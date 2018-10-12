@@ -118,83 +118,79 @@ namespace ngraph
                     return instance;
                 }
 
+#define REGISTER_OPERATOR(name_, fn_)                                                              \
+    m_map.emplace(name_, std::bind(op::fn_, std::placeholders::_1))
+
                 ops_bridge()
                 {
-                    m_map.emplace("Abs", std::bind(op::abs, std::placeholders::_1));
-                    m_map.emplace("Add", std::bind(op::add, std::placeholders::_1));
-                    m_map.emplace("And", std::bind(op::logical_and, std::placeholders::_1));
-                    m_map.emplace("AveragePool",
-                                  std::bind(op::average_pool, std::placeholders::_1));
-                    m_map.emplace("BatchNormalization",
-                                  std::bind(op::batch_norm, std::placeholders::_1));
-                    m_map.emplace("Cast", std::bind(op::cast, std::placeholders::_1));
-                    m_map.emplace("Ceil", std::bind(op::ceil, std::placeholders::_1));
-                    m_map.emplace("Clip", std::bind(op::clip, std::placeholders::_1));
-                    m_map.emplace("Concat", std::bind(op::concat, std::placeholders::_1));
-                    m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
-                    m_map.emplace("Conv", std::bind(op::conv, std::placeholders::_1));
-                    m_map.emplace("Div", std::bind(op::div, std::placeholders::_1));
-                    m_map.emplace("Dropout", std::bind(op::identity, std::placeholders::_1));
-                    m_map.emplace("Elu", std::bind(op::elu, std::placeholders::_1));
-                    m_map.emplace("Equal", std::bind(op::equal, std::placeholders::_1));
-                    m_map.emplace("Exp", std::bind(op::exp, std::placeholders::_1));
-                    m_map.emplace("Flatten", std::bind(op::flatten, std::placeholders::_1));
-                    m_map.emplace("Floor", std::bind(op::floor, std::placeholders::_1));
-                    m_map.emplace("Gemm", std::bind(op::gemm, std::placeholders::_1));
-                    m_map.emplace("Greater", std::bind(op::greater, std::placeholders::_1));
-                    m_map.emplace("HardSigmoid",
-                                  std::bind(op::hard_sigmoid, std::placeholders::_1));
-                    m_map.emplace("Identity", std::bind(op::identity, std::placeholders::_1));
-                    m_map.emplace("LeakyRelu", std::bind(op::leaky_relu, std::placeholders::_1));
-                    m_map.emplace("Less", std::bind(op::less, std::placeholders::_1));
-                    m_map.emplace("Log", std::bind(op::log, std::placeholders::_1));
-                    m_map.emplace("LogSoftmax", std::bind(op::log_softmax, std::placeholders::_1));
-                    m_map.emplace("LRN", std::bind(op::lrn, std::placeholders::_1));
-                    m_map.emplace("MatMul", std::bind(op::matmul, std::placeholders::_1));
-                    m_map.emplace("MaxPool", std::bind(op::max_pool, std::placeholders::_1));
-                    m_map.emplace("Max", std::bind(op::max, std::placeholders::_1));
-                    m_map.emplace("Mean", std::bind(op::mean, std::placeholders::_1));
-                    m_map.emplace("Min", std::bind(op::min, std::placeholders::_1));
-                    m_map.emplace("Mul", std::bind(op::mul, std::placeholders::_1));
-                    m_map.emplace("Neg", std::bind(op::neg, std::placeholders::_1));
-                    m_map.emplace("Not", std::bind(op::logical_not, std::placeholders::_1));
-                    m_map.emplace("Or", std::bind(op::logical_or, std::placeholders::_1));
-                    m_map.emplace("Pow", std::bind(op::pow, std::placeholders::_1));
-                    m_map.emplace("PRelu", std::bind(op::prelu, std::placeholders::_1));
-                    m_map.emplace("Reciprocal", std::bind(op::reciprocal, std::placeholders::_1));
-                    m_map.emplace("ReduceLogSum",
-                                  std::bind(op::reduce_log_sum, std::placeholders::_1));
-                    m_map.emplace("ReduceLogSumExp",
-                                  std::bind(op::reduce_log_sum_exp, std::placeholders::_1));
-                    m_map.emplace("ReduceL1", std::bind(op::reduce_l1, std::placeholders::_1));
-                    m_map.emplace("ReduceL2", std::bind(op::reduce_l2, std::placeholders::_1));
-                    m_map.emplace("ReduceMax", std::bind(op::reduce_max, std::placeholders::_1));
-                    m_map.emplace("ReduceMean", std::bind(op::reduce_mean, std::placeholders::_1));
-                    m_map.emplace("ReduceMin", std::bind(op::reduce_min, std::placeholders::_1));
-                    m_map.emplace("ReduceProd", std::bind(op::reduce_prod, std::placeholders::_1));
-                    m_map.emplace("ReduceSum", std::bind(op::reduce_sum, std::placeholders::_1));
-                    m_map.emplace("ReduceSumSquare",
-                                  std::bind(op::reduce_sum_square, std::placeholders::_1));
-                    m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
-                    m_map.emplace("Reshape", std::bind(op::reshape, std::placeholders::_1));
-                    m_map.emplace("Selu", std::bind(op::selu, std::placeholders::_1));
-                    m_map.emplace("Shape", std::bind(op::shape, std::placeholders::_1));
-                    m_map.emplace("Sigmoid", std::bind(op::sigmoid, std::placeholders::_1));
-                    m_map.emplace("Slice", std::bind(op::slice, std::placeholders::_1));
-                    m_map.emplace("Softmax", std::bind(op::softmax, std::placeholders::_1));
-                    m_map.emplace("Softplus", std::bind(op::softplus, std::placeholders::_1));
-                    m_map.emplace("Softsign", std::bind(op::softsign, std::placeholders::_1));
-                    m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
-                    m_map.emplace("Sqrt", std::bind(op::sqrt, std::placeholders::_1));
-                    m_map.emplace("Squeeze", std::bind(op::squeeze, std::placeholders::_1));
-                    m_map.emplace("Sub", std::bind(op::sub, std::placeholders::_1));
-                    m_map.emplace("Sum", std::bind(op::sum, std::placeholders::_1));
-                    m_map.emplace("Tanh", std::bind(op::tanh, std::placeholders::_1));
-                    m_map.emplace("ThresholdedRelu",
-                                  std::bind(op::thresholded_relu, std::placeholders::_1));
-                    m_map.emplace("Transpose", std::bind(op::transpose, std::placeholders::_1));
-                    m_map.emplace("Unsqueeze", std::bind(op::unsqueeze, std::placeholders::_1));
-                    m_map.emplace("Xor", std::bind(op::logical_xor, std::placeholders::_1));
+                    REGISTER_OPERATOR("Abs", abs);
+                    REGISTER_OPERATOR("Add", add);
+                    REGISTER_OPERATOR("And", logical_and);
+                    REGISTER_OPERATOR("AveragePool", average_pool);
+                    REGISTER_OPERATOR("BatchNormalization", batch_norm);
+                    REGISTER_OPERATOR("Cast", cast);
+                    REGISTER_OPERATOR("Ceil", ceil);
+                    REGISTER_OPERATOR("Clip", clip);
+                    REGISTER_OPERATOR("Concat", concat);
+                    REGISTER_OPERATOR("Constant", constant);
+                    REGISTER_OPERATOR("Conv", conv);
+                    REGISTER_OPERATOR("Div", div);
+                    REGISTER_OPERATOR("Dropout", identity);
+                    REGISTER_OPERATOR("Elu", elu);
+                    REGISTER_OPERATOR("Equal", equal);
+                    REGISTER_OPERATOR("Exp", exp);
+                    REGISTER_OPERATOR("Flatten", flatten);
+                    REGISTER_OPERATOR("Floor", floor);
+                    REGISTER_OPERATOR("Gemm", gemm);
+                    REGISTER_OPERATOR("Greater", greater);
+                    REGISTER_OPERATOR("HardSigmoid", hard_sigmoid);
+                    REGISTER_OPERATOR("Identity", identity);
+                    REGISTER_OPERATOR("LeakyRelu", leaky_relu);
+                    REGISTER_OPERATOR("Less", less);
+                    REGISTER_OPERATOR("Log", log);
+                    REGISTER_OPERATOR("LogSoftmax", log_softmax);
+                    REGISTER_OPERATOR("LRN", lrn);
+                    REGISTER_OPERATOR("MatMul", matmul);
+                    REGISTER_OPERATOR("MaxPool", max_pool);
+                    REGISTER_OPERATOR("Max", max);
+                    REGISTER_OPERATOR("Mean", mean);
+                    REGISTER_OPERATOR("Min", min);
+                    REGISTER_OPERATOR("Mul", mul);
+                    REGISTER_OPERATOR("Neg", neg);
+                    REGISTER_OPERATOR("Not", logical_not);
+                    REGISTER_OPERATOR("Or", logical_or);
+                    REGISTER_OPERATOR("Pow", pow);
+                    REGISTER_OPERATOR("PRelu", prelu);
+                    REGISTER_OPERATOR("Reciprocal", reciprocal);
+                    REGISTER_OPERATOR("ReduceLogSum", reduce_log_sum);
+                    REGISTER_OPERATOR("ReduceLogSumExp", reduce_log_sum_exp);
+                    REGISTER_OPERATOR("ReduceL1", reduce_l1);
+                    REGISTER_OPERATOR("ReduceL2", reduce_l2);
+                    REGISTER_OPERATOR("ReduceMax", reduce_max);
+                    REGISTER_OPERATOR("ReduceMean", reduce_mean);
+                    REGISTER_OPERATOR("ReduceMin", reduce_min);
+                    REGISTER_OPERATOR("ReduceProd", reduce_prod);
+                    REGISTER_OPERATOR("ReduceSum", reduce_sum);
+                    REGISTER_OPERATOR("ReduceSumSquare", reduce_sum_square);
+                    REGISTER_OPERATOR("Relu", relu);
+                    REGISTER_OPERATOR("Reshape", reshape);
+                    REGISTER_OPERATOR("Selu", selu);
+                    REGISTER_OPERATOR("Shape", shape);
+                    REGISTER_OPERATOR("Sigmoid", sigmoid);
+                    REGISTER_OPERATOR("Slice", slice);
+                    REGISTER_OPERATOR("Softmax", softmax);
+                    REGISTER_OPERATOR("Softplus", softplus);
+                    REGISTER_OPERATOR("Softsign", softsign);
+                    REGISTER_OPERATOR("Split", split);
+                    REGISTER_OPERATOR("Sqrt", sqrt);
+                    REGISTER_OPERATOR("Squeeze", squeeze);
+                    REGISTER_OPERATOR("Sub", sub);
+                    REGISTER_OPERATOR("Sum", sum);
+                    REGISTER_OPERATOR("Tanh", tanh);
+                    REGISTER_OPERATOR("ThresholdedRelu", thresholded_relu);
+                    REGISTER_OPERATOR("Transpose", transpose);
+                    REGISTER_OPERATOR("Unsqueeze", unsqueeze);
+                    REGISTER_OPERATOR("Xor", logical_xor);
                 }
 
                 NodeVector operator()(const Node& node) const
