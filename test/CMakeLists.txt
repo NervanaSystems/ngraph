@@ -29,6 +29,7 @@ set(SRC
     element_type.cpp
     file_util.cpp
     graph_partition.cpp
+    includes.cpp
     inliner.cpp
     input_output_assign.cpp
     main.cpp
@@ -49,6 +50,9 @@ set(SRC
     zero_dim_tensor_elimination.cpp
 )
 
+set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
+    NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
+
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND SRC onnx_import.cpp)
     if (NGRAPH_ONNXIFI_ENABLE)
@@ -58,39 +62,44 @@ endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
     set(SRC ${SRC} backend_debug_api.cpp builder.cpp backend_api.cpp)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
     set(SRC ${SRC} core_fusion.cpp quantize_cpu.cpp)
+    set(SRC ${SRC} backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
 endif()
+
+if(NGRAPH_GPU_ENABLE)
+    set(SRC ${SRC} cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
+endif()
+
+# if (NGRAPH_INTELGPU_ENABLE)
+#     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
+# endif()
 
 add_subdirectory(models)
 add_subdirectory(files)
 add_subdirectory(util)
 
-if(NGRAPH_CPU_ENABLE)
-    set(SRC ${SRC} backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp)
+# backend specific test files must meet the following requirements:
+# 1) The must be named <name>.in.cpp
+# 2) They must be in the test directory
+# 3) add the line `static string s_manifest = "${MANIFEST}";` to your cpp file
+# All such files are configured via cmake which replaces all instances of cmake variables
+# such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
+set(MULTI_TEST_SRC
+    autodiff.in.cpp
+    backend_test.in.cpp
+    convolution_test.in.cpp
+)
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    set(MULTI_TEST_SRC ${MULTI_TEST_SRC} distributed.in.cpp)
 endif()
 
-if(NGRAPH_GPU_ENABLE)
-    set(SRC ${SRC} cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
-endif()
-
-foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
-    string(FIND ${TEST_CONFIG} "@" OFFSET)
-    string(SUBSTRING ${TEST_CONFIG} 0 ${OFFSET} BACKEND_NAME)
-    math(EXPR OFFSET ${OFFSET}+1)
-    string(SUBSTRING ${TEST_CONFIG} ${OFFSET} -1 MANIFEST)
-
-    configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
-    configure_file(convolution_test.in.cpp convolution_test_${BACKEND_NAME}.cpp)
-    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp ${SRC})
-    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/convolution_test_${BACKEND_NAME}.cpp ${SRC})
-    if(NGRAPH_DISTRIBUTED_ENABLE)
-        configure_file(distributed.cpp distributed_${BACKEND_NAME}.cpp)
-        set(SRC ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp  ${SRC})
-    endif()
-
+foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     # Some---but not all---autodiff tests go through multiple iterations with
     # different random seeds. On the CPU backend this is currently very slow
     # because the autodiff tests recompile with each iteration. That behavior
@@ -102,8 +111,14 @@ foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
         set(TEST_LOOPS 2)
     endif()
 
-    configure_file(autodiff.in.cpp autodiff_${BACKEND_NAME}.cpp)
-    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp ${SRC})
+    string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
+    set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+
+    foreach(TEST_SRC ${MULTI_TEST_SRC})
+        string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
+        configure_file(${TEST_SRC} ${TARGET_NAME})
+        set(SRC ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} ${SRC})
+    endforeach()
 
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
 endforeach()
