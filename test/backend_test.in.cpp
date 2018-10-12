@@ -7026,7 +7026,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_include_in_compu
                         read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below_do_not_include_in_computation)
+NGRAPH_TEST(${BACKEND_NAME},
+            avg_pool_2d_2channel_2image_padded_only_below_do_not_include_in_computation)
 {
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{2, 2};
@@ -7096,7 +7097,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below_inclu
                                 read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above_do_not_include_in_computation)
+NGRAPH_TEST(${BACKEND_NAME},
+            avg_pool_2d_2channel_2image_padded_only_above_do_not_include_in_computation)
 {
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{2, 2};
@@ -7246,7 +7248,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_3x3_padded_include_in_c
         read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_3x3_strided_padded_do_not_include_in_computation)
+NGRAPH_TEST(${BACKEND_NAME},
+            avg_pool_2d_2channel_2image_3x3_strided_padded_do_not_include_in_computation)
 {
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{3, 3};
@@ -7316,7 +7319,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_3x3_strided_padded_incl
                                   read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_3x3_strided_uneven_padded_do_not_include_in_computation)
+NGRAPH_TEST(${BACKEND_NAME},
+            avg_pool_2d_2channel_2image_3x3_strided_uneven_padded_do_not_include_in_computation)
 {
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{3, 3};
@@ -7349,7 +7353,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_3x3_strided_uneven_padd
         read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_3x3_strided_uneven_padded_include_in_computation)
+NGRAPH_TEST(${BACKEND_NAME},
+            avg_pool_2d_2channel_2image_3x3_strided_uneven_padded_include_in_computation)
 {
     Shape shape_a{2, 1, 3, 3};
     Shape window_shape{3, 3};
@@ -7393,10 +7398,12 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_3d_strided_uneven_padded_do_not_include_in
     auto B = make_shared<op::Parameter>(element::f32, shape_a);
 
     auto cpu_f = make_shared<Function>(
-        make_shared<op::AvgPool>(A, window_shape, move_strides, padding_below, padding_above, false),
+        make_shared<op::AvgPool>(
+            A, window_shape, move_strides, padding_below, padding_above, false),
         op::ParameterVector{A});
     auto int_f = make_shared<Function>(
-        make_shared<op::AvgPool>(B, window_shape, move_strides, padding_below, padding_above, false),
+        make_shared<op::AvgPool>(
+            B, window_shape, move_strides, padding_below, padding_above, false),
         op::ParameterVector{B});
     test::Uniform<float> rng(0.0f, 1.0f);
     vector<vector<float>> args;
