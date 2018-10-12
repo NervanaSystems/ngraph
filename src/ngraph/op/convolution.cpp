@@ -82,9 +82,16 @@ Shape op::util::infer_convolution_output(const Node* node,
                                             data_padding_below[i] + data_padding_above[i];
         size_t filter_dilated_dim = filter_dilation[i] * (filter_shape[i] - 1) + 1;
 
-        NODE_VALIDATION_ASSERT(node, data_padded_dilated_dim > 0);
-        NODE_VALIDATION_ASSERT(node, filter_dilated_dim > 0);
-        NODE_VALIDATION_ASSERT(node, filter_dilated_dim <= size_t(data_padded_dilated_dim));
+        NODE_VALIDATION_ASSERT(node, data_padded_dilated_dim > 0)
+            << "Data shape after padding and dilation has dimension less than 1 (dim: "
+            << data_padded_dilated_dim << ") at dimension " << i << ".";
+        NODE_VALIDATION_ASSERT(node, filter_dilated_dim > 0)
+            << "Filter after dilation has dimension less than 1 (dim: " << filter_dilated_dim
+            << ") at dimension " << i << ".";
+        NODE_VALIDATION_ASSERT(node, filter_dilated_dim <= size_t(data_padded_dilated_dim))
+            << "Filter after dilation has dimension (dim: " << filter_dilated_dim
+            << ") larger than the data shape after padding (dim: " << data_padded_dilated_dim
+            << ") at dimension " << i << ".";
 
         size_t output_dim =
             ceil_div(size_t(data_padded_dilated_dim) - filter_dilated_dim + 1, filter_strides[i]);
@@ -400,7 +407,9 @@ void op::Convolution::validate_and_infer_types()
     size_t filter_output_channel_count = output_and_input_dims[0];
     size_t filter_input_channel_count = output_and_input_dims[1];
 
-    NODE_VALIDATION_ASSERT(this, data_channel_count == filter_input_channel_count);
+    NODE_VALIDATION_ASSERT(this, data_channel_count == filter_input_channel_count)
+        << "Data batch channel count (" << data_channel_count << ") does not match filter input "
+        << "channel count (" << filter_input_channel_count << ").";
 
     Shape data_output_shape = op::util::infer_convolution_output(this,
                                                                  data_spatial_shape,
@@ -541,65 +550,111 @@ op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_sha
 
 void op::ConvolutionBackpropData::validate_and_infer_types()
 {
+    // Backprop to data is itself convolution on the incoming delta, with the forward
+    // arguments/attributes transformed as follows.
+    //
+    //                          Forward   Backward
+    // "N" axis for data batch  0         0
+    // "C" axis for data batch  1         1
+    // "Co" axis for filters    0         0
+    // "Ci" axis for filters    1         1
+    // "N" axis for output      0         0
+    // "C" axis for output      1         1
+    // Data batch               x         delta
+    // Data batch shape         S_x       S_o
+    // Filters                  f         reverse(f) [on spatial axes]
+    // Filters shape            S_f       S_f
+    // Window movement strides  q_x       p_x
+    // Window dilation strides  p_f       p_f
+    // Padding below            a_x       (S_f - 1)p_f - a_x
+    // Padding above            b_x       (S_f - 1)p_f + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f) % q_x) - b_x
+    // Data dilation strides    p_x       q_x
+    // Output shape             S_o       S_x
+    //
+    // To _validate_, we simply need to check/infer the output shape of the forward convolution,
+    // then check to make sure that the incoming delta has the same shape as the forward output.
+    //
+    // We will also compute the various parameters in the "backward" column above, since some
+    // backends need them. (TODO(amprocte): Is it just because of the way the reference works that
+    // this stuff is needed? If so, we can probably get rid of it and have conv_backprop reference
+    // kernels that do the calculations of the backward parameters internally, or supply utility
+    // functions to do it.)
+
     auto& filters_shape = get_input_shape(0);
     auto& filters_et = get_input_element_type(0);
-    auto& output_delta_shape = get_input_shape(1);
-    auto& output_delta_et = get_input_element_type(1);
+    auto& delta_shape = get_input_shape(1);
+    auto& delta_et = get_input_element_type(1);
 
-    //
-    // Make sure filter and output delta element types match.
-    //
-    NODE_VALIDATION_ASSERT(this, output_delta_et == filters_et)
-        << "Element types for filters and output delta do not match (filters element type: "
-        << filters_et << ", output delta element type: " << output_delta_et << ").";
+    NODE_VALIDATION_ASSERT(this, m_data_batch_shape.size() >= 3)
+        << "Data batch input must have rank of at least 3 (one batch axis, "
+        << "one input-channel axis, and at least one spatial dimension) "
+        << "(data batch shape: " << m_data_batch_shape << ").";
 
-    //                              Forward               Backward
-    // Window movement strides      q                     p_x
-    // Window dilation strides      p_f                   p_f
-    // Padding below                a_x                   (S_F - 1)p_f - a_x
-    // Padding above                b_x                   (S_f - 1)p_f + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f) % q) - b_x
-    // Data dilation strides        p_x                   q
+    NODE_VALIDATION_ASSERT(this, delta_et == filters_et)
+        << "Element types for delta and filters do not match (delta element type: " << delta_et
+        << ", filters element type: " << filters_et << ").";
 
-    for (size_t i = 0; i < m_data_batch_shape.size() - 2; i++)
+    std::vector<size_t> batch_and_channel_dims;
+    Shape data_spatial_shape;
+    std::tie(batch_and_channel_dims, data_spatial_shape) =
+        split_nonspatial_dimensions({0, 1}, m_data_batch_shape);
+    size_t batch_size = batch_and_channel_dims[0];
+    size_t data_channel_count = batch_and_channel_dims[1];
+
+    std::vector<size_t> output_and_input_dims;
+    Shape filter_spatial_shape;
+    std::tie(output_and_input_dims, filter_spatial_shape) =
+        split_nonspatial_dimensions({0, 1}, filters_shape);
+    size_t filter_output_channel_count = output_and_input_dims[0];
+    size_t filter_input_channel_count = output_and_input_dims[1];
+
+    NODE_VALIDATION_ASSERT(this, data_channel_count == filter_input_channel_count)
+        << "Data batch channel count (" << data_channel_count << ") does not match filter input "
+        << "channel count (" << filter_input_channel_count << ").";
+
+    Shape data_output_shape = op::util::infer_convolution_output(this,
+                                                                 data_spatial_shape,
+                                                                 m_data_dilation_strides_forward,
+                                                                 m_padding_below_forward,
+                                                                 m_padding_above_forward,
+                                                                 filter_spatial_shape,
+                                                                 m_window_movement_strides_forward,
+                                                                 m_window_dilation_strides_forward);
+
+    Shape batch_output_shape(m_data_batch_shape.size());
+    batch_output_shape[0] = batch_size;
+    batch_output_shape[1] = filter_output_channel_count;
+    std::copy(data_output_shape.begin(), data_output_shape.end(), batch_output_shape.begin() + 2);
+
+    NODE_VALIDATION_ASSERT(this, batch_output_shape == delta_shape)
+        << "Inferred forward output shape (" << batch_output_shape << ") does not match shape of "
+        << "delta (" << delta_shape << ").";
+
+    set_output_type(0, delta_et, m_data_batch_shape);
+
+    size_t spatial_dim_count = data_spatial_shape.size();
+
+    m_window_movement_strides_backward = m_data_dilation_strides_forward;
+    m_window_dilation_strides_backward = m_window_dilation_strides_forward;
+    m_data_dilation_strides_backward = m_window_movement_strides_forward;
+
+    m_padding_below_backward.resize(spatial_dim_count);
+    m_padding_above_backward.resize(spatial_dim_count);
+
+    for (size_t i = 0; i < spatial_dim_count; i++)
     {
-        m_window_movement_strides_backward.push_back(m_data_dilation_strides_forward[i]);
-        m_window_dilation_strides_backward.push_back(m_window_dilation_strides_forward[i]);
-        m_padding_below_backward.push_back((filters_shape[i + 2] - 1) *
-                                               m_window_dilation_strides_forward[i] -
-                                           m_padding_below_forward[i]);
-        m_padding_above_backward.push_back(
-            (filters_shape[i + 2] - 1) * m_window_dilation_strides_forward[i] +
+        m_padding_below_backward[i] =
+            (filter_spatial_shape[i] - 1) * m_window_dilation_strides_forward[i] -
+            m_padding_below_forward[i];
+        m_padding_above_backward[i] =
+            (filter_spatial_shape[i] - 1) * m_window_dilation_strides_forward[i] +
             ((m_padding_below_forward[i] +
-              (m_data_batch_shape[i + 2] - 1) * m_data_dilation_strides_forward[i] +
+              (data_spatial_shape[i] - 1) * m_data_dilation_strides_forward[i] +
               m_padding_above_forward[i] -
-              (filters_shape[i + 2] - 1) * m_window_dilation_strides_forward[i]) %
+              (filter_spatial_shape[i] - 1) * m_window_dilation_strides_forward[i]) %
              m_window_movement_strides_forward[i]) -
-            m_padding_above_forward[i]);
-        m_data_dilation_strides_backward.push_back(m_window_movement_strides_forward[i]);
+            m_padding_above_forward[i];
     }
-
-    Shape inferred_convolution_output_shape =
-        util::infer_convolution_output_shape(this,
-                                             output_delta_shape,
-                                             filters_shape,
-                                             m_window_movement_strides_backward,
-                                             m_window_dilation_strides_backward,
-                                             m_padding_below_backward,
-                                             m_padding_above_backward,
-                                             m_data_dilation_strides_backward,
-                                             0,
-                                             1,
-                                             0,
-                                             1,
-                                             0,
-                                             1);
-
-    NODE_VALIDATION_ASSERT(this, inferred_convolution_output_shape == m_data_batch_shape)
-        << "Specified data batch shape does not match the inferred data batch shape "
-        << "(specified shape: " << m_data_batch_shape
-        << ", inferred data batch shape: " << inferred_convolution_output_shape;
-
-    set_output_type(0, filters_et, inferred_convolution_output_shape);
 }
 
 void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
