@@ -82,7 +82,7 @@ function build_ngraph() {
 
 # Copy Onnx models
 if [ -d /home/onnx_models/.onnx ]; then
-    rsync -avhz /home/onnx_models/.onnx /root/
+    ln -s /home/onnx_models/.onnx /root/.onnx
 fi
 
 # Copy stored nGraph master and use it to build PR branch
