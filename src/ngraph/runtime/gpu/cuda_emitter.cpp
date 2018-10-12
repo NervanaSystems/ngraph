@@ -170,13 +170,15 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::vector<std::string>& d
 size_t runtime::gpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>& dtypes,
                                                NVShape input_shape,
                                                NVShape output_shape,
-                                               size_t one_hot_axis)
+                                               size_t one_hot_axis,
+                                               size_t output_datatype_size)
 {
     std::stringstream kernel_name;
     kernel_name << "onehot_" << join(dtypes, "_");
 
     std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_") + "_o_" +
-                       join(output_shape, "_") + std::to_string(one_hot_axis);
+                       join(output_shape, "_") + "_axis_" + std::to_string(one_hot_axis) +
+                       "_datasize_" + std::to_string(output_datatype_size);
     // For backwards compatability we currently use two unordered maps
     // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
     // 2. the other looks to see if this kernel is already in the primitive list
@@ -206,18 +208,19 @@ size_t runtime::gpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>&
     uint32_t block_size_x = 64;
     uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
 
-    uint32_t repeat_times = static_cast<uint32_t>(output_shape[one_hot_axis]);
-    uint32_t repeat_size = 1;
+    uint32_t hot_axis_shape = static_cast<uint32_t>(output_shape[one_hot_axis]);
+    uint32_t hot_axis_stride = 1;
     for (size_t i = one_hot_axis + 1; i < output_shape.size(); i++)
     {
-        repeat_size *= output_shape[i];
+        hot_axis_stride *= output_shape[i];
     }
-
+    uint32_t output_size = static_cast<uint32_t>(shape_size(output_shape) * output_datatype_size);
     // create the launch primitive
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             std::vector<void*> args_list{
-                &inputs[0], &outputs[0], &repeat_size, &repeat_times, &nthreads};
+                &inputs[0], &outputs[0], &hot_axis_stride, &hot_axis_shape, &nthreads};
+            runtime::gpu::cuda_memset(outputs[0], 0, output_size);
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                           aligned_grid_size_x,
                                           1,
@@ -1780,8 +1783,9 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Softmax* node)
     auto output_type = out[0].get_element_type().c_type_string();
 
     auto exp_index = build_elementwise<ngraph::op::Exp>({input_type, output_type}, input_shape);
+    std::vector<element::Type> dtypes{args[0].get_element_type(), out[0].get_element_type()};
     auto reduce_index = cudnn_emitter->build_reduce_forward(
-        CUDNN_REDUCE_TENSOR_ADD, output_type, input_shape, axes);
+        CUDNN_REDUCE_TENSOR_ADD, dtypes, input_shape, axes, CUDNNEmitter::ReductionMode::Reduce);
     size_t divide_index = build_softmax_divide(
         std::vector<std::string>(3, output_type), input_shape, reduced_shape, axes_flag);
 

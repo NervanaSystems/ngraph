@@ -196,25 +196,8 @@ if(WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_CRT_SECURE_NO_WARNINGS")
 endif()
 
-include(unit_test_control)
-set(UNIT_TEST_CONFIG_LIST "" CACHE INTERNAL "")
-
-if (NGRAPH_INTERPRETER_ENABLE)
-    unit_test_control(BACKEND INTERPRETER MANIFEST src/ngraph/runtime/interpreter/unit_test.manifest)
-endif()
-
-# Set true if CPU backend is built by default
 if (NGRAPH_CPU_ENABLE)
-    unit_test_control(BACKEND CPU MANIFEST src/ngraph/runtime/cpu/unit_test.manifest)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
-endif()
-
-if (NGRAPH_INTELGPU_ENABLE)
-    unit_test_control(BACKEND INTELGPU MANIFEST src/ngraph/runtime/intelgpu/unit_test.manifest)
-endif()
-
-if (NGRAPH_GPU_ENABLE)
-    unit_test_control(BACKEND GPU MANIFEST src/ngraph/runtime/gpu/unit_test.manifest)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")	
 endif()
 
 if (NOT DEFINED NGRAPH_TBB_ENABLE)
