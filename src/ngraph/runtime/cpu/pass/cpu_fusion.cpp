@@ -533,10 +533,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv_backprop_
         pad_input, pad_value, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0});
     auto pad_label = std::make_shared<pattern::op::Label>(pad, nullptr, NodeVector{pad});
 
-    auto output_delta = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
+    auto output_delta = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 3, 3});
 
     auto conv = std::make_shared<op::ConvolutionBackpropFilters>(pad_label,
-                                                                 Shape{1, 1, 3, 3},
+                                                                 Shape{1, 1, 1, 1},
                                                                  output_delta,
                                                                  Strides{1, 1},
                                                                  Strides{1, 1},
