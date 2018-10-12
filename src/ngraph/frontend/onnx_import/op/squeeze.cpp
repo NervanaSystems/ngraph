@@ -78,7 +78,6 @@ namespace ngraph
                         output_data_shape.push_back(data_shape.at(idx));
                     }
                 }
-
                 return {
                     std::make_shared<ngraph::op::Reshape>(data, input_order, output_data_shape)};
             }
