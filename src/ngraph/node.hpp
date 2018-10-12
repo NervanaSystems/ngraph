@@ -103,10 +103,11 @@ namespace ngraph
         void validate_and_infer_elementwise_logical();
 
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
-        virtual ~Node();
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
     public:
+        virtual ~Node();
+        void revalidate_and_infer_types() { validate_and_infer_types(); }
         // Called after transition
         void delayed_validate_and_infer_types();
 
@@ -168,6 +169,9 @@ namespace ngraph
         /// Returns the shape for output i
         const Shape& get_output_shape(size_t i) const;
 
+        /// Returns the partial shape for output i
+        const PartialShape& get_output_partial_shape(size_t i) const;
+
         /// Checks that there is exactly one output and returns its shape
         const Shape& get_shape() const;
 
@@ -194,6 +198,9 @@ namespace ngraph
 
         /// Returns the shape of input i
         const Shape& get_input_shape(size_t i) const;
+
+        /// Returns the partial shape of input i
+        const PartialShape& get_input_partial_shape(size_t i) const;
 
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;

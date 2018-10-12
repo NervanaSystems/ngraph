@@ -41,6 +41,8 @@ set(SRC
     pass/gpu_layout.cpp
     pass/tensor_memory_reservation.cpp
     gpu_kernel_args.cpp
+    pass/gpu_rnn_fusion.cpp
+    op/rnn.cpp
     )
 set(CUDA_SRC
     nvcc/example.cu.cpp

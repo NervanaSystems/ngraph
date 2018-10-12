@@ -69,11 +69,11 @@ add_subdirectory(files)
 add_subdirectory(util)
 
 if(NGRAPH_CPU_ENABLE)
-    set(SRC ${SRC} backend_performance.cpp cpu_fusion.cpp cpu_test.cpp)
+    set(SRC ${SRC} backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp)
 endif()
 
 if(NGRAPH_GPU_ENABLE)
-    set(SRC ${SRC} cudnn.cpp gpu_test.cpp)
+    set(SRC ${SRC} cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
 endif()
 
 foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})

@@ -126,6 +126,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
@@ -152,6 +153,7 @@
 #include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -188,7 +190,7 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_function_name(function->get_name())
     , m_is_built(false)
 #if !defined(NGRAPH_DEX_ONLY)
-    , m_direct_execution(std::getenv("NGRAPH_DEX") != nullptr)
+    , m_direct_execution(!std::getenv("NGRAPH_CODEGEN"))
 #else
     , m_direct_execution(true)
 #endif
@@ -308,6 +310,8 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropData>},
     {TI(ngraph::op::GroupConvolution), &runtime::cpu::CPU_Emitter::emit<op::GroupConvolution>},
     {TI(ngraph::op::ConvolutionBias), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBias>},
+    {TI(ngraph::op::QuantizedConvolutionBias),
+     &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBias>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolution),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolution>},
@@ -998,6 +1002,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
 {
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
+    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
     // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
     // failing mxnet unit tests.
     // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
@@ -1010,7 +1015,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
@@ -1355,6 +1360,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
             case CPUTensorRole::CONSTANT: return string("CPUTensorRole::CONSTANT");
             case CPUTensorRole::OUTPUT: return string("CPUTensorRole::OUTPUT");
             }
+            throw runtime_error("unhandled CPU tensor role");
         };
 
         //dump the tensor roles to debug manifest
