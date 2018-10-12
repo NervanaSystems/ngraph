@@ -16,8 +16,7 @@
 
 #pragma once
 
-#include <cstddef>
-#include <cstring>
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
@@ -25,16 +24,13 @@ namespace ngraph
     {
         namespace cpu
         {
-            namespace kernel
+            namespace pass
             {
-                template <typename ElementType>
-                void result(const void* arg, void* out, size_t count)
+                class CPUReshapeSinking : public ngraph::pass::FunctionPass
                 {
-                    if (arg != out)
-                    {
-                        memcpy(out, arg, sizeof(ElementType) * count);
-                    }
-                }
+                public:
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                };
             }
         }
     }
