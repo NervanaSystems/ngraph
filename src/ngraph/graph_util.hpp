@@ -315,4 +315,6 @@ namespace ngraph
     bool possibly_overwritten(Node* node);
 
     bool is_strided(const Strides& strides);
+
+    bool is_valid_rank(const std::shared_ptr<Node>& node, std::vector<size_t> valid_ranks);
 }
