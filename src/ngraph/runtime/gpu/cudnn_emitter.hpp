@@ -72,6 +72,19 @@ namespace ngraph
                     Backward
                 };
 
+                enum class ReductionMode
+                {
+                    Reduce,
+                    ArgReduce
+                };
+
+                enum class algo_search
+                {
+                    HEURISTIC,
+                    EXPLICIT,
+                    NONE
+                };
+
                 size_t build_convolution(const std::string& dtype,
                                          const Shape& input_tensor_shape,
                                          const Shape& input_filter_shape,
@@ -79,30 +92,33 @@ namespace ngraph
                                          const Strides& window_movement_strides,
                                          const Strides& window_dilation_strides,
                                          const Shape& padding_below,
-                                         const bool find_algo = false);
+                                         const algo_search find_algo = algo_search::NONE);
 
-                size_t build_convolution_backward_data(const std::string& dtype,
-                                                       const Shape& input_filter_shape,
-                                                       const Shape& input_tensor_shape,
-                                                       const Shape& output_tensor_shape,
-                                                       const Strides& window_movement_strides,
-                                                       const Strides& window_dilation_strides,
-                                                       const Shape& padding_below,
-                                                       const bool find_algo = false);
+                size_t build_convolution_backward_data(
+                    const std::string& dtype,
+                    const Shape& input_filter_shape,
+                    const Shape& input_tensor_shape,
+                    const Shape& output_tensor_shape,
+                    const Strides& window_movement_strides,
+                    const Strides& window_dilation_strides,
+                    const Shape& padding_below,
+                    const algo_search find_algo = algo_search::NONE);
 
-                size_t build_convolution_backward_filter(const std::string& dtype,
-                                                         const Shape& input_tensor_shape_0,
-                                                         const Shape& input_tensor_shape_1,
-                                                         const Shape& output_filter_shape,
-                                                         const Strides& window_movement_strides,
-                                                         const Strides& window_dilation_strides,
-                                                         const Shape& padding_below,
-                                                         const bool find_algo = false);
+                size_t build_convolution_backward_filter(
+                    const std::string& dtype,
+                    const Shape& input_tensor_shape_0,
+                    const Shape& input_tensor_shape_1,
+                    const Shape& output_filter_shape,
+                    const Strides& window_movement_strides,
+                    const Strides& window_dilation_strides,
+                    const Shape& padding_below,
+                    const algo_search find_algo = algo_search::NONE);
 
                 size_t build_reduce_forward(const cudnnReduceTensorOp_t& reduce_op,
-                                            const std::string& dtype,
+                                            const std::vector<element::Type>& dtypes,
                                             const Shape& input_shape,
-                                            const AxisSet& reduction_axes);
+                                            const AxisSet& reduction_axes,
+                                            const ReductionMode& reduction_mode);
 
                 size_t build_tensor_op(const cudnnOpTensorOp_t& tensor_op,
                                        const std::string& dtype,
@@ -154,6 +170,7 @@ namespace ngraph
                 void* get_data_by_type(cudnnDataType_t data_type, double value);
 
                 cudnnDataType_t get_cudnn_datatype(std::string dtype);
+                cudnnDataType_t get_cudnn_datatype(const element::Type& dtype);
 
                 cudnnTensorDescriptor_t&
                     tensor_descriptor_from_shape(const Shape& shape,
@@ -177,6 +194,24 @@ namespace ngraph
                                                      const Strides& window_dilation_strides,
                                                      cudnnConvolutionMode_t mode,
                                                      cudnnDataType_t data_type);
+
+                template <typename PERF_TYPE, typename ALGO_TYPE>
+                ALGO_TYPE
+                    select_cudnn_algo(const std::vector<PERF_TYPE>& perf_results,
+                                      size_t workspace_byte = std::numeric_limits<size_t>::max())
+                {
+                    for (auto i = 0; i != perf_results.size(); ++i)
+                    {
+                        auto const& result = perf_results[i];
+                        if (result.status == CUDNN_STATUS_SUCCESS &&
+                            result.memory <= workspace_byte)
+                        {
+                            return result.algo;
+                        }
+                    }
+                    throw ngraph_error(
+                        "No suitable cuDNN algorithm was found for the requested operation.");
+                }
 
                 CUDNNDescriptors m_descriptors;
                 CUDNNHostParameters m_host_parameters;
