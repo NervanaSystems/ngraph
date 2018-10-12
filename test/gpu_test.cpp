@@ -69,9 +69,10 @@ TEST(gpu_test, memory_manager_extract_arguments)
     EXPECT_EQ(host, fp32_args);
 }
 
+// This test is add to catch a potential bug in allocator
 // previously allocator will copy extra data
 // for exampele: alignment = 8 bytes, you reserve 4 bytes space
-// allocator will copy 8 bytes data from input_args, this will lead to two potential bug:
+// previously allocator will copy 8 bytes data from input_args, this will lead to two potential bug:
 // 1. copy extrea data intead of initial alignment data to 0.
 // 2. out of boundary access for input_args which lead to undefined behavior
 TEST(gpu_test, memory_manager_argspace_alignment)
