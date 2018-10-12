@@ -28,12 +28,16 @@ namespace ngraph
     {
         namespace op
         {
-            inline NodeVector max(const Node& node)
+            namespace set_1
             {
-                return variadic::make_ng_variadic_op<ngraph::op::Maximum>(node);
-            }
+                inline NodeVector max(const Node& node)
+                {
+                    return variadic::make_ng_variadic_op<ngraph::op::Maximum>(node);
+                }
 
-        } // namespace op
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 

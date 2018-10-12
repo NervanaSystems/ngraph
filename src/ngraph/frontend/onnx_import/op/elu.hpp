@@ -26,8 +26,13 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector elu(const Node& node);
-        } // namespace op
+            namespace set_1
+            {
+                NodeVector elu(const Node& node);
+
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 
