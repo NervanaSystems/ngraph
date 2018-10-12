@@ -15,7 +15,10 @@
 # ******************************************************************************
 
 add_subdirectory(interpreter)
-add_subdirectory(hybrid)
+
+if (NGRAPH_HYBRID_ENABLE)
+    add_subdirectory(hybrid)
+endif()
 
 
 if (NGRAPH_CPU_ENABLE)
