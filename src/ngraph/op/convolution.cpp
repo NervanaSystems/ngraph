@@ -26,6 +26,106 @@
 using namespace std;
 using namespace ngraph;
 
+Shape op::util::infer_convolution_output(const Node* node,
+                                         const Shape& data_shape,
+                                         const Strides& data_dilation,
+                                         const CoordinateDiff& data_padding_below,
+                                         const CoordinateDiff& data_padding_above,
+                                         const Shape& filter_shape,
+                                         const Strides& filter_strides,
+                                         const Strides& filter_dilation)
+{
+    NODE_VALIDATION_ASSERT(node, data_shape.size() == data_dilation.size())
+        << "Data shape (" << data_shape << ") does not have same rank as "
+        << "the data dilation (" << data_dilation << ").";
+
+    NODE_VALIDATION_ASSERT(node, data_shape.size() == data_padding_below.size())
+        << "Data shape (" << data_shape << ") does not have same rank as "
+        << "the data padding below (" << data_padding_below << ").";
+
+    NODE_VALIDATION_ASSERT(node, data_shape.size() == data_padding_above.size())
+        << "Data shape (" << data_shape << ") does not have same rank as "
+        << "the data padding above (" << data_padding_above << ").";
+
+    NODE_VALIDATION_ASSERT(node, data_shape.size() == filter_shape.size())
+        << "Data shape (" << data_shape << ") does not have same rank as "
+        << "the filter shape (" << filter_shape << ").";
+
+    NODE_VALIDATION_ASSERT(node, data_shape.size() == filter_strides.size())
+        << "Data shape (" << data_shape << ") does not have same rank as "
+        << "the filter strides (" << filter_strides << ").";
+
+    NODE_VALIDATION_ASSERT(node, data_shape.size() == filter_dilation.size())
+        << "Data shape (" << data_shape << ") does not have same rank as "
+        << "the filter dilation (" << filter_dilation << ").";
+
+    Shape output_shape(data_shape.size());
+
+    for (size_t i = 0; i < data_shape.size(); i++)
+    {
+        NODE_VALIDATION_ASSERT(node, data_shape[i] > 0)
+            << "Data shape (" << data_shape << ") has zero dimension at axis " << i << ".";
+        NODE_VALIDATION_ASSERT(node, data_dilation[i] > 0)
+            << "Data dilation (" << data_dilation << ") has zero dimension at axis " << i << ".";
+        NODE_VALIDATION_ASSERT(node, filter_shape[i] > 0)
+            << "Filter shape (" << filter_shape << ") has zero dimension at axis " << i << ".";
+        NODE_VALIDATION_ASSERT(node, filter_shape[i] <= data_shape[i])
+            << "Filter shape (" << filter_shape << ") is smaller than data shape (" << data_shape
+            << ") at axis " << i << ".";
+        NODE_VALIDATION_ASSERT(node, filter_strides[i] > 0)
+            << "Filter strides (" << filter_strides << ") has zero dimension at axis " << i << ".";
+        NODE_VALIDATION_ASSERT(node, filter_dilation[i] > 0)
+            << "Filter dilation (" << filter_dilation << ") has zero dimension at axis " << i
+            << ".";
+
+        ptrdiff_t data_padded_dilated_dim = ptrdiff_t(data_dilation[i] * (data_shape[i] - 1) + 1) +
+                                            data_padding_below[i] + data_padding_above[i];
+        size_t filter_dilated_dim = filter_dilation[i] * (filter_shape[i] - 1) + 1;
+
+        NODE_VALIDATION_ASSERT(node, data_padded_dilated_dim > 0);
+        NODE_VALIDATION_ASSERT(node, filter_dilated_dim > 0);
+        NODE_VALIDATION_ASSERT(node, filter_dilated_dim <= size_t(data_padded_dilated_dim));
+
+        size_t output_dim =
+            ceil_div(size_t(data_padded_dilated_dim) - filter_dilated_dim + 1, filter_strides[i]);
+        output_shape[i] = output_dim;
+    }
+
+    return output_shape;
+}
+
+static std::tuple<std::vector<size_t>, Shape>
+    split_nonspatial_dimensions(std::vector<size_t> nonspatial_axes, const Shape& shape)
+{
+    std::set<size_t> axes_seen;
+    for (size_t i : nonspatial_axes)
+    {
+        NGRAPH_ASSERT(i < shape.size());
+        NGRAPH_ASSERT(axes_seen.count(i) == 0);
+        axes_seen.insert(i);
+    }
+
+    auto retval = std::tuple<std::vector<size_t>, Shape>(
+        std::vector<size_t>(nonspatial_axes.size()), Shape(shape.size() - nonspatial_axes.size()));
+    auto& nonspatial_dims = std::get<0>(retval);
+    auto& spatial_shape = std::get<1>(retval);
+
+    for (size_t i = 0; i < nonspatial_axes.size(); i++)
+    {
+        nonspatial_dims[i] = shape[nonspatial_axes[i]];
+    }
+
+    for (size_t i = 0, j = 0; i < shape.size(); i++)
+    {
+        if (axes_seen.count(i) == 0)
+        {
+            spatial_shape[j++] = shape[i];
+        }
+    }
+
+    return retval;
+}
+
 Shape op::util::infer_convolution_output_shape(const Node* node,
                                                const Shape& data_batch_shape,
                                                const Shape& filters_shape,
@@ -249,14 +349,21 @@ void op::Convolution::validate_and_infer_types()
     auto& filters_shape = get_input_shape(1);
     auto& filters_et = get_input_element_type(1);
 
+    NODE_VALIDATION_ASSERT(this, data_batch_shape.size() >= 3)
+        << "Data batch input must have rank of at least 3 (one batch axis, "
+        << "one input-channel axis, and at least one spatial dimension) "
+        << "(data batch shape: " << data_batch_shape << ").";
+
     if (m_data_dilation_strides.size() == 0)
     {
         m_data_dilation_strides = default_strides(this, data_batch_shape);
     }
+
     if (m_window_movement_strides.size() == 0)
     {
         m_window_movement_strides = default_strides(this, data_batch_shape);
     }
+
     if (m_window_dilation_strides.size() == 0)
     {
         m_window_dilation_strides = default_strides(this, data_batch_shape);
@@ -279,32 +386,42 @@ void op::Convolution::validate_and_infer_types()
         << "Element types for data batch and filters do not match (data batch element type: "
         << data_batch_et << ", filters element type: " << filters_et << ").";
 
-    set_output_type(0,
-                    data_batch_et,
-                    util::infer_convolution_output_shape(this,
-                                                         data_batch_shape,
-                                                         filters_shape,
-                                                         m_window_movement_strides,
-                                                         m_window_dilation_strides,
-                                                         m_padding_below,
-                                                         m_padding_above,
-                                                         m_data_dilation_strides,
-                                                         0,
-                                                         1,
-                                                         1,
-                                                         0,
-                                                         0,
-                                                         1));
+    std::vector<size_t> batch_and_channel_dims;
+    Shape data_spatial_shape;
+    std::tie(batch_and_channel_dims, data_spatial_shape) =
+        split_nonspatial_dimensions({0, 1}, data_batch_shape);
+    size_t batch_size = batch_and_channel_dims[0];
+    size_t data_channel_count = batch_and_channel_dims[1];
+
+    std::vector<size_t> output_and_input_dims;
+    Shape filter_spatial_shape;
+    std::tie(output_and_input_dims, filter_spatial_shape) =
+        split_nonspatial_dimensions({0, 1}, filters_shape);
+    size_t filter_output_channel_count = output_and_input_dims[0];
+    size_t filter_input_channel_count = output_and_input_dims[1];
+
+    NODE_VALIDATION_ASSERT(this, data_channel_count == filter_input_channel_count);
+
+    Shape data_output_shape = op::util::infer_convolution_output(this,
+                                                                 data_spatial_shape,
+                                                                 m_data_dilation_strides,
+                                                                 m_padding_below,
+                                                                 m_padding_above,
+                                                                 filter_spatial_shape,
+                                                                 m_window_movement_strides,
+                                                                 m_window_dilation_strides);
+
+    Shape batch_output_shape(data_batch_shape.size());
+    batch_output_shape[0] = batch_size;
+    batch_output_shape[1] = filter_output_channel_count;
+    std::copy(data_output_shape.begin(), data_output_shape.end(), batch_output_shape.begin() + 2);
+
+    set_output_type(0, data_batch_et, batch_output_shape);
 }
 
 Strides op::Convolution::default_strides(const Node* node, const Shape& data_batch_shape)
 {
-    // For consistency we should throw the same error message here that we throw in the constructor.
-    NODE_VALIDATION_ASSERT(node, data_batch_shape.size() >= 3)
-        << "Data batch input must have rank of at least 3 (one batch axis, "
-        << "one input-channel axis, and at least one spatial dimension) "
-        << "(data batch shape: " << data_batch_shape << ").";
-
+    NGRAPH_ASSERT(data_batch_shape.size() >= 2);
     return Strides(data_batch_shape.size() - 2, 1);
 }
 
@@ -326,12 +443,7 @@ op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
 
 CoordinateDiff op::Convolution::default_padding(const Node* node, const Shape& data_batch_shape)
 {
-    // For consistency we should throw the same error message here that we throw in the constructor.
-    NODE_VALIDATION_ASSERT(node, data_batch_shape.size() >= 3)
-        << "Data batch input must have rank of at least 3 (one batch axis, "
-        << "one input-channel axis, and at least one spatial dimension) "
-        << "(data batch shape: " << data_batch_shape << ").";
-
+    NGRAPH_ASSERT(data_batch_shape.size() >= 2);
     return CoordinateDiff(data_batch_shape.size() - 2, 0);
 }
 
