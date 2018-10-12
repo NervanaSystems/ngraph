@@ -26,12 +26,16 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector average_pool(const Node& node)
+            namespace set_1
             {
-                return convpool::make_ng_pool<ngraph::op::AvgPool>(node);
-            }
+                NodeVector average_pool(const Node& node)
+                {
+                    return convpool::make_ng_pool<ngraph::op::AvgPool>(node);
+                }
 
-        } // namespace op
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 

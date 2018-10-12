@@ -41,32 +41,41 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector selu(const Node& node)
+            namespace set_1
             {
-                auto data = node.get_ng_inputs().at(0);
-                double alpha = node.get_attribute_value<double>("alpha", 1.67326319217681884765625);
-                double gamma = node.get_attribute_value<double>("gamma", 1.05070102214813232421875);
+                NodeVector selu(const Node& node)
+                {
+                    auto data = node.get_ng_inputs().at(0);
+                    double alpha =
+                        node.get_attribute_value<double>("alpha", 1.67326319217681884765625);
+                    double gamma =
+                        node.get_attribute_value<double>("gamma", 1.05070102214813232421875);
 
-                std::shared_ptr<ngraph::Node> alpha_node = std::make_shared<ngraph::op::Constant>(
-                    data->get_element_type(), ngraph::Shape{}, std::vector<double>{alpha});
-                alpha_node = make_broadcast_node(alpha_node, data->get_shape());
+                    std::shared_ptr<ngraph::Node> alpha_node =
+                        std::make_shared<ngraph::op::Constant>(
+                            data->get_element_type(), ngraph::Shape{}, std::vector<double>{alpha});
+                    alpha_node = make_broadcast_node(alpha_node, data->get_shape());
 
-                std::shared_ptr<ngraph::Node> gamma_node = std::make_shared<ngraph::op::Constant>(
-                    data->get_element_type(), ngraph::Shape{}, std::vector<double>{gamma});
-                gamma_node = make_broadcast_node(gamma_node, data->get_shape());
+                    std::shared_ptr<ngraph::Node> gamma_node =
+                        std::make_shared<ngraph::op::Constant>(
+                            data->get_element_type(), ngraph::Shape{}, std::vector<double>{gamma});
+                    gamma_node = make_broadcast_node(gamma_node, data->get_shape());
 
-                std::shared_ptr<ngraph::Node> zero_node = std::make_shared<ngraph::op::Constant>(
-                    data->get_element_type(), ngraph::Shape{}, std::vector<double>{0});
-                zero_node = make_broadcast_node(zero_node, data->get_shape());
+                    std::shared_ptr<ngraph::Node> zero_node =
+                        std::make_shared<ngraph::op::Constant>(
+                            data->get_element_type(), ngraph::Shape{}, std::vector<double>{0});
+                    zero_node = make_broadcast_node(zero_node, data->get_shape());
 
-                return {gamma_node *
-                        (std::make_shared<ngraph::op::Maximum>(data, zero_node) +
-                         alpha_node * std::make_shared<ngraph::op::Exp>(
-                                          std::make_shared<ngraph::op::Minimum>(data, zero_node)) -
-                         alpha_node)};
-            }
+                    return {gamma_node * (std::make_shared<ngraph::op::Maximum>(data, zero_node) +
+                                          alpha_node * std::make_shared<ngraph::op::Exp>(
+                                                           std::make_shared<ngraph::op::Minimum>(
+                                                               data, zero_node)) -
+                                          alpha_node)};
+                }
 
-        } // namespace op
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 
