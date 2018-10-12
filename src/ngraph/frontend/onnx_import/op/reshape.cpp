@@ -33,39 +33,45 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector reshape(const Node& node)
+            namespace set_1
             {
-                NodeVector ng_inputs{node.get_ng_inputs()};
-                auto data = ng_inputs.at(0);
-                auto data_shape = data->get_shape();
-
-                auto output_shape = node.get_attribute_value<std::vector<std::size_t>>("shape", {});
-
-                // If no shape argument (opset >= 5) and there is second input.
-                if (output_shape.empty() && ng_inputs.size() == 2)
+                NodeVector reshape(const Node& node)
                 {
-                    // Currently only support Constant node.
-                    ASSERT_IS_SUPPORTED(node, ng_inputs.at(1)->description() == "Constant")
-                        << "doesn't support shape input of other type than Constant.";
+                    NodeVector ng_inputs{node.get_ng_inputs()};
+                    auto data = ng_inputs.at(0);
+                    auto data_shape = data->get_shape();
 
-                    auto output_shape_node =
-                        std::dynamic_pointer_cast<ngraph::op::Constant>(ng_inputs.at(1));
-                    output_shape = output_shape_node->get_vector<std::size_t>();
+                    auto output_shape =
+                        node.get_attribute_value<std::vector<std::size_t>>("shape", {});
+
+                    // If no shape argument (opset >= 5) and there is second input.
+                    if (output_shape.empty() && ng_inputs.size() == 2)
+                    {
+                        // Currently only support Constant node.
+                        ASSERT_IS_SUPPORTED(node, ng_inputs.at(1)->description() == "Constant")
+                            << "doesn't support shape input of other type than Constant.";
+
+                        auto output_shape_node =
+                            std::dynamic_pointer_cast<ngraph::op::Constant>(ng_inputs.at(1));
+                        output_shape = output_shape_node->get_vector<std::size_t>();
+                    }
+                    // Do nothing if there is no shape argument nor second node input.
+                    else if (output_shape.empty())
+                    {
+                        return {data};
+                    }
+
+                    output_shape =
+                        reshape::infer_dimensions(node.get_name(), data_shape, output_shape);
+                    return {std::make_shared<ngraph::op::Reshape>(
+                        data,
+                        reshape::get_default_axis_vector(data_shape.size()),
+                        Shape{output_shape})};
                 }
-                // Do nothing if there is no shape argument nor second node input.
-                else if (output_shape.empty())
-                {
-                    return {data};
-                }
 
-                output_shape = reshape::infer_dimensions(node.get_name(), data_shape, output_shape);
-                return {std::make_shared<ngraph::op::Reshape>(
-                    data,
-                    reshape::get_default_axis_vector(data_shape.size()),
-                    Shape{output_shape})};
-            }
+            } // namespace set_1
 
-        } // namespace op
+        } //namespace op
 
     } // namespace onnx_import
 
