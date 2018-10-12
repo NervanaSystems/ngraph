@@ -31,13 +31,17 @@ namespace ngraph
     {
         namespace op
         {
-            inline NodeVector log_softmax(const Node& node)
+            namespace set_1
             {
-                return {std::make_shared<ngraph::op::Log>(softmax(node).at(0))};
-            }
+                inline NodeVector log_softmax(const Node& node)
+                {
+                    return {std::make_shared<ngraph::op::Log>(softmax(node).at(0))};
+                }
 
-        } // namespace  op
+            } // namespace set_1
 
-    } // namespace  onnx_import
+        } //namespace op
 
-} // namespace  ngraph
+    } // namespace onnx_import
+
+} // namespace ngraph
