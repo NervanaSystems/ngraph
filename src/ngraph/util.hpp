@@ -189,6 +189,8 @@ namespace ngraph
     AxisVector get_default_order(size_t rank);
     AxisVector get_default_order(const Shape& shape);
 
+    AxisVector get_permutation_to_default_order(const AxisVector& axis_order);
+
     /*
     * Return type struct for cache_fprop, with the modified fprop and bprop
     * functions

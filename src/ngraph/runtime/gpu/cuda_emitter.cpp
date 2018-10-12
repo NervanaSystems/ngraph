@@ -170,13 +170,15 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::vector<std::string>& d
 size_t runtime::gpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>& dtypes,
                                                NVShape input_shape,
                                                NVShape output_shape,
-                                               size_t one_hot_axis)
+                                               size_t one_hot_axis,
+                                               size_t output_datatype_size)
 {
     std::stringstream kernel_name;
     kernel_name << "onehot_" << join(dtypes, "_");
 
     std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_") + "_o_" +
-                       join(output_shape, "_") + std::to_string(one_hot_axis);
+                       join(output_shape, "_") + "_axis_" + std::to_string(one_hot_axis) +
+                       "_datasize_" + std::to_string(output_datatype_size);
     // For backwards compatability we currently use two unordered maps
     // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
     // 2. the other looks to see if this kernel is already in the primitive list
@@ -206,18 +208,19 @@ size_t runtime::gpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>&
     uint32_t block_size_x = 64;
     uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
 
-    uint32_t repeat_times = static_cast<uint32_t>(output_shape[one_hot_axis]);
-    uint32_t repeat_size = 1;
+    uint32_t hot_axis_shape = static_cast<uint32_t>(output_shape[one_hot_axis]);
+    uint32_t hot_axis_stride = 1;
     for (size_t i = one_hot_axis + 1; i < output_shape.size(); i++)
     {
-        repeat_size *= output_shape[i];
+        hot_axis_stride *= output_shape[i];
     }
-
+    uint32_t output_size = static_cast<uint32_t>(shape_size(output_shape) * output_datatype_size);
     // create the launch primitive
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             std::vector<void*> args_list{
-                &inputs[0], &outputs[0], &repeat_size, &repeat_times, &nthreads};
+                &inputs[0], &outputs[0], &hot_axis_stride, &hot_axis_shape, &nthreads};
+            runtime::gpu::cuda_memset(outputs[0], 0, output_size);
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                           aligned_grid_size_x,
                                           1,
@@ -306,179 +309,15 @@ size_t runtime::gpu::CUDAEmitter::build_reverse(const std::array<std::string, 2>
     return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
-size_t runtime::gpu::CUDAEmitter::build_pad(const std::array<std::string, 2>& dtypes,
+size_t runtime::gpu::CUDAEmitter::build_pad(const std::vector<std::string>& dtypes,
                                             NVShape input_shape,
                                             NVShape output_shape,
                                             NVShape padding_below,
-                                            NVShape padding_above,
-                                            NVShape padding_interior,
-                                            const std::string& pad_value)
-{
-    // Need to check: are there models in which some tensors will have different types? if so, this
-    // hash needs to include the tensor types.
-    std::string val_hash = (pad_value == "") ? "0" : "1";
-    std::string hash = "pad_i" + join(input_shape, "_") + "_pb" + join(padding_below, "_") + "_pa" +
-                       join(padding_above, "_") + "_pi" + join(padding_interior, "_") + "_pv" +
-                       val_hash;
-
-    // For backwards compatability we currently use two unordered maps
-    // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
-    // 2. the other looks to see if this kernel is already in the primitive list
-    // Once all previously implemented cuda kernels are refactored to use the
-    // CUDAEmitter/GPUPrimittiveEmitter interface, only one map (from hash to primitive index)
-    // will be required.
-
-    // check if the requested kernel is already an inserted primitive
-    size_t primitive_index = m_primitive_emitter->lookup(hash);
-    if (primitive_index != std::numeric_limits<size_t>::max())
-    {
-        return primitive_index;
-    }
-
-    size_t nthreads = shape_size(output_shape);
-    // TODO: currently we set it to 64, will add tuning method later
-    uint32_t block_size_x = 64;
-    uint32_t aligned_grid_size_x =
-        align_to_block_size(static_cast<uint32_t>(nthreads), block_size_x);
-
-    // if the kernel has not been compiled, build it
-    auto compiled_kernel = m_ctx->compiled_kernel_pool->get(hash);
-    if (compiled_kernel == nullptr)
-    {
-        // normalize pad dimensions to shape dimensions
-        NVShape pad_below(input_shape.size(), 0);
-        NVShape pad_above(input_shape.size(), 0);
-        NVShape pad_interior(input_shape.size(), 0);
-
-        // if padding_interior is not zero length, it
-        // is from op::Pad for which padding_below will
-        // always be equal in size to padding_above
-        if (padding_below.size() != input_shape.size())
-        {
-            for (int64_t i = padding_below.size() - 1; i >= 0; i--)
-            {
-                pad_below[i + input_shape.size() - padding_below.size()] = padding_below[i];
-                pad_above[i + input_shape.size() - padding_above.size()] = padding_above[i];
-            }
-        }
-        else
-        {
-            pad_below = padding_below;
-            pad_above = padding_above;
-            pad_interior = padding_interior;
-        }
-
-        NVShape input_strides = row_major_strides(input_shape);
-        NVShape output_strides = row_major_strides(output_shape);
-
-        int offset = 0;
-        for (size_t i = 0; i < output_strides.size(); i++)
-        {
-            offset += (output_strides[i] * pad_below[i]);
-        }
-
-        codegen::CodeWriter writer;
-        writer << "extern \"C\" __global__ void cuda_" << hash << "(";
-
-        // if the pad value is static, a runtime argument isn't necessary
-        if (pad_value == "")
-        {
-            writer << dtypes[0] << "* val, ";
-        }
-        writer << dtypes[0] << "* in, " << dtypes[1] << "* out)\n";
-        writer.block_begin();
-        {
-            writer << "size_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
-
-            // fill kernel
-            writer << "if (tid < " << nthreads << ")\n";
-            writer.block_begin();
-            {
-                if (pad_value == "")
-                {
-                    writer << "out[tid] = *val;\n";
-                }
-                else
-                {
-                    writer << "out[tid] = " << pad_value << ";\n";
-                }
-            }
-            writer.block_end();
-
-            // pad re-index kernel
-            writer << "if (tid < " << shape_size(input_shape) << ")\n";
-            writer.block_begin();
-            {
-                writer << "size_t idx = ";
-                writer << offset << " + (tid % " << input_shape.back() << ") * "
-                       << 1 + pad_interior.back();
-                int64_t last = input_strides.size() - 1;
-                for (int64_t i = last - 1; i >= 0; i--)
-                {
-                    writer << " + (((tid / " << input_strides[i] << ") % " << input_shape[i + 1]
-                           << ") * " << 1 + pad_interior[i] << ") * " << output_strides[i];
-                }
-                writer << ";\n";
-                writer << "out[idx] = in[tid];\n";
-            }
-            writer.block_end();
-        }
-        writer.block_end();
-
-        compiled_kernel = m_ctx->compiled_kernel_pool->set(hash, writer.get_code());
-    }
-    std::unique_ptr<gpu::primitive> pad;
-
-    // if the pad value is statically provided, the kernel call signature is different
-    if (pad_value == "") // pad value provided at runtime (dynamic)
-    {
-        pad.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
-            void* args_list[] = {&inputs[1], &inputs[0], &outputs[0]};
-            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          aligned_grid_size_x,
-                                          1,
-                                          1, // grid dim
-                                          block_size_x,
-                                          1,
-                                          1, // block dim
-                                          0,
-                                          NULL, // shared mem and stream
-                                          args_list,
-                                          0)); // arguments
-            debug_sync();
-        }});
-    }
-    else // pad value provided at compile time (static)
-    {
-        pad.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
-            void* args_list[] = {&inputs[0], &outputs[0]};
-            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          aligned_grid_size_x,
-                                          1,
-                                          1, // grid dim
-                                          block_size_x,
-                                          1,
-                                          1, // block dim
-                                          0,
-                                          NULL, // shared mem and stream
-                                          args_list,
-                                          0)); // arguments
-            debug_sync();
-        }});
-    }
-
-    return this->m_primitive_emitter->register_primitive(pad, hash);
-}
-
-size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string, 2>& dtypes,
-                                                    NVShape input_shape,
-                                                    NVShape output_shape,
-                                                    NVShape padding_below,
-                                                    NVShape padding_interior)
+                                            NVShape padding_interior)
 {
     uint32_t rank = static_cast<uint32_t>(input_shape.size());
     std::stringstream kernel_name;
-    kernel_name << "pad_dynamic_" << join(dtypes, "_") << rank;
+    kernel_name << "pad_" << join(dtypes, "_") << rank;
 
     std::string hash = kernel_name.str() + "pad_i" + join(input_shape, "_") + "pad_o" +
                        join(output_shape) + "_pb" + join(padding_below, "_") + "_pi" +
@@ -494,11 +333,6 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
         return primitive_index;
     }
 
-    uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
-    // TODO: currently we set it to 64, will add tuning method later
-    uint32_t block_size_x = 64;
-    uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
-
     NVShape pad_below(input_shape.size(), 0);
     NVShape pad_interior(input_shape.size(), 1);
 
@@ -513,30 +347,31 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
     NVShape input_strides = row_major_strides(input_shape);
     NVShape output_strides = row_major_strides(output_shape);
 
+    uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
+    // TODO: currently we set it to 64, will add tuning method later
+    uint32_t block_size_x = 64;
+    uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
+
     auto args = m_primitive_emitter->add_kernel_args();
-    args.add_placeholder(dtypes[0], "in")
-        .add_placeholder(dtypes[1], "out")
+    args.add_placeholder(dtypes.front(), "in")
+        .add_placeholder(dtypes.back(), "out")
         .add("input_strides", input_strides)
         .add("output_strides", output_strides)
         .add("padding_below", pad_below)
         .add("padding_interior", pad_interior)
         .add("n", nthreads);
 
-    // check if the kernel has already been compiled. if so, create
-    // a launch primitive for it based on the input tensor shape
-    // but do not recompile the kernel. otherwise, do it all:
-    // recompile the kernel and then create the primitive
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-        CudaKernelBuilder::get_pad_dynamic_op(writer, kernel_name.str(), args, dtypes, rank);
+        CudaKernelBuilder::get_pad_op(writer, kernel_name.str(), args, rank);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
 
     // create the launch primitive
-    std::unique_ptr<gpu::primitive> pad_dynamic(
+    std::unique_ptr<gpu::primitive> pad(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             void** args_list = args.resolve_placeholder(0, &inputs[0])
                                    .resolve_placeholder(1, &outputs[0])
@@ -556,7 +391,95 @@ size_t runtime::gpu::CUDAEmitter::build_pad_dynamic(const std::array<std::string
             debug_sync();
         }});
 
-    return this->m_primitive_emitter->register_primitive(pad_dynamic, hash);
+    return this->m_primitive_emitter->register_primitive(pad, hash);
+}
+
+size_t runtime::gpu::CUDAEmitter::build_pad_fill(const std::vector<std::string>& dtypes,
+                                                 NVShape input_shape,
+                                                 NVShape output_shape,
+                                                 NVShape padding_below,
+                                                 NVShape padding_interior)
+{
+    uint32_t rank = static_cast<uint32_t>(input_shape.size());
+    std::stringstream kernel_name;
+    kernel_name << "pad_" << join(dtypes, "_") << rank;
+
+    std::string hash = kernel_name.str() + "pad_i" + join(input_shape, "_") + "pad_o" +
+                       join(output_shape) + "_pb" + join(padding_below, "_") + "_pi" +
+                       join(padding_interior, "_");
+    // For backwards compatability we currently use two unordered maps
+    // 1. one looks up the compiled cuda kernel (CudaFunctionPool)
+    // 2. the other looks to see if this kernel is already in the primitive list
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    NVShape pad_below(input_shape.size(), 0);
+    NVShape pad_interior(input_shape.size(), 1);
+
+    int64_t i = padding_below.size() - 1;
+    int64_t j = input_shape.size() - 1;
+    for (; i >= 0; i--, j--)
+    {
+        pad_below[j] = padding_below[i];
+        pad_interior[j] = padding_interior[i];
+    }
+
+    NVShape input_strides = row_major_strides(input_shape);
+    NVShape output_strides = row_major_strides(output_shape);
+
+    uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
+    // TODO: currently we set it to 64, will add tuning method later
+    uint32_t block_size_x = 64;
+    uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
+
+    auto args = m_primitive_emitter->add_kernel_args();
+    args.add_placeholder(dtypes.front(), "in")
+        .add_placeholder(dtypes[1], "pad")
+        .add_placeholder(dtypes.back(), "out")
+        .add("input_shape", input_shape)
+        .add("input_strides", input_strides)
+        .add("output_strides", output_strides)
+        .add("padding_below", pad_below)
+        .add("padding_interior", pad_interior)
+        .add("n", nthreads);
+
+    auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        CudaKernelBuilder::get_pad_fill_op(writer, kernel_name.str(), args, rank);
+        compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
+    }
+
+    // create the launch primitive
+    std::unique_ptr<gpu::primitive> pad(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                   .resolve_placeholder(1, &inputs[1])
+                                   .resolve_placeholder(2, &outputs[0])
+                                   .get_argument_list();
+
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          aligned_grid_size_x,
+                                          1,
+                                          1, // grid dim
+                                          block_size_x,
+                                          1,
+                                          1, // block dim
+                                          0,
+                                          NULL, // shared mem and stream
+                                          args_list,
+                                          0)); // arguments
+            debug_sync();
+        }});
+
+    return this->m_primitive_emitter->register_primitive(pad, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reshape(const std::array<std::string, 2>& dtypes,
@@ -1335,32 +1258,37 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
 
     /// assymetric padding detection
     bool pad_required = false;
-    auto shape_to_pool =
-        runtime::gpu::get_padded_shape(input_shape, padding_below, padding_above, {});
-    if (shape_to_pool != input_shape)
-    {
-        pad_required = true;
-    }
+    auto input_shape_padded = input_shape;
 
-    pad_required = pad_required && (padding_below != padding_above);
+    size_t padded_size;
     // asymetric padding
     size_t idx_workspace = std::numeric_limits<size_t>::max();
     size_t pad_index = std::numeric_limits<size_t>::max();
-    if (pad_required)
+    if (padding_below != padding_above)
     {
-        auto temp_size = shape_size(shape_to_pool) * args[0].get_element_type().size();
+        Shape padding_interior(padding_below.size(), 1);
+        input_shape_padded =
+            runtime::gpu::get_padded_shape(input_shape, padding_below, padding_above, {});
+        padded_size = shape_size(input_shape_padded);
+        //currntly we set this to float point only, need to add other datatype support later
+        float pad_value = std::numeric_limits<float>::lowest();
+        std::vector<float> temp(padded_size, pad_value);
         GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
-        idx_workspace = allocator.reserve_workspace(temp_size);
+        idx_workspace = allocator.reserve_argspace(temp.data(),
+                                                   padded_size * args[0].get_element_type().size());
 
-        auto pad_value = TypeInfo::Get(args[0].get_element_type())->lowest();
+        auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
+        pad_index = cuda_emitter->build_pad({{input_type, output_type}},
+                                            input_shape,
+                                            input_shape_padded,
+                                            padding_below,
+                                            padding_interior);
 
-        pad_index = build_pad({{input_type, output_type}},
-                              input_shape,
-                              shape_to_pool,
-                              padding_below,
-                              padding_above,
-                              Shape{},
-                              pad_value);
+        // asymetric padding has been applied, zero out padding vectors to
+        // ensure cuDNN does not assume padding during pooling
+        std::fill(padding_below.begin(), padding_below.end(), 0);
+        std::fill(padding_above.begin(), padding_above.end(), 0);
+        pad_required = true;
     }
     /// end asymmetric padding detection
 
@@ -1377,7 +1305,7 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
             {
                 // void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
                 // gpu::invoke_primitive(m_ctx,
-                //                       pad_dynamic_index,
+                //                       pad_index,
                 //                       std::vector<void*>{inputs[0]}.data(),
                 //                       std::vector<void*>{pad_buffer}.data());
 
@@ -1855,8 +1783,9 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Softmax* node)
     auto output_type = out[0].get_element_type().c_type_string();
 
     auto exp_index = build_elementwise<ngraph::op::Exp>({input_type, output_type}, input_shape);
+    std::vector<element::Type> dtypes{args[0].get_element_type(), out[0].get_element_type()};
     auto reduce_index = cudnn_emitter->build_reduce_forward(
-        CUDNN_REDUCE_TENSOR_ADD, output_type, input_shape, axes);
+        CUDNN_REDUCE_TENSOR_ADD, dtypes, input_shape, axes, CUDNNEmitter::ReductionMode::Reduce);
     size_t divide_index = build_softmax_divide(
         std::vector<std::string>(3, output_type), input_shape, reduced_shape, axes_flag);
 
@@ -2403,7 +2332,7 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node, 
     Shape input_strides = row_major_strides(input_shape);
     Shape replace_strides = row_major_strides(replace_shape);
 
-    size_t pad_index = build_pad_dynamic(
+    size_t pad_index = build_pad(
         {{input_type, output_type}}, replace_shape, input_shape, lower_bounds, slice_strides);
 
     if (in_place_op)
