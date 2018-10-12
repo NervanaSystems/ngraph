@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018 Intel Corporation
+* Copyright 2017-2018 Intel Corporation
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -36,7 +36,6 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto qconvolution = static_cast<const ngraph::op::QuantizedConvolution*>(node);
                     auto& functors = external_function->get_functors();
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
@@ -68,8 +67,6 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto qconvolution_relu =
-                        static_cast<const ngraph::op::QuantizedConvolutionRelu*>(node);
                     auto& functors = external_function->get_functors();
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
@@ -102,8 +99,6 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto qconvolution_bias =
-                        static_cast<const ngraph::op::QuantizedConvolutionBias*>(node);
                     auto& functors = external_function->get_functors();
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
