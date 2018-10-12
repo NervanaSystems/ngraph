@@ -33,7 +33,9 @@ class ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
         RESHAPE,
         BROADCAST,
         PAD,
-        DEQUANTIZE
+        DEQUANTIZE,
+        UNARY,
+        BINARY
     };
 
 public:
@@ -71,10 +73,7 @@ private:
     void construct_constant_reshape();
     void construct_constant_broadcast();
     void construct_constant_pad();
-<<<<<<< HEAD
     void construct_constant_unary();
     void construct_constant_binary();
-=======
     void construct_constant_dequantize();
->>>>>>> origin/master
 };
