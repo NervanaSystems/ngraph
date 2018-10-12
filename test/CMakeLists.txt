@@ -29,6 +29,7 @@ set(SRC
     element_type.cpp
     file_util.cpp
     graph_partition.cpp
+    includes.cpp
     inliner.cpp
     input_output_assign.cpp
     main.cpp
@@ -48,6 +49,9 @@ set(SRC
     uuid.cpp
     zero_dim_tensor_elimination.cpp
 )
+
+set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
+    NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND SRC onnx_import.cpp)
