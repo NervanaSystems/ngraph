@@ -23,14 +23,15 @@ using namespace ngraph;
 //
 // Infers the spatial shape of a single item in a convolution batch.
 //
-Shape ngraph::infer_convolution_output_item_shape(const Node* node,
-                                                  const Shape& data_shape,
-                                                  const Strides& data_dilation,
-                                                  const CoordinateDiff& data_padding_below,
-                                                  const CoordinateDiff& data_padding_above,
-                                                  const Shape& filter_shape,
-                                                  const Strides& filter_strides,
-                                                  const Strides& filter_dilation)
+Shape ngraph::infer_windowed_reduction_output_shape(const Node* node,
+                                                    const Shape& data_shape,
+                                                    const Strides& data_dilation,
+                                                    const CoordinateDiff& data_padding_below,
+                                                    const CoordinateDiff& data_padding_above,
+                                                    const Shape& window_shape,
+                                                    const Strides& window_strides,
+                                                    const Strides& window_dilation,
+                                                    bool is_window_all_in_padding_allowed)
 {
     NODE_VALIDATION_ASSERT(node, data_shape.size() == data_dilation.size())
         << "Data shape (" << data_shape << ") does not have same rank as "
@@ -44,17 +45,17 @@ Shape ngraph::infer_convolution_output_item_shape(const Node* node,
         << "Data shape (" << data_shape << ") does not have same rank as "
         << "the data padding above (" << data_padding_above << ").";
 
-    NODE_VALIDATION_ASSERT(node, data_shape.size() == filter_shape.size())
+    NODE_VALIDATION_ASSERT(node, data_shape.size() == window_shape.size())
         << "Data shape (" << data_shape << ") does not have same rank as "
-        << "the filter shape (" << filter_shape << ").";
+        << "the window shape (" << window_shape << ").";
 
-    NODE_VALIDATION_ASSERT(node, data_shape.size() == filter_strides.size())
+    NODE_VALIDATION_ASSERT(node, data_shape.size() == window_strides.size())
         << "Data shape (" << data_shape << ") does not have same rank as "
-        << "the filter strides (" << filter_strides << ").";
+        << "the window strides (" << window_strides << ").";
 
-    NODE_VALIDATION_ASSERT(node, data_shape.size() == filter_dilation.size())
+    NODE_VALIDATION_ASSERT(node, data_shape.size() == window_dilation.size())
         << "Data shape (" << data_shape << ") does not have same rank as "
-        << "the filter dilation (" << filter_dilation << ").";
+        << "the window dilation (" << window_dilation << ").";
 
     Shape output_shape(data_shape.size());
 
@@ -64,34 +65,43 @@ Shape ngraph::infer_convolution_output_item_shape(const Node* node,
             << "Data shape (" << data_shape << ") has zero dimension at axis " << i << ".";
         NODE_VALIDATION_ASSERT(node, data_dilation[i] > 0)
             << "Data dilation (" << data_dilation << ") has zero dimension at axis " << i << ".";
-        NODE_VALIDATION_ASSERT(node, filter_shape[i] > 0)
-            << "Filter shape (" << filter_shape << ") has zero dimension at axis " << i << ".";
-        NODE_VALIDATION_ASSERT(node, filter_shape[i] <= data_shape[i])
-            << "Filter shape (" << filter_shape << ") is smaller than data shape (" << data_shape
+        NODE_VALIDATION_ASSERT(node, window_shape[i] > 0)
+            << "Window shape (" << window_shape << ") has zero dimension at axis " << i << ".";
+        NODE_VALIDATION_ASSERT(node, window_shape[i] <= data_shape[i])
+            << "Window shape (" << window_shape << ") is smaller than data shape (" << data_shape
             << ") at axis " << i << ".";
-        NODE_VALIDATION_ASSERT(node, filter_strides[i] > 0)
-            << "Filter strides (" << filter_strides << ") has zero dimension at axis " << i << ".";
-        NODE_VALIDATION_ASSERT(node, filter_dilation[i] > 0)
-            << "Filter dilation (" << filter_dilation << ") has zero dimension at axis " << i
+        NODE_VALIDATION_ASSERT(node, window_strides[i] > 0)
+            << "Window strides (" << window_strides << ") has zero dimension at axis " << i << ".";
+        NODE_VALIDATION_ASSERT(node, window_dilation[i] > 0)
+            << "Window dilation (" << window_dilation << ") has zero dimension at axis " << i
             << ".";
 
         ptrdiff_t data_padded_dilated_dim = ptrdiff_t(data_dilation[i] * (data_shape[i] - 1) + 1) +
                                             data_padding_below[i] + data_padding_above[i];
-        size_t filter_dilated_dim = filter_dilation[i] * (filter_shape[i] - 1) + 1;
+        size_t window_dilated_dim = window_dilation[i] * (window_shape[i] - 1) + 1;
 
         NODE_VALIDATION_ASSERT(node, data_padded_dilated_dim > 0)
             << "Data shape after padding and dilation has dimension less than 1 (dim: "
             << data_padded_dilated_dim << ") at dimension " << i << ".";
-        NODE_VALIDATION_ASSERT(node, filter_dilated_dim > 0)
-            << "Filter after dilation has dimension less than 1 (dim: " << filter_dilated_dim
+        NODE_VALIDATION_ASSERT(node, window_dilated_dim > 0)
+            << "Window after dilation has dimension less than 1 (dim: " << window_dilated_dim
             << ") at dimension " << i << ".";
-        NODE_VALIDATION_ASSERT(node, filter_dilated_dim <= size_t(data_padded_dilated_dim))
-            << "Filter after dilation has dimension (dim: " << filter_dilated_dim
+        NODE_VALIDATION_ASSERT(node, window_dilated_dim <= size_t(data_padded_dilated_dim))
+            << "Window after dilation has dimension (dim: " << window_dilated_dim
             << ") larger than the data shape after padding (dim: " << data_padded_dilated_dim
             << ") at dimension " << i << ".";
+        NODE_VALIDATION_ASSERT(node,
+                               is_window_all_in_padding_allowed ||
+                                   (window_dilated_dim >= data_padding_below[i] &&
+                                    window_dilated_dim >= data_padding_above[i]))
+            << "Window after dilation is sometimes entirely in the padding area for axis " << i
+            << "(dilated window dimension: " << window_dilated_dim
+            << ", padding below dimension: " << data_padding_below[i]
+            << ", padding above dimension: " << data_padding_above[i] << ") and this is not "
+            << "allowed.";
 
         size_t output_dim =
-            ceil_div(size_t(data_padded_dilated_dim) - filter_dilated_dim + 1, filter_strides[i]);
+            ceil_div(size_t(data_padded_dilated_dim) - window_dilated_dim + 1, window_strides[i]);
         output_shape[i] = output_dim;
     }
 
@@ -110,8 +120,8 @@ std::tuple<element::Type, Shape>
                                       const CoordinateDiff& data_padding_below,
                                       const CoordinateDiff& data_padding_above,
                                       const Shape& filters_shape,
-                                      const Strides& filter_strides,
-                                      const Strides& filter_dilation)
+                                      const Strides& window_strides,
+                                      const Strides& window_dilation)
 {
     NODE_VALIDATION_ASSERT(node, et_batch == et_filters)
         << "Element types for data batch and filters do not match (data batch element type: "
@@ -146,14 +156,15 @@ std::tuple<element::Type, Shape>
     NODE_VALIDATION_ASSERT(node, filter_output_channel_count > 0)
         << "Filter output channel count is zero.";
 
-    Shape data_output_shape = infer_convolution_output_item_shape(node,
-                                                                  data_spatial_shape,
-                                                                  data_dilation,
-                                                                  data_padding_below,
-                                                                  data_padding_above,
-                                                                  filter_spatial_shape,
-                                                                  filter_strides,
-                                                                  filter_dilation);
+    Shape data_output_shape = infer_windowed_reduction_output_shape(node,
+                                                                    data_spatial_shape,
+                                                                    data_dilation,
+                                                                    data_padding_below,
+                                                                    data_padding_above,
+                                                                    filter_spatial_shape,
+                                                                    window_strides,
+                                                                    window_dilation,
+                                                                    true);
 
     Shape batch_output_shape(data_batch_shape.size());
     batch_output_shape[0] = batch_size;

@@ -2914,9 +2914,10 @@ TEST(type_prop, conv_invalid_0d_input)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch must have rank of at least 3 "
-                                                       "(one batch axis, one input-channel axis, "
-                                                       "and at least one spatial dimension)"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data batch must have rank of at least 3 "
+                                         "(one batch axis, one input-channel axis, "
+                                         "and at least one spatial dimension)"));
     }
     catch (...)
     {
@@ -2938,9 +2939,10 @@ TEST(type_prop, conv_invalid_1d_input)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch must have rank of at least 3 "
-                                                       "(one batch axis, one input-channel axis, "
-                                                       "and at least one spatial dimension)"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data batch must have rank of at least 3 "
+                                         "(one batch axis, one input-channel axis, "
+                                         "and at least one spatial dimension)"));
     }
     catch (...)
     {
@@ -2962,9 +2964,10 @@ TEST(type_prop, conv_invalid_2d_input)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch must have rank of at least 3 "
-                                                       "(one batch axis, one input-channel axis, "
-                                                       "and at least one spatial dimension)"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data batch must have rank of at least 3 "
+                                         "(one batch axis, one input-channel axis, "
+                                         "and at least one spatial dimension)"));
     }
     catch (...)
     {
@@ -3032,7 +3035,7 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_many)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data shape (Shape{10, 10}) does not have same rank as "
-                                         "the filter shape (Shape{3, 3, 3})"));
+                                         "the window shape (Shape{3, 3, 3})"));
     }
     catch (...)
     {
@@ -3054,8 +3057,9 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_few)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data shape (Shape{10, 10}) does not have "
-                                                       "same rank as the filter shape (Shape{3})"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data shape (Shape{10, 10}) does not have "
+                                         "same rank as the window shape (Shape{3})"));
     }
     catch (...)
     {
@@ -3126,7 +3130,7 @@ TEST(type_prop, conv_invalid_movement_stride_rank)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data shape (Shape{10, 10}) does not have same rank as "
-                                         "the filter strides (Strides{2, 3, 8})"));
+                                         "the window strides (Strides{2, 3, 8})"));
     }
     catch (...)
     {
@@ -3150,7 +3154,7 @@ TEST(type_prop, conv_invalid_window_dilation_stride_rank)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data shape (Shape{10, 10}) does not have same rank as "
-                                         "the filter dilation (Strides{2, 3, 8})"));
+                                         "the window dilation (Strides{2, 3, 8})"));
     }
     catch (...)
     {
@@ -3342,7 +3346,7 @@ TEST(type_prop, conv_invalid_window_size_0)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), std::string("Filter shape (Shape{3, 0}) has zero dimension at axis 1"));
+            error.what(), std::string("Window shape (Shape{3, 0}) has zero dimension at axis 1"));
     }
     catch (...)
     {
@@ -3366,7 +3370,7 @@ TEST(type_prop, conv_invalid_window_dilation_stride_0)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Filter dilation (Strides{2, 0}) has zero dimension at axis 1"));
+            std::string("Window dilation (Strides{2, 0}) has zero dimension at axis 1"));
     }
     catch (...)
     {
@@ -3419,7 +3423,7 @@ TEST(type_prop, conv_invalid_dilated_window_too_large)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Filter after dilation has dimension (dim: 9) larger than "
+                             std::string("Window after dilation has dimension (dim: 9) larger than "
                                          "the data shape after padding (dim: 8) at dimension 0"));
     }
     catch (...)
@@ -3444,7 +3448,7 @@ TEST(type_prop, conv_invalid_movement_stride_0)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Filter strides (Strides{0, 1}) has zero dimension at axis 0"));
+            std::string("Window strides (Strides{0, 1}) has zero dimension at axis 0"));
     }
     catch (...)
     {
