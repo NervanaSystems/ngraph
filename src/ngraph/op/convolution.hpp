@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <tuple>
+
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
@@ -356,15 +358,29 @@ namespace ngraph
 
         namespace util
         {
-            Shape infer_convolution_output(const Node* node,
-                                           const Shape& data_shape,
-                                           const Strides& data_dilation,
-                                           const CoordinateDiff& data_padding_below,
-                                           const CoordinateDiff& data_padding_above,
-                                           const Shape& filter_shape,
-                                           const Strides& filter_strides,
-                                           const Strides& filter_dilation);
+            Shape infer_convolution_output_item_shape(const Node* node,
+                                                      const Shape& data_shape,
+                                                      const Strides& data_dilation,
+                                                      const CoordinateDiff& data_padding_below,
+                                                      const CoordinateDiff& data_padding_above,
+                                                      const Shape& filter_shape,
+                                                      const Strides& filter_strides,
+                                                      const Strides& filter_dilation);
 
+            std::tuple<element::Type, Shape>
+                infer_convolution_forward(const Node* node,
+                                          element::Type et_batch,
+                                          element::Type et_filters,
+                                          const Shape& data_batch_shape,
+                                          const Strides& data_dilation,
+                                          const CoordinateDiff& data_padding_below,
+                                          const CoordinateDiff& data_padding_above,
+                                          const Shape& filters_shape,
+                                          const Strides& filter_strides,
+                                          const Strides& filter_dilation);
+
+            // This is a legacy function, retained because the CPU backend uses it for now.
+            // TODO: Update CPU backend to use the new stuff, and remove this function.
             Shape infer_convolution_output_shape(const Node* node,
                                                  const Shape& data_batch_shape,
                                                  const Shape& filters_shape,
