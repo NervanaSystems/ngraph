@@ -64,6 +64,8 @@ public:
             construct_zero_padded_conv();
             construct_zero_padded_conv_backprop_filters();
             construct_conv_bias_bprop();
+            construct_conv_bias_folded_batch_norm();
+            construct_conv_bias_affine_folding();
             construct_batch_norm_relu();
             construct_batch_norm_relu_global_stats();
             construct_conv_relu();
@@ -96,4 +98,6 @@ private:
     void construct_conv_add();
     void construct_conv_add_relu();
     void construct_bounded_relu();
+    void construct_conv_bias_folded_batch_norm();
+    void construct_conv_bias_affine_folding();
 };
