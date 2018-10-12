@@ -155,6 +155,11 @@ size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t siz
 
 size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size, bool zero_initialize)
 {
+    if (size == 0)
+    {
+        return m_manager->m_primitive_emitter->insert([]() { return nullptr; });
+    }
+
     size_t offset = m_manager->m_workspace_manager->allocate(size);
     m_active.push(offset);
     auto local = std::prev(m_manager->m_workspace_mem.end());
@@ -174,7 +179,7 @@ size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size, bool zero_init
         }
         return workspace_ptr;
     };
-    return m_manager->m_primitive_emitter->insert(mem_primitive);
+    return m_manager->m_primitive_emitter->insert(std::move(mem_primitive));
 }
 
 void runtime::gpu::GPUAllocator::close()
