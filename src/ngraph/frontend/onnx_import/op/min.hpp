@@ -28,12 +28,16 @@ namespace ngraph
     {
         namespace op
         {
-            inline NodeVector min(const Node& node)
+            namespace set_1
             {
-                return variadic::make_ng_variadic_op<ngraph::op::Minimum>(node);
-            }
+                inline NodeVector min(const Node& node)
+                {
+                    return variadic::make_ng_variadic_op<ngraph::op::Minimum>(node);
+                }
 
-        } // namespace op
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 
