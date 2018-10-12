@@ -19,11 +19,12 @@
 #include "ngraph/builder/quantization.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/quantized_avg_pool.hpp"
-#include "ngraph/op/quantized_conv.hpp"
-#include "ngraph/op/quantized_conv_bias.hpp"
-#include "ngraph/op/quantized_conv_relu.hpp"
-#include "ngraph/op/quantized_max_pool.hpp"
+#include "ngraph/op/experimental/quantized_avg_pool.hpp"
+#include "ngraph/op/experimental/quantized_conv.hpp"
+#include "ngraph/op/experimental/quantized_conv_bias.hpp"
+#include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "quantization_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -41,16 +42,12 @@ namespace ngraph
                                                      const std::shared_ptr<Node> min,
                                                      const std::shared_ptr<Node> max)
         {
-            // TODO: make a builder to calculate
-            auto scale = op::Constant::create(element::f32, Shape{}, {1});
-
             return make_shared<op::QuantizedAvgPool>(arg,
                                                      window_shape,
                                                      window_movement_strides,
                                                      padding_below,
                                                      padding_above,
-                                                     include_padding_in_avg_computation,
-                                                     scale);
+                                                     include_padding_in_avg_computation);
         }
 
         std::shared_ptr<Node>
@@ -70,8 +67,13 @@ namespace ngraph
                                            const std::shared_ptr<Node> max_freezed_output,
                                            const bool with_relu)
         {
-            // TODO: make a builder to calculate
-            auto scale = op::Constant::create(element::f32, Shape{}, {1});
+            float scale = builder::quantization_util::get_scale(min_input,
+                                                                max_input,
+                                                                min_filter,
+                                                                max_filter,
+                                                                min_freezed_output,
+                                                                max_freezed_output);
+            auto requantization_scale = op::Constant::create(element::f32, Shape{1}, {scale});
 
             return make_shared<op::QuantizedConvolutionBias>(data_batch,
                                                              filters,
@@ -81,7 +83,7 @@ namespace ngraph
                                                              padding_below,
                                                              padding_above,
                                                              data_dilation_strides,
-                                                             scale);
+                                                             requantization_scale);
         }
 
         std::shared_ptr<Node>
@@ -99,9 +101,13 @@ namespace ngraph
                                            const std::shared_ptr<Node> min_freezed_output,
                                            const std::shared_ptr<Node> max_freezed_output)
         {
-            // TODO: make a builder to calculate
-            auto scale = op::Constant::create(element::f32, Shape{}, {1});
-
+            float scale = builder::quantization_util::get_scale(min_input,
+                                                                max_input,
+                                                                min_filter,
+                                                                max_filter,
+                                                                min_freezed_output,
+                                                                max_freezed_output);
+            auto requantization_scale = op::Constant::create(element::f32, Shape{1}, {scale});
             return make_shared<op::QuantizedConvolutionRelu>(data_batch,
                                                              filters,
                                                              window_movement_strides,
@@ -109,7 +115,7 @@ namespace ngraph
                                                              padding_below,
                                                              padding_above,
                                                              data_dilation_strides,
-                                                             scale);
+                                                             requantization_scale);
         }
 
         std::shared_ptr<Node>
@@ -127,9 +133,13 @@ namespace ngraph
                                        const std::shared_ptr<Node> min_freezed_output,
                                        const std::shared_ptr<Node> max_freezed_output)
         {
-            // TODO: make a builder to calculate
-            auto scale = op::Constant::create(element::f32, Shape{}, {1});
-
+            float scale = builder::quantization_util::get_scale(min_input,
+                                                                max_input,
+                                                                min_filter,
+                                                                max_filter,
+                                                                min_freezed_output,
+                                                                max_freezed_output);
+            auto requantization_scale = op::Constant::create(element::f32, Shape{1}, {scale});
             return make_shared<op::QuantizedConvolution>(data_batch,
                                                          filters,
                                                          window_movement_strides,
@@ -137,7 +147,7 @@ namespace ngraph
                                                          padding_below,
                                                          padding_above,
                                                          data_dilation_strides,
-                                                         scale);
+                                                         requantization_scale);
         }
 
         std::shared_ptr<Node> ScaledQuantizedMaxPool(const std::shared_ptr<Node>& arg,
@@ -148,15 +158,8 @@ namespace ngraph
                                                      const std::shared_ptr<Node> min,
                                                      const std::shared_ptr<Node> max)
         {
-            // TODO: make a builder to calculate
-            auto scale = op::Constant::create(element::f32, Shape{}, {1});
-
-            return make_shared<op::QuantizedMaxPool>(arg,
-                                                     window_shape,
-                                                     window_movement_strides,
-                                                     padding_below,
-                                                     padding_above,
-                                                     scale);
+            return make_shared<op::QuantizedMaxPool>(
+                arg, window_shape, window_movement_strides, padding_below, padding_above);
         }
     }
 }

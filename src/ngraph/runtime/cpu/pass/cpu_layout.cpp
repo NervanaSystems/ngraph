@@ -32,15 +32,15 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/experimental/quantized_avg_pool.hpp"
+#include "ngraph/op/experimental/quantized_conv.hpp"
+#include "ngraph/op/experimental/quantized_conv_bias.hpp"
+#include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/quantized_avg_pool.hpp"
-#include "ngraph/op/quantized_conv.hpp"
-#include "ngraph/op/quantized_conv_bias.hpp"
-#include "ngraph/op/quantized_conv_relu.hpp"
-#include "ngraph/op/quantized_max_pool.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
@@ -1024,11 +1024,6 @@ namespace ngraph
                         MaxPoolLayout<ngraph::op::QuantizedMaxPool, prop_kind::forward_inference>(
                             node, i_mds, o_mds);
 
-                        auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 1, false, memory::format::x);
-
-                        i_mds.push_back(scale_input_md);
-
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -1047,11 +1042,6 @@ namespace ngraph
                         vector<memory::desc> o_mds;
 
                         AvgPoolLayout<ngraph::op::QuantizedAvgPool>(node, i_mds, o_mds);
-
-                        auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 1, false, memory::format::x);
-
-                        i_mds.push_back(scale_input_md);
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);

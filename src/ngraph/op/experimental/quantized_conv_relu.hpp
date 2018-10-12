@@ -16,8 +16,8 @@
 
 #pragma once
 
+#include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/quantized_conv.hpp"
 
 namespace ngraph
 {

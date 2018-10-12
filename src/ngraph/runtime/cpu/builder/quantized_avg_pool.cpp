@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/op/quantized_avg_pool.hpp"
+#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"

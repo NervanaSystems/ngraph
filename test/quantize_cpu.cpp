@@ -22,12 +22,12 @@
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/experimental/quantized_avg_pool.hpp"
+#include "ngraph/op/experimental/quantized_conv.hpp"
+#include "ngraph/op/experimental/quantized_conv_bias.hpp"
+#include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/op/quantized_avg_pool.hpp"
-#include "ngraph/op/quantized_conv.hpp"
-#include "ngraph/op/quantized_conv_bias.hpp"
-#include "ngraph/op/quantized_conv_relu.hpp"
-#include "ngraph/op/quantized_max_pool.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
@@ -48,9 +48,8 @@ TEST(quantize_cpu, quantize_max_pool_2d_unsigned)
     Shape padding_above{0, 0};
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     Shape shape_r{1, 1, 2, 3};
-    auto B = op::Constant::create(element::f32, Shape{1}, {3.0});
     auto QMP = make_shared<op::QuantizedMaxPool>(
-        A, window_shape, window_movement_strides, padding_below, padding_above, B);
+        A, window_shape, window_movement_strides, padding_below, padding_above);
     auto f = make_shared<Function>(NodeVector{QMP}, op::ParameterVector{A});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -71,9 +70,8 @@ TEST(quantize_cpu, quantize_max_pool_2d_signed)
     Shape padding_above{0, 0};
     auto A = make_shared<op::Parameter>(element::i8, shape_a);
     Shape shape_r{1, 1, 2, 3};
-    auto B = op::Constant::create(element::f32, Shape{1}, {3.0f});
     auto QMP = make_shared<op::QuantizedMaxPool>(
-        A, window_shape, window_movement_strides, padding_below, padding_above, B);
+        A, window_shape, window_movement_strides, padding_below, padding_above);
     auto f = make_shared<Function>(NodeVector{QMP}, op::ParameterVector{A});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -94,9 +92,8 @@ TEST(quantize_cpu, quantize_avg_pool_2d_unsigned)
     Shape padding_above{0, 0};
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     Shape shape_r{1, 1, 2, 3};
-    auto B = op::Constant::create(element::f32, Shape{1}, {3.0});
     auto QMP = make_shared<op::QuantizedAvgPool>(
-        A, window_shape, window_movement_strides, padding_below, padding_above, false, B);
+        A, window_shape, window_movement_strides, padding_below, padding_above, false);
     auto f = make_shared<Function>(NodeVector{QMP}, op::ParameterVector{A});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -117,9 +114,8 @@ TEST(quantize_cpu, quantize_avg_pool_2d_signed)
     Shape padding_above{0, 0};
     auto A = make_shared<op::Parameter>(element::i8, shape_a);
     Shape shape_r{1, 1, 2, 3};
-    auto B = op::Constant::create(element::f32, Shape{1}, {3.0f});
     auto QMP = make_shared<op::QuantizedAvgPool>(
-        A, window_shape, window_movement_strides, padding_below, padding_above, false, B);
+        A, window_shape, window_movement_strides, padding_below, padding_above, false);
     auto f = make_shared<Function>(NodeVector{QMP}, op::ParameterVector{A});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output

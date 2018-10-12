@@ -48,8 +48,7 @@ namespace ngraph
                              const Strides& window_movement_strides,
                              const Shape& padding_below,
                              const Shape& padding_above,
-                             bool include_padding_in_avg_computation,
-                             const std::shared_ptr<Node> scale);
+                             bool include_padding_in_avg_computation);
             void validate_and_infer_types() override;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
