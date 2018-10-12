@@ -347,7 +347,7 @@ bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
     //fix wrong shape info wholesale
     for (auto n : f->get_ordered_ops())
     {
-        n->validate_and_infer_types();
+        n->revalidate_and_infer_types();
     }
     return true;
 }
