@@ -1442,7 +1442,18 @@ namespace ngraph
                     }
                     else
                     {
-                        set_native_layouts(external_function, node);
+                        if (mkldnn_utils::get_input_mkldnn_md(node.get(), 0).data.format ==
+                            mkldnn_format_undef)
+                        {
+                            set_native_layouts(external_function, node);
+                        }
+                        else
+                        {
+                            auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                            vector<memory::desc> o_mds;
+                            o_mds.push_back(input_md);
+                            set_output_layouts(node, o_mds);
+                        }
                     }
                 }
 
@@ -1684,33 +1695,36 @@ namespace ngraph
                         auto result_shape = slice->get_output_shape(0);
 
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                        auto input_pd = mkldnn::memory::primitive_desc(
-                            input_md, runtime::cpu::mkldnn_utils::global_cpu_engine);
-                        auto dims = mkldnn::memory::dims(result_shape.begin(), result_shape.end());
-                        auto offsets =
-                            mkldnn::memory::dims(lower_bounds.begin(), lower_bounds.end());
+                        NGRAPH_DEBUG << "input memory format: " << input_md.data.format << "\n";
+                        auto result_format =
+                            static_cast<mkldnn::memory::format>(input_md.data.format);
 
-                        try
+                        // check lower bounds and output shape
+                        for (auto i = 0; i < input_md.data.ndims; i++)
                         {
-                            // MKLDNN currently doesn't support views for blocked layouts
-                            // when the dims and offsets are not divisible by the block size
-                            auto view_md = mkldnn::view::primitive_desc(input_pd, dims, offsets)
-                                               .dst_primitive_desc()
-                                               .desc();
-                            vector<memory::desc> o_mds;
-                            o_mds.push_back(view_md);
-                            set_output_layouts(node, o_mds);
-                        }
-                        catch (const mkldnn::error& e)
-                        {
-                            if (e.status == mkldnn_unimplemented)
+                            auto block_size = input_md.data.layout_desc.blocking.block_dims[i];
+                            if (block_size != 0 && (lower_bounds[i] % block_size != 0 ||
+                                                    result_shape[i] % block_size != 0))
                             {
+                                NGRAPH_DEBUG << "slice: number of channels in lower bounds or "
+                                                "output shape is not multiple of block size, "
+                                                "set native layout\n";
                                 set_native_layouts(external_function, node);
+                                return;
                             }
-                            else
-                            {
-                                throw ngraph_error(e.message);
-                            }
+                        }
+
+                        if (result_format == mkldnn::memory::blocked)
+                        {
+                            set_native_layouts(external_function, node);
+                        }
+                        else
+                        {
+                            vector<memory::desc> o_mds;
+                            auto result_desc = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 0, true, result_format);
+                            o_mds.push_back(result_desc);
+                            set_output_layouts(node, o_mds);
                         }
                     }
                     else

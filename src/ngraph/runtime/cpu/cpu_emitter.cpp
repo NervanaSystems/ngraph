@@ -2660,8 +2660,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConvolutionRelu)
             {
-                auto qconvolution_relu =
-                    static_cast<const ngraph::op::QuantizedConvolutionRelu*>(node);
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
@@ -2688,7 +2686,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConvolution)
             {
-                auto qconvolution = static_cast<const ngraph::op::QuantizedConvolution*>(node);
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
@@ -2921,8 +2918,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConvolutionBias)
             {
-                auto qconvolution_bias =
-                    static_cast<const ngraph::op::QuantizedConvolutionBias*>(node);
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
