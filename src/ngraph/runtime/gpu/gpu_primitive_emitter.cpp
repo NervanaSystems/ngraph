@@ -59,7 +59,7 @@ size_t GPUPrimitiveEmitter::insert(std::unique_ptr<gpu::primitive>&& f)
     m_gpu_primitives.push_back(m_managed_primitives.back().get());
     return m_gpu_primitives.size() - 1;
 }
-size_t GPUPrimitiveEmitter::insert(gpu::memory_primitive& f)
+size_t GPUPrimitiveEmitter::insert(const gpu::memory_primitive& f)
 {
     m_gpu_mem_primitives.push_back(f);
     return m_gpu_mem_primitives.size() - 1;
