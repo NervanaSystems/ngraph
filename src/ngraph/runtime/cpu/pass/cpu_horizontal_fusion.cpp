@@ -124,7 +124,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
             NGRAPH_DEBUG << "conv_horizontal_fusion: slice shape " << slice_shape << "\n";
             auto lower_bounds = Coordinate{0, index, 0, 0};
             index += slice_shape[1];
-            auto upper_bounds = Coordinate{slice_shape[0], index, slice_shape[2], slice_shape[2]};
+            auto upper_bounds = Coordinate{slice_shape[0], index, slice_shape[2], slice_shape[3]};
             NGRAPH_DEBUG << "conv_horizontal_fusion: lower_bounds " << lower_bounds << "\n";
             NGRAPH_DEBUG << "conv_horizontal_fusion: upper_bounds " << upper_bounds << "\n";
             auto slice =

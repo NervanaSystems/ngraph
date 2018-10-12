@@ -27,21 +27,25 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector mean(const Node& node)
+            namespace set_1
             {
-                auto sum = variadic::make_ng_variadic_op<ngraph::op::Add>(node).front();
-                auto shape = sum->get_shape();
+                NodeVector mean(const Node& node)
+                {
+                    auto sum = variadic::make_ng_variadic_op<ngraph::op::Add>(node).front();
+                    auto shape = sum->get_shape();
 
-                // Create a Constant representing the number of inputs with the same shape as sum
-                auto count = ngraph::op::Constant::create(
-                    sum->get_element_type(),
-                    shape,
-                    std::vector<int>(shape_size(shape), node.get_ng_inputs().size()));
+                    // Create a Constant representing the number of inputs with the same shape as sum
+                    auto count = ngraph::op::Constant::create(
+                        sum->get_element_type(),
+                        shape,
+                        std::vector<int>(shape_size(shape), node.get_ng_inputs().size()));
 
-                return {sum / count};
-            }
+                    return {sum / count};
+                }
 
-        } // namespace op
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 
