@@ -19,6 +19,7 @@
 #include "ngraph/runtime/cpu/kernel/softmax.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/reference/softmax.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -131,8 +132,35 @@ namespace ngraph
                         };
                         functors.emplace_back(functor);
                     }
+                    else if (arg_shape.size() == 4 && axes.size() == 3)
+                    {
+                        std::function<decltype(runtime::cpu::kernel::softmax_4d_3rd<float>)> kernel;
+
+                        SELECT_KERNEL(kernel,
+                                      args[0].get_element_type(),
+                                      runtime::cpu::kernel::softmax_4d_3rd);
+
+                        auto functor = [&, kernel, arg_shape, axes](CPURuntimeContext* ctx) {
+                            kernel(arg_tensor, out_tensor, arg_shape, axes);
+                        };
+                        functors.emplace_back(functor);
+                    }
+                    else if (softmax->get_element_type() == element::f32)
+                    {
+                        NGRAPH_WARN << "Falling back to refernce kernel for softmax " << arg_shape
+                                    << " over " << axes;
+                        auto functor = [&, arg_shape, axes](CPURuntimeContext* ctx) {
+                            runtime::reference::softmax<float>(static_cast<float*>(arg_tensor),
+                                                               static_cast<float*>(out_tensor),
+                                                               arg_shape,
+                                                               axes);
+                        };
+                        functors.emplace_back(functor);
+                    }
                     else
                     {
+                        NGRAPH_ERR << "Unsupported Softmax " << arg_shape << " over " << axes
+                                   << " in cpu buiilder";
                         throw ngraph_error("Unsupported Softmax");
                     }
                 }
