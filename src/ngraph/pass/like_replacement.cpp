@@ -66,7 +66,7 @@ bool ngraph::pass::LikeReplacement::run_on_function(std::shared_ptr<ngraph::Func
 
         // Here we're checking on a common base class of a family of template classes,
         // which is more than type info can handle.
-        auto sclb = std::static_pointer_cast<ngraph::op::ScalarConstantLikeBase>(n);
+        auto sclb = std::dynamic_pointer_cast<ngraph::op::ScalarConstantLikeBase>(n);
         if (sclb != nullptr)
         {
             ngraph::replace_node(sclb, sclb->as_constant());
