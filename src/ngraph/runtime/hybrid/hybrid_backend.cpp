@@ -17,7 +17,6 @@
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/assign_placement.hpp"
 #include "ngraph/pass/like_replacement.hpp"
@@ -25,6 +24,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/interpreter/int_placement.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -64,8 +64,6 @@ bool runtime::hybrid::HYBRIDBackend::compile(shared_ptr<Function> function)
     NGRAPH_INFO << "hybrid compile -Begin ";
     if (m_function_map.find(function) == m_function_map.end())
     {
-        // FunctionInstance& instance = m_function_map[function];
-
         // Clone function
         FunctionInstance instance;
         instance.m_function = clone_function(*function);
@@ -73,7 +71,16 @@ bool runtime::hybrid::HYBRIDBackend::compile(shared_ptr<Function> function)
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::AssignPlacement>(
             runtime::interpreter::default_placement_policy);
-        pass_manager.run_passes(function);
+        pass_manager.run_passes(instance.m_function);
+
+        NGRAPH_INFO << "hybrid compile -begin split  ";
+        // Split function to sub_functions
+        tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
+            split_function_by_placement(instance.m_function);
+        NGRAPH_INFO << "hybrid compile -End split  ";
+
+        m_function_map.insert({function, instance});
+        NGRAPH_INFO << "hybrid compile -map incertion successful";
     }
     NGRAPH_INFO << "hybrid compile -End ";
     return true;
