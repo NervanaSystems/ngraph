@@ -110,7 +110,6 @@ def Cleanup(configurationMaps) {
         sh """
             cd ${HOME}/ONNX_CI
             ./docker.sh chmod --container_name=${configMap["dockerContainerName"]} --directory="/logs" --options="-R 777" || true
-            docker exec ${configMap["dockerContainerName"]} rm -rf /root/* || true
             ./docker.sh stop --container_name=${configMap["dockerContainerName"]} || true
             ./docker.sh remove --container_name=${configMap["dockerContainerName"]} || true
             ./docker.sh clean_up || true
