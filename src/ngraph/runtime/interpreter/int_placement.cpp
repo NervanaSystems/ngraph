@@ -62,7 +62,7 @@ static bool filter_shape_allowed(const Shape& shape)
 // - Unsupported: Not listed at all
 Placement runtime::interpreter::default_placement_policy(const std::shared_ptr<Node>& node)
 {
-    NGRAPH_INFO << "runtime::interpreter::default_placement_policy -Begin ";
+    NGRAPH_INFO << "runtime::interpreter::default_placement_policy -Begin " + node->description();
     // clang-format off
     static unordered_set<string> fully_supported_ops = {
         "Abs",
@@ -78,10 +78,12 @@ Placement runtime::interpreter::default_placement_policy(const std::shared_ptr<N
     string node_op = node->description();
     if (fully_supported_ops.count(node_op) == 0 && partially_supported_ops.count(node_op) == 0)
     {
+        NGRAPH_INFO
+            << "runtime::interpreter::default_placement_policy  placement done on CPU for " +
+                   node->description();
         return Placement::CPU;
     }
 
-    // TODO: fill in these ops to allow placement on nnp in certain cases
     if (node_op == "Dot")
     {
         // Experimental
@@ -91,6 +93,7 @@ Placement runtime::interpreter::default_placement_policy(const std::shared_ptr<N
         }
     }
 
+    NGRAPH_INFO
+        << "runtime::interpreter::default_placement_policy -End & placement on INTERPRETER ";
     return Placement::INTERPRETER;
-    NGRAPH_INFO << "runtime::interpreter::default_placement_policy -End ";
 }
