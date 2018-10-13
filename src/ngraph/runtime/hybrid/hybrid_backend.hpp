@@ -23,6 +23,7 @@
 
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
 {

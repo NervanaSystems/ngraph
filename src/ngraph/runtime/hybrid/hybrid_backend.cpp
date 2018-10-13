@@ -18,9 +18,11 @@
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/pass/assign_layout.hpp"
+#include "ngraph/pass/assign_placement.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/interpreter/int_placement.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -58,8 +60,15 @@ shared_ptr<runtime::Tensor> runtime::hybrid::HYBRIDBackend::create_tensor(const 
 
 bool runtime::hybrid::HYBRIDBackend::compile(shared_ptr<Function> function)
 {
+    NGRAPH_INFO << "hybrid compile -Begin ";
     FunctionInstance& instance = m_function_map[function];
 
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AssignPlacement>(
+        runtime::interpreter::default_placement_policy);
+    pass_manager.run_passes(function);
+
+    NGRAPH_INFO << "hybrid compile -End ";
     return true;
 }
 
@@ -68,5 +77,10 @@ bool runtime::hybrid::HYBRIDBackend::call(shared_ptr<Function> function,
                                           const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     NGRAPH_INFO << "hybrid call -Begin ";
+
+    validate_call(function, outputs, inputs);
+    compile(function);
+
+    NGRAPH_INFO << "hybrid call -End ";
     return true;
 }
