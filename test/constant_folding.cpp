@@ -164,6 +164,59 @@ TEST(constant_folding, constant_pad_interior)
     ASSERT_EQ(padded_values, values_out);
 }
 
+template <typename T>
+static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t pos)
+{
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(pos)->get_argument(0));
+    return new_const->get_vector<T>();
+}
+
+TEST(constant_folding, constant_unary_binary)
+{
+    Shape shape_in{4};
+    vector<int> values_a{1, 2, 3, 4};
+    vector<int> values_b{1, 2, 3, 4};
+    vector<int> values_c{-1, -1, -1, -1};
+    auto a = make_shared<op::Constant>(element::i32, shape_in, values_a);
+    auto b = make_shared<op::Constant>(element::i32, shape_in, values_b);
+    auto c = make_shared<op::Constant>(element::i32, shape_in, values_c);
+
+    auto add = a + b;
+    auto sub = a - b;
+    auto mul = a * b;
+    auto divn = a / b;
+    auto min = make_shared<op::Minimum>(c, a);
+    auto max = make_shared<op::Maximum>(a, c);
+    auto absn = make_shared<op::Abs>(c);
+    auto neg = make_shared<op::Negative>(c);
+
+    auto f = make_shared<Function>(NodeVector{add, sub, mul, divn, min, max, absn, neg},
+                                   op::ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    //expected values
+    vector<int> add_expected{2, 4, 6, 8};
+    vector<int> sub_expected{0, 0, 0, 0};
+    vector<int> mul_expected{1, 4, 9, 16};
+    vector<int> div_expected{1, 1, 1, 1};
+    vector<int> min_expected{-1, -1, -1, -1};
+    vector<int> max_expected{1, 2, 3, 4};
+    vector<int> abs_neg_expected{1, 1, 1, 1};
+
+    ASSERT_EQ(get_result_constant<int>(f, 0), add_expected);
+    ASSERT_EQ(get_result_constant<int>(f, 1), sub_expected);
+    ASSERT_EQ(get_result_constant<int>(f, 2), mul_expected);
+    ASSERT_EQ(get_result_constant<int>(f, 3), div_expected);
+    ASSERT_EQ(get_result_constant<int>(f, 4), min_expected);
+    ASSERT_EQ(get_result_constant<int>(f, 5), max_expected);
+    ASSERT_EQ(get_result_constant<int>(f, 6), abs_neg_expected);
+    ASSERT_EQ(get_result_constant<int>(f, 7), abs_neg_expected);
+}
+
 TEST(constant_folding, const_dequantize)
 {
     Shape input_shape{12};
