@@ -55,25 +55,6 @@ TEST(zero_dim_tensor_elimination, zero_sum)
     ASSERT_EQ(count_ops_of_type<op::Sum>(f), 0);
 }
 
-TEST(zero_dim_tensor_elimination, zero_const_avg_pool)
-{
-    Shape zero_shape{0};
-    auto A = std::make_shared<op::Parameter>(element::f32, Shape{1, 1, 0});
-
-    auto avg_pool =
-        std::make_shared<op::AvgPool>(A, Shape{1}, Strides{1}, Shape{2}, Shape{2}, true);
-    auto abs_node = std::make_shared<op::Abs>(avg_pool);
-    auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
-    auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, op::ParameterVector{A});
-    pass::Manager pass_manager;
-
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
-    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
-    pass_manager.run_passes(f);
-    ASSERT_EQ(count_ops_of_type<op::AvgPool>(f), 0);
-}
-
 TEST(zero_dim_tensor_elimination, zero_const_pad)
 {
     Shape zero_shape{0};

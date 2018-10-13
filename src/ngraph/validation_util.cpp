@@ -120,8 +120,8 @@ std::tuple<element::Type, Shape>
                                       const CoordinateDiff& data_padding_below,
                                       const CoordinateDiff& data_padding_above,
                                       const Shape& filters_shape,
-                                      const Strides& window_strides,
-                                      const Strides& window_dilation)
+                                      const Strides& filter_strides,
+                                      const Strides& filter_dilation)
 {
     NODE_VALIDATION_ASSERT(node, et_batch == et_filters)
         << "Element types for data batch and filters do not match (data batch element type: "
@@ -162,8 +162,8 @@ std::tuple<element::Type, Shape>
                                                                     data_padding_below,
                                                                     data_padding_above,
                                                                     filter_spatial_shape,
-                                                                    window_strides,
-                                                                    window_dilation,
+                                                                    filter_strides,
+                                                                    filter_dilation,
                                                                     true);
 
     Shape batch_output_shape(data_batch_shape.size());
@@ -172,4 +172,69 @@ std::tuple<element::Type, Shape>
     std::copy(data_output_shape.begin(), data_output_shape.end(), batch_output_shape.begin() + 2);
 
     return std::make_tuple(et_batch, batch_output_shape);
+}
+
+//
+// Infers the output batch shape and element type for batched pooling fprop.
+//
+Shape ngraph::infer_batched_pooling_forward(const Node* node,
+                                            const Shape& data_batch_shape,
+                                            const CoordinateDiff& data_padding_below,
+                                            const CoordinateDiff& data_padding_above,
+                                            const Shape& window_shape,
+                                            const Strides& window_strides,
+                                            bool is_window_all_in_padding_allowed)
+{
+    NODE_VALIDATION_ASSERT(node, data_batch_shape.size() >= 3)
+        << "Data batch must have rank of at least 3 (one batch axis, "
+        << "one input-channel axis, and at least one spatial dimension) "
+        << "(data batch shape: " << data_batch_shape << ").";
+
+    size_t spatial_dimension_count = data_batch_shape.size() - 2;
+
+    NODE_VALIDATION_ASSERT(node, data_padding_below.size() == spatial_dimension_count)
+        << "Data padding below (" << data_padding_below << ") does not have required rank ("
+        << spatial_dimension_count << ").";
+
+    NODE_VALIDATION_ASSERT(node, data_padding_above.size() == spatial_dimension_count)
+        << "Data padding above (" << data_padding_above << ") does not have required rank ("
+        << spatial_dimension_count << ").";
+
+    NODE_VALIDATION_ASSERT(node, window_shape.size() == spatial_dimension_count)
+        << "Window shape (" << window_shape << ") does not have required rank ("
+        << spatial_dimension_count << ").";
+
+    NODE_VALIDATION_ASSERT(node, window_strides.size() == spatial_dimension_count)
+        << "Window shape (" << window_strides << ") does not have required rank ("
+        << spatial_dimension_count << ").";
+
+    size_t batch_size = data_batch_shape[0];
+    size_t channel_count = data_batch_shape[1];
+    Shape data_spatial_shape(data_batch_shape.begin() + 2, data_batch_shape.end());
+
+    NODE_VALIDATION_ASSERT(node, batch_size > 0) << "Batch size is zero.";
+
+    NODE_VALIDATION_ASSERT(node, channel_count > 0) << "Channel count is zero.";
+
+    // For pooling ops we don't need dilation, so we fill in the identity value (all 1).
+    Strides data_dilation(spatial_dimension_count, 1);
+    Strides window_dilation(spatial_dimension_count, 1);
+
+    Shape data_output_shape =
+        infer_windowed_reduction_output_shape(node,
+                                              data_spatial_shape,
+                                              data_dilation,
+                                              data_padding_below,
+                                              data_padding_above,
+                                              window_shape,
+                                              window_strides,
+                                              window_dilation,
+                                              is_window_all_in_padding_allowed);
+
+    Shape batch_output_shape(data_batch_shape.size());
+    batch_output_shape[0] = batch_size;
+    batch_output_shape[1] = channel_count;
+    std::copy(data_output_shape.begin(), data_output_shape.end(), batch_output_shape.begin() + 2);
+
+    return batch_output_shape;
 }
