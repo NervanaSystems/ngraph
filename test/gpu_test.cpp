@@ -40,6 +40,20 @@ TEST(gpu_test, memory_manager_unallocated)
     ASSERT_ANY_THROW(mem_primitive());
 }
 
+TEST(gpu_test, memory_manager_zero_workspace)
+{
+    runtime::gpu::GPUPrimitiveEmitter emitter;
+    size_t idx_null, idx_not_null;
+    {
+        auto allocator = emitter.get_memory_allocator();
+        idx_null = allocator.reserve_workspace(0);
+        idx_not_null = allocator.reserve_workspace(10);
+    }
+    emitter.allocate_primitive_memory();
+    EXPECT_EQ(emitter.get_memory_primitives()[idx_null](), nullptr);
+    EXPECT_NE(emitter.get_memory_primitives()[idx_not_null](), nullptr);
+}
+
 TEST(gpu_test, memory_manager_allocated)
 {
     runtime::gpu::GPUPrimitiveEmitter emitter;

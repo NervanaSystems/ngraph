@@ -3,5 +3,12 @@
 Release Notes
 #############
 
-This is the |version| of release.  
+This is release |release|.
+
+
+
+API Changes
+===========
+
+.. literalinclude:: ../../../../changes.md
 
