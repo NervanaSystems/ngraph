@@ -22,6 +22,7 @@ set -e
 NGRAPH_CACHE_DIR="/home"
 
 function check_cached_ngraph() {
+    set -x
     # if no ngraph in /home - clone
     if [ ! -e "${NGRAPH_CACHE_DIR}/ngraph" ]; then
         cd /home/
@@ -30,6 +31,7 @@ function check_cached_ngraph() {
 }
 
 function build_ngraph() {
+    set -x
     # directory containing ngraph repo
     local ngraph_directory="$1"
     local func_parameters="$2"
@@ -73,16 +75,18 @@ function build_ngraph() {
     export PYBIND_HEADERS_PATH="${ngraph_directory}/ngraph/python/pybind11"
     export NGRAPH_CPP_BUILD_PATH="${ngraph_directory}/ngraph_dist"
     python3 setup.py bdist_wheel
+    # Clean build artifacts
+    rm -rf "${ngraph_directory}/ngraph/python/_pyngraph.cpython* ${ngraph_directory}/ngraph/python/build"
+    rm -rf "${ngraph_directory}/ngraph_dist"
     return 0
 }
+
+# Link Onnx models
+mkdir -p /home/onnx_models/.onnx
+ln -s /home/onnx_models/.onnx /root/.onnx
 
 # Copy stored nGraph master and use it to build PR branch
 if ! build_ngraph "/root" "USE_CACHED"; then
     build_ngraph "${NGRAPH_CACHE_DIR}" "UPDATE REBUILD"
     build_ngraph "/root" "REBUILD USE_CACHED"
-fi
-
-# Copy Onnx models
-if [ -d /home/onnx_models/.onnx ]; then
-    rsync -avhz /home/onnx_models/.onnx /root/ngraph-onnx/
 fi
