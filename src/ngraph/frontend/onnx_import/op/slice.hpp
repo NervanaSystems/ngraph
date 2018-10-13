@@ -26,8 +26,13 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector slice(const Node& node);
-        } // namespace op
+            namespace set_1
+            {
+                NodeVector slice(const Node& node);
+
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 
