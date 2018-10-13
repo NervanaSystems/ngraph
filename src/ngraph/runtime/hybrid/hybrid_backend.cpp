@@ -17,6 +17,7 @@
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/assign_placement.hpp"
 #include "ngraph/pass/like_replacement.hpp"
@@ -24,7 +25,6 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/interpreter/int_placement.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -44,6 +44,15 @@ extern "C" runtime::Backend* new_backend(const char* configuration_string)
 extern "C" void delete_backend(runtime::Backend* backend)
 {
     delete backend;
+}
+
+shared_ptr<runtime::Backend> runtime::hybrid::HYBRIDBackend::get_cached_backend(Placement placement)
+{
+    if (m_cached_backends.find(placement) == m_cached_backends.end())
+    {
+        m_cached_backends[placement] = runtime::Backend::create(placement_to_string(placement));
+    }
+    return m_cached_backends.at(placement);
 }
 
 shared_ptr<runtime::Tensor> runtime::hybrid::HYBRIDBackend::create_tensor(const element::Type& type,
@@ -81,6 +90,14 @@ bool runtime::hybrid::HYBRIDBackend::compile(shared_ptr<Function> function)
 
         m_function_map.insert({function, instance});
         NGRAPH_INFO << "hybrid compile -map incertion successful";
+
+        // Compile subfunctions in corresponding backends
+        for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
+        {
+            Placement placement = get_colocated_function_placement(sub_function);
+            auto backend = get_cached_backend(placement);
+            backend->compile(sub_function);
+        }
     }
     NGRAPH_INFO << "hybrid compile -End ";
     return true;

@@ -57,6 +57,9 @@ namespace ngraph
                         m_map_parameter_to_result;
                 };
 
+                std::shared_ptr<runtime::Backend> get_cached_backend(Placement placement);
+
+                std::map<Placement, std::shared_ptr<runtime::Backend>> m_cached_backends;
                 std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
             };
         }
