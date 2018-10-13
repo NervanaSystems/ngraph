@@ -72,15 +72,11 @@ void op::Slice::validate_and_infer_types()
     const PartialShape& input_shape = get_input_partial_shape(0);
     Dimension input_rank = input_shape.rank();
 
-    std::vector<Dimension> result_dims(implied_rank);
+    NODE_VALIDATION_ASSERT(this, input_rank.is_dynamic() || size_t(input_rank) == implied_rank)
+        << "Input rank does not match the rank of the lower bounds (" << m_lower_bounds
+        << "), upper bounds (" << m_upper_bounds << "), and strides (" << m_strides << ").";
 
-    if (input_rank.is_static())
-    {
-        NODE_VALIDATION_ASSERT(this, size_t(input_rank) == implied_rank)
-            << "Input rank for slice does not match the rank of the lower bounds ("
-            << m_lower_bounds << "), upper bounds (" << m_upper_bounds << "), and strides ("
-            << m_strides << ").";
-    }
+    std::vector<Dimension> result_dims(implied_rank);
 
     for (size_t i = 0; i < implied_rank; i++)
     {
