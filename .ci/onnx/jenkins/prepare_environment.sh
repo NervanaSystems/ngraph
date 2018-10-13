@@ -75,15 +75,15 @@ function build_ngraph() {
     export PYBIND_HEADERS_PATH="${ngraph_directory}/ngraph/python/pybind11"
     export NGRAPH_CPP_BUILD_PATH="${ngraph_directory}/ngraph_dist"
     python3 setup.py bdist_wheel
+    # Clean build artifacts
     rm -rf "${ngraph_directory}/ngraph/python/_pyngraph.cpython* ${ngraph_directory}/ngraph/python/build"
     rm -rf "${ngraph_directory}/ngraph_dist"
     return 0
 }
 
-# Copy Onnx models
-if [ -d /home/onnx_models/.onnx ]; then
-    ln -s /home/onnx_models/.onnx /root/.onnx
-fi
+# Link Onnx models
+mkdir -p /home/onnx_models/.onnx
+ln -s /home/onnx_models/.onnx /root/.onnx
 
 # Copy stored nGraph master and use it to build PR branch
 if ! build_ngraph "/root" "USE_CACHED"; then
