@@ -21,7 +21,8 @@ using namespace std;
 using namespace ngraph;
 
 //
-// Infers the spatial shape of a single item in a convolution batch.
+// Infers the output shape of a windowed reduction operation, where the data may be dilated and/or
+// padded, and the reduction window may be strided and/or dilated.
 //
 Shape ngraph::infer_windowed_reduction_output_shape(const Node* node,
                                                     const Shape& data_shape,
