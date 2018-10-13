@@ -72,6 +72,12 @@ namespace ngraph
                     Backward
                 };
 
+                enum class ReductionMode
+                {
+                    Reduce,
+                    ArgReduce
+                };
+
                 enum class algo_search
                 {
                     HEURISTIC,
@@ -109,9 +115,10 @@ namespace ngraph
                     const algo_search find_algo = algo_search::NONE);
 
                 size_t build_reduce_forward(const cudnnReduceTensorOp_t& reduce_op,
-                                            const std::string& dtype,
+                                            const std::vector<element::Type>& dtypes,
                                             const Shape& input_shape,
-                                            const AxisSet& reduction_axes);
+                                            const AxisSet& reduction_axes,
+                                            const ReductionMode& reduction_mode);
 
                 size_t build_tensor_op(const cudnnOpTensorOp_t& tensor_op,
                                        const std::string& dtype,
@@ -163,6 +170,7 @@ namespace ngraph
                 void* get_data_by_type(cudnnDataType_t data_type, double value);
 
                 cudnnDataType_t get_cudnn_datatype(std::string dtype);
+                cudnnDataType_t get_cudnn_datatype(const element::Type& dtype);
 
                 cudnnTensorDescriptor_t&
                     tensor_descriptor_from_shape(const Shape& shape,
