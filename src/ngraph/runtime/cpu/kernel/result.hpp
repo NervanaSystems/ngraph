@@ -16,6 +16,9 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstring>
+
 namespace ngraph
 {
     namespace runtime

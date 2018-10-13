@@ -35,32 +35,37 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector slice(const Node& node)
+            namespace set_1
             {
-                std::shared_ptr<ngraph::Node> data = node.get_ng_inputs().at(0);
-                Shape data_shape = data->get_shape();
-
-                auto starts = node.get_attribute_value<std::vector<int64_t>>("starts");
-                auto ends = node.get_attribute_value<std::vector<int64_t>>("ends");
-
-                auto axes = node.get_attribute_value<std::vector<int64_t>>(
-                    "axes", common::get_monotonic_range<int64_t>(data_shape.size()));
-
-                Shape lower_bounds(data_shape.size());
-                Shape upper_bounds = data_shape;
-
-                for (auto idx = 0; idx < axes.size(); ++idx)
+                NodeVector slice(const Node& node)
                 {
-                    size_t axis = axes.at(idx);
-                    lower_bounds.at(axis) =
-                        get_valid_array_idx(starts.at(idx), data_shape.at(axis));
-                    upper_bounds.at(axis) = get_valid_array_idx(ends.at(idx), data_shape.at(axis));
+                    std::shared_ptr<ngraph::Node> data = node.get_ng_inputs().at(0);
+                    Shape data_shape = data->get_shape();
+
+                    auto starts = node.get_attribute_value<std::vector<int64_t>>("starts");
+                    auto ends = node.get_attribute_value<std::vector<int64_t>>("ends");
+
+                    auto axes = node.get_attribute_value<std::vector<int64_t>>(
+                        "axes", common::get_monotonic_range<int64_t>(data_shape.size()));
+
+                    Shape lower_bounds(data_shape.size());
+                    Shape upper_bounds = data_shape;
+
+                    for (auto idx = 0; idx < axes.size(); ++idx)
+                    {
+                        size_t axis = axes.at(idx);
+                        lower_bounds.at(axis) =
+                            get_valid_array_idx(starts.at(idx), data_shape.at(axis));
+                        upper_bounds.at(axis) =
+                            get_valid_array_idx(ends.at(idx), data_shape.at(axis));
+                    }
+
+                    return {std::make_shared<ngraph::op::Slice>(data, lower_bounds, upper_bounds)};
                 }
 
-                return {std::make_shared<ngraph::op::Slice>(data, lower_bounds, upper_bounds)};
-            }
+            } // namespace set_1
 
-        } // namespace op
+        } //namespace op
 
     } // namespace onnx_import
 

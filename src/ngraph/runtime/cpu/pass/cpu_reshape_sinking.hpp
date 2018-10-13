@@ -16,24 +16,22 @@
 
 #pragma once
 
-#include "ngraph/node_vector.hpp"
-
-#include "core/node.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace runtime
     {
-        namespace op
+        namespace cpu
         {
-            namespace set_1
+            namespace pass
             {
-                NodeVector elu(const Node& node);
-
-            } // namespace set_1
-
-        } //namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+                class CPUReshapeSinking : public ngraph::pass::FunctionPass
+                {
+                public:
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                };
+            }
+        }
+    }
+}

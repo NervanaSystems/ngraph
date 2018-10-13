@@ -26,12 +26,16 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector max_pool(const Node& node)
+            namespace set_1
             {
-                return convpool::make_ng_pool<ngraph::op::MaxPool>(node);
-            }
+                NodeVector max_pool(const Node& node)
+                {
+                    return convpool::make_ng_pool<ngraph::op::MaxPool>(node);
+                }
 
-        } // namespace op
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 
