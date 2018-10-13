@@ -5,7 +5,7 @@ Overview
 
 
 Welcome to the documentation site for |InG|, an open-source C++ Compiler, 
-Library, and runtime suite for running training and inference on 
+Library, and runtime suite for Deep Learning frameworks running training and inference on 
 :abbr:`Deep Neural Network (DNN)` models. nGraph is framework-neutral and can be 
 targeted for programming and deploying :abbr:`Deep Learning (DL)` applications 
 on the most modern compute and edge devices.   
@@ -22,8 +22,8 @@ Features
 Develop without lock-in
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. figure:: ../graphics/develop-without-lockin.png
-   :width: 650px
+.. figure:: ../graphics/599px-Intel-ngraph-ecosystem.png
+   :width: 599px
   
 
 Being able to increase training performance or reduce inference latency by simply 
@@ -33,47 +33,6 @@ invented generation of NNP or accelerator -- is a key benefit for frameworks
 developers working with nGraph. Our commitment to bake flexibility into our 
 ecosystem ensures developers' freedom to design user-facing APIs for various 
 hardware deployments directly into their frameworks. 
-
-
-.. figure:: ../graphics/ngraph-ecosystem.png
-   :width: 585px   
-  
-nGraph currently supports :doc:`three popular <../framework-integration-guides>` 
-frameworks for :abbr:`Deep Learning (DL)` models through what we call 
-a :term:`bridge` that can be integrated during the framework's build time. 
-For developers working with other frameworks (even those not listed above), 
-we've created a :doc:`How to Guide <../howto/index>` so you can learn how to 
-create custom bridge code that can be used to 
-:doc:`compile and run <../howto/execute>` a training model.  
-
-Additionally, nGraph Library supports the `ONNX`_ format. Developers who 
-already have a "trained" model can use nGraph to bypass much of the 
-framework-based complexity and :doc:`../howto/import` to test or run it 
-on targeted and efficient backends with our user-friendly ``ngraph_api``. 
-With nGraph, data scientists can focus on data science rather than worrying 
-about how to adapt models to train and run efficiently on different devices. 
-Be sure to add the ``-DNGRAPH_ONNX_IMPORT_ENABLE=ON`` option when running `cmake`
-to build the Library. 
-
-
-Supported platforms
---------------------
-
-
-* Intel® Architecture Processors (CPUs), 
-* Intel® Nervana™ Neural Network Processor™ (NNPs), and 
-* NVIDIA\* CUDA (GPUs). 
-
-We built the first-generation of the Intel Nervana™ NNP family of processors 
-last year to show that the nGraph Library can be used to train a
-:abbr:`Neural Network (NN)` more quickly. The more advanced the silicon, the 
-more powerful a lightweight a library can be. So while we do currently support 
-traditional GPUs, they are not advanced silicon, and trying to scale workloads 
-using traditional GPU libraries is clunky and brittle with bottlenecks. Iteration 
-from an already-trained NN model to one that can also perform inference 
-computations is immensely simplified. Read more about these compute-friendly 
-options on the documentation for :doc:`../fusion/index`.  
-
 
 .. note:: The library code is under active development as we're continually 
    adding support for more kinds of DL models and ops, framework compiler 
