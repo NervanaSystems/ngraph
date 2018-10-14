@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include "ngraph/runtime/interpreter/int_placement.hpp"
+#include "ngraph/runtime/cpu/cpu_placement.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/function.hpp"
@@ -29,15 +29,15 @@
 using namespace std;
 using namespace ngraph;
 
-// The policy that place supported ops on interpreter
+// The policy that place supported ops on cpu
 // There are 3 levels of op support
 // - Fully supported: List in fully_supported_ops
 // - Partially supported: Listed in the partially supported ops. Only run on nnp if specific
 //   conditions are satisfied.
 // - Unsupported: Not listed at all
-Placement runtime::interpreter::default_placement_policy(const std::shared_ptr<Node>& node)
+Placement runtime::cpu::default_placement_policy(const std::shared_ptr<Node>& node)
 {
-    NGRAPH_INFO << "runtime::interpreter::default_placement_policy -Begin " + node->description();
+    NGRAPH_INFO << "runtime::cpu::default_placement_policy -Begin " + node->description();
 
     // clang-format off
     static unordered_set<string> fully_supported_ops = {
@@ -55,9 +55,9 @@ Placement runtime::interpreter::default_placement_policy(const std::shared_ptr<N
     if (fully_supported_ops.count(node_op) == 0 && partially_supported_ops.count(node_op) == 0)
     {
         NGRAPH_INFO
-            << "runtime::interpreter::default_placement_policy  placement done on CPU for " +
+            << "runtime::cpu::default_placement_policy  placement done on INTERPRETER for " +
                    node->description();
-        return Placement::CPU;
+        return Placement::INTERPRETER;
     }
 
     if (node_op == "Dot")
@@ -65,11 +65,10 @@ Placement runtime::interpreter::default_placement_policy(const std::shared_ptr<N
         // Experimental
         if (shape_size(node->get_shape()) > 50000)
         {
-            return Placement::CPU;
+            return Placement::INTERPRETER;
         }
     }
 
-    NGRAPH_INFO
-        << "runtime::interpreter::default_placement_policy -End & placement on INTERPRETER ";
-    return Placement::INTERPRETER;
+    NGRAPH_INFO << "runtime::cpu::default_placement_policy -End & placement on CPU ";
+    return Placement::CPU;
 }
