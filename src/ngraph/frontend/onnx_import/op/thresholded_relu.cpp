@@ -36,22 +36,27 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector thresholded_relu(const Node& node)
+            namespace set_1
             {
-                auto data = node.get_ng_inputs().at(0);
-                double alpha = node.get_attribute_value<double>("alpha", 1.0);
+                NodeVector thresholded_relu(const Node& node)
+                {
+                    auto data = node.get_ng_inputs().at(0);
+                    double alpha = node.get_attribute_value<double>("alpha", 1.0);
 
-                std::shared_ptr<ngraph::Node> alpha_node = std::make_shared<ngraph::op::Constant>(
-                    data->get_element_type(), ngraph::Shape{}, std::vector<double>{alpha});
-                alpha_node = make_broadcast_node(alpha_node, data->get_shape());
+                    std::shared_ptr<ngraph::Node> alpha_node =
+                        std::make_shared<ngraph::op::Constant>(
+                            data->get_element_type(), ngraph::Shape{}, std::vector<double>{alpha});
+                    alpha_node = make_broadcast_node(alpha_node, data->get_shape());
 
-                auto data_map = std::make_shared<ngraph::op::Convert>(
-                    std::make_shared<ngraph::op::Greater>(data, alpha_node),
-                    data->get_element_type());
-                return {data * data_map};
-            }
+                    auto data_map = std::make_shared<ngraph::op::Convert>(
+                        std::make_shared<ngraph::op::Greater>(data, alpha_node),
+                        data->get_element_type());
+                    return {data * data_map};
+                }
 
-        } // namespace op
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 
