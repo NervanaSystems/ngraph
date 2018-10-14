@@ -23,7 +23,6 @@ set(SRC
     cpu_external_function.cpp
     cpu_kernels.cpp
     cpu_layout_descriptor.cpp
-    cpu_placement.cpp
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
@@ -121,6 +120,13 @@ if (NOT NGRAPH_DEX_ONLY)
         cpu_kernel_emitters.cpp
         cpu_kernel_utils.cpp
         )
+endif()
+
+if (NGRAPH_HYBRID_ENABLE)
+    set(SRC
+        ${SRC}
+        cpu_placement.cpp
+    )
 endif()
 
 if (NGRAPH_TBB_ENABLE)
