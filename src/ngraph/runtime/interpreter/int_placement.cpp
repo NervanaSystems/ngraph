@@ -29,31 +29,6 @@
 using namespace std;
 using namespace ngraph;
 
-static bool all_ones(const vector<long unsigned int> v)
-{
-    for (auto elem : v)
-    {
-        if (elem != 1)
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-static bool filter_shape_allowed(const Shape& shape)
-{
-    const size_t max_filter_dim = 16;
-    for (size_t i = 2; i < shape.size(); i++)
-    {
-        if (shape[i] > max_filter_dim)
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 // The policy that place supported ops on interpreter
 // There are 3 levels of op support
 // - Fully supported: List in fully_supported_ops
@@ -63,6 +38,7 @@ static bool filter_shape_allowed(const Shape& shape)
 Placement runtime::interpreter::default_placement_policy(const std::shared_ptr<Node>& node)
 {
     NGRAPH_INFO << "runtime::interpreter::default_placement_policy -Begin " + node->description();
+    
     // clang-format off
     static unordered_set<string> fully_supported_ops = {
         "Abs",
@@ -73,8 +49,8 @@ Placement runtime::interpreter::default_placement_policy(const std::shared_ptr<N
     static unordered_set<string> partially_supported_ops = {
         "Dot"
     };
-    // clang-format on
 
+    // clang-format on
     string node_op = node->description();
     if (fully_supported_ops.count(node_op) == 0 && partially_supported_ops.count(node_op) == 0)
     {
