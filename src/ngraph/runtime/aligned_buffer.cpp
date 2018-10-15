@@ -30,11 +30,6 @@ runtime::AlignedBuffer::AlignedBuffer()
 
 runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment)
 {
-    initialize(byte_size, alignment);
-}
-
-void runtime::AlignedBuffer::initialize(size_t byte_size, size_t alignment)
-{
     m_byte_size = byte_size;
     if (m_byte_size > 0)
     {
@@ -47,6 +42,11 @@ void runtime::AlignedBuffer::initialize(size_t byte_size, size_t alignment)
         {
             m_aligned_buffer += (alignment - mod);
         }
+    }
+    else
+    {
+        m_allocated_buffer = nullptr;
+        m_aligned_buffer = nullptr;
     }
 }
 
