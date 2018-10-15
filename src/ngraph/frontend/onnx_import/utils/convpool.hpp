@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -85,22 +87,20 @@ namespace ngraph
                 return get_pads(node, get_kernel_shape(node));
             }
 
-            /**
-             * @brief Create an nGraph pooling operation based on an ONNX pooling op.
-             *
-             * @tparam T Class of an nGraph pooling operation (e.g. AveragePool, MaxPool)
-             * @param node incoming ONNX opearation
-             * @return nGraph node equivalent of the ONNX operation
-             */
+            /// \ brief Create an nGraph pooling operation based on an ONNX pooling op.
+            ///
+            /// \ param T Class of an nGraph pooling operation (e.g. AveragePool, MaxPool)
+            /// \ param node incoming ONNX opearation
+            /// \ return nGraph node equivalent of the ONNX operation
             template <class T>
-            inline NodeVector make_ng_pool(const Node& node, bool is_global = false)
+            inline NodeVector make_ng_pool(const Node& node)
             {
                 // Fetch input node for the pooling operation
                 auto data = node.get_ng_inputs().at(0);
 
                 // Parse ONNX op attributes
                 Shape kernel_shape;
-                if (is_global)
+                if (node.op_type().find("Global") != std::string::npos)
                 {
                     kernel_shape = node.get_ng_inputs()[0]->get_shape();
                     kernel_shape.erase(std::begin(kernel_shape), std::next(std::begin(kernel_shape), 2));

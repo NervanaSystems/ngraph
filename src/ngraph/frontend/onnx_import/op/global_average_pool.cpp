@@ -30,7 +30,7 @@ namespace ngraph
             {
                 NodeVector global_average_pool(const Node& node)
                 {
-                    return convpool::make_ng_pool<ngraph::op::AvgPool>(node, true);
+                    return convpool::make_ng_pool<ngraph::op::AvgPool>(node);
                 }
 
             } // namespace set_1

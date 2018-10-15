@@ -30,7 +30,7 @@ namespace ngraph
             {
                 NodeVector global_max_pool(const Node& node)
                 {
-                    return convpool::make_ng_pool<ngraph::op::MaxPool>(node, true);
+                    return convpool::make_ng_pool<ngraph::op::MaxPool>(node);
                 }
 
             } // namespace set_1
