@@ -62,32 +62,30 @@ Shape ngraph::infer_windowed_reduction_output_shape(const Node* node,
 
     for (size_t i = 0; i < data_shape.size(); i++)
     {
-        NODE_VALIDATION_ASSERT(node, data_shape[i] > 0)
-            << "Data shape (" << data_shape << ") has zero dimension at axis " << i << ".";
         NODE_VALIDATION_ASSERT(node, data_dilation[i] > 0)
             << "Data dilation (" << data_dilation << ") has zero dimension at axis " << i << ".";
-        NODE_VALIDATION_ASSERT(node, window_shape[i] > 0)
-            << "Window shape (" << window_shape << ") has zero dimension at axis " << i << ".";
         NODE_VALIDATION_ASSERT(node, window_strides[i] > 0)
             << "Window strides (" << window_strides << ") has zero dimension at axis " << i << ".";
         NODE_VALIDATION_ASSERT(node, window_dilation[i] > 0)
             << "Window dilation (" << window_dilation << ") has zero dimension at axis " << i
             << ".";
 
-        ptrdiff_t data_padded_dilated_dim = ptrdiff_t(data_dilation[i] * (data_shape[i] - 1) + 1) +
-                                            data_padding_below[i] + data_padding_above[i];
-        size_t window_dilated_dim = window_dilation[i] * (window_shape[i] - 1) + 1;
+        ptrdiff_t data_padded_dilated_dim =
+            (ptrdiff_t(data_dilation[i]) * (ptrdiff_t(data_shape[i]) - 1)) + 1 +
+            data_padding_below[i] + data_padding_above[i];
+        ptrdiff_t window_dilated_dim =
+            ptrdiff_t(window_dilation[i]) * (ptrdiff_t(window_shape[i]) - 1) + 1;
 
         NODE_VALIDATION_ASSERT(node, data_padded_dilated_dim > 0)
             << "Data shape after padding and dilation has dimension less than 1 (dim: "
-            << data_padded_dilated_dim << ") at dimension " << i << ".";
+            << data_padded_dilated_dim << ") at axis " << i << ".";
         NODE_VALIDATION_ASSERT(node, window_dilated_dim > 0)
             << "Window after dilation has dimension less than 1 (dim: " << window_dilated_dim
-            << ") at dimension " << i << ".";
-        NODE_VALIDATION_ASSERT(node, window_dilated_dim <= size_t(data_padded_dilated_dim))
+            << ") at axis " << i << ".";
+        NODE_VALIDATION_ASSERT(node, window_dilated_dim <= data_padded_dilated_dim)
             << "Window after dilation has dimension (dim: " << window_dilated_dim
             << ") larger than the data shape after padding (dim: " << data_padded_dilated_dim
-            << ") at dimension " << i << ".";
+            << ") at axis " << i << ".";
         NODE_VALIDATION_ASSERT(node,
                                is_window_all_in_padding_allowed ||
                                    (window_dilated_dim >= data_padding_below[i] &&
@@ -98,8 +96,8 @@ Shape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             << ", padding above dimension: " << data_padding_above[i] << ") and this is not "
             << "allowed.";
 
-        size_t output_dim =
-            ceil_div(size_t(data_padded_dilated_dim) - window_dilated_dim + 1, window_strides[i]);
+        size_t output_dim = ceil_div(
+            size_t(data_padded_dilated_dim) - size_t(window_dilated_dim) + 1, window_strides[i]);
         output_shape[i] = output_dim;
     }
 

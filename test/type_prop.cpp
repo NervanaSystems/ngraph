@@ -3271,7 +3271,7 @@ TEST(type_prop, conv_invalid_input_spatial_size_negative_after_padding)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data shape after padding and dilation has dimension less "
-                                         "than 1 (dim: -1) at dimension 0"));
+                                         "than 1 (dim: -1) at axis 0"));
     }
     catch (...)
     {
@@ -3300,7 +3300,7 @@ TEST(type_prop, conv_invalid_input_spatial_size_zero_after_padding)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Data shape after padding and dilation has dimension less "
-                                         "than 1 (dim: 0) at dimension 0"));
+                                         "than 1 (dim: 0) at axis 0"));
     }
     catch (...)
     {
@@ -3322,8 +3322,8 @@ TEST(type_prop, conv_invalid_input_spatial_size_0)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data shape (Shape{0, 10}) has zero dimension at axis 0"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data shape after padding and dilation has "
+                                                       "dimension less than 1 (dim: 0) at axis 0"));
     }
     catch (...)
     {
@@ -3346,7 +3346,8 @@ TEST(type_prop, conv_invalid_window_size_0)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), std::string("Window shape (Shape{3, 0}) has zero dimension at axis 1"));
+            error.what(),
+            std::string("Window after dilation has dimension less than 1 (dim: 0) at axis 1"));
     }
     catch (...)
     {
@@ -3424,7 +3425,7 @@ TEST(type_prop, conv_invalid_dilated_window_too_large)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Window after dilation has dimension (dim: 9) larger than "
-                                         "the data shape after padding (dim: 8) at dimension 0"));
+                                         "the data shape after padding (dim: 8) at axis 0"));
     }
     catch (...)
     {
@@ -3758,8 +3759,8 @@ TEST(type_prop, max_pool_invalid_input_data_size_0)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data shape (Shape{0, 10}) has zero dimension at axis 0"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data shape after padding and dilation has "
+                                                       "dimension less than 1 (dim: 0) at axis 0"));
     }
     catch (...)
     {
@@ -3782,7 +3783,8 @@ TEST(type_prop, max_pool_invalid_window_size_0)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), std::string("Window shape (Shape{3, 0}) has zero dimension at axis 1"));
+            error.what(),
+            std::string("Window after dilation has dimension less than 1 (dim: 0) at axis 1"));
     }
     catch (...)
     {
@@ -3806,7 +3808,7 @@ TEST(type_prop, max_pool_invalid_dilated_too_large)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Window after dilation has dimension (dim: 9) larger than "
-                                         "the data shape after padding (dim: 8) at dimension 0"));
+                                         "the data shape after padding (dim: 8) at axis 0"));
     }
     catch (...)
     {
@@ -6103,8 +6105,9 @@ TEST(type_prop, avg_pool_invalid_input_item_size_0)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Data shape (Shape{0, 10}) has zero dimension at axis 0");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Data shape after padding and dilation has dimension less than 1 (dim: 0) at axis 0");
     }
     catch (...)
     {
@@ -6127,7 +6130,7 @@ TEST(type_prop, avg_pool_invalid_window_size_0)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Window shape (Shape{3, 0}) has zero dimension at axis 1");
+                             "Window after dilation has dimension less than 1 (dim: 0) at axis 1");
     }
     catch (...)
     {
@@ -6151,7 +6154,7 @@ TEST(type_prop, avg_pool_invalid_dilated_too_large)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Window after dilation has dimension (dim: 9) larger than the data "
-                             "shape after padding (dim: 8) at dimension 0");
+                             "shape after padding (dim: 8) at axis 0");
     }
     catch (...)
     {
