@@ -14,8 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(nbench)
-add_subdirectory(reserialize)
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    add_subdirectory(serialize_onnx)
-endif()
+add_executable(serialize_onnx serialize_onnx.cpp)
+add_dependencies(serialize_onnx ngraph)
+target_link_libraries(serialize_onnx ngraph)
