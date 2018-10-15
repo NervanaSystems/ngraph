@@ -58,6 +58,7 @@
 #include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -473,6 +474,51 @@ namespace ngraph
                         vector<memory::desc> o_mds;
                         ConvolutionLayout<ngraph::op::ConvolutionBias, true, false>(
                             node, i_mds, o_mds);
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolutionBias)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        ConvolutionLayout<ngraph::op::QuantizedConvolutionBias, true, false>(
+                            node, i_mds, o_mds);
+
+                        auto min_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 3, false, memory::format::x);
+                        auto max_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 4, false, memory::format::x);
+                        auto min_filter_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 5, false, memory::format::x);
+                        auto max_filter_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 6, false, memory::format::x);
+                        auto min_freezed_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 7, false, memory::format::x);
+                        auto max_freezed_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 8, false, memory::format::x);
+                        auto min_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 1, true, memory::format::x);
+                        auto max_output_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 2, true, memory::format::x);
+
+                        i_mds.push_back(min_input_md);
+                        i_mds.push_back(max_input_md);
+                        i_mds.push_back(min_filter_md);
+                        i_mds.push_back(max_filter_md);
+                        i_mds.push_back(min_freezed_output_md);
+                        i_mds.push_back(max_freezed_output_md);
+                        o_mds.push_back(min_output_md);
+                        o_mds.push_back(max_output_md);
+
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -1276,84 +1322,182 @@ namespace ngraph
                     }
                 }
 
+                static bool can_be_rotated(const ngraph::op::Reshape* reshape,
+                                           const mkldnn::memory::desc& md)
+                {
+                    auto axis_order = reshape->get_input_order();
+                    auto input_shape = reshape->get_input_shape(0);
+                    auto output_shape = reshape->get_output_shape();
+                    if (input_shape.size() != output_shape.size())
+                        return false;
+
+                    if ((shape_size(input_shape)) == 1)
+                        return false;
+
+                    for (size_t i = 0; i < output_shape.size(); i++)
+                    {
+                        if (input_shape[axis_order[i]] != output_shape[i])
+                            return false;
+                    }
+                    return true;
+                }
+
+                static bool can_be_squeezed(const ngraph::op::Reshape* reshape,
+                                            const mkldnn::memory::desc& md,
+                                            AxisVector& squeezed_axis)
+                {
+                    auto input_shape = reshape->get_input_shape(0);
+                    auto output_shape = reshape->get_output_shape();
+
+                    if (input_shape.size() <= output_shape.size())
+                        return false;
+
+                    if ((shape_size(input_shape)) == 1)
+                        return false;
+
+                    for (size_t i = 0, j = 0; i < input_shape.size(); i++)
+                    {
+                        if (j >= output_shape.size() || input_shape[i] != output_shape[j])
+                        {
+                            // Squeezed axis
+                            if (input_shape[i] != 1)
+                                return false;
+                            squeezed_axis.push_back(i);
+                        }
+                        else
+                        {
+                            j++;
+                        }
+                    }
+
+                    if (mkldnn_utils::is_mkldnn_padded_layout(md, squeezed_axis))
+                        return false;
+
+                    return true;
+                }
+
+                static bool can_be_expanded(const ngraph::op::Reshape* reshape,
+                                            const mkldnn::memory::desc& md,
+                                            AxisVector& expanded_axis)
+                {
+                    auto input_shape = reshape->get_input_shape(0);
+                    auto output_shape = reshape->get_output_shape();
+
+                    if (input_shape.size() >= output_shape.size())
+                        return false;
+
+                    if ((shape_size(input_shape)) == 1)
+                        return false;
+
+                    for (size_t i = 0, j = 0; j < output_shape.size(); j++)
+                    {
+                        if (i >= input_shape.size() || input_shape[i] != output_shape[j])
+                        {
+                            // Expanded axis
+                            if (output_shape[j] != 1)
+                                return false;
+                            expanded_axis.push_back(j);
+                        }
+                        else
+                        {
+                            i++;
+                        }
+                    }
+                    return true;
+                }
+
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Reshape)
                 {
                     auto reshape = static_cast<ngraph::op::Reshape*>(node.get());
-                    if (reshape->get_is_transpose())
+                    bool skip_reshape = false;
+                    bool skip_input_reorder = false;
+
+                    auto tvl =
+                        node->get_inputs()[0].get_output().get_tensor_ptr()->get_tensor_layout();
+                    auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
+                    if (cpu_tvl && cpu_tvl->is_mkldnn_layout())
                     {
-                        if (reshape->get_output_shape().size() ==
-                            reshape->get_argument(0)->get_shape().size())
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        auto input_shape = reshape->get_input_shape(0);
+                        auto output_shape = reshape->get_output_shape();
+                        AxisVector squeezed_axis;
+                        AxisVector expanded_axis;
+
+                        // Case 1: Transpose only. Rotate layouts
+                        // Case 2: Squeeze dims. Removes size-1 dimensions. Squeeze mkldnn layout
+                        // Case 3: Exapnd dims. Add size-1 dimensions. Expand mkldnn layout
+                        // Default: Convert to row-major if needed
+                        if (can_be_rotated(reshape, input_md))
                         {
-                            auto axis_order = reshape->get_input_order();
-                            auto tvl = node->get_inputs()[0]
-                                           .get_output()
-                                           .get_tensor_ptr()
-                                           ->get_tensor_layout();
-                            auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
-                            if (cpu_tvl && cpu_tvl->is_mkldnn_layout())
-                            {
-                                // Rotate MKLDNN memory descriptor
-                                auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                                auto output_md =
-                                    mkldnn_utils::rotate_blocked_md(input_md, axis_order);
-                                set_output_layouts(node, {output_md});
-                                auto op_annotations = reshape->get_op_annotations();
-                                if (op_annotations)
-                                {
-                                    // pass-through
-                                    op_annotations->add_in_place_oi_pair({0, 0, false});
-                                }
-                                else
-                                {
-                                    op_annotations =
-                                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                                    // pass-through
-                                    op_annotations->add_in_place_oi_pair({0, 0, false});
-                                    reshape->set_op_annotations(op_annotations);
-                                }
-                            }
-                            else
-                            {
-                                auto input_strides = cpu_tvl->get_strides();
-                                Strides output_strides(input_strides.size());
-                                for (size_t i = 0; i < input_strides.size(); i++)
-                                {
-                                    output_strides[i] = input_strides[axis_order[i]];
-                                }
-                                set_native_layouts(external_function, node);
-                                auto output_tvl =
-                                    dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-                                        node->get_output_tensor_ptr()->get_tensor_layout());
-                                // TODO (jbobba): For now non-MKLDNN layouts are always in row-major format
-                                // Enable this once we support non row-major strided formats
-                                // output_tvl->set_strides(output_strides);
-                            }
+                            auto output_md = mkldnn_utils::rotate_blocked_md(
+                                input_md, reshape->get_input_order());
+                            set_output_layouts(node, {output_md});
+                            skip_reshape = true;
+                            skip_input_reorder = true;
+                        }
+                        else if (can_be_squeezed(reshape, input_md, squeezed_axis))
+                        {
+                            auto output_md =
+                                mkldnn_utils::squeeze_blocked_md(input_md, squeezed_axis);
+                            set_output_layouts(node, {output_md});
+                            skip_reshape = true;
+                            skip_input_reorder = true;
+                        }
+                        else if (can_be_expanded(reshape, input_md, expanded_axis))
+                        {
+                            auto output_md =
+                                mkldnn_utils::expand_blocked_md(input_md, expanded_axis);
+                            set_output_layouts(node, {output_md});
+                            skip_reshape = true;
+                            skip_input_reorder = true;
                         }
                         else
                         {
-                            set_native_layouts(external_function, node);
-                            return;
+                            if (!reshape->get_is_transpose())
+                                skip_reshape = true;
                         }
                     }
                     else
                     {
-                        // Shape change only, tensor in native layout can be
-                        // forwarded to output
-                        auto op_annotations = reshape->get_op_annotations();
-                        if (op_annotations)
+                        // Input is in row-major layout
+                        if (reshape->get_is_transpose())
                         {
-                            // pass-through
-                            op_annotations->add_in_place_oi_pair({0, 0, false});
+                            auto input_strides = cpu_tvl->get_strides();
+                            auto axis_order = reshape->get_input_order();
+                            Strides output_strides(input_strides.size());
+                            for (size_t i = 0; i < input_strides.size(); i++)
+                            {
+                                output_strides[i] = input_strides[axis_order[i]];
+                            }
+
+                            auto output_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
+                                node->get_output_tensor_ptr()->get_tensor_layout());
+                            // TODO (jbobba): For now non-MKLDNN layouts are always in row-major format
+                            // Enable this once we support non row-major strided formats
+                            // output_tvl->set_strides(output_strides);
                         }
                         else
                         {
+                            skip_reshape = true;
+                        }
+                    }
+
+                    if (skip_reshape)
+                    {
+                        auto op_annotations = reshape->get_op_annotations();
+                        if (!op_annotations)
+                        {
                             op_annotations =
                                 std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                            // pass-through
-                            op_annotations->add_in_place_oi_pair({0, 0, false});
                             reshape->set_op_annotations(op_annotations);
                         }
+                        // pass-through
+                        op_annotations->add_in_place_oi_pair({0, 0, false});
+                    }
+
+                    if (!skip_input_reorder)
+                    {
                         set_native_layouts(external_function, node);
                     }
                 }
@@ -1389,7 +1533,18 @@ namespace ngraph
                     }
                     else
                     {
-                        set_native_layouts(external_function, node);
+                        if (mkldnn_utils::get_input_mkldnn_md(node.get(), 0).data.format ==
+                            mkldnn_format_undef)
+                        {
+                            set_native_layouts(external_function, node);
+                        }
+                        else
+                        {
+                            auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                            vector<memory::desc> o_mds;
+                            o_mds.push_back(input_md);
+                            set_output_layouts(node, o_mds);
+                        }
                     }
                 }
 
@@ -1625,60 +1780,43 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        // pass input format to output
+                        const ngraph::op::Slice* slice =
+                            static_cast<const ngraph::op::Slice*>(node.get());
+                        auto lower_bounds = slice->get_lower_bounds();
+                        auto result_shape = slice->get_output_shape(0);
+
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         NGRAPH_DEBUG << "input memory format: " << input_md.data.format << "\n";
                         auto result_format =
                             static_cast<mkldnn::memory::format>(input_md.data.format);
 
-                        auto slice = static_cast<ngraph::op::Slice*>(node.get());
-                        auto lower_bounds = slice->get_lower_bounds();
-                        if (result_format == mkldnn::memory::nChw16c)
+                        // check lower bounds and output shape
+                        for (auto i = 0; i < input_md.data.ndims; i++)
                         {
-                            // check lower bound of channels
-                            if (lower_bounds[1] % 16 != 0)
+                            auto block_size = input_md.data.layout_desc.blocking.block_dims[i];
+                            if (block_size != 0 && (lower_bounds[i] % block_size != 0 ||
+                                                    result_shape[i] % block_size != 0))
                             {
-                                NGRAPH_DEBUG
-                                    << "slice nChw16c: lower bound of channels not multiple of 16, "
-                                       "set native layout\n";
-                                set_native_layouts(external_function, node);
-                                return;
-                            }
-                        }
-                        else if (result_format == mkldnn::memory::nChw8c)
-                        {
-                            // check lower bound of channels
-                            if (lower_bounds[1] % 8 != 0)
-                            {
-                                NGRAPH_DEBUG
-                                    << "slice nChw8C: lower bound of channels not multiple of 8,"
-                                       "set native layout\n";
+                                NGRAPH_DEBUG << "slice: number of channels in lower bounds or "
+                                                "output shape is not multiple of block size, "
+                                                "set native layout\n";
                                 set_native_layouts(external_function, node);
                                 return;
                             }
                         }
 
-                        vector<memory::desc> o_mds;
                         if (result_format == mkldnn::memory::blocked)
                         {
-                            auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-                                node->get_inputs()[0]
-                                    .get_output()
-                                    .get_tensor_ptr()
-                                    ->get_tensor_layout());
-                            auto result_desc =
-                                mkldnn_utils::create_blocked_mkldnn_md(node->get_output_shape(0),
-                                                                       cpu_tvl->get_strides(),
-                                                                       node->get_element_type());
-                            o_mds.push_back(result_desc);
+                            set_native_layouts(external_function, node);
                         }
                         else
                         {
+                            vector<memory::desc> o_mds;
                             auto result_desc = mkldnn_utils::create_default_mkldnn_md(
                                 node.get(), 0, true, result_format);
                             o_mds.push_back(result_desc);
+                            set_output_layouts(node, o_mds);
                         }
-                        set_output_layouts(node, o_mds);
                     }
                     else
                     {
@@ -1891,6 +2029,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::QuantizeCPU), &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizeCPU>},
     {TI(ngraph::op::QuantizedConvolutionRelu),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionRelu>},
+    {TI(ngraph::op::QuantizedConvolutionBias),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBias>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

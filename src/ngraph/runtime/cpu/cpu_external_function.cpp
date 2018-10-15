@@ -65,6 +65,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
@@ -94,6 +95,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
@@ -126,6 +128,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
@@ -152,6 +155,7 @@
 #include "ngraph/runtime/cpu/op/quantize.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -188,7 +192,7 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_function_name(function->get_name())
     , m_is_built(false)
 #if !defined(NGRAPH_DEX_ONLY)
-    , m_direct_execution(std::getenv("NGRAPH_DEX") != nullptr)
+    , m_direct_execution(!std::getenv("NGRAPH_CODEGEN"))
 #else
     , m_direct_execution(true)
 #endif
@@ -308,6 +312,8 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBackpropData>},
     {TI(ngraph::op::GroupConvolution), &runtime::cpu::CPU_Emitter::emit<op::GroupConvolution>},
     {TI(ngraph::op::ConvolutionBias), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBias>},
+    {TI(ngraph::op::QuantizedConvolutionBias),
+     &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBias>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolution),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolution>},
@@ -358,6 +364,8 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::LoopKernel>},
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
     {TI(ngraph::op::ConvolutionAdd), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionAdd>},
+    {TI(ngraph::op::Quantize), &runtime::cpu::CPU_Emitter::emit<op::Quantize>},
+    {TI(ngraph::op::Dequantize), &runtime::cpu::CPU_Emitter::emit<op::Dequantize>},
 
 };
 
@@ -432,6 +440,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/convolution.hpp"
+#include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/runtime/reference/lrn.hpp"
 #include "ngraph/runtime/reference/max.hpp"
@@ -442,6 +451,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/reference/or.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/product.hpp"
+#include "ngraph/runtime/reference/quantize.hpp"
 #include "ngraph/runtime/reference/reduce.hpp"
 #include "ngraph/runtime/reference/reduce_window.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
@@ -998,19 +1008,20 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
 {
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
+    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
     // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
     // failing mxnet unit tests.
-    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
     // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
@@ -1355,6 +1366,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
             case CPUTensorRole::CONSTANT: return string("CPUTensorRole::CONSTANT");
             case CPUTensorRole::OUTPUT: return string("CPUTensorRole::OUTPUT");
             }
+            throw runtime_error("unhandled CPU tensor role");
         };
 
         //dump the tensor roles to debug manifest
@@ -1674,7 +1686,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
         const descriptor::Output& output = input.get_output();
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
         TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
-        if (!contains(arg_names, tvw.get_name()))
+        if (arg_names.find(tvw.get_name()) == arg_names.end())
         {
             arg_names.insert(tvw.get_name());
             if (arg_index++ > 0)

@@ -42,6 +42,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
@@ -71,6 +72,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
@@ -109,6 +111,7 @@
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -2991,6 +2994,42 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConvolutionBias)
+            {
+                auto qconvolution_bias =
+                    static_cast<const ngraph::op::QuantizedConvolutionBias*>(node);
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto qconv_index =
+                        mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolutionBias>(
+                            node, args, out);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
+
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "*(" << out[1].get_name()
+                           << ") = " << qconvolution_bias->get_freezed_output_min() << ";\n";
+                    writer << "*(" << out[2].get_name()
+                           << ") = " << qconvolution_bias->get_freezed_output_max() << ";\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(qconv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error(
+                        "QuantizedConvolutionBias is only supported with MKLDNN kernel.");
+                }
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBias)
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
@@ -4651,6 +4690,34 @@ namespace ngraph
                 }
 
                 writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Dequantize)
+            {
+                auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
+                writer << "reference::dequantize(";
+                writer << "            " << args[0].get_name() << ",\n";
+                writer << "            " << args[1].get_name() << ",\n";
+                writer << "            " << args[2].get_name() << ",\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            {" << join(args[0].get_shape()) << "},\n";
+                writer << "            {" << join(args[1].get_shape()) << "},\n";
+                writer << "            {" << join(dequantize->get_axes()) << "});\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Quantize)
+            {
+                auto quantize = static_cast<const ngraph::op::Dequantize*>(node);
+                writer << "reference::quantize(";
+                writer << "            " << args[0].get_name() << ",\n";
+                writer << "            " << args[1].get_name() << ",\n";
+                writer << "            " << args[2].get_name() << ",\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            {" << join(args[0].get_shape()) << "},\n";
+                writer << "            {" << join(args[1].get_shape()) << "},\n";
+                writer << "            {" << join(quantize->get_axes()) << "});\n";
             }
 
 #undef TI

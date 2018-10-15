@@ -26,8 +26,15 @@ namespace ngraph
     {
         namespace op
         {
-            inline NodeVector identity(const Node& node) { return {node.get_ng_inputs().at(0)}; }
-        } // namespace op
+            namespace set_1
+            {
+                inline NodeVector identity(const Node& node)
+                {
+                    return {node.get_ng_inputs().at(0)};
+                }
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 

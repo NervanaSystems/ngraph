@@ -435,15 +435,24 @@ void runtime::gpu::CudaKernelBuilder::get_onehot_op(codegen::CodeWriter& writer,
                                                     const std::array<std::string, 2>& data_types)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, uint32_t m, uint32_t k, uint32_t n)\n";
+           << data_types[1]
+           << "* out, uint32_t hot_axis_stride, uint32_t hot_axis_shape, uint32_t n)\n";
     writer.block_begin();
     {
         writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
         writer << "if (tid < n)\n";
         writer.block_begin();
         {
-            writer << "uint32_t idx = (tid / m) * m * k + (m * in[tid]) + tid % m;\n";
-            writer << "out[idx] = 1;\n";
+            writer << "int32_t in_pixel = static_cast<int32_t>(in[tid]);\n";
+            writer << "if(in_pixel >= 0 && in_pixel < hot_axis_shape)\n";
+            writer.block_begin();
+            {
+                writer << "uint32_t idx = tid / hot_axis_stride * hot_axis_stride * hot_axis_shape "
+                          "+ (hot_axis_stride * in_pixel) + tid % "
+                          "hot_axis_stride;\n";
+                writer << "out[idx] = 1;\n";
+            }
+            writer.block_end();
         }
         writer.block_end();
     }
@@ -638,12 +647,10 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
     writer.block_end();
 }
 
-void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
-    codegen::CodeWriter& writer,
-    const std::string& name,
-    GPUKernelArgs& args,
-    const std::array<std::string, 2>& data_types,
-    size_t rank)
+void runtime::gpu::CudaKernelBuilder::get_pad_op(codegen::CodeWriter& writer,
+                                                 const std::string& name,
+                                                 GPUKernelArgs& args,
+                                                 size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -667,6 +674,44 @@ void runtime::gpu::CudaKernelBuilder::get_pad_dynamic_op(
                 writer << "input_idx %= input_strides" << i << ";\n";
             }
             writer << "out[output_idx] = in[tid];\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
+void runtime::gpu::CudaKernelBuilder::get_pad_fill_op(codegen::CodeWriter& writer,
+                                                      const std::string& name,
+                                                      GPUKernelArgs& args,
+                                                      size_t rank)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
+    writer.block_begin();
+    {
+        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        writer << "if (tid < n)\n";
+        writer.block_begin();
+        {
+            writer << "bool in_bounds = true;\n";
+            writer << "uint32_t output_pixel = tid;\n";
+            writer << "uint32_t input_pixel = 0;\n";
+            writer << "int32_t input, input_dil;\n";
+            for (size_t i = 0; i < rank; i++)
+            {
+                if (i != 0)
+                {
+                    writer << "output_pixel %= output_strides" << i - 1 << ";\n";
+                }
+                writer << "input_dil = output_pixel / output_strides" << i << " - padding_below"
+                       << i << ";\n";
+
+                writer << "input = input_dil / (padding_interior" << i << " + 1);\n";
+                writer << "input_dil %= (padding_interior" << i << " + 1);\n";
+                writer << "in_bounds = in_bounds && (input >= 0) && (input < input_shape" << i
+                       << ") && (input_dil == 0);\n";
+                writer << "input_pixel += input * input_strides" << i << ";\n";
+            }
+            writer << "out[tid] = (in_bounds) ? in[input_pixel] : *pad;\n";
         }
         writer.block_end();
     }

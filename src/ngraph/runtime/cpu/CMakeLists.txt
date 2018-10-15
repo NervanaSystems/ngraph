@@ -70,6 +70,7 @@ set(SRC
     builder/softmax.cpp
     builder/sum.cpp
     builder/topk.cpp
+    builder/quantization.cpp
     kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
@@ -95,6 +96,7 @@ set(SRC
     op/quantized_max_pool.cpp
     op/quantized_avg_pool.cpp
     op/quantized_conv_relu.cpp
+    op/quantized_conv_bias.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
     op/conv_add.cpp
@@ -109,6 +111,7 @@ set(SRC
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
+    pass/cpu_reshape_sinking.cpp
 )
 
 if (NOT NGRAPH_DEX_ONLY)
