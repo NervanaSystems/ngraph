@@ -7349,3 +7349,39 @@ TEST(type_prop, logic_arith_compare_partial_et)
     ASSERT_EQ(test_not(element::boolean)->get_element_type(), element::boolean);
     ASSERT_EQ(test_not(element::dynamic)->get_element_type(), element::dynamic);
 }
+
+TEST(type_prop, get_output_element_partial_et_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
+    auto b = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
+    auto add = make_shared<op::Add>(a, b);
+    auto goe = make_shared<op::GetOutputElement>(add, 0);
+
+    ASSERT_EQ(goe->get_output_element_type(0), element::dynamic);
+    ASSERT_EQ(goe->get_output_shape(0), (Shape{1, 2, 3, 4}));
+}
+
+TEST(type_prop, get_output_element_partial_rank_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto b = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto add = make_shared<op::Add>(a, b);
+    auto goe = make_shared<op::GetOutputElement>(add, 0);
+
+    ASSERT_EQ(goe->get_output_element_type(0), element::i32);
+    ASSERT_TRUE(goe->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, get_output_element_partial_rank_static_dynamic)
+{
+    auto a = make_shared<op::Parameter>(
+        element::i32, PartialShape{Dimension::dynamic(), 2, 3, Dimension::dynamic()});
+    auto b = make_shared<op::Parameter>(
+        element::i32, PartialShape{Dimension::dynamic(), 2, Dimension::dynamic(), 4});
+    auto add = make_shared<op::Add>(a, b);
+    auto goe = make_shared<op::GetOutputElement>(add, 0);
+
+    ASSERT_EQ(goe->get_output_element_type(0), element::i32);
+    ASSERT_TRUE(
+        goe->get_output_partial_shape(0).same_scheme(PartialShape{Dimension::dynamic(), 2, 3, 4}));
+}
