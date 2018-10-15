@@ -68,9 +68,6 @@ Shape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             << "Data dilation (" << data_dilation << ") has zero dimension at axis " << i << ".";
         NODE_VALIDATION_ASSERT(node, window_shape[i] > 0)
             << "Window shape (" << window_shape << ") has zero dimension at axis " << i << ".";
-        NODE_VALIDATION_ASSERT(node, window_shape[i] <= data_shape[i])
-            << "Window shape (" << window_shape << ") is larger than data shape (" << data_shape
-            << ") at axis " << i << ".";
         NODE_VALIDATION_ASSERT(node, window_strides[i] > 0)
             << "Window strides (" << window_strides << ") has zero dimension at axis " << i << ".";
         NODE_VALIDATION_ASSERT(node, window_dilation[i] > 0)
