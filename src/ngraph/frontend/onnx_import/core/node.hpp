@@ -20,7 +20,7 @@
 
 #include "ngraph/node_vector.hpp"
 
-#include <onnx.pb.h>
+#include <onnx-ml.pb.h>
 
 #include "attribute.hpp"
 #include "tensor.hpp"
