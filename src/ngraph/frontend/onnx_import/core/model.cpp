@@ -17,8 +17,9 @@
 #include <ostream>
 #include <set>
 
+#include <onnx-ml.pb.h>
+
 #include "assertion.hpp"
-#include "onnx.pb.h"
 
 #include "model.hpp"
 #include "ops_bridge.hpp"
