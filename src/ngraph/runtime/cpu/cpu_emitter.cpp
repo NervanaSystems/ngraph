@@ -42,6 +42,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
@@ -71,6 +72,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
@@ -4688,6 +4690,57 @@ namespace ngraph
                 }
 
                 writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Dequantize)
+            {
+                auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
+                //<" << lrn->get_element_type().c_type_string() << ">
+                writer << "reference::dequantize(";
+                writer << "            " << args[0].get_name() << ",\n";
+                writer << "            " << args[1].get_name() << ",\n";
+                writer << "            " << args[2].get_name() << ",\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            {" << join(args[0].get_shape()) << "},\n";
+                writer << "            {" << join(args[1].get_shape()) << "},\n";
+                writer << "            {" << join(dequantize->get_axes()) << "});\n";
+                /*
+                            ngraph::runtime::reference::dequantize<int8_t>(
+                                static_cast<int8_t*>(arg0_tensor),
+                                static_cast<float*>(arg1_tensor),
+                                static_cast<int8_t*>(arg2_tensor),
+                                static_cast<float*>(out_tensor),
+                                arg0_shape,
+                                arg1_shape,
+                                daxes);
+*/
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Quantize)
+            {
+                auto quantize = static_cast<const ngraph::op::Dequantize*>(node);
+                //<" << lrn->get_element_type().c_type_string() << ">
+                writer << "reference::quantize(";
+                writer << "            " << args[0].get_name() << ",\n";
+                writer << "            " << args[1].get_name() << ",\n";
+                writer << "            " << args[2].get_name() << ",\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            {" << join(args[0].get_shape()) << "},\n";
+                writer << "            {" << join(args[1].get_shape()) << "},\n";
+                writer << "            {" << join(quantize->get_axes()) << "});\n";
+                /*
+                        functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
+                            ngraph::runtime::reference::quantize<float>(
+                                static_cast<float*>(arg0_tensor),
+                                static_cast<float*>(arg1_tensor),
+                                static_cast<int8_t*>(arg2_tensor),
+                                static_cast<int8_t*>(out_tensor),
+                                arg0_shape,
+                                arg1_shape,
+                                daxes);
+*/
             }
 
 #undef TI
