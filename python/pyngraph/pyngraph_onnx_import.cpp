@@ -13,24 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <pybind11/pybind11.h>
 
-#include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
-#include "ngraph/runtime/backend.hpp"
-#include "ngraph/util.hpp"
+#include "pyngraph/onnx_import/onnx_import.hpp"
 
-using namespace std;
-using namespace ngraph;
+namespace py = pybind11;
 
-TEST(backend_api, registered_devices)
+PYBIND11_MODULE(_pyngraph_onnx_import, m)
 {
-    vector<string> devices = runtime::Backend::get_registered_devices();
-    EXPECT_GE(devices.size(), 0);
-
-    EXPECT_TRUE(find(devices.begin(), devices.end(), "INTERPRETER") != devices.end());
-}
-
-TEST(backend_api, invalid_name)
-{
-    ASSERT_ANY_THROW(ngraph::runtime::Backend::create("COMPLETELY-BOGUS-NAME"));
+    m.doc() = "Package ngraph.impl that wraps ngraph::onnx_import";
+    regmodule_pyngraph_onnx_import(m);
 }
