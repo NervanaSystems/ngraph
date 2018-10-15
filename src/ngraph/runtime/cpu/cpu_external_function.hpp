@@ -114,7 +114,7 @@ namespace ngraph
                 // Temporary Memory Pool alignment
                 static constexpr size_t s_memory_pool_alignment = 4096;
 
-                std::list<std::function<void(CPURuntimeContext*)>>& get_functors()
+                std::vector<std::function<void(CPURuntimeContext*)>>& get_functors()
                 {
                     return functors;
                 }
@@ -217,9 +217,9 @@ namespace ngraph
 
                 std::string m_function_name;
 
-                std::list<std::function<void(CPURuntimeContext*)>> functors;
+                std::vector<std::function<void(CPURuntimeContext*)>> functors;
                 std::vector<std::string> op_names;
-                std::list<std::function<bool(CPURuntimeContext*)>> enables;
+                std::vector<std::function<bool(CPURuntimeContext*)>> enables;
                 std::list<std::pair<std::function<bool(CPURuntimeContext*)>, std::string>>
                     enable_nodename_list;
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>

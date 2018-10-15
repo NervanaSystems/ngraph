@@ -1524,13 +1524,9 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
         else
         {
-            std::advance(functor, ctx->pc);
-            auto enable = enables.begin();
-            std::advance(enable, ctx->pc);
-            while (functor != functors.end())
+            for (; ctx->pc < functors.size(); ctx->pc++)
             {
-                ctx->pc++;
-                if ((*enable)(ctx) || ctx->first_iteration)
+                if ((enables.at(ctx->pc))(ctx) || ctx->first_iteration)
                 {
                     // Each Op will have exactly one functor, start the clock before the exceution of functor
                     // and collect the profiler_count once the execution complets
@@ -1539,10 +1535,11 @@ void runtime::cpu::CPU_ExternalFunction::build()
                         start_ts = cpu::Clock::now();
                     }
 
-                    (*functor)(ctx);
+                    (functors.at(ctx->pc))(ctx);
 
-                    if (ctx->breakpoints.count(ctx->pc))
+                    if (ctx->breakpoints.count(ctx->pc + 1))
                     {
+                        ctx->pc++;
                         break;
                     }
 
@@ -1561,8 +1558,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
                         ctx->op_durations[profiler_count++] = 0;
                     }
                 }
-                std::advance(functor, 1);
-                std::advance(enable, 1);
             }
         }
         ctx->first_iteration = false;
