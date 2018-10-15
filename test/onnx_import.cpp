@@ -1276,3 +1276,24 @@ TEST(onnx, model_thresholded_relu)
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
+
+TEST(onnx, model_unsupported_op)
+{
+    try
+    {
+        onnx_import::import_onnx_function(
+            file_util::path_join(SERIALIZED_ZOO, "onnx/unsupported_op.onnx"));
+        FAIL() << "Expected ngraph::ngraph_error";
+    }
+    catch (ngraph::ngraph_error const& err)
+    {
+        std::string what{err.what()};
+        EXPECT_NE(what.find("unknown operations"), std::string::npos);
+        EXPECT_NE(what.find("FakeOpName"), std::string::npos);
+        EXPECT_NE(what.find("AnotherFakeOpName"), std::string::npos);
+    }
+    catch (...)
+    {
+        FAIL() << "Expected ngraph::ngraph_error";
+    }
+}
