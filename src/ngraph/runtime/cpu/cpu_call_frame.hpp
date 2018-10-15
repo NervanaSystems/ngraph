@@ -59,6 +59,10 @@ namespace ngraph
                 void cleanup_runtime_context();
 
             protected:
+                CPU_CallFrame(const CPU_CallFrame&) = delete;
+                CPU_CallFrame(CPU_CallFrame&&) = delete;
+                CPU_CallFrame& operator=(const CPU_CallFrame&) = delete;
+
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;
                 EntryPoint m_compiled_function;
                 CPURuntimeContext* ctx;

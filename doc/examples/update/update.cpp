@@ -46,4 +46,6 @@ int main()
         std::cout << std::get<0>(r);
     }
     std::cout << std::endl;
+
+    return 0;
 }

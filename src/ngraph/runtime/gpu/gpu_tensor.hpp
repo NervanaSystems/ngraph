@@ -55,4 +55,9 @@ public:
     void* m_allocated_buffer_pool = nullptr;
     size_t m_buffer_size;
     bool m_custom_memory;
+
+private:
+    GPUTensor(const GPUTensor&) = delete;
+    GPUTensor(GPUTensor&&) = delete;
+    GPUTensor& operator=(const GPUTensor&) = delete;
 };

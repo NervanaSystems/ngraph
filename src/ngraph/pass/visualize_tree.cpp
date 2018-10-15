@@ -73,7 +73,7 @@ pass::VisualizeTree::VisualizeTree(const string& file_name)
 std::string pass::VisualizeTree::add_attributes(shared_ptr<Node> node)
 {
     string rc;
-    if (!contains(m_nodes_with_attributes, node))
+    if (m_nodes_with_attributes.find(node) == m_nodes_with_attributes.end())
     {
         m_nodes_with_attributes.insert(node);
         rc = get_attributes(node);
@@ -103,13 +103,22 @@ std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
 
     ss << " label=\"" << node->get_name();
 
-    static const auto nvtos = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
+    static const char* nvtos = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
     if (nvtos != nullptr)
     {
         // The shapes of the Outputs of a multi-output op
         // will be printed for its corresponding `GetOutputElement`s
         ss << " " << (node->get_outputs().size() != 1 ? std::string("[skipped]")
                                                       : vector_to_string(node->get_shape()));
+    }
+
+    static const char* nvtot = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
+    if (nvtot != nullptr)
+    {
+        // The types of the Outputs of a multi-output op
+        // will be printed for its corresponding `GetOutputElement`s
+        ss << " " << ((node->get_outputs().size() != 1) ? std::string("[skipped]")
+                                                        : node->get_element_type().c_type_string());
     }
 
     const Node& n = *node;
@@ -157,7 +166,10 @@ void pass::VisualizeTree::render() const
         ss << "dot -T" << get_file_ext() << " " << tmp_file << " -o " << m_name;
         auto cmd = ss.str();
         auto stream = popen(cmd.c_str(), "r");
-        pclose(stream);
+        if (stream)
+        {
+            pclose(stream);
+        }
 
         remove(tmp_file.c_str());
     }

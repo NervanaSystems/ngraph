@@ -103,6 +103,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
@@ -111,7 +112,9 @@
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
+#include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
 #include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 
 using namespace std;
@@ -551,19 +554,26 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 
     m_function_name = m_function->get_name();
 
+    auto allocator = std::make_shared<runtime::gpu::GPUAllocator>(
+        m_shared_context->m_primitive_emitter->get_memory_allocator());
+
+#if CUDNN_VERSION >= 7200
+    // recurrent network fusion
+    m_pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
+    m_pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
+    m_pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    m_pass_manager.register_pass<runtime::gpu::pass::MultiLayerRNNFusion>();
+#else
+    m_pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+#endif
     m_pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     m_pass_manager
         .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
-
     m_pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     m_pass_manager.register_pass<ngraph::pass::Liveness>();
-
     m_pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
-
-    GPUAllocator allocator = m_shared_context->m_primitive_emitter->get_memory_allocator();
     m_pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(
-        allocator, m_tensor_memory_buffers);
-
+        *allocator, m_tensor_memory_buffers);
     std::string common_function_string;
     auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
                          this,
@@ -571,7 +581,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
                          placeholders::_2);
     m_pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, m_node_function_map, common_function_string);
-
     string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
     m_pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
 
@@ -590,7 +599,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     emit_functions();
 
     // allocate device buffers for primitive arguments and workspace
-    allocator.close();
+    allocator->close();
     m_shared_context->m_primitive_emitter->allocate_primitive_memory();
 
     string code = m_writer.get_code();
@@ -650,7 +659,7 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
         const descriptor::Output& output = input.get_output();
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
         GPUTensorWrapper tvw{tv, "_arg" + to_string(arg_index)};
-        if (!contains(arg_names, tvw.get_name()))
+        if (arg_names.find(tvw.get_name()) == arg_names.end())
         {
             arg_names.insert(tvw.get_name());
             if (arg_index++ > 0)
