@@ -13,27 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <pybind11/pybind11.h>
 
-#pragma once
+#include "pyngraph/onnx_import/onnx_import.hpp"
 
-#include "ngraph/node_vector.hpp"
+namespace py = pybind11;
 
-#include "core/node.hpp"
-
-namespace ngraph
+PYBIND11_MODULE(_pyngraph_onnx_import, m)
 {
-    namespace onnx_import
-    {
-        namespace op
-        {
-            namespace set_1
-            {
-                NodeVector elu(const Node& node);
-
-            } // namespace set_1
-
-        } //namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    m.doc() = "Package ngraph.impl that wraps ngraph::onnx_import";
+    regmodule_pyngraph_onnx_import(m);
+}

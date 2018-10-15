@@ -29,8 +29,8 @@
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/cpu/cpu_placement.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/runtime/interpreter/int_placement.hpp"
 #include "ngraph/util.hpp"
@@ -109,13 +109,13 @@ bool runtime::hybrid::HYBRIDBackend::compile(shared_ptr<Function> function)
 
         pass::Manager pass_manager;
 
-        // fall back to CPU as the base transformer 
+        // fall back to CPU as the base transformer
         // pass_manager.register_pass<pass::AssignPlacement>(
         //     runtime::interpreter::default_placement_policy);
 
-        // fall back to Interpreter as the base transformer 
+        // fall back to Interpreter as the base transformer
         pass_manager.register_pass<pass::AssignPlacement>(runtime::cpu::default_placement_policy);
-        
+
         pass_manager.run_passes(instance.m_function);
 
         NGRAPH_INFO << "hybrid compile -begin split  ";
@@ -219,8 +219,6 @@ bool runtime::hybrid::HYBRIDBackend::call(shared_ptr<Function> function,
         // Call
         backend->call_with_validate(sub_function, result_tvs, parameter_tvs);
     }
-    return rc;
-
     NGRAPH_INFO << "hybrid call -End ";
-    return true;
+    return rc;
 }
