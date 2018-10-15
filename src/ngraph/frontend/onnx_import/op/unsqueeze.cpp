@@ -28,32 +28,36 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector unsqueeze(const Node& node)
+            namespace set_1
             {
-                NodeVector inputs{node.get_ng_inputs()};
-                auto data = inputs.at(0);
-                auto data_shape = data->get_shape();
-                auto axes = node.get_attribute_value<std::vector<int64_t>>("axes");
-
-                ASSERT_VALID_ARGUMENT(node, !axes.empty()) << "'axes' attribute is mandatory.";
-
-                std::sort(std::begin(axes), std::end(axes), std::less<int64_t>());
-
-                AxisVector input_order{reshape::get_default_axis_vector(data_shape.size())};
-
-                for (auto axis : axes)
+                NodeVector unsqueeze(const Node& node)
                 {
-                    ASSERT_VALID_ARGUMENT(node, axis >= 0 && axis <= data_shape.size())
-                        << "provided 'axes' attribute is not valid.";
+                    NodeVector inputs{node.get_ng_inputs()};
+                    auto data = inputs.at(0);
+                    auto data_shape = data->get_shape();
+                    auto axes = node.get_attribute_value<std::vector<int64_t>>("axes");
 
-                    data_shape.insert(std::next(std::begin(data_shape), axis), 1);
+                    ASSERT_VALID_ARGUMENT(node, !axes.empty()) << "'axes' attribute is mandatory.";
+
+                    std::sort(std::begin(axes), std::end(axes), std::less<int64_t>());
+
+                    AxisVector input_order{reshape::get_default_axis_vector(data_shape.size())};
+
+                    for (auto axis : axes)
+                    {
+                        ASSERT_VALID_ARGUMENT(node, axis >= 0 && axis <= data_shape.size())
+                            << "provided 'axes' attribute is not valid.";
+
+                        data_shape.insert(std::next(std::begin(data_shape), axis), 1);
+                    }
+
+                    return {std::make_shared<ngraph::op::Reshape>(data, input_order, data_shape)};
                 }
 
-                return {std::make_shared<ngraph::op::Reshape>(data, input_order, data_shape)};
-            }
+            } // namespace set_1
 
-        } // namespace  op
+        } //namespace op
 
-    } // namespace  onnx_import
+    } // namespace onnx_import
 
-} // namespace  ngraph
+} // namespace ngraph
