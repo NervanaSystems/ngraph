@@ -58,6 +58,10 @@ add_library(onnx_import STATIC
         op/floor.hpp
         op/gemm.cpp
         op/gemm.hpp
+        op/global_average_pool.cpp
+        op/global_average_pool.hpp
+        op/global_max_pool.cpp
+        op/global_max_pool.hpp
         op/greater.hpp
         op/hard_sigmoid.cpp
         op/hard_sigmoid.hpp

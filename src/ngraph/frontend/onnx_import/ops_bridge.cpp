@@ -36,6 +36,8 @@
 #include "op/flatten.hpp"
 #include "op/floor.hpp"
 #include "op/gemm.hpp"
+#include "op/global_average_pool.hpp"
+#include "op/global_max_pool.hpp"
 #include "op/greater.hpp"
 #include "op/hard_sigmoid.hpp"
 #include "op/identity.hpp"
@@ -142,6 +144,8 @@ namespace ngraph
                     REGISTER_OPERATOR("Flatten", 1, flatten);
                     REGISTER_OPERATOR("Floor", 1, floor);
                     REGISTER_OPERATOR("Gemm", 1, gemm);
+                    REGISTER_OPERATOR("GlobalAveragePool", 1, global_average_pool);
+                    REGISTER_OPERATOR("GlobalMaxPool", 1, global_max_pool);
                     REGISTER_OPERATOR("Greater", 1, greater);
                     REGISTER_OPERATOR("HardSigmoid", 1, hard_sigmoid);
                     REGISTER_OPERATOR("Identity", 1, identity);
