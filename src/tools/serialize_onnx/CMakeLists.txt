@@ -14,16 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-function(UNIT_TEST_CONTROL)
-    set(options)
-    set(oneValueArgs BACKEND MANIFEST)
-    set(multiValueArgs)
-    cmake_parse_arguments(UNIT_TEST_CONTROL "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-    if (UNIT_TEST_CONTROL_MANIFEST)
-        get_filename_component(UNIT_TEST_CONTROL_MANIFEST ${UNIT_TEST_CONTROL_MANIFEST} ABSOLUTE)
-        set(CONFIG_STRING "${UNIT_TEST_CONTROL_BACKEND}@${UNIT_TEST_CONTROL_MANIFEST}")
-    else()
-        set(CONFIG_STRING "${UNIT_TEST_CONTROL_BACKEND}@")
-    endif()
-    set(UNIT_TEST_CONFIG_LIST "${UNIT_TEST_CONFIG_LIST};${CONFIG_STRING}" CACHE INTERNAL "")
-endfunction()
+add_executable(serialize_onnx serialize_onnx.cpp)
+add_dependencies(serialize_onnx ngraph)
+target_link_libraries(serialize_onnx ngraph)

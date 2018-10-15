@@ -26,6 +26,7 @@ namespace ngraph
         namespace ops_bridge
         {
             NodeVector make_ng_nodes(const onnx_import::Node&);
+            bool is_op_type_supported(const std::string& op_type);
         }
 
     } // namespace onnx_import

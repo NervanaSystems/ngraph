@@ -558,3 +558,16 @@ bool ngraph::is_strided(const Strides& strides)
 {
     return std::any_of(strides.begin(), strides.end(), [](size_t stride) { return stride != 1; });
 }
+
+bool ngraph::is_valid_rank(const std::shared_ptr<Node>& node, std::vector<size_t> valid_ranks)
+{
+    auto node_rank = node->get_shape().size();
+    for (auto rank : valid_ranks)
+    {
+        if (rank == node_rank)
+        {
+            return true;
+        }
+    }
+    return false;
+}

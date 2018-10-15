@@ -73,7 +73,7 @@ pass::VisualizeTree::VisualizeTree(const string& file_name)
 std::string pass::VisualizeTree::add_attributes(shared_ptr<Node> node)
 {
     string rc;
-    if (!contains(m_nodes_with_attributes, node))
+    if (m_nodes_with_attributes.find(node) == m_nodes_with_attributes.end())
     {
         m_nodes_with_attributes.insert(node);
         rc = get_attributes(node);
