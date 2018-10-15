@@ -4705,16 +4705,6 @@ namespace ngraph
                 writer << "            {" << join(args[0].get_shape()) << "},\n";
                 writer << "            {" << join(args[1].get_shape()) << "},\n";
                 writer << "            {" << join(dequantize->get_axes()) << "});\n";
-                /*
-                            ngraph::runtime::reference::dequantize<int8_t>(
-                                static_cast<int8_t*>(arg0_tensor),
-                                static_cast<float*>(arg1_tensor),
-                                static_cast<int8_t*>(arg2_tensor),
-                                static_cast<float*>(out_tensor),
-                                arg0_shape,
-                                arg1_shape,
-                                daxes);
-*/
             }
 
             template <>
@@ -4730,17 +4720,6 @@ namespace ngraph
                 writer << "            {" << join(args[0].get_shape()) << "},\n";
                 writer << "            {" << join(args[1].get_shape()) << "},\n";
                 writer << "            {" << join(quantize->get_axes()) << "});\n";
-                /*
-                        functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
-                            ngraph::runtime::reference::quantize<float>(
-                                static_cast<float*>(arg0_tensor),
-                                static_cast<float*>(arg1_tensor),
-                                static_cast<int8_t*>(arg2_tensor),
-                                static_cast<int8_t*>(out_tensor),
-                                arg0_shape,
-                                arg1_shape,
-                                daxes);
-*/
             }
 
 #undef TI
