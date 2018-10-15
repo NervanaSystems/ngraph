@@ -14,9 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <assertion.hpp>
-#include <onnx.pb.h>
 #include <ostream>
+#include <set>
+
+#include "assertion.hpp"
+#include "onnx.pb.h"
 
 #include "model.hpp"
 #include "ops_bridge.hpp"

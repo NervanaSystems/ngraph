@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <string>
 
 #include "core/attribute.hpp"
 #include "op/abs.hpp"
