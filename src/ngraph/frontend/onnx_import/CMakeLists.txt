@@ -25,6 +25,7 @@ add_library(onnx_import STATIC
         core/attribute.hpp
         core/graph.cpp
         core/graph.hpp
+        core/model.cpp
         core/model.hpp
         core/node.cpp
         core/node.hpp
