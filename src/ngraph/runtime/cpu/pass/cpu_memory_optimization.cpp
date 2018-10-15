@@ -66,6 +66,30 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     break;
                 }
 
+                if (arg->get_output_size() != 1)
+                {
+                    NGRAPH_DEBUG << "cpu_post_layout_assignment: " << arg->get_name()
+                                 << ": multiple outputs, no in place concat";
+                    in_place_concat = false;
+                    break;
+                }
+
+                if (!std::dynamic_pointer_cast<op::Concat>(arg))
+                {
+                    if (auto op = std::dynamic_pointer_cast<op::Op>(arg))
+                    {
+                        auto annotation = op->get_op_annotations();
+                        if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
+
+                        {
+                            NGRAPH_DEBUG << "cpu_post_layout_assignment: " << arg->get_name()
+                                         << ": in place non concat op, no in place concat";
+                            in_place_concat = false;
+                            break;
+                        }
+                    }
+                }
+
                 if (output.get_inputs().size() != 1)
                 {
                     // check if we can do in place concat
