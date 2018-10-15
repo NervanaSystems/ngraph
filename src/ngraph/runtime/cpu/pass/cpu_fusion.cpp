@@ -809,7 +809,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
     auto gamma = std::make_shared<pattern::op::Label>(element::f32, gamma_shape);
     auto beta_shape = Shape{2};
     auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
-    double eps = 0.001;
     auto bn_pred = pattern::has_class<op::BatchNormBase>();
     auto bn = std::make_shared<pattern::op::Any>(
         input, bn_pred, NodeVector{gamma, beta, input, mean, var});
@@ -1450,7 +1449,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
     auto gamma = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
     auto beta = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
     double eps = 0.001;
-    auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, pconv, mean, var);
+    auto bn = std::make_shared<op::BatchNormInference>(eps, gamma, beta, pconv, mean, var);
 
     ngraph::pattern::graph_rewrite_callback callback =
         [input, filters, bias, mean, var, gamma, beta](pattern::Matcher& m) {
@@ -1458,7 +1457,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
                          << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
 
-            auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(m.get_match_root());
+            auto m_bn = std::dynamic_pointer_cast<op::BatchNormInference>(m.get_match_root());
             auto m_conv = std::dynamic_pointer_cast<op::ConvolutionBias>(m_bn->get_argument(2));
 
             if (m_conv->get_users().size() > 1)

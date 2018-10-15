@@ -1195,6 +1195,7 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::BatchNormTraining*>(&n);
         node["eps"] = tmp->get_eps_value();
+        break;
     }
     case OP_TYPEID::BatchNormInference:
     {

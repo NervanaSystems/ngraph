@@ -1691,7 +1691,7 @@ TEST(cpu_fusion, convbias_batch_norm_folding)
         auto conv = std::make_shared<op::Convolution>(input, weights, Strides{1, 1}, Strides{1, 1});
         auto convbias =
             conv + std::make_shared<op::Broadcast>(bias, conv->get_shape(), AxisSet{0, 2, 3});
-        auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, convbias, mean, var);
+        auto bn = std::make_shared<op::BatchNormInference>(eps, gamma, beta, convbias, mean, var);
         auto f = make_shared<Function>(
             NodeVector{bn}, op::ParameterVector{input, weights, bias, gamma, beta, mean, var});
         return f;
