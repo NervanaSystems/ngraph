@@ -19,8 +19,8 @@
 #include <string>
 
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/shape.hpp"
 #include "ngraph/op/avg_pool.hpp"
+#include "ngraph/shape.hpp"
 
 #include "core/attribute.hpp"
 #include "core/node.hpp"
@@ -103,7 +103,8 @@ namespace ngraph
                 if (node.op_type().find("Global") != std::string::npos)
                 {
                     kernel_shape = node.get_ng_inputs()[0]->get_shape();
-                    kernel_shape.erase(std::begin(kernel_shape), std::next(std::begin(kernel_shape), 2));
+                    kernel_shape.erase(std::begin(kernel_shape),
+                                       std::next(std::begin(kernel_shape), 2));
                 }
                 else
                 {
