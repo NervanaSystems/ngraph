@@ -22,7 +22,7 @@
 using namespace ngraph;
 using namespace std;
 
-shared_ptr<runtime::TensorView>
+shared_ptr<runtime::Tensor>
     make_reduce_result(function<shared_ptr<Node>(const shared_ptr<Node>&, const AxisSet&)> func)
 {
     Shape shape_a{3, 2};
@@ -39,7 +39,7 @@ shared_ptr<runtime::TensorView>
     return result;
 }
 
-shared_ptr<runtime::TensorView> make_reduce_result_true(
+shared_ptr<runtime::Tensor> make_reduce_result_true(
     function<shared_ptr<Node>(const shared_ptr<Node>&, const AxisSet&, bool)> func)
 {
     Shape shape_a{3, 2};
@@ -56,7 +56,7 @@ shared_ptr<runtime::TensorView> make_reduce_result_true(
     return result;
 }
 
-shared_ptr<runtime::TensorView> make_reduce_result_false(
+shared_ptr<runtime::Tensor> make_reduce_result_false(
     function<shared_ptr<Node>(const shared_ptr<Node>&, const AxisSet&, bool)> func)
 {
     Shape shape_a{3, 2};

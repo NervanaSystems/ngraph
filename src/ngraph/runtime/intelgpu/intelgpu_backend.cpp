@@ -45,6 +45,7 @@
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_broadcast.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_convolution.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_op_custom_func_call.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
@@ -69,6 +70,7 @@
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter_vector.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/slice.hpp"
@@ -161,9 +163,41 @@ static void do_eltwise_operation(cldnn::topology& topology,
 {
     arguments_check(op, 2, 1);
 
-    const cldnn::eltwise op_add(
-        get_output_name(op), {get_input_name(op, 0), get_input_name(op, 1)}, mode);
-    topology.add(op_add);
+    if ((get_input_type(op) == element::i32 || get_input_type(op) == element::i64) &&
+        (mode == cldnn::eltwise_mode::min || mode == cldnn::eltwise_mode::max))
+    {
+        string custom_op;
+
+        if (mode == cldnn::eltwise_mode::min)
+        {
+            custom_op = "min";
+        }
+        else if (mode == cldnn::eltwise_mode::max)
+        {
+            custom_op = "max";
+        }
+        else
+        {
+            custom_op = "not_implemented_operation";
+        }
+
+        runtime::intelgpu::do_eltwise_kernel(topology,
+                                             get_input_name(op, 0),
+                                             get_input_shape(op, 0),
+                                             get_input_type(op, 0),
+                                             get_input_name(op, 1),
+                                             get_input_shape(op, 1),
+                                             get_output_name(op),
+                                             get_output_shape(op),
+                                             get_output_type(op),
+                                             custom_op);
+    }
+    else
+    {
+        const cldnn::eltwise op_add(
+            get_output_name(op), {get_input_name(op, 0), get_input_name(op, 1)}, mode);
+        topology.add(op_add);
+    }
 }
 
 static void do_unary_operation(cldnn::topology& topology,
@@ -246,14 +280,14 @@ runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
     ocl_engine = make_shared<cldnn::engine>();
 }
 
-shared_ptr<runtime::TensorView>
+shared_ptr<runtime::Tensor>
     runtime::intelgpu::IntelGPUBackend::create_tensor(const element::Type& element_type,
                                                       const Shape& shape)
 {
     return make_shared<runtime::intelgpu::IntelGPUTensorView>(element_type, shape, *ocl_engine);
 }
 
-shared_ptr<runtime::TensorView> runtime::intelgpu::IntelGPUBackend::create_tensor(
+shared_ptr<runtime::Tensor> runtime::intelgpu::IntelGPUBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     return make_shared<runtime::intelgpu::IntelGPUTensorView>(
@@ -754,6 +788,27 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                                           activation_grad_relu,
                                                           param);
             topology.add(cldnn_activ_grad);
+            break;
+        }
+        case OP_TYPEID::Reduce:
+        {
+            arguments_check(op, 2, 1);
+
+            const shared_ptr<op::Reduce> red_op = static_pointer_cast<op::Reduce>(op);
+            const AxisSet& axis = red_op->get_reduction_axes();
+            vector<shared_ptr<Function>> func = red_op->get_functions();
+
+            // Empty axis is not a case for do_equal_propagation()
+            do_reduce_func_call(topology,
+                                get_input_name(op, 0),
+                                get_input_shape(op, 0),
+                                get_input_name(op, 1),
+                                get_input_shape(op, 1),
+                                get_output_name(op),
+                                get_output_shape(op),
+                                get_output_type(op),
+                                axis,
+                                func);
             break;
         }
         case OP_TYPEID::Abs:
@@ -1316,8 +1371,8 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
         case OP_TYPEID::AllReduce:
         case OP_TYPEID::FunctionCall:
+        case OP_TYPEID::Dequantize:
         case OP_TYPEID::Quantize:
-        case OP_TYPEID::Reduce:
         case OP_TYPEID::ReduceWindow:
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::ReverseSequence:
@@ -1340,10 +1395,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     return true;
 }
 
-bool runtime::intelgpu::IntelGPUBackend::call(
-    shared_ptr<Function> func,
-    const vector<shared_ptr<runtime::TensorView>>& outputs,
-    const vector<shared_ptr<runtime::TensorView>>& inputs)
+bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
+                                              const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                              const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     validate_call(func, outputs, inputs);
 

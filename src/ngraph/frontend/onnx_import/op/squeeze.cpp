@@ -30,38 +30,42 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector squeeze(const Node& node)
+            namespace set_1
             {
-                NodeVector inputs{node.get_ng_inputs()};
-                auto data = inputs.at(0);
-                auto data_shape = data->get_shape();
-                auto axes = node.get_attribute_value<std::vector<uint64_t>>("axes", {});
-
-                if (axes.empty())
+                NodeVector squeeze(const Node& node)
                 {
-                    for (auto index = 0; index < data_shape.size(); ++index)
+                    NodeVector inputs{node.get_ng_inputs()};
+                    auto data = inputs.at(0);
+                    auto data_shape = data->get_shape();
+                    auto axes = node.get_attribute_value<std::vector<uint64_t>>("axes", {});
+
+                    if (axes.empty())
                     {
-                        if (data_shape.at(index) == 1)
+                        for (auto index = 0; index < data_shape.size(); ++index)
                         {
-                            axes.push_back(index);
+                            if (data_shape.at(index) == 1)
+                            {
+                                axes.push_back(index);
+                            }
                         }
                     }
+
+                    std::sort(std::begin(axes), std::end(axes), std::greater<uint64_t>());
+
+                    AxisVector input_order{reshape::get_default_axis_vector(data_shape.size())};
+
+                    for (auto axis : axes)
+                    {
+                        data_shape.erase(std::next(std::begin(data_shape), axis));
+                    }
+
+                    return {std::make_shared<ngraph::op::Reshape>(data, input_order, data_shape)};
                 }
 
-                std::sort(std::begin(axes), std::end(axes), std::greater<uint64_t>());
+            } // namespace set_1
 
-                AxisVector input_order{reshape::get_default_axis_vector(data_shape.size())};
+        } //namespace op
 
-                for (auto axis : axes)
-                {
-                    data_shape.erase(std::next(std::begin(data_shape), axis));
-                }
+    } // namespace onnx_import
 
-                return {std::make_shared<ngraph::op::Reshape>(data, input_order, data_shape)};
-            }
-
-        } // namespace  op
-
-    } // namespace  onnx_import
-
-} // namespace  ngraph
+} // namespace ngraph

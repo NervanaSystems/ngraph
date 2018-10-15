@@ -23,7 +23,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
 {
@@ -49,16 +49,20 @@ namespace ngraph
                 /// \brief Invoke the function with values matching the signature of the function.
                 ///
                 /// Tuples will be expanded into their tensor views to build the call frame.
-                void call(const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
+                void call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
-                void propagate_layouts(const std::vector<std::shared_ptr<runtime::TensorView>>& tvs,
+                void propagate_layouts(const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
                                        const LayoutDescriptorPtrs& layouts) const;
 
                 void setup_runtime_context();
                 void cleanup_runtime_context();
 
             protected:
+                CPU_CallFrame(const CPU_CallFrame&) = delete;
+                CPU_CallFrame(CPU_CallFrame&&) = delete;
+                CPU_CallFrame& operator=(const CPU_CallFrame&) = delete;
+
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;
                 EntryPoint m_compiled_function;
                 CPURuntimeContext* ctx;

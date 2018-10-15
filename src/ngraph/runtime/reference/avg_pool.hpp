@@ -225,6 +225,11 @@ namespace ngraph
                         }
                     }
 
+                    if (n_elements == 0)
+                    {
+                        throw std::runtime_error("AvgPool elements == 0, must be non-zero");
+                    }
+
                     out[output_transform.index(out_coord)] = result / n_elements;
                 }
             }

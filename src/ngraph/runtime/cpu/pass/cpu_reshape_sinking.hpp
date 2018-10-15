@@ -16,8 +16,22 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include "ngraph/pass/pass.hpp"
 
-namespace py = pybind11;
-
-void regclass_pyngraph_runtime_TensorView(py::module m);
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace cpu
+        {
+            namespace pass
+            {
+                class CPUReshapeSinking : public ngraph::pass::FunctionPass
+                {
+                public:
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                };
+            }
+        }
+    }
+}

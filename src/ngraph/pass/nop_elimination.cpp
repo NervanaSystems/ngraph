@@ -36,7 +36,7 @@
 
 HANDLER_DECL(eliminate_pad)
 {
-    auto pad = std::dynamic_pointer_cast<ngraph::op::Pad>(node);
+    auto pad = std::static_pointer_cast<ngraph::op::Pad>(node);
     if (pad->get_input_shape(0) == pad->get_output_shape(0))
     {
         ngraph::replace_node(node, node->get_argument(0));
@@ -47,7 +47,7 @@ HANDLER_DECL(eliminate_pad)
 
 HANDLER_DECL(eliminate_sum)
 {
-    auto sum = std::dynamic_pointer_cast<ngraph::op::Sum>(node);
+    auto sum = std::static_pointer_cast<ngraph::op::Sum>(node);
     if (sum->get_reduction_axes().empty())
     {
         ngraph::replace_node(node, node->get_argument(0));
@@ -58,7 +58,7 @@ HANDLER_DECL(eliminate_sum)
 
 HANDLER_DECL(eliminate_convert)
 {
-    auto convert = std::dynamic_pointer_cast<ngraph::op::Convert>(node);
+    auto convert = std::static_pointer_cast<ngraph::op::Convert>(node);
     if (convert->get_convert_element_type() == convert->get_argument(0)->get_element_type())
     {
         ngraph::replace_node(node, node->get_argument(0));
@@ -69,7 +69,7 @@ HANDLER_DECL(eliminate_convert)
 
 HANDLER_DECL(eliminate_slice)
 {
-    auto slice = std::dynamic_pointer_cast<ngraph::op::Slice>(node);
+    auto slice = std::static_pointer_cast<ngraph::op::Slice>(node);
     if (slice->get_input_shape(0) == slice->get_output_shape(0))
     {
         ngraph::replace_node(node, node->get_argument(0));
@@ -81,7 +81,7 @@ HANDLER_DECL(eliminate_slice)
 HANDLER_DECL(replace_broadcast_like)
 {
     // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like" argument
-    auto broadcast_like = std::dynamic_pointer_cast<ngraph::op::BroadcastLike>(node);
+    auto broadcast_like = std::static_pointer_cast<ngraph::op::BroadcastLike>(node);
     ngraph::replace_node(
         node,
         std::make_shared<ngraph::op::Broadcast>(broadcast_like->get_argument(0),
@@ -92,7 +92,7 @@ HANDLER_DECL(replace_broadcast_like)
 
 HANDLER_DECL(eliminate_broadcast)
 {
-    auto broadcast = std::dynamic_pointer_cast<ngraph::op::Broadcast>(node);
+    auto broadcast = std::static_pointer_cast<ngraph::op::Broadcast>(node);
     if (broadcast->get_input_shape(0) == broadcast->get_output_shape(0))
     {
         ngraph::replace_node(node, node->get_argument(0));

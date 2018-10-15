@@ -22,7 +22,7 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {
@@ -39,7 +39,7 @@ namespace ngraph
 // static void emit_Abs(EMIT_ARGS);
 // static void emit_Acos(EMIT_ARGS);
 #define NGRAPH_OP(a, b) static void emit_##a(EMIT_ARGS);
-#include "ngraph/op/op_tbl.hpp"
+#include "ngraph/runtime/gpu/op/op_tbl.hpp"
 #undef NGRAPH_OP
 
                 template <typename T>
@@ -75,13 +75,15 @@ namespace ngraph
                     writer.block_end();
                 }
 
+                static void emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t);
+
             private:
                 /// \brief Create a list of node names for each arg in args
                 /// \param args list of tensor arguments
                 /// \param arg_indexes a list of indexes into args for which args to include in
                 ///    the output list, so {1, 2} will include args 1 and 2 and skip 0.
                 /// \ return returns a string containing "arg0_name, arg1_name, etc."
-                static std::string node_names(const std::vector<GPU_TensorViewWrapper>& args,
+                static std::string node_names(const std::vector<GPUTensorWrapper>& args,
                                               std::initializer_list<int> arg_indexes = {});
             };
 

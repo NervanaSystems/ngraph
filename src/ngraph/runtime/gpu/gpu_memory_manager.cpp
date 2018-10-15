@@ -97,11 +97,19 @@ void runtime::gpu::GPUMemoryManager::allocate()
 size_t runtime::gpu::GPUMemoryManager::queue_for_transfer(const void* data, size_t size)
 {
     // if the current allocation will overflow the host buffer
-    if (m_buffer_offset + size > m_buffered_mem.size())
+    size_t new_size = m_buffer_offset + size;
+    size_t buffer_size = m_buffered_mem.size();
+    bool need_resize = false;
+    while (buffer_size < new_size)
     {
         // add more space to the managed buffer
-        size_t new_size = m_buffered_mem.size() / initial_buffer_size + 1;
-        m_buffered_mem.resize(new_size);
+        buffer_size <<= 1;
+        need_resize = true;
+    }
+
+    if (need_resize)
+    {
+        m_buffered_mem.resize(buffer_size);
     }
 
     size_t offset = m_buffer_offset;
@@ -144,6 +152,11 @@ size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t siz
 
 size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size, bool zero_initialize)
 {
+    if (size == 0)
+    {
+        return m_manager->m_primitive_emitter->insert([]() { return nullptr; });
+    }
+
     size_t offset = m_manager->m_workspace_manager->allocate(size);
     m_active.push(offset);
     auto local = std::prev(m_manager->m_workspace_mem.end());
@@ -163,7 +176,7 @@ size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size, bool zero_init
         }
         return workspace_ptr;
     };
-    return m_manager->m_primitive_emitter->insert(mem_primitive);
+    return m_manager->m_primitive_emitter->insert(std::move(mem_primitive));
 }
 
 void runtime::gpu::GPUAllocator::close()

@@ -12,7 +12,7 @@ Negative
 Description
 ===========
 
-Produces a single output tensor of the same element type and shape as ``arg``,
+Produces a single output tensor of the same element type and shape as ``arg,``
 where the value at each coordinate of ``output`` is the negative of the
 value at each ``arg`` coordinate.
 
