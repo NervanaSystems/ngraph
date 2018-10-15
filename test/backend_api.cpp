@@ -27,7 +27,7 @@ TEST(backend_api, registered_devices)
     vector<string> devices = runtime::Backend::get_registered_devices();
     EXPECT_GE(devices.size(), 0);
 
-    EXPECT_TRUE(contains(devices, "INTERPRETER"));
+    EXPECT_TRUE(find(devices.begin(), devices.end(), "INTERPRETER") != devices.end());
 }
 
 TEST(backend_api, invalid_name)

@@ -26,9 +26,14 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector concat(const Node& node);
-        } // namespace  op
+            namespace set_1
+            {
+                NodeVector concat(const Node& node);
 
-    } // namespace  onnx_import
+            } // namespace set_1
 
-} // namespace  ngraph
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

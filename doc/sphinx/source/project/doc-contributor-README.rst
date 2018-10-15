@@ -15,13 +15,13 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-nGraph™ Library docs  
-====================
+nGraph Library docs  
+===================
 
 Read this for changes affecting anything in ``ngraph/doc``
 ----------------------------------------------------------
 
-For updates to the Intel® nGraph™ Library ``/doc`` repo, please submit a PR with 
+For updates to the Intel® nGraph Library ``/doc`` repo, please submit a PR with 
 any changes or ideas you'd like integrated. This helps us maintain trackability 
 with respect to additions or feature requests.
 
@@ -127,7 +127,7 @@ To build documentation locally, run:
 
    .. code-block:: console
 
-      $ pip3 install [-I] Sphinx==1.6.5 [--user] 
+      $ pip3 install [-I] Sphinx==1.7.5 [--user] 
       $ pip3 install [-I] breathe numpy [--user]
       $ cd doc/sphinx/
       $ make html
@@ -150,11 +150,16 @@ To build documentation in a python3 virtualenv, run:
 
 Then point your browser at ``localhost:8000``.
 
+.. note:: For docs built in a virtual env, Sphinx latest changes may break 
+   documentation; try building with a specific version of Sphinx.  
+
+
+
 For tips on writing reStructuredText-formatted documentation, see the `sphinx`_ 
 stable reST documentation.
 
-.. _ngraph repo: https://github.com/NervanaSystems/ngraph-cpp/
-.. _documentation repo: https://github.com/NervanaSystems/private-ngraph/tree/master/doc
+.. _ngraph repo: https://github.com/NervanaSystems/ngraph/
+.. _documentation repo: https://github.com/NervanaSystems/ngraph/tree/master/doc
 .. _sphinx: http://www.sphinx-doc.org/en/stable/rest.html
 .. _wiki: https://github.com/NervanaSystems/ngraph/wiki/
 .. _breathe: https://breathe.readthedocs.io/en/latest/

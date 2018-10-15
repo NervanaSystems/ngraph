@@ -29,12 +29,16 @@ namespace ngraph
     {
         namespace op
         {
-            inline NodeVector exp(const Node& node)
+            namespace set_1
             {
-                return {std::make_shared<ngraph::op::Exp>(node.get_ng_inputs().at(0))};
-            }
+                inline NodeVector exp(const Node& node)
+                {
+                    return {std::make_shared<ngraph::op::Exp>(node.get_ng_inputs().at(0))};
+                }
 
-        } // namespace op
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 
