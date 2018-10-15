@@ -104,7 +104,7 @@ static bool simplify_concat(std::shared_ptr<Node> n)
             return false;
         }
 
-        auto slice = std::dynamic_pointer_cast<op::Slice>(matcher->get_pattern_map()[lslice]);
+        auto slice = std::static_pointer_cast<op::Slice>(matcher->get_pattern_map()[lslice]);
         if (branch_tip)
         {
             if (branch_tip != matcher->get_pattern_map()[ltip])
@@ -170,7 +170,7 @@ static bool simplify_concat(std::shared_ptr<Node> n)
         }
     }
 
-    auto concat = std::dynamic_pointer_cast<op::Concat>(n);
+    auto concat = std::static_pointer_cast<op::Concat>(n);
     size_t concat_axis = concat->get_concatenation_axis();
 
     auto slice_shape = branch_tip->get_users().at(0)->get_shape();
@@ -424,7 +424,7 @@ template <typename T,
 static bool simplify_reduction(std::shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_reduction for " << n->get_name();
-    auto reduction = std::dynamic_pointer_cast<T>(n);
+    auto reduction = std::static_pointer_cast<T>(n);
 
     auto broadcast = std::dynamic_pointer_cast<op::Broadcast>(n->get_argument(0));
     if (!broadcast)
