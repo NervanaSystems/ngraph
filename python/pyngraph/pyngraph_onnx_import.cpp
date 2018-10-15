@@ -13,40 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <pybind11/pybind11.h>
 
-#ifdef NGRAPH_DISTRIBUTED
+#include "pyngraph/onnx_import/onnx_import.hpp"
 
-#include "ngraph/distributed.hpp"
-#include <mpi.h>
+namespace py = pybind11;
 
-using namespace ngraph;
-
-ngraph::Distributed::Distributed()
+PYBIND11_MODULE(_pyngraph_onnx_import, m)
 {
-    int flag = 0;
-    MPI_Initialized(&flag);
-    if (!flag)
-    {
-        MPI_Init(NULL, NULL);
-    }
+    m.doc() = "Package ngraph.impl that wraps ngraph::onnx_import";
+    regmodule_pyngraph_onnx_import(m);
 }
-
-ngraph::Distributed::~Distributed()
-{
-    MPI_Finalize();
-}
-
-int ngraph::Distributed::get_size() const
-{
-    int size;
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    return size;
-}
-
-int ngraph::Distributed::get_rank() const
-{
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    return rank;
-}
-#endif

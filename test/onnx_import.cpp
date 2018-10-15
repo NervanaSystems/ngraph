@@ -561,6 +561,25 @@ TEST(onnx, model_unsqueeze)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
+TEST(onnx, model_squeeze)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/squeeze_duplicate_axes.onnx"));
+
+    // {1, 4, 1, 1, 2}
+    Inputs inputs{test::NDArray<float, 5>(
+                      {{{{{1.0f, 2.0f}}}, {{{3.0f, 4.0f}}}, {{{5.0f, 6.0f}}}, {{{7.0f, 8.0f}}}}})
+                      .get_vector()};
+
+    // {4, 2}
+    Outputs expected_output{
+        test::NDArray<float, 2>({{1.0f, 2.0f}, {3.0f, 4.0f}, {5.0f, 6.0f}, {7.0f, 8.0f}})
+            .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
 TEST(onnx, model_div)
 {
     auto function =
