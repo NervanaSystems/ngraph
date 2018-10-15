@@ -351,8 +351,8 @@ private:
         }
         case OP_TYPEID::BatchNormInference:
         {
-           ngraph::op::BatchNormInference* bn =
-                static_cast<ngraph::op::BatchNormInference*>(&node);
+           const ngraph::op::BatchNormInference* bn =
+                static_cast<const ngraph::op::BatchNormInference*>(&node);
             reference::batch_norm_one_output<T>(bn->get_eps_value(),
                                                 reinterpret_cast<T*>(args[0]->get_data_ptr()),
                                                 reinterpret_cast<T*>(args[1]->get_data_ptr()),
@@ -365,8 +365,8 @@ private:
         }
         case OP_TYPEID::BatchNormTrainingBackprop:
         {
-            ngraph::op::BatchNormTrainingBackprop* bn_bprop =
-                static_cast<ngraph::op::BatchNormTrainingBackprop*>(&node);
+            const ngraph::op::BatchNormTrainingBackprop* bn_bprop =
+                static_cast<const ngraph::op::BatchNormTrainingBackprop*>(&node);
             reference::batch_norm_backprop(bn_bprop->get_eps_value(),
                                            reinterpret_cast<T*>(args[0]->get_data_ptr()),
                                            reinterpret_cast<T*>(args[1]->get_data_ptr()),
