@@ -28,38 +28,42 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector batch_norm(const Node& node)
+            namespace set_1
             {
-                NodeVector inputs{node.get_ng_inputs()};
-                auto x = inputs.at(0);
-                auto scale = inputs.at(1);
-                auto bias = inputs.at(2);
-                std::shared_ptr<ngraph::Node> mean{nullptr};
-                std::shared_ptr<ngraph::Node> var{nullptr};
-
-                int is_test{node.get_attribute_value<int>("is_test", 1)};
-                int spatial{node.get_attribute_value<int>("spatial", 1)};
-                double epsilon{node.get_attribute_value<double>("epsilon", 1e-5)};
-                // TODO: Implement learning mode support
-                // float momentum{node.get_attribute_value<float>("momentum", 0.9f)};
-                bool training = false;
-
-                ASSERT_IS_SUPPORTED(node, is_test) << "only 'is_test' mode is supported.";
-                ASSERT_IS_SUPPORTED(node, spatial) << "only 'spatial' mode is supported.";
-
-                if (inputs.size() >= 5)
+                NodeVector batch_norm(const Node& node)
                 {
-                    mean = inputs.at(3);
-                    var = inputs.at(4);
-                    return {std::make_shared<ngraph::op::BatchNorm>(
-                        epsilon, scale, bias, x, mean, var, training)};
+                    NodeVector inputs{node.get_ng_inputs()};
+                    auto x = inputs.at(0);
+                    auto scale = inputs.at(1);
+                    auto bias = inputs.at(2);
+                    std::shared_ptr<ngraph::Node> mean{nullptr};
+                    std::shared_ptr<ngraph::Node> var{nullptr};
+
+                    int is_test{node.get_attribute_value<int>("is_test", 1)};
+                    int spatial{node.get_attribute_value<int>("spatial", 1)};
+                    double epsilon{node.get_attribute_value<double>("epsilon", 1e-5)};
+                    // TODO: Implement learning mode support
+                    // float momentum{node.get_attribute_value<float>("momentum", 0.9f)};
+                    bool training = false;
+
+                    ASSERT_IS_SUPPORTED(node, is_test) << "only 'is_test' mode is supported.";
+                    ASSERT_IS_SUPPORTED(node, spatial) << "only 'spatial' mode is supported.";
+
+                    if (inputs.size() >= 5)
+                    {
+                        mean = inputs.at(3);
+                        var = inputs.at(4);
+                        return {std::make_shared<ngraph::op::BatchNorm>(
+                            epsilon, scale, bias, x, mean, var, training)};
+                    }
+
+                    return {std::make_shared<ngraph::op::BatchNorm>(epsilon, scale, bias, x)};
                 }
 
-                return {std::make_shared<ngraph::op::BatchNorm>(epsilon, scale, bias, x)};
-            }
+            } // namespace set_1
 
-        } // namespace  op
+        } //namespace op
 
-    } // namespace  onnx_import
+    } // namespace onnx_import
 
-} // namespace  ngraph
+} // namespace ngraph
