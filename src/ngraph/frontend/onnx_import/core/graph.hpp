@@ -16,9 +16,10 @@
 
 #pragma once
 
-#include <onnx-ml.pb.h>
 #include <string>
 #include <vector>
+
+#include <onnx-ml.pb.h>
 
 #include "ngraph/op/parameter_vector.hpp"
 
