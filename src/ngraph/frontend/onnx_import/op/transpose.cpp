@@ -28,17 +28,22 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector transpose(const Node& node)
+            namespace set_1
             {
-                std::shared_ptr<ngraph::Node> data = node.get_ng_inputs().at(0);
+                NodeVector transpose(const Node& node)
+                {
+                    std::shared_ptr<ngraph::Node> data = node.get_ng_inputs().at(0);
 
-                auto permute_axes = node.get_attribute_value<std::vector<std::size_t>>("perm", {});
+                    auto permute_axes =
+                        node.get_attribute_value<std::vector<std::size_t>>("perm", {});
 
-                return {(permute_axes.empty()) ? reshape::transpose(data)
-                                               : reshape::reorder_axes(data, permute_axes)};
-            }
+                    return {(permute_axes.empty()) ? reshape::transpose(data)
+                                                   : reshape::reorder_axes(data, permute_axes)};
+                }
 
-        } // namespace op
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 
