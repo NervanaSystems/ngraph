@@ -18,9 +18,9 @@
 
 #include <string>
 
-#include "ngraph/node_vector.hpp"
+#include <onnx-ml.pb.h>
 
-#include <onnx.pb.h>
+#include "ngraph/node_vector.hpp"
 
 #include "attribute.hpp"
 #include "tensor.hpp"

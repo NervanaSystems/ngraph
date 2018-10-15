@@ -128,6 +128,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
@@ -1007,6 +1008,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
 {
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
+    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
     // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
     // failing mxnet unit tests.
     // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
@@ -1019,7 +1021,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
@@ -1684,7 +1686,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
         const descriptor::Output& output = input.get_output();
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
         TensorViewWrapper tvw{tv, "_arg" + to_string(arg_index)};
-        if (!contains(arg_names, tvw.get_name()))
+        if (arg_names.find(tvw.get_name()) == arg_names.end())
         {
             arg_names.insert(tvw.get_name());
             if (arg_index++ > 0)

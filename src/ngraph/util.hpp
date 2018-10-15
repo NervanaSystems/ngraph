@@ -69,21 +69,6 @@ namespace ngraph
         return os.str();
     }
 
-    template <typename U, typename T>
-    bool contains(const U& container, const T& obj)
-    {
-        bool rc = false;
-        for (auto o : container)
-        {
-            if (o == obj)
-            {
-                rc = true;
-                break;
-            }
-        }
-        return rc;
-    }
-
     size_t hash_combine(const std::vector<size_t>& list);
     void dump(std::ostream& out, const void*, size_t);
 
@@ -203,6 +188,8 @@ namespace ngraph
 
     AxisVector get_default_order(size_t rank);
     AxisVector get_default_order(const Shape& shape);
+
+    AxisVector get_permutation_to_default_order(const AxisVector& axis_order);
 
     /*
     * Return type struct for cache_fprop, with the modified fprop and bprop
