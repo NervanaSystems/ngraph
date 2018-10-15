@@ -47,7 +47,7 @@ std::unordered_set<std::type_index>& runtime::cpu::mkldnn_utils::get_op_registry
     static std::unordered_set<std::type_index> s_op_registry{
         TI(ngraph::op::Add),
         TI(ngraph::op::AvgPool),
-        TI(ngraph::op::AvgPoolBackprop),    
+        TI(ngraph::op::AvgPoolBackprop),
         TI(ngraph::op::BatchNormTraining),
         TI(ngraph::op::BatchNormInference),
         TI(ngraph::op::BatchNormTrainingBackprop),

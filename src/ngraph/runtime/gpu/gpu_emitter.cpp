@@ -311,10 +311,10 @@ void runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
     writer.block_end();
 }
 
-
 void runtime::gpu::GPU_Emitter::emit_BatchNormInference(EMIT_ARGS)
 {
-    const ngraph::op::BatchNormInference* batchnorm = static_cast<const ngraph::op::BatchNormInference*>(node);
+    const ngraph::op::BatchNormInference* batchnorm =
+        static_cast<const ngraph::op::BatchNormInference*>(node);
 
     CUDNNEmitter::Prop direction = CUDNNEmitter::Prop::Inference;
 
@@ -336,7 +336,8 @@ void runtime::gpu::GPU_Emitter::emit_BatchNormInference(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_BatchNormTraining(EMIT_ARGS)
 {
-    const ngraph::op::BatchNormTraining* batchnorm = static_cast<const ngraph::op::BatchNormTraining*>(node);
+    const ngraph::op::BatchNormTraining* batchnorm =
+        static_cast<const ngraph::op::BatchNormTraining*>(node);
 
     CUDNNEmitter::Prop direction = CUDNNEmitter::Prop::Forward;
     bool global_stats = (batchnorm->get_arguments().size() == 5);
