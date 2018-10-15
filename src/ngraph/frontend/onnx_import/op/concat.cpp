@@ -24,16 +24,20 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector concat(const Node& node)
+            namespace set_1
             {
-                NodeVector inputs{node.get_ng_inputs()};
-                auto axis = node.get_attribute_value<int64_t>("axis");
+                NodeVector concat(const Node& node)
+                {
+                    NodeVector inputs{node.get_ng_inputs()};
+                    auto axis = node.get_attribute_value<int64_t>("axis");
 
-                return {std::make_shared<ngraph::op::Concat>(inputs, axis)};
-            }
+                    return {std::make_shared<ngraph::op::Concat>(inputs, axis)};
+                }
 
-        } // namespace  op
+            } // namespace set_1
 
-    } // namespace  onnx_import
+        } //namespace op
 
-} // namespace  ngraph
+    } // namespace onnx_import
+
+} // namespace ngraph

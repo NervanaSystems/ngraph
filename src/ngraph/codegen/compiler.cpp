@@ -298,7 +298,8 @@ void codegen::CompilerCore::add_header_search_path(const string& p)
     vector<string> paths = split(p, ';');
     for (const string& path : paths)
     {
-        if (!contains(m_extra_search_path_list, path))
+        if (find(m_extra_search_path_list.begin(), m_extra_search_path_list.end(), path) ==
+            m_extra_search_path_list.end())
         {
             m_extra_search_path_list.push_back(path);
             HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
