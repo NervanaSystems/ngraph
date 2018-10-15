@@ -28,14 +28,18 @@ namespace ngraph
     {
         namespace op
         {
-            inline NodeVector logical_or(const Node& node)
+            namespace set_1
             {
-                NodeVector ng_inputs{
-                    numpy_style_broadcast_for_binary_operation(node.get_ng_inputs())};
-                return {std::make_shared<ngraph::op::Or>(ng_inputs.at(0), ng_inputs.at(1))};
-            }
+                inline NodeVector logical_or(const Node& node)
+                {
+                    NodeVector ng_inputs{
+                        numpy_style_broadcast_for_binary_operation(node.get_ng_inputs())};
+                    return {std::make_shared<ngraph::op::Or>(ng_inputs.at(0), ng_inputs.at(1))};
+                }
 
-        } // namespace op
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 

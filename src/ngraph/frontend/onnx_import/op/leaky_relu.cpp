@@ -38,21 +38,26 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector leaky_relu(const Node& node)
+            namespace set_1
             {
-                auto data = node.get_ng_inputs().at(0);
-                double alpha = node.get_attribute_value<double>("alpha", 0.01);
+                NodeVector leaky_relu(const Node& node)
+                {
+                    auto data = node.get_ng_inputs().at(0);
+                    double alpha = node.get_attribute_value<double>("alpha", 0.01);
 
-                ASSERT_VALID_ARGUMENT(node, ((alpha >= 0) && (alpha <= 1)))
-                    << " alpha value should be in range (0,1)";
+                    ASSERT_VALID_ARGUMENT(node, ((alpha >= 0) && (alpha <= 1)))
+                        << " alpha value should be in range (0,1)";
 
-                std::shared_ptr<ngraph::Node> alpha_node = std::make_shared<ngraph::op::Constant>(
-                    data->get_element_type(), Shape{}, std::vector<double>{alpha});
-                alpha_node = make_broadcast_node(alpha_node, data->get_shape());
-                return {std::make_shared<ngraph::op::Maximum>(data * alpha_node, data)};
-            }
+                    std::shared_ptr<ngraph::Node> alpha_node =
+                        std::make_shared<ngraph::op::Constant>(
+                            data->get_element_type(), Shape{}, std::vector<double>{alpha});
+                    alpha_node = make_broadcast_node(alpha_node, data->get_shape());
+                    return {std::make_shared<ngraph::op::Maximum>(data * alpha_node, data)};
+                }
 
-        } // namespace op
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 
