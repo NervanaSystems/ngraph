@@ -81,22 +81,14 @@ void ngraph::op::BatchNormTraining::validate_and_infer_types()
     BatchNormBase::validate_and_infer_types();
     auto in_size = get_input_size();
     auto& et = get_input_element_type(INPUT);
-    NODE_VALIDATION_ASSERT(this, in_size == 3 || in_size == 5)
-        << "Argument count must be either 3 or 5 (received argument count: " << in_size << ").";
+    NODE_VALIDATION_ASSERT(this, in_size == 3)
+        << "Argument count must be 3 (received argument count: " << in_size << ").";
 
-    if (in_size == 3)
-    {
-        Shape channel_shape{bn_input_shape[1]};
-        set_output_size(3);
-        set_output_type(0, et, bn_input_shape);
-        set_output_type(1, et, channel_shape);
-        set_output_type(2, et, channel_shape);
-    }
-    else
-    {
-        set_output_size(1);
-        set_output_type(0, et, bn_input_shape);
-    }
+    Shape channel_shape{bn_input_shape[1]};
+    set_output_size(3);
+    set_output_type(0, et, bn_input_shape);
+    set_output_type(1, et, channel_shape);
+    set_output_type(2, et, channel_shape);
 }
 
 void ngraph::op::BatchNormBase::validate_and_infer_types()
@@ -147,20 +139,8 @@ std::shared_ptr<ngraph::Node>
     ngraph::op::BatchNormTraining::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    if (new_args.size() == 3)
-    {
-        return std::make_shared<BatchNormTraining>(
-            m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2));
-    }
-    else
-    {
-        return std::make_shared<BatchNormTraining>(m_epsilon,
-                                                   new_args.at(0),
-                                                   new_args.at(1),
-                                                   new_args.at(2),
-                                                   new_args.at(3),
-                                                   new_args.at(4));
-    }
+    return std::make_shared<BatchNormTraining>(
+        m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2));
 }
 
 ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(
@@ -248,25 +228,19 @@ void ngraph::op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoin
     // and get_n() is used to sort the inputs in the same order as Batchnorm's outputs
     // Next, Mean and Variance (`at(1)` and `at(2)`) are extracted
     // Please see `add_output` in `BatchNormBase::BatchNormBase` for more details
-    if (get_input_size() == 3)
+
+    auto goes = op::get_output_elements(shared_from_this());
+    mean = goes.at(1);
+    var = goes.at(2);
+    if (!mean)
     {
-        auto goes = op::get_output_elements(shared_from_this());
-        mean = goes.at(1);
-        var = goes.at(2);
-        if (!mean)
-        {
-            throw ngraph_error("GetOutputElement for mean is missing");
-        };
-        if (!var)
-        {
-            throw ngraph_error("GetOutputElement for variance is missing");
-        }
-    }
-    else // BatchNormBase Training with global stats
+        throw ngraph_error("GetOutputElement for mean is missing");
+    };
+    if (!var)
     {
-        mean = get_argument(3);
-        var = get_argument(4);
+        throw ngraph_error("GetOutputElement for variance is missing");
     }
+
     auto bbn = std::make_shared<op::BatchNormTrainingBackprop>(
         get_eps_value(), gamma, beta, input, mean, var, deltas.at(0));
     auto dinput = std::make_shared<op::GetOutputElement>(bbn, 0);

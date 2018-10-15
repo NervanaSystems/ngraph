@@ -466,15 +466,7 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::BatchNormTraining:
             {
                 auto epsilon = node_js.at("eps").get<double>();
-                if (args.size() == 3)
-                {
-                    node = make_shared<op::BatchNormTraining>(epsilon, args[0], args[1], args[2]);
-                }
-                else
-                {
-                    node = make_shared<op::BatchNormTraining>(
-                        epsilon, args[0], args[1], args[2], args[3], args[4]);
-                }
+                node = make_shared<op::BatchNormTraining>(epsilon, args[0], args[1], args[2]);
                 break;
             }
             case OP_TYPEID::BatchNormInference:
