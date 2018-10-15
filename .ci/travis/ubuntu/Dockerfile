@@ -39,7 +39,7 @@ RUN make install
 
 # Prepare nGraph Python API
 WORKDIR /root/ngraph/python
-RUN git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
+RUN git clone --recursive https://github.com/pybind/pybind11.git
 ENV NGRAPH_CPP_BUILD_PATH /root/ngraph_dist
 ENV LD_LIBRARY_PATH /root/ngraph_dist/lib
 ENV PYBIND_HEADERS_PATH /root/ngraph/python/pybind11
@@ -47,4 +47,4 @@ ENV PYBIND_HEADERS_PATH /root/ngraph/python/pybind11
 RUN df -k
 
 # Test nGraph and nGraph Python API
-CMD cd /root/ngraph/build && make unit-test-check ; cd /root/ngraph/python && tox
+CMD cd /root/ngraph/build && make unit-test-check ; cd /root/ngraph/python && NGRAPH_ONNX_IMPORT_ENABLE=TRUE tox
