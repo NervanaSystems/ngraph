@@ -96,6 +96,7 @@ option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
+option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
@@ -155,6 +156,10 @@ endif()
 
 SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
 SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
+
+if (NGRAPH_CODE_COVERAGE_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+endif()
 
 # Enable build target CPU features
 set(NGRAPH_TARGET_ARCH native CACHE STRING "Target CPU architecture to build for. Defaults to the native CPU architecture")
