@@ -17,9 +17,11 @@
 #include "ngraph/runtime/cpu/pass/cpu_memory_optimization.hpp"
 
 #include "ngraph/descriptor/output.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 using namespace ngraph;
 
@@ -44,9 +46,25 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             }
 
             bool in_place_concat = true;
-
+            AxisVector axis_list;
+            for (auto i = 0; i < shape.size(); i++)
+            {
+                axis_list.push_back(i);
+            }
+            auto index = 0;
             for (descriptor::Input& input : concat->get_inputs())
             {
+                // check if input layout is padded
+                auto input_md = mkldnn_utils::get_input_mkldnn_md(n.get(), index);
+                index++;
+                if (mkldnn_utils::is_mkldnn_padded_layout(input_md, axis_list))
+                {
+                    NGRAPH_DEBUG
+                        << "cpu_post_layout_assignment: padded input layout, no in place concat";
+                    in_place_concat = false;
+                    break;
+                }
+
                 if (shape_size(input.get_shape()) == 0)
                 {
                     NGRAPH_DEBUG << "cpu_post_layout_assignment: 0 length tensor, no in "
@@ -114,55 +132,35 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                         break;
                     }
 
-                    std::unordered_set<Node*> visited;
-                    std::deque<Node*> stack;
-                    stack.push_front(arg.get());
-
-                    while (stack.size() > 0)
+                    for (auto user : arg->get_users())
                     {
-                        ngraph::Node* curr = stack.front();
-                        visited.insert(curr);
-                        if (curr->is_output())
+                        if ((user != concat))
                         {
-                            NGRAPH_DEBUG << "cpu_post_layout_assignment: not post "
-                                            "dominated, no in place concat";
-                            in_place_concat = false;
-                            break;
-                        }
-                        else
-                        {
-                            if (auto op = dynamic_cast<op::Op*>(curr))
+                            if (auto op = std::dynamic_pointer_cast<op::Op>(user))
                             {
                                 if (auto op_annotations = op->get_op_annotations())
                                 {
                                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                                     {
-                                        if (oi_pair.destructive)
-                                        {
-                                            NGRAPH_DEBUG << "cpu_post_layout_assignment: "
-                                                            "destructive in place oi, no "
-                                                            "in place concat";
-                                            in_place_concat = false;
-                                            break;
-                                        }
+                                        NGRAPH_DEBUG << "cpu_post_layout_assignment: "
+                                                        "in place oi, no in place concat";
+                                        in_place_concat = false;
+                                        break;
                                     }
                                 }
                             }
                         }
-                        stack.pop_front();
-                        if (curr != concat.get())
-                        {
-                            for (auto next : curr->get_users())
-                            {
-                                if (visited.count(next.get()) == 0)
-                                {
-                                    stack.push_front(next.get());
-                                }
-                            }
-                        }
                     }
+
                     if (!in_place_concat)
                     {
+                        break;
+                    }
+                    else if (!is_post_dominated(arg.get(), n.get()))
+                    {
+                        NGRAPH_DEBUG << "cpu_post_layout_assignment: "
+                                        "not post dominated, no in place concat";
+                        in_place_concat = false;
                         break;
                     }
                 }

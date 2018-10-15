@@ -1198,8 +1198,9 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_concat(
                     auto input_tensor = &input_node->get_output_tensor();
                     auto old_offset = input_tensor->get_pool_offset();
                     input_tensor->set_pool_offset(offset);
-                    NGRAPH_DEBUG << "cpu_external_function: change offset, old offset is "
-                                 << old_offset << ", new offset is " << offset << std::endl;
+                    NGRAPH_DEBUG
+                        << "cpu_external_function, propagate: change offset, old offset is "
+                        << old_offset << ", new offset is " << offset << std::endl;
                     offset += input_tensor->size();
                     if (auto arg_concat = std::dynamic_pointer_cast<ngraph::op::Concat>(arg))
                     {
@@ -1276,6 +1277,18 @@ void runtime::cpu::CPU_ExternalFunction::build()
                 if (in_place_oi_pairs.size() > 0)
                 {
                     bool found_last_concat = true;
+                    auto output_tensor = &concat->get_output_tensor();
+                    auto offset = output_tensor->get_pool_offset();
+                    for (auto arg : concat->get_arguments())
+                    {
+                        auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
+                        auto input_tensor = &input_node->get_output_tensor();
+                        auto old_offset = input_tensor->get_pool_offset();
+                        input_tensor->set_pool_offset(offset);
+                        NGRAPH_DEBUG << "cpu_external_function: change offset, old offset is "
+                                     << old_offset << ", new offset is " << offset << std::endl;
+                        offset += input_tensor->size();
+                    }
                     for (auto user : concat->get_users())
                     {
                         if (dynamic_pointer_cast<ngraph::op::Concat>(user))
@@ -1290,8 +1303,9 @@ void runtime::cpu::CPU_ExternalFunction::build()
                         {
                             if (auto arg_concat = dynamic_pointer_cast<ngraph::op::Concat>(arg))
                             {
-                                NGRAPH_DEBUG << "call propagate_in_place_concat for "
-                                             << arg->get_name() << std::endl;
+                                NGRAPH_DEBUG
+                                    << "cpu_external_function: call propagate_in_place_concat for "
+                                    << arg->get_name() << std::endl;
                                 propagate_in_place_concat(arg_concat);
                             }
                         }
