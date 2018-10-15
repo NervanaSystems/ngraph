@@ -4696,7 +4696,6 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Dequantize)
             {
                 auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
-                //<" << lrn->get_element_type().c_type_string() << ">
                 writer << "reference::dequantize(";
                 writer << "            " << args[0].get_name() << ",\n";
                 writer << "            " << args[1].get_name() << ",\n";
@@ -4711,7 +4710,6 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Quantize)
             {
                 auto quantize = static_cast<const ngraph::op::Dequantize*>(node);
-                //<" << lrn->get_element_type().c_type_string() << ">
                 writer << "reference::quantize(";
                 writer << "            " << args[0].get_name() << ",\n";
                 writer << "            " << args[1].get_name() << ",\n";
