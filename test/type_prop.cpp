@@ -3804,10 +3804,9 @@ TEST(type_prop, max_pool_invalid_dilated_too_large)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string(
-                "Window shape (Shape{9, 9}) is larger than data shape (Shape{8, 8}) at axis 0"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Window after dilation has dimension (dim: 9) larger than "
+                                         "the data shape after padding (dim: 8) at dimension 0"));
     }
     catch (...)
     {
