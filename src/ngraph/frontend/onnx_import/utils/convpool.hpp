@@ -103,6 +103,7 @@ namespace ngraph
                 if (node.op_type().find("Global") != std::string::npos)
                 {
                     kernel_shape = node.get_ng_inputs()[0]->get_shape();
+                    // Remove N and C dimensions and leave only spatial dims.
                     kernel_shape.erase(std::begin(kernel_shape),
                                        std::next(std::begin(kernel_shape), 2));
                 }
