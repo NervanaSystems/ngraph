@@ -36,6 +36,7 @@
 #endif
 
 #include "ngraph/function.hpp"
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
@@ -129,6 +130,10 @@ namespace ngraph
                     return callees;
                 }
                 bool is_direct_execution() const { return m_direct_execution; }
+                void write_to_file(const std::string& code,
+                                   const std::string& directory,
+                                   const std::string& filename);
+
             protected:
                 void build();
 
@@ -139,6 +144,9 @@ namespace ngraph
 #endif
 
             private:
+                // Register passes that are common to codegen and DEX
+                void register_common_passes(ngraph::pass::Manager& pass_manager);
+
                 // For non-destructive passthrough kernels, propagate function
                 // input buffers to internal ops
                 void propagate_in_place_input(ngraph::descriptor::Output* output,
@@ -163,7 +171,7 @@ namespace ngraph
                 void handle_output_alias(
                     codegen::CodeWriter& writer,
                     const Node&,
-                    const std::unordered_map<descriptor::TensorView*, std::vector<size_t>>&);
+                    const std::unordered_map<descriptor::Tensor*, std::vector<size_t>>&);
 
                 bool is_functionally_identical(
                     const Node&,
@@ -209,7 +217,7 @@ namespace ngraph
                 std::string m_function_name;
 
                 std::list<std::function<void(CPURuntimeContext*)>> functors;
-                std::list<std::pair<std::function<bool(CPURuntimeContext*)>, size_t>> enables;
+                std::list<std::function<bool(CPURuntimeContext*)>> enables;
                 std::list<std::pair<std::function<bool(CPURuntimeContext*)>, std::string>>
                     enable_nodename_list;
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>

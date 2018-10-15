@@ -47,7 +47,7 @@ namespace ngraph
 
                 for (const Coordinate& input_coord : input_transform)
                 {
-                    Coordinate output_coord = project(input_coord, reduction_axes);
+                    Coordinate output_coord = reduce(input_coord, reduction_axes);
                     size_t input_index = input_transform.index(input_coord);
                     size_t output_index = output_transform.index(output_coord);
 

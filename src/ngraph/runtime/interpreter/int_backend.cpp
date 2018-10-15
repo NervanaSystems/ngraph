@@ -15,7 +15,8 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/interpreter/int_backend.hpp"
-#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
+#include "ngraph/except.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/util/binary_elementwise_comparison.hpp"
@@ -28,7 +29,7 @@
 using namespace std;
 using namespace ngraph;
 
-using descriptor::layout::DenseTensorViewLayout;
+using descriptor::layout::DenseTensorLayout;
 
 extern "C" const char* get_ngraph_version_string()
 {
@@ -45,16 +46,16 @@ extern "C" void delete_backend(runtime::Backend* backend)
     delete backend;
 }
 
-shared_ptr<runtime::TensorView>
+shared_ptr<runtime::Tensor>
     runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)
 {
-    return make_shared<runtime::HostTensorView>(type, shape, "external");
+    return make_shared<runtime::HostTensor>(type, shape, "external");
 }
 
-shared_ptr<runtime::TensorView> runtime::interpreter::INTBackend::create_tensor(
+shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
     const element::Type& type, const Shape& shape, void* memory_pointer)
 {
-    return make_shared<runtime::HostTensorView>(type, shape, memory_pointer, "external");
+    return make_shared<runtime::HostTensor>(type, shape, memory_pointer, "external");
 }
 
 bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
@@ -65,54 +66,59 @@ bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
         instance.m_is_compiled = true;
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::LikeReplacement>();
-        pass_manager.register_pass<pass::AssignLayout<DenseTensorViewLayout>>();
+        pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
         pass_manager.register_pass<pass::Liveness>();
         pass_manager.run_passes(function);
+
+        for (const shared_ptr<Node>& node : function->get_ordered_ops())
+        {
+            instance.m_wrapped_nodes.emplace_back(node);
+        }
     }
 
     return true;
 }
 
 bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
-                                            const vector<shared_ptr<runtime::TensorView>>& outputs,
-                                            const vector<shared_ptr<runtime::TensorView>>& inputs)
+                                            const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                            const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     validate_call(function, outputs, inputs);
 
     compile(function);
     FunctionInstance& instance = m_function_map[function];
 
-    // convert inputs to HostTensorView
-    vector<shared_ptr<runtime::HostTensorView>> func_inputs;
+    // convert inputs to HostTensor
+    vector<shared_ptr<runtime::HostTensor>> func_inputs;
     for (auto tv : inputs)
     {
-        func_inputs.push_back(static_pointer_cast<runtime::HostTensorView>(tv));
+        func_inputs.push_back(static_pointer_cast<runtime::HostTensor>(tv));
     }
     if (instance.m_nan_check_enabled)
     {
         perform_nan_check(func_inputs);
     }
 
-    // convert outputs to HostTensorView
-    vector<shared_ptr<runtime::HostTensorView>> func_outputs;
+    // convert outputs to HostTensor
+    vector<shared_ptr<runtime::HostTensor>> func_outputs;
     for (auto tv : outputs)
     {
-        func_outputs.push_back(static_pointer_cast<runtime::HostTensorView>(tv));
+        func_outputs.push_back(static_pointer_cast<runtime::HostTensor>(tv));
     }
 
-    // map function params -> HostTensorView
-    unordered_map<descriptor::TensorView*, shared_ptr<runtime::HostTensorView>> tensor_map;
+    // map function params -> HostTensor
+    unordered_map<descriptor::Tensor*, shared_ptr<runtime::HostTensor>> tensor_map;
     size_t input_count = 0;
     for (auto param : function->get_parameters())
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
-            descriptor::TensorView* tv = param->get_output_tensor_view(i).get();
+            descriptor::Tensor* tv = param->get_output_tensor_ptr(i).get();
             tensor_map.insert({tv, func_inputs[input_count++]});
         }
     }
 
-    // map function outputs -> HostTensorView
+    // map function outputs -> HostTensor
     for (size_t output_count = 0; output_count < function->get_output_size(); ++output_count)
     {
         auto output = function->get_output_op(output_count);
@@ -120,79 +126,83 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
-        descriptor::TensorView* tv = output->get_output_tensor_view(0).get();
+        descriptor::Tensor* tv = output->get_output_tensor_ptr(0).get();
         tensor_map.insert({tv, func_outputs[output_count]});
     }
 
     // for each ordered op in the graph
-    for (shared_ptr<Node> op : function->get_ordered_ops())
+    for (const NodeWrapper& wrapped : instance.m_wrapped_nodes)
     {
-        if (op->description() == "Parameter")
+        const Node* op = &wrapped.get_node();
+        auto type_id = wrapped.get_typeid();
+        if (type_id == OP_TYPEID::Parameter)
         {
             continue;
         }
-
         // get op inputs from map
-        vector<shared_ptr<runtime::HostTensorView>> op_inputs;
+        vector<shared_ptr<runtime::HostTensor>> op_inputs;
         for (const descriptor::Input& input : op->get_inputs())
         {
-            descriptor::TensorView* tv = input.get_output().get_tensor_view().get();
+            descriptor::Tensor* tv = input.get_output().get_tensor_ptr().get();
             op_inputs.push_back(tensor_map.at(tv));
         }
 
         // get op outputs from map or create
-        vector<shared_ptr<runtime::HostTensorView>> op_outputs;
+        vector<shared_ptr<runtime::HostTensor>> op_outputs;
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
-            descriptor::TensorView* tv = op->get_output_tensor_view(i).get();
-            shared_ptr<runtime::HostTensorView> htv;
-            if (!contains_key(tensor_map, tv))
+            descriptor::Tensor* tv = op->get_output_tensor_ptr(i).get();
+            shared_ptr<runtime::HostTensor> htv;
+            auto it = tensor_map.find(tv);
+            if (it == tensor_map.end())
             {
                 // the output tensor is not in the tensor map so create a new tensor
                 const Shape& shape = op->get_output_shape(i);
                 const element::Type& type = op->get_output_element_type(i);
                 string name = op->get_output_tensor(i).get_name();
-                htv = make_shared<runtime::HostTensorView>(type, shape, name);
+                htv = make_shared<runtime::HostTensor>(type, shape, name);
                 tensor_map.insert({tv, htv});
             }
             else
             {
-                htv = tensor_map.at(tv);
+                htv = it->second;
             }
             op_outputs.push_back(htv);
         }
 
         // get op type
         element::Type type;
-        if (dynamic_pointer_cast<op::util::BinaryElementwiseComparison>(op) ||
-            dynamic_pointer_cast<op::Select>(op))
+        switch (type_id)
         {
+        case OP_TYPEID::Convert:
+        case OP_TYPEID::Quantize:
+        case OP_TYPEID::Dequantize: type = op->get_input_element_type(0); break;
+        case OP_TYPEID::Equal:
+        case OP_TYPEID::Greater:
+        case OP_TYPEID::GreaterEq:
+        case OP_TYPEID::Less:
+        case OP_TYPEID::LessEq:
+        case OP_TYPEID::NotEqual:
             // Get the type of the second input, not the first
             // All BinaryElementwiseComparision ops have the same type for inputs
             // Select has bool for first input and the type we are interested in for the second
-            type = op->get_inputs().at(1).get_tensor().get_element_type();
-        }
-        else if (dynamic_pointer_cast<op::Convert>(op))
-        {
-            type = op->get_inputs().at(0).get_tensor().get_element_type();
-        }
-        else
-        {
-            type = op->get_outputs().at(0).get_element_type();
+            type = op->get_input_element_type(1);
+            break;
+        default: type = op->get_outputs().at(0).get_element_type(); break;
         }
 
         if (instance.m_performance_counters_enabled)
         {
-            instance.m_timer_map[op.get()].start();
+            instance.m_timer_map[op].start();
         }
-        generate_calls(type, *op, op_outputs, op_inputs);
+        generate_calls(type, wrapped, op_outputs, op_inputs);
         if (instance.m_performance_counters_enabled)
         {
-            instance.m_timer_map[op.get()].stop();
+            instance.m_timer_map[op].stop();
         }
         if (instance.m_nan_check_enabled)
         {
-            perform_nan_check(op_outputs, op.get());
+            perform_nan_check(op_outputs, op);
         }
 
         // delete any obsolete tensors
@@ -200,7 +210,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         {
             for (auto it = tensor_map.begin(); it != tensor_map.end(); ++it)
             {
-                if (it->second->get_tensor().get_name() == t->get_name())
+                if (it->second->get_name() == t->get_name())
                 {
                     tensor_map.erase(it);
                     break;
@@ -212,11 +222,10 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     return true;
 }
 
-void runtime::interpreter::INTBackend::generate_calls(
-    const element::Type& type,
-    Node& op,
-    const vector<shared_ptr<HostTensorView>>& outputs,
-    const vector<shared_ptr<HostTensorView>>& inputs)
+void runtime::interpreter::INTBackend::generate_calls(const element::Type& type,
+                                                      const NodeWrapper& op,
+                                                      const vector<shared_ptr<HostTensor>>& outputs,
+                                                      const vector<shared_ptr<HostTensor>>& inputs)
 {
     if (type == element::boolean)
     {
@@ -265,7 +274,7 @@ void runtime::interpreter::INTBackend::generate_calls(
     else
     {
         stringstream ss;
-        ss << "unsupported element type " << type << " op " << op.get_name();
+        ss << "unsupported element type " << type << " op " << op.get_node().get_name();
         throw ngraph_error(ss.str());
     }
 }
@@ -297,13 +306,13 @@ vector<runtime::PerformanceCounter>
     return rc;
 }
 
-void runtime::interpreter::INTBackend::perform_nan_check(
-    const vector<shared_ptr<HostTensorView>>& tvs, const Node* op)
+void runtime::interpreter::INTBackend::perform_nan_check(const vector<shared_ptr<HostTensor>>& tvs,
+                                                         const Node* op)
 {
     size_t arg_number = 1;
-    for (shared_ptr<HostTensorView> tv : tvs)
+    for (shared_ptr<HostTensor> tv : tvs)
     {
-        const element::Type& type = tv->get_tensor().get_element_type();
+        const element::Type& type = tv->get_element_type();
         if (type == element::f32)
         {
             const float* data = tv->get_data_ptr<float>();

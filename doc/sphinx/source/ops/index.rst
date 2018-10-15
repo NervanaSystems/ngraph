@@ -67,6 +67,7 @@ Not currently a comprehensive list.
    * :doc:`cosh`
    * :doc:`divide`
    * :doc:`dot`
+   * :doc:`drop_out`
    * :doc:`equal`
    * :doc:`exp`
    * :doc:`floor`
@@ -94,7 +95,12 @@ Not currently a comprehensive list.
    * :doc:`product`
    * :doc:`relu`
    * :doc:`sigmoid`
+   * :doc:`sign`
+   * :doc:`sin`
+   * :doc:`sinh`
    * :doc:`softmax`
+   * :doc:`sqrt`
+   * :doc:`tan`
    * :doc:`tanh`
 
 
@@ -122,6 +128,7 @@ Not currently a comprehensive list.
    cosh.rst
    divide.rst
    dot.rst
+   drop_out.rst
    equal.rst
    exp.rst
    floor.rst
@@ -149,7 +156,12 @@ Not currently a comprehensive list.
    product.rst
    relu.rst
    sigmoid.rst
+   sign.rst
+   sin.rst
+   sinh.rst
    softmax.rst
+   sqrt.rst
+   tan.rst
    tanh.rst
 
    

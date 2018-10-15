@@ -70,7 +70,7 @@ namespace ngraph
             ///
             /// \return: New node with permuted axes.
             std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
-                                                       std::vector<int> axes_order);
+                                                       std::vector<std::size_t> axes_order);
 
             /// \brief Return transposed tensor (with axes in reversed order).
             ///

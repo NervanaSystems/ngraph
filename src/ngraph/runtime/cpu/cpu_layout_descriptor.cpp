@@ -30,10 +30,9 @@ namespace ngraph
                                             mkldnn::memory::f32,
                                             mkldnn::memory::format::format_undef);
 
-            LayoutDescriptor::LayoutDescriptor(const ngraph::descriptor::TensorView& tv)
-                : TensorViewLayout(tv)
+            LayoutDescriptor::LayoutDescriptor(const ngraph::descriptor::Tensor& tv)
+                : TensorLayout(tv)
                 , m_offset(0)
-                , m_size(ngraph::shape_size(tv.get_shape()))
                 , m_mkldnn_md(LayoutDescriptor::DummyDesc)
             {
                 auto shape = get_shape();
@@ -45,7 +44,7 @@ namespace ngraph
                     s *= shape[shape.size() - (i + 1)];
                 }
                 std::reverse(m_strides.begin(), m_strides.end());
-                m_mkldnn_memory_size = shape_size(tv.get_shape()) * tv.get_element_type().size();
+                m_buffer_size = shape_size(tv.get_shape()) * tv.get_element_type().size();
             }
 
             size_t LayoutDescriptor::get_index_offset(const std::vector<size_t>& indices)
@@ -63,7 +62,7 @@ namespace ngraph
             }
 
             bool LayoutDescriptor::
-                operator==(const ngraph::descriptor::layout::TensorViewLayout& other) const
+                operator==(const ngraph::descriptor::layout::TensorLayout& other) const
             {
                 const LayoutDescriptor* p_other = dynamic_cast<const LayoutDescriptor*>(&other);
                 if (!p_other)
@@ -99,7 +98,7 @@ namespace ngraph
                 return true;
             }
 
-            void LayoutDescriptor::set_mkldnn_md(const mkldnn::memory::desc md)
+            void LayoutDescriptor::set_mkldnn_md(const mkldnn::memory::desc& md)
             {
                 m_mkldnn_md = md;
 
@@ -110,7 +109,7 @@ namespace ngraph
                 {
                     auto mem_prim_desc =
                         mkldnn::memory::primitive_desc(md, mkldnn_utils::global_cpu_engine);
-                    m_mkldnn_memory_size = mem_prim_desc.get_size();
+                    m_buffer_size = mem_prim_desc.get_size();
                 }
                 catch (const mkldnn::error& e)
                 {
@@ -118,6 +117,15 @@ namespace ngraph
                         "error in computing mkldnn memory size from memory primitive desc: " +
                         e.message);
                 }
+            }
+
+            bool LayoutDescriptor::is_row_major_layout()
+            {
+                if (!is_mkldnn_layout())
+                    return true;
+                auto native_md = runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
+                    get_shape(), m_strides, get_element_type());
+                return runtime::cpu::mkldnn_utils::compare_mkldnn_mds(m_mkldnn_md, native_md);
             }
         }
     }

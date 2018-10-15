@@ -42,125 +42,148 @@ using namespace std;
 
 #define TI(x) std::type_index(typeid(x))
 
-static const std::unordered_set<std::type_index> s_op_registry{
-    TI(ngraph::op::Add),
-    TI(ngraph::op::AvgPool),
-    TI(ngraph::op::AvgPoolBackprop),
-    TI(ngraph::op::BatchNormTraining),
-    TI(ngraph::op::BatchNormInference),
-    TI(ngraph::op::BatchNormTrainingBackprop),
-    TI(ngraph::op::Concat),
-    TI(ngraph::op::Convolution),
-    TI(ngraph::op::ConvolutionBackpropData),
-    TI(ngraph::op::ConvolutionBackpropFilters),
-    TI(ngraph::op::ConvolutionBias),
-    TI(ngraph::op::ConvolutionRelu),
-    TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
-    TI(ngraph::op::MaxPool),
-    TI(ngraph::op::MaxPoolBackprop),
-    TI(ngraph::op::Relu),
-    TI(ngraph::op::ReluBackprop),
-    TI(ngraph::op::Reshape)};
+std::unordered_set<std::type_index>& runtime::cpu::mkldnn_utils::get_op_registry()
+{
+    static std::unordered_set<std::type_index> s_op_registry{
+        TI(ngraph::op::Add),
+        TI(ngraph::op::AvgPool),
+        TI(ngraph::op::AvgPoolBackprop),    
+        TI(ngraph::op::BatchNormTraining),
+        TI(ngraph::op::BatchNormInference),
+        TI(ngraph::op::BatchNormTrainingBackprop),
+        TI(ngraph::op::Concat),
+        TI(ngraph::op::Convolution),
+        TI(ngraph::op::ConvolutionBackpropData),
+        TI(ngraph::op::ConvolutionBackpropFilters),
+        TI(ngraph::op::ConvolutionBias),
+        TI(ngraph::op::ConvolutionRelu),
+        TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
+        TI(ngraph::op::MaxPool),
+        TI(ngraph::op::MaxPoolBackprop),
+        TI(ngraph::op::Relu),
+        TI(ngraph::op::ReluBackprop),
+        TI(ngraph::op::Reshape)};
+    return s_op_registry;
+}
 
-// Mapping from POD types to MKLDNN data types
-static const std::map<element::Type, const mkldnn::memory::data_type> s_mkldnn_data_type_map{
-    {element::boolean, mkldnn::memory::data_type::s8},
-    {element::f32, mkldnn::memory::data_type::f32},
-    {element::f64, mkldnn::memory::data_type::data_undef},
-    {element::i8, mkldnn::memory::data_type::s8},
-    {element::i16, mkldnn::memory::data_type::s16},
-    {element::i32, mkldnn::memory::data_type::s32},
-    {element::i64, mkldnn::memory::data_type::data_undef},
-    {element::u8, mkldnn::memory::data_type::u8},
-    {element::u16, mkldnn::memory::data_type::data_undef},
-    {element::u32, mkldnn::memory::data_type::data_undef},
-    {element::u64, mkldnn::memory::data_type::data_undef}};
+std::map<element::Type, const mkldnn::memory::data_type>&
+    runtime::cpu::mkldnn_utils::get_mkldnn_data_type_map()
+{
+    // Mapping from POD types to MKLDNN data types
+    static std::map<element::Type, const mkldnn::memory::data_type> s_mkldnn_data_type_map = {
+        {element::boolean, mkldnn::memory::data_type::s8},
+        {element::f32, mkldnn::memory::data_type::f32},
+        {element::f64, mkldnn::memory::data_type::data_undef},
+        {element::i8, mkldnn::memory::data_type::s8},
+        {element::i16, mkldnn::memory::data_type::s16},
+        {element::i32, mkldnn::memory::data_type::s32},
+        {element::i64, mkldnn::memory::data_type::data_undef},
+        {element::u8, mkldnn::memory::data_type::u8},
+        {element::u16, mkldnn::memory::data_type::data_undef},
+        {element::u32, mkldnn::memory::data_type::data_undef},
+        {element::u64, mkldnn::memory::data_type::data_undef},
+    };
+    return s_mkldnn_data_type_map;
+}
 
-static const std::map<element::Type, const std::string> s_mkldnn_data_type_string_map{
-    {element::boolean, "mkldnn::memory::data_type::s8"},
-    {element::f32, "mkldnn::memory::data_type::f32"},
-    {element::f64, "mkldnn::memory::data_type::data_undef"},
-    {element::i8, "mkldnn::memory::data_type::s8"},
-    {element::i16, "mkldnn::memory::data_type::s16"},
-    {element::i32, "mkldnn::memory::data_type::s32"},
-    {element::i64, "mkldnn::memory::data_type::data_undef"},
-    {element::u8, "mkldnn::memory::data_type::u8"},
-    {element::u16, "mkldnn::memory::data_type::data_undef"},
-    {element::u32, "mkldnn::memory::data_type::data_undef"},
-    {element::u64, "mkldnn::memory::data_type::data_undef"}};
+std::map<element::Type, const std::string>&
+    runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string_map()
+{
+    static std::map<element::Type, const std::string> s_mkldnn_data_type_string_map{
+        {element::boolean, "mkldnn::memory::data_type::s8"},
+        {element::f32, "mkldnn::memory::data_type::f32"},
+        {element::f64, "mkldnn::memory::data_type::data_undef"},
+        {element::i8, "mkldnn::memory::data_type::s8"},
+        {element::i16, "mkldnn::memory::data_type::s16"},
+        {element::i32, "mkldnn::memory::data_type::s32"},
+        {element::i64, "mkldnn::memory::data_type::data_undef"},
+        {element::u8, "mkldnn::memory::data_type::u8"},
+        {element::u16, "mkldnn::memory::data_type::data_undef"},
+        {element::u32, "mkldnn::memory::data_type::data_undef"},
+        {element::u64, "mkldnn::memory::data_type::data_undef"}};
+    return s_mkldnn_data_type_string_map;
+}
 
-// TODO (jbobba): Add the rest of memory formats to this map as well
-static const std::map<memory::format, const std::string> s_mkldnn_format_string_map{
-    {memory::format::format_undef, "memory::format::format_undef"},
-    {memory::format::any, "memory::format::any"},
-    {memory::format::blocked, "memory::format::blocked"},
-    {memory::format::x, "memory::format::x"},
-    {memory::format::nc, "memory::format::nc"},
-    {memory::format::nchw, "memory::format::nchw"},
-    {memory::format::nhwc, "memory::format::nhwc"},
-    {memory::format::chwn, "memory::format::chwn"},
-    {memory::format::nChw8c, "memory::format::nChw8c"},
-    {memory::format::nChw16c, "memory::format::nChw16c"},
-    {memory::format::ncdhw, "memory::format::ndhwc"},
-    {memory::format::ncdhw, "memory::format::ndhwc"},
-    {memory::format::nCdhw16c, "memory::format::nCdhw16c"},
-    {memory::format::oi, "memory::format::oi"},
-    {memory::format::io, "memory::format::io"},
-    {memory::format::oihw, "memory::format::oihw"},
-    {memory::format::ihwo, "memory::format::ihwo"},
-    {memory::format::hwio, "memory::format::hwio"},
-    // TODO (nishant): Uncomment after the next release of mkl-dnn"
-    //{memory::format::dhwio, "memory::format::dhwio"},
-    {memory::format::oidhw, "memory::format::oidhw"},
-    {memory::format::OIdhw16i16o, "memory::format::OIdhw16i16o"},
-    {memory::format::OIdhw16o16i, "memory::format::OIdhw16o16i"},
-    {memory::format::Oidhw16o, "memory::format::Oidhw16o"},
-    {memory::format::Odhwi16o, "memory::format::Odhwi16o"},
-    {memory::format::oIhw8i, "memory::format::oIhw8i"},
-    {memory::format::oIhw16i, "memory::format::oIhw16i"},
-    {memory::format::OIhw8i8o, "memory::format::OIhw8i8o"},
-    {memory::format::OIhw16i16o, "memory::format::OIhw16i16o"},
-    {memory::format::IOhw16o16i, "memory::format::IOhw16o16i"},
-    {memory::format::OIhw8o8i, "memory::format::OIhw8o8i"},
-    {memory::format::OIhw16o16i, "memory::format::OIhw16o16i"},
-    {memory::format::Oihw8o, "memory::format::Oihw8o"},
-    {memory::format::Oihw16o, "memory::format::Oihw16o"},
-    {memory::format::Ohwi8o, "memory::format::Ohwi8o"},
-    {memory::format::Ohwi16o, "memory::format::Ohwi16o"},
-    {memory::format::OhIw16o4i, "memory::format::OhIw16o4i"},
-    {memory::format::tnc, "memory::format::tnc"},
-    {memory::format::ldsnc, "memory::format::ldsnc"},
-    {memory::format::ldigo, "memory::format::ldigo"},
-    {memory::format::ldgo, "memory::format::ldgo"},
-};
+std::map<memory::format, const std::string>&
+    runtime::cpu::mkldnn_utils::get_mkldnn_format_string_map()
+{
+    // TODO (jbobba): Add the rest of memory formats to this map as well
+    static std::map<memory::format, const std::string> s_mkldnn_format_string_map{
+        {memory::format::format_undef, "memory::format::format_undef"},
+        {memory::format::any, "memory::format::any"},
+        {memory::format::blocked, "memory::format::blocked"},
+        {memory::format::x, "memory::format::x"},
+        {memory::format::nc, "memory::format::nc"},
+        {memory::format::nchw, "memory::format::nchw"},
+        {memory::format::nhwc, "memory::format::nhwc"},
+        {memory::format::chwn, "memory::format::chwn"},
+        {memory::format::nChw8c, "memory::format::nChw8c"},
+        {memory::format::nChw16c, "memory::format::nChw16c"},
+        {memory::format::ncdhw, "memory::format::ndhwc"},
+        {memory::format::ncdhw, "memory::format::ndhwc"},
+        {memory::format::nCdhw16c, "memory::format::nCdhw16c"},
+        {memory::format::oi, "memory::format::oi"},
+        {memory::format::io, "memory::format::io"},
+        {memory::format::oihw, "memory::format::oihw"},
+        {memory::format::ihwo, "memory::format::ihwo"},
+        {memory::format::hwio, "memory::format::hwio"},
+        // TODO (nishant): Uncomment after the next release of mkl-dnn"
+        //{memory::format::dhwio, "memory::format::dhwio"},
+        {memory::format::oidhw, "memory::format::oidhw"},
+        {memory::format::OIdhw16i16o, "memory::format::OIdhw16i16o"},
+        {memory::format::OIdhw16o16i, "memory::format::OIdhw16o16i"},
+        {memory::format::Oidhw16o, "memory::format::Oidhw16o"},
+        {memory::format::Odhwi16o, "memory::format::Odhwi16o"},
+        {memory::format::oIhw8i, "memory::format::oIhw8i"},
+        {memory::format::oIhw16i, "memory::format::oIhw16i"},
+        {memory::format::OIhw8i8o, "memory::format::OIhw8i8o"},
+        {memory::format::OIhw16i16o, "memory::format::OIhw16i16o"},
+        {memory::format::IOhw16o16i, "memory::format::IOhw16o16i"},
+        {memory::format::OIhw8o8i, "memory::format::OIhw8o8i"},
+        {memory::format::OIhw16o16i, "memory::format::OIhw16o16i"},
+        {memory::format::Oihw8o, "memory::format::Oihw8o"},
+        {memory::format::Oihw16o, "memory::format::Oihw16o"},
+        {memory::format::Ohwi8o, "memory::format::Ohwi8o"},
+        {memory::format::Ohwi16o, "memory::format::Ohwi16o"},
+        {memory::format::OhIw16o4i, "memory::format::OhIw16o4i"},
+        {memory::format::tnc, "memory::format::tnc"},
+        {memory::format::ldsnc, "memory::format::ldsnc"},
+        {memory::format::ldigo, "memory::format::ldigo"},
+        {memory::format::ldgo, "memory::format::ldgo"},
+    };
+    return s_mkldnn_format_string_map;
+}
 
-static const std::set<memory::format> s_filter_formats{
-    memory::format::oihw,
-    memory::format::ihwo,
-    memory::format::hwio,
-    // TODO (nishant): Uncomment after the next release of mkl-dnn"
-    // memory::format::dhwio,
-    memory::format::oidhw,
-    memory::format::OIdhw16i16o,
-    memory::format::OIdhw16o16i,
-    memory::format::Oidhw16o,
-    memory::format::Odhwi16o,
-    // memory::format::oIhw8i,             // These currently map to nChw8c and nChw16c
-    // memory::format::oIhw16i,
-    memory::format::OIhw8i8o,
-    memory::format::OIhw16i16o,
-    memory::format::IOhw16o16i,
-    memory::format::OIhw8o8i,
-    memory::format::OIhw16o16i,
-    memory::format::Oihw8o,
-    memory::format::Oihw16o,
-    memory::format::Ohwi8o,
-    memory::format::Ohwi16o,
-    memory::format::OhIw16o4i};
-
+std::set<memory::format>& runtime::cpu::mkldnn_utils::get_filter_formats()
+{
+    static std::set<memory::format> s_filter_formats{
+        memory::format::oihw,
+        memory::format::ihwo,
+        memory::format::hwio,
+        // TODO (nishant): Uncomment after the next release of mkl-dnn"
+        // memory::format::dhwio,
+        memory::format::oidhw,
+        memory::format::OIdhw16i16o,
+        memory::format::OIdhw16o16i,
+        memory::format::Oidhw16o,
+        memory::format::Odhwi16o,
+        // memory::format::oIhw8i,             // These currently map to nChw8c and nChw16c
+        // memory::format::oIhw16i,
+        memory::format::OIhw8i8o,
+        memory::format::OIhw16i16o,
+        memory::format::IOhw16o16i,
+        memory::format::OIhw8o8i,
+        memory::format::OIhw16o16i,
+        memory::format::Oihw8o,
+        memory::format::Oihw16o,
+        memory::format::Ohwi8o,
+        memory::format::Ohwi16o,
+        memory::format::OhIw16o4i};
+    return s_filter_formats;
+}
 bool runtime::cpu::mkldnn_utils::IsMKLDNNOp(ngraph::Node& op)
 {
-    return (s_op_registry.find(TI(op)) != s_op_registry.end());
+    return (get_op_registry().find(TI(op)) != get_op_registry().end());
 }
 
 mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
@@ -184,27 +207,31 @@ mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(const 
 const std::string&
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(const ngraph::element::Type& type)
 {
-    auto it = s_mkldnn_data_type_string_map.find(type);
-    if (it == s_mkldnn_data_type_string_map.end() || it->second.empty())
-        throw ngraph_error("No MKLDNN data type exists for the given element type");
+    auto it = get_mkldnn_data_type_string_map().find(type);
+    if (it == get_mkldnn_data_type_string_map().end() || it->second.empty())
+    {
+        throw ngraph_error("No MKLDNN data type exists for the given element type" +
+                           type.c_type_string());
+    }
     return it->second;
 }
 
 mkldnn::memory::data_type
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type(const ngraph::element::Type& type)
 {
-    auto it = s_mkldnn_data_type_map.find(type);
-    if (it == s_mkldnn_data_type_map.end())
+    auto it = get_mkldnn_data_type_map().find(type);
+    if (it == get_mkldnn_data_type_map().end())
     {
-        throw ngraph_error("No MKLDNN data type exists for the given element type");
+        throw ngraph_error("No MKLDNN data type exists for the given element type" +
+                           type.c_type_string());
     }
     return it->second;
 }
 
 const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_format_string(memory::format fmt)
 {
-    auto it = s_mkldnn_format_string_map.find(fmt);
-    if (it == s_mkldnn_format_string_map.end())
+    auto it = get_mkldnn_format_string_map().find(fmt);
+    if (it == get_mkldnn_format_string_map().end())
         throw ngraph_error("No MKLDNN format exists for the given format type " +
                            std::to_string(fmt));
     return it->second;
@@ -214,14 +241,14 @@ const mkldnn::memory::desc& runtime::cpu::mkldnn_utils::get_input_mkldnn_md(cons
                                                                             size_t index)
 {
     auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-        node->get_inputs()[index].get_output().get_tensor_view()->get_tensor_view_layout());
+        node->get_inputs()[index].get_output().get_tensor_ptr()->get_tensor_layout());
     return cpu_tvl->get_mkldnn_md();
 }
 
 const mkldnn::memory::desc& runtime::cpu::mkldnn_utils::get_output_mkldnn_md(const Node* node,
                                                                              size_t index)
 {
-    auto tvl = node->get_output_tensor_view(index)->get_tensor_view_layout();
+    auto tvl = node->get_output_tensor_ptr(index)->get_tensor_layout();
     return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_md();
 }
 
@@ -236,12 +263,12 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
     if (output)
     {
         shape = node->get_output_shape(index);
-        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_output_element_type(0));
+        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_output_element_type(index));
     }
     else
     {
         shape = node->get_input_shape(index);
-        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
+        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(index));
     }
 
     return memory::desc(memory::dims(shape.begin(), shape.end()), et, format);
@@ -251,12 +278,13 @@ bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,
                                                       const Strides& strides,
                                                       const ngraph::element::Type type)
 {
-    auto it = s_mkldnn_data_type_map.find(type);
+    auto it = get_mkldnn_data_type_map().find(type);
     if (dims.size() == 0)
     {
         return false;
     }
-    if (it == s_mkldnn_data_type_map.end() || it->second == mkldnn::memory::data_type::data_undef)
+    if (it == get_mkldnn_data_type_map().end() ||
+        it->second == mkldnn::memory::data_type::data_undef)
     {
         return false;
     }
@@ -284,6 +312,20 @@ bool runtime::cpu::mkldnn_utils::is_perm_sorted(const Strides& a, const AxisVect
 mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
     const Shape& dims, const Strides& strides, const ngraph::element::Type type)
 {
+    if (dims.size() > TENSOR_MAX_DIMS || strides.size() > TENSOR_MAX_DIMS)
+    {
+        throw ngraph_error("In create_blocked_mkldnn_md: Dimensions (dims, stride): (" +
+                           std::to_string(dims.size()) + ", " + std::to_string(strides.size()) +
+                           ") exceed maximum supported by MKLDNN " +
+                           std::to_string(TENSOR_MAX_DIMS));
+    }
+
+    if (dims.size() != strides.size())
+    {
+        throw ngraph_error("In create_blocked_mkldnn_md: Rank mismatch between shape and strides " +
+                           std::to_string(dims.size()) + " " + std::to_string(strides.size()));
+    }
+
     memory::dims dim(dims.begin(), dims.end());
     memory::dims stride(strides.begin(), strides.end());
     memory::data_type dtype = get_mkldnn_data_type(type);
@@ -344,31 +386,10 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
     return memory::desc(md);
 }
 
-memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& in,
-                                                           AxisVector& axis_order)
+// MKLDNN kernel selection sometimes relies on named layouts like "mkldnn_nchw"
+// Try and convert a blocked layout into a named layout
+memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(mkldnn_memory_desc_t md)
 {
-    mkldnn_memory_desc_t md;
-    md.primitive_kind = in.data.primitive_kind;
-    md.ndims = in.data.ndims;
-    md.format = mkldnn_blocked;
-    md.data_type = in.data.data_type;
-
-    for (size_t i = 0; i < in.data.ndims; i++)
-    {
-        md.layout_desc.blocking.block_dims[i] =
-            in.data.layout_desc.blocking.block_dims[axis_order[i]];
-        md.layout_desc.blocking.strides[1][i] =
-            in.data.layout_desc.blocking.strides[1][axis_order[i]];
-        md.layout_desc.blocking.strides[0][i] =
-            in.data.layout_desc.blocking.strides[0][axis_order[i]];
-        md.layout_desc.blocking.padding_dims[i] =
-            in.data.layout_desc.blocking.padding_dims[axis_order[i]];
-        md.layout_desc.blocking.offset_padding_to_data[i] =
-            in.data.layout_desc.blocking.offset_padding_to_data[axis_order[i]];
-        md.dims[i] = in.data.dims[axis_order[i]];
-    }
-    md.layout_desc.blocking.offset_padding = in.data.layout_desc.blocking.offset_padding;
-
     auto out_md = memory::desc(md);
 
     auto get_named_md = [](const mkldnn_memory_desc_t& blk, const mkldnn_memory_format_t format) {
@@ -421,12 +442,133 @@ memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& i
     return out_md;
 }
 
-bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
+memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& in,
+                                                           const AxisVector& axis_order)
 {
-    auto op_annotations = static_cast<const ngraph::op::Op*>(node)->get_op_annotations();
-    return (op_annotations &&
-            static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
-                ->is_mkldnn_op());
+    mkldnn_memory_desc_t md;
+    md.primitive_kind = in.data.primitive_kind;
+    md.ndims = in.data.ndims;
+    md.format = mkldnn_blocked;
+    md.data_type = in.data.data_type;
+
+    for (size_t i = 0; i < in.data.ndims; i++)
+    {
+        md.layout_desc.blocking.block_dims[i] =
+            in.data.layout_desc.blocking.block_dims[axis_order[i]];
+        md.layout_desc.blocking.strides[1][i] =
+            in.data.layout_desc.blocking.strides[1][axis_order[i]];
+        md.layout_desc.blocking.strides[0][i] =
+            in.data.layout_desc.blocking.strides[0][axis_order[i]];
+        md.layout_desc.blocking.padding_dims[i] =
+            in.data.layout_desc.blocking.padding_dims[axis_order[i]];
+        md.layout_desc.blocking.offset_padding_to_data[i] =
+
+            in.data.layout_desc.blocking.offset_padding_to_data[axis_order[i]];
+        md.dims[i] = in.data.dims[axis_order[i]];
+    }
+    md.layout_desc.blocking.offset_padding = in.data.layout_desc.blocking.offset_padding;
+
+    return try_get_named_md(md);
+}
+
+memory::desc runtime::cpu::mkldnn_utils::squeeze_blocked_md(const memory::desc& in,
+                                                            AxisVector& axis_list)
+{
+    if (in.data.ndims <= axis_list.size())
+    {
+        throw ngraph_error("Squeezing too many axes: input " + to_string(in.data.ndims) +
+                           " , removing " + to_string(axis_list.size()));
+    }
+    for (auto axis : axis_list)
+    {
+        if (in.data.dims[axis] != 1)
+        {
+            throw ngraph_error("Cannot squeeze axis on non unit-size, axis: " + to_string(axis) +
+                               " size: " + to_string(in.data.dims[axis]));
+        }
+    }
+
+    mkldnn_memory_desc_t md;
+    md.primitive_kind = in.data.primitive_kind;
+    md.ndims = in.data.ndims - static_cast<int>(axis_list.size());
+    md.format = mkldnn_blocked;
+    md.data_type = in.data.data_type;
+
+    size_t k = 0;
+    for (size_t i = 0, j = 0; i < in.data.ndims; i++)
+    {
+        if (k < axis_list.size() && i == axis_list[k])
+        {
+            k++;
+            continue;
+        }
+
+        md.layout_desc.blocking.block_dims[j] = in.data.layout_desc.blocking.block_dims[i];
+        md.layout_desc.blocking.strides[1][j] = in.data.layout_desc.blocking.strides[1][i];
+        md.layout_desc.blocking.strides[0][j] = in.data.layout_desc.blocking.strides[0][i];
+        md.layout_desc.blocking.padding_dims[j] = in.data.layout_desc.blocking.padding_dims[i];
+        md.layout_desc.blocking.offset_padding_to_data[j] =
+
+            in.data.layout_desc.blocking.offset_padding_to_data[i];
+        md.dims[j] = in.data.dims[i];
+        j++;
+    }
+    md.layout_desc.blocking.offset_padding = in.data.layout_desc.blocking.offset_padding;
+
+    return try_get_named_md(md);
+}
+
+memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& in,
+                                                           AxisVector& axis_list)
+{
+    mkldnn_memory_desc_t md;
+    md.primitive_kind = in.data.primitive_kind;
+    md.ndims = in.data.ndims + static_cast<int>(axis_list.size());
+    md.format = mkldnn_blocked;
+    md.data_type = in.data.data_type;
+
+    size_t k = 0;
+    for (size_t i = 0, j = 0; j < md.ndims; j++)
+    {
+        if (k < axis_list.size() && j == axis_list[k])
+        {
+            k++;
+            md.dims[j] = 1;
+            md.layout_desc.blocking.block_dims[j] = 1;
+            md.layout_desc.blocking.padding_dims[j] = 1;
+            md.layout_desc.blocking.offset_padding_to_data[j] = 0;
+            if (i > 0)
+            {
+                md.layout_desc.blocking.strides[1][j] =
+                    in.data.layout_desc.blocking.strides[1][i - 1];
+                md.layout_desc.blocking.strides[0][j] =
+                    in.data.layout_desc.blocking.strides[0][i - 1];
+            }
+            else
+            {
+                md.layout_desc.blocking.strides[1][j] =
+                    in.data.layout_desc.blocking.strides[0][in.data.ndims - 1];
+                size_t nelems = 1;
+                for (size_t idx = 0; idx < in.data.ndims; idx++)
+                    nelems *= in.data.dims[idx];
+                md.layout_desc.blocking.strides[0][j] = nelems;
+            }
+        }
+        else
+        {
+            md.dims[j] = in.data.dims[i];
+            md.layout_desc.blocking.strides[1][j] = in.data.layout_desc.blocking.strides[1][i];
+            md.layout_desc.blocking.strides[0][j] = in.data.layout_desc.blocking.strides[0][i];
+            md.layout_desc.blocking.block_dims[j] = in.data.layout_desc.blocking.block_dims[i];
+            md.layout_desc.blocking.padding_dims[j] = in.data.layout_desc.blocking.padding_dims[i];
+            md.layout_desc.blocking.offset_padding_to_data[j] =
+                in.data.layout_desc.blocking.offset_padding_to_data[i];
+            i++;
+        }
+    }
+    md.layout_desc.blocking.offset_padding = in.data.layout_desc.blocking.offset_padding;
+
+    return try_get_named_md(md);
 }
 
 bool runtime::cpu::mkldnn_utils::compare_mkldnn_formats(mkldnn::memory::format lhs,
@@ -451,7 +593,7 @@ bool runtime::cpu::mkldnn_utils::compare_mkldnn_mds(const mkldnn::memory::desc& 
 
 bool runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(mkldnn::memory::format fmt)
 {
-    if (s_filter_formats.find(fmt) != s_filter_formats.end())
+    if (get_filter_formats().find(fmt) != get_filter_formats().end())
     {
         return true;
     }
@@ -465,4 +607,39 @@ bool runtime::cpu::mkldnn_utils::is_mkldnn_blocked_data_format(mkldnn::memory::f
         return true;
     }
     return false;
+}
+
+bool runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(const mkldnn::memory::desc& in,
+                                                         const AxisVector& axis_list)
+{
+    for (size_t i = 0; i < in.data.ndims; i++)
+    {
+        if (std::find(axis_list.begin(), axis_list.end(), i) == axis_list.end())
+        {
+            continue;
+        }
+        if (in.data.layout_desc.blocking.padding_dims[i] != in.data.dims[i])
+        {
+            return true;
+        }
+        if (in.data.layout_desc.blocking.offset_padding_to_data[i] != 0)
+        {
+            return true;
+        }
+    }
+
+    if (in.data.layout_desc.blocking.offset_padding != 0)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
+{
+    auto op_annotations = static_cast<const ngraph::op::Op*>(node)->get_op_annotations();
+    return (op_annotations &&
+            static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
+                ->is_mkldnn_op());
 }

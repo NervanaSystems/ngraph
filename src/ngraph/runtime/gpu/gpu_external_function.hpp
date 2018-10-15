@@ -32,9 +32,13 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+
+#define EMIT_ARGS                                                                                  \
+    runtime::gpu::GPU_ExternalFunction *external_function, codegen::CodeWriter &writer,            \
+        const Node *node, const std::vector<runtime::gpu::GPUTensorWrapper> &args,                 \
+        const std::vector<runtime::gpu::GPUTensorWrapper> &out
 
 namespace ngraph
 {
@@ -43,30 +47,17 @@ namespace ngraph
         namespace gpu
         {
             class GPU_Emitter;
-            class GPU_CallFrame;
             struct GPURuntimeContext;
 
-            using OpFunction =
-                std::function<void(GPU_ExternalFunction* external_function,
-                                   codegen::CodeWriter&,
-                                   const ngraph::Node*,
-                                   const std::vector<GPU_TensorViewWrapper>& inputs,
-                                   const std::vector<GPU_TensorViewWrapper>& outputs)>;
-
-            using OpMap = std::unordered_map<std::type_index, OpFunction>;
-
-            class GPU_ExternalFunction : public std::enable_shared_from_this<GPU_ExternalFunction>
+            class GPU_ExternalFunction
             {
-                friend class GPU_CallFrame;
                 friend class GPU_Backend;
 
             public:
                 GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                     std::shared_ptr<GPU_Backend::BackendContext>& shared_context,
-                                     bool release_function = true);
+                                     std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
                 ~GPU_ExternalFunction();
 
-                std::shared_ptr<ngraph::runtime::gpu::GPU_CallFrame> make_call_frame();
                 std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
                 const std::unique_ptr<GPUPrimitiveEmitter>& get_primitive_emitter() const
                 {
@@ -81,6 +72,14 @@ namespace ngraph
                 EntryPoint m_compiled_function;
 
             private:
+                // For non-destructive passthrough kernels, propagate function
+                // input buffers to internal ops
+                void propagate_in_place_input(ngraph::descriptor::Output* output,
+                                              std::string input_name);
+                // For in-place kernels, propagate function output buffers to
+                // internal ops
+                void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
+                                               std::string output_name);
                 void emit_header();
                 void emit_timer_functions();
                 void emit_constant_declarations();
@@ -89,10 +88,13 @@ namespace ngraph
                 void emit_debug_function_entry(Node* node);
                 void emit_debug_function_exit(Node* node);
                 void emit_temp_mem_pool_allocation(std::shared_ptr<Function> current_function);
-                void release_function() { m_function = nullptr; }
+                void emit_op(EMIT_ARGS);
                 void store_emitted_functions(const std::string& code);
                 std::string emit_op_as_function(const Node& node, const std::string& function_name);
                 std::string strip_comments(const std::string& s) const;
+
+                static const std::string& get_pch_header_source();
+                static const std::string& get_header_source();
 
                 codegen::CodeWriter m_writer;
                 ngraph::pass::Manager m_pass_manager;
@@ -109,14 +111,11 @@ namespace ngraph
 
                 bool m_emit_timing;
                 bool m_is_compiled;
-                bool m_release_function;
-                bool m_temporaries_used;
                 size_t m_offset;
 
                 std::string m_function_name;
-                std::string m_pch_header_source;
 
-                std::shared_ptr<std::unordered_map<std::string, size_t>> m_tensor_memory_buffers;
+                std::unordered_map<std::string, size_t> m_tensor_memory_buffers;
                 std::shared_ptr<GPU_Backend::BackendContext> m_shared_context;
             };
         }

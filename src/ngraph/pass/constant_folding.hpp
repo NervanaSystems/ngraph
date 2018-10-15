@@ -28,15 +28,52 @@ namespace ngraph
 
 class ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
 {
+    enum class CFTransformations
+    {
+        RESHAPE,
+        BROADCAST,
+        PAD,
+        DEQUANTIZE,
+        UNARY,
+        BINARY
+    };
+
 public:
     ConstantFolding()
         : GraphRewrite()
     {
         construct_constant_reshape();
         construct_constant_broadcast();
+        construct_constant_pad();
+        construct_constant_unary();
+        construct_constant_binary();
+        construct_constant_dequantize();
+    }
+
+    //this allows to specify the order in which matchers will be run
+    //and also allows to register the same matcher more than once
+    ConstantFolding(const std::vector<CFTransformations>& transformations)
+        : GraphRewrite()
+    {
+        for (auto cft : transformations)
+        {
+            switch (cft)
+            {
+            case CFTransformations::RESHAPE: construct_constant_reshape(); break;
+            case CFTransformations::BROADCAST: construct_constant_broadcast(); break;
+            case CFTransformations::PAD: construct_constant_pad(); break;
+            case CFTransformations::UNARY: construct_constant_unary(); break;
+            case CFTransformations::BINARY: construct_constant_binary(); break;
+            case CFTransformations::DEQUANTIZE: construct_constant_dequantize(); break;
+            }
+        }
     }
 
 private:
     void construct_constant_reshape();
     void construct_constant_broadcast();
+    void construct_constant_pad();
+    void construct_constant_unary();
+    void construct_constant_binary();
+    void construct_constant_dequantize();
 };

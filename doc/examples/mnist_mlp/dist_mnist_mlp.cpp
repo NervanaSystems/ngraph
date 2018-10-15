@@ -20,13 +20,13 @@
 #include <list>
 #include <math.h>
 #include <memory>
-#include <mpi.h>
 #include <random>
 #include <set>
 #include <stdexcept>
 #include <string>
 
 #include <ngraph/autodiff/adjoints.hpp>
+#include <ngraph/distributed.hpp>
 #include <ngraph/graph_util.hpp>
 #include <ngraph/ngraph.hpp>
 
@@ -35,9 +35,8 @@
 
 using namespace ngraph;
 
-size_t
-    accuracy_count(const std::shared_ptr<runtime::TensorView>& t_softmax,
-                   const std::shared_ptr<runtime::TensorView>& t_Y)
+size_t accuracy_count(const std::shared_ptr<runtime::Tensor>& t_softmax,
+                      const std::shared_ptr<runtime::Tensor>& t_Y)
 {
     const Shape& softmax_shape = t_softmax->get_shape();
     size_t batch_size = softmax_shape.at(0);
@@ -76,13 +75,13 @@ size_t
 float test_accuracy(MNistDataLoader& loader,
                     std::shared_ptr<runtime::Backend> backend,
                     std::shared_ptr<Function> function,
-                    const std::shared_ptr<runtime::TensorView>& t_X,
-                    const std::shared_ptr<runtime::TensorView>& t_Y,
-                    const std::shared_ptr<runtime::TensorView>& t_softmax,
-                    const std::shared_ptr<runtime::TensorView>& t_W0,
-                    const std::shared_ptr<runtime::TensorView>& t_b0,
-                    const std::shared_ptr<runtime::TensorView>& t_W1,
-                    const std::shared_ptr<runtime::TensorView>& t_b1)
+                    const std::shared_ptr<runtime::Tensor>& t_X,
+                    const std::shared_ptr<runtime::Tensor>& t_Y,
+                    const std::shared_ptr<runtime::Tensor>& t_softmax,
+                    const std::shared_ptr<runtime::Tensor>& t_W0,
+                    const std::shared_ptr<runtime::Tensor>& t_b0,
+                    const std::shared_ptr<runtime::Tensor>& t_W1,
+                    const std::shared_ptr<runtime::Tensor>& t_b1)
 {
     loader.reset();
     size_t batch_size = loader.get_batch_size();
@@ -109,7 +108,7 @@ float test_accuracy(MNistDataLoader& loader,
 
 int main(int argc, const char* argv[])
 {
-    MPI::Init();
+    ngraph::Distributed dist;
 
     size_t epochs = 5;
     size_t batch_size = 128;
@@ -290,8 +289,6 @@ int main(int argc, const char* argv[])
                       << std::endl;
         }
     }
-
-    MPI::Finalize();
 
     return 0;
 }

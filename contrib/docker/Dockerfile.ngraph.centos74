@@ -23,6 +23,7 @@
 FROM centos:7
 
 # Added install for perl Data::Dumper to avoid a compile error
+# Sphinx docs specify python-sphinx package
 RUN yum -y update && \
     yum -y --enablerepo=extras install epel-release && \
     yum -y install \
@@ -30,7 +31,7 @@ RUN yum -y update && \
     cmake3 make \
     git \
     wget patch diffutils zlib-devel ncurses-devel libtinfo-dev \
-    python python-devel python-setuptools \
+    python python-devel python-sphinx python-setuptools \
     doxygen graphviz \
     which \
     'perl(Data::Dumper)'

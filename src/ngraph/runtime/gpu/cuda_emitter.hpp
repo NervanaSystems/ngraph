@@ -50,19 +50,17 @@ namespace ngraph
                 size_t build_primitive(const op::ReplaceSlice* node, bool in_place_op);
 
             public:
-                size_t build_pad(const std::array<std::string, 2>& dtypes,
+                size_t build_pad(const std::vector<std::string>& dtypes,
                                  NVShape input_shape,
                                  NVShape output_shape,
-                                 NVShape pad_below,
-                                 NVShape pad_above,
-                                 NVShape pad_interior,
-                                 const std::string& pad_value = "");
+                                 NVShape padding_below,
+                                 NVShape padding_interior);
 
-                size_t build_pad_dynamic(const std::array<std::string, 2>& dtypes,
-                                         NVShape input_shape,
-                                         NVShape output_shape,
-                                         NVShape padding_below,
-                                         NVShape padding_interior);
+                size_t build_pad_fill(const std::vector<std::string>& dtypes,
+                                      NVShape input_shape,
+                                      NVShape output_shape,
+                                      NVShape padding_below,
+                                      NVShape padding_interior);
 
                 size_t build_1d_max_pool(const std::array<std::string, 2>& dtypes,
                                          NVShape input_shape,
@@ -101,7 +99,8 @@ namespace ngraph
                 size_t build_onehot(const std::array<std::string, 2>& dtypes,
                                     NVShape input_shape,
                                     NVShape output_shape,
-                                    size_t one_hot_axis);
+                                    size_t one_hot_axis,
+                                    size_t output_datatype_size);
 
                 size_t build_reverse(const std::array<std::string, 2>& dtypes,
                                      NVShape input_shape,
@@ -153,6 +152,14 @@ namespace ngraph
                 size_t build_reshape(const std::array<std::string, 2>& dtypes,
                                      NVShape input_shape,
                                      NVShape input_order);
+
+                size_t build_reshape_2d(const std::array<std::string, 2>& dtypes,
+                                        NVShape input_shape,
+                                        NVShape input_order);
+
+                size_t build_reshape_3d(const std::array<std::string, 2>& dtypes,
+                                        NVShape input_shape,
+                                        NVShape input_order);
 
                 size_t build_convolution(const std::array<std::string, 3>& dtypes,
                                          NVShape input_shape,

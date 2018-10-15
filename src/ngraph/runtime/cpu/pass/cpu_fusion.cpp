@@ -26,12 +26,14 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -41,6 +43,7 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
@@ -50,6 +53,7 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
+#include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
@@ -737,7 +741,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
     auto beta_shape = Shape{2};
     auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
     double eps = 0.001;
-    auto shape_r = Shape{1, 2, 2, 2};
     auto bn = std::make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
     auto goe = std::make_shared<op::GetOutputElement>(bn, 0);
     auto prelu = std::make_shared<op::Relu>(goe);
@@ -806,7 +809,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
     auto gamma = std::make_shared<pattern::op::Label>(element::f32, gamma_shape);
     auto beta_shape = Shape{2};
     auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
-    auto shape_r = Shape{1, 2, 2, 2};
+    double eps = 0.001;
     auto bn_pred = pattern::has_class<op::BatchNormBase>();
     auto bn = std::make_shared<pattern::op::Any>(
         input, bn_pred, NodeVector{gamma, beta, input, mean, var});
@@ -1006,6 +1009,143 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
     };
 
     auto m = std::make_shared<pattern::Matcher>(prelu, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
+{
+    Shape shape{2, 2, 1, 1};
+    auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
+
+    auto pconv = std::make_shared<op::Convolution>(data_batch,
+                                                   filters,
+                                                   Strides{1, 1},
+                                                   Strides{1, 1},
+                                                   CoordinateDiff{0, 0},
+                                                   CoordinateDiff{0, 0},
+                                                   Strides{1, 1});
+    auto add_input = std::make_shared<pattern::op::Label>(element::f32, pconv->get_shape());
+    auto padd = std::make_shared<op::Add>(add_input, pconv);
+
+    pattern::graph_rewrite_callback callback = [data_batch, filters](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_conv_add against "
+                     << m.get_match_root()->get_name();
+
+        auto add_m = m.get_match_root();
+        auto pattern_map = m.get_pattern_map();
+        auto conv_m = std::dynamic_pointer_cast<op::Convolution>(add_m->get_argument(1));
+        auto inplace_input = add_m->get_argument(0);
+
+        if (!conv_m)
+        {
+            conv_m = std::dynamic_pointer_cast<op::Convolution>(add_m->get_argument(0));
+            inplace_input = add_m->get_argument(1);
+        }
+
+        //These checks are to make sure a MKLDNN Convolution kernel can be used.
+        bool data_dilated = false;
+        for (size_t s : conv_m->get_data_dilation_strides())
+        {
+            data_dilated = data_dilated || (s != 1);
+        }
+
+        if (data_dilated)
+        {
+            NGRAPH_DEBUG << "Convolution has dilations greater than 1";
+            return false;
+        }
+
+        if (conv_m->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "Convolution isn't of type float";
+            return false;
+        }
+
+        auto arg0_rank = conv_m->get_input_shape(0).size();
+        auto arg1_rank = conv_m->get_input_shape(1).size();
+
+        if (arg0_rank != 4 || arg1_rank != 4)
+        {
+            NGRAPH_DEBUG << "Convolution's arguments ranks aren't equal to 4";
+            return false;
+        }
+
+        if (get_user_count(conv_m.get()) > 1)
+        {
+            NGRAPH_DEBUG << "Convolution has more than one user";
+            return false;
+        }
+
+        if (!is_post_dominated(inplace_input.get(), add_m.get()))
+        {
+            NGRAPH_DEBUG << "Unsafe to use in-place kernel since add's in-place input has "
+                            "potential live users";
+            return false;
+        }
+
+        if (inplace_input->is_parameter())
+        {
+            NGRAPH_DEBUG
+                << "Unsafe to use in-place kernel since add's in-place input is a parameter";
+            return false;
+        }
+
+        auto conv_add = std::shared_ptr<Node>(new op::ConvolutionAdd(conv_m, inplace_input, false));
+        ngraph::replace_node(m.get_match_root(), conv_add);
+        return true;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(padd, callback, "conv_add");
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add_relu()
+{
+    Shape shape{2, 2, 1, 1};
+    auto data_batch = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto add_input = std::make_shared<pattern::op::Label>(element::f32, shape);
+
+    auto pconv = std::make_shared<op::ConvolutionAdd>(data_batch,
+                                                      filters,
+                                                      add_input,
+                                                      Strides{1, 1},
+                                                      Strides{1, 1},
+                                                      CoordinateDiff{0, 0},
+                                                      CoordinateDiff{0, 0},
+                                                      Strides{1, 1},
+                                                      false);
+    auto prelu = std::make_shared<op::Relu>(pconv);
+
+    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_conv_add_relu against "
+                     << m.get_match_root()->get_name();
+
+        auto conv_m =
+            std::dynamic_pointer_cast<op::ConvolutionAdd>(m.get_match_root()->get_argument(0));
+        if (conv_m->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Convolution has more than one user";
+            return false;
+        }
+
+        // ConvolutionAdd created only if it can run with MKLDNN.
+        // No further checks needed.
+        auto conv_n = std::make_shared<op::ConvolutionAdd>(conv_m->get_argument(0),
+                                                           conv_m->get_argument(1),
+                                                           conv_m->get_argument(2),
+                                                           conv_m->get_window_movement_strides(),
+                                                           conv_m->get_window_dilation_strides(),
+                                                           conv_m->get_padding_below(),
+                                                           conv_m->get_padding_above(),
+                                                           conv_m->get_data_dilation_strides(),
+                                                           true);
+        ngraph::replace_node(m.get_match_root(), conv_n);
+        return true;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(prelu, callback, "conv_add_relu");
     this->add_matcher(m);
 }
 
@@ -1262,7 +1402,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
         auto pattern_map = m.get_pattern_map();
         if (!std::dynamic_pointer_cast<op::Constant>(pattern_map[alpha]))
         {
-            throw ngraph_error("alpha must be constant for bounded relu");
+            NGRAPH_DEBUG << "alpha must be constant for bounded relu";
+            return false;
         }
 
         // we wont fuse if the alpha and the Relu output element type are not same
@@ -1286,5 +1427,212 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
     };
 
     auto m = std::make_shared<pattern::Matcher>(min, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_norm()
+{
+    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 2, 1, 1});
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 2, 1, 1});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
+
+    auto pconv = std::make_shared<op::ConvolutionBias>(input,
+                                                       filters,
+                                                       bias,
+                                                       Strides{1, 1},
+                                                       Strides{1, 1},
+                                                       CoordinateDiff{0, 0},
+                                                       CoordinateDiff{0, 0},
+                                                       Strides{1, 1});
+
+    auto mean = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
+    auto var = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
+    auto gamma = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
+    auto beta = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
+    double eps = 0.001;
+    auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, pconv, mean, var);
+
+    ngraph::pattern::graph_rewrite_callback callback =
+        [input, filters, bias, mean, var, gamma, beta](pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In callback for folded batch norm against node = "
+                         << m.get_match_root()->get_name();
+            auto pattern_map = m.get_pattern_map();
+
+            auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(m.get_match_root());
+            auto m_conv = std::dynamic_pointer_cast<op::ConvolutionBias>(m_bn->get_argument(2));
+
+            if (m_conv->get_users().size() > 1)
+            {
+                return false;
+            }
+
+            if (m_conv->get_shape().size() != 4)
+            {
+                return false;
+            }
+
+            // new weights = old weights * gamma / sqrt(variance + epsilon)
+            // new biases = (old_bias-mean) * gamma / sqrt(variance + epsilon) + beta
+
+            auto bn_eps = op::Constant::create(element::f32, Shape{}, {m_bn->get_eps_value()});
+            auto var_eps = std::make_shared<op::Add>(
+                pattern_map[var],
+                std::make_shared<op::Broadcast>(bn_eps, pattern_map[var]->get_shape(), AxisSet{0}));
+            auto sqrt_var_eps = std::make_shared<op::Sqrt>(var_eps);
+
+            auto mean_gamma = std::make_shared<op::Multiply>(
+                std::make_shared<op::Subtract>(pattern_map[bias], pattern_map[mean]),
+                pattern_map[gamma]);
+            auto new_biases = std::make_shared<op::Add>(
+                pattern_map[beta], std::make_shared<op::Divide>(mean_gamma, sqrt_var_eps));
+            auto weight_scaling = std::make_shared<op::Divide>(pattern_map[gamma], sqrt_var_eps);
+            auto new_weights = std::make_shared<op::Multiply>(
+                pattern_map[filters],
+                std::make_shared<op::Broadcast>(
+                    weight_scaling, pattern_map[filters]->get_shape(), AxisSet{1, 2, 3}));
+
+            auto conv_bias =
+                std::make_shared<op::ConvolutionBias>(pattern_map[input],
+                                                      new_weights,
+                                                      new_biases,
+                                                      m_conv->get_window_movement_strides(),
+                                                      m_conv->get_window_dilation_strides(),
+                                                      m_conv->get_padding_below(),
+                                                      m_conv->get_padding_above(),
+                                                      m_conv->get_data_dilation_strides());
+            ngraph::replace_node(m.get_match_root(), conv_bias);
+
+            return true;
+
+        };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(bn, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
+{
+    // A * ConvBias (input, filters, bias) + B -> ConvBias (input, filters * A_c)
+    Shape shape{2, 2, 1, 1};
+    auto input = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
+
+    auto conv = std::make_shared<op::ConvolutionBias>(input,
+                                                      filters,
+                                                      bias,
+                                                      Strides{1, 1},
+                                                      Strides{1, 1},
+                                                      CoordinateDiff{0, 0},
+                                                      CoordinateDiff{0, 0},
+                                                      Strides{1, 1});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+
+    auto Ac = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
+    auto A = std::make_shared<op::Broadcast>(Ac, Shape{2, 2, 1, 1}, AxisSet{0, 2, 3});
+    auto A_label = std::make_shared<pattern::op::Label>(A, nullptr, NodeVector{A});
+    auto multiply = std::make_shared<op::Multiply>(conv_label, A_label);
+
+    ngraph::pattern::graph_rewrite_callback callback = [input, filters, bias, conv_label, A_label](
+        pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for conv affine folding against node = "
+                     << m.get_match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
+
+        auto conv_m = std::static_pointer_cast<op::ConvolutionBias>(pattern_map[conv_label]);
+
+        if (conv_m->get_users().size() > 1)
+        {
+            return false;
+        }
+
+        if (conv_m->get_shape().size() != 4)
+        {
+            return false;
+        }
+
+        if (conv_m->with_relu())
+        {
+            return false;
+        }
+
+        auto A_m = std::static_pointer_cast<op::Broadcast>(pattern_map[A_label]);
+
+        // Check if values are being broadcast along channel (2nd) dimension
+        auto is_channel_bcast = [](const std::shared_ptr<op::Broadcast>& bcast) {
+
+            if (bcast->get_argument(0)->get_shape().size() == 0)
+            {
+                return true;
+            }
+
+            if (bcast->get_argument(0)->get_shape().size() == 1 &&
+                bcast->get_broadcast_axes() == AxisSet{0, 2, 3})
+            {
+                return true;
+            }
+
+            if (bcast->get_argument(0)->get_shape().size() == 2)
+            {
+                auto input_shape = bcast->get_argument(0)->get_shape();
+                if (input_shape[0] == 1 && bcast->get_broadcast_axes() == AxisSet{2, 3})
+                    return true;
+            }
+            return false;
+        };
+
+        if (!is_channel_bcast(A_m))
+        {
+            return false;
+        }
+
+        auto get_bcast_input = [](const std::shared_ptr<op::Broadcast>& bcast) {
+            if (bcast->get_argument(0)->get_shape().size() == 0)
+            {
+                Shape bshape{bcast->get_shape()[1]};
+                return std::static_pointer_cast<ngraph::Node>(
+                    std::make_shared<op::Broadcast>(bcast->get_argument(0), bshape, AxisSet{0}));
+            }
+            if (bcast->get_argument(0)->get_shape().size() == 1)
+            {
+                return bcast->get_argument(0);
+            }
+            if (bcast->get_argument(0)->get_shape().size() == 2)
+            {
+                Shape bshape{bcast->get_argument(0)->get_shape()[1]};
+                return std::static_pointer_cast<ngraph::Node>(std::make_shared<op::Reshape>(
+                    bcast->get_argument(0), AxisVector{0, 1}, bshape));
+            }
+            throw ngraph_error("Unexpected shape for bcast input");
+        };
+
+        auto Ac_m = get_bcast_input(A_m);
+
+        // new weights = old weights * Ac_m
+        // new_bias = old_bias * Ac_m;
+
+        auto filters_n = std::make_shared<op::Multiply>(
+            pattern_map[filters],
+            std::make_shared<op::Broadcast>(
+                Ac_m, pattern_map[filters]->get_shape(), AxisSet{1, 2, 3}));
+
+        auto bias_n = std::make_shared<op::Multiply>(pattern_map[bias], Ac_m);
+
+        auto convbias_n =
+            std::make_shared<op::ConvolutionBias>(pattern_map[input],
+                                                  filters_n,
+                                                  bias_n,
+                                                  conv_m->get_window_movement_strides(),
+                                                  conv_m->get_window_dilation_strides(),
+                                                  conv_m->get_padding_below(),
+                                                  conv_m->get_padding_above(),
+                                                  conv_m->get_data_dilation_strides());
+        ngraph::replace_node(m.get_match_root(), convbias_n);
+
+        return true;
+
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(multiply, callback);
     this->add_matcher(m);
 }

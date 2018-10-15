@@ -90,6 +90,10 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
         auto call_graph_pass = dynamic_pointer_cast<CallGraphPass>(pass);
         if (module_pass)
         {
+            if (auto vt_pass = dynamic_pointer_cast<pass::VisualizeTree>(module_pass))
+            {
+                vt_pass->set_ops_to_details(get_state().get_visualize_tree_ops_map());
+            }
             module_pass->run_on_module(fs);
         }
         else if (function_pass)
@@ -135,6 +139,7 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
             if (m_visualize)
             {
                 pass::VisualizeTree vt(base_filename + pass::VisualizeTree::get_file_ext());
+                vt.set_ops_to_details(get_state().get_visualize_tree_ops_map());
                 vt.run_on_module(fs);
             }
 

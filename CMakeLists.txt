@@ -96,6 +96,7 @@ option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
+option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
@@ -156,6 +157,10 @@ endif()
 SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
 SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
 
+if (NGRAPH_CODE_COVERAGE_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+endif()
+
 # Enable build target CPU features
 set(NGRAPH_TARGET_ARCH native CACHE STRING "Target CPU architecture to build for. Defaults to the native CPU architecture")
 
@@ -196,25 +201,8 @@ if(WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_CRT_SECURE_NO_WARNINGS")
 endif()
 
-include(unit_test_control)
-set(UNIT_TEST_CONFIG_LIST "" CACHE INTERNAL "")
-
-if (NGRAPH_INTERPRETER_ENABLE)
-    unit_test_control(BACKEND INTERPRETER MANIFEST src/ngraph/runtime/interpreter/unit_test.manifest)
-endif()
-
-# Set true if CPU backend is built by default
 if (NGRAPH_CPU_ENABLE)
-    unit_test_control(BACKEND CPU MANIFEST src/ngraph/runtime/cpu/unit_test.manifest)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
-endif()
-
-if (NGRAPH_INTELGPU_ENABLE)
-    unit_test_control(BACKEND INTELGPU MANIFEST src/ngraph/runtime/intelgpu/unit_test.manifest)
-endif()
-
-if (NGRAPH_GPU_ENABLE)
-    unit_test_control(BACKEND GPU MANIFEST src/ngraph/runtime/gpu/unit_test.manifest)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")	
 endif()
 
 if (NOT DEFINED NGRAPH_TBB_ENABLE)
@@ -277,6 +265,8 @@ if (NGRAPH_HALIDE)
                      disabling it till this message goes away")
     include(cmake/external_halide.cmake)
 endif()
+
+add_definitions(-DPROJECT_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_subdirectory(src)
 

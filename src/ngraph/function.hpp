@@ -61,6 +61,9 @@ namespace ngraph
         /// Return the shape of element i
         const Shape& get_output_shape(size_t i) const;
 
+        /// Return the partial shape of element i
+        const PartialShape& get_output_partial_shape(size_t i) const;
+
         /// Return the function parameters
         const op::ParameterVector& get_parameters() const { return m_parameters; }
         /// Return a list of function's outputs
@@ -73,8 +76,8 @@ namespace ngraph
         // so we can use `dynamic_cast` in FunctionCall to double check if we are dealing with
         //  an XLA or regular function
         void set_name(const std::string& name);
-        std::list<std::shared_ptr<Node>> get_ops() const;
-        std::list<std::shared_ptr<Node>> get_ordered_ops();
+        std::list<std::shared_ptr<Node>> get_ops(bool include_control_deps = true) const;
+        std::list<std::shared_ptr<Node>> get_ordered_ops(bool include_control_deps = true) const;
         friend std::ostream& operator<<(std::ostream&, const Function&);
         size_t get_instance_id() { return m_instance_id; }
         size_t get_temporary_pool_size();

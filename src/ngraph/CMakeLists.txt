@@ -20,15 +20,17 @@ set (SRC
     autodiff/adjoints.cpp
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
+    builder/quantization.cpp
     builder/reduce_ops.cpp
     coordinate.cpp
     coordinate_diff.cpp
     coordinate_transform.cpp
     descriptor/input.cpp
-    descriptor/layout/dense_tensor_view_layout.cpp
-    descriptor/layout/tensor_view_layout.cpp
+    descriptor/layout/dense_tensor_layout.cpp
+    descriptor/layout/tensor_layout.cpp
     descriptor/output.cpp
     descriptor/tensor.cpp
+    dimension.cpp
     file_util.cpp
     function.cpp
     log.cpp
@@ -52,6 +54,7 @@ set (SRC
     op/convolution.cpp
     op/cos.cpp
     op/cosh.cpp
+    op/dequantize.cpp
     op/divide.cpp
     op/dot.cpp
     op/equal.cpp
@@ -81,10 +84,15 @@ set (SRC
     op/parameter.cpp
     op/power.cpp
     op/product.cpp
+    op/quantize.cpp
+    op/experimental/quantized_avg_pool.cpp
+    op/experimental/quantized_conv_bias.cpp
+    op/experimental/quantized_conv_relu.cpp
+    op/experimental/quantized_conv.cpp
+    op/experimental/quantized_max_pool.cpp
     op/reduce.cpp
     op/reduce_window.cpp
     op/relu.cpp
-    op/remainder.cpp
     op/replace_slice.cpp
     op/reshape.cpp
     op/result.cpp
@@ -104,12 +112,14 @@ set (SRC
     op/sum.cpp
     op/tan.cpp
     op/tanh.cpp
+    op/topk.cpp
     op/util/arithmetic_reduction.cpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_comparison.cpp
     op/util/binary_elementwise_logical.cpp
     op/util/index_reduction.cpp
     op/util/unary_elementwise_arithmetic.cpp
+    partial_shape.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
     pass/common_function_collection.cpp
@@ -138,8 +148,8 @@ set (SRC
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
     runtime/backend_manager.cpp
-    runtime/host_tensor_view.cpp
-    runtime/tensor_view.cpp
+    runtime/host_tensor.cpp
+    runtime/tensor.cpp
     serializer.cpp
     shape.cpp
     strides.cpp
@@ -150,23 +160,16 @@ set (SRC
     cpio.cpp
     )
 
-add_subdirectory(frontend)
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    find_package(MPI REQUIRED)
+    add_definitions(-DNGRAPH_DISTRIBUTED)
+    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    link_libraries(${MPI_CXX_LIBRARIES})
+    set (SRC distributed.cpp ${SRC})
+endif()
 
-message(STATUS  ${CMAKE_CURRENT_SOURCE_DIR}/op)
-file(GLOB OPS "${CMAKE_CURRENT_SOURCE_DIR}/op/" "${CMAKE_CURRENT_SOURCE_DIR}/op/*.hpp")
-foreach(OP ${OPS})
-    file(STRINGS ${OP} OP_CLASS REGEX "class [A-Za-z0-9_]+ :")
-    foreach(LINE ${OP_CLASS})
-        string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\1" CLASS_FOUND ${LINE})
-        string(REGEX REPLACE ".*class ([A-Za-z0-9_]+) : public ([A-Za-z0-9_]+).*" "\\2" BASE_FOUND ${LINE})
-        if (NOT ${BASE_FOUND} STREQUAL "std" AND NOT ${CLASS_FOUND} STREQUAL "Op")
-            set(OP_CLASS_LIST ${OP_CLASS_LIST} ${CLASS_FOUND})
-        endif()
-    endforeach(LINE ${OP_CLASS})
-endforeach()
-message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt")
-string(REPLACE ";" "\n" OP_CLASS_LINES "${OP_CLASS_LIST}")
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/ops_list.txt" "${OP_CLASS_LINES}")
+add_subdirectory(frontend)
 
 find_package(Graphviz QUIET)
 if (GRAPHVIZ_FOUND)

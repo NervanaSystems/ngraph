@@ -144,7 +144,6 @@ namespace ngraph
                             ctx, fdeps[2], ctx->mkldnn_workspaces[fdeps[3]]);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, max_pool_index - 1);
                     };
-                    functors.emplace_back(functor_fprop);
                     auto& bdeps = mkldnn_emitter->get_primitive_deps(max_pool_index);
                     auto functor_bprop = [&, max_pool_index](CPURuntimeContext* ctx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, bdeps[0], delta_tensor);
@@ -153,7 +152,11 @@ namespace ngraph
                         cpu::mkldnn_utils::set_memory_ptr(ctx, bdeps[2], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, max_pool_index);
                     };
-                    functors.emplace_back(functor_bprop);
+                    auto functor = [&, functor_fprop, functor_bprop](CPURuntimeContext* ctx) {
+                        functor_fprop(ctx);
+                        functor_bprop(ctx);
+                    };
+                    functors.emplace_back(functor);
                 }
                 else
                 {

@@ -25,6 +25,7 @@ add_library(onnx_import STATIC
         core/attribute.hpp
         core/graph.cpp
         core/graph.hpp
+        core/model.cpp
         core/model.hpp
         core/node.cpp
         core/node.hpp
@@ -32,10 +33,16 @@ add_library(onnx_import STATIC
         core/value_info.hpp
         exceptions.hpp
         op/add.hpp
+        op/and.hpp
         op/average_pool.cpp
         op/average_pool.hpp
         op/batch_norm.cpp
         op/batch_norm.hpp
+        op/cast.cpp
+        op/cast.hpp
+        op/ceil.hpp
+        op/clip.cpp
+        op/clip.hpp
         op/concat.cpp
         op/concat.hpp
         op/constant.cpp
@@ -43,10 +50,26 @@ add_library(onnx_import STATIC
         op/conv.cpp
         op/conv.hpp
         op/div.hpp
+        op/elu.cpp
+        op/elu.hpp
+        op/equal.hpp
+        op/exp.hpp
         op/flatten.cpp
         op/flatten.hpp
+        op/floor.hpp
         op/gemm.cpp
         op/gemm.hpp
+        op/greater.hpp
+        op/hard_sigmoid.cpp
+        op/hard_sigmoid.hpp
+        op/identity.hpp
+        op/leaky_relu.cpp
+        op/leaky_relu.hpp
+        op/less.hpp
+        op/log.hpp
+        op/log_softmax.hpp
+        op/lrn.cpp
+        op/lrn.hpp
         op/matmul.hpp
         op/max_pool.cpp
         op/max_pool.hpp
@@ -55,23 +78,55 @@ add_library(onnx_import STATIC
         op/mean.hpp
         op/min.hpp
         op/mul.hpp
+        op/neg.hpp
+        op/not.hpp
+        op/or.hpp
         op/pow.hpp
+        op/prelu.cpp
+        op/prelu.hpp
+        op/reciprocal.cpp
+        op/reciprocal.hpp
+        op/reduce.cpp
+        op/reduce.hpp
         op/relu.hpp
         op/reshape.cpp
         op/reshape.hpp
+        op/selu.cpp
+        op/selu.hpp
+        op/shape.hpp
+        op/shape.cpp
+        op/sigmoid.hpp
+        op/slice.cpp
+        op/slice.hpp
         op/softmax.cpp
         op/softmax.hpp
+        op/softplus.cpp
+        op/softplus.hpp
+        op/softsign.cpp
+        op/softsign.hpp
         op/split.cpp
         op/split.hpp
+        op/sqrt.hpp
+        op/squeeze.cpp
+        op/squeeze.hpp
         op/sub.hpp
         op/sum.hpp
+        op/tanh.hpp
+        op/thresholded_relu.cpp
+        op/thresholded_relu.hpp
+        op/transpose.cpp
+        op/transpose.hpp
         op/unsqueeze.cpp
         op/unsqueeze.hpp
+        op/xor.hpp
         ops_bridge.cpp
+        ops_bridge.hpp
         utils/broadcasting.cpp
         utils/broadcasting.hpp
+        utils/common.hpp
         utils/convpool.cpp
         utils/convpool.hpp
+        utils/reduction.hpp
         utils/reshape.cpp
         utils/reshape.hpp
         utils/variadic.hpp)
