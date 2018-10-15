@@ -175,8 +175,6 @@ if(NGRAPH_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
 
-include_directories("${NGRAPH_INCLUDE_PATH}")
-
 add_subdirectory(codegen)
 add_subdirectory(runtime)
 
