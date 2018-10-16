@@ -36,11 +36,11 @@ Attributes
 +-------------------------------+----------------------------------------------------------------+
 | Name                          | Description                                                    |
 +===============================+================================================================+
-| ``type``                      | The output element type, which must be a quantized type       |
+| ``type``                      | The output element type, which must be a quantized type        |
 +-------------------------------+----------------------------------------------------------------+
 | ``axes``                      | Axis positions on which ``scale`` and ``offset`` are specified |
 +-------------------------------+----------------------------------------------------------------+
-| ``round_mode``                |                                                                |
+| ``round_mode``                | Refer to ``/src/ngraph/op/quantize.hpp``                       |
 +-------------------------------+----------------------------------------------------------------+
 
 
@@ -58,8 +58,10 @@ Mathematical Definition
 =======================
 
 .. math::
-    
-   \mathtt{output}_{i} = round(\frac{\mathtt{input}_{i}}{\mathtt_{scale}_{j}}}) - \mathtt_{offset}_{j}
+  
+   \mathtt{output}_{i} = \mathtt{round}(\frac{\mathtt{input}_{i}}{\mathtt{scale}_{j}}) - \mathtt{offset}_{j}    
+
+
 
 C++ Interface
 =============
@@ -67,7 +69,3 @@ C++ Interface
 .. doxygenclass:: ngraph::op::Quantize
    :project: ngraph
    :members: 
-
-.. something like this might work .. doxygentypedef:: ngraph::op::Quantize
-   :project: ngraph
-   :members: m_type, m_axes, round_mode

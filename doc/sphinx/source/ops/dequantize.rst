@@ -6,16 +6,15 @@ Dequantize
 
 .. code-block:: cpp
 
-   Dequantize // Maps quantized input to real output using scale and offset
+   Dequantize // Maps quantized input to real output
 
 Description
 ===========
 
 Produces a tensor of element type ``type`` and the same shape as ``input``
-where the value of each coordinate (i) of ``output`` is the corresponding coordinate of 
-``input`` plus ``offset`` quantity multiplied by ``scale``.  
-The coordinate (j) of ``scale`` and ``offset`` is the coordinate of ``output``
-projected along ``axes``.
+where the value of each coordinate :math:`i` of ``output`` is the corresponding coordinate of 
+``input`` plus ``offset`` quantity multiplied by ``scale``.  The coordinate :math:`j` of 
+``scale`` and ``offset`` is the coordinate of ``output`` projected onto ``axes``.
 
 Inputs
 ------
@@ -57,8 +56,7 @@ Mathematical Definition
 
 .. math::
 
-   \mathtt{output}_{i} = (\mathtt{input}_{i}} + \mathtt_{offset}_{j}) \mathtt_{scale}_{j}
-
+   \mathtt{output}_{i} = (\mathtt{input}_{i} + \mathtt{offset}_{j}) \mathtt{scale}_{j}
 
 
 C++ Interface
@@ -67,8 +65,3 @@ C++ Interface
 .. doxygenclass:: ngraph::op::Dequantize
    :project: ngraph
    :members: 
-
-
-.. something like this might work .. doxygentypedef:: ngraph::op::Dequantize
-   :project: ngraph
-   :members: m_type, m_axes
