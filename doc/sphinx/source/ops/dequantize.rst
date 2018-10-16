@@ -23,7 +23,7 @@ Inputs
 +-----------------+-------------------------+---------------------------------------+
 | Name            | Element Type            | Shape                                 |
 +=================+=========================+=======================================+
-| ``input``       | is_quantized()          | Any                                   |
+| ``input``       | Any quantized type      | Any                                   |
 +-----------------+-------------------------+---------------------------------------+
 | ``scale``       | Same as ``output``      | ``input`` shape projected on ``axes`` |
 +-----------------+-------------------------+---------------------------------------+
@@ -56,11 +56,19 @@ Mathematical Definition
 =======================
 
 .. math::
-    $\mathtt{output}_{i} = (\mathtt{input}_{i}} + \mathtt_{offset}_{j}) \mathtt_{scale}_{j}$
+
+   \mathtt{output}_{i} = (\mathtt{input}_{i}} + \mathtt_{offset}_{j}) \mathtt_{scale}_{j}
+
+
 
 C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Dequantize
+   :project: ngraph
+   :members: 
+
+
+.. something like this might work .. doxygentypedef:: ngraph::op::Dequantize
    :project: ngraph
    :members: m_type, m_axes

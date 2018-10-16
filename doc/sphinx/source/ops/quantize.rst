@@ -6,16 +6,16 @@ Quantize
 
 .. code-block:: cpp
 
-   Quantize // Maps real input to quantized output using scale, offset and round mode
+   Quantize // Maps real input to quantized output
 
 Description
 ===========
 
 Produces a tensor of element type ``type`` and the same shape as ``input``
-where the value of each coordinate (i) of ``output`` is the corresponding coordinate of 
-``input`` divided by ``scale`` rounded as specified by ``round_mode`` minus ``offset``.  
-The coordinate (j) of ``scale`` and ``offset`` is the coordinate of ``output``
-projected along ``axes``.
+where the value of each coordinate :math:`i` of ``output`` is the corresponding 
+coordinate of ``input`` divided by ``scale`` rounded as specified by 
+``round_mode`` minus ``offset``. The coordinate :math:`j` of ``scale`` and 
+``offset`` is the coordinate of ``output`` projected onto ``axes``.
 
 Inputs
 ------
@@ -36,12 +36,14 @@ Attributes
 +-------------------------------+----------------------------------------------------------------+
 | Name                          | Description                                                    |
 +===============================+================================================================+
-| ``type``                      | ``output`` element type                                        |
+| ``type``                      | The output element, type, which must be a quantized type       |
 +-------------------------------+----------------------------------------------------------------+
 | ``axes``                      | Axis positions on which ``scale`` and ``offset`` are specified |
 +-------------------------------+----------------------------------------------------------------+
-| ``round_mode``                | See src/ngraph/op/quantize.hpp                                 |
+| ``round_mode``                |                                                                |
 +-------------------------------+----------------------------------------------------------------+
+
+
 
 Outputs
 -------
@@ -49,18 +51,23 @@ Outputs
 +-----------------+-------------------------+---------------------------------------+
 | Name            | Element Type            | Shape                                 |
 +=================+=========================+=======================================+
-| ``output``      | is_quantized()          | Same as ``input``                     |
+| ``output``      | type                    | Same as ``input``                     |
 +-----------------+-------------------------+---------------------------------------+
 
 Mathematical Definition
 =======================
 
 .. math::
-    $\mathtt{output}_{i} = round(\frac{\mathtt{input}_{i}}{\mathtt_{scale}_{j}}}) - \mathtt_{offset}_{j}$
+    
+   \mathtt{output}_{i} = round(\frac{\mathtt{input}_{i}}{\mathtt_{scale}_{j}}}) - \mathtt_{offset}_{j}
 
 C++ Interface
 =============
 
 .. doxygenclass:: ngraph::op::Quantize
    :project: ngraph
-   :members: m_type, m_axes, m_round_mode
+   :members: 
+
+.. something like this might work .. doxygentypedef:: ngraph::op::Quantize
+   :project: ngraph
+   :members: m_type, m_axes, round_mode
