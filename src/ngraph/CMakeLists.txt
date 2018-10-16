@@ -155,6 +155,7 @@ set (SRC
     strides.cpp
     type/element_type.cpp
     util.cpp
+    validation_util.cpp
     graph_util.cpp
     placement.cpp
     cpio.cpp
