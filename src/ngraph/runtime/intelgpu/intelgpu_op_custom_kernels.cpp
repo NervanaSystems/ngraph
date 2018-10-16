@@ -1566,12 +1566,12 @@ void runtime::intelgpu::do_arg_max_min_operation(cldnn::topology& topology,
         gws = generate_loops(writer, output_shape, true);
 
         writer << get_opencl_type_name(input_type) << " " << var_name << " = " << infinity << ";\n";
-        writer << "uint index = -1;\n";
+        writer << get_opencl_type_name(output_type) << " index = 0;\n";
 
         writer << "for (uint i = 0; i < " << input_shape.at(reduction_axis) << "; ++i)\n";
         writer.block_begin();
         {
-            writer << "if(i == 0 || input0" << dims_buffer << operation_sign << var_name << ")\n";
+            writer << "if (input0" << dims_buffer << operation_sign << var_name << ")\n";
             writer.block_begin();
             {
                 writer << var_name << " = input0" << dims_buffer << ";\n";
