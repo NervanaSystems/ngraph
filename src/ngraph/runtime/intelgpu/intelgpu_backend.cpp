@@ -40,6 +40,7 @@
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
@@ -308,6 +309,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+    pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
 
     // GetOutputElementElimination must be after CommonSubexpressionElimination
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
