@@ -112,10 +112,12 @@
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/gpu/op/batch_norm.hpp"
 #include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
 #include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
+#include "ngraph/runtime/gpu/pass/gpu_batch_norm_cache.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -566,6 +568,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 #else
     m_pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
 #endif
+    m_pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
     m_pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     m_pass_manager
         .register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();

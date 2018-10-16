@@ -10521,6 +10521,42 @@ NGRAPH_TEST(${BACKEND_NAME}, minimal_bn_bprop)
     }
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, bn_forward_backward)
+{
+    Shape sca{1};
+    Shape vec{1, 1, 1, 2};
+    double eps = 1.0e-04;
+
+    auto g = std::make_shared<op::Parameter>(element::f32, sca);
+    auto b = std::make_shared<op::Parameter>(element::f32, sca);
+    auto input = std::make_shared<op::Parameter>(element::f32, vec);
+    auto bn_fp = std::make_shared<op::BatchNorm>(eps, g, b, input);
+    auto bnorm = std::make_shared<op::GetOutputElement>(bn_fp, 0);
+    auto mean = std::make_shared<op::GetOutputElement>(bn_fp, 1);
+    auto var = std::make_shared<op::GetOutputElement>(bn_fp, 2);
+
+    auto delta = std::make_shared<op::Parameter>(element::f32, vec);
+    auto bn_bp = std::make_shared<op::BatchNormBackprop>(eps, g, b, bnorm, mean, var, delta);
+    auto dx = std::make_shared<op::GetOutputElement>(bn_bp, 0);
+
+    auto func = std::make_shared<Function>(dx, op::ParameterVector{g, b, input, delta});
+
+    std::vector<std::vector<float>> args = {
+        {1.0f},          // gamma
+        {1.0f},          // beta
+        {1.1f, 1.0f},    // x
+        {-0.01f, 0.01f}, // dy
+    };
+
+    auto backend_results = execute(func, args, "${BACKEND_NAME}");
+    auto int_results = execute(func, args, "INTERPRETER");
+
+    for (size_t i = 0; i < int_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close_f(int_results.at(i), backend_results.at(i)));
+    }
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, bn_bprop_numerical)
 {
     Shape sca{1};

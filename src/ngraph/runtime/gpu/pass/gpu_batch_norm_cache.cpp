@@ -32,20 +32,49 @@ using namespace ngraph;
         return false;                           \
     }
 
-bool ngraph::runtime::gpu::pass::KernelMemoryAllocation::run_on_function(
+bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
     std::shared_ptr<ngraph::Function> f)
 {
     bool replaced = false;
     for (auto n : f->get_ordered_ops())
     {
-        if (auto bnbp = dynamic_pointer_cast<op::BatchNormBackprop>(n))
+        if (auto bnbp = std::dynamic_pointer_cast<op::BatchNormBackprop>(n))
         {
-            auto bn0 = dynamic_pointer_cast<op::BatchNorm>(bnbp->get_argument(3));
-            auto bn1 = dynamic_pointer_cast<op::BatchNorm>(bnbp->get_argument(4));
-            if (bn0 && bn0 == bn1)
+            // pass must be run prior to GOE elimination
+            // auto input_goe = std::dynamic_pointer_cast<op::GetOutputElement>(bnbp->get_argument(2));
+            // auto mean_goe = std::dynamic_pointer_cast<op::GetOutputElement>(bnbp->get_argument(3));
+            // auto var_goe = std::dynamic_pointer_cast<op::GetOutputElement>(bnbp->get_argument(4));
+            std::vector<std::shared_ptr<op::GetOutputElement> > goes;
+            for (auto& arg : bnbp->get_arguments())
             {
-                //std::make_shared<op::gpu::BatchNorm>(bn0)
-                replace = true;
+                if (auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(arg))
+                {
+                    for (auto& target : goe->get_arguments())
+                    {
+                        if (auto bn = std::dynamic_pointer_cast<op::BatchNorm>(target))
+                        {
+                            goes.push_back(goe);
+                        }
+                    }
+                }
+            }
+
+            if (goes.size())
+            {
+
+                if (auto target = std::dynamic_pointer_cast<op::BatchNorm>(goes.front()->get_arguments().at(0)))
+                {
+                    auto replacement = std::make_shared<op::gpu::CUDNNBatchNorm>(target->get_eps_value(),
+                                                                                 target->get_argument(0),
+                                                                                 target->get_argument(1),
+                                                                                 target->get_argument(2));
+                    for (auto& goe : goes)
+                    {
+                        auto new_goe = std::make_shared<op::GetOutputElement>(replacement, goe->get_n());
+                        ngraph::replace_node(goe, new_goe);
+                        replaced = true;
+                    }
+                }
             }
         }
     }

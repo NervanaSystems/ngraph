@@ -16,7 +16,7 @@
 
 #include "ngraph/runtime/gpu/op/batch_norm.hpp"
 
-ngraph::op::gpu::BatchNorm::BatchNorm(double eps,
+ngraph::op::gpu::CUDNNBatchNorm::CUDNNBatchNorm(double eps,
                                  std::shared_ptr<ngraph::Node> gamma,
                                  std::shared_ptr<ngraph::Node> beta,
                                  std::shared_ptr<ngraph::Node> input)
@@ -31,7 +31,7 @@ ngraph::op::gpu::BatchNorm::BatchNorm(double eps,
     set_output_type(output_index++, input->get_element_type(), channel_shape);
 }
 
-ngraph::op::gpu::BatchNorm::BatchNorm(double eps,
+ngraph::op::gpu::CUDNNBatchNorm::CUDNNBatchNorm(double eps,
                                  std::shared_ptr<ngraph::Node> gamma,
                                  std::shared_ptr<ngraph::Node> beta,
                                  std::shared_ptr<ngraph::Node> input,
@@ -50,23 +50,23 @@ ngraph::op::gpu::BatchNorm::BatchNorm(double eps,
 }
 
 std::shared_ptr<ngraph::Node>
-ngraph::op::gpu::BatchNorm::copy_with_new_args(const NodeVector& new_args) const
+ngraph::op::gpu::CUDNNBatchNorm::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
 
-    if (m_training)
+    if (get_training_flag())
     {
         // FIXME(amprocte): is this redundant?
         NODE_VALIDATION_ASSERT(this, new_args.size() == 3 || new_args.size() == 5);
 
         if (new_args.size() == 3)
         {
-            return std::make_shared<ngraph::op::gpu::BatchNorm>(
-                m_epsilon, new_args.at(0), new_args.at(1), new_args.at(2));
+            return std::make_shared<ngraph::op::gpu::CUDNNBatchNorm>(
+                get_eps_value(), new_args.at(0), new_args.at(1), new_args.at(2));
         }
         else
         {
-            return std::make_shared<ngraph::op::gpu::BatchNorm>(m_epsilon,
+            return std::make_shared<ngraph::op::gpu::CUDNNBatchNorm>(get_eps_value(),
                                                                 new_args.at(0),
                                                                 new_args.at(1),
                                                                 new_args.at(2),
@@ -79,7 +79,7 @@ ngraph::op::gpu::BatchNorm::copy_with_new_args(const NodeVector& new_args) const
     {
         NODE_VALIDATION_ASSERT(this, new_args.size() == 5);
 
-        return std::make_shared<ngraph::op::gpu::BatchNorm>(m_epsilon,
+        return std::make_shared<ngraph::op::gpu::CUDNNBatchNorm>(get_eps_value(),
                                                             new_args.at(0),
                                                             new_args.at(1),
                                                             new_args.at(2),
