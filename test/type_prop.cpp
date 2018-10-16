@@ -2915,7 +2915,9 @@ TEST(type_prop, conv_invalid_0d_input)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data batch input must have rank of at least 3"));
+                             std::string("Data batch must have rank of at least 3 "
+                                         "(one batch axis, one input-channel axis, "
+                                         "and at least one spatial dimension)"));
     }
     catch (...)
     {
@@ -2938,7 +2940,9 @@ TEST(type_prop, conv_invalid_1d_input)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data batch input must have rank of at least 3"));
+                             std::string("Data batch must have rank of at least 3 "
+                                         "(one batch axis, one input-channel axis, "
+                                         "and at least one spatial dimension)"));
     }
     catch (...)
     {
@@ -2961,7 +2965,9 @@ TEST(type_prop, conv_invalid_2d_input)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data batch input must have rank of at least 3"));
+                             std::string("Data batch must have rank of at least 3 "
+                                         "(one batch axis, one input-channel axis, "
+                                         "and at least one spatial dimension)"));
     }
     catch (...)
     {
@@ -2983,7 +2989,7 @@ TEST(type_prop, conv_invalid_0_batch_size)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch size is zero"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Batch size is zero"));
     }
     catch (...)
     {
@@ -3005,7 +3011,7 @@ TEST(type_prop, conv_invalid_0_input_channels)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input channel count is zero"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch channel count is zero"));
     }
     catch (...)
     {
@@ -3028,7 +3034,8 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_many)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Filter input must have rank equal to the data batch"));
+                             std::string("Data shape (Shape{10, 10}) does not have same rank as "
+                                         "the window shape (Shape{3, 3, 3})"));
     }
     catch (...)
     {
@@ -3051,7 +3058,8 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_few)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Filter input must have rank equal to the data batch"));
+                             std::string("Data shape (Shape{10, 10}) does not have "
+                                         "same rank as the window shape (Shape{3})"));
     }
     catch (...)
     {
@@ -3073,7 +3081,7 @@ TEST(type_prop, conv_invalid_0_output_channels)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Output channel count for filters is zero"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Filter output channel count is zero"));
     }
     catch (...)
     {
@@ -3095,9 +3103,10 @@ TEST(type_prop, conv_invalid_input_channel_mismatch)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Input channel count for filters (3) does not match the "
-                                         "number of channels in the data batch (2)"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Data batch channel count (2) does not match filter input channel count (3)"));
     }
     catch (...)
     {
@@ -3119,10 +3128,9 @@ TEST(type_prop, conv_invalid_movement_stride_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string(
-                "Rank of window movement strides does not match the number of spatial dimensions"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data shape (Shape{10, 10}) does not have same rank as "
+                                         "the window strides (Strides{2, 3, 8})"));
     }
     catch (...)
     {
@@ -3144,10 +3152,9 @@ TEST(type_prop, conv_invalid_window_dilation_stride_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string(
-                "Rank of window dilation strides does not match the number of spatial dimensions"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data shape (Shape{10, 10}) does not have same rank as "
+                                         "the window dilation (Strides{2, 3, 8})"));
     }
     catch (...)
     {
@@ -3175,10 +3182,9 @@ TEST(type_prop, conv_invalid_data_dilation_stride_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string(
-                "Rank of data dilation strides does not match the number of spatial dimensions"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data shape (Shape{10, 10}) does not have same rank as "
+                                         "the data dilation (Strides{2, 3, 8})"));
     }
     catch (...)
     {
@@ -3205,10 +3211,9 @@ TEST(type_prop, conv_invalid_padding_below_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string(
-                "Rank of the padding below does not match the number of spatial dimensions"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data shape (Shape{10, 10}) does not have same rank as "
+                                         "the data padding below (CoordinateDiff{0, 0, 0})"));
     }
     catch (...)
     {
@@ -3235,10 +3240,9 @@ TEST(type_prop, conv_invalid_padding_above_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string(
-                "Rank of the padding above does not match the number of spatial dimensions"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data shape (Shape{10, 10}) does not have same rank as "
+                                         "the data padding above (CoordinateDiff{0, 0, 0})"));
     }
     catch (...)
     {
@@ -3255,8 +3259,8 @@ TEST(type_prop, conv_invalid_input_spatial_size_negative_after_padding)
     {
         auto conv = make_shared<op::Convolution>(param0,
                                                  param1,
-                                                 Strides{0, 0},
-                                                 Strides{0, 0},
+                                                 Strides{1, 1},
+                                                 Strides{1, 1},
                                                  CoordinateDiff{-4, 0},
                                                  CoordinateDiff{-7, 0});
 
@@ -3265,9 +3269,9 @@ TEST(type_prop, conv_invalid_input_spatial_size_negative_after_padding)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Input dimension after padding and dilation is non-positive"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data shape after padding and dilation has dimension less "
+                                         "than 1 (dim: -1) at axis 0"));
     }
     catch (...)
     {
@@ -3284,8 +3288,8 @@ TEST(type_prop, conv_invalid_input_spatial_size_zero_after_padding)
     {
         auto conv = make_shared<op::Convolution>(param0,
                                                  param1,
-                                                 Strides{0, 0},
-                                                 Strides{0, 0},
+                                                 Strides{1, 1},
+                                                 Strides{1, 1},
                                                  CoordinateDiff{-4, 0},
                                                  CoordinateDiff{-6, 0});
 
@@ -3294,9 +3298,9 @@ TEST(type_prop, conv_invalid_input_spatial_size_zero_after_padding)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Input dimension after padding and dilation is non-positive"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data shape after padding and dilation has dimension less "
+                                         "than 1 (dim: 0) at axis 0"));
     }
     catch (...)
     {
@@ -3318,9 +3322,9 @@ TEST(type_prop, conv_invalid_input_spatial_size_0)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Input dimension after padding and dilation is non-positive"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data shape after padding and dilation has "
+                                         "dimension less than 1 (dim: 0) at axis 0"));
     }
     catch (...)
     {
@@ -3342,8 +3346,9 @@ TEST(type_prop, conv_invalid_window_size_0)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Filters shape at spatial dimension 1 is zero"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Window after dilation has dimension less than 1 (dim: 0) at axis 1"));
     }
     catch (...)
     {
@@ -3365,8 +3370,9 @@ TEST(type_prop, conv_invalid_window_dilation_stride_0)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Window dilation stride at spatial dimension 1 is zero"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Window dilation (Strides{2, 0}) has zero dimension at axis 1"));
     }
     catch (...)
     {
@@ -3394,8 +3400,9 @@ TEST(type_prop, conv_invalid_data_dilation_stride_0)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data dilation stride at spatial dimension 1 is zero"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Data dilation (Strides{2, 0}) has zero dimension at axis 1"));
     }
     catch (...)
     {
@@ -3418,8 +3425,8 @@ TEST(type_prop, conv_invalid_dilated_window_too_large)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Post-dilation window shape is smaller than the "
-                                         "post-padding/dilation input item shape"));
+                             std::string("Window after dilation has dimension (dim: 9) larger than "
+                                         "the data shape after padding (dim: 8) at axis 0"));
     }
     catch (...)
     {
@@ -3441,8 +3448,9 @@ TEST(type_prop, conv_invalid_movement_stride_0)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Window movement stride at spatial dimension 0 is zero"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Window strides (Strides{0, 1}) has zero dimension at axis 0"));
     }
     catch (...)
     {
@@ -3636,7 +3644,7 @@ TEST(type_prop, max_pool_invalid_0_batch_size)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch size is zero"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Batch size is zero"));
     }
     catch (...)
     {
@@ -3682,7 +3690,7 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_many)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Window shape rank does not match number of spatial dimensions"));
+            std::string("Window shape (Shape{3, 3, 3}) does not have required rank (2)"));
     }
     catch (...)
     {
@@ -3705,8 +3713,7 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_few)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Window shape rank does not match number of spatial dimensions"));
+            error.what(), std::string("Window shape (Shape{3}) does not have required rank (2)"));
     }
     catch (...)
     {
@@ -3731,7 +3738,7 @@ TEST(type_prop, max_pool_invalid_movement_stride_rank)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Window movement stride rank does not match number of spatial dimensions"));
+            std::string("Window shape (Strides{2, 3, 8}) does not have required rank (2)"));
     }
     catch (...)
     {
@@ -3753,9 +3760,9 @@ TEST(type_prop, max_pool_invalid_input_data_size_0)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Data input spatial dimension 0 has zero length even after padding"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data shape after padding and dilation has "
+                                         "dimension less than 1 (dim: 0) at axis 0"));
     }
     catch (...)
     {
@@ -3777,7 +3784,9 @@ TEST(type_prop, max_pool_invalid_window_size_0)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Window shape dimension 1 has zero length"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Window after dilation has dimension less than 1 (dim: 0) at axis 1"));
     }
     catch (...)
     {
@@ -3799,9 +3808,9 @@ TEST(type_prop, max_pool_invalid_dilated_too_large)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Window shape after padding is larger than the spatial dimensions"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Window after dilation has dimension (dim: 9) larger than "
+                                         "the data shape after padding (dim: 8) at axis 0"));
     }
     catch (...)
     {
@@ -3824,8 +3833,9 @@ TEST(type_prop, max_pool_invalid_movement_stride_0)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Window movement strides dimension 0 has zero length"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Window strides (Strides{0, 1}) has zero dimension at axis 0"));
     }
     catch (...)
     {
@@ -5927,7 +5937,7 @@ TEST(type_prop, avg_pool_invalid_0_batch_size)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "Data batch size is zero");
+        EXPECT_HAS_SUBSTRING(error.what(), "Batch size is zero");
     }
     catch (...)
     {
@@ -5972,7 +5982,7 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_many)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Window shape rank does not match number of spatial dimensions");
+                             "Window shape (Shape{3, 3, 3}) does not have required rank (2)");
     }
     catch (...)
     {
@@ -5995,7 +6005,7 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_few)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Window shape rank does not match number of spatial dimensions");
+                             "Window shape (Shape{3}) does not have required rank (2)");
     }
     catch (...)
     {
@@ -6018,9 +6028,8 @@ TEST(type_prop, avg_pool_invalid_movement_stride_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Window movement stride rank does not match number of spatial dimensions");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Window shape (Strides{2, 3, 8}) does not have required rank (2)");
     }
     catch (...)
     {
@@ -6046,8 +6055,9 @@ TEST(type_prop, avg_pool_invalid_padding_below_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Below-padding rank does not match number of spatial dimensions");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Data padding below (CoordinateDiff{1, 2, 3}) does not have required rank (2)");
     }
     catch (...)
     {
@@ -6073,8 +6083,9 @@ TEST(type_prop, avg_pool_invalid_padding_above_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Above-padding rank does not match number of spatial dimensions");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Data padding above (CoordinateDiff{1, 2, 3}) does not have required rank (2");
     }
     catch (...)
     {
@@ -6096,8 +6107,9 @@ TEST(type_prop, avg_pool_invalid_input_item_size_0)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Data input spatial dimension 0 has zero length even after padding");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Data shape after padding and dilation has dimension less than 1 (dim: 0) at axis 0");
     }
     catch (...)
     {
@@ -6119,7 +6131,8 @@ TEST(type_prop, avg_pool_invalid_window_size_0)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "Window shape dimension 1 has zero length");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Window after dilation has dimension less than 1 (dim: 0) at axis 1");
     }
     catch (...)
     {
@@ -6142,12 +6155,27 @@ TEST(type_prop, avg_pool_invalid_dilated_too_large)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Window shape after padding is larger than the spatial dimensions");
+                             "Window after dilation has dimension (dim: 9) larger than the data "
+                             "shape after padding (dim: 8) at axis 0");
     }
     catch (...)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, avg_pool_larger_than_pre_padding_but_fits_in_post_padding)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 8, 8});
+    Shape window_shape{9, 9};
+    Strides window_strides{1, 1};
+    Shape padding_below{0, 0};
+    Shape padding_above{1, 1};
+    auto avg_pool =
+        make_shared<op::AvgPool>(param, window_shape, window_strides, padding_below, padding_above);
+
+    ASSERT_EQ(avg_pool->get_output_element_type(0), element::f32);
+    ASSERT_EQ(avg_pool->get_output_shape(0), (Shape{6, 2, 1, 1}));
 }
 
 TEST(type_prop, avg_pool_invalid_movement_stride_0)
@@ -6165,7 +6193,8 @@ TEST(type_prop, avg_pool_invalid_movement_stride_0)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "Window movement strides dimension 0 has zero length");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Window strides (Strides{0, 1}) has zero dimension at axis 0");
     }
     catch (...)
     {
