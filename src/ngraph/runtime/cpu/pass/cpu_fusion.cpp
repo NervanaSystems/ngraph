@@ -1229,17 +1229,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
             return false;
         }
 
-        for (auto add_user : m.get_match_root()->get_users())
-        {
-            if (add_user->is_output())
-            {
-                // TODO: Remove restriction once we handle this case in codegen
-                NGRAPH_DEBUG
-                    << "Unsafe to use in-place kernel since add's in-place output is a result";
-                return false;
-            }
-        }
-
         auto conv_add =
             std::shared_ptr<Node>(new op::ConvolutionBiasAdd(conv_m, inplace_input, false));
         ngraph::replace_node(m.get_match_root(), conv_add);
