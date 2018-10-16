@@ -737,3 +737,56 @@ TEST(partial_shape, partial_shape_relaxes_refines_static_static_not_eq)
     ASSERT_FALSE(s2.refines(s1));
     ASSERT_FALSE(s2.relaxes(s1));
 }
+
+TEST(partial_shape, partial_shape_project_rank_dynamic)
+{
+    PartialShape s1{PartialShape::dynamic()};
+    PartialShape s2 = project(s1, AxisSet{284, 0, 103});
+
+    ASSERT_TRUE(s2.rank().is_dynamic());
+}
+
+TEST(partial_shape, partial_shape_project_rank_static_dynamic)
+{
+    PartialShape s1{Dimension::dynamic(), 2, Dimension::dynamic(), 3};
+    PartialShape s2 = project(s1, AxisSet{0, 3});
+
+    ASSERT_TRUE(s2.same_scheme(PartialShape{Dimension::dynamic(), 3}));
+}
+
+TEST(partial_shape, partial_shape_reduce_rank_dynamic)
+{
+    PartialShape s1{PartialShape::dynamic()};
+    PartialShape s2 = reduce(s1, AxisSet{284, 0, 103});
+
+    ASSERT_TRUE(s2.rank().is_dynamic());
+}
+
+TEST(partial_shape, partial_shape_reduce_rank_static_dynamic)
+{
+    PartialShape s1{Dimension::dynamic(), 2, Dimension::dynamic(), 3};
+    PartialShape s2 = reduce(s1, AxisSet{0, 3});
+
+    ASSERT_TRUE(s2.same_scheme(PartialShape{2, Dimension::dynamic()}));
+}
+
+TEST(partial_shape, partial_shape_inject_pairs_rank_dynamic)
+{
+    PartialShape s1{PartialShape::dynamic()};
+    PartialShape s2 = inject_pairs(
+        s1, std::vector<std::pair<size_t, Dimension>>{{0, Dimension::dynamic()}, {207, 909}});
+
+    ASSERT_TRUE(s2.rank().is_dynamic());
+}
+
+TEST(partial_shape, partial_shape_inject_pairs_rank_static)
+{
+    PartialShape s1{1, Dimension::dynamic()};
+    PartialShape s2 =
+        inject_pairs(s1,
+                     std::vector<std::pair<size_t, Dimension>>{
+                         {0, Dimension::dynamic()}, {2, 909}, {4, Dimension::dynamic()}});
+
+    ASSERT_TRUE(s2.same_scheme(
+        PartialShape{Dimension::dynamic(), 1, 909, Dimension::dynamic(), Dimension::dynamic()}));
+}

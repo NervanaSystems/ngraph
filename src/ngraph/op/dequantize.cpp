@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/shape_util.hpp"
 
 using namespace std;
 using namespace ngraph;
