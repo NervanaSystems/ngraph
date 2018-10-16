@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018 Intel Corporation
+# Copyright 2017-2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,26 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ******************************************************************************
-"""
-Package: ngraph
-Low level wrappers for the nGraph c++ api in ngraph::onnx_import.
-"""
 
-# flake8: noqa
-
-import sys
-import six
-
-# workaround to load the libngraph.so with RTLD_GLOBAL
-if six.PY3:
-    import os
-    flags = os.RTLD_NOW | os.RTLD_GLOBAL
-else:
-    import ctypes
-    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-sys.setdlopenflags(flags)
-
-from _pyngraph_onnx_import import load_onnx_model
-from _pyngraph_onnx_import import load_onnx_model_file
-from _pyngraph_onnx_import import import_onnx_function
-from _pyngraph_onnx_import import import_onnx_function_file
+add_executable(serialize_onnx serialize_onnx.cpp)
+add_dependencies(serialize_onnx ngraph)
+target_link_libraries(serialize_onnx ngraph)

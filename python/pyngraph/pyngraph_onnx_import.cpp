@@ -13,30 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <pybind11/pybind11.h>
 
-#pragma once
+#include "pyngraph/onnx_import/onnx_import.hpp"
 
-#include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/op.hpp"
+namespace py = pybind11;
 
-namespace ngraph
+PYBIND11_MODULE(_pyngraph_onnx_import, m)
 {
-    namespace op
-    {
-        class DequantizeCPU : public Op
-        {
-        public:
-            DequantizeCPU(std::shared_ptr<Node> input,
-                          std::shared_ptr<Node> min,
-                          std::shared_ptr<Node> max,
-                          const element::Type& type);
-            const element::Type& get_dequantize_et() const { return m_element_type; }
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-        private:
-            const element::Type m_element_type;
-        };
-    }
+    m.doc() = "Package ngraph.impl that wraps ngraph::onnx_import";
+    regmodule_pyngraph_onnx_import(m);
 }
