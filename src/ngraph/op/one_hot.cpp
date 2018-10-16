@@ -26,22 +26,31 @@ op::OneHot::OneHot(const shared_ptr<Node>& arg, const Shape& shape, size_t one_h
     , m_one_hot_axis(one_hot_axis)
 {
     constructor_validate_and_infer_types();
+}
 
-    auto& input = m_inputs.at(0);
-    auto& input_element_type = input.get_element_type();
+void op::OneHot::validate_and_infer_types()
+{
+    element::Type arg_et = get_input_element_type(0);
+    PartialShape arg_shape = get_input_partial_shape(0);
+    Rank arg_rank = arg_shape.rank();
 
-    NODE_VALIDATION_ASSERT(this, one_hot_axis < shape.size())
-        << "One-hot axis (" << one_hot_axis
-        << ") is out of bounds (requested result shape: " << shape << ").";
+    NODE_VALIDATION_ASSERT(this, m_one_hot_axis < m_shape.size())
+        << "One-hot axis (" << m_one_hot_axis
+        << ") is out of bounds (requested result shape: " << m_shape << ").";
 
-    auto expected_input_shape = shape;
-    expected_input_shape.erase(expected_input_shape.begin() + one_hot_axis);
+    if (arg_rank.is_static())
+    {
+        std::vector<Dimension> expected_input_dims(m_shape.begin(), m_shape.end());
+        expected_input_dims.erase(expected_input_dims.begin() + m_one_hot_axis);
 
-    NODE_VALIDATION_ASSERT(this, input.get_shape() == expected_input_shape)
-        << "Argument shape " << input.get_shape() << " does not match the expected shape of "
-        << expected_input_shape << ".";
+        PartialShape expected_input_shape{expected_input_dims};
 
-    set_output_type(0, input_element_type, shape);
+        NODE_VALIDATION_ASSERT(this, arg_shape.compatible(expected_input_shape))
+            << "Argument shape " << arg_shape << " does not match the expected shape of "
+            << expected_input_shape << ".";
+    }
+
+    set_output_type(0, arg_et, m_shape);
 }
 
 shared_ptr<Node> op::OneHot::copy_with_new_args(const NodeVector& new_args) const

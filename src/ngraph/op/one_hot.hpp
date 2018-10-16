@@ -58,6 +58,8 @@ namespace ngraph
             /// \return The index of the one-hot axis.
             size_t get_one_hot_axis() const { return m_one_hot_axis; }
         protected:
+            void validate_and_infer_types() override;
+
             Shape m_shape;
             size_t m_one_hot_axis;
         };

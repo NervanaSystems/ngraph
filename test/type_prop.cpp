@@ -2092,8 +2092,7 @@ TEST(type_prop, one_hot_deduce_shape_incompatible)
     catch (const ngraph_error& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Argument shape Shape{12, 24} does not match the expected shape"));
+            error.what(), std::string("Argument shape {12,24} does not match the expected shape"));
     }
     catch (...)
     {
@@ -7384,4 +7383,9 @@ TEST(type_prop, get_output_element_partial_rank_static_dynamic)
     ASSERT_EQ(goe->get_output_element_type(0), element::i32);
     ASSERT_TRUE(
         goe->get_output_partial_shape(0).same_scheme(PartialShape{Dimension::dynamic(), 2, 3, 4}));
+}
+
+TEST(type_prop, fail_for_reminders)
+{
+    FAIL() << "Adam P needs to update OneHot to use PartialShapes, and write unit tests.";
 }
