@@ -17,11 +17,11 @@ if [ ${TRAVIS_OS_NAME} == "linux" ]; then
     fi
 
     if [ ${TASK} == "python2_test" ]; then
-        docker run -w '/root/ngraph/python' test_ngraph tox -e py27
+        docker run -w '/root/ngraph/python' -e NGRAPH_ONNX_IMPORT_ENABLE=TRUE test_ngraph tox -e py27
     fi
 
     if [ ${TASK} == "python3_test" ]; then
-        docker run -w '/root/ngraph/python' test_ngraph tox -e py3
+        docker run -w '/root/ngraph/python' -e NGRAPH_ONNX_IMPORT_ENABLE=TRUE test_ngraph tox -e py3
     fi
 
 fi

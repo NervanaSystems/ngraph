@@ -233,35 +233,33 @@ void runtime::gpu::GPU_Emitter::emit_AvgPool(EMIT_ARGS)
         {
             auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
 
-            index = cuda_emitter->build_avg_pool({{args[0].get_type(), out[0].get_type()}},
+            index =
+                cuda_emitter->build_avg_pool({{args[0].get_type(), out[0].get_type()}},
+                                             input_shape,
+                                             result_shape,
+                                             avg_pool->get_window_shape(),
+                                             avg_pool->get_window_movement_strides(),
+                                             padding_below,
+                                             avg_pool->get_include_padding_in_avg_computation());
+        }
+        // 2d and 3d avg pool (NCHW) with either symetric padding or no padding
+        else if (input_shape.size() == 4 || input_shape.size() == 5)
+        {
+            auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+            auto cudnn_avg_type = avg_pool->get_include_padding_in_avg_computation()
+                                      ? CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING
+                                      : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
+
+            index = cudnn_emitter->build_pooling(cudnn_avg_type,
+                                                 out[0].get_type(),
+                                                 CUDNNEmitter::Prop::Forward,
                                                  input_shape,
                                                  result_shape,
-                                                 avg_pool->get_window_shape(),
                                                  avg_pool->get_window_movement_strides(),
-                                                 padding_below);
-        }
-        else if (input_shape.size() <= 5)
-        {
-            // 2d and 3d avg pool (NCHW) with either symetric padding or no padding
-            if (input_shape.size() == 4 || input_shape.size() == 5)
-            {
-                auto& cudnn_emitter =
-                    external_function->get_primitive_emitter()->get_cudnn_emitter();
-
-                auto cudnn_avg_type = avg_pool->get_include_padding_in_avg_computation()
-                                          ? CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING
-                                          : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
-
-                index = cudnn_emitter->build_pooling(cudnn_avg_type,
-                                                     out[0].get_type(),
-                                                     CUDNNEmitter::Prop::Forward,
-                                                     input_shape,
-                                                     result_shape,
-                                                     avg_pool->get_window_movement_strides(),
-                                                     avg_pool->get_window_shape(),
-                                                     padding_below,
-                                                     padding_above);
-            }
+                                                 avg_pool->get_window_shape(),
+                                                 padding_below,
+                                                 padding_above);
         }
         else
         {
