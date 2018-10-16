@@ -45,13 +45,12 @@ void regclass_pyngraph_op_BatchNormInference(py::module m)
     batch_norm_inference.doc() =
         "ngraph.impl.op.BatchNormInference wraps ngraph::op::BatchNormInference";
 
-    batch_norm_inference.def(py::init<double,
-                                      const std::shared_ptr<ngraph::Node>&,
-                                      const std::shared_ptr<ngraph::Node>&,
-                                      const std::shared_ptr<ngraph::Node>&,
-                                      const std::shared_ptr<ngraph::Node>&,
-                                      const std::shared_ptr<ngraph::Node>&,
-                                      bool&>());
+    batch_norm_inference.def(py::init < double,
+                             const std::shared_ptr<ngraph::Node>&,
+                             const std::shared_ptr<ngraph::Node>&,
+                             const std::shared_ptr<ngraph::Node>&,
+                             const std::shared_ptr<ngraph::Node>&,
+                             const std::shared_ptr<ngraph::Node>&);
 }
 
 void regclass_pyngraph_op_BatchNormTrainingBackprop(py::module m)
