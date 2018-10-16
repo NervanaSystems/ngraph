@@ -1,0 +1,17 @@
+ngraph ONNXImporter:œ
+$
+ABmissing_op_node1"
+FakeOpName
++
+BCmissing_op_node2"AnotherFakeOpName
+
+CXsupported_op"Abs
+test_graphZ
+A
+
+
+b
+X
+
+
+B
