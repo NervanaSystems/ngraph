@@ -24,6 +24,7 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "quantization_util.hpp"
 
 using namespace std;
@@ -33,6 +34,33 @@ namespace ngraph
 {
     namespace builder
     {
+        std::shared_ptr<Node> ScaledQuantize(std::shared_ptr<Node> input,
+                                             std::shared_ptr<Node> min,
+                                             std::shared_ptr<Node> max,
+                                             const ngraph::element::Type& type,
+                                             const ngraph::AxisSet& axes,
+                                             op::Quantize::RoundMode round_mode)
+        {
+            float scale =
+                builder::quantization_util::get_quantize_scale(min, max, type.is_signed());
+            auto offset = op::Constant::create(element::f32, Shape{1}, {0});
+            auto quantize_scale = op::Constant::create(element::f32, Shape{1}, {scale});
+            return make_shared<op::Quantize>(input, quantize_scale, offset, type, axes, round_mode);
+        }
+
+        std::shared_ptr<Node> ScaledDequantize(std::shared_ptr<Node> input,
+                                               std::shared_ptr<Node> min,
+                                               std::shared_ptr<Node> max,
+                                               const ngraph::element::Type& type,
+                                               const ngraph::AxisSet& axes)
+        {
+            float scale =
+                builder::quantization_util::get_dequantize_scale(min, max, type.is_signed());
+            auto offset = op::Constant::create(element::f32, Shape{1}, {0});
+            auto dequantize_scale = op::Constant::create(element::f32, Shape{1}, {scale});
+            return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);
+        }
+
         std::shared_ptr<Node> ScaledQuantizedAvgPool(const std::shared_ptr<Node>& arg,
                                                      const Shape& window_shape,
                                                      const Strides& window_movement_strides,

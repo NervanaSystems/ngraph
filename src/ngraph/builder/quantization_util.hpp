@@ -99,6 +99,59 @@ namespace ngraph
                     (std::pow(2, -24) * static_cast<double>(max_abs32 / max_abs8)));
                 return scale;
             }
+
+            static inline float get_quantize_scale(const std::shared_ptr<Node> min_input,
+                                                   const std::shared_ptr<Node> max_input,
+                                                   bool is_signed)
+            {
+                auto min_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(min_input);
+                auto max_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(max_input);
+                float input_min_range =
+                    *(static_cast<float const*>(min_input_const_op->get_data_ptr()));
+                float input_max_range =
+                    *(static_cast<float const*>(max_input_const_op->get_data_ptr()));
+
+                // begin code copied and pasted from
+                // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantize_op.cc
+                float min_range;
+                float max_range;
+                // If input_min_range and input_max_range are close,
+                // introduce a slightly larger delta between them.
+                min_range = std::min(0.0f, input_min_range);
+                const float epsilon =
+                    std::max(1.0f, std::max(fabsf(input_min_range), fabsf(input_max_range))) /
+                    100.0f;
+                max_range = std::max(input_max_range, min_range + epsilon);
+                max_range = std::max(0.0f, max_range);
+                // end code copied and pasted from
+                // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantize_op.cc
+                const float max_abs = std::max(std::abs(min_range), std::abs(max_range));
+                const float target_range =
+                    static_cast<float>((is_signed ? std::pow(2, 7) : std::pow(2, 8)) - 1);
+                max_range = max_abs;
+                min_range = is_signed ? -max_abs : 0;
+                const float scale = target_range / max_abs;
+                return scale;
+            }
+
+            static inline float get_dequantize_scale(const std::shared_ptr<Node> min_input,
+                                                     const std::shared_ptr<Node> max_input,
+                                                     bool is_signed)
+            {
+                auto min_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(min_input);
+                auto max_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(max_input);
+                float input_min_range =
+                    *(static_cast<float const*>(min_input_const_op->get_data_ptr()));
+                float input_max_range =
+                    *(static_cast<float const*>(max_input_const_op->get_data_ptr()));
+
+                const float max_abs =
+                    std::max(std::abs(input_min_range), std::abs(input_max_range));
+                const float target_range =
+                    static_cast<float>((is_signed ? std::pow(2, 7) : std::pow(2, 8)) - 1);
+                const float scale_factor = max_abs / target_range;
+                return scale_factor;
+            }
         }
     }
 }
