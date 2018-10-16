@@ -25,6 +25,7 @@ add_library(onnx_import STATIC
         core/attribute.hpp
         core/graph.cpp
         core/graph.hpp
+        core/model.cpp
         core/model.hpp
         core/node.cpp
         core/node.hpp
@@ -58,6 +59,10 @@ add_library(onnx_import STATIC
         op/floor.hpp
         op/gemm.cpp
         op/gemm.hpp
+        op/global_average_pool.cpp
+        op/global_average_pool.hpp
+        op/global_max_pool.cpp
+        op/global_max_pool.hpp
         op/greater.hpp
         op/hard_sigmoid.cpp
         op/hard_sigmoid.hpp

@@ -71,7 +71,7 @@ shared_ptr<op::Constant> make_constant_pad(shared_ptr<op::Constant> constant,
 {
     auto out_shape = pad->get_shape();
     vector<T> out_vec(shape_size(out_shape));
-    auto pad_value = std::dynamic_pointer_cast<op::Constant>(pad->get_argument(1));
+    auto pad_value = std::static_pointer_cast<op::Constant>(pad->get_argument(1));
 
     runtime::reference::pad<T>(constant->get_vector<T>().data(),
                                pad_value->get_vector<T>().data(),
@@ -105,8 +105,8 @@ void ngraph::pass::ConstantFolding::construct_constant_pad()
 
         auto pattern_map = m.get_pattern_map();
 
-        auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto pad_match = dynamic_pointer_cast<op::Pad>(m.get_match_root());
+        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
+        auto pad_match = static_pointer_cast<op::Pad>(m.get_match_root());
 
         auto type = constant_match->get_element_type();
         if (type == element::i32)
@@ -149,8 +149,8 @@ void ngraph::pass::ConstantFolding::construct_constant_reshape()
 
         auto pattern_map = m.get_pattern_map();
 
-        auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto reshape_match = dynamic_pointer_cast<op::Reshape>(m.get_match_root());
+        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
+        auto reshape_match = static_pointer_cast<op::Reshape>(m.get_match_root());
 
         auto type = constant_match->get_element_type();
         if (type == element::i32)
@@ -214,8 +214,8 @@ void ngraph::pass::ConstantFolding::construct_constant_broadcast()
 
         auto pattern_map = m.get_pattern_map();
 
-        auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto broadcast_match = dynamic_pointer_cast<op::Broadcast>(m.get_match_root());
+        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
+        auto broadcast_match = static_pointer_cast<op::Broadcast>(m.get_match_root());
 
         auto type = constant_match->get_element_type();
         if (type == element::i32)

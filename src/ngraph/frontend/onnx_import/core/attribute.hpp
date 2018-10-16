@@ -16,7 +16,8 @@
 
 #pragma once
 
-#include <onnx.pb.h>
+#include <onnx-ml.pb.h>
+
 #include "ngraph/except.hpp"
 #include "tensor.hpp"
 
@@ -179,7 +180,7 @@ namespace ngraph
                 }
 
                 template <>
-                inline const std::string& get_value(const onnx::AttributeProto& attribute)
+                inline std::string get_value(const onnx::AttributeProto& attribute)
                 {
                     if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_STRING))
                     {

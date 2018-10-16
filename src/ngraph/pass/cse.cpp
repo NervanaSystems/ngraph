@@ -72,8 +72,8 @@ static bool cse_constant(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
         return false;
     }
 
-    auto ca = std::dynamic_pointer_cast<op::Constant>(a);
-    auto cb = std::dynamic_pointer_cast<op::Constant>(b);
+    auto ca = std::static_pointer_cast<op::Constant>(a);
+    auto cb = std::static_pointer_cast<op::Constant>(b);
 
     size_t size = shape_size(a->get_shape()) * a->get_element_type().size();
 
@@ -84,8 +84,8 @@ static bool cse_reshape(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_reshape for " << a->get_name() << " and " << b->get_name();
 
-    auto reshape_a = std::dynamic_pointer_cast<ngraph::op::Reshape>(a);
-    auto reshape_b = std::dynamic_pointer_cast<ngraph::op::Reshape>(b);
+    auto reshape_a = std::static_pointer_cast<ngraph::op::Reshape>(a);
+    auto reshape_b = std::static_pointer_cast<ngraph::op::Reshape>(b);
 
     return (a->get_argument(0) == b->get_argument(0)) &&
            (reshape_a->get_input_order() == reshape_b->get_input_order()) &&
@@ -95,8 +95,8 @@ static bool cse_broadcast(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_broadcast for " << a->get_name() << " and " << b->get_name();
 
-    auto broadcast_a = std::dynamic_pointer_cast<ngraph::op::Broadcast>(a);
-    auto broadcast_b = std::dynamic_pointer_cast<ngraph::op::Broadcast>(b);
+    auto broadcast_a = std::static_pointer_cast<ngraph::op::Broadcast>(a);
+    auto broadcast_b = std::static_pointer_cast<ngraph::op::Broadcast>(b);
 
     return (a->get_argument(0) == b->get_argument(0)) &&
            (broadcast_a->get_broadcast_axes() == broadcast_b->get_broadcast_axes()) &&
@@ -121,8 +121,8 @@ static bool cse_reduction(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_reduction for " << a->get_name() << " and " << b->get_name();
 
-    auto ar_a = std::dynamic_pointer_cast<op::util::ArithmeticReduction>(a);
-    auto ar_b = std::dynamic_pointer_cast<op::util::ArithmeticReduction>(b);
+    auto ar_a = std::static_pointer_cast<op::util::ArithmeticReduction>(a);
+    auto ar_b = std::static_pointer_cast<op::util::ArithmeticReduction>(b);
 
     return ar_a->get_argument(0) == ar_b->get_argument(0) &&
            ar_a->get_reduction_axes() == ar_b->get_reduction_axes();
