@@ -1,7 +1,7 @@
 .. ops/index.rst
 
-Core Ops
-========
+About Core Ops
+==============
 
 An ``Op``'s primary role is to function as a node in a directed acyclic graph 
 dependency computation graph.  
@@ -40,7 +40,7 @@ that must be performed are:
 
 
 Alphabetical list of Core ``ops``
-----------------------------------
+=================================
 
 Not currently a comprehensive list.  
 
@@ -163,5 +163,3 @@ Not currently a comprehensive list.
    sqrt.rst
    tan.rst
    tanh.rst
-
-   

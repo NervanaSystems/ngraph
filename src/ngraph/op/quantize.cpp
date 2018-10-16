@@ -58,9 +58,9 @@ void op::Quantize::validate_and_infer_types()
         << "Input element type (" << get_input_element_type(INPUT)
         << ") must be a floating point number";
 
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(SCALE).is_real())
+    NODE_VALIDATION_ASSERT(this, get_input_element_type(SCALE) == get_input_element_type(INPUT))
         << "Scale element type (" << get_input_element_type(SCALE)
-        << ") must be a floating point number";
+        << ") must match input element type (" << get_input_element_type(INPUT) << ")";
 
     NODE_VALIDATION_ASSERT(this, get_input_element_type(OFFSET) == m_type)
         << "Offset element type (" << get_input_element_type(OFFSET)
@@ -69,7 +69,7 @@ void op::Quantize::validate_and_infer_types()
     for (auto axis : m_axes)
     {
         NODE_VALIDATION_ASSERT(this, axis < get_shape().size())
-            << "Quantizaztion axis (" << axis << ") is greater than input shape rank ("
+            << "Quantization axis (" << axis << ") must be less than input shape rank ("
             << get_shape().size() << ")";
     }
 

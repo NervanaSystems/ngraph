@@ -134,16 +134,6 @@ TEST(util, trim)
     EXPECT_STREQ("test", trim(" \t test \t ").c_str());
 }
 
-TEST(util, contains)
-{
-    vector<int> v1 = {1, 2, 3, 4, 5, 6};
-
-    EXPECT_TRUE(contains(v1, 1));
-    EXPECT_TRUE(contains(v1, 4));
-    EXPECT_TRUE(contains(v1, 6));
-    EXPECT_FALSE(contains(v1, 8));
-}
-
 #if defined(NGRAPH_INTERPRETER_ENABLE)
 TEST(util, all_close)
 {
