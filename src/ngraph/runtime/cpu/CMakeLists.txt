@@ -170,10 +170,12 @@ if (NGRAPH_CPU_ENABLE)
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
         find_package(MPI REQUIRED)
-        add_definitions(-DNGRAPH_DISTRIBUTED)
-        include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-        link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-        target_link_libraries(cpu_backend PRIVATE ${MPI_CXX_LIBRARIES})
+        target_compile_definitions(cpu_backend
+            PRIVATE NGRAPH_DISTRIBUTED)
+        target_include_directories(cpu_backend
+            SYSTEM PRIVATE "${MPI_C_INCLUDE_PATH}" "${MPI_CXX_INCLUDE_PATH}")
+        target_link_libraries(cpu_backend
+            PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
     endif()
 
     add_dependencies(cpu_backend ext_mkldnn ext_eigen)
