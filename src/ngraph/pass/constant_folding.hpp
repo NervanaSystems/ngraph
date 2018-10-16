@@ -33,7 +33,9 @@ class ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
         RESHAPE,
         BROADCAST,
         PAD,
-        DEQUANTIZE
+        DEQUANTIZE,
+        UNARY,
+        BINARY
     };
 
 public:
@@ -43,6 +45,8 @@ public:
         construct_constant_reshape();
         construct_constant_broadcast();
         construct_constant_pad();
+        construct_constant_unary();
+        construct_constant_binary();
         construct_constant_dequantize();
     }
 
@@ -58,6 +62,8 @@ public:
             case CFTransformations::RESHAPE: construct_constant_reshape(); break;
             case CFTransformations::BROADCAST: construct_constant_broadcast(); break;
             case CFTransformations::PAD: construct_constant_pad(); break;
+            case CFTransformations::UNARY: construct_constant_unary(); break;
+            case CFTransformations::BINARY: construct_constant_binary(); break;
             case CFTransformations::DEQUANTIZE: construct_constant_dequantize(); break;
             }
         }
@@ -67,5 +73,7 @@ private:
     void construct_constant_reshape();
     void construct_constant_broadcast();
     void construct_constant_pad();
+    void construct_constant_unary();
+    void construct_constant_binary();
     void construct_constant_dequantize();
 };
