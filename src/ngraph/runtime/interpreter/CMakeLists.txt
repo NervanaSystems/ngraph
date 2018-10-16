@@ -30,7 +30,7 @@ if (NGRAPH_INTERPRETER_ENABLE)
         target_compile_definitions(interpreter_backend
             PRIVATE NGRAPH_DISTRIBUTED)
         target_include_directories(interpreter_backend
-            SYSTEM PRIVATE "${MPI_C_INCLUDE_PATH}" "${MPI_CXX_INCLUDE_PATH}")
+            SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
         target_link_libraries(interpreter_backend
             PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
     endif()

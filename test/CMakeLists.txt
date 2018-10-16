@@ -139,7 +139,7 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
     find_package(MPI REQUIRED)
     target_compile_definitions(unit-test PRIVATE NGRAPH_DISTRIBUTED)
     target_include_directories(unit-test 
-        SYSTEM PRIVATE "${MPI_C_INCLUDE_PATH}" "${MPI_CXX_INCLUDE_PATH}")
+        SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
     target_link_libraries(unit-test PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 endif()
 

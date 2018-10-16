@@ -173,7 +173,7 @@ if (NGRAPH_CPU_ENABLE)
         target_compile_definitions(cpu_backend
             PRIVATE NGRAPH_DISTRIBUTED)
         target_include_directories(cpu_backend
-            SYSTEM PRIVATE "${MPI_C_INCLUDE_PATH}" "${MPI_CXX_INCLUDE_PATH}")
+            SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
         target_link_libraries(cpu_backend
             PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
     endif()
