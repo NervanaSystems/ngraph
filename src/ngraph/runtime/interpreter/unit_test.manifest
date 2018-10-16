@@ -3,4 +3,5 @@ batchnorm_fprop_b1c2h2w2
 batchnorm_fprop_b2c2h2w1
 batchnorm_fprop_globalstats_b2c2w2h1
 batchnorm_fprop_inference_b2c2h2w1
+batchnorm_fprop_bprop
 computation_reuse

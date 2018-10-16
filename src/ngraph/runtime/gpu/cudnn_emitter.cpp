@@ -1738,7 +1738,6 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
     {
         batchnorm.reset(new gpu::primitive{
             [=, &tensor_desc, &derived_param_desc](void** inputs, void** outputs) {
-                std::cout << inputs[3] << " " << inputs[4] << std::endl;
                 CUDNN_SAFE_CALL(cudnnBatchNormalizationBackward(
                     *m_ctx->cudnn_handle,
                     bn_op,

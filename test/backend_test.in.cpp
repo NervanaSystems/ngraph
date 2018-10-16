@@ -27,6 +27,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
+#include "ngraph/graph_util.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
@@ -10397,131 +10398,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp)
         read_vector<output_c_type>(y));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, compare_all)
-{
-    // stringstream ss("output_bp_param.json");
-    stringstream ss("bn_bprop.json");
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-
-    NodeVector new_results;
-    for (auto n : func->get_ordered_ops())
-    {
-        //dont include op::Results otherwise Function c-tor will complain
-        if (!n->is_output() && !n->is_parameter() && !n->is_constant() && !(n->get_outputs().size()>1)
-            && n->get_element_type() == element::f32)
-        {
-            // if (auto goe = dynamic_pointer_cast<op::GetOutputElement>(n))
-            // {
-            //     for (auto& p : goe->get_arguments())
-            //     {
-            //         if (p->get_instance_id() == 38)
-            //         {
-            //             std::cout << n->get_instance_id() << " " << n->get_name() << std::endl;
-            //             new_results.push_back(n);
-            //             break;
-            //         }
-            //     }
-            // }
-            std::cout << n->get_instance_id() << " " << n->get_name() << std::endl;
-            new_results.push_back(n);
-        }
-    }
-
-    //no need to include original results they are subsumed by new_results
-    auto new_func = make_shared<Function>(new_results, func->get_parameters());
-
-    // string js = serialize(new_func, 4);
-    // std::ofstream outfile;
-    // outfile.open("bn_bprop.json");
-    // outfile << js;
-    // outfile.close();
-    // if (new_func) exit(0);
-
-    test::Uniform<float> rng(1.0f, 2.0f, 2112);
-    vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : new_func->get_parameters())
-    {
-        vector<float> tensor_val(shape_size(param->get_shape()));
-        rng.initialize(tensor_val);
-        args.push_back(tensor_val);
-    }
-
-    auto int_results = execute(new_func, args, "${BACKEND_NAME}");
-    auto cpu_results = execute(new_func, args, "INTERPRETER");
-
-    for (size_t i = 0; i < cpu_results.size(); i++)
-    {
-        std::cout << "Comparing results for " << new_results.at(i)->get_name() <<std::endl;
-        if (auto node = dynamic_pointer_cast<op::GetOutputElement>(new_results.at(i)))
-        {
-            std::cout << "  Parent node: ";
-            for (auto& p : node->get_arguments())
-            {
-                std::cout << " " << p->get_name() << std::endl;
-                std::cout << "   nargs: " << p->get_arguments().size() << std::endl;
-            }
-        }
-        EXPECT_TRUE(test::all_close_f(cpu_results.at(i), int_results.at(i)));
-    }
-    std::cout << "GPU results: " << std::endl;
-    for (size_t i = 0; i < int_results.size(); i++)
-    {
-        auto& tensor = int_results.at(i);
-        std::cout << "Tensor " << i << std::endl;
-        std::ofstream outfile;
-        std::string filename = "tensor_gpu" + std::to_string(i) + ".txt";
-        outfile.open(filename);
-        outfile << join(tensor);
-        outfile.close();
-    }
-    std::cout << "CPU results: " << std::endl;
-    for (size_t i = 0; i < cpu_results.size(); i++)
-    {
-        auto& tensor = cpu_results.at(i);
-        std::cout << "Tensor " << i << std::endl;
-        std::ofstream outfile;
-        std::string filename = "tensor_int" + std::to_string(i) + ".txt";
-        outfile.open(filename);
-        outfile << join(tensor);
-        outfile.close();
-    }
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, minimal_bn_bprop)
-{
-    stringstream ss("bn_bprop.json");
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-
-    //auto results = func->get_results();
-    NodeVector results;
-    for (auto& n : func->get_ordered_ops())
-    {
-        if (dynamic_pointer_cast<op::ReluBackprop>(n))
-        {
-            results.push_back(n);
-        }
-    }
-
-    test::Uniform<float> rng(1.0f, 2.0f, 2112);
-    vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : func->get_parameters())
-    {
-        vector<float> tensor_val(shape_size(param->get_shape()));
-        rng.initialize(tensor_val);
-        args.push_back(tensor_val);
-    }
-
-    auto backend_results = execute(func, args, "${BACKEND_NAME}");
-    auto int_results = execute(func, args, "INTERPRETER");
-
-    for (size_t i = 0; i < int_results.size(); i++)
-    {
-        std::cout << join(int_results.at(i)) << std::endl;
-        //EXPECT_TRUE(test::all_close_f(int_results.at(i), backend_results.at(i)));
-    }
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, bn_forward_backward)
+NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop)
 {
     Shape sca{1};
     Shape vec{1, 1, 1, 2};
@@ -10539,55 +10416,16 @@ NGRAPH_TEST(${BACKEND_NAME}, bn_forward_backward)
     auto bn_bp = std::make_shared<op::BatchNormBackprop>(eps, g, b, bnorm, mean, var, delta);
     auto dx = std::make_shared<op::GetOutputElement>(bn_bp, 0);
 
+
+    std::vector<std::vector<float>> args = {
+        {1.0f},          // gamma
+        {1.0f},          // beta
+        {1.1f, 1.0f},    // x
+        {1.0f, 1.0f},    // dy
+    };
+
     auto func = std::make_shared<Function>(dx, op::ParameterVector{g, b, input, delta});
+    auto results = execute(func, args, "${BACKEND_NAME}");
+    EXPECT_TRUE(test::all_close_f(std::vector<float>{350.957, -388.67}, results.at(0)));
 
-    std::vector<std::vector<float>> args = {
-        {1.0f},          // gamma
-        {1.0f},          // beta
-        {1.1f, 1.0f},    // x
-        {-0.01f, 0.01f}, // dy
-    };
-
-    auto backend_results = execute(func, args, "${BACKEND_NAME}");
-    auto int_results = execute(func, args, "INTERPRETER");
-
-    for (size_t i = 0; i < int_results.size(); i++)
-    {
-        EXPECT_TRUE(test::all_close_f(int_results.at(i), backend_results.at(i)));
-    }
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, bn_bprop_numerical)
-{
-    Shape sca{1};
-    Shape vec{1, 1, 1, 2};
-    auto g = std::make_shared<op::Parameter>(element::f32, sca);
-    auto b = std::make_shared<op::Parameter>(element::f32, sca);
-    auto D = std::make_shared<op::Parameter>(element::f32, vec);
-    auto m = std::make_shared<op::Parameter>(element::f32, sca);
-    auto v = std::make_shared<op::Parameter>(element::f32, sca);
-
-    auto delta = std::make_shared<op::Parameter>(element::f32, vec);
-
-    auto bn_bp = std::make_shared<op::BatchNormBackprop>(1.0e-04f, g, b, D, m, v, delta);
-    auto dx = std::make_shared<op::GetOutputElement>(bn_bp, 0);
-    auto func = std::make_shared<Function>(dx, op::ParameterVector{g, b, D, m, v, delta});
-    auto results = func->get_results();
-
-    std::vector<std::vector<float>> args = {
-        {1.0f},          // gamma
-        {1.0f},          // beta
-        {1.1f, 1.0f},    // x
-        {1.049f},        // approx mean
-        {0.0025f},       // var
-        {-0.01f, 0.01f}, // dy
-    };
-
-    auto backend_results = execute(func, args, "${BACKEND_NAME}");
-    auto int_results = execute(func, args, "INTERPRETER");
-
-    for (size_t i = 0; i < int_results.size(); i++)
-    {
-        EXPECT_TRUE(test::all_close_f(int_results.at(i), backend_results.at(i)));
-    }
 }

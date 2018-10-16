@@ -348,18 +348,15 @@ static void emit_BatchNorm(EMIT_ARGS, bool save_stats)
         writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
     }
     writer.block_end();
-    std::cout << out.size() << std::endl;
 }
 
 void runtime::gpu::GPU_Emitter::emit_BatchNorm(EMIT_ARGS)
 {
-    std::cout << "Batchnorm\n";
     ::emit_BatchNorm(external_function, writer, node, args, out, false);
 }
 
 void runtime::gpu::GPU_Emitter::emit_CUDNNBatchNorm(EMIT_ARGS)
 {
-    std::cout << "CUDNNBatchnorm\n";
     ::emit_BatchNorm(external_function, writer, node, args, out, true);
 }
 
