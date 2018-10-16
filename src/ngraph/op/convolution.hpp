@@ -356,6 +356,9 @@ namespace ngraph
 
         namespace util
         {
+            // This is a legacy function, retained because the CPU backend uses it for now.
+            // TODO: Update CPU backend to use the new stuff in validation_util.hpp, and remove
+            // this function.
             Shape infer_convolution_output_shape(const Node* node,
                                                  const Shape& data_batch_shape,
                                                  const Shape& filters_shape,
