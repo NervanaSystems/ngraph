@@ -28,14 +28,12 @@ namespace ngraph
         {
             namespace set_1
             {
-                /**
-                 * @brief Convert ONNX GlobalMaxPool operation to an nGraph node.
-                 *
-                 * @param node   The ONNX node object representing this operation.
-                 *
-                 * @return The vector containing Ngraph nodes producing output of ONNX GlobalMaxPool
-                 *         operation.
-                 */
+                /// \brief Convert ONNX GlobalMaxPool operation to an nGraph node.
+                ///
+                /// \param node   The ONNX node object representing this operation.
+                ///
+                /// \return The vector containing Ngraph nodes producing output of ONNX GlobalMaxPool
+                ///         operation.
                 NodeVector global_max_pool(const Node& node);
 
             } // namespace set_1

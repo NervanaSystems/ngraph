@@ -87,11 +87,11 @@ namespace ngraph
                 return get_pads(node, get_kernel_shape(node));
             }
 
-            /// \ brief Create an nGraph pooling operation based on an ONNX pooling op.
+            /// \brief Create an nGraph pooling operation based on an ONNX pooling op.
             ///
-            /// \ param T Class of an nGraph pooling operation (e.g. AveragePool, MaxPool)
-            /// \ param node incoming ONNX opearation
-            /// \ return nGraph node equivalent of the ONNX operation
+            /// \param T Class of an nGraph pooling operation (e.g. AveragePool, MaxPool)
+            /// \param node incoming ONNX opearation
+            /// \return nGraph node equivalent of the ONNX operation
             template <class T>
             inline NodeVector make_ng_pool(const Node& node)
             {
