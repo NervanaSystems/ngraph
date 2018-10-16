@@ -1565,8 +1565,7 @@ void runtime::intelgpu::do_arg_max_min_operation(cldnn::topology& topology,
     {
         gws = generate_loops(writer, output_shape, true);
 
-        writer << get_opencl_type_name(output_type) << " " << var_name << " = " << infinity
-               << ";\n";
+        writer << get_opencl_type_name(input_type) << " " << var_name << " = " << infinity << ";\n";
         writer << "uint index = -1;\n";
 
         writer << "for (uint i = 0; i < " << input_shape.at(reduction_axis) << "; ++i)\n";
