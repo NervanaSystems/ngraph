@@ -7552,6 +7552,39 @@ TEST(type_prop, quantize_f64_to_u8_ok)
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
 }
 
+TEST(type_prop, quantize_f64_to_dyn_fails)
+{
+    Shape batch_shape{64, 3, 480, 640};
+    Shape scale_shape{};
+    Shape offset_shape{};
+    element::Type unquantized_type = element::f64;
+    element::Type quantized_type = element::dynamic;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+
+    try
+    {
+        auto quant =
+            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+        FAIL() << "Attempt to quantize to dynamic type not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Output element type must not be dynamic");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, quantize_i8_to_u8_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
@@ -7578,8 +7611,8 @@ TEST(type_prop, quantize_i8_to_u8_fails)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Input element type (element::Type{8, 0, 1, 1, \"int8_t\"}) must be a "
-                             "floating point number");
+                             "Scale/input element type (element::Type{8, 0, 1, 1, \"int8_t\"}) "
+                             "must be a floating point number");
     }
     catch (...)
     {
@@ -7751,9 +7784,8 @@ TEST(type_prop, quantize_scale_shape_mismatch_same_rank_fails)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape (Shape{64, 4}) must match input shape projected along "
-                             "the quantization axes (Shape{64, 3})");
+        EXPECT_HAS_SUBSTRING(
+            error.what(), "Scale shape (Shape{64, 4}) and offset shape (Shape{64, 3}) must match");
     }
     catch (...)
     {
@@ -7786,9 +7818,9 @@ TEST(type_prop, quantize_scale_shape_mismatch_different_rank_fails)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape (Shape{64, 3, 2}) must match input shape projected along "
-                             "the quantization axes (Shape{64, 3})");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Scale shape (Shape{64, 3, 2}) and offset shape (Shape{64, 3}) must match");
     }
     catch (...)
     {
@@ -7821,9 +7853,8 @@ TEST(type_prop, quantize_offset_shape_mismatch_same_rank_fails)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Offset shape (Shape{64, 4}) must match input shape projected along "
-                             "the quantization axes (Shape{64, 3})");
+        EXPECT_HAS_SUBSTRING(
+            error.what(), "Scale shape (Shape{64, 3}) and offset shape (Shape{64, 4}) must match");
     }
     catch (...)
     {
@@ -7856,9 +7887,9 @@ TEST(type_prop, quantize_offset_shape_mismatch_different_rank_fails)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Offset shape (Shape{64, 3, 2}) must match input shape projected "
-                             "along the quantization axes (Shape{64, 3})");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Scale shape (Shape{64, 3}) and offset shape (Shape{64, 3, 2}) must match");
     }
     catch (...)
     {
@@ -7898,6 +7929,11 @@ TEST(type_prop, quantize_offset_unsupported_round_mode_fails)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, quantize_fail_for_reminder)
+{
+    FAIL() << "Adam P needs to implement unit tests for Quantize";
 }
 
 TEST(type_prop, dequantize_f32_from_i8_nchw_per_channel_ok)
