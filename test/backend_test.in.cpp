@@ -18,16 +18,16 @@
 #include <cinttypes>
 #include <cmath>
 #include <cstdlib>
+#include <fstream>
 #include <random>
 #include <string>
-#include <fstream>
 #include "gtest/gtest.h"
 
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
-#include "ngraph/graph_util.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
@@ -10416,16 +10416,14 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop)
     auto bn_bp = std::make_shared<op::BatchNormBackprop>(eps, g, b, bnorm, mean, var, delta);
     auto dx = std::make_shared<op::GetOutputElement>(bn_bp, 0);
 
-
     std::vector<std::vector<float>> args = {
-        {1.0f},          // gamma
-        {1.0f},          // beta
-        {1.1f, 1.0f},    // x
-        {1.0f, 1.0f},    // dy
+        {1.0f},       // gamma
+        {1.0f},       // beta
+        {1.1f, 1.0f}, // x
+        {1.0f, 1.0f}, // dy
     };
 
     auto func = std::make_shared<Function>(dx, op::ParameterVector{g, b, input, delta});
     auto results = execute(func, args, "${BACKEND_NAME}");
     EXPECT_TRUE(test::all_close_f(std::vector<float>{350.957, -388.67}, results.at(0)));
-
 }

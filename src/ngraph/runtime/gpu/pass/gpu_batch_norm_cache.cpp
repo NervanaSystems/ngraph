@@ -17,10 +17,10 @@
 #include <memory>
 #include <unordered_map>
 
-#include "ngraph/runtime/gpu/op/batch_norm.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/runtime/gpu/op/batch_norm.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_batch_norm_cache.hpp"
 
 using namespace ngraph;
@@ -35,12 +35,13 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
         {
             // pass must be run prior to GOE elimination
             // collect all batch norm inputs to batch norm backward op
-            std::vector<std::shared_ptr<op::GetOutputElement> > goes;
+            std::vector<std::shared_ptr<op::GetOutputElement>> goes;
             for (auto& arg : bnbp->get_arguments())
             {
                 if (auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(arg))
                 {
-                    if (auto bn = std::dynamic_pointer_cast<op::BatchNorm>(goe->get_arguments().at(0)))
+                    if (auto bn =
+                            std::dynamic_pointer_cast<op::BatchNorm>(goe->get_arguments().at(0)))
                     {
                         goes.push_back(goe);
                     }
@@ -50,19 +51,21 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
             // only replace if some of the inputs to backprop are from fprop directly
             if (goes.size())
             {
-                if (auto target = std::dynamic_pointer_cast<op::BatchNorm>(goes.front()->get_arguments().at(0)))
+                if (auto target = std::dynamic_pointer_cast<op::BatchNorm>(
+                        goes.front()->get_arguments().at(0)))
                 {
-                    auto replacement = std::make_shared<op::gpu::CUDNNBatchNorm>(target->get_eps_value(),
-                                                                                 target->get_argument(0),
-                                                                                 target->get_argument(1),
-                                                                                 target->get_argument(2));
+                    auto replacement =
+                        std::make_shared<op::gpu::CUDNNBatchNorm>(target->get_eps_value(),
+                                                                  target->get_argument(0),
+                                                                  target->get_argument(1),
+                                                                  target->get_argument(2));
 
                     // replace all users of old batchnorm with cudnn batchnorm
                     for (size_t i = 0; i < target->get_outputs().size(); i++)
                     {
                         auto& target_output = target->get_outputs().at(i);
-                        std::set<ngraph::descriptor::Input*> copy_inputs{begin(target_output.get_inputs()),
-                                end(target_output.get_inputs())};
+                        std::set<ngraph::descriptor::Input*> copy_inputs{
+                            begin(target_output.get_inputs()), end(target_output.get_inputs())};
                         for (auto input : copy_inputs)
                         {
                             input->replace_output(replacement->get_outputs().at(i));
@@ -77,7 +80,8 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
                         auto out_idx = goe->get_n();
                         if (out_idx != 0)
                         {
-                            auto new_goe = std::make_shared<op::GetOutputElement>(replacement, out_idx + 2);
+                            auto new_goe =
+                                std::make_shared<op::GetOutputElement>(replacement, out_idx + 2);
                             ngraph::replace_node(goe, new_goe);
                         }
                     }

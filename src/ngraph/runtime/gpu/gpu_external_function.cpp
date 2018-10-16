@@ -114,10 +114,10 @@
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 #include "ngraph/runtime/gpu/op/batch_norm.hpp"
 #include "ngraph/runtime/gpu/op/rnn.hpp"
+#include "ngraph/runtime/gpu/pass/gpu_batch_norm_cache.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
 #include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
-#include "ngraph/runtime/gpu/pass/gpu_batch_norm_cache.hpp"
 
 using namespace std;
 using namespace ngraph;

@@ -1736,30 +1736,29 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
     }
     case Prop::Backward:
     {
-        batchnorm.reset(new gpu::primitive{
-            [=, &tensor_desc, &derived_param_desc](void** inputs, void** outputs) {
-                CUDNN_SAFE_CALL(cudnnBatchNormalizationBackward(
-                    *m_ctx->cudnn_handle,
-                    bn_op,
-                    alpha,
-                    beta,
-                    alpha,
-                    beta,
-                    tensor_desc,
-                    inputs[2 /* input tensor x */],
-                    tensor_desc,
-                    inputs[5 /* dy */],
-                    tensor_desc,
-                    outputs[0 /* dx */],
-                    derived_param_desc,
-                    inputs[0 /* gamma */],
-                    outputs[1 /* dgamma */],
-                    outputs[2 /* dbeta */],
-                    epsilon,
-                    inputs[3],   // batch mean
-                    inputs[4])); // batch inverse variance
-                debug_sync();
-            }});
+        batchnorm.reset(new gpu::primitive{[=, &tensor_desc, &derived_param_desc](void** inputs,
+                                                                                  void** outputs) {
+            CUDNN_SAFE_CALL(cudnnBatchNormalizationBackward(*m_ctx->cudnn_handle,
+                                                            bn_op,
+                                                            alpha,
+                                                            beta,
+                                                            alpha,
+                                                            beta,
+                                                            tensor_desc,
+                                                            inputs[2 /* input tensor x */],
+                                                            tensor_desc,
+                                                            inputs[5 /* dy */],
+                                                            tensor_desc,
+                                                            outputs[0 /* dx */],
+                                                            derived_param_desc,
+                                                            inputs[0 /* gamma */],
+                                                            outputs[1 /* dgamma */],
+                                                            outputs[2 /* dbeta */],
+                                                            epsilon,
+                                                            inputs[3],   // batch mean
+                                                            inputs[4])); // batch inverse variance
+            debug_sync();
+        }});
         break;
     }
     }

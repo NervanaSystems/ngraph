@@ -37,8 +37,8 @@ class ngraph::runtime::gpu::pass::BatchNormCache : public ngraph::pass::Function
 public:
     BatchNormCache()
         : FunctionPass()
-        {
-        }
+    {
+    }
 
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 };

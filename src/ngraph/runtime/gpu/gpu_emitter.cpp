@@ -104,14 +104,14 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
+#include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
-#include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/op/batch_norm.hpp"
+#include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/runtime/gpu/gpu_emitter.hpp"
 
 using namespace std;
 using namespace ngraph;

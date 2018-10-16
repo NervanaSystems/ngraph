@@ -29,12 +29,11 @@ namespace ngraph
 {
     namespace op
     {
-        namespace gpu {
-
+        namespace gpu
+        {
             class CUDNNBatchNorm : public ngraph::op::BatchNorm
             {
             public:
-
                 CUDNNBatchNorm(double eps,
                                std::shared_ptr<Node> gamma,
                                std::shared_ptr<Node> beta,
@@ -50,7 +49,7 @@ namespace ngraph
 
             protected:
                 virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                    copy_with_new_args(const NodeVector& new_args) const override;
             };
         }
     }
