@@ -14,33 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/op.hpp"
+#include "ngraph/op/max_pool.hpp"
+
+#include "utils/convpool.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace onnx_import
     {
-        class QuantizeCPU : public Op
+        namespace op
         {
-        public:
-            QuantizeCPU(std::shared_ptr<Node> input,
-                        std::shared_ptr<Node> min,
-                        std::shared_ptr<Node> max,
-                        const element::Type& type);
-            const element::Type& get_quantize_et() const { return m_element_type; }
-            float get_input_min() const { return m_input_min; }
-            float get_input_max() const { return m_input_max; }
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+            namespace set_1
+            {
+                NodeVector global_max_pool(const Node& node)
+                {
+                    return convpool::make_ng_pool<ngraph::op::MaxPool>(node);
+                }
 
-        private:
-            const element::Type m_element_type;
-            float m_input_min;
-            float m_input_max;
-        };
-    }
-}
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

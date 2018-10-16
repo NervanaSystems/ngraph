@@ -37,7 +37,7 @@
 HANDLER_DECL(replace_broadcast_like)
 {
     // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like" argument
-    auto broadcast_like = std::dynamic_pointer_cast<ngraph::op::BroadcastLike>(node);
+    auto broadcast_like = std::static_pointer_cast<ngraph::op::BroadcastLike>(node);
     ngraph::replace_node(
         node,
         std::make_shared<ngraph::op::Broadcast>(broadcast_like->get_argument(0),
