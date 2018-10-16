@@ -112,6 +112,46 @@ namespace ngraph
         ///     `s1[i]` represents the same scheme as `s2[i]` (see Dimension::same_scheme()).
         bool same_scheme(const PartialShape& s) const;
 
+        /// \brief Check whether this shape is a relaxation of the argument.
+        /// \param s The shape which is being compared against this shape.
+        /// \return `true` if this shape relaxes `s`, else `false`.
+        ///
+        /// Intuitively, a PartialShape `s1` is said to _relax_ `s2` (or _is a
+        /// relaxation_ of `s2`) if it is "more permissive" than `s2`. In other
+        /// words, `s1` is a relaxation of `s2` if anything you can form by
+        /// plugging things into the dynamic dimensions of `s2` is also
+        /// something you can form by plugging things into the dynamic
+        /// dimensions of `s1`, but not necessarily the other way around.
+        ///
+        /// `s1.relaxes(s2)` is equivalent to `s2.refines(s1)`.
+        ///
+        /// Formally, PartialShape `s1` is said to _relax_ PartialShape `s2`
+        /// if:
+        /// \li `s1` has dynamic rank, or
+        /// \li `s1` and `s2` both have static rank `r`, and for every `i` from `0` to `r-1`,
+        ///      either `s1[i]` is dynamic, or `s1[i]` == `s2[i]`.
+        bool relaxes(const PartialShape& s) const;
+
+        /// \brief Check whether this shape is a refinement of the argument.
+        /// \param s The shape which is being compared against this shape.
+        /// \return `true` if this shape refines `s`, else `false`.
+        ///
+        /// Intuitively, a PartialShape `s1` is said to _relax_ `s2` (or _is a
+        /// relaxation_ of `s2`) if it is "less permissive" than `s2`. In other
+        /// words, `s1` is a relaxation of `s2` if anything you can form by
+        /// plugging things into the dynamic dimensions of `s1` is also
+        /// something you can form by plugging things into the dynamic
+        /// dimensions of `s2`, but not necessarily the other way around.
+        ///
+        /// `s1.refines(s2)` is equivalent to `s2.relaxes(s1)`.
+        ///
+        /// Formally, PartialShape `s1` is said to _refine_ PartialShape `s2`
+        /// if:
+        /// \li `s2` has dynamic rank, or
+        /// \li `s1` and `s2` both have static rank `r`, and for every `i` from `0` to `r-1`,
+        ///      either `s2[i]` is dynamic, or `s1[i]` == `s2[i]`.
+        bool refines(const PartialShape& s) const;
+
         /// \brief Convert a static PartialShape to a Shape.
         /// \return A new Shape `s` where `s[i] = size_t((*this)[i])`.
         /// \throws std::invalid_argument If this PartialShape is dynamic.
