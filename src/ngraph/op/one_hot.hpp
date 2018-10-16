@@ -50,7 +50,9 @@ namespace ngraph
             /// \param arg          Node that produces the input tensor to be one-hot encoded.
             /// \param shape        The shape of the output tensor, including the new one-hot axis.
             /// \param one_hot_axis The index within the output shape of the new one-hot axis.
-            OneHot(const std::shared_ptr<Node>& arg, const Shape& shape, size_t one_hot_axis);
+            OneHot(const std::shared_ptr<Node>& arg,
+                   const PartialShape& shape,
+                   size_t one_hot_axis);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -60,7 +62,7 @@ namespace ngraph
         protected:
             void validate_and_infer_types() override;
 
-            Shape m_shape;
+            PartialShape m_shape;
             size_t m_one_hot_axis;
         };
     }
