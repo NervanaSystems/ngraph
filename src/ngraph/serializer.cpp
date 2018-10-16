@@ -109,6 +109,7 @@ using const_data_callback_t = shared_ptr<Node>(const string&, const element::Typ
 enum class OP_TYPEID
 {
 #include "ngraph/op/op_tbl.hpp"
+    UnknownOp
 };
 #undef NGRAPH_OP
 
@@ -123,7 +124,13 @@ static OP_TYPEID get_typeid(const string& s)
 #include "ngraph/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
-    return typeid_map.at(s);
+    OP_TYPEID rc = OP_TYPEID::UnknownOp;
+    auto it = typeid_map.find(s);
+    if (it != typeid_map.end())
+    {
+        rc = it->second;
+    }
+    return rc;
 }
 
 template <typename T>
@@ -208,8 +215,6 @@ void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t i
                        },
                        true);
     });
-
-    writer.close();
 }
 
 static string serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data)
@@ -1017,7 +1022,7 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::StopGradient>(args[0]);
                 break;
             }
-            default:
+            case OP_TYPEID::UnknownOp:
             {
                 stringstream ss;
                 ss << "unsupported op " << node_op;
@@ -1511,6 +1516,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["k"] = tmp->get_k();
         node["compute_max"] = tmp->get_compute_max();
         break;
+    }
+    case OP_TYPEID::UnknownOp: { break;
     }
     }
 #pragma GCC diagnostic pop
