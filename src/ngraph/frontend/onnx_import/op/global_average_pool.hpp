@@ -16,27 +16,30 @@
 
 #pragma once
 
-#include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/op.hpp"
+
+#include "core/node.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace onnx_import
     {
-        class DequantizeCPU : public Op
+        namespace op
         {
-        public:
-            DequantizeCPU(std::shared_ptr<Node> input,
-                          std::shared_ptr<Node> min,
-                          std::shared_ptr<Node> max,
-                          const element::Type& type);
-            const element::Type& get_dequantize_et() const { return m_element_type; }
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+            namespace set_1
+            {
+                /// \brief Convert ONNX GlobalAveragePool operation to an nGraph node.
+                ///
+                /// \param node   The ONNX node object representing this operation.
+                ///
+                /// \return The vector containing Ngraph nodes producing output of ONNX GlobalAveragePool
+                ///         operation.
+                NodeVector global_average_pool(const Node& node);
 
-        private:
-            const element::Type m_element_type;
-        };
-    }
-}
+            } // namespace set_1
+
+        } // namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

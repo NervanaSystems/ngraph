@@ -180,7 +180,7 @@ namespace ngraph
                 }
 
                 template <>
-                inline const std::string& get_value(const onnx::AttributeProto& attribute)
+                inline std::string get_value(const onnx::AttributeProto& attribute)
                 {
                     if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_STRING))
                     {
