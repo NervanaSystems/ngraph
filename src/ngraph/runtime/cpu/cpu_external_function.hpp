@@ -158,7 +158,11 @@ namespace ngraph
                 void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
                                                std::string output_name,
                                                bool dex);
-                // For a chain of concat ops, propagate pool offsets
+
+                // Find in-place concat ops and set appropriate memory pool offset for its arguments
+                void process_in_place_concat(std::list<std::shared_ptr<Node>> nodes);
+
+                // For a chain of concat ops, propagate memory pool offsets
                 void propagate_in_place_concat(std::shared_ptr<ngraph::op::Concat> concat);
                 bool computes_result(Node* node);
 

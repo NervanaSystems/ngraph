@@ -66,6 +66,9 @@ namespace ngraph
                             for (size_t i = 0; i < nargs; i++)
                             {
                                 auto arg_size = shape_size(arg_shapes[i]) * element_size;
+                                // if the argument pointer does not fall within the concat output buffer
+                                // (caused by propagate_in_place_output or propagate_in_place_input), we need to copy the data;
+                                // otherwise, we can skip the copy.
                                 if (arg_tensors[i] < out_tensor ||
                                     arg_tensors[i] >=
                                         reinterpret_cast<char*>(out_tensor) + out_size)

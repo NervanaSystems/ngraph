@@ -620,41 +620,8 @@ using namespace ngraph::runtime;
             }
         }
 
-        // concat
-        for (shared_ptr<Node> node : ordered_ops)
-        {
-            if (auto concat = std::dynamic_pointer_cast<ngraph::op::Concat>(node))
-            {
-                if (auto op_annotations = concat->get_op_annotations())
-                {
-                    auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
-                    if (in_place_oi_pairs.size() > 0)
-                    {
-                        bool found_last_concat = true;
-                        for (auto user : concat->get_users())
-                        {
-                            if (dynamic_pointer_cast<ngraph::op::Concat>(user))
-                            {
-                                found_last_concat = false;
-                                break;
-                            }
-                        }
-                        if (found_last_concat)
-                        {
-                            for (auto arg : concat->get_arguments())
-                            {
-                                if (auto arg_concat = dynamic_pointer_cast<ngraph::op::Concat>(arg))
-                                {
-                                    NGRAPH_DEBUG << "call propagate_in_place_concat for "
-                                                 << arg->get_name() << std::endl;
-                                    propagate_in_place_concat(arg_concat);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        // In place concatenation optimization
+        process_in_place_concat(ordered_ops);
 
         writer << "bool " << current_function->get_name() << "_t_en[" << tensor_index << "];\n";
 
@@ -1177,6 +1144,56 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
     } while (propagate_further);
 }
 
+void runtime::cpu::CPU_ExternalFunction::process_in_place_concat(
+    std::list<std::shared_ptr<Node>> nodes)
+{
+    for (shared_ptr<Node> node : nodes)
+    {
+        if (auto concat = std::dynamic_pointer_cast<ngraph::op::Concat>(node))
+        {
+            if (auto op_annotations = concat->get_op_annotations())
+            {
+                auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                if (in_place_oi_pairs.size() > 0)
+                {
+                    bool found_last_concat = true;
+
+                    for (auto user : concat->get_users())
+                    {
+                        if (dynamic_pointer_cast<ngraph::op::Concat>(user))
+                        {
+                            found_last_concat = false;
+                            break;
+                        }
+                    }
+                    if (found_last_concat)
+                    {
+                        auto output_tensor = &concat->get_output_tensor();
+                        auto offset = output_tensor->get_pool_offset();
+                        for (auto arg : concat->get_arguments())
+                        {
+                            auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
+                            auto input_tensor = &input_node->get_output_tensor();
+                            auto old_offset = input_tensor->get_pool_offset();
+                            input_tensor->set_pool_offset(offset);
+                            NGRAPH_DEBUG << "cpu_external_function: change offset, old offset is "
+                                         << old_offset << ", new offset is " << offset << std::endl;
+                            offset += input_tensor->size();
+                            if (auto arg_concat = dynamic_pointer_cast<ngraph::op::Concat>(arg))
+                            {
+                                NGRAPH_DEBUG
+                                    << "cpu_external_function: call propagate_in_place_concat for "
+                                    << arg->get_name() << std::endl;
+                                propagate_in_place_concat(arg_concat);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 void runtime::cpu::CPU_ExternalFunction::propagate_in_place_concat(
     shared_ptr<ngraph::op::Concat> concat)
 {
@@ -1268,54 +1285,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
     // Build executor
 
-    // concat
-    for (shared_ptr<Node> node : m_function->get_ordered_ops())
-    {
-        if (auto concat = std::dynamic_pointer_cast<ngraph::op::Concat>(node))
-        {
-            if (auto op_annotations = concat->get_op_annotations())
-            {
-                auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
-                if (in_place_oi_pairs.size() > 0)
-                {
-                    bool found_last_concat = true;
-                    auto output_tensor = &concat->get_output_tensor();
-                    auto offset = output_tensor->get_pool_offset();
-                    for (auto arg : concat->get_arguments())
-                    {
-                        auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
-                        auto input_tensor = &input_node->get_output_tensor();
-                        auto old_offset = input_tensor->get_pool_offset();
-                        input_tensor->set_pool_offset(offset);
-                        NGRAPH_DEBUG << "cpu_external_function: change offset, old offset is "
-                                     << old_offset << ", new offset is " << offset << std::endl;
-                        offset += input_tensor->size();
-                    }
-                    for (auto user : concat->get_users())
-                    {
-                        if (dynamic_pointer_cast<ngraph::op::Concat>(user))
-                        {
-                            found_last_concat = false;
-                            break;
-                        }
-                    }
-                    if (found_last_concat)
-                    {
-                        for (auto arg : concat->get_arguments())
-                        {
-                            if (auto arg_concat = dynamic_pointer_cast<ngraph::op::Concat>(arg))
-                            {
-                                NGRAPH_DEBUG
-                                    << "cpu_external_function: call propagate_in_place_concat for "
-                                    << arg->get_name() << std::endl;
-                                propagate_in_place_concat(arg_concat);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    // In place concatenation optimization
+    process_in_place_concat(m_function->get_ordered_ops());
 
     // Intermediates
     if (m_function->get_temporary_pool_size())
