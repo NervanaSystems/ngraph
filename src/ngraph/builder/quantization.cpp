@@ -44,7 +44,7 @@ namespace ngraph
             float scale =
                 builder::quantization_util::get_quantize_scale(min, max, type.is_signed());
             auto offset = op::Constant::create(element::f32, Shape{1}, {0});
-            auto quantize_scale = op::Constant::create(element::f32, Shape{1}, {scale});
+            auto quantize_scale = op::Constant::create(type, Shape{1}, {scale});
             return make_shared<op::Quantize>(input, quantize_scale, offset, type, axes, round_mode);
         }
 
