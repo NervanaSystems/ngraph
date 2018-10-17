@@ -21,7 +21,7 @@ import setuptools
 import os
 import distutils.ccompiler
 
-__version__ = '0.7.0'
+__version__ = '0.9.0'
 
 PYNGRAPH_SOURCE_DIR = os.path.abspath(os.path.dirname(__file__))
 NGRAPH_DEFAULT_INSTALL_DIR = os.environ.get('HOME')
