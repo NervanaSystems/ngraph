@@ -70,10 +70,10 @@ if (NGRAPH_GPU_ENABLE)
             -gencode=arch=compute_62,code=sm_62;
 	    -gencode=arch=compute_70,code=sm_70;
 	    -gencode=arch=compute_70,code=compute_70)
-    endif()
 
-    set_source_files_properties( ${CUDA_SRC} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
-    cuda_compile(CUDA_OBJ ${CUDA_SRC} STATIC)
+        set_source_files_properties( ${CUDA_SRC} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
+        cuda_compile(CUDA_OBJ ${CUDA_SRC} STATIC)
+    endif()
 
     add_library(gpu_backend SHARED ${SRC} ${CUDA_OBJ})
     set_target_properties(gpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
