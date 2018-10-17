@@ -96,12 +96,14 @@ Not currently a comprehensive list.
    * :doc:`product`
    * :doc:`quantize`
    * :doc:`relu`
+   * :doc:`result`
    * :doc:`sigmoid`
    * :doc:`sign`
    * :doc:`sin`
    * :doc:`sinh`
    * :doc:`softmax`
    * :doc:`sqrt`
+   * :doc:`subtract`
    * :doc:`tan`
    * :doc:`tanh`
 
@@ -159,11 +161,13 @@ Not currently a comprehensive list.
    product.rst
    quantize.rst
    relu.rst
+   result.rst
    sigmoid.rst
    sign.rst
    sin.rst
    sinh.rst
    softmax.rst
    sqrt.rst
+   subtract.rst
    tan.rst
    tanh.rst
