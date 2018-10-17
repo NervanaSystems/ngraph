@@ -557,7 +557,7 @@ void ngraph::pass::ConstantFolding::construct_constant_quantize()
     auto constant_label =
         make_shared<pattern::op::Label>(element::f32, Shape{2}, pattern::has_class<op::Constant>());
     auto q_scale = op::Constant::create(element::f32, Shape{}, {1});
-    auto q_offset = op::Constant::create(element::i8, Shape{}, {1});
+    auto q_offset = op::Constant::create(element::i8, Shape{}, {0});
     auto mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
     auto quant_op =
         make_shared<op::Quantize>(constant_label, q_scale, q_offset, element::i8, AxisSet{}, mode);
@@ -573,12 +573,17 @@ void ngraph::pass::ConstantFolding::construct_constant_quantize()
         auto quant_match = pattern_map[quant];
         auto quantize_op = dynamic_pointer_cast<op::Quantize>(quant_match);
         auto args = quant_match->get_arguments();
-        auto scale = dynamic_pointer_cast<op::Constant>(args[1]);
-        auto offset = dynamic_pointer_cast<op::Constant>(args[2]);
+        auto scale = static_pointer_cast<op::Constant>(args[1]);
+        auto offset = static_pointer_cast<op::Constant>(args[2]);
 
         auto type = quant_match->get_element_type();
 
         if (constant_match->get_element_type() != element::f32)
+        {
+            return false;
+        }
+
+        if (quantize_op->get_round_mode() != op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO)
         {
             return false;
         }
