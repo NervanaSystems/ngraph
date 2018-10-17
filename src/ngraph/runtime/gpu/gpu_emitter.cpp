@@ -176,14 +176,25 @@ void runtime::gpu::GPU_Emitter::emit_ArgMin(EMIT_ARGS)
         external_function, writer, node, args, out, reduce_op);
 }
 
-void runtime::gpu::GPU_Emitter::emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t reduce_mode)
+void runtime::gpu::GPU_Emitter::emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t reduce_op)
 {
     if (out[0].get_size() == 0)
     {
         return;
     }
-    auto argmax = static_cast<const ngraph::op::ArgMax*>(node);
-    std::vector<size_t> axes{argmax->get_reduction_axis()};
+
+    std::vector<size_t> axes;
+    if(reduce_op = CUDNN_REDUCE_TENSOR_MIN)
+    {
+        auto argmin = static_cast<const ngraph::op::ArgMin*>(node);
+        axes = argmin->get_reduction_axis();
+    }
+    else
+    {
+        auto argmax = static_cast<const ngraph::op::ArgMax*>(node);
+        axes = argmax->get_reduction_axis();
+    }
+
     auto axis_set = AxisSet(axes);
 
     std::vector<element::Type> dtypes{args[0].get_element_type(), out[0].get_element_type()};
@@ -192,7 +203,7 @@ void runtime::gpu::GPU_Emitter::emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t 
     {
         auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
-        auto index = cudnn_emitter->build_reduce_forward(reduce_mode,
+        auto index = cudnn_emitter->build_reduce_forward(reduce_op,
                                                          dtypes,
                                                          args[0].get_shape(),
                                                          axis_set,
