@@ -525,7 +525,7 @@ namespace ngraph
                 }
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto lstm_index = mkldnn_emitter->build_rnn<ngraph::op::Lstm>(node, args, out);
-                auto& deps = mkldnn_emitter->get_primitive_deps(lstm_index);
+                auto& deps = mkldnn_emitter->get_primitive_deps(lstm_index[0]);
 
                 writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
                        << args[0].get_name() << ");\n";
@@ -545,7 +545,7 @@ namespace ngraph
                        << ", ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
 
                 writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                       << to_string(lstm_index) << ");\n";
+                       << to_string(lstm_index[0]) << ");\n";
             }
 
             template <>
@@ -553,7 +553,7 @@ namespace ngraph
             {
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto rnn_index = mkldnn_emitter->build_rnn<ngraph::op::Rnn>(node, args, out);
-                auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index);
+                auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index[0]);
 
                 writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
                        << args[0].get_name() << ");\n";
@@ -571,8 +571,8 @@ namespace ngraph
                        << out[1].get_name() << ");\n";
                 writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[7])
                        << ", ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
-                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, " << to_string(rnn_index)
-                       << ");\n";
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(rnn_index[0]) << ");\n";
             }
 
             void CPU_Emitter::emitBatchNorm(CPU_ExternalFunction* external_function,

@@ -480,9 +480,9 @@ namespace ngraph
                                                 const double eps);
 
                 template <typename OP>
-                std::vector<size_t>& build_rnn(const ngraph::Node* node,
-                                               const std::vector<TensorViewWrapper>& args,
-                                               const std::vector<TensorViewWrapper>& out)
+                std::vector<size_t> build_rnn(const ngraph::Node* node,
+                                              const std::vector<TensorViewWrapper>& args,
+                                              const std::vector<TensorViewWrapper>& out)
                 {
                     auto rnn_node = static_cast<const OP*>(node);
                     auto src_sequence_length_max =
@@ -566,15 +566,16 @@ namespace ngraph
                                              wei_iter_reorder);
                 }
 
-                size_t build_rnn_forward(const mkldnn::memory::desc& src_layer_desc,
-                                         const mkldnn::memory::desc& src_iter_desc,
-                                         const mkldnn::memory::desc& weights_layer_desc,
-                                         const mkldnn::memory::desc& weights_iter_desc,
-                                         const mkldnn::memory::desc& bias_desc,
-                                         const mkldnn::memory::desc& dst_layer_desc,
-                                         const mkldnn::memory::desc& dst_iter_desc,
-                                         const mkldnn::memory::desc& wei_layer_reorder_desc,
-                                         const mkldnn::memory::desc& wei_iter_reorder_desc);
+                std::vector<size_t>
+                    build_rnn_forward(const mkldnn::memory::desc& src_layer_desc,
+                                      const mkldnn::memory::desc& src_iter_desc,
+                                      const mkldnn::memory::desc& weights_layer_desc,
+                                      const mkldnn::memory::desc& weights_iter_desc,
+                                      const mkldnn::memory::desc& bias_desc,
+                                      const mkldnn::memory::desc& dst_layer_desc,
+                                      const mkldnn::memory::desc& dst_iter_desc,
+                                      const mkldnn::memory::desc& wei_layer_reorder_desc,
+                                      const mkldnn::memory::desc& wei_iter_reorder_desc);
 
                 size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                     const mkldnn::memory::desc& result_desc,

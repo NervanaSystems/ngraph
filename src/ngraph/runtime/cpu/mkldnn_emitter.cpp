@@ -1054,7 +1054,7 @@ size_t MKLDNNEmitter::build_batchnorm_backward(const mkldnn::memory::desc& weigh
     return batchnorm_index;
 }
 
-std::vector<size_t>&
+std::vector<size_t>
     MKLDNNEmitter::build_rnn_forward(const mkldnn::memory::desc& src_layer_desc,
                                      const mkldnn::memory::desc& src_iter_desc,
                                      const mkldnn::memory::desc& weights_layer_desc,
@@ -1080,10 +1080,10 @@ std::vector<size_t>&
         this->build_reorder(weights_iter_desc, wei_iter_reorder_desc);
 
     auto& weights_layer_reorder_deps = this->get_primitive_deps(weight_layer_reorder_index);
-    auto& weights_iter_reorder_deps = this->get_primitive_deps(weight_layer_reorder_index);
+    auto& weights_iter_reorder_deps = this->get_primitive_deps(weight_iter_reorder_index);
 
     mkldnn::rnn_cell::desc rnn_cell(mkldnn::algorithm::vanilla_lstm);
-    mkldnn::rnn_forward::desc rnn_layer_desc(mkldnn::prop_kind::forward_inference,
+    mkldnn::rnn_forward::desc rnn_layer_desc(mkldnn::prop_kind::forward_training,
                                              rnn_cell,
                                              mkldnn::rnn_direction::unidirectional_left2right,
                                              src_layer_desc,
@@ -1101,14 +1101,10 @@ std::vector<size_t>&
         new MKLDNNWorkspace(rnn_layer_prim_desc.workspace_primitive_desc().get_size()));
     auto workspace_buf_index = insert_workspace(workspace);
 
-    auto ws_weights_layer_index =
-        build_memory_primitive(rnn_layer_prim_desc.weights_layer_primitive_desc().desc());
     auto workspace_wei_layer = std::unique_ptr<MKLDNNWorkspace>(
         new MKLDNNWorkspace(rnn_layer_prim_desc.weights_layer_primitive_desc().get_size()));
     auto workspace_wei_layer_buf_index = insert_workspace(workspace_wei_layer);
 
-    auto ws_weights_iter_index =
-        build_memory_primitive(rnn_layer_prim_desc.weights_iter_primitive_desc().desc());
     auto workspace_wei_iter = std::unique_ptr<MKLDNNWorkspace>(
         new MKLDNNWorkspace(rnn_layer_prim_desc.weights_iter_primitive_desc().get_size()));
     auto workspace_wei_iter_buf_index = insert_workspace(workspace_wei_iter);
@@ -1123,6 +1119,7 @@ std::vector<size_t>&
         static_cast<mkldnn::memory>(*m_mkldnn_primitives[dst_layer_index]),
         static_cast<mkldnn::memory>(*m_mkldnn_primitives[dst_iter_index]),
         static_cast<mkldnn::memory>(*m_mkldnn_primitives[workspace_index])));
+
     m_primitive_deps[rnn_index] = {src_layer_index,
                                    src_iter_index,
                                    weights_layer_index,
@@ -1131,13 +1128,17 @@ std::vector<size_t>&
                                    dst_layer_index,
                                    dst_iter_index,
                                    workspace_index,
-                                   workspace_buf_index ws_weights_layer_index,
+                                   workspace_buf_index,
+                                   weights_layer_reorder_deps[1],
                                    workspace_wei_layer_buf_index,
-                                   ws_weights_iter_index,
-                                   workspace_wei_iter_buf_index};
+                                   weights_iter_reorder_deps[1],
+                                   workspace_wei_iter_buf_index,
+                                   weights_layer_reorder_deps[0],
+                                   weights_iter_reorder_deps[0]};
 
-    std::vector<size_t> index{rnn_index, weight_layer_reorder_index, weight_iter_reorder_index};
-    return index;
+    std::vector<size_t> primitive_index{
+        rnn_index, weight_layer_reorder_index, weight_iter_reorder_index};
+    return primitive_index;
 }
 
 size_t MKLDNNEmitter::build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,

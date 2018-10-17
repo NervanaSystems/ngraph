@@ -49,25 +49,22 @@ namespace ngraph
                 auto& dst_iter_tensor = external_function->get_tensor_data(out[1].get_name());
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto& index = mkldnn_emitter->build_rnn<ngraph::op::Rnn>(node, args, out);
-                auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index);
+                auto index = mkldnn_emitter->build_rnn<ngraph::op::Rnn>(node, args, out);
+                auto& deps = mkldnn_emitter->get_primitive_deps(index[0]);
 
-                auto functor_weights_layer_reorder = [&, index[1] ](CPURuntimeContext * ctx)
-                {
+                auto functor_weights_layer_reorder = [&](CPURuntimeContext* ctx) {
                     cpu::mkldnn_utils::set_memory_ptr(
                         ctx, deps[9], ctx->mkldnn_workspaces[deps[10]]);
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, index[1]);
                 };
 
-                auto functor_weights_iter_reorder = [&, index[2] ](CPURuntimeContext * ctx)
-                {
+                auto functor_weights_iter_reorder = [&](CPURuntimeContext* ctx) {
                     cpu::mkldnn_utils::set_memory_ptr(
                         ctx, deps[11], ctx->mkldnn_workspaces[deps[12]]);
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, index[1]);
                 };
 
-                auto functor_rnn = [&, index[0] ](CPURuntimeContext * ctx)
-                {
+                auto functor_rnn = [&](CPURuntimeContext* ctx) {
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], src_layer_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], src_iter_tensor);
                     //cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], weights_layer_tensor);
