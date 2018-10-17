@@ -63,7 +63,6 @@ namespace ngraph
                         m_thread_pool_devices.push_back(std::unique_ptr<Eigen::ThreadPoolDevice>(
                             new Eigen::ThreadPoolDevice(m_thread_pools[i].get(), GetNumCores())));
                     }
-                    mkldnn::engine global_cpu_engine(mkldnn::engine::cpu, 0);
                 }
 
                 CPUExecutor& GetCPUExecutor()
@@ -71,8 +70,9 @@ namespace ngraph
                     static CPUExecutor cpu_executor(NGRAPH_CPU_THREAD_POOLS);
                     return cpu_executor;
                 }
+
+                mkldnn::engine global_cpu_engine(mkldnn::engine::cpu, 0);
             }
         }
     }
 }
-
