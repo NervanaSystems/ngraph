@@ -184,7 +184,7 @@ void runtime::gpu::GPU_Emitter::emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t 
     }
 
     size_t axis;
-    if(reduce_op == CUDNN_REDUCE_TENSOR_MIN)
+    if (reduce_op == CUDNN_REDUCE_TENSOR_MIN)
     {
         auto argmin = static_cast<const ngraph::op::ArgMin*>(node);
         axis = argmin->get_reduction_axis();
