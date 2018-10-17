@@ -14,9 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <algorithm>
 #include <functional>
+#include <iterator>
+#include <map>
 #include <string>
+#include <unordered_map>
 
 #include "core/attribute.hpp"
 #include "op/abs.hpp"
@@ -89,47 +91,194 @@ namespace ngraph
         {
             namespace error
             {
-                struct unknown_operation : ngraph_error
+                struct UnknownOperator : ngraph_error
                 {
-                    explicit unknown_operation(const std::string& op_type)
-                        : ngraph_error{"unknown operation: " + op_type}
+                    explicit UnknownOperator(const std::string& op_type)
+                        : ngraph_error{"unknown operator: \"" + op_type + "\""}
+                    {
+                    }
+                };
+
+                struct UnsupportedVersion : ngraph_error
+                {
+                    explicit UnsupportedVersion(std::int64_t version)
+                        : ngraph_error{"unsupported operator set version: " +
+                                       std::to_string(version)}
                     {
                     }
                 };
 
             } // namespace error
 
-            class ops_bridge
+            class OperatorsBridge
             {
             public:
-                ops_bridge(const ops_bridge&) = delete;
-                ops_bridge& operator=(const ops_bridge&) = delete;
-                ops_bridge(ops_bridge&&) = delete;
-                ops_bridge& operator=(ops_bridge&&) = delete;
+                OperatorsBridge(const OperatorsBridge&) = delete;
+                OperatorsBridge& operator=(const OperatorsBridge&) = delete;
+                OperatorsBridge(OperatorsBridge&&) = delete;
+                OperatorsBridge& operator=(OperatorsBridge&&) = delete;
 
-                static NodeVector make_ng_nodes(const Node& node)
+                static const OperatorSet& get_operator_set(std::int64_t version)
                 {
-                    return ops_bridge::get()(node);
-                }
-
-                static bool is_op_type_supported(const std::string& op_type)
-                {
-                    return ops_bridge::get().is_op_type_supported_(op_type);
+                    return instance().get_operator_set_version(version);
                 }
 
             private:
-                std::map<std::string, std::function<NodeVector(const Node&)>> m_map;
+                std::unordered_map<std::string,
+                                   std::map<std::int64_t, std::function<NodeVector(const Node&)>>>
+                    m_map;
 
-                static const ops_bridge& get()
+                static const OperatorsBridge& instance()
                 {
-                    static ops_bridge instance;
+                    static OperatorsBridge instance;
                     return instance;
                 }
 
-#define REGISTER_OPERATOR(name_, version_, fn_)                                                    \
-    m_map.emplace(name_, std::bind(op::set_##version_::fn_, std::placeholders::_1))
+                const Operator& get_operator(const std::string& name, std::int64_t version) const
+                {
+                    auto op = m_map.find(name);
+                    if (op == std::end(m_map))
+                    {
+                        throw error::UnknownOperator{name};
+                    }
+                    auto it = op->second.find(version);
+                    if (it == std::end(op->second))
+                    {
+                        throw error::UnsupportedVersion{version};
+                    }
+                    return it->second;
+                }
 
-                ops_bridge()
+                const OperatorSet& get_operator_set_version_1() const
+                {
+                    static OperatorSet operator_set;
+                    if (operator_set.empty())
+                    {
+                        for (const auto& op : m_map)
+                        {
+                            for (const auto& it : op.second)
+                            {
+                                if (it.first == 1)
+                                {
+                                    operator_set.emplace(op.first, it.second);
+                                }
+                            }
+                        }
+                    }
+                    return operator_set;
+                }
+
+                const OperatorSet& get_operator_set_version_2() const
+                {
+                    static OperatorSet operator_set;
+                    if (operator_set.empty())
+                    {
+                        operator_set = get_operator_set_version_1();
+                    }
+                    return operator_set;
+                }
+
+                const OperatorSet& get_operator_set_version_3() const
+                {
+                    static OperatorSet operator_set;
+                    if (operator_set.empty())
+                    {
+                        operator_set = get_operator_set_version_2();
+                    }
+                    return operator_set;
+                }
+
+                const OperatorSet& get_operator_set_version_4() const
+                {
+                    static OperatorSet operator_set;
+                    if (operator_set.empty())
+                    {
+                        operator_set = get_operator_set_version_3();
+                    }
+                    return operator_set;
+                }
+
+                const OperatorSet& get_operator_set_version_5() const
+                {
+                    static OperatorSet operator_set;
+                    if (operator_set.empty())
+                    {
+                        operator_set = get_operator_set_version_4();
+                    }
+                    return operator_set;
+                }
+
+                const OperatorSet& get_operator_set_version_6() const
+                {
+                    static OperatorSet operator_set;
+                    if (operator_set.empty())
+                    {
+                        operator_set = get_operator_set_version_5();
+                    }
+                    return operator_set;
+                }
+
+                const OperatorSet& get_operator_set_version_7() const
+                {
+                    static OperatorSet operator_set;
+                    if (operator_set.empty())
+                    {
+                        operator_set = get_operator_set_version_6();
+                    }
+                    return operator_set;
+                }
+
+                const OperatorSet& get_operator_set_version_8() const
+                {
+                    static OperatorSet operator_set;
+                    if (operator_set.empty())
+                    {
+                        operator_set = get_operator_set_version_7();
+                    }
+                    return operator_set;
+                }
+
+                const OperatorSet& get_operator_set_version_9() const
+                {
+                    static OperatorSet operator_set;
+                    if (operator_set.empty())
+                    {
+                        operator_set = get_operator_set_version_8();
+                    }
+                    return operator_set;
+                }
+
+#define OPERATOR_SET_NAME(version_) get_operator_set_version_##version_()
+
+#define GET_OPERATOR_SET(version_)                                                                 \
+    case version_:                                                                                 \
+        return OPERATOR_SET_NAME(version_)
+
+#define OPERATOR_SET_NAME_HELPER(version_) OPERATOR_SET_NAME(version_)
+
+#define DEFAULT_OPERATOR_SET() return OPERATOR_SET_NAME_HELPER(ONNX_OPSET_VERSION)
+
+                const OperatorSet& get_operator_set_version(std::int64_t version) const
+                {
+                    switch (version)
+                    {
+                        GET_OPERATOR_SET(1);
+                        GET_OPERATOR_SET(2);
+                        GET_OPERATOR_SET(3);
+                        GET_OPERATOR_SET(4);
+                        GET_OPERATOR_SET(5);
+                        GET_OPERATOR_SET(6);
+                        GET_OPERATOR_SET(7);
+                        GET_OPERATOR_SET(8);
+                        GET_OPERATOR_SET(9);
+                    default: DEFAULT_OPERATOR_SET();
+                    }
+                }
+
+#define REGISTER_OPERATOR(name_, version_, fn_)                                                    \
+    m_map[name_].emplace(version_, std::bind(op::set_##version_::fn_, std::placeholders::_1))
+
+                OperatorsBridge()
                 {
                     REGISTER_OPERATOR("Abs", 1, abs);
                     REGISTER_OPERATOR("Add", 1, add);
@@ -202,38 +351,15 @@ namespace ngraph
                     REGISTER_OPERATOR("Unsqueeze", 1, unsqueeze);
                     REGISTER_OPERATOR("Xor", 1, logical_xor);
                 }
-
-                NodeVector operator()(const Node& node) const
-                {
-                    auto it = m_map.find(node.op_type());
-                    if (it == m_map.end())
-                    {
-                        throw detail::error::unknown_operation{node.op_type()};
-                    }
-
-                    std::function<NodeVector(const Node&)> factory{it->second};
-                    return factory(node);
-                }
-
-                bool is_op_type_supported_(const std::string& op_type) const
-                {
-                    auto it = m_map.find(op_type);
-                    return !(it == m_map.end());
-                }
             };
 
         } // namespace detail
 
         namespace ops_bridge
         {
-            NodeVector make_ng_nodes(const Node& node)
+            const OperatorSet& get_operator_set(std::int64_t version)
             {
-                return detail::ops_bridge::make_ng_nodes(node);
-            }
-
-            bool is_op_type_supported(const std::string& op_type)
-            {
-                return detail::ops_bridge::is_op_type_supported(op_type);
+                return detail::OperatorsBridge::get_operator_set(version);
             }
 
         } // namespace ops_bridge
