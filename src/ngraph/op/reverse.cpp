@@ -32,6 +32,11 @@ op::Reverse::Reverse(const shared_ptr<Node>& arg, const AxisSet& reversed_axes)
 
 void op::Reverse::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     auto input_shape = get_input_shape(0);
     auto input_rank = input_shape.size();
 
