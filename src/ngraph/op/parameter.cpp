@@ -22,11 +22,11 @@ using namespace std;
 using namespace ngraph;
 
 op::Parameter::Parameter(const element::Type& element_type,
-                         const Shape& shape,
+                         const PartialShape& pshape,
                          const bool cacheable)
     : Op("Parameter", {})
     , m_cacheable(cacheable)
-    , m_shape(shape)
+    , m_partial_shape(pshape)
     , m_element_type(element_type)
 {
     constructor_validate_and_infer_types();
@@ -35,13 +35,13 @@ op::Parameter::Parameter(const element::Type& element_type,
 void op::Parameter::validate_and_infer_types()
 {
     Op::validate_and_infer_types();
-    set_output_type(0, m_element_type, m_shape);
+    set_output_type(0, m_element_type, m_partial_shape);
 }
 
 shared_ptr<Node> op::Parameter::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Parameter>(m_element_type, m_shape);
+    return make_shared<Parameter>(m_element_type, m_partial_shape);
 }
 
 void op::Parameter::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

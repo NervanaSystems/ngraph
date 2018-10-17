@@ -46,6 +46,11 @@ op::Convolution::Convolution(const shared_ptr<Node>& data_batch,
 
 void op::Convolution::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     auto& data_batch_shape = get_input_shape(0);
     auto& data_batch_et = get_input_element_type(0);
     auto& filters_shape = get_input_shape(1);
@@ -220,6 +225,11 @@ op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_sha
 
 void op::ConvolutionBackpropData::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     // Backprop to data is itself convolution, with inputs/outputs/attributes transmogrified as
     // follows.
     //
@@ -410,6 +420,11 @@ op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
 
 void op::ConvolutionBackpropFilters::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     // Backprop to filters is itself convolution, with inputs/outputs/attributes transmogrified as
     // follows.
     //
