@@ -46,7 +46,7 @@ namespace ngraph
                 SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::reverse);
 
                 auto functor = [&, kernel, arg_shape, result_shape, reversed_axes](
-                    CPURuntimeContext* ctx, int arena) {
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     kernel(arg_tensor, out_tensor, arg_shape, result_shape, reversed_axes);
                 };
                 functors.emplace_back(functor);

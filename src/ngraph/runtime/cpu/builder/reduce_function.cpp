@@ -57,7 +57,7 @@ namespace ngraph
                 if (reduction_axes.empty())
                 {
                     size_t size = args[0].get_size() * args[0].get_element_type().size();
-                    auto functor = [&, size](CPURuntimeContext* ctx, int arena) {
+                    auto functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         memcpy(out_tensor, arg0_tensor, size);
                     };
                     functors.emplace_back(functor);
@@ -73,14 +73,14 @@ namespace ngraph
                                           runtime::cpu::kernel::reduce_function_1rd);
 
                     auto functor = [&, kernel, arg0_shape, out_shape, reduction_axes](
-                        CPURuntimeContext* ctx, int arena) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         kernel(arg0_tensor,
                                arg1_tensor,
                                out_tensor,
                                arg0_shape,
                                out_shape,
                                reduction_axes,
-                               arena,
+                               ectx->arena,
                                reducer_external_function);
                     };
                     functors.emplace_back(functor);
@@ -95,14 +95,14 @@ namespace ngraph
                                   runtime::cpu::kernel::reduce_function_2d_2rd);
 
                     auto functor = [&, kernel, arg0_shape, out_shape, reduction_axes](
-                        CPURuntimeContext* ctx, int arena) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         kernel(arg0_tensor,
                                arg1_tensor,
                                out_tensor,
                                arg0_shape,
                                out_shape,
                                reduction_axes,
-                               arena,
+                               ectx->arena,
                                reducer_external_function);
                     };
                     functors.emplace_back(functor);
@@ -117,14 +117,14 @@ namespace ngraph
                                   runtime::cpu::kernel::reduce_function_3d_2rd);
 
                     auto functor = [&, kernel, arg0_shape, out_shape, reduction_axes](
-                        CPURuntimeContext* ctx, int arena) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         kernel(arg0_tensor,
                                arg1_tensor,
                                out_tensor,
                                arg0_shape,
                                out_shape,
                                reduction_axes,
-                               arena,
+                               ectx->arena,
                                reducer_external_function);
                     };
                     functors.emplace_back(functor);

@@ -47,8 +47,6 @@ namespace ngraph
             typedef std::chrono::time_point<Clock> Timestamp;
             typedef std::chrono::microseconds Timescale;
 
-            typedef function<void(CPURuntimeContext*, int)> CPUFunctor;
-
             extern "C" {
             struct CPURuntimeContext
             {
@@ -68,6 +66,8 @@ namespace ngraph
             {
                 int arena;
             };
+
+            typedef std::function<void(CPURuntimeContext*, CPUExecutionContext*)> CPUKernelFunctor;
         }
     }
 }

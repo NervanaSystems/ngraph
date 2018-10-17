@@ -1463,7 +1463,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                     {
                                         start_ts = cpu::Clock::now();
                                     }
-                                    (*functor)(ctx, 0);
+                                    CPUExecutionContext ectx{0};
+                                    (*functor)(ctx, &ectx);
                                     if (runtime::cpu::IsTracingEnabled())
                                     {
                                         ctx->op_durations[profiler_count++] =
@@ -1538,7 +1539,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
                     {
                         start_ts = cpu::Clock::now();
                     }
-                    (*functor)(ctx, 0);
+                    CPUExecutionContext ectx{0};
+                    (*functor)(ctx, &ectx);
                     if (runtime::cpu::IsTracingEnabled())
                     {
                         ctx->op_durations[profiler_count++] =

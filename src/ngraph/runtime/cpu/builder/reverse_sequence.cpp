@@ -60,14 +60,14 @@ namespace ngraph
                 }
 
                 auto functor = [&, kernel, arg_shape, batch_axis, sequence_axis](
-                    CPURuntimeContext* ctx, int arena) {
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     kernel(arg_tensor,
                            out_tensor,
                            arg_shape,
                            batch_axis,
                            sequence_axis,
                            seq_len_tensor,
-                           arena);
+                           ectx->arena);
                 };
                 functors.emplace_back(functor);
             }

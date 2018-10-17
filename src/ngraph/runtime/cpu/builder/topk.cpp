@@ -36,7 +36,7 @@ namespace ngraph
                 auto& tensor_data = external_function->get_tensor_data();
 
                 const ngraph::op::TopK* topk = static_cast<const ngraph::op::TopK*>(node);
-                function<void(CPURuntimeContext*, int)> functor;
+                CPUKernelFunctor functor;
 
                 auto& arg_tensor = tensor_data[args[0].get_name()];
                 auto& out_indices_tensor = tensor_data[out[0].get_name()];
@@ -59,7 +59,7 @@ namespace ngraph
                     if (is_int64)
                     {
                         functor = [&, in_shape, out_shape, axis, k, compute_max](
-                            CPURuntimeContext* ctx, int arena) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::topk<float, int64_t>(
                                 static_cast<float*>(arg_tensor),
                                 static_cast<int64_t*>(out_indices_tensor),
@@ -74,7 +74,7 @@ namespace ngraph
                     else
                     {
                         functor = [&, in_shape, out_shape, axis, k, compute_max](
-                            CPURuntimeContext* ctx, int arena) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::topk<float, int32_t>(
                                 static_cast<float*>(arg_tensor),
                                 static_cast<int32_t*>(out_indices_tensor),
@@ -92,7 +92,7 @@ namespace ngraph
                     if (is_int64)
                     {
                         functor = [&, in_shape, out_shape, axis, k, compute_max](
-                            CPURuntimeContext* ctx, int arena) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::topk<double, int64_t>(
                                 static_cast<double*>(arg_tensor),
                                 static_cast<int64_t*>(out_indices_tensor),
@@ -107,7 +107,7 @@ namespace ngraph
                     else
                     {
                         functor = [&, in_shape, out_shape, axis, k, compute_max](
-                            CPURuntimeContext* ctx, int arena) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::topk<double, int32_t>(
                                 static_cast<double*>(arg_tensor),
                                 static_cast<int32_t*>(out_indices_tensor),

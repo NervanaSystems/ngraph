@@ -58,7 +58,8 @@ namespace ngraph
                         input_desc, result_desc, lower_bounds, out_shape);
                     auto& deps = mkldnn_emitter->get_primitive_deps(slice_index);
 
-                    auto functor = [&, slice_index](CPURuntimeContext* ctx, int arena) {
+                    auto functor = [&, slice_index](CPURuntimeContext* ctx,
+                                                    CPUExecutionContext* ectx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, slice_index);
@@ -80,7 +81,7 @@ namespace ngraph
 
                         auto functor =
                             [&, kernel, arg_shape, out_shape, lower_bounds, upper_bounds, strides](
-                                CPURuntimeContext* ctx, int arena) {
+                                CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                                 kernel(arg_tensor,
                                        out_tensor,
                                        arg_shape,
@@ -88,7 +89,7 @@ namespace ngraph
                                        lower_bounds,
                                        upper_bounds,
                                        strides,
-                                       arena);
+                                       ectx->arena);
                             };
                         functors.emplace_back(functor);
                     }
@@ -102,9 +103,13 @@ namespace ngraph
                                               runtime::cpu::kernel::slice);
 
                         auto functor = [&, kernel, arg_shape, out_shape, lower_bounds](
-                            CPURuntimeContext* ctx, int arena) {
-                            kernel(
-                                arg_tensor, out_tensor, arg_shape, out_shape, lower_bounds, arena);
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            kernel(arg_tensor,
+                                   out_tensor,
+                                   arg_shape,
+                                   out_shape,
+                                   lower_bounds,
+                                   ectx->arena);
                         };
                         functors.emplace_back(functor);
                     }

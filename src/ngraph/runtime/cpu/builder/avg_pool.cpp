@@ -68,7 +68,8 @@ namespace ngraph
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
 
-                    auto functor = [&, avg_pool_index](CPURuntimeContext* ctx, int arena) {
+                    auto functor = [&, avg_pool_index](CPURuntimeContext* ctx,
+                                                       CPUExecutionContext* ectx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, avg_pool_index);
@@ -91,7 +92,7 @@ namespace ngraph
                                     padding_below,
                                     padding_above,
                                     include_padding_in_avg_computation](CPURuntimeContext* ctx,
-                                                                        int arena) {
+                                                                        CPUExecutionContext* ectx) {
                         kernel(arg0_tensor,
                                out_tensor,
                                arg0_shape,
@@ -144,7 +145,8 @@ namespace ngraph
                         apb->get_padding_above());
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
-                    auto functor = [&, avg_pool_index](CPURuntimeContext* ctx, int arena) {
+                    auto functor = [&, avg_pool_index](CPURuntimeContext* ctx,
+                                                       CPUExecutionContext* ectx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], delta_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, avg_pool_index);
@@ -166,7 +168,7 @@ namespace ngraph
                                     padding_below,
                                     padding_above,
                                     include_padding_in_avg_computation](CPURuntimeContext* ctx,
-                                                                        int arena) {
+                                                                        CPUExecutionContext* ectx) {
                         kernel(delta_tensor,
                                out_tensor,
                                delta_shape,

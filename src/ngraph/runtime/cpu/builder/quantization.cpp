@@ -39,7 +39,7 @@ namespace ngraph
 
                 const ngraph::op::Dequantize* dequantize =
                     static_cast<const ngraph::op::Dequantize*>(node);
-                function<void(CPURuntimeContext*, int)> functor;
+                CPUKernelFunctor functor;
 
                 auto& arg0_tensor = tensor_data[args[0].get_name()];
                 auto& arg1_tensor = tensor_data[args[1].get_name()];
@@ -55,7 +55,7 @@ namespace ngraph
                     if (out[0].get_element_type() == element::f32)
                     {
                         functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx,
-                                                                     int arena) {
+                                                                     CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::dequantize<int8_t>(
                                 static_cast<int8_t*>(arg0_tensor),
                                 static_cast<float*>(arg1_tensor),
@@ -69,7 +69,7 @@ namespace ngraph
                     else if (out[0].get_element_type() == element::f64)
                     {
                         functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx,
-                                                                     int arena) {
+                                                                     CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::dequantize<int8_t>(
                                 static_cast<int8_t*>(arg0_tensor),
                                 static_cast<double*>(arg1_tensor),
@@ -90,7 +90,7 @@ namespace ngraph
                     if (out[0].get_element_type() == element::f32)
                     {
                         functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx,
-                                                                     int arena) {
+                                                                     CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::dequantize<uint8_t>(
                                 static_cast<uint8_t*>(arg0_tensor),
                                 static_cast<float*>(arg1_tensor),
@@ -104,7 +104,7 @@ namespace ngraph
                     else if (out[0].get_element_type() == element::f64)
                     {
                         functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx,
-                                                                     int arena) {
+                                                                     CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::dequantize<uint8_t>(
                                 static_cast<uint8_t*>(arg0_tensor),
                                 static_cast<double*>(arg1_tensor),
@@ -136,7 +136,7 @@ namespace ngraph
 
                 const ngraph::op::Quantize* quantize =
                     static_cast<const ngraph::op::Quantize*>(node);
-                function<void(CPURuntimeContext*, int)> functor;
+                CPUKernelFunctor functor;
 
                 auto& arg0_tensor = tensor_data[args[0].get_name()];
                 auto& arg1_tensor = tensor_data[args[1].get_name()];
@@ -152,7 +152,7 @@ namespace ngraph
                     if (out[0].get_element_type() == element::i8)
                     {
                         functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx,
-                                                                     int arena) {
+                                                                     CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::quantize<float>(
                                 static_cast<float*>(arg0_tensor),
                                 static_cast<float*>(arg1_tensor),
@@ -166,7 +166,7 @@ namespace ngraph
                     else if (out[0].get_element_type() == element::u8)
                     {
                         functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx,
-                                                                     int arena) {
+                                                                     CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::quantize<float>(
                                 static_cast<float*>(arg0_tensor),
                                 static_cast<float*>(arg1_tensor),
@@ -187,7 +187,7 @@ namespace ngraph
                     if (out[0].get_element_type() == element::i8)
                     {
                         functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx,
-                                                                     int arena) {
+                                                                     CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::quantize<double>(
                                 static_cast<double*>(arg0_tensor),
                                 static_cast<double*>(arg1_tensor),
@@ -201,7 +201,7 @@ namespace ngraph
                     else if (out[0].get_element_type() == element::u8)
                     {
                         functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx,
-                                                                     int arena) {
+                                                                     CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::quantize<double>(
                                 static_cast<double*>(arg0_tensor),
                                 static_cast<double*>(arg1_tensor),

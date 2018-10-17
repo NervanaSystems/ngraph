@@ -61,7 +61,7 @@ namespace ngraph
                 if (!arg0_shape.size())
                 {
                     size_t size = args[0].get_element_type().size();
-                    auto functor = [&, size](CPURuntimeContext* ctx, int arena) {
+                    auto functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         memcpy(out_tensor, arg1_tensor, size);
                     };
                     functors.emplace_back(functor);
@@ -80,7 +80,7 @@ namespace ngraph
 
                     auto functor =
                         [&, kernel, arg0_shape, arg1_shape, lower_bounds, upper_bounds, strides](
-                            CPURuntimeContext* ctx, int arena) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             kernel(arg0_tensor,
                                    arg1_tensor,
                                    out_tensor,
@@ -89,7 +89,7 @@ namespace ngraph
                                    lower_bounds,
                                    upper_bounds,
                                    strides,
-                                   arena);
+                                   ectx->arena);
                         };
                     functors.emplace_back(functor);
                 }
@@ -103,14 +103,14 @@ namespace ngraph
                                           runtime::cpu::kernel::replace_slice);
 
                     auto functor = [&, kernel, arg0_shape, arg1_shape, lower_bounds](
-                        CPURuntimeContext* ctx, int arena) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         kernel(arg0_tensor,
                                arg1_tensor,
                                out_tensor,
                                arg0_shape,
                                arg1_shape,
                                lower_bounds,
-                               arena);
+                               ectx->arena);
                     };
                     functors.emplace_back(functor);
                 }
