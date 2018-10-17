@@ -94,12 +94,14 @@ Not currently a comprehensive list.
    * :doc:`power`
    * :doc:`product`
    * :doc:`relu`
+   * :doc:`result`
    * :doc:`sigmoid`
    * :doc:`sign`
    * :doc:`sin`
    * :doc:`sinh`
    * :doc:`softmax`
    * :doc:`sqrt`
+   * :doc:`subtract`
    * :doc:`tan`
    * :doc:`tanh`
 
@@ -155,11 +157,13 @@ Not currently a comprehensive list.
    power.rst
    product.rst
    relu.rst
+   result.rst
    sigmoid.rst
    sign.rst
    sin.rst
    sinh.rst
    softmax.rst
    sqrt.rst
+   subtract.rst
    tan.rst
    tanh.rst
