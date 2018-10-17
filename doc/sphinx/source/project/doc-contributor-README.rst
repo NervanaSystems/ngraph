@@ -127,6 +127,7 @@ To build documentation locally, run:
 
    .. code-block:: console
 
+      $ sudo apt-get install python3-sphinx
       $ pip3 install [-I] Sphinx==1.7.5 [--user] 
       $ pip3 install [-I] breathe numpy [--user]
       $ cd doc/sphinx/
