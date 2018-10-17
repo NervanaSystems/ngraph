@@ -20,6 +20,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/op/quantize.hpp"
 
 namespace ngraph
 {
@@ -34,7 +35,8 @@ namespace ngraph
                           QUANT* output,
                           const Shape& input_shape,
                           const Shape& scale_offset_shape,
-                          const AxisSet& axes)
+                          const AxisSet& axes,
+                          op::Quantize::RoundMode round_mode)
             {
                 CoordinateTransform input_transform(input_shape);
                 CoordinateTransform scale_offset_transform(scale_offset_shape);
@@ -43,11 +45,34 @@ namespace ngraph
                 {
                     Coordinate scale_offset_coord = project(input_coord, axes);
 
-                    // apply scale and offset
-                    REAL qvalue =
-                        std::round(input[input_transform.index(input_coord)] /
-                                   scale[scale_offset_transform.index(scale_offset_coord)]) +
-                        offset[scale_offset_transform.index(scale_offset_coord)];
+                    // apply scale
+                    REAL qvalue = input[input_transform.index(input_coord)] /
+                                  scale[scale_offset_transform.index(scale_offset_coord)];
+
+                    REAL abs_qvalue = std::abs(qvalue);
+                    REAL sign_qvalue = qvalue < 0.0 ? -1.0 : 1.0;
+                    REAL half = static_cast<REAL>(0.5);
+
+                    // round
+                    if (round_mode == op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO)
+                    {
+                        qvalue = sign_qvalue * (abs_qvalue + half)
+                    }
+                    else if (round_mode == op::Quantize::RoundMode::HALF_TOWARD_ZERO)
+                    {
+                        qvalue = sign_qvalue * (abs_qvalue - half)
+                    }
+                    else if (round_mode == op::Quantize::RoundMode::HALF_TOWARD_POSITIVE_INFINITY)
+                    {
+                        qvalue += half;
+                    }
+                    else if (round_mode == op::Quantize::RoundMode::HALF_TOWARD_NEGATIVE_INFINITY)
+                    {
+                        qvalue -= half;
+                    }
+
+                    // apply offset
+                    qvalue += offset[scale_offset_transform.index(scale_offset_coord)];
 
                     // clamp
                     qvalue = std::max<REAL>(qvalue,

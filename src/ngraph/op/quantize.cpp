@@ -79,9 +79,6 @@ void op::Quantize::validate_and_infer_types()
         << "Offset shape (" << get_input_shape(OFFSET)
         << ") must match input shape projected along the quantization axes (" << projected_shape
         << ")";
-
-    NODE_VALIDATION_ASSERT(this, m_round_mode == RoundMode::HALF_AWAY_FROM_ZERO)
-        << "Only RoundMode = HALF_AWAY_FROM_ZERO is supported, for now";
 }
 
 shared_ptr<Node> op::Quantize::copy_with_new_args(const NodeVector& new_args) const

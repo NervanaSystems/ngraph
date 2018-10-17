@@ -30,6 +30,9 @@ namespace ngraph
             enum class RoundMode
             {
                 HALF_AWAY_FROM_ZERO,
+                HALF_TOWARD_ZERO,
+                HALF_TOWARD_POSITIVE_INFINITY,
+                HALF_TOWARD_NEGATIVE_INFINITY,
                 HALF_TO_EVEN
             };
 

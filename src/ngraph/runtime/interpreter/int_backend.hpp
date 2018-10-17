@@ -887,7 +887,8 @@ private:
                                        out[0]->get_data_ptr<uint8_t>(),
                                        args[0]->get_shape(),
                                        args[1]->get_shape(),
-                                       quantize->get_axes());
+                                       quantize->get_axes(),
+                                       quantize->get_round_mode());
             }
             else if (type == element::i8)
             {
@@ -897,7 +898,8 @@ private:
                                        out[0]->get_data_ptr<int8_t>(),
                                        args[0]->get_shape(),
                                        args[1]->get_shape(),
-                                       quantize->get_axes());
+                                       quantize->get_axes(),
+                                       quantize->get_round_mode());
             }
             else
             {

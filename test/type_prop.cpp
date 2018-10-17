@@ -7066,40 +7066,6 @@ TEST(type_prop, quantize_offset_shape_mismatch_different_rank_fails)
     }
 }
 
-TEST(type_prop, quantize_offset_unsupported_round_mode_fails)
-{
-    Shape batch_shape{64, 3, 480, 640};
-    Shape scale_shape{64, 3};
-    Shape offset_shape{64, 3};
-    element::Type unquantized_type = element::f32;
-    element::Type quantized_type = element::i8;
-    element::Type batch_type = unquantized_type;
-    element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
-    AxisSet axes{0, 1};
-    auto round_mode = op::Quantize::RoundMode::HALF_TO_EVEN;
-
-    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
-    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-
-    try
-    {
-        auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
-        FAIL() << "Mismatch of offset argument shape with required shape not detected";
-    }
-    catch (const NodeValidationError& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Only RoundMode = HALF_AWAY_FROM_ZERO is supported, for now");
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
 TEST(type_prop, dequantize_f32_from_i8_nchw_per_channel_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
