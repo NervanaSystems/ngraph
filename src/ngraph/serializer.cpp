@@ -149,6 +149,59 @@ static json write(const ngraph::Node&, bool binary_constant_data);
 static string
     serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data);
 
+static json write_dimension(Dimension d)
+{
+    if (d.is_static())
+    {
+        return size_t(d);
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+static json write_partial_shape(const PartialShape& s)
+{
+    if (s.rank().is_dynamic())
+    {
+        return nullptr;
+    }
+    else
+    {
+        std::vector<json> vals(size_t(s.rank()));
+        for (size_t i = 0; i < vals.size(); i++)
+        {
+            vals[i] = write_dimension(s[i]);
+        }
+        return vals;
+    }
+}
+
+static PartialShape read_partial_shape(const json& j)
+{
+    if (j.is_null())
+    {
+        return PartialShape::dynamic();
+    }
+    else
+    {
+        std::vector<Dimension> dims(j.size());
+        for (size_t i = 0; i < j.size(); i++)
+        {
+            if (j[i].is_null())
+            {
+                dims[i] = Dimension::dynamic();
+            }
+            else
+            {
+                dims[i] = size_t(j[i]);
+            }
+        }
+        return PartialShape(dims);
+    }
+}
+
 static json write_element_type(const ngraph::element::Type& n)
 {
     json j;
@@ -839,7 +892,8 @@ static shared_ptr<ngraph::Function>
                 auto element_type = read_element_type(type_node_js.at("element_type"));
                 auto shape = type_node_js.at("shape");
                 auto cacheable = get_or_default<bool>(node_js, "cacheable", false);
-                node = make_shared<op::Parameter>(element_type, shape, cacheable);
+                node =
+                    make_shared<op::Parameter>(element_type, read_partial_shape(shape), cacheable);
                 break;
             }
             case OP_TYPEID::Power:
@@ -1389,7 +1443,7 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Parameter:
     {
         auto tmp = dynamic_cast<const op::Parameter*>(&n);
-        node["shape"] = tmp->get_shape();
+        node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
         node["cacheable"] = tmp->get_cacheable();
         node["element_type"] = write_element_type(tmp->get_element_type());
         break;
