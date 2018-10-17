@@ -99,37 +99,33 @@ namespace ngraph
 
             } // namespace error
 
-            class ops_bridge
+            class OperatorsBridge
             {
             public:
-                ops_bridge(const ops_bridge&) = delete;
-                ops_bridge& operator=(const ops_bridge&) = delete;
-                ops_bridge(ops_bridge&&) = delete;
-                ops_bridge& operator=(ops_bridge&&) = delete;
+                OperatorsBridge(const OperatorsBridge&) = delete;
+                OperatorsBridge& operator=(const OperatorsBridge&) = delete;
+                OperatorsBridge(OperatorsBridge&&) = delete;
+                OperatorsBridge& operator=(OperatorsBridge&&) = delete;
 
-                static NodeVector make_ng_nodes(const Node& node)
-                {
-                    return ops_bridge::get()(node);
-                }
-
+                static NodeVector make_ng_nodes(const Node& node) { return instance()(node); }
                 static bool is_op_type_supported(const std::string& op_type)
                 {
-                    return ops_bridge::get().is_op_type_supported_(op_type);
+                    return instance().is_op_type_supported_(op_type);
                 }
 
             private:
                 std::map<std::string, std::function<NodeVector(const Node&)>> m_map;
 
-                static const ops_bridge& get()
+                static const OperatorsBridge& instance()
                 {
-                    static ops_bridge instance;
+                    static OperatorsBridge instance;
                     return instance;
                 }
 
 #define REGISTER_OPERATOR(name_, version_, fn_)                                                    \
     m_map.emplace(name_, std::bind(op::set_##version_::fn_, std::placeholders::_1))
 
-                ops_bridge()
+                OperatorsBridge()
                 {
                     REGISTER_OPERATOR("Abs", 1, abs);
                     REGISTER_OPERATOR("Add", 1, add);
@@ -228,12 +224,12 @@ namespace ngraph
         {
             NodeVector make_ng_nodes(const Node& node)
             {
-                return detail::ops_bridge::make_ng_nodes(node);
+                return detail::OperatorsBridge::make_ng_nodes(node);
             }
 
             bool is_op_type_supported(const std::string& op_type)
             {
-                return detail::ops_bridge::is_op_type_supported(op_type);
+                return detail::OperatorsBridge::is_op_type_supported(op_type);
             }
 
         } // namespace ops_bridge
