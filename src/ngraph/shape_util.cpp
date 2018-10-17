@@ -14,6 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
+
 #include "ngraph/shape_util.hpp"
 
 using namespace ngraph;

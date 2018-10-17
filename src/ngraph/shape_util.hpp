@@ -73,10 +73,18 @@ namespace ngraph
              result_pos < axis_values.size() + new_axis_pos_value_pairs.size();
              result_pos++)
         {
-            auto search_it = std::find_if(
-                new_axis_pos_value_pairs.begin(),
-                new_axis_pos_value_pairs.end(),
-                [result_pos](std::pair<size_t, AXIS_VALUE> p) { return p.first == result_pos; });
+            // Would be nice to use std::find_if here but would rather not #include <algorithm> in
+            // this header
+            auto search_it = new_axis_pos_value_pairs.begin();
+
+            while (search_it != new_axis_pos_value_pairs.end())
+            {
+                if (search_it->first == result_pos)
+                {
+                    break;
+                }
+                ++search_it;
+            }
 
             if (search_it == new_axis_pos_value_pairs.end())
             {
