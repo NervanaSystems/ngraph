@@ -27,7 +27,7 @@ Inputs
 +-----------------+-------------------------+------------------------------------------+
 | ``scale``       | Same as ``output``      | ``input`` shape projected onto ``axes``  |
 +-----------------+-------------------------+------------------------------------------+
-| ``offset``      | Same as ``input``       | ``input`` shape projected along ``axes`` |
+| ``offset``      | Same as ``input``       | ``input`` shape projected onto ``axes``  |
 +-----------------+-------------------------+------------------------------------------+
 
 Attributes
