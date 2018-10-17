@@ -14,27 +14,28 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <onnx-ml.pb.h>
+#include "ngraph/node.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/max_pool.hpp"
 
-#include "model.hpp"
+#include "utils/convpool.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        Model::Model(const onnx::ModelProto& model_proto)
-            : m_model_proto{&model_proto}
+        namespace op
         {
-            for (const auto& id : m_model_proto->opset_import())
+            namespace set_1
             {
-                // onnx.proto(.3): the empty string ("") or absence of this field implies
-                // the operator set that is defined as part of the ONNX specification.
-                if (id.domain().empty())
+                NodeVector global_max_pool(const Node& node)
                 {
-                    m_opset_version = id.version();
+                    return convpool::make_ng_pool<ngraph::op::MaxPool>(node);
                 }
-            }
-        }
+
+            } // namespace set_1
+
+        } // namespace op
 
     } // namespace onnx_import
 

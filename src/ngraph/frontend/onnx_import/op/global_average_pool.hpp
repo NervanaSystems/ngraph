@@ -14,27 +14,31 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <onnx-ml.pb.h>
+#pragma once
 
-#include "model.hpp"
+#include "ngraph/node_vector.hpp"
+
+#include "core/node.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        Model::Model(const onnx::ModelProto& model_proto)
-            : m_model_proto{&model_proto}
+        namespace op
         {
-            for (const auto& id : m_model_proto->opset_import())
+            namespace set_1
             {
-                // onnx.proto(.3): the empty string ("") or absence of this field implies
-                // the operator set that is defined as part of the ONNX specification.
-                if (id.domain().empty())
-                {
-                    m_opset_version = id.version();
-                }
-            }
-        }
+                /// \brief Convert ONNX GlobalAveragePool operation to an nGraph node.
+                ///
+                /// \param node   The ONNX node object representing this operation.
+                ///
+                /// \return The vector containing Ngraph nodes producing output of ONNX GlobalAveragePool
+                ///         operation.
+                NodeVector global_average_pool(const Node& node);
+
+            } // namespace set_1
+
+        } // namespace op
 
     } // namespace onnx_import
 

@@ -45,9 +45,17 @@ std::shared_ptr<Node> make_zero(const std::shared_ptr<Node>& node)
 NodeVector make_zeros(std::shared_ptr<Node> x)
 {
     NodeVector zeros;
-    for (size_t i = 0; i < x->get_outputs().size(); ++i)
+    if (x->get_outputs().size() > 1)
     {
-        zeros.push_back(make_zero(get_output_element(x, i)));
+        auto goes = op::get_output_elements(x);
+        for (size_t i = 0; i < goes.size(); ++i)
+        {
+            zeros.push_back(make_zero(goes.at(i)));
+        }
+    }
+    else
+    {
+        zeros.push_back(make_zero(x));
     }
     return zeros;
 }

@@ -35,7 +35,8 @@ class ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
         PAD,
         DEQUANTIZE,
         UNARY,
-        BINARY
+        BINARY,
+        QUANTIZE
     };
 
 public:
@@ -47,6 +48,7 @@ public:
         construct_constant_pad();
         construct_constant_unary();
         construct_constant_binary();
+        construct_constant_quantize();
         construct_constant_dequantize();
     }
 
@@ -65,6 +67,7 @@ public:
             case CFTransformations::UNARY: construct_constant_unary(); break;
             case CFTransformations::BINARY: construct_constant_binary(); break;
             case CFTransformations::DEQUANTIZE: construct_constant_dequantize(); break;
+            case CFTransformations::QUANTIZE: construct_constant_quantize(); break;
             }
         }
     }
@@ -75,5 +78,6 @@ private:
     void construct_constant_pad();
     void construct_constant_unary();
     void construct_constant_binary();
+    void construct_constant_quantize();
     void construct_constant_dequantize();
 };
