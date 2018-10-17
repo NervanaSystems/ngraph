@@ -25,7 +25,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Quantize operation
-        ///        Maps real input (r) to quantized output (q) using scale (s), offset (o) and round mode:  
+        ///        Maps real input (r) to quantized output (q) using scale (s), offset (o) and round mode:
         ///        q = ROUND(r / s) + o
         class Quantize : public ngraph::op::Op
         {

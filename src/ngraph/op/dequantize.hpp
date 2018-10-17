@@ -25,7 +25,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Dequantize operation
-        ///        Maps quantized input (q) to real output (r) using scale (s) and offset (o):  
+        ///        Maps quantized input (q) to real output (r) using scale (s) and offset (o):
         ///        r = (q - o) * s
         class Dequantize : public ngraph::op::Op
         {
