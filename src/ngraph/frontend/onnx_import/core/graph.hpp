@@ -23,6 +23,7 @@
 
 #include "ngraph/op/parameter_vector.hpp"
 
+#include "operator_set.hpp"
 #include "value_info.hpp"
 
 namespace ngraph
@@ -32,7 +33,7 @@ namespace ngraph
         class Graph
         {
         public:
-            explicit Graph(const onnx::GraphProto& proto);
+            explicit Graph(const onnx::GraphProto& proto, const OperatorSet& opset);
 
             const std::vector<Node>& get_nodes() const { return m_nodes; }
             const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }
@@ -44,6 +45,11 @@ namespace ngraph
             }
 
             const std::string& get_name() const { return m_graph_proto->name(); }
+            NodeVector make_ng_nodes(const Node& node) const
+            {
+                return m_opset->at(node.op_type())(node);
+            }
+
         private:
             const onnx::GraphProto* m_graph_proto;
             std::vector<Node> m_nodes;
@@ -52,6 +58,7 @@ namespace ngraph
             op::ParameterVector m_parameters;
             std::map<std::string, std::shared_ptr<ngraph::Node>> m_ng_node_cache;
             std::map<std::string, Tensor> m_initializers;
+            const OperatorSet* m_opset;
         };
 
         inline std::ostream& operator<<(std::ostream& outs, const Graph& graph)
