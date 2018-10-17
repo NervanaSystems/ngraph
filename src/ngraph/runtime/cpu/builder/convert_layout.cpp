@@ -57,7 +57,7 @@ namespace ngraph
                     //hack
                     auto gconvbias = std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(
                         *(begin(node->get_users())));
-                    
+
                     cout << "gconv = " << gconv << ", gconv_bias = " << gconvbias << "\n";
                     if (gconv)
                     {

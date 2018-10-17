@@ -61,7 +61,8 @@ std::unordered_set<std::type_index>& runtime::cpu::mkldnn_utils::get_op_registry
         TI(ngraph::op::MaxPoolBackprop),
         TI(ngraph::op::Relu),
         TI(ngraph::op::ReluBackprop),
-        TI(ngraph::op::Reshape),};
+        TI(ngraph::op::Reshape),
+    };
     return s_op_registry;
 }
 
@@ -271,7 +272,8 @@ mkldnn::memory::data_type
 const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_format_string(memory::format fmt)
 {
     auto it = get_mkldnn_format_string_map().find(fmt);
-    if (it == get_mkldnn_format_string_map().end()) {
+    if (it == get_mkldnn_format_string_map().end())
+    {
         throw ngraph_error("No MKLDNN format exists for the given format type " +
                            std::to_string(fmt));
     }

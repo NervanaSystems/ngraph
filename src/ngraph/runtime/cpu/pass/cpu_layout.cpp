@@ -284,17 +284,18 @@ namespace ngraph
 
                     if (default_weights_format && use_bias)
                     {
-                        arg1_shape = std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node)
-                                         ->get_weights_dimensions();
-                        cout << "\t$$ cpu_layout: ConvolutionLayout GroupConvBias filterShapes :  " <<
-                                 arg1_shape <<" \n";
+                        arg1_shape =
+                            std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node)
+                                ->get_weights_dimensions();
+                        cout << "\t$$ cpu_layout: ConvolutionLayout GroupConvBias filterShapes :  "
+                             << arg1_shape << " \n";
                     }
                     else if (default_weights_format)
                     {
                         arg1_shape = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node)
                                          ->get_weights_dimensions();
-                        cout << "\t$$ cpu_layout: ConvolutionLayout ConvBias filterShapes :  " <<
-                                 arg1_shape <<" \n";
+                        cout << "\t$$ cpu_layout: ConvolutionLayout ConvBias filterShapes :  "
+                             << arg1_shape << " \n";
                     }
                     auto result_shape = node->get_output_shape(0);
                     auto filter_strides = convolution->get_window_movement_strides();
@@ -487,7 +488,11 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::GroupConvolutionBias)
                 {
-                    cout << " !! cpu_layout : GroupConvolutionBias called\n";
+                    auto num_groups =
+                        std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node)
+                            ->get_groups();
+                    cout << " !! cpu_layout : GroupConvolutionBias called. name: "
+                         << node->get_name() << ", num_groups: " << num_groups << "\n";
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
@@ -1841,7 +1846,7 @@ namespace ngraph
                             }
                             else
                             {
-                                throw ngraph_error("cpu_layout Slice" + e.message);
+                                throw ngraph_error(e.message);
                             }
                         }
                     }
@@ -1887,7 +1892,7 @@ namespace ngraph
                         }
                         catch (const mkldnn::error& e)
                         {
-                            throw ngraph_error("cpu_layout Concat" + e.message);
+                            throw ngraph_error(e.message);
                         }
                     }
                     else

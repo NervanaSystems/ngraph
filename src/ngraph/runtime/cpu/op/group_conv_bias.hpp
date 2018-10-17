@@ -27,20 +27,20 @@ namespace ngraph
         {
         public:
             GroupConvolutionBias(const std::shared_ptr<op::GroupConvolution>& conv,
-                            const std::shared_ptr<Node>& bias,
-                            const size_t groups,
-                            const bool with_relu = false);
+                                 const std::shared_ptr<Node>& bias,
+                                 const size_t groups,
+                                 bool with_relu);
 
             GroupConvolutionBias(const std::shared_ptr<Node>& data_batch,
-                            const std::shared_ptr<Node>& filters,
-                            const std::shared_ptr<Node>& bias,
-                            const Strides& window_movement_strides,
-                            const Strides& window_dilation_strides,
-                            const CoordinateDiff& padding_below,
-                            const CoordinateDiff& padding_above,
-                            const Strides& data_dilation_strides,
-                            const size_t groups,
-                            const bool with_relu = false);
+                                 const std::shared_ptr<Node>& filters,
+                                 const std::shared_ptr<Node>& bias,
+                                 const Strides& window_movement_strides,
+                                 const Strides& window_dilation_strides,
+                                 const CoordinateDiff& padding_below,
+                                 const CoordinateDiff& padding_above,
+                                 const Strides& data_dilation_strides,
+                                 const size_t groups,
+                                 bool with_relu);
 
             Shape get_weights_dimensions();
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
@@ -71,8 +71,8 @@ namespace ngraph
         namespace util
         {
             void validate_groupconvbias_shapes(const Shape& data_shape,
-                                                const Shape& filters_shape,
-                                                const Shape& bias_shape);
+                                               const Shape& filters_shape,
+                                               const Shape& bias_shape);
         }
     }
 }

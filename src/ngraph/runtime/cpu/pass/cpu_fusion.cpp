@@ -1614,7 +1614,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global_stats_folding()
 {
-    Shape shape_a{1, 32, 2, 2};  //GD: Copied shapes from cpu_fusion test for groupconv
+    Shape shape_a{1, 32, 2, 2}; //GD: Copied shapes from cpu_fusion test for groupconv
     //auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{32, 1, 1, 1};
     //auto B = make_shared<op::Parameter>(element::f32, shape_b);
@@ -1626,18 +1626,18 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
     //size_t num_groups = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
     auto resShape = std::make_shared<pattern::op::Label>(element::f32, shape_r);
     size_t num_groups = input->get_shape().at(1);
+    //size_t num = std::make_shared<pattern::op::Label>(element::f32, Shape{0});
 
     auto conv = std::make_shared<op::GroupConvolution>(input,
-                                                      filters,
-                                                      Strides{1, 1},
-                                                      Strides{1, 1},
-                                                      CoordinateDiff{0, 0},
-                                                      CoordinateDiff{0, 0},
-                                                      Strides{1, 1},
-                                                      num_groups,
-                                                      shape_r);
+                                                       filters,
+                                                       Strides{1, 1},
+                                                       Strides{1, 1},
+                                                       CoordinateDiff{0, 0},
+                                                       CoordinateDiff{0, 0},
+                                                       Strides{1, 1},
+                                                       input->get_shape().size(),
+                                                       shape_r);
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
-
 
     auto mean = std::make_shared<pattern::op::Label>(element::f32, Shape{32});
     auto var = std::make_shared<pattern::op::Label>(element::f32, Shape{32});
@@ -1648,83 +1648,154 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
     //TODO: add Relu as well for matching
     //auto prelu = std::make_shared<op::Relu>(bn);
 
+    ngraph::pattern::graph_rewrite_callback callback =
+        [input, filters, conv_label, mean, var, gamma, beta, eps](pattern::Matcher& m) {
 
-    ngraph::pattern::graph_rewrite_callback callback = [input, filters, num_groups, conv_label,
-                                                        mean, var, gamma, beta, eps](
-        pattern::Matcher& m) {
+            std::cout << " GD ****** found groupConv + batchNorm match ****** \n";
+            NGRAPH_DEBUG << "In callback for groupconv BatchNorm folding against node = "
+                         << m.get_match_root()->get_name();
+            auto pattern_map = m.get_pattern_map();
 
-        std::cout << " GD ****** found groupConv + batchNorm match ****** \n";
-        NGRAPH_DEBUG << "In callback for groupconv BatchNorm folding against node = "
-                     << m.get_match_root()->get_name();
-        auto pattern_map = m.get_pattern_map();
+            auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(m.get_match_root());
+            //auto m_conv = std::dynamic_pointer_cast<op::ConvolutionBias>(m_bn->get_argument(2));
+            auto conv_m = std::static_pointer_cast<op::GroupConvolution>(pattern_map[conv_label]);
 
+            if (conv_m->get_users().size() > 1)
+            {
+                return false;
+            }
 
-        auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(m.get_match_root());
-        //auto m_conv = std::dynamic_pointer_cast<op::ConvolutionBias>(m_bn->get_argument(2));
-        auto conv_m = std::static_pointer_cast<op::GroupConvolution>(pattern_map[conv_label]);
+            if (conv_m->get_shape().size() != 4)
+            {
+                return false;
+            }
 
-        if (conv_m->get_users().size() > 1)
-        {
-            return false;
-        }
-
-        if (conv_m->get_shape().size() != 4)
-        {
-            return false;
-        }
-
-        if (conv_m->get_groups() == 0)
-        {
-            std::cout << "\t cpu_fusion: num_groups == 0, can't fuse\n";
-            return false;
-        }
-        /*if (conv_m->with_relu())
+            if (conv_m->get_groups() == 0)
+            {
+                std::cout << "\t cpu_fusion: num_groups == 0, can't fuse\n";
+                return false;
+            }
+            /*if (conv_m->with_relu())
         {
             return false;
         }*/
 
-        //auto A_m = std::static_pointer_cast<op::Broadcast>(pattern_map[A_label]);
+            //auto A_m = std::static_pointer_cast<op::Broadcast>(pattern_map[A_label]);
 
-        // new weights = old weights * gamma / sqrt(variance + epsilon)
-        // new biases = (-mean) * gamma / sqrt(variance + epsilon) + beta
+            // new weights = old weights * gamma / sqrt(variance + epsilon)
+            // new biases = (-mean) * gamma / sqrt(variance + epsilon) + beta
 
-        auto bn_eps = op::Constant::create(element::f32, Shape{}, {m_bn->get_eps_value()});
+            auto bn_eps = op::Constant::create(element::f32, Shape{}, {m_bn->get_eps_value()});
 
-        auto var_eps = std::make_shared<op::Add>(
-            pattern_map[var],
-            std::make_shared<op::Broadcast>(bn_eps, pattern_map[var]->get_shape(), AxisSet{0}));
-        auto sqrt_var_eps = std::make_shared<op::Sqrt>(var_eps);
+            auto var_eps = std::make_shared<op::Add>(
+                pattern_map[var],
+                std::make_shared<op::Broadcast>(bn_eps, pattern_map[var]->get_shape(), AxisSet{0}));
+            auto sqrt_var_eps = std::make_shared<op::Sqrt>(var_eps);
 
-        auto weight_scaling = std::make_shared<op::Divide>(pattern_map[gamma], sqrt_var_eps);
+            auto weight_scaling = std::make_shared<op::Divide>(pattern_map[gamma], sqrt_var_eps);
 
-        std::cout << "\t--> cpu_fusion, weights shape: " << pattern_map[filters]->get_shape() << "\n";
-        auto weight_scaling_bcast = std::make_shared<op::Broadcast>(
+            std::cout << "\t--> cpu_fusion, input shape pmap: " << pattern_map[input]->get_shape()
+                      << "\n";
+            std::cout << "\t--> cpu_fusion, get_groups: " << conv_m->get_groups() << "\n";
+            std::cout << "\t--> cpu_fusion, weights shape: " << pattern_map[filters]->get_shape()
+                      << "\n";
+            auto weight_scaling_bcast = std::make_shared<op::Broadcast>(
                 weight_scaling, pattern_map[filters]->get_shape(), AxisSet{1, 2, 3});
 
-        auto new_weights = std::make_shared<op::Multiply>(pattern_map[filters], weight_scaling_bcast);
-        auto mean_gamma = std::make_shared<op::Multiply>(pattern_map[mean], weight_scaling);
-        auto new_biases = std::make_shared<op::Subtract>(pattern_map[beta], mean_gamma);
-        std::cout << "\t--> cpu_fusion, new_biases shape: " << new_biases->get_shape() << "\n";
-        std::cout << "\t--> cpu_fusion, subtract and weight_scaling.\n";
+            auto new_weights =
+                std::make_shared<op::Multiply>(pattern_map[filters], weight_scaling_bcast);
+            auto mean_gamma = std::make_shared<op::Multiply>(pattern_map[mean], weight_scaling);
+            auto new_biases = std::make_shared<op::Subtract>(pattern_map[beta], mean_gamma);
+            std::cout << "\t--> cpu_fusion, new_biases shape: " << new_biases->get_shape() << "\n";
+            std::cout << "\t--> cpu_fusion, subtract and weight_scaling.\n";
 
-        auto g_conv_bias =
-            std::make_shared<op::GroupConvolutionBias>(pattern_map[input],
-                                                        new_weights,
-                                                        new_biases,
-                                                        conv_m->get_window_movement_strides(),
-                                                        conv_m->get_window_dilation_strides(),
-                                                        conv_m->get_padding_below(),
-                                                        conv_m->get_padding_above(),
-                                                        conv_m->get_data_dilation_strides(),
-                                                        conv_m->get_groups(),
-                                                        false);
-        std::cout << "\t--> cpu_fusion: make_shared\n";
-        ngraph::replace_node(m.get_match_root(), g_conv_bias);
+            auto g_conv_bias =
+                std::make_shared<op::GroupConvolutionBias>(pattern_map[input],
+                                                           new_weights,
+                                                           new_biases,
+                                                           conv_m->get_window_movement_strides(),
+                                                           conv_m->get_window_dilation_strides(),
+                                                           conv_m->get_padding_below(),
+                                                           conv_m->get_padding_above(),
+                                                           conv_m->get_data_dilation_strides(),
+                                                           conv_m->get_groups(),
+                                                           false);
+            std::cout << "\t--> cpu_fusion: make_shared\n";
+            ngraph::replace_node(m.get_match_root(), g_conv_bias);
 
-        return true;
-    };
+            return true;
+        };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(bn, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::
+    construct_groupconv_batchnorm_global_stats_folding_relu()
+{
+    Shape shape_a{1, 32, 2, 2}; //GD: Copied shapes from cpu_fusion test for groupconv
+    Shape shape_b{32, 1, 1, 1};
+    Shape shape_r{1, 32, 2, 2};
+    Shape shape_bias{32};
+    Shape shape_num{0};
+
+    auto input = std::make_shared<pattern::op::Label>(element::f32, shape_a);
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, shape_b);
+    auto bias = std::make_shared<pattern::op::Label>(element::f32, shape_bias);
+    auto num = std::make_shared<pattern::op::Label>(element::f32, shape_num);
+    size_t num_groups = input->get_shape().at(1);
+
+    auto conv = std::make_shared<op::GroupConvolutionBias>(input,
+                                                           filters,
+                                                           bias,
+                                                           Strides{1, 1},
+                                                           Strides{1, 1},
+                                                           CoordinateDiff{0, 0},
+                                                           CoordinateDiff{0, 0},
+                                                           Strides{1, 1},
+                                                           input->get_shape().size(),
+                                                           false);
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+
+    // add Relu as well for matching
+    auto prelu = std::make_shared<op::Relu>(conv_label);
+
+    ngraph::pattern::graph_rewrite_callback callback =
+        [input, filters, bias, num, conv_label, prelu](pattern::Matcher& m) {
+
+            std::cout << " GD ****** found groupConvBias + Relu match ****** \n";
+            NGRAPH_DEBUG << "In callback for groupconvBias + Relu folding against node = "
+                         << m.get_match_root()->get_name();
+            auto pattern_map = m.get_pattern_map();
+
+            //auto conv_m = std::dynamic_pointer_cast<op::GroupConvolutionBias>(m.get_match_root());
+            auto conv_m = std::static_pointer_cast<op::GroupConvolution>(pattern_map[conv_label]);
+
+            if (conv_m->get_users().size() > 1)
+            {
+                NGRAPH_DEBUG << "GroupConvolutionBias has more than one user";
+                return false;
+            }
+
+            std::cout << "\t num_groups = " << conv_m->get_groups() << "\n";
+            auto g_conv_bias_relu = std::make_shared<op::GroupConvolutionBias>(
+                pattern_map[input], //conv_m->get_argument(0) vs pattern_map[input] ??
+                conv_m->get_argument(1),
+                conv_m->get_argument(2),
+                conv_m->get_window_movement_strides(),
+                conv_m->get_window_dilation_strides(),
+                conv_m->get_padding_below(),
+                conv_m->get_padding_above(),
+                conv_m->get_data_dilation_strides(),
+                conv_m->get_groups(),
+                true);
+            std::cout << "\t--> cpu_fusion : with_relu: make_shared\n";
+            ngraph::replace_node(m.get_match_root(), g_conv_bias_relu);
+
+            return true;
+        };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(prelu, callback);
     this->add_matcher(m);
 }
 

@@ -362,7 +362,8 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::LoopKernel>},
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
     {TI(ngraph::op::ConvolutionAdd), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionAdd>},
-    {TI(ngraph::op::GroupConvolutionBias), &runtime::cpu::CPU_Emitter::emit<op::GroupConvolutionBias>},
+    {TI(ngraph::op::GroupConvolutionBias),
+     &runtime::cpu::CPU_Emitter::emit<op::GroupConvolutionBias>},
 };
 
 static void

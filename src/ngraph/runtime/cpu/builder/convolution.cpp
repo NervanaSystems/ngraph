@@ -445,8 +445,8 @@ namespace ngraph
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                cout << "++ GD: builder_conv: inShape: "<<arg0_shape <<", wtShape: "<<arg1_shape <<
-                        ", resultShape << " << result_shape << "\n";
+                cout << "++ GD: builder_conv: inShape: " << arg0_shape
+                     << ", wtShape: " << arg1_shape << ", resultShape << " << result_shape << "\n";
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     Strides window_dilation_strides_adjusted;
@@ -509,8 +509,8 @@ namespace ngraph
                 auto arg2_shape = args[2].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                cout << "++ GD: builder_conv: inShape: "<<arg0_shape <<", wtShape: "<<arg1_shape <<
-                        ", resultShape << " << result_shape << "\n";
+                cout << "++ GD: builder_conv: inShape: " << arg0_shape
+                     << ", wtShape: " << arg1_shape << ", resultShape << " << result_shape << "\n";
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     Strides window_dilation_strides_adjusted;
@@ -530,6 +530,17 @@ namespace ngraph
                     auto padding_above = convolution->get_padding_above();
                     auto filter_strides = convolution->get_window_movement_strides();
 
+                    const float ops_scale = 1.f;
+                    const float ops_alpha = -0.f; // relu negative slope
+                    const float ops_beta = 0.f;
+
+                    mkldnn::post_ops ops;
+                    if (convolution->with_relu())
+                    {
+                        ops.append_eltwise(
+                            ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+                    }
+
                     size_t conv_index =
                         mkldnn_emitter->build_convolution_forward(input_data_desc,
                                                                   weights_desc,
@@ -538,7 +549,8 @@ namespace ngraph
                                                                   filter_strides,
                                                                   window_dilation_strides_adjusted,
                                                                   padding_below,
-                                                                  padding_above);
+                                                                  padding_above,
+                                                                  ops);
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 

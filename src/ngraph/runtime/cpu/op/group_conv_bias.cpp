@@ -16,8 +16,8 @@
 
 #include <numeric>
 
-#include "group_conv_bias.hpp"
 #include "group_conv.hpp"
+#include "group_conv_bias.hpp"
 
 //#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -27,8 +27,8 @@ using namespace std;
 using namespace ngraph;
 
 void op::util::validate_groupconvbias_shapes(const Shape& data_shape,
-                                        const Shape& filters_shape,
-                                        const Shape& bias_shape)
+                                             const Shape& filters_shape,
+                                             const Shape& bias_shape)
 {
     cout << "** GroupConvolutionBias validate_groupconvbias_shapes called \n";
     if (bias_shape.size() != 1)
@@ -38,19 +38,22 @@ void op::util::validate_groupconvbias_shapes(const Shape& data_shape,
     }
     if (bias_shape[0] != filters_shape[0] && bias_shape[0] != filters_shape[0] * filters_shape[1])
     {
-        cout << "bias shape: " << bias_shape <<", filter_shape: " << filters_shape << "\n";
+        cout << "bias shape: " << bias_shape << ", filter_shape: " << filters_shape << "\n";
         throw ngraph_error(
-            "GroupConvolutionBias bias element size does not match number of filters. bias_size = " +
+            "GroupConvolutionBias bias element size does not match number of filters. bias_size "
+            "= " +
             std::to_string(bias_shape[0]) + ", num_filters = " + std::to_string(filters_shape[0]));
     }
 
     // Note: the subtle match here
     if (data_shape[1] != filters_shape[0] && data_shape[1] != filters_shape[0] * filters_shape[1])
     {
-        cout << " GroupConvolutionBias: data_shape: " << data_shape <<", filter_shape: " << filters_shape <<"\n";
+        cout << " GroupConvolutionBias: data_shape: " << data_shape
+             << ", filter_shape: " << filters_shape << "\n";
         // CHECK: Should we support if data_shape[1] == filters_shape[0] * filters_shape[1] ??
         throw ngraph_error(
-            "GroupConvolution+bias data and filter have different number of channels: data_channel=" +
+            "GroupConvolution+bias data and filter have different number of channels: "
+            "data_channel=" +
             std::to_string(data_shape[1]) + ", filter_channel= " +
             std::to_string(filters_shape[0]));
     }
@@ -63,14 +66,17 @@ Shape op::GroupConvolutionBias::get_weights_dimensions()
     const size_t OC_IN_OUTPUT = 1;
     const size_t IC = 1;
 
+    cout << "\t Node name : " << get_name() << ", input_shape: " << get_inputs().at(0).get_shape()
+         << "\n";
+    Shape weights_shape_groups{get_inputs().at(1).get_shape()};
+    cout << "\tnum_groups: " << get_groups() << ", get_wts_dims: " << weights_shape_groups << "\n";
+
     // when called from convertLayout, m_groups is 0, don't know why?!
     // hack for now
-    if (get_groups() == 0)
+    if (get_groups() == 0 || get_groups() > get_inputs().at(0).get_shape().at(1))
     {
         m_groups = get_inputs().at(0).get_shape().at(1);
     }
-    Shape weights_shape_groups{get_inputs().at(1).get_shape()};
-    cout << "\tnum_groups: "<< get_groups() <<", get_wts_dims: " << weights_shape_groups << "\n";
     // adjust output and channel given a number of groups
 
     weights_shape_groups.at(OC) = get_shape().at(OC_IN_OUTPUT) / get_groups();
@@ -86,9 +92,9 @@ Shape op::GroupConvolutionBias::get_weights_dimensions()
 }
 
 op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolution>& conv,
-                                                const shared_ptr<Node>& bias,
-                                                const size_t groups,
-                                                const bool with_relu)
+                                               const shared_ptr<Node>& bias,
+                                               const size_t groups,
+                                               bool with_relu)
     : Op("GroupConvolutionBias",
          check_single_output_args({conv->get_argument(0), conv->get_argument(1), bias}))
     , m_window_movement_strides(conv->get_window_movement_strides())
@@ -113,15 +119,15 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolu
 }
 
 op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<Node>& data_batch,
-                                     const shared_ptr<Node>& filters,
-                                     const shared_ptr<Node>& bias,
-                                     const Strides& window_movement_strides,
-                                     const Strides& window_dilation_strides,
-                                     const CoordinateDiff& padding_below,
-                                     const CoordinateDiff& padding_above,
-                                     const Strides& data_dilation_strides,
-                                     const size_t groups,
-                                     const bool with_relu)
+                                               const shared_ptr<Node>& filters,
+                                               const shared_ptr<Node>& bias,
+                                               const Strides& window_movement_strides,
+                                               const Strides& window_dilation_strides,
+                                               const CoordinateDiff& padding_below,
+                                               const CoordinateDiff& padding_above,
+                                               const Strides& data_dilation_strides,
+                                               const size_t groups,
+                                               bool with_relu)
     : Op("GroupConvolutionBias", check_single_output_args({data_batch, filters, bias}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
@@ -177,17 +183,19 @@ shared_ptr<Node> op::GroupConvolutionBias::copy_with_new_args(const NodeVector& 
     }
 
     return shared_ptr<Node>(new GroupConvolutionBias(new_args.at(0),
-                                                new_args.at(1),
-                                                new_args.at(2),
-                                                get_window_movement_strides(),
-                                                get_window_dilation_strides(),
-                                                get_padding_below(),
-                                                get_padding_above(),
-                                                get_data_dilation_strides(),
-                                                m_with_relu));
+                                                     new_args.at(1),
+                                                     new_args.at(2),
+                                                     get_window_movement_strides(),
+                                                     get_window_dilation_strides(),
+                                                     get_padding_below(),
+                                                     get_padding_above(),
+                                                     get_data_dilation_strides(),
+                                                     get_groups(),
+                                                     m_with_relu));
 }
 
-void op::GroupConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::GroupConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
+                                                 const NodeVector& deltas)
 {
     throw ngraph_error("GroupConvBias generate_adjoints not supported implemented");
 }

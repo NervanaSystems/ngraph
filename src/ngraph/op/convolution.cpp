@@ -91,21 +91,23 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
         << "Output channel count for filters is zero (filters shape: " << filters_shape << ", "
         << "output channels on axis " << output_channel_axis_filters << ").";
 
-    if (node->get_friendly_name().find("GroupConvolution") !=std::string::npos)
+    if (node->get_friendly_name().find("GroupConvolution") != std::string::npos)
     {
         cout << " node name : " << node->get_name() << "\n";
         NODE_VALIDATION_ASSERT(node, filters_shape.at(0) == input_channel_count)
             << "Input channel count for filters (" << filters_shape.at(0) << ") "
             << "does not match the number of channels in the data batch (" << input_channel_count
             << ") "
-            << "(filter input shape: " << filters_shape << "; data batch shape: " << data_batch_shape
-            << ").";
+            << "(filter input shape: " << filters_shape
+            << "; data batch shape: " << data_batch_shape << ").";
     }
     else
     {
         //cout << " node name : " << node->get_name() << "\n";
-        NODE_VALIDATION_ASSERT(node, filters_shape[input_channel_axis_filters] == input_channel_count)
-            << "Input channel count for filters (" << filters_shape[input_channel_axis_filters] << ") "
+        NODE_VALIDATION_ASSERT(node,
+                               filters_shape[input_channel_axis_filters] == input_channel_count)
+            << "Input channel count for filters (" << filters_shape[input_channel_axis_filters]
+            << ") "
             << "does not match the number of channels in the data batch (" << input_channel_count
             << ") "
             << "(filter input shape: " << filters_shape << ", filter input channels on axis "

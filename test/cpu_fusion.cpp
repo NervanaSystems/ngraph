@@ -88,7 +88,7 @@ TEST(cpu_fusion, broadcast_gauri)
     Shape shape_r{4, 1, 3, 3};
     AxisSet axis{1, 2, 3};
     //broadcast_test_helper(shape_a, shape_r, axis);
-    
+
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
 
     vector<float> inp_data(shape_size<const Shape>(shape_a));
@@ -115,7 +115,7 @@ TEST(cpu_fusion, broadcast_gauri)
     vector<float> tmp = read_vector<float>(wrk_result);
     for (size_t i = 0; i < wrk_result->get_element_count(); ++i)
     {
-        std::cout << i << ": " << tmp[i] << "\n"; 
+        std::cout << i << ": " << tmp[i] << "\n";
     }
     EXPECT_EQ(read_vector<float>(ref_result), read_vector<float>(wrk_result));
 }
@@ -1116,7 +1116,7 @@ shared_ptr<Function> gen_groupconv_bias()
     auto var = std::make_shared<op::Parameter>(element::f32, Shape{32});
     auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, group_conv, mean, var);
     auto f = make_shared<Function>(NodeVector{bn},
-                                    op::ParameterVector{input, weights, gamma, beta, mean, var});
+                                   op::ParameterVector{input, weights, gamma, beta, mean, var});
     return f;
 }
 
@@ -1128,7 +1128,6 @@ TEST(cpu_fusion, fuse_groupconv_bias)
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.run_passes(func_fuse);
     ASSERT_EQ(count_ops_of_type<op::GroupConvolutionBias>(func_fuse), 1);
-
 }
 
 TEST(cpu_fusion, groupconv_bias)

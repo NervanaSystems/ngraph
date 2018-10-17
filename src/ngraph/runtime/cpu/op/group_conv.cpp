@@ -68,7 +68,7 @@ Shape op::GroupConvolution::get_weights_dimensions() const
     const size_t OC_IN_OUTPUT = 1;
     const size_t IC = 1;
     Shape weights_shape_groups{get_inputs().at(1).get_shape()};
-    cout << "\tnum_groups: "<< get_groups() <<", get_wts_dims: " << weights_shape_groups << "\n";
+    cout << "\tnum_groups: " << get_groups() << ", get_wts_dims: " << weights_shape_groups << "\n";
     // adjust output and channel given a number of groups
 
     weights_shape_groups.at(OC) = get_shape().at(OC_IN_OUTPUT) / get_groups();
