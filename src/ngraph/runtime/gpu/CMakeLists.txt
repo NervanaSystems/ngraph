@@ -70,7 +70,31 @@ if (NGRAPH_GPU_ENABLE)
             -gencode=arch=compute_62,code=sm_62;
 	    -gencode=arch=compute_70,code=sm_70;
 	    -gencode=arch=compute_70,code=compute_70)
+    endif()
 
+    set (DO_CUDA_COMPILE FALSE)
+    if (CUDA9_FOUND)
+        set (DO_CUDA_COMPILE TRUE)
+        if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
+            # CUDA 9 supports up to gcc 6.x
+            if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
+                set (DO_CUDA_COMPILE TRUE)
+            endif()
+        # CUDA 9 supports up to clang 3.9
+        elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.0)
+            set (DO_CUDA_COMPILE TRUE)
+        endif()
+    elseif (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
+        # All variants of CUDA 8 support up to gcc 5.3
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.4)
+            set (DO_CUDA_COMPILE TRUE)
+        endif()
+    # CUDA 8 supports up to clang 3.8
+    elseif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.9)
+        set (DO_CUDA_COMPILE TRUE)
+    endif()
+
+    if (DO_CUDA_COMPILE)
         set_source_files_properties( ${CUDA_SRC} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
         cuda_compile(CUDA_OBJ ${CUDA_SRC} STATIC)
     endif()
