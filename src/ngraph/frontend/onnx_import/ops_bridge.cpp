@@ -14,9 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <algorithm>
 #include <functional>
+#include <iterator>
+#include <map>
 #include <string>
+#include <unordered_map>
 
 #include "core/attribute.hpp"
 #include "op/abs.hpp"
@@ -122,8 +124,8 @@ namespace ngraph
                 }
 
             private:
-                std::map<std::string,
-                         std::map<std::int64_t, std::function<NodeVector(const Node&)>>>
+                std::unordered_map<std::string,
+                                   std::map<std::int64_t, std::function<NodeVector(const Node&)>>>
                     m_map;
 
                 static const OperatorsBridge& instance()

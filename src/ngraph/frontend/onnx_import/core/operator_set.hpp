@@ -17,6 +17,7 @@
 #pragma once
 
 #include <functional>
+#include <string>
 #include <unordered_map>
 
 #include "ngraph/node_vector.hpp"
