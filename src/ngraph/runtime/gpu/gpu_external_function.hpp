@@ -97,7 +97,6 @@ namespace ngraph
                 static const std::string& get_header_source();
 
                 codegen::CodeWriter m_writer;
-                ngraph::pass::Manager m_pass_manager;
 
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
