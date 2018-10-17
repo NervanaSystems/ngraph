@@ -1933,7 +1933,7 @@ TEST(cpu_fusion, group_convolution)
 }
 
 //TODO(Pruthvi) enable this test after MKLDNN RNN bug is fixed
-#if 0
+//#if 0
 TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
 {
     auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
@@ -1981,8 +1981,7 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     shared_ptr<runtime::Tensor> biases_t =
         backend->create_tensor(element::f32, biases->get_shape());
     shared_ptr<runtime::Tensor> result_ht = backend->create_tensor(element::f32, {10, 100});
-    shared_ptr<runtime::Tensor> result_ct =
-        backend->create_tensor(element::f32, Shape{20, 100});
+    shared_ptr<runtime::Tensor> result_ct = backend->create_tensor(element::f32, Shape{20, 100});
 
     copy_data(src_layer_t, vector<float>(1000, 1));
     copy_data(src_iter_t, vector<float>(2000, 1));
@@ -2011,7 +2010,7 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
     EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
 }
-#endif
+//#endif
 
 TEST(cpu_fusion, fuse_lstm_cells)
 {
@@ -2085,7 +2084,7 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
     auto cpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
@@ -2107,7 +2106,7 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-10.0f, 1.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
@@ -2129,7 +2128,7 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-10.0f, 1.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())

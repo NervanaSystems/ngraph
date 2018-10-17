@@ -480,9 +480,9 @@ namespace ngraph
                                                 const double eps);
 
                 template <typename OP>
-                size_t build_rnn(const ngraph::Node* node,
-                                 const std::vector<TensorViewWrapper>& args,
-                                 const std::vector<TensorViewWrapper>& out)
+                std::vector<size_t>& build_rnn(const ngraph::Node* node,
+                                               const std::vector<TensorViewWrapper>& args,
+                                               const std::vector<TensorViewWrapper>& out)
                 {
                     auto rnn_node = static_cast<const OP*>(node);
                     auto src_sequence_length_max =
@@ -539,9 +539,9 @@ namespace ngraph
                     auto src_iter_md = build_memory_descriptor(
                         src_iter_tz, args[1].get_element_type(), mkldnn::memory::format::ldsnc);
                     auto wei_layer_md = build_memory_descriptor(
-                        wei_layer_tz, args[2].get_element_type(), mkldnn::memory::format::ldigo);
+                        wei_layer_tz, args[2].get_element_type(), mkldnn::memory::format::ldgoi);
                     auto wei_iter_md = build_memory_descriptor(
-                        wei_iter_tz, args[3].get_element_type(), mkldnn::memory::format::ldigo);
+                        wei_iter_tz, args[3].get_element_type(), mkldnn::memory::format::ldgoi);
                     auto bias_md = build_memory_descriptor(
                         bias_tz, args[4].get_element_type(), mkldnn::memory::format::ldgo);
                     auto dst_layer_md = build_memory_descriptor(
@@ -549,13 +549,21 @@ namespace ngraph
                     auto dst_iter_md = build_memory_descriptor(
                         dst_iter_tz, out[1].get_element_type(), mkldnn::memory::format::ldsnc);
 
+                    // define the reorder for the weights (ldgoi) -> (ldigo)
+                    auto wei_layer_reorder = build_memory_descriptor(
+                        wei_layer_tz, args[2].get_element_type(), mkldnn::memory::format::ldigo);
+                    auto wei_iter_reorder = build_memory_descriptor(
+                        wei_iter_tz, args[3].get_element_type(), mkldnn::memory::format::ldigo);
+
                     return build_rnn_forward(src_layer_md,
                                              src_iter_md,
                                              wei_layer_md,
                                              wei_iter_md,
                                              bias_md,
                                              dst_layer_md,
-                                             dst_iter_md);
+                                             dst_iter_md,
+                                             wei_layer_reorder,
+                                             wei_iter_reorder);
                 }
 
                 size_t build_rnn_forward(const mkldnn::memory::desc& src_layer_desc,
@@ -564,7 +572,9 @@ namespace ngraph
                                          const mkldnn::memory::desc& weights_iter_desc,
                                          const mkldnn::memory::desc& bias_desc,
                                          const mkldnn::memory::desc& dst_layer_desc,
-                                         const mkldnn::memory::desc& dst_iter_desc);
+                                         const mkldnn::memory::desc& dst_iter_desc,
+                                         const mkldnn::memory::desc& wei_layer_reorder_desc,
+                                         const mkldnn::memory::desc& wei_iter_reorder_desc);
 
                 size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                     const mkldnn::memory::desc& result_desc,
