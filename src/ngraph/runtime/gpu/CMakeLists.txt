@@ -85,8 +85,8 @@ if (NGRAPH_GPU_ENABLE)
             set (DO_CUDA_COMPILE TRUE)
         endif()
     elseif (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
-        # All variants of CUDA 8 support up to gcc 5.3
-        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.4)
+        # Current release of CUDA 8 supports up to gcc 5.4
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.5)
             set (DO_CUDA_COMPILE TRUE)
         endif()
     # CUDA 8 supports up to clang 3.8
