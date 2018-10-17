@@ -74,7 +74,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             }
             if (product != 1)
             {
-                NGRAPH_DEBUG << "cpu_post_layout_assignment: The product of Concat's shape "
+                NGRAPH_DEBUG << "cpu_memory_optimization: The product of Concat's shape "
                                 "before concat axis is not 1, no in place concat";
                 continue;
             }
@@ -97,7 +97,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                 if (mkldnn_utils::is_mkldnn_padded_layout(input_md, axis_list))
                 {
                     NGRAPH_DEBUG
-                        << "cpu_post_layout_assignment: padded input layout, no in place concat";
+                        << "cpu_memory_optimization: padded input layout, no in place concat";
                     in_place_concat = false;
                     break;
                 }
@@ -107,7 +107,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                 if (std::dynamic_pointer_cast<op::Constant>(arg) ||
                     std::dynamic_pointer_cast<op::Parameter>(arg))
                 {
-                    NGRAPH_DEBUG << "cpu_post_layout_assignment: " << arg->get_name()
+                    NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
                                  << ": constant or parameter, no in place concat";
                     in_place_concat = false;
                     break;
@@ -115,7 +115,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
                 if (arg->get_output_size() != 1)
                 {
-                    NGRAPH_DEBUG << "cpu_post_layout_assignment: " << arg->get_name()
+                    NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
                                  << ": multiple outputs, no in place concat";
                     in_place_concat = false;
                     break;
@@ -129,8 +129,8 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                         if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
 
                         {
-                            NGRAPH_DEBUG << "cpu_post_layout_assignment: " << arg->get_name()
-                                         << ": in place non concat op, no in place concat";
+                            NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
+                                         << ": in place non-concat op, no in place concat";
                             in_place_concat = false;
                             break;
                         }
@@ -149,7 +149,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                             concat_count++;
                             if (concat_count == 2)
                             {
-                                NGRAPH_DEBUG << "cpu_post_layout_assignment: multiple "
+                                NGRAPH_DEBUG << "cpu_memory_optimization: multiple "
                                                 "concat users, no in place concat";
                                 in_place_concat = false;
                                 break;
@@ -171,7 +171,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                                 {
                                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                                     {
-                                        NGRAPH_DEBUG << "cpu_post_layout_assignment: "
+                                        NGRAPH_DEBUG << "cpu_memory_optimization: "
                                                         "in place oi, no in place concat";
                                         in_place_concat = false;
                                         break;
@@ -187,7 +187,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     }
                     else if (!is_post_dominated(arg.get(), n.get()))
                     {
-                        NGRAPH_DEBUG << "cpu_post_layout_assignment: "
+                        NGRAPH_DEBUG << "cpu_memory_optimization: "
                                         "not post dominated, no in place concat";
                         in_place_concat = false;
                         break;
