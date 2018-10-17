@@ -278,7 +278,20 @@ extern "C" void delete_backend(runtime::Backend* backend)
 
 runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
 {
-    ocl_engine = make_shared<cldnn::engine>();
+    bool profiling = false;
+
+    if (getenv("NGRAPH_INTELGPU_STAT") != nullptr)
+    {
+        profiling = true;
+    }
+
+    if (getenv("NGRAPH_INTELGPU_DISABLE_OPTIMIZATIONS") != nullptr)
+    {
+        m_disable_backend_optimizations = true;
+    }
+
+    cldnn::engine_configuration cldnn_configuration(profiling);
+    ocl_engine = make_shared<cldnn::engine>(cldnn_configuration);
 }
 
 shared_ptr<runtime::Tensor>
@@ -304,17 +317,21 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     }
 
     cldnn::topology topology;
-    ngraph::pass::Manager pass_manager;
 
-    pass_manager.register_pass<ngraph::pass::NopElimination>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
+    if (!m_disable_backend_optimizations)
+    {
+        ngraph::pass::Manager pass_manager;
 
-    // GetOutputElementElimination must be after CommonSubexpressionElimination
-    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+        pass_manager.register_pass<ngraph::pass::NopElimination>();
+        pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+        pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+        pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
 
-    pass_manager.run_passes(func);
+        // GetOutputElementElimination must be after CommonSubexpressionElimination
+        pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+
+        pass_manager.run_passes(func);
+    }
 
     for (shared_ptr<Node> op : func->get_ops())
     {
@@ -1443,4 +1460,76 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     }
 
     return true;
+}
+
+void runtime::intelgpu::IntelGPUBackend::remove_compiled_function(shared_ptr<Function> func)
+{
+    ocl_networks.erase(func);
+}
+
+void runtime::intelgpu::IntelGPUBackend::enable_performance_data(shared_ptr<Function> func,
+                                                                 bool enable)
+{
+    FunctionInstance& instance = ocl_networks[func];
+    if (instance.ocl_network != nullptr)
+    {
+        throw runtime_error("Performance data collection must be enabled prior to compiling.");
+    }
+
+    instance.m_performance_counters_enabled = enable;
+}
+
+// The cldnn::network contains something like "generic_layer_0_Parameter_254_0" names
+// This function should return "Parameter_254" from the example above
+static string convert_cldnn_names(shared_ptr<Function> func, const string& cldnn_name)
+{
+    const string key("_");
+    string result;
+
+    const size_t last_key = cldnn_name.rfind(key);
+    const size_t pre_last_key = cldnn_name.rfind(key, last_key - 1);
+    const size_t pre_pre_last_key = cldnn_name.rfind(key, pre_last_key - 1);
+
+    if (pre_pre_last_key == std::string::npos)
+    {
+        result = cldnn_name.substr(0, last_key);
+    }
+    else
+    {
+        result = cldnn_name.substr(pre_pre_last_key + 1, last_key - pre_pre_last_key - 1);
+    }
+
+    return result;
+}
+
+vector<runtime::PerformanceCounter>
+    runtime::intelgpu::IntelGPUBackend::get_performance_data(shared_ptr<Function> func) const
+{
+    vector<runtime::PerformanceCounter> rc;
+    auto it = ocl_networks.find(func);
+    if (it != ocl_networks.end())
+    {
+        const shared_ptr<cldnn::network> network = it->second.ocl_network;
+
+        if (network != nullptr && it->second.m_performance_counters_enabled)
+        {
+            const map<cldnn::primitive_id, cldnn::event>& primitives =
+                network->get_executed_primitives();
+            for (const auto& p : primitives)
+            {
+                // Let's generate the primitive name that matches to the name in Function
+                const string primitive_name = convert_cldnn_names(func, p.first);
+                for (const auto& q : p.second.get_profiling_info())
+                {
+                    const size_t usec = chrono::duration_cast<
+                                            chrono::duration<double, chrono::milliseconds::period>>(
+                                            q.value->value())
+                                            .count();
+                    const runtime::PerformanceCounter perf_counter(primitive_name.c_str(), usec, 1);
+                    rc.push_back(perf_counter);
+                }
+            }
+        }
+    }
+    return rc;
 }
