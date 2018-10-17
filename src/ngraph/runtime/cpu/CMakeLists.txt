@@ -70,7 +70,6 @@ set(SRC
     builder/sum.cpp
     builder/topk.cpp
     builder/quantization.cpp
-    kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
     kernel/reduce_sum.cpp

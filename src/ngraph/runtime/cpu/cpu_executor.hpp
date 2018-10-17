@@ -33,8 +33,6 @@ namespace ngraph
         {
             namespace executor
             {
-                extern Eigen::ThreadPool global_thread_pool;
-                extern Eigen::ThreadPoolDevice global_thread_pool_device;
                 extern mkldnn::engine global_cpu_engine;
 
                 // CPUExecutor owns the resources for executing a graph.
@@ -42,8 +40,6 @@ namespace ngraph
                 {
                 public:
                     CPUExecutor(int num_thread_pools);
-
-                    int get_available_cores();
 
                     Eigen::ThreadPoolDevice& get_device(int id)
                     {

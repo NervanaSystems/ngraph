@@ -18,6 +18,27 @@
 
 #include "cpu_executor.hpp"
 
+static int GetNumCores()
+{
+    const auto omp_num_threads = std::getenv("OMP_NUM_THREADS");
+    const auto ngraph_intra_op_parallelism = std::getenv("NGRAPH_INTRA_OP_PARALLELISM");
+    int count = 0;
+
+    if (omp_num_threads && (count = std::atoi(omp_num_threads)))
+    {
+        return count;
+    }
+    else if (ngraph_intra_op_parallelism && (count == std::atoi(ngraph_intra_op_parallelism)))
+    {
+        return count;
+    }
+    else
+    {
+        count = std::thread::hardware_concurrency() >> 1;
+    }
+    return count ? count : 1;
+}
+
 namespace ngraph
 {
     namespace runtime
@@ -26,59 +47,32 @@ namespace ngraph
         {
             namespace executor
             {
-                static int GetNumCores()
+                CPUExecutor::CPUExecutor(int num_thread_pools)
+                    : m_num_thread_pools(num_thread_pools)
                 {
-                    const auto omp_num_threads = std::getenv("OMP_NUM_THREADS");
-                    const auto ngraph_intra_op_parallelism =
-                        std::getenv("NGRAPH_INTRA_OP_PARALLELISM");
-                    int count = 0;
-
-                    if (omp_num_threads && (count = std::atoi(omp_num_threads)))
+                    for (int i = 0; i < num_thread_pools; i++)
                     {
-                        return count;
+                        int num_threads_per_pool;
+#if defined(EIGEN_OPENMP)
+                        num_threads_per_pool = 1;
+#else
+                        num_threads_per_pool = GetNumCores();
+#endif
+                        m_thread_pools.push_back(std::unique_ptr<Eigen::ThreadPool>(
+                            new Eigen::ThreadPool(num_threads_per_pool)));
+                        m_thread_pool_devices.push_back(std::unique_ptr<Eigen::ThreadPoolDevice>(
+                            new Eigen::ThreadPoolDevice(m_thread_pools[i].get(), GetNumCores())));
                     }
-                    else if (ngraph_intra_op_parallelism &&
-                             (count == std::atoi(ngraph_intra_op_parallelism)))
-                    {
-                        return count;
-                    }
-                    else
-                    {
-                        count = std::thread::hardware_concurrency() >> 1;
-                    }
-                    return count ? count : 1;
+                    mkldnn::engine global_cpu_engine(mkldnn::engine::cpu, 0);
                 }
-                mkldnn::engine global_cpu_engine(mkldnn::engine::cpu, 0);
+
+                CPUExecutor& GetCPUExecutor()
+                {
+                    static CPUExecutor cpu_executor(NGRAPH_CPU_THREAD_POOLS);
+                    return cpu_executor;
+                }
             }
         }
     }
 }
 
-ngraph::runtime::cpu::executor::CPUExecutor::CPUExecutor(int num_thread_pools)
-    : m_num_thread_pools(num_thread_pools)
-{
-    for (int i = 0; i < num_thread_pools; i++)
-    {
-        int num_threads_per_pool;
-#if defined(EIGEN_OPENMP)
-        num_threads_per_pool = 1;
-#else
-        num_threads_per_pool = GetNumCores();
-#endif
-        m_thread_pools.push_back(
-            std::unique_ptr<Eigen::ThreadPool>(new Eigen::ThreadPool(num_threads_per_pool)));
-        m_thread_pool_devices.push_back(std::unique_ptr<Eigen::ThreadPoolDevice>(
-            new Eigen::ThreadPoolDevice(m_thread_pools[i].get(), GetNumCores())));
-        //m_thread_pool_devices.emplace_back(&m_thread_pools[i], GetNumCores());
-    }
-}
-
-int ngraph::runtime::cpu::executor::CPUExecutor::get_available_cores()
-{
-}
-
-ngraph::runtime::cpu::executor::CPUExecutor& ngraph::runtime::cpu::executor::GetCPUExecutor()
-{
-    static ngraph::runtime::cpu::executor::CPUExecutor cpu_executor(NGRAPH_CPU_THREAD_POOLS);
-    return cpu_executor;
-}
