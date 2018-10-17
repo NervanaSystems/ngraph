@@ -40,6 +40,11 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
 
 void op::AvgPool::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     auto& arg_shape = get_input_shape(0);
 
     NODE_VALIDATION_ASSERT(this, arg_shape.size() >= 3)
@@ -120,6 +125,11 @@ op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
 
 void op::AvgPoolBackprop::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     auto& delta_shape = get_input_shape(0);
 
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
