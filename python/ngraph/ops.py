@@ -20,12 +20,13 @@ import numpy as np
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
     NodeVector, Shape, Strides
 
-from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, BatchNormTraining, BatchNormInference \
-    Broadcast, Ceiling, Concat, Constant, Convert, Convolution, ConvolutionBackpropData, Cos, \
-    Cosh, Divide, Dot, Equal, Exp, Floor, FunctionCall, GetOutputElement, Greater, GreaterEq, \
-    Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, \
-    NotEqual, OneHot, Or, Pad, Parameter, Product, Power, Reduce, Relu, ReplaceSlice, Reshape, \
-    Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh, TopK
+from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
+    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Concat, Constant, Convert, \
+    Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
+    FunctionCall, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, \
+    Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, \
+    Parameter, Product, Power, Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, \
+    Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh, TopK
 
 from typing import Callable, Iterable, List, Union
 
@@ -824,7 +825,7 @@ def softmax(node, axes, name=None):  # type: (Node, Iterable[int], str) -> Node
     :param name: The optional new name for output node.
     :return: The new node with softmax operation applied on each element.
     """
-    if type(axes) is not set:
+    if not isinstance(axes, set):
         axes = set(axes)
     return Softmax(node, AxisSet(axes))
 
