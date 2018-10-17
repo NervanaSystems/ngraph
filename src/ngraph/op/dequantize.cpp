@@ -118,49 +118,6 @@ void op::Dequantize::validate_and_infer_types()
     {
         set_output_type(0, unquantized_type, PartialShape::dynamic());
     }
-#if 0
-
-
-
-
-
-
-    set_output_size(1);
-    set_output_type(0, m_type, get_input_shape(INPUT));
-
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(INPUT).is_quantized())
-        << "Input element type (" << get_input_element_type(INPUT) << ") must be a quantized type";
-
-    NODE_VALIDATION_ASSERT(this, m_type.is_real()) << "Output element type (" << m_type
-                                                   << ") must be a floating point number";
-
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(SCALE) == m_type)
-        << "Scale element type (" << get_input_element_type(SCALE)
-        << ") must match the output element type (" << m_type << ")";
-
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(OFFSET) == get_input_element_type(INPUT))
-        << "Offset element type (" << get_input_element_type(OFFSET)
-        << ") must match input element type (" << get_input_element_type(INPUT) << ")";
-
-    for (auto axis : m_axes)
-    {
-        NODE_VALIDATION_ASSERT(this, axis < get_shape().size())
-            << "Quantization axis (" << axis << ") must be less than input shape rank ("
-            << get_shape().size() << ")";
-    }
-
-    Shape projected_shape = project(get_input_shape(INPUT), m_axes);
-
-    NODE_VALIDATION_ASSERT(this, get_input_shape(SCALE) == projected_shape)
-        << "Scale shape (" << get_input_shape(SCALE)
-        << ") must match input shape projected along the quantization axes (" << projected_shape
-        << ")";
-
-    NODE_VALIDATION_ASSERT(this, get_input_shape(OFFSET) == projected_shape)
-        << "Offset shape (" << get_input_shape(OFFSET)
-        << ") must match input shape projected along the quantization axes (" << projected_shape
-        << ")";
-#endif
 }
 
 shared_ptr<Node> op::Dequantize::copy_with_new_args(const NodeVector& new_args) const
