@@ -40,6 +40,7 @@
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
@@ -308,6 +309,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+    pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
 
     // GetOutputElementElimination must be after CommonSubexpressionElimination
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
@@ -768,8 +770,25 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
         case OP_TYPEID::Negative:
         {
-            const cldnn_activation_additional_params param = {-1.f, 0.f};
-            do_unary_operation(topology, op, activation_linear, param);
+            if (get_input_type(op) == ngraph::element::i32)
+            {
+                // This is workaround to enable GNMT in training mode.
+                // clDNN doesn't support i32 data type for activation primitive.
+                // Exception from clDNN:  implementation_map for N5cldnn10activationE
+                // could not find any implementation to match key
+                do_negative_operation(topology,
+                                      get_input_name(op),
+                                      get_input_shape(op),
+                                      get_input_type(op),
+                                      get_output_name(op),
+                                      get_output_shape(op),
+                                      get_output_type(op));
+            }
+            else
+            {
+                const cldnn_activation_additional_params param = {-1.f, 0.f};
+                do_unary_operation(topology, op, activation_linear, param);
+            }
             break;
         }
         case OP_TYPEID::Relu:
