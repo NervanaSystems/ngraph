@@ -20,6 +20,7 @@
 #include "mkldnn_emitter.hpp"
 
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"

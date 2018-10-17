@@ -4647,7 +4647,7 @@ namespace ngraph
                     auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    float scale_const_op =
+                    auto scale_const_op =
                         std::static_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));
                     float scale = *(static_cast<float const*>(scale_const_op->get_data_ptr()));
 
@@ -4662,8 +4662,6 @@ namespace ngraph
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
                            << ", " << out[0].get_name() << ");\n";
-                    writer << "*(" << out[1].get_name() << ") = " << quant_util[0] << ";\n";
-                    writer << "*(" << out[2].get_name() << ") = " << quant_util[1] << ";\n";
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(quantize_index) << ");\n";
                 }

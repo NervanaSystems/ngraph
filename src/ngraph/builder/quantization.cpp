@@ -54,8 +54,9 @@ namespace ngraph
                                                const ngraph::element::Type& type,
                                                const ngraph::AxisSet& axes)
         {
+            auto input_et = input->get_element_type();
             float scale =
-                builder::quantization_util::get_dequantize_scale(min, max, type.is_signed());
+                builder::quantization_util::get_dequantize_scale(min, max, input_et.is_signed());
             auto offset = op::Constant::create(element::f32, Shape{1}, {0});
             auto dequantize_scale = op::Constant::create(element::f32, Shape{1}, {scale});
             return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);

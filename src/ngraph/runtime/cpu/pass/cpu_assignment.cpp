@@ -29,6 +29,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
@@ -782,7 +783,7 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Dequantize)
                 {
                     auto dequantize = static_cast<op::Dequantize*>(node);
-                    float offset_const_op =
+                    auto offset_const_op =
                         std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(2));
                     float offset = *(static_cast<float const*>(offset_const_op->get_data_ptr()));
                     if ((node->get_input_element_type(0) == element::u8 ||
@@ -801,10 +802,12 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Quantize)
                 {
                     auto quantize = static_cast<op::Quantize*>(node);
-                    float offset_const_op =
+                    auto offset_const_op =
                         std::static_pointer_cast<ngraph::op::Constant>(quantize->get_argument(2));
                     float offset = *(static_cast<float const*>(offset_const_op->get_data_ptr()));
-                    if (node->get_input_element_type(0) == element::f32 && offset == 0)
+                    op::Quantize::RoundMode round_mode = quantize->get_round_mode();
+                    if (node->get_input_element_type(0) == element::f32 && offset == 0 &&
+                        round_mode == op::Quantize::RoundMode::HALF_TO_EVEN)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -880,6 +883,9 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolutionBias),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConvolutionBias>},
+    {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Quantize>},
+    {TI(ngraph::op::Dequantize),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Dequantize>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(
