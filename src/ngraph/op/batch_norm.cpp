@@ -69,8 +69,6 @@ void ngraph::op::BatchNormInference::validate_and_infer_types()
     BatchNormBase::validate_and_infer_types();
     auto in_size = get_input_size();
     auto& et = get_input_element_type(INPUT);
-    NODE_VALIDATION_ASSERT(this, in_size == 5)
-        << "Argument count must be 5 (received argument count: " << in_size << ").";
     set_output_size(1);
     set_output_type(0, et, bn_input_shape);
 }
@@ -81,9 +79,6 @@ void ngraph::op::BatchNormTraining::validate_and_infer_types()
     BatchNormBase::validate_and_infer_types();
     auto in_size = get_input_size();
     auto& et = get_input_element_type(INPUT);
-    NODE_VALIDATION_ASSERT(this, in_size == 3)
-        << "Argument count must be 3 (received argument count: " << in_size << ").";
-
     Shape channel_shape{bn_input_shape[1]};
     set_output_size(3);
     set_output_type(0, et, bn_input_shape);
@@ -235,7 +230,8 @@ void ngraph::op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoin
     if (!mean)
     {
         throw ngraph_error("GetOutputElement for mean is missing");
-    };
+    }
+
     if (!var)
     {
         throw ngraph_error("GetOutputElement for variance is missing");
