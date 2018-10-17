@@ -435,15 +435,24 @@ void runtime::gpu::CudaKernelBuilder::get_onehot_op(codegen::CodeWriter& writer,
                                                     const std::array<std::string, 2>& data_types)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, uint32_t m, uint32_t k, uint32_t n)\n";
+           << data_types[1]
+           << "* out, uint32_t hot_axis_stride, uint32_t hot_axis_shape, uint32_t n)\n";
     writer.block_begin();
     {
         writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
         writer << "if (tid < n)\n";
         writer.block_begin();
         {
-            writer << "uint32_t idx = (tid / m) * m * k + (m * in[tid]) + tid % m;\n";
-            writer << "out[idx] = 1;\n";
+            writer << "int32_t in_pixel = static_cast<int32_t>(in[tid]);\n";
+            writer << "if(in_pixel >= 0 && in_pixel < hot_axis_shape)\n";
+            writer.block_begin();
+            {
+                writer << "uint32_t idx = tid / hot_axis_stride * hot_axis_stride * hot_axis_shape "
+                          "+ (hot_axis_stride * in_pixel) + tid % "
+                          "hot_axis_stride;\n";
+                writer << "out[idx] = 1;\n";
+            }
+            writer.block_end();
         }
         writer.block_end();
     }

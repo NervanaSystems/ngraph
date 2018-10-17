@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cinttypes>
 #include <list>
 
 namespace ngraph

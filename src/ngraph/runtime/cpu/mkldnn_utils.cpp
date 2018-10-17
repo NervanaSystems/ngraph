@@ -355,6 +355,20 @@ bool runtime::cpu::mkldnn_utils::is_perm_sorted(const Strides& a, const AxisVect
 mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
     const Shape& dims, const Strides& strides, const ngraph::element::Type type)
 {
+    if (dims.size() > TENSOR_MAX_DIMS || strides.size() > TENSOR_MAX_DIMS)
+    {
+        throw ngraph_error("In create_blocked_mkldnn_md: Dimensions (dims, stride): (" +
+                           std::to_string(dims.size()) + ", " + std::to_string(strides.size()) +
+                           ") exceed maximum supported by MKLDNN " +
+                           std::to_string(TENSOR_MAX_DIMS));
+    }
+
+    if (dims.size() != strides.size())
+    {
+        throw ngraph_error("In create_blocked_mkldnn_md: Rank mismatch between shape and strides " +
+                           std::to_string(dims.size()) + " " + std::to_string(strides.size()));
+    }
+
     memory::dims dim(dims.begin(), dims.end());
     memory::dims stride(strides.begin(), strides.end());
     memory::data_type dtype = get_mkldnn_data_type(type);
@@ -559,7 +573,7 @@ memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& i
     size_t k = 0;
     for (size_t i = 0, j = 0; j < md.ndims; j++)
     {
-        if (j == axis_list[k])
+        if (k < axis_list.size() && j == axis_list[k])
         {
             k++;
             md.dims[j] = 1;
@@ -575,7 +589,8 @@ memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& i
             }
             else
             {
-                md.layout_desc.blocking.strides[1][j] = 0;
+                md.layout_desc.blocking.strides[1][j] =
+                    in.data.layout_desc.blocking.strides[0][in.data.ndims - 1];
                 size_t nelems = 1;
                 for (size_t idx = 0; idx < in.data.ndims; idx++)
                     nelems *= in.data.dims[idx];
