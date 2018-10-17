@@ -65,19 +65,19 @@ function build_ngraph() {
     mkdir -p ./build
     cd ./build
     cmake ../ -DNGRAPH_TOOLS_ENABLE=FALSE -DNGRAPH_UNIT_TEST_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="${ngraph_directory}/ngraph_dist" || return 1
-    rm -f "${ngraph_directory}"/ngraph/python/dist/ngraph*.whl
     make -j $(lscpu --parse=CORE | grep -v '#' | sort | uniq | wc -l) || return 1
     make install || return 1
     cd "${ngraph_directory}/ngraph/python"
     if [ ! -d ./pybind11 ]; then
         git clone --recursive https://github.com/pybind/pybind11.git
     fi
+    rm -f "${ngraph_directory}"/ngraph/python/dist/ngraph*.whl
+    rm -rf "${ngraph_directory}/ngraph/python/*.so ${ngraph_directory}/ngraph/python/build"
     export PYBIND_HEADERS_PATH="${ngraph_directory}/ngraph/python/pybind11"
     export NGRAPH_CPP_BUILD_PATH="${ngraph_directory}/ngraph_dist"
     export NGRAPH_ONNX_IMPORT_ENABLE="TRUE"
     python3 setup.py bdist_wheel
     # Clean build artifacts
-    rm -rf "${ngraph_directory}/ngraph/python/_pyngraph.cpython* ${ngraph_directory}/ngraph/python/build"
     rm -rf "${ngraph_directory}/ngraph_dist"
     return 0
 }

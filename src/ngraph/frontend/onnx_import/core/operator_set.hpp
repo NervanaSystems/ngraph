@@ -16,27 +16,22 @@
 
 #pragma once
 
-#include "ngraph/node.hpp"
+#include <functional>
+#include <string>
+#include <unordered_map>
+
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace onnx_import
     {
-        class DequantizeCPU : public Op
-        {
-        public:
-            DequantizeCPU(std::shared_ptr<Node> input,
-                          std::shared_ptr<Node> min,
-                          std::shared_ptr<Node> max,
-                          const element::Type& type);
-            const element::Type& get_dequantize_et() const { return m_element_type; }
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+        // Forward declaration
+        class Node;
 
-        private:
-            const element::Type m_element_type;
-        };
-    }
-}
+        using Operator = std::function<NodeVector(const Node&)>;
+        using OperatorSet = std::unordered_map<std::string, std::reference_wrapper<const Operator>>;
+
+    } // namespace onnx_import
+
+} // namespace ngraph
