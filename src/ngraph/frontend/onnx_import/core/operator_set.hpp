@@ -14,27 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <onnx-ml.pb.h>
+#pragma once
 
-#include "model.hpp"
+#include <functional>
+#include <unordered_map>
+
+#include "ngraph/node_vector.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        Model::Model(const onnx::ModelProto& model_proto)
-            : m_model_proto{&model_proto}
-        {
-            for (const auto& id : m_model_proto->opset_import())
-            {
-                // onnx.proto(.3): the empty string ("") or absence of this field implies
-                // the operator set that is defined as part of the ONNX specification.
-                if (id.domain().empty())
-                {
-                    m_opset_version = id.version();
-                }
-            }
-        }
+        // Forward declaration
+        class Node;
+
+        using Operator = std::function<NodeVector(const Node&)>;
+        using OperatorSet = std::unordered_map<std::string, std::reference_wrapper<const Operator>>;
 
     } // namespace onnx_import
 

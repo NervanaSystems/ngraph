@@ -21,8 +21,9 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        Graph::Graph(const onnx::GraphProto& graph_proto)
+        Graph::Graph(const onnx::GraphProto& graph_proto, const OperatorSet& opset)
             : m_graph_proto{&graph_proto}
+            , m_opset{&opset}
         {
             for (const auto& tensor : m_graph_proto->initializer())
             {
