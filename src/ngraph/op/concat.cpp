@@ -32,6 +32,11 @@ op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
 
 void op::Concat::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     NODE_VALIDATION_ASSERT(this, m_inputs.size() >= 1) << "At least one argument required.";
 
     Shape first_input_shape = get_input_shape(0);

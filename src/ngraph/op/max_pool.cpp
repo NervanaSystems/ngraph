@@ -42,6 +42,11 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
 
 void op::MaxPool::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     auto& arg_shape = get_input_shape(0);
 
     NODE_VALIDATION_ASSERT(this, arg_shape.size() >= 3)
@@ -120,6 +125,11 @@ op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
 
 void op::MaxPoolBackprop::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     auto forward_arg_et = get_input_element_type(0);
     auto& forward_arg_shape = get_input_shape(0);
     auto delta_et = get_input_element_type(1);

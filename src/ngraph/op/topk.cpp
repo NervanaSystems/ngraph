@@ -39,6 +39,11 @@ op::TopK::TopK(const shared_ptr<Node>& arg,
 
 void op::TopK::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     auto& input = get_inputs().at(0);
     auto rank = input.get_shape().size();
 
