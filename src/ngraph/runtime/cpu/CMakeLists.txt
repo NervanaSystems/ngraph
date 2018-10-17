@@ -122,6 +122,15 @@ if (NOT NGRAPH_DEX_ONLY)
         )
 endif()
 
+if (NGRAPH_HALIDE)
+    set(SRC
+        ${SRC}
+        builder/halide_subgraph.cpp
+        op/halide_subgraph.cpp
+        pass/halide_subgraph_extraction.cpp
+        )
+endif()
+
 if (NGRAPH_TBB_ENABLE)
     include(${TBB_ROOT}/cmake/TBBBuild.cmake)
     tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
@@ -158,6 +167,12 @@ if (NGRAPH_CPU_ENABLE)
     set_target_properties(cpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
+    endif()
+    if (NGRAPH_HALIDE)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_HALIDE")
+        ExternalProject_Get_Property(ext_halide BINARY_DIR)
+        target_include_directories(cpu_backend SYSTEM PRIVATE ${BINARY_DIR}/include)
+        target_link_libraries(cpu_backend PRIVATE ${BINARY_DIR}/lib/libHalide.so)
     endif()
 
     if(OPENMP_FOUND)
