@@ -189,10 +189,14 @@ void runtime::gpu::GPU_Emitter::emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t 
         auto argmin = static_cast<const ngraph::op::ArgMin*>(node);
         axis = argmin->get_reduction_axis();
     }
-    else
+    else if (reduce_op == CUDNN_REDUCE_TENSOR_MAX)
     {
         auto argmax = static_cast<const ngraph::op::ArgMax*>(node);
         axis = argmax->get_reduction_axis();
+    }
+    else
+    {
+        throw std::runtime_error("Not supported. Only Min/Max op are supported by ArgReduce.");
     }
     auto axis_set = AxisSet{axis};
 
