@@ -70,7 +70,8 @@ namespace ngraph
                         mkldnn_emitter->build_concat(inputs_data_desc, result_desc, concat_dim);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 
-                    auto functor = [&, arg_tensors, nargs, concat_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, arg_tensors, nargs, concat_index](CPURuntimeContext* ctx,
+                                                                         int arena) {
                         for (size_t i = 0; i < nargs; i++)
                         {
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[i], arg_tensors[i]);
@@ -91,7 +92,7 @@ namespace ngraph
                                           runtime::cpu::kernel::concat);
 
                     auto functor = [&, kernel, arg_tensors, arg_shapes, out_shape, axis](
-                        CPURuntimeContext* ctx) {
+                        CPURuntimeContext* ctx, int arena) {
                         kernel(arg_tensors, arg_shapes, out_tensor, out_shape, axis);
                     };
                     functors.emplace_back(functor);

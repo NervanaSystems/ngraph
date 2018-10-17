@@ -55,7 +55,7 @@ namespace ngraph
                         mkldnn_emitter->build_convolution<ngraph::op::Convolution>(node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx, int arena) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
@@ -85,7 +85,7 @@ namespace ngraph
                                     window_dilation_strides,
                                     padding_below,
                                     padding_above,
-                                    data_dilation_strides](CPURuntimeContext* ctx) {
+                                    data_dilation_strides](CPURuntimeContext* ctx, int arena) {
                         kernel(arg0_tensor,
                                arg1_tensor,
                                out_tensor,
@@ -126,7 +126,7 @@ namespace ngraph
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx, int arena) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
@@ -158,7 +158,7 @@ namespace ngraph
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx, int arena) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
@@ -191,7 +191,7 @@ namespace ngraph
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx, int arena) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
@@ -222,7 +222,7 @@ namespace ngraph
                         node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx, int arena) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
@@ -260,7 +260,7 @@ namespace ngraph
                                 node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx, int arena) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
@@ -292,7 +292,7 @@ namespace ngraph
                                     window_dilation_strides,
                                     padding_below,
                                     padding_above,
-                                    data_dilation_strides](CPURuntimeContext* ctx) {
+                                    data_dilation_strides](CPURuntimeContext* ctx, int arena) {
                         kernel(arg1_tensor,
                                arg0_tensor,
                                out_tensor,
@@ -340,7 +340,7 @@ namespace ngraph
                                 node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx, int arena) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
@@ -372,7 +372,7 @@ namespace ngraph
                                     window_dilation_strides,
                                     padding_below,
                                     padding_above,
-                                    data_dilation_strides](CPURuntimeContext* ctx) {
+                                    data_dilation_strides](CPURuntimeContext* ctx, int arena) {
                         kernel(arg0_tensor,
                                arg1_tensor,
                                out_tensor,
@@ -413,7 +413,7 @@ namespace ngraph
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx, int arena) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
@@ -473,7 +473,7 @@ namespace ngraph
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx, int arena) {
 
                         // group convolution
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);

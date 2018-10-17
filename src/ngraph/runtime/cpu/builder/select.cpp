@@ -44,8 +44,8 @@ namespace ngraph
 
                 SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::select);
 
-                auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {
-                    kernel(arg0_tensor, arg1_tensor, arg2_tensor, out_tensor, element_count);
+                auto functor = [&, kernel, element_count](CPURuntimeContext* ctx, int arena) {
+                    kernel(arg0_tensor, arg1_tensor, arg2_tensor, out_tensor, element_count, arena);
                 };
                 functors.emplace_back(functor);
             }

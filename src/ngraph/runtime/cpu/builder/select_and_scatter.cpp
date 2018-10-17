@@ -106,7 +106,7 @@ namespace ngraph
                                 arg1_shape,
                                 out_shape,
                                 window_shape,
-                                window_movement_strides](CPURuntimeContext* ctx) {
+                                window_movement_strides](CPURuntimeContext* ctx, int arena) {
                     reference::select_and_scatter<float>(static_cast<float*>(arg0_tensor),
                                                          static_cast<float*>(arg1_tensor),
                                                          static_cast<float*>(arg2_tensor),

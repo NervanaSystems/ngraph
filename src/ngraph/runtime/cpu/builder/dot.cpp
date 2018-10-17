@@ -50,7 +50,7 @@ namespace ngraph
 
                 if (!shape_size(result_shape))
                 {
-                    auto functor = [](CPURuntimeContext* ctx) {};
+                    auto functor = [](CPURuntimeContext* ctx, int arena) {};
                     functors.emplace_back(functor);
                     return;
                 }
@@ -58,7 +58,7 @@ namespace ngraph
                 if (!shape_size(arg0_shape) || !shape_size(arg1_shape))
                 {
                     auto size = shape_size(result_shape) * out[0].get_element_type().size();
-                    auto functor = [&, size](CPURuntimeContext* ctx) {
+                    auto functor = [&, size](CPURuntimeContext* ctx, int arena) {
                         memset(out_tensor, 0, size);
                     };
                     functors.emplace_back(functor);
@@ -80,8 +80,8 @@ namespace ngraph
 
                     auto element_count = shape_size(second.get_shape());
 
-                    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {
-                        kernel(first_tensor, second_tensor, out_tensor, element_count);
+                    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx, int arena) {
+                        kernel(first_tensor, second_tensor, out_tensor, element_count, arena);
                     };
                     functors.emplace_back(functor);
                     return;
@@ -95,15 +95,16 @@ namespace ngraph
                     SELECT_KERNEL(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_1d_1rd);
 
-                    auto functor =
-                        [&, kernel, arg0_shape, arg1_shape, result_shape](CPURuntimeContext* ctx) {
-                            kernel(arg0_tensor,
-                                   arg1_tensor,
-                                   out_tensor,
-                                   arg0_shape,
-                                   arg1_shape,
-                                   result_shape);
-                        };
+                    auto functor = [&, kernel, arg0_shape, arg1_shape, result_shape](
+                        CPURuntimeContext* ctx, int arena) {
+                        kernel(arg0_tensor,
+                               arg1_tensor,
+                               out_tensor,
+                               arg0_shape,
+                               arg1_shape,
+                               result_shape,
+                               arena);
+                    };
                     functors.emplace_back(functor);
                     return;
                 }
@@ -116,15 +117,16 @@ namespace ngraph
                     SELECT_KERNEL(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_2d_1d_1rd);
 
-                    auto functor =
-                        [&, kernel, arg0_shape, arg1_shape, result_shape](CPURuntimeContext* ctx) {
-                            kernel(arg0_tensor,
-                                   arg1_tensor,
-                                   out_tensor,
-                                   arg0_shape,
-                                   arg1_shape,
-                                   result_shape);
-                        };
+                    auto functor = [&, kernel, arg0_shape, arg1_shape, result_shape](
+                        CPURuntimeContext* ctx, int arena) {
+                        kernel(arg0_tensor,
+                               arg1_tensor,
+                               out_tensor,
+                               arg0_shape,
+                               arg1_shape,
+                               result_shape,
+                               arena);
+                    };
                     functors.emplace_back(functor);
                     return;
                 }
@@ -137,15 +139,16 @@ namespace ngraph
                     SELECT_KERNEL(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_3d_3d_1rd);
 
-                    auto functor =
-                        [&, kernel, arg0_shape, arg1_shape, result_shape](CPURuntimeContext* ctx) {
-                            kernel(arg0_tensor,
-                                   arg1_tensor,
-                                   out_tensor,
-                                   arg0_shape,
-                                   arg1_shape,
-                                   result_shape);
-                        };
+                    auto functor = [&, kernel, arg0_shape, arg1_shape, result_shape](
+                        CPURuntimeContext* ctx, int arena) {
+                        kernel(arg0_tensor,
+                               arg1_tensor,
+                               out_tensor,
+                               arg0_shape,
+                               arg1_shape,
+                               result_shape,
+                               arena);
+                    };
                     functors.emplace_back(functor);
                     return;
                 }
@@ -173,7 +176,7 @@ namespace ngraph
 
                         auto functor =
                             [&, offset_a, offset_b, offset_c, m, n, k, group_size, group_count](
-                                CPURuntimeContext* ctx) {
+                                CPURuntimeContext* ctx, int arena) {
                                 cblas::Transpose transpose = cblas::Transpose::None;
                                 float alpha = 1.0f;
 
@@ -232,13 +235,14 @@ namespace ngraph
                             kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_3d_2d_1rd);
 
                         auto functor = [&, kernel, arg0_shape, arg1_shape, result_shape](
-                            CPURuntimeContext* ctx) {
+                            CPURuntimeContext* ctx, int arena) {
                             kernel(arg0_tensor,
                                    arg1_tensor,
                                    out_tensor,
                                    arg0_shape,
                                    arg1_shape,
-                                   result_shape);
+                                   result_shape,
+                                   arena);
                         };
                         functors.emplace_back(functor);
                         return;
@@ -251,7 +255,7 @@ namespace ngraph
 
                 auto functor =
                     [&, kernel, arg0_shape, arg1_shape, result_shape, reduction_axes_count](
-                        CPURuntimeContext* ctx) {
+                        CPURuntimeContext* ctx, int arena) {
                         kernel(arg0_tensor,
                                arg1_tensor,
                                out_tensor,

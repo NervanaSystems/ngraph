@@ -19,7 +19,7 @@
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/reference/one_hot.hpp"
 #include "ngraph/shape.hpp"
 
@@ -73,8 +73,8 @@ namespace ngraph
                         return 0;
                     };
 
-                    out_tensor.device(eigen::global_thread_pool_device) =
-                        out_tensor.generate(generator);
+                    out_tensor.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                        0)) = out_tensor.generate(generator);
                 }
 
                 template <typename ElementType>

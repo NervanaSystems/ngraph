@@ -61,7 +61,7 @@ namespace ngraph
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(softmax_index);
 
-                    auto functor = [&, softmax_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, softmax_index](CPURuntimeContext* ctx, int arena) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, softmax_index);
@@ -79,8 +79,8 @@ namespace ngraph
                                                       args[0].get_shape().size(),
                                                       runtime::cpu::kernel::softmax_all);
 
-                        auto functor = [&, kernel, arg_shape](CPURuntimeContext* ctx) {
-                            kernel(arg_tensor, out_tensor, arg_shape);
+                        auto functor = [&, kernel, arg_shape](CPURuntimeContext* ctx, int arena) {
+                            kernel(arg_tensor, out_tensor, arg_shape, arena);
                         };
                         functors.emplace_back(functor);
                     }
@@ -98,8 +98,9 @@ namespace ngraph
                                 args[0].get_shape().size(),
                                 runtime::cpu::kernel::softmax_innermost_1rd);
 
-                            auto functor = [&, kernel, arg_shape](CPURuntimeContext* ctx) {
-                                kernel(arg_tensor, out_tensor, arg_shape);
+                            auto functor = [&, kernel, arg_shape](CPURuntimeContext* ctx,
+                                                                  int arena) {
+                                kernel(arg_tensor, out_tensor, arg_shape, arena);
                             };
                             functors.emplace_back(functor);
                         }
@@ -113,8 +114,9 @@ namespace ngraph
                                                           args[0].get_shape().size(),
                                                           runtime::cpu::kernel::softmax_1rd);
 
-                            auto functor = [&, kernel, arg_shape, axes](CPURuntimeContext* ctx) {
-                                kernel(arg_tensor, out_tensor, arg_shape, axes);
+                            auto functor = [&, kernel, arg_shape, axes](CPURuntimeContext* ctx,
+                                                                        int arena) {
+                                kernel(arg_tensor, out_tensor, arg_shape, axes, arena);
                             };
                             functors.emplace_back(functor);
                         }
@@ -127,8 +129,9 @@ namespace ngraph
                                       args[0].get_element_type(),
                                       runtime::cpu::kernel::softmax_3d_2rd);
 
-                        auto functor = [&, kernel, arg_shape, axes](CPURuntimeContext* ctx) {
-                            kernel(arg_tensor, out_tensor, arg_shape, axes);
+                        auto functor = [&, kernel, arg_shape, axes](CPURuntimeContext* ctx,
+                                                                    int arena) {
+                            kernel(arg_tensor, out_tensor, arg_shape, axes, arena);
                         };
                         functors.emplace_back(functor);
                     }
@@ -140,8 +143,9 @@ namespace ngraph
                                       args[0].get_element_type(),
                                       runtime::cpu::kernel::softmax_4d_3rd);
 
-                        auto functor = [&, kernel, arg_shape, axes](CPURuntimeContext* ctx) {
-                            kernel(arg_tensor, out_tensor, arg_shape, axes);
+                        auto functor = [&, kernel, arg_shape, axes](CPURuntimeContext* ctx,
+                                                                    int arena) {
+                            kernel(arg_tensor, out_tensor, arg_shape, axes, arena);
                         };
                         functors.emplace_back(functor);
                     }
@@ -149,7 +153,7 @@ namespace ngraph
                     {
                         NGRAPH_WARN << "Falling back to refernce kernel for softmax " << arg_shape
                                     << " over " << axes;
-                        auto functor = [&, arg_shape, axes](CPURuntimeContext* ctx) {
+                        auto functor = [&, arg_shape, axes](CPURuntimeContext* ctx, int arena) {
                             runtime::reference::softmax<float>(static_cast<float*>(arg_tensor),
                                                                static_cast<float*>(out_tensor),
                                                                arg_shape,

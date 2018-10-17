@@ -47,7 +47,7 @@ namespace ngraph
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
 
-                    auto functor = [&, relu_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, relu_index](CPURuntimeContext* ctx, int arena) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, relu_index);
@@ -81,7 +81,7 @@ namespace ngraph
                         mkldnn_emitter->build_relu_backward(input_desc, delta_desc, result_desc);
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(relu_index);
-                    auto functor = [&, relu_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, relu_index](CPURuntimeContext* ctx, int arena) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_fwd_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], delta_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);
@@ -96,8 +96,8 @@ namespace ngraph
                     SELECT_KERNEL(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::relu_backprop);
 
-                    auto functor = [&, kernel, count](CPURuntimeContext* ctx) {
-                        kernel(arg_fwd_tensor, delta_tensor, out_tensor, count);
+                    auto functor = [&, kernel, count](CPURuntimeContext* ctx, int arena) {
+                        kernel(arg_fwd_tensor, delta_tensor, out_tensor, count, arena);
                     };
                     functors.emplace_back(functor);
                 }

@@ -57,7 +57,7 @@ namespace ngraph
                 if (can_skip_reshape())
                 {
                     size_t size = out[0].get_size() * out[0].get_element_type().size();
-                    auto functor = [&, size](CPURuntimeContext* ctx) {
+                    auto functor = [&, size](CPURuntimeContext* ctx, int arena) {
                         if (out_tensor != arg_tensor)
                         {
                             memcpy(out_tensor, arg_tensor, size);
@@ -83,7 +83,7 @@ namespace ngraph
                 if (same_layout || result_size < 2)
                 {
                     size_t size = out[0].get_size() * out[0].get_element_type().size();
-                    auto functor = [&, size](CPURuntimeContext* ctx) {
+                    auto functor = [&, size](CPURuntimeContext* ctx, int arena) {
                         memcpy(out_tensor, arg_tensor, size);
                     };
                     functors.emplace_back(functor);
@@ -118,17 +118,18 @@ namespace ngraph
                     SELECT_KERNEL(ref_kernel, result_element_type, runtime::cpu::kernel::reshape);
 
                     auto functor = [&, ref_kernel, arg_shape, input_order, result_shape](
-                        CPURuntimeContext* ctx) {
-                        ref_kernel(arg_tensor, out_tensor, arg_shape, input_order, result_shape);
+                        CPURuntimeContext* ctx, int arena) {
+                        ref_kernel(
+                            arg_tensor, out_tensor, arg_shape, input_order, result_shape, arena);
                     };
                     functors.emplace_back(functor);
                     return;
                 }
 
-                auto functor =
-                    [&, kernel, arg_shape, input_order, result_shape](CPURuntimeContext* ctx) {
-                        kernel(arg_tensor, out_tensor, arg_shape, input_order, result_shape);
-                    };
+                auto functor = [&, kernel, arg_shape, input_order, result_shape](
+                    CPURuntimeContext* ctx, int arena) {
+                    kernel(arg_tensor, out_tensor, arg_shape, input_order, result_shape, arena);
+                };
                 functors.emplace_back(functor);
             }
 

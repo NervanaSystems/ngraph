@@ -101,8 +101,8 @@ namespace ngraph
                     throw ngraph_error("Cannot convert from an invalid input element type");
                 }
 
-                auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {
-                    kernel(arg_tensor, out_tensor, element_count);
+                auto functor = [&, kernel, element_count](CPURuntimeContext* ctx, int arena) {
+                    kernel(arg_tensor, out_tensor, element_count, arena);
                 };
                 functors.emplace_back(functor);
             }
