@@ -81,15 +81,15 @@ void op::Quantize::validate_and_infer_types()
             << input_rank << ")";
     }
 
-    PartialShape scale_offset_shape = get_input_shape(SCALE);
+    PartialShape scale_offset_shape = get_input_partial_shape(SCALE);
 
-    NODE_VALIDATION_ASSERT(this,
-                           PartialShape::merge_into(scale_offset_shape, get_input_shape(OFFSET)))
-        << "Scale shape (" << get_input_shape(SCALE) << ") and offset shape ("
-        << get_input_shape(OFFSET) << ") must match";
+    NODE_VALIDATION_ASSERT(
+        this, PartialShape::merge_into(scale_offset_shape, get_input_partial_shape(OFFSET)))
+        << "Scale shape (" << get_input_partial_shape(SCALE) << ") and offset shape ("
+        << get_input_partial_shape(OFFSET) << ") must match";
 
     NODE_VALIDATION_ASSERT(this, scale_offset_shape.rank().compatible(m_axes.size()))
-        << "Scale/offset rank (" << scale_offset_shape.rank() << ") does not match the number of ("
+        << "Scale/offset rank (" << scale_offset_shape.rank() << ") does not match the number of "
         << "quantization axes (" << m_axes.size() << ")";
 
     set_output_size(1);
@@ -116,7 +116,7 @@ void op::Quantize::validate_and_infer_types()
         NODE_VALIDATION_ASSERT(
             this, PartialShape::merge_into(result_shape, PartialShape{injected_scale_offset_dims}))
             << "Scale/offset shape (" << scale_offset_shape << ") must match input shape ("
-            << input_shape << ")";
+            << input_shape << ") at the quantization axes (" << m_axes << ")";
         set_output_type(0, quantized_type, result_shape);
     }
     else

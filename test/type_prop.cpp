@@ -7784,8 +7784,8 @@ TEST(type_prop, quantize_scale_shape_mismatch_same_rank_fails)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(), "Scale shape (Shape{64, 4}) and offset shape (Shape{64, 3}) must match");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Scale shape ({64,4}) and offset shape ({64,3}) must match");
     }
     catch (...)
     {
@@ -7818,9 +7818,8 @@ TEST(type_prop, quantize_scale_shape_mismatch_different_rank_fails)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Scale shape (Shape{64, 3, 2}) and offset shape (Shape{64, 3}) must match");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Scale shape ({64,3,2}) and offset shape ({64,3}) must match");
     }
     catch (...)
     {
@@ -7853,8 +7852,8 @@ TEST(type_prop, quantize_offset_shape_mismatch_same_rank_fails)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(), "Scale shape (Shape{64, 3}) and offset shape (Shape{64, 4}) must match");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Scale shape ({64,3}) and offset shape ({64,4}) must match");
     }
     catch (...)
     {
@@ -7887,9 +7886,8 @@ TEST(type_prop, quantize_offset_shape_mismatch_different_rank_fails)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Scale shape (Shape{64, 3}) and offset shape (Shape{64, 3, 2}) must match");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Scale shape ({64,3}) and offset shape ({64,3,2}) must match");
     }
     catch (...)
     {
@@ -7918,7 +7916,7 @@ TEST(type_prop, quantize_offset_unsupported_round_mode_fails)
     {
         auto quant =
             make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
-        FAIL() << "Mismatch of offset argument shape with required shape not detected";
+        FAIL() << "Unsupported round mode not detected";
     }
     catch (const NodeValidationError& error)
     {
@@ -7931,9 +7929,279 @@ TEST(type_prop, quantize_offset_unsupported_round_mode_fails)
     }
 }
 
-TEST(type_prop, quantize_fail_for_reminder)
+TEST(type_prop, quantize_partial_all_rank_dynamic_ok)
 {
-    FAIL() << "Adam P needs to implement unit tests for Quantize";
+    PartialShape batch_shape{PartialShape::dynamic()};
+    PartialShape scale_shape{PartialShape::dynamic()};
+    PartialShape offset_shape{PartialShape::dynamic()};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{0, 1, 2000};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+
+    ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
+    ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop,
+     quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_dynamic_ok)
+{
+    PartialShape batch_shape{PartialShape::dynamic()};
+    PartialShape scale_shape{64, Dimension::dynamic(), 96};
+    PartialShape offset_shape{PartialShape::dynamic()};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{0, 1, 2000};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+
+    ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
+    ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(
+    type_prop,
+    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_dynamic_axis_count_inconsistent)
+{
+    PartialShape batch_shape{PartialShape::dynamic()};
+    PartialShape scale_shape{64, Dimension::dynamic(), 96};
+    PartialShape offset_shape{PartialShape::dynamic()};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{0, 1};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+
+    try
+    {
+        auto quant =
+            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+        FAIL() << "Mismatch of scale/offset rank with axis count not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Scale/offset rank (3) does not match the number of quantization axes (2)");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_ok)
+{
+    PartialShape batch_shape{PartialShape::dynamic()};
+    PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
+    PartialShape offset_shape{64, 22, Dimension::dynamic(), Dimension::dynamic()};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{0, 1, 5, 88};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+
+    ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
+    ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(
+    type_prop,
+    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_ranks_inconsistent)
+{
+    PartialShape batch_shape{PartialShape::dynamic()};
+    PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
+    PartialShape offset_shape{64, 22, Dimension::dynamic(), Dimension::dynamic(), 3};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{0, 1, 5, 88};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+
+    try
+    {
+        auto quant =
+            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+        FAIL() << "Inconsistent scale/offset ranks not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(), "Scale shape ({64,?,96,?}) and offset shape ({64,22,?,?,3}) must match");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_dims_inconsistent)
+{
+    PartialShape batch_shape{PartialShape::dynamic()};
+    PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
+    PartialShape offset_shape{65, 22, Dimension::dynamic(), Dimension::dynamic()};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{0, 1, 5, 88};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+
+    try
+    {
+        auto quant =
+            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+        FAIL() << "Inconsistent scale/offset ranks not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Scale shape ({64,?,96,?}) and offset shape ({65,22,?,?}) must match");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    quantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_ok)
+{
+    PartialShape batch_shape{2, 4, 6, Dimension::dynamic(), 10, Dimension::dynamic()};
+    PartialShape scale_shape{4, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape offset_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{1, 3, 5};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+
+    ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
+    ASSERT_TRUE(quant->get_output_partial_shape(0).same_scheme(
+        PartialShape{2, 4, 6, 8, 10, Dimension::dynamic()}));
+}
+
+TEST(
+    type_prop,
+    quantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_axis_oob)
+{
+    PartialShape batch_shape{2, 4, 6, Dimension::dynamic(), 10, Dimension::dynamic()};
+    PartialShape scale_shape{4, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape offset_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{1, 3, 6};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+
+    try
+    {
+        auto quant =
+            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+        FAIL() << "Out-of-bound quantization axis not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Quantization axis (6) must be less than input shape rank (6)");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    quantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_dims_inconsistent)
+{
+    PartialShape batch_shape{2, 5, 6, Dimension::dynamic(), 10, Dimension::dynamic()};
+    PartialShape scale_shape{4, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape offset_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
+    element::Type unquantized_type = element::f32;
+    element::Type quantized_type = element::i8;
+    element::Type batch_type = unquantized_type;
+    element::Type scale_type = unquantized_type;
+    element::Type offset_type = quantized_type;
+    AxisSet axes{1, 3, 5};
+    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+
+    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
+    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
+    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+
+    try
+    {
+        auto quant =
+            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+        FAIL() << "Inconsistent dimensions not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Scale/offset shape ({4,8,?}) must match input shape ({2,5,6,?,10,?}) "
+                             "at the quantization axes (AxisSet{1, 3, 5})");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }
 
 TEST(type_prop, dequantize_f32_from_i8_nchw_per_channel_ok)
@@ -8378,6 +8646,11 @@ TEST(type_prop, dequantize_offset_shape_mismatch_different_rank_fails)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, dequantize_fail_for_reminder)
+{
+    FAIL() << "Adam P needs to implement partial shape/type validation for Dequantize";
 }
 
 //
