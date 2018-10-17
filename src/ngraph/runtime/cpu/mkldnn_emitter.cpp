@@ -1073,7 +1073,7 @@ std::vector<size_t>
     size_t dst_layer_index = build_memory_primitive(dst_layer_desc);
     size_t dst_iter_index = build_memory_primitive(dst_iter_desc);
 
-    // memory primitives for the reorder weights
+    // memory primitives for the reorder weights layer/iter of rnn
     size_t weight_layer_reorder_index =
         this->build_reorder(weights_layer_desc, wei_layer_reorder_desc);
     size_t weight_iter_reorder_index =
@@ -1095,6 +1095,8 @@ std::vector<size_t>
                                              dst_iter_desc);
     auto rnn_layer_prim_desc =
         mkldnn::rnn_forward::primitive_desc(rnn_layer_desc, mkldnn_utils::global_cpu_engine);
+
+    // define workspace for rnn and weights reordering
     auto workspace_index =
         build_memory_primitive(rnn_layer_prim_desc.workspace_primitive_desc().desc());
     auto workspace = std::unique_ptr<MKLDNNWorkspace>(
@@ -1128,13 +1130,10 @@ std::vector<size_t>
                                    dst_layer_index,
                                    dst_iter_index,
                                    workspace_index,
-                                   workspace_buf_index,
-                                   weights_layer_reorder_deps[1],
-                                   workspace_wei_layer_buf_index,
-                                   weights_iter_reorder_deps[1],
-                                   workspace_wei_iter_buf_index,
-                                   weights_layer_reorder_deps[0],
-                                   weights_iter_reorder_deps[0]};
+                                   workspace_buf_index};
+
+    m_primitive_deps[weight_layer_reorder_index].push_back(workspace_wei_layer_buf_index);
+    m_primitive_deps[weight_iter_reorder_index].push_back(workspace_wei_iter_buf_index);
 
     std::vector<size_t> primitive_index{
         rnn_index, weight_layer_reorder_index, weight_iter_reorder_index};
