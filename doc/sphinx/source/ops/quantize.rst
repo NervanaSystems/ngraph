@@ -15,7 +15,7 @@ Produces a tensor of element type ``type`` and the same shape as ``input``
 where the value of each coordinate :math:`i` of ``output`` is the corresponding coordinate of 
 ``input`` divided by ``scale`` rounded as specified by ``round_mode`` plus ``offset``.
 The coordinate :math:`j` of ``scale`` and ``offset`` is the coordinate of ``output`` 
-projected along ``axes``.
+projected onto ``axes``.
 
 Inputs
 ------
