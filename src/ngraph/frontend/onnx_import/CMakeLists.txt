@@ -18,8 +18,6 @@ add_library(onnx_import_interface OBJECT
         onnx.cpp
         onnx.hpp)
 
-target_include_directories(onnx_import_interface PRIVATE ${ONNX_PROTO_INCLUDE_DIR})
-
 add_library(onnx_import STATIC
         core/attribute.cpp
         core/attribute.hpp
@@ -143,12 +141,13 @@ if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
 endif()
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import PUBLIC ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${NGRAPH_INCLUDE_PATH} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
+target_include_directories(onnx_import PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${NGRAPH_INCLUDE_PATH}
+    SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 target_link_libraries(onnx_import PRIVATE ${Protobuf_LIBRARIES} ${ONNX_PROTO_LIBRARY})
 
 set_property(TARGET onnx_import_interface PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(onnx_import_interface PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
-    ${NGRAPH_INCLUDE_PATH} ${Protobuf_INCLUDE_DIR})
+target_include_directories(onnx_import_interface PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${NGRAPH_INCLUDE_PATH}
+    SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(onnx_import PRIVATE -Wno-undef -Wno-reserved-id-macro -Wno-switch-enum
