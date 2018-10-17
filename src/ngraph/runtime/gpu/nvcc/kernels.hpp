@@ -14,28 +14,15 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <onnx-ml.pb.h>
-
-#include "model.hpp"
+#pragma once
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace runtime
     {
-        Model::Model(const onnx::ModelProto& model_proto)
-            : m_model_proto{&model_proto}
+        namespace gpu
         {
-            for (const auto& id : m_model_proto->opset_import())
-            {
-                // onnx.proto(.3): the empty string ("") or absence of this field implies
-                // the operator set that is defined as part of the ONNX specification.
-                if (id.domain().empty())
-                {
-                    m_opset_version = id.version();
-                }
-            }
+            void example_kernel();
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}
