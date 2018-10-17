@@ -49,12 +49,12 @@ TEST(halide, halide_subgraph)
 
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape);
 
-    vector<float> dataA{-1, 4, -2, 5, 1, 5, 7, 9};
+    vector<float> data{-1, 4, -2, 5, 1, 5, 7, 9};
 
-    copy_data(a, dataA);
-    copy_data(b, dataA);
-    copy_data(c, dataA);
-    copy_data(d, dataA);
+    copy_data(a, data);
+    copy_data(b, data);
+    copy_data(c, data);
+    copy_data(d, data);
 
     vector<float> expected{1, 36, 6, 55, 3, 55, 105, 171};
 
