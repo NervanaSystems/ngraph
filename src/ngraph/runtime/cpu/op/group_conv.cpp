@@ -56,6 +56,9 @@ op::GroupConvolution::GroupConvolution(const shared_ptr<Node>& data_batch,
     }
 
     set_output_type(0, data_batch_et, output_shape);
+    //cout << "GD: gconv: element_type: " << data_batch_et << "\n";
+    cout << "GD: gconv: input shape: " << get_inputs().at(0).get_shape() << "\n";
+    cout << "GD: gconv: weights shape: " << get_inputs().at(1).get_shape() << "\n";
 }
 
 Shape op::GroupConvolution::get_weights_dimensions() const
@@ -65,12 +68,18 @@ Shape op::GroupConvolution::get_weights_dimensions() const
     const size_t OC_IN_OUTPUT = 1;
     const size_t IC = 1;
     Shape weights_shape_groups{get_inputs().at(1).get_shape()};
+    cout << "\tnum_groups: "<< get_groups() <<", get_wts_dims: " << weights_shape_groups << "\n";
     // adjust output and channel given a number of groups
 
     weights_shape_groups.at(OC) = get_shape().at(OC_IN_OUTPUT) / get_groups();
+    cout << "\tOC, get_wts_dims: " << get_shape().at(OC_IN_OUTPUT) / get_groups() << " \n";
+
     weights_shape_groups.at(IC) = get_inputs().at(0).get_shape().at(IC) / get_groups();
+    cout << "\tIC, get_wts_dims: " << get_inputs().at(0).get_shape().at(IC) / get_groups() << " \n";
+    cout << "\twights_shape_groups: " << weights_shape_groups << "\n";
     // push_front the number of groups
     weights_shape_groups.insert(weights_shape_groups.begin(), get_groups());
+    cout << "\tweights shape: " << weights_shape_groups << "\n-------------\n";
     return weights_shape_groups;
 }
 

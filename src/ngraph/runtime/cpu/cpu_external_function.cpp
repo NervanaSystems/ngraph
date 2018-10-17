@@ -145,6 +145,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/dequantize.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
@@ -361,7 +362,7 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::LoopKernel>},
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
     {TI(ngraph::op::ConvolutionAdd), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionAdd>},
-
+    {TI(ngraph::op::GroupConvolutionBias), &runtime::cpu::CPU_Emitter::emit<op::GroupConvolutionBias>},
 };
 
 static void

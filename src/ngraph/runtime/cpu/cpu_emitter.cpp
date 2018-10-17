@@ -104,6 +104,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/dequantize.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
@@ -2773,6 +2774,65 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error("unsupported parameters for GroupConvolution");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GroupConvolutionBias)
+            {
+                auto convolution = static_cast<const ngraph::op::GroupConvolutionBias*>(node);
+
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto arg2_shape = args[2].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    Strides window_dilation_strides_adjusted;
+                    for (size_t s : convolution->get_window_dilation_strides())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+
+                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    auto padding_below = convolution->get_padding_below();
+                    auto padding_above = convolution->get_padding_above();
+                    auto filter_strides = convolution->get_window_movement_strides();
+
+                    size_t conv_index =
+                        mkldnn_emitter->build_convolution_forward(input_data_desc,
+                                                                  weights_desc,
+                                                                  bias_desc,
+                                                                  result_desc,
+                                                                  filter_strides,
+                                                                  window_dilation_strides_adjusted,
+                                                                  padding_below,
+                                                                  padding_above);
+
+                    // invoke group convolution
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("unsupported parameters for GroupConvolutionBias");
                 }
             }
 

@@ -19,6 +19,7 @@
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -53,9 +54,23 @@ namespace ngraph
                 {
                     auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
                         *(begin(node->get_users())));
+                    //hack
+                    auto gconvbias = std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(
+                        *(begin(node->get_users())));
+                    
+                    cout << "gconv = " << gconv << ", gconv_bias = " << gconvbias << "\n";
                     if (gconv)
                     {
                         Shape weights_shape_groups = gconv->get_weights_dimensions();
+                        input_desc = mkldnn::memory::desc(
+                            mkldnn::memory::dims(weights_shape_groups.begin(),
+                                                 weights_shape_groups.end()),
+                            mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                            mkldnn::memory::format::goihw);
+                    }
+                    else if (gconvbias)
+                    {
+                        Shape weights_shape_groups = gconvbias->get_weights_dimensions();
                         input_desc = mkldnn::memory::desc(
                             mkldnn::memory::dims(weights_shape_groups.begin(),
                                                  weights_shape_groups.end()),

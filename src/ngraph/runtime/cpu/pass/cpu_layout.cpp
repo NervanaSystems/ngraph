@@ -53,6 +53,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/dequantize.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/quantize.hpp"
@@ -281,10 +282,19 @@ namespace ngraph
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg1_shape = node->get_input_shape(1);
 
-                    if (default_weights_format)
+                    if (default_weights_format && use_bias)
+                    {
+                        arg1_shape = std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node)
+                                         ->get_weights_dimensions();
+                        cout << "\t$$ cpu_layout: ConvolutionLayout GroupConvBias filterShapes :  " <<
+                                 arg1_shape <<" \n";
+                    }
+                    else if (default_weights_format)
                     {
                         arg1_shape = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node)
                                          ->get_weights_dimensions();
+                        cout << "\t$$ cpu_layout: ConvolutionLayout ConvBias filterShapes :  " <<
+                                 arg1_shape <<" \n";
                     }
                     auto result_shape = node->get_output_shape(0);
                     auto filter_strides = convolution->get_window_movement_strides();
@@ -325,8 +335,16 @@ namespace ngraph
                     if (use_bias)
                     {
                         auto arg2_shape = node->get_input_shape(2);
-                        ngraph::op::util::validate_convbias_shapes(
-                            arg0_shape, arg1_shape, arg2_shape);
+                        if (default_weights_format)
+                        {
+                            ngraph::op::util::validate_groupconvbias_shapes(
+                                arg0_shape, arg1_shape, arg2_shape);
+                        }
+                        else
+                        {
+                            ngraph::op::util::validate_convbias_shapes(
+                                arg0_shape, arg1_shape, arg2_shape);
+                        }
                         memory::dims mkldnn_arg2_shape(arg2_shape.begin(), arg2_shape.end());
                         const memory::desc bias_desc(mkldnn_arg2_shape, et, memory::format::any);
                         try
@@ -451,6 +469,7 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
+                        cout << " !! cpu_layout : GroupConvolution called\n";
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
                         ConvolutionLayout<ngraph::op::GroupConvolution, false, true>(
@@ -463,6 +482,28 @@ namespace ngraph
                     {
                         set_native_layouts(external_function, node);
                     }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::GroupConvolutionBias)
+                {
+                    cout << " !! cpu_layout : GroupConvolutionBias called\n";
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        ConvolutionLayout<ngraph::op::GroupConvolutionBias, true, true>(
+                            node, i_mds, o_mds);
+
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                        cout << "\t cpu_layout : GroupConvolutionBias after set_output_layouts\n";
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                    cout << " !! cpu_layout : GroupConvolutionBias done\n";
                 }
 
                 template <>
@@ -1800,7 +1841,7 @@ namespace ngraph
                             }
                             else
                             {
-                                throw ngraph_error(e.message);
+                                throw ngraph_error("cpu_layout Slice" + e.message);
                             }
                         }
                     }
@@ -1846,7 +1887,7 @@ namespace ngraph
                         }
                         catch (const mkldnn::error& e)
                         {
-                            throw ngraph_error(e.message);
+                            throw ngraph_error("cpu_layout Concat" + e.message);
                         }
                     }
                     else
@@ -2017,6 +2058,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolutionBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBias>},
+    {TI(ngraph::op::GroupConvolutionBias),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolutionBias>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

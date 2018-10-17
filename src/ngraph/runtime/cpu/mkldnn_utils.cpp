@@ -61,7 +61,7 @@ std::unordered_set<std::type_index>& runtime::cpu::mkldnn_utils::get_op_registry
         TI(ngraph::op::MaxPoolBackprop),
         TI(ngraph::op::Relu),
         TI(ngraph::op::ReluBackprop),
-        TI(ngraph::op::Reshape)};
+        TI(ngraph::op::Reshape),};
     return s_op_registry;
 }
 
@@ -118,37 +118,78 @@ std::map<memory::format, const std::string>&
         {memory::format::chwn, "memory::format::chwn"},
         {memory::format::nChw8c, "memory::format::nChw8c"},
         {memory::format::nChw16c, "memory::format::nChw16c"},
-        {memory::format::ncdhw, "memory::format::ndhwc"},
-        {memory::format::ncdhw, "memory::format::ndhwc"},
+        {memory::format::ncdhw, "memory::format::ncdhw"},
+        {memory::format::ndhwc, "memory::format::ndhwc"},
+        {memory::format::nCdhw8c, "memory::format::nCdhw8c"},
         {memory::format::nCdhw16c, "memory::format::nCdhw16c"},
         {memory::format::oi, "memory::format::oi"},
         {memory::format::io, "memory::format::io"},
         {memory::format::oihw, "memory::format::oihw"},
         {memory::format::ihwo, "memory::format::ihwo"},
         {memory::format::hwio, "memory::format::hwio"},
-        // TODO (nishant): Uncomment after the next release of mkl-dnn"
-        //{memory::format::dhwio, "memory::format::dhwio"},
+        {memory::format::dhwio, "memory::format::dhwio"},
         {memory::format::oidhw, "memory::format::oidhw"},
+        {memory::format::OIdhw8i8o, "memory::format::OIdhw8i8o"},
+        {memory::format::OIdhw8o8i, "memory::format::OIdhw8o8i"},
+        {memory::format::Odhwi8o, "memory::format::Odhwi8o"},
         {memory::format::OIdhw16i16o, "memory::format::OIdhw16i16o"},
         {memory::format::OIdhw16o16i, "memory::format::OIdhw16o16i"},
         {memory::format::Oidhw16o, "memory::format::Oidhw16o"},
         {memory::format::Odhwi16o, "memory::format::Odhwi16o"},
         {memory::format::oIhw8i, "memory::format::oIhw8i"},
         {memory::format::oIhw16i, "memory::format::oIhw16i"},
+        {memory::format::oIdhw8i, "memory::format::oIdhw8i"},
+        {memory::format::oIdhw16i, "memory::format::oIdhw16i"},
         {memory::format::OIhw8i8o, "memory::format::OIhw8i8o"},
         {memory::format::OIhw16i16o, "memory::format::OIhw16i16o"},
-        {memory::format::IOhw16o16i, "memory::format::IOhw16o16i"},
         {memory::format::OIhw8o8i, "memory::format::OIhw8o8i"},
         {memory::format::OIhw16o16i, "memory::format::OIhw16o16i"},
+        {memory::format::IOhw16o16i, "memory::format::IOhw16o16i"},
+        {memory::format::OIhw8i16o2i, "memory::format::OIhw8i16o2i"},
+        {memory::format::OIdhw8i16o2i, "memory::format::OIdhw8i16o2i"},
+        {memory::format::OIhw8o16i2o, "memory::format::OIhw8o16i2o"},
+        {memory::format::OIhw4i16o4i, "memory::format::OIhw4i16o4i"},
         {memory::format::Oihw8o, "memory::format::Oihw8o"},
         {memory::format::Oihw16o, "memory::format::Oihw16o"},
         {memory::format::Ohwi8o, "memory::format::Ohwi8o"},
         {memory::format::Ohwi16o, "memory::format::Ohwi16o"},
         {memory::format::OhIw16o4i, "memory::format::OhIw16o4i"},
+        {memory::format::goihw, "memory::format::goihw"},
+        {memory::format::hwigo, "memory::format::hwigo"},
+        {memory::format::gOIdhw8i8o, "memory::format::gOIdhw8i8o"},
+        {memory::format::gOIdhw8o8i, "memory::format::gOIdhw8o8i"},
+        {memory::format::gOdhwi8o, "memory::format::gOdhwi8o"},
+        {memory::format::gOIhw8i8o, "memory::format::gOIhw8i8o"},
+        {memory::format::gOIhw16i16o, "memory::format::gOIhw16i16o"},
+        {memory::format::gOIhw8i16o2i, "memory::format::gOIhw8i16o2i"},
+        {memory::format::gOIdhw8i16o2i, "memory::format::gOIdhw8i16o2i"},
+        {memory::format::gOIhw8o16i2o, "memory::format::gOIhw8o16i2o"},
+        {memory::format::gOIhw4i16o4i, "memory::format::gOIhw4i16o4i"},
+        {memory::format::gOihw8o, "memory::format::gOihw8o"},
+        {memory::format::gOihw16o, "memory::format::gOihw16o"},
+        {memory::format::gOhwi8o, "memory::format::gOhwi8o"},
+        {memory::format::gOhwi16o, "memory::format::gOhwi16o"},
+        {memory::format::Goihw8g, "memory::format::Goihw8g"},
+        {memory::format::Goihw16g, "memory::format::Goihw16g"},
+        {memory::format::gOIhw8o8i, "memory::format::gOIhw8o8i"},
+        {memory::format::gOIhw16o16i, "memory::format::gOIhw16o16i"},
+        {memory::format::gIOhw16o16i, "memory::format::gIOhw16o16i"},
+        {memory::format::gOhIw16o4i, "memory::format::gOhIw16o4i"},
+        {memory::format::goidhw, "memory::format::goidhw"},
+        {memory::format::gOIdhw16i16o, "memory::format::gOIdhw16i16o"},
+        {memory::format::gOIdhw16o16i, "memory::format::gOIdhw16o16i"},
+        {memory::format::gOidhw16o, "memory::format::gOidhw16o"},
+        {memory::format::gOdhwi16o, "memory::format::gOdhwi16o"},
+        {memory::format::ntc, "memory::format::ntc"},
         {memory::format::tnc, "memory::format::tnc"},
         {memory::format::ldsnc, "memory::format::ldsnc"},
         {memory::format::ldigo, "memory::format::ldigo"},
+        {memory::format::ldigo_p, "memory::format::ldigo_p"},
+        {memory::format::ldgoi, "memory::format::ldgoi"},
+        {memory::format::ldgoi_p, "memory::format::ldgoi_p"},
         {memory::format::ldgo, "memory::format::ldgo"},
+        {memory::format::wino_fmt, "memory::format::wino_fmt"},
+        {memory::format::format_last, "memory::format::format_last"},
     };
     return s_mkldnn_format_string_map;
 }
@@ -230,9 +271,10 @@ mkldnn::memory::data_type
 const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_format_string(memory::format fmt)
 {
     auto it = get_mkldnn_format_string_map().find(fmt);
-    if (it == get_mkldnn_format_string_map().end())
+    if (it == get_mkldnn_format_string_map().end()) {
         throw ngraph_error("No MKLDNN format exists for the given format type " +
                            std::to_string(fmt));
+    }
     return it->second;
 }
 

@@ -55,6 +55,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
@@ -80,6 +81,44 @@
 
 using namespace ngraph;
 using namespace std;
+
+TEST(cpu_fusion, broadcast_gauri)
+{
+    Shape shape_a{4};
+    Shape shape_r{4, 1, 3, 3};
+    AxisSet axis{1, 2, 3};
+    //broadcast_test_helper(shape_a, shape_r, axis);
+    
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+
+    vector<float> inp_data(shape_size<const Shape>(shape_a));
+    iota(inp_data.begin(), inp_data.end(), 1);
+
+    auto f =
+        make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, axis), op::ParameterVector{A});
+
+    auto ref_backend = runtime::Backend::create("INTERPRETER");
+    auto wrk_backend = runtime::Backend::create("CPU");
+
+    auto wrk_a = wrk_backend->create_tensor(element::f32, shape_a);
+    copy_data(wrk_a, inp_data);
+
+    auto ref_a = ref_backend->create_tensor(element::f32, shape_a);
+    copy_data(ref_a, inp_data);
+
+    shared_ptr<runtime::Tensor> wrk_result = wrk_backend->create_tensor(element::f32, shape_r);
+    shared_ptr<runtime::Tensor> ref_result = ref_backend->create_tensor(element::f32, shape_r);
+
+    wrk_backend->call_with_validate(f, {wrk_result}, {wrk_a});
+    ref_backend->call_with_validate(f, {ref_result}, {ref_a});
+
+    vector<float> tmp = read_vector<float>(wrk_result);
+    for (size_t i = 0; i < wrk_result->get_element_count(); ++i)
+    {
+        std::cout << i << ": " << tmp[i] << "\n"; 
+    }
+    EXPECT_EQ(read_vector<float>(ref_result), read_vector<float>(wrk_result));
+}
 
 TEST(cpu_fusion, gemm_pattern)
 {
@@ -1032,6 +1071,70 @@ TEST(cpu_fusion, conv_add)
 {
     auto int_f = gen_conv_add(false, false);
     auto cpu_f = gen_conv_add(false, false);
+
+    vector<vector<float>> args{{1.25f, 2.25f, 5.25f, 6.25f, -1.25f, -1.25f, 3.25f, -4.25f},
+                               {-1.25f},
+                               {1.25f, 2.25f, -3.25f, 2.25f, 4.25f, 4.25f, 1.25f, 2.25f}};
+
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+
+    int_f = gen_conv_add(false, true);
+    cpu_f = gen_conv_add(false, true);
+
+    int_results = execute(int_f, args, "INTERPRETER");
+    cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
+
+// CHECK: do we care if this is in-place only??
+// ConvolutionAdd relies on an in-place fused MKLDNN kernel.
+// Need to ensure that it is fused only when in-place buffer allocation is feasible
+shared_ptr<Function> gen_groupconv_bias()
+{
+    const size_t GROUPS = 32;
+    Shape shape_a{1, 32, 5, 5};
+    auto input = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{32, 1, 3, 3};
+    auto weights = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1, 32, 3, 3};
+    auto group_conv = make_shared<op::GroupConvolution>(input,
+                                                        weights,
+                                                        Strides{1, 1},
+                                                        Strides{1, 1},
+                                                        CoordinateDiff{0, 0},
+                                                        CoordinateDiff{0, 0},
+                                                        Strides{1, 1},
+                                                        GROUPS,
+                                                        shape_r);
+
+    double eps = 0.001;
+    auto gamma = std::make_shared<op::Parameter>(element::f32, Shape{32});
+    auto beta = std::make_shared<op::Parameter>(element::f32, Shape{32});
+    auto mean = std::make_shared<op::Parameter>(element::f32, Shape{32});
+    auto var = std::make_shared<op::Parameter>(element::f32, Shape{32});
+    auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, group_conv, mean, var);
+    auto f = make_shared<Function>(NodeVector{bn},
+                                    op::ParameterVector{input, weights, gamma, beta, mean, var});
+    return f;
+}
+
+TEST(cpu_fusion, fuse_groupconv_bias)
+{
+    auto func_fuse = gen_groupconv_bias();
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.run_passes(func_fuse);
+    ASSERT_EQ(count_ops_of_type<op::GroupConvolutionBias>(func_fuse), 1);
+
+}
+
+TEST(cpu_fusion, groupconv_bias)
+{
+    auto int_f = gen_groupconv_bias();
+    auto cpu_f = gen_groupconv_bias();
 
     vector<vector<float>> args{{1.25f, 2.25f, 5.25f, 6.25f, -1.25f, -1.25f, 3.25f, -4.25f},
                                {-1.25f},

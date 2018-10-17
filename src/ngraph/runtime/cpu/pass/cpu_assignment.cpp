@@ -45,6 +45,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/dequantize.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/quantize.hpp"
@@ -179,6 +180,22 @@ namespace ngraph
 
                     if (can_use_mkldnn_conv<ngraph::op::GroupConvolution>(node))
                     {
+                        cout << "## cpu_assignment groupConv \n";
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        convolution->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::GroupConvolutionBias)
+                {
+                    auto convolution = static_cast<op::GroupConvolutionBias*>(node);
+
+                    if (can_use_mkldnn_conv<ngraph::op::GroupConvolutionBias>(node))
+                    {
+                        cout << "## cpu_assignment groupConvBias \n";
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
@@ -873,6 +890,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolutionBias),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConvolutionBias>},
+    {TI(ngraph::op::GroupConvolutionBias),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::GroupConvolutionBias>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

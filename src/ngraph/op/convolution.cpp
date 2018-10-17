@@ -14,13 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
+#include <iostream>
 #include <numeric>
+#include <string>
+#include <unordered_set>
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -86,14 +91,27 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
         << "Output channel count for filters is zero (filters shape: " << filters_shape << ", "
         << "output channels on axis " << output_channel_axis_filters << ").";
 
-    NODE_VALIDATION_ASSERT(node, filters_shape[input_channel_axis_filters] == input_channel_count)
-        << "Input channel count for filters (" << filters_shape[input_channel_axis_filters] << ") "
-        << "does not match the number of channels in the data batch (" << input_channel_count
-        << ") "
-        << "(filter input shape: " << filters_shape << ", filter input channels on axis "
-        << input_channel_axis_filters << "; data batch shape: " << data_batch_shape
-        << ", data batch channels on axis " << batch_axis_data << ").";
-
+    if (node->get_friendly_name().find("GroupConvolution") !=std::string::npos)
+    {
+        cout << " node name : " << node->get_name() << "\n";
+        NODE_VALIDATION_ASSERT(node, filters_shape.at(0) == input_channel_count)
+            << "Input channel count for filters (" << filters_shape.at(0) << ") "
+            << "does not match the number of channels in the data batch (" << input_channel_count
+            << ") "
+            << "(filter input shape: " << filters_shape << "; data batch shape: " << data_batch_shape
+            << ").";
+    }
+    else
+    {
+        //cout << " node name : " << node->get_name() << "\n";
+        NODE_VALIDATION_ASSERT(node, filters_shape[input_channel_axis_filters] == input_channel_count)
+            << "Input channel count for filters (" << filters_shape[input_channel_axis_filters] << ") "
+            << "does not match the number of channels in the data batch (" << input_channel_count
+            << ") "
+            << "(filter input shape: " << filters_shape << ", filter input channels on axis "
+            << input_channel_axis_filters << "; data batch shape: " << data_batch_shape
+            << ", data batch channels on axis " << batch_axis_data << ").";
+    }
     //
     // Make sure window movement strides, window dilation strides, and data dilation strides
     // have same rank as Di.
@@ -222,6 +240,7 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
                                        window_movement_strides[i]);
     }
 
+    //cout << "**** infer_convolution_output_shape: result_shape: " << result_shape <<"\n";
     return result_shape;
 }
 
