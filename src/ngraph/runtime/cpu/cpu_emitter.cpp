@@ -4607,29 +4607,77 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Dequantize)
             {
-                auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
-                writer << "reference::dequantize(";
-                writer << "            " << args[0].get_name() << ",\n";
-                writer << "            " << args[1].get_name() << ",\n";
-                writer << "            " << args[2].get_name() << ",\n";
-                writer << "            " << out[0].get_name() << ",\n";
-                writer << "            {" << join(args[0].get_shape()) << "},\n";
-                writer << "            {" << join(args[1].get_shape()) << "},\n";
-                writer << "            {" << join(dequantize->get_axes()) << "});\n";
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    size_t dequantize_index =
+                        mkldnn_emitter->build_dequantization(node, input_data_desc, result_desc);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(dequantize_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(dequantize_index) << ");\n";
+                }
+                else
+                {
+                    auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
+                    writer << "reference::dequantize(";
+                    writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            " << args[1].get_name() << ",\n";
+                    writer << "            " << args[2].get_name() << ",\n";
+                    writer << "            " << out[0].get_name() << ",\n";
+                    writer << "            {" << join(args[0].get_shape()) << "},\n";
+                    writer << "            {" << join(args[1].get_shape()) << "},\n";
+                    writer << "            {" << join(dequantize->get_axes()) << "});\n";
+                }
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Quantize)
             {
-                auto quantize = static_cast<const ngraph::op::Dequantize*>(node);
-                writer << "reference::quantize(";
-                writer << "            " << args[0].get_name() << ",\n";
-                writer << "            " << args[1].get_name() << ",\n";
-                writer << "            " << args[2].get_name() << ",\n";
-                writer << "            " << out[0].get_name() << ",\n";
-                writer << "            {" << join(args[0].get_shape()) << "},\n";
-                writer << "            {" << join(args[1].get_shape()) << "},\n";
-                writer << "            {" << join(quantize->get_axes()) << "});\n";
+                auto quantize = static_cast<const ngraph::op::Quantize*>(node);
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    float scale_const_op =
+                        std::static_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));
+                    float scale = *(static_cast<float const*>(scale_const_op->get_data_ptr()));
+
+                    std::vector<float> scales;
+                    scales.push_back(scale);
+
+                    size_t quantize_index = 0;
+                    quantize_index = mkldnn_emitter->build_quantize_reorder(
+                        input_data_desc, result_desc, scales);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "*(" << out[1].get_name() << ") = " << quant_util[0] << ";\n";
+                    writer << "*(" << out[2].get_name() << ") = " << quant_util[1] << ";\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(quantize_index) << ");\n";
+                }
+                else
+                {
+                    writer << "reference::quantize(";
+                    writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            " << args[1].get_name() << ",\n";
+                    writer << "            " << args[2].get_name() << ",\n";
+                    writer << "            " << out[0].get_name() << ",\n";
+                    writer << "            {" << join(args[0].get_shape()) << "},\n";
+                    writer << "            {" << join(args[1].get_shape()) << "},\n";
+                    writer << "            {" << join(quantize->get_axes()) << "});\n";
+                }
             }
 
 #undef TI

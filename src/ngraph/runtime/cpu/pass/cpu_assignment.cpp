@@ -30,6 +30,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
@@ -37,6 +38,7 @@
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/slice.hpp"
@@ -773,6 +775,41 @@ namespace ngraph
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
                         quantized_conv_bias->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Dequantize)
+                {
+                    auto dequantize = static_cast<op::Dequantize*>(node);
+                    float offset_const_op =
+                        std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(2));
+                    float offset = *(static_cast<float const*>(offset_const_op->get_data_ptr()));
+                    if ((node->get_input_element_type(0) == element::u8 ||
+                         node->get_input_element_type(0) == element::i8) &&
+                        offset == 0)
+                    {
+                        auto dequantize = static_cast<op::Dequantize*>(node);
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        dequantize->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Quantize)
+                {
+                    auto quantize = static_cast<op::Quantize*>(node);
+                    float offset_const_op =
+                        std::static_pointer_cast<ngraph::op::Constant>(quantize->get_argument(2));
+                    float offset = *(static_cast<float const*>(offset_const_op->get_data_ptr()));
+                    if (node->get_input_element_type(0) == element::f32 && offset == 0)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        quantize->set_op_annotations(op_annotations);
                     }
                 }
             }
