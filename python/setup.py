@@ -321,7 +321,6 @@ class BuildExt(build_ext):
     """
 
     def build_extensions(self):
-        ct = self.compiler.compiler_type
         for ext in self.extensions:
             ext.extra_compile_args += [cpp_flag(self.compiler)]
             if has_flag(self.compiler, '-fstack-protector-strong'):
