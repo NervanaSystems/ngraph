@@ -20,7 +20,7 @@ import numpy as np
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
     NodeVector, Shape, Strides
 
-from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, BatchNorm, \
+from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, BatchNormTraining, BatchNormInference \
     Broadcast, Ceiling, Concat, Constant, Convert, Convolution, ConvolutionBackpropData, Cos, \
     Cosh, Divide, Dot, Equal, Exp, Floor, FunctionCall, GetOutputElement, Greater, GreaterEq, \
     Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, \
@@ -924,9 +924,9 @@ def batch_norm(eps,             # type: float
     # type: (...) -> Node
     """Return batch normalization node."""
     if mean is None and variance is None:
-        return BatchNorm(eps, gamma, beta, data)
+        return BatchNormTraining(eps, gamma, beta, data)
     else:
-        return BatchNorm(eps, gamma, beta, data, mean, variance, training)
+        return BatchNormInference(eps, gamma, beta, data, mean, variance, training)
 
 
 @nameable_op

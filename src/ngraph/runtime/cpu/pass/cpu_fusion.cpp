@@ -310,7 +310,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
             // get epsilon value
             auto eps_ptr = std::dynamic_pointer_cast<op::Constant>(pattern_map[eps_label]);
             double epsilon = *(reinterpret_cast<const double*>(eps_ptr->get_data_ptr()));
-            auto bn_node = std::make_shared<op::BatchNorm>(
+            auto bn_node = std::make_shared<op::BatchNormTraining>(
                 epsilon, pattern_map[gamma_label], pattern_map[beta_label], pattern_map[input]);
 
             auto normalized_output = std::shared_ptr<Node>(new op::GetOutputElement(bn_node, 0));
@@ -741,7 +741,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
     auto beta_shape = Shape{2};
     auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
     double eps = 0.001;
-    auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, input);
+    auto bn = std::make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
     auto goe = std::make_shared<op::GetOutputElement>(bn, 0);
     auto prelu = std::make_shared<op::Relu>(goe);
 
@@ -750,7 +750,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(
+        auto m_bn = std::dynamic_pointer_cast<op::BatchNormTraining>(
             m.get_match_root()->get_argument(0)->get_inputs().at(0).get_output().get_node());
 
         // as of now, only MKLDNN supports this fusion
@@ -777,7 +777,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
 
         mgoes[0] = m.get_match_root(); // replace relu instead of its GetOutputElement
 
-        auto bn_relu = std::make_shared<op::BatchNormRelu>(
+        auto bn_relu = std::make_shared<op::BatchNormTrainingRelu>(
             m_bn->get_eps_value(), pattern_map[gamma], pattern_map[beta], pattern_map[input]);
 
         auto bn_relu_output = std::make_shared<op::GetOutputElement>(bn_relu, 0);
@@ -809,46 +809,62 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
     auto gamma = std::make_shared<pattern::op::Label>(element::f32, gamma_shape);
     auto beta_shape = Shape{2};
     auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
-    double eps = 0.001;
-    auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
+    auto bn_pred = pattern::has_class<op::BatchNormBase>();
+    auto bn = std::make_shared<pattern::op::Any>(
+        input, bn_pred, NodeVector{gamma, beta, input, mean, var});
     auto prelu = std::make_shared<op::Relu>(bn);
 
-    ngraph::pattern::graph_rewrite_callback callback =
-        [input, mean, var, gamma, beta](pattern::Matcher& m) {
-            NGRAPH_DEBUG << "In callback for construct_batch_norm_relu against node = "
-                         << m.get_match_root()->get_name();
+    ngraph::pattern::graph_rewrite_callback callback = [input, mean, var, gamma, beta](
+        pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for construct_batch_norm_relu against node = "
+                     << m.get_match_root()->get_name();
 
-            auto pattern_map = m.get_pattern_map();
-            auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(
-                m.get_match_root()->get_inputs().at(0).get_output().get_node());
+        auto pattern_map = m.get_pattern_map();
 
-            // as of now, only MKLDNN supports this fusion
-            // and it requires input data's rank to be equal to 4
-            if (pattern_map[input]->get_shape().size() != 4)
-            {
-                NGRAPH_DEBUG << " Input data's rank isn't equal to 4. Shape = "
-                             << pattern_map[input]->get_shape().size();
-                return false;
-            }
+        // as of now, only MKLDNN supports this fusion
+        // and it requires input data's rank to be equal to 4
+        if (pattern_map[input]->get_shape().size() != 4)
+        {
+            NGRAPH_DEBUG << " Input data's rank isn't equal to 4. Shape = "
+                         << pattern_map[input]->get_shape().size();
+            return false;
+        }
 
-            if (m_bn->get_users().size() > 1)
-            {
-                NGRAPH_DEBUG << "Relu isn't the only user of BatchNorm's output";
-                return false;
-            }
+        auto bn_match = m.get_match_root()->get_inputs().at(0).get_output().get_node();
+        if (bn_match->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Relu isn't the only user of BatchNorm's output";
+            return false;
+        }
 
-            auto bn_relu = std::make_shared<op::BatchNormRelu>(m_bn->get_eps_value(),
-                                                               pattern_map[gamma],
-                                                               pattern_map[beta],
-                                                               pattern_map[input],
-                                                               pattern_map[mean],
-                                                               pattern_map[var],
-                                                               m_bn->get_training_flag());
+        std::shared_ptr<Node> bn_relu;
+        if (auto bn_inference = std::dynamic_pointer_cast<op::BatchNormInference>(bn_match))
+        {
+            bn_relu = std::make_shared<op::BatchNormInferenceRelu>(bn_inference->get_eps_value(),
+                                                                   pattern_map[gamma],
+                                                                   pattern_map[beta],
+                                                                   pattern_map[input],
+                                                                   pattern_map[mean],
+                                                                   pattern_map[var]);
+        }
+        else if (auto bn_training = std::dynamic_pointer_cast<op::BatchNormTraining>(bn_match))
+        {
+            bn_relu = std::make_shared<op::BatchNormTrainingRelu>(bn_training->get_eps_value(),
+                                                                  pattern_map[gamma],
+                                                                  pattern_map[beta],
+                                                                  pattern_map[input],
+                                                                  pattern_map[mean],
+                                                                  pattern_map[var]);
+        }
 
+        if (bn_relu)
+        {
             ngraph::replace_node(m.get_match_root(), bn_relu);
-
             return true;
-        };
+        }
+
+        return false;
+    };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(prelu, callback);
     this->add_matcher(m);
@@ -1422,7 +1438,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
     auto gamma = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
     auto beta = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
     double eps = 0.001;
-    auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, pconv, mean, var);
+    auto bn = std::make_shared<op::BatchNormInference>(eps, gamma, beta, pconv, mean, var);
 
     ngraph::pattern::graph_rewrite_callback callback =
         [input, filters, bias, mean, var, gamma, beta](pattern::Matcher& m) {
@@ -1430,7 +1446,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
                          << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
 
-            auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(m.get_match_root());
+            auto m_bn = std::dynamic_pointer_cast<op::BatchNormInference>(m.get_match_root());
             auto m_conv = std::dynamic_pointer_cast<op::ConvolutionBias>(m_bn->get_argument(2));
 
             if (m_conv->get_users().size() > 1)
