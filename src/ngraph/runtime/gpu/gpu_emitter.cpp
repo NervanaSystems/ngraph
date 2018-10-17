@@ -183,19 +183,18 @@ void runtime::gpu::GPU_Emitter::emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t 
         return;
     }
 
-    std::vector<size_t> axes;
-    if(reduce_op = CUDNN_REDUCE_TENSOR_MIN)
+    size_t axis;
+    if(reduce_op == CUDNN_REDUCE_TENSOR_MIN)
     {
         auto argmin = static_cast<const ngraph::op::ArgMin*>(node);
-        axes = argmin->get_reduction_axis();
+        axis = argmin->get_reduction_axis();
     }
     else
     {
         auto argmax = static_cast<const ngraph::op::ArgMax*>(node);
-        axes = argmax->get_reduction_axis();
+        axis = argmax->get_reduction_axis();
     }
-
-    auto axis_set = AxisSet(axes);
+    auto axis_set = AxisSet{axis};
 
     std::vector<element::Type> dtypes{args[0].get_element_type(), out[0].get_element_type()};
 
