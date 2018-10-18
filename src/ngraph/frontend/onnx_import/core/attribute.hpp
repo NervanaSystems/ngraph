@@ -23,9 +23,6 @@
 #include "operator_set.hpp"
 #include "tensor.hpp"
 
-#define likely(__x) __builtin_expect(!!(__x), 1)
-#define unlikely(__x) __builtin_expect(!!(__x), 0)
-
 namespace ngraph
 {
     namespace onnx_import
@@ -139,7 +136,7 @@ namespace ngraph
                 template <>
                 inline std::size_t get_value(const onnx::AttributeProto& attribute)
                 {
-                    if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_INT))
+                    if (attribute.type() != onnx::AttributeProto_AttributeType_INT)
                     {
                         throw error::attribute::InvalidData{attribute.type()};
                     }
@@ -162,7 +159,7 @@ namespace ngraph
                 template <>
                 inline int64_t get_value(const onnx::AttributeProto& attribute)
                 {
-                    if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_INT))
+                    if (attribute.type() != onnx::AttributeProto_AttributeType_INT)
                     {
                         throw error::attribute::InvalidData{attribute.type()};
                     }
@@ -184,7 +181,7 @@ namespace ngraph
                 template <>
                 inline std::string get_value(const onnx::AttributeProto& attribute)
                 {
-                    if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_STRING))
+                    if (attribute.type() != onnx::AttributeProto_AttributeType_STRING)
                     {
                         throw error::attribute::InvalidData{attribute.type()};
                     }
@@ -206,7 +203,7 @@ namespace ngraph
                 template <>
                 inline Tensor get_value(const onnx::AttributeProto& attribute)
                 {
-                    if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_TENSOR))
+                    if (attribute.type() != onnx::AttributeProto_AttributeType_TENSOR)
                     {
                         throw error::attribute::InvalidData{attribute.type()};
                     }
