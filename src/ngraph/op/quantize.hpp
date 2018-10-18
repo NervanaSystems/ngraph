@@ -32,7 +32,6 @@ namespace ngraph
         public:
             enum class RoundMode
             {
-                // std::round
                 // x.5 to x+1
                 // -x.5 to -(x+1)
                 // everything else to nearest integer
@@ -50,7 +49,6 @@ namespace ngraph
                 // -3.75 -> -4.0
                 HALF_AWAY_FROM_ZERO,
 
-                // std::nearbyint FE_TONEAREST
                 // x.5 and -x.5 to nearest even integer
                 // everything else to nearest integer
                 //  2.25 ->  2.0
@@ -67,7 +65,6 @@ namespace ngraph
                 // -3.75 -> -4.0
                 HALF_TO_EVEN,
 
-                // std::nearbyint FE_UPWARD
                 // everything to next integer towards infinity
                 //  2.25 ->  3.0
                 //  2.50 ->  3.0
@@ -83,7 +80,6 @@ namespace ngraph
                 // -3.75 -> -3.0
                 ALL_TOWARD_POSITIVE_INFINITY,
 
-                // std::nearbyint FE_DOWNWARD
                 // everything to next integer towards -infinity
                 //  2.25 ->  2.0
                 //  2.50 ->  2.0
@@ -99,7 +95,6 @@ namespace ngraph
                 // -3.75 -> -4.0
                 ALL_TOWARD_NEGATIVE_INFINITY,
 
-                // std::nearbyint FE_TOWARDZERO
                 // everything to next integer towards zero
                 //  2.25 ->  2.0
                 //  2.50 ->  2.0
@@ -122,7 +117,7 @@ namespace ngraph
             /// \param offset element type: same as `type`, shape: `input` shape projected along `axes`
             /// \param type output element type
             /// \param axes axis positions on which `scale` and `offset` are specified
-            /// \param round_mode describes how to perform ROUND function
+            /// \param round_mode describes how to perform ROUND function (see above)
             Quantize(std::shared_ptr<Node> input,
                      std::shared_ptr<Node> scale,
                      std::shared_ptr<Node> offset,

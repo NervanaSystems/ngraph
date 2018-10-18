@@ -40,7 +40,23 @@ Attributes
 +-------------------------------+----------------------------------------------------------------+
 | ``axes``                      | Axis positions on which ``scale`` and ``offset`` are specified |
 +-------------------------------+----------------------------------------------------------------+
-| ``round_mode``                | Refer to ``/src/ngraph/op/quantize.hpp``                       |
+| ``round_mode``                | *HALF_AWAY_FROM_ZERO:*                                         |
+|                               | x.5 to x+1                                                     |
+|                               | -x.5 to -(x+1)                                                 |
+|                               | everything else to nearest integer                             |
+|                               |                                                                |
+|                               | *HALF_TO_EVEN:*                                                |
+|                               | x.5 and -x.5 to nearest even ineger                            |
+|                               | everything else to nearest integer                             |
+|                               |                                                                |
+|                               | *ALL_TOWARD_POSITIVE_INFINITY:*                                |
+|                               | everything to next integer towards infinity                    |
+|                               |                                                                |
+|                               | *ALL_TOWARD_NEGATIVE_INFINITY:*                                |
+|                               | everything to next integer towards negative infinity           |
+|                               |                                                                |
+|                               | *ALL_TOWARD_ZERO:*                                             |
+|                               | everything to next integer towards zero                        |
 +-------------------------------+----------------------------------------------------------------+
 
 
