@@ -57,9 +57,9 @@ void op::Slice::validate_and_infer_types()
         << "Ranks of lower bounds (" << m_lower_bounds << "), upper bounds (" << m_upper_bounds
         << ") and strides (" << m_strides << ") do not match.";
 
-    size_t implied_rank = m_upper_bounds.size();
+    size_t output_rank = m_upper_bounds.size();
 
-    for (size_t i = 0; i < implied_rank; i++)
+    for (size_t i = 0; i < output_rank; i++)
     {
         NODE_VALIDATION_ASSERT(this, m_lower_bounds[i] <= m_upper_bounds[i])
             << "Lower bound for slice is greater than upper bound at axis " << i
@@ -72,13 +72,13 @@ void op::Slice::validate_and_infer_types()
     const PartialShape& input_shape = get_input_partial_shape(0);
     Dimension input_rank = input_shape.rank();
 
-    NODE_VALIDATION_ASSERT(this, input_rank.is_dynamic() || size_t(input_rank) == implied_rank)
+    NODE_VALIDATION_ASSERT(this, input_rank.is_dynamic() || size_t(input_rank) == output_rank)
         << "Input rank does not match the rank of the lower bounds (" << m_lower_bounds
         << "), upper bounds (" << m_upper_bounds << "), and strides (" << m_strides << ").";
 
-    std::vector<Dimension> result_dims(implied_rank);
+    std::vector<Dimension> result_dims(output_rank);
 
-    for (size_t i = 0; i < implied_rank; i++)
+    for (size_t i = 0; i < output_rank; i++)
     {
         NODE_VALIDATION_ASSERT(this,
                                input_rank.is_dynamic() || input_shape[i].is_dynamic() ||
