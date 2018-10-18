@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cfenv>
 #include <cmath>
 
 #include "ngraph/axis_set.hpp"
@@ -49,27 +50,35 @@ namespace ngraph
                     REAL qvalue = input[input_transform.index(input_coord)] /
                                   scale[scale_offset_transform.index(scale_offset_coord)];
 
-                    REAL abs_qvalue = std::abs(qvalue);
-                    REAL sign_qvalue = qvalue < 0.0 ? -1.0 : 1.0;
-                    REAL half = static_cast<REAL>(0.5);
+                    auto fe_round_mode = std::fegetround();
 
                     // round
                     if (round_mode == op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO)
                     {
-                        qvalue = sign_qvalue * (abs_qvalue + half)
+                        qvalue = std::round(qvalue);
                     }
-                    else if (round_mode == op::Quantize::RoundMode::HALF_TOWARD_ZERO)
+                    else if (round_mode == op::Quantize::RoundMode::HALF_TO_EVEN)
                     {
-                        qvalue = sign_qvalue * (abs_qvalue - half)
+                        std::fesetround(FE_TONEAREST);
+                        qvalue = std::nearbyint(qvalue);
                     }
-                    else if (round_mode == op::Quantize::RoundMode::HALF_TOWARD_POSITIVE_INFINITY)
+                    else if (round_mode == op::Quantize::RoundMode::ALL_TOWARD_POSITIVE_INFINITY)
                     {
-                        qvalue += half;
+                        std::fesetround(FE_UPWARD);
+                        qvalue = std::nearbyint(qvalue);
                     }
-                    else if (round_mode == op::Quantize::RoundMode::HALF_TOWARD_NEGATIVE_INFINITY)
+                    else if (round_mode == op::Quantize::RoundMode::ALL_TOWARD_NEGATIVE_INFINITY)
                     {
-                        qvalue -= half;
+                        std::fesetround(FE_DOWNWARD);
+                        qvalue = std::nearbyint(qvalue);
                     }
+                    else if (round_mode == op::Quantize::RoundMode::ALL_TOWARD_ZERO)
+                    {
+                        std::fesetround(FE_TOWARDZERO);
+                        qvalue = std::nearbyint(qvalue);
+                    }
+
+                    std::fesetround(fe_round_mode);
 
                     // apply offset
                     qvalue += offset[scale_offset_transform.index(scale_offset_coord)];

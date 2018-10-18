@@ -29,11 +29,88 @@ namespace ngraph
         public:
             enum class RoundMode
             {
+                // std::round
+                // x.5 to x+1
+                // -x.5 to -(x+1)
+                // everything else to nearest integer
+                //  2.25 ->  2.0
+                //  2.50 ->  3.0
+                //  2.75 ->  3.0
+                // -2.25 -> -2.0
+                // -2.50 -> -3.0
+                // -2.75 -> -3.0
+                //  3.25 ->  3.0
+                //  3.50 ->  4.0
+                //  3.75 ->  4.0
+                // -3.25 -> -3.0
+                // -3.50 -> -4.0
+                // -3.75 -> -4.0
                 HALF_AWAY_FROM_ZERO,
-                HALF_TOWARD_ZERO,
-                HALF_TOWARD_POSITIVE_INFINITY,
-                HALF_TOWARD_NEGATIVE_INFINITY,
-                HALF_TO_EVEN
+
+                // std::nearbyint FE_TONEAREST
+                // x.5 and -x.5 to nearest even integer
+                // everything else to nearest integer
+                //  2.25 ->  2.0
+                //  2.50 ->  2.0
+                //  2.75 ->  3.0
+                // -2.25 -> -2.0
+                // -2.50 -> -2.0
+                // -2.75 -> -3.0
+                //  3.25 ->  3.0
+                //  3.50 ->  4.0
+                //  3.75 ->  4.0
+                // -3.25 -> -3.0
+                // -3.50 -> -4.0
+                // -3.75 -> -4.0
+                HALF_TO_EVEN,
+
+                // std::nearbyint FE_UPWARD
+                // everything to next integer towards infinity
+                //  2.25 ->  3.0
+                //  2.50 ->  3.0
+                //  2.75 ->  3.0
+                // -2.25 -> -2.0
+                // -2.50 -> -2.0
+                // -2.75 -> -2.0
+                //  3.25 ->  4.0
+                //  3.50 ->  4.0
+                //  3.75 ->  4.0
+                // -3.25 -> -3.0
+                // -3.50 -> -3.0
+                // -3.75 -> -3.0
+                ALL_TOWARD_POSITIVE_INFINITY,
+
+                // std::nearbyint FE_DOWNWARD
+                // everything to next integer towards -infinity
+                //  2.25 ->  2.0
+                //  2.50 ->  2.0
+                //  2.75 ->  2.0
+                // -2.25 -> -3.0
+                // -2.50 -> -3.0
+                // -2.75 -> -3.0
+                //  3.25 ->  3.0
+                //  3.50 ->  3.0
+                //  3.75 ->  3.0
+                // -3.25 -> -4.0
+                // -3.50 -> -4.0
+                // -3.75 -> -4.0
+                ALL_TOWARD_NEGATIVE_INFINITY,
+
+                // std::nearbyint FE_TOWARDZERO
+                // everything to next integer towards zero
+                //  2.25 ->  2.0
+                //  2.50 ->  2.0
+                //  2.75 ->  2.0
+                // -2.25 -> -2.0
+                // -2.50 -> -2.0
+                // -2.75 -> -2.0
+                //  3.25 ->  3.0
+                //  3.50 ->  3.0
+                //  3.75 ->  3.0
+                // -3.25 -> -3.0
+                // -3.50 -> -3.0
+                // -3.75 -> -3.0
+                ALL_TOWARD_ZERO
             };
 
             Quantize(std::shared_ptr<Node> input,

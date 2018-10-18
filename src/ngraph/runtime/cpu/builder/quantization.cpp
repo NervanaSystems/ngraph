@@ -143,7 +143,6 @@ namespace ngraph
                 auto arg1_shape = args[1].get_shape();
                 auto daxes = quantize->get_axes();
                 op::Quantize::RoundMode round_mode = quantize->get_round_mode();
-                std::cout << "CPU round mode = " << (int)round_mode << std::endl;
 
                 if (args[0].get_element_type() == element::f32)
                 {
