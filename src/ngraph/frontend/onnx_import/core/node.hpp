@@ -84,6 +84,10 @@ namespace ngraph
 
         private:
             class Impl;
+            // In this case we need custom deleter, because Impl is an incomplete
+            // type. Node's are elements of std::vector. Without custom deleter
+            // compilation fails; the compiler is unable to parameterize an allocator's
+            // default deleter due to incomple type.
             std::unique_ptr<Impl, void (*)(Impl*)> m_pimpl;
         };
 

@@ -66,25 +66,25 @@ namespace ngraph
             std::vector<std::reference_wrapper<const std::string>> m_output_names;
         };
 
-        inline const onnx::NodeProto& Node::Impl::node_proto() const { return *m_node_proto; }
-        inline const Graph& Node::Impl::graph() const { return *m_graph; }
-        inline const std::vector<Attribute>& Node::Impl::attributes() const { return m_attributes; }
-        inline const std::string& Node::Impl::domain() const { return m_node_proto->domain(); }
-        inline const std::string& Node::Impl::op_type() const { return m_node_proto->op_type(); }
-        inline const std::string& Node::Impl::name() const { return m_node_proto->name(); }
-        inline const std::vector<std::reference_wrapper<const std::string>>&
+        const onnx::NodeProto& Node::Impl::node_proto() const { return *m_node_proto; }
+        const Graph& Node::Impl::graph() const { return *m_graph; }
+        const std::vector<Attribute>& Node::Impl::attributes() const { return m_attributes; }
+        const std::string& Node::Impl::domain() const { return m_node_proto->domain(); }
+        const std::string& Node::Impl::op_type() const { return m_node_proto->op_type(); }
+        const std::string& Node::Impl::name() const { return m_node_proto->name(); }
+        const std::vector<std::reference_wrapper<const std::string>>&
             Node::Impl::get_output_names() const
         {
             return m_output_names;
         }
 
-        inline const std::string& Node::Impl::output(int index) const
+        const std::string& Node::Impl::output(int index) const
         {
             return m_node_proto->output(index);
         }
 
         template <typename T>
-        inline T Node::Impl::get_attribute_value(const std::string& name, T default_value) const
+        T Node::Impl::get_attribute_value(const std::string& name, T default_value) const
         {
             auto it = std::find_if(
                 std::begin(m_attributes), std::end(m_attributes), [&](const Attribute& attribute) {
@@ -98,7 +98,7 @@ namespace ngraph
         }
 
         template <typename T>
-        inline T Node::Impl::get_attribute_value(const std::string& name) const
+        T Node::Impl::get_attribute_value(const std::string& name) const
         {
             auto it = std::find_if(
                 std::begin(m_attributes), std::end(m_attributes), [&](const Attribute& attribute) {
@@ -111,12 +111,12 @@ namespace ngraph
             return it->template get_value<T>();
         }
 
-        inline NodeVector Node::Impl::get_ng_nodes(const Node& node) const
+        NodeVector Node::Impl::get_ng_nodes(const Node& node) const
         {
             return m_graph->make_ng_nodes(node);
         }
 
-        inline NodeVector Node::Impl::get_ng_inputs() const
+        NodeVector Node::Impl::get_ng_inputs() const
         {
             NodeVector result;
             for (const auto& name : m_node_proto->input())
@@ -126,7 +126,7 @@ namespace ngraph
             return result;
         }
 
-        inline const std::string& Node::Impl::description() const
+        const std::string& Node::Impl::description() const
         {
             static std::string description;
             if (description.empty())
