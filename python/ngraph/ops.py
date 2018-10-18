@@ -919,7 +919,6 @@ def batch_norm(eps,             # type: float
                data,            # type: Node
                mean=None,       # type: Node
                variance=None,   # type: Node
-               training=False,  # type: bool
                name=None,       # type: str
                ):
     # type: (...) -> Node
@@ -927,7 +926,7 @@ def batch_norm(eps,             # type: float
     if mean is None and variance is None:
         return BatchNormTraining(eps, gamma, beta, data)
     else:
-        return BatchNormInference(eps, gamma, beta, data, mean, variance, training)
+        return BatchNormInference(eps, gamma, beta, data, mean, variance)
 
 
 @nameable_op
