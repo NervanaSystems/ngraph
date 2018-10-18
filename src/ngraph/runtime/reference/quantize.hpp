@@ -20,6 +20,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/shape_util.hpp"
 
 namespace ngraph
 {
