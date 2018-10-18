@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "ngraph/except.hpp"
+#include "ngraph/type/bfloat16.hpp"
 
 namespace ngraph
 {
@@ -35,6 +36,7 @@ namespace ngraph
 
         extern const Type unspecified;
         extern const Type boolean;
+        extern const Type bf16;
         extern const Type f32;
         extern const Type f64;
         extern const Type i8;
@@ -110,6 +112,8 @@ namespace ngraph
         const Type& from<uint32_t>();
         template <>
         const Type& from<uint64_t>();
+        template <>
+        const Type& from<ngraph::bfloat16>();
 
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
     }

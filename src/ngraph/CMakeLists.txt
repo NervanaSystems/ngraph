@@ -153,6 +153,7 @@ set (SRC
     serializer.cpp
     shape.cpp
     strides.cpp
+    type/bfloat16.cpp
     type/element_type.cpp
     util.cpp
     graph_util.cpp
