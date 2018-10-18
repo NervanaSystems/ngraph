@@ -17,6 +17,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -69,6 +70,9 @@ namespace ngraph
 
                 const std::vector<mkldnn::primitive*>& get_mkldnn_primitives() const;
                 const std::vector<char*>& get_mkldnn_workspaces();
+
+                std::string
+                    serialize_descriptors_and_emit_setup_function(const std::string& filename);
 
                 size_t insert_primitive(mkldnn::primitive* primitive);
                 size_t insert_workspace(std::unique_ptr<MKLDNNWorkspace>& workspace);

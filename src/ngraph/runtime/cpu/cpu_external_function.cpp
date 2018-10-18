@@ -465,11 +465,15 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 using namespace ngraph::runtime::cpu::eigen;
 using namespace ngraph::runtime;
 
+std::vector<mkldnn::primitive*> primitives;
+
 )";
 
 #ifdef NGRAPH_DISTRIBUTED
     writer << "#include <mpi.h>\n\n";
 #endif
+
+    writer << "namespace AOT { mkldnn::engine global_cpu_engine; }\n";
 
     string pch_header_source = writer.get_code();
 
@@ -533,6 +537,9 @@ using namespace ngraph::runtime;
         writer << "}\n";
         writer << "\n";
     }
+
+    writer << "// Declare setup prototype\n";
+    writer << "void setup(cpu::CPURuntimeContext* ctx);\n";
 
     writer << "// Declare all constants\n";
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
@@ -927,6 +934,12 @@ using namespace ngraph::runtime;
         // End generated function
         writer += "}\n\n";
     }
+
+    //setup function
+    writer << "void setup(cpu::CPURuntimeContext* ctx)\n";
+    writer.block_begin();
+    writer << m_mkldnn_emitter->serialize_descriptors_and_emit_setup_function("descriptors.bin");
+    writer.block_end();
 
     // TODO: Cleanup and make this a utility function
     string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");

@@ -14,7 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <fstream>
 #include <memory>
+#include <sstream>
 #include <string>
 
 #include "mkldnn_emitter.hpp"
@@ -89,6 +91,40 @@ mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const Shape& shape,
     return mkldnn::memory::desc(mkldnn::memory::dims(shape.begin(), shape.end()),
                                 mkldnn_utils::get_mkldnn_data_type(et),
                                 fmt);
+}
+
+std::string
+    MKLDNNEmitter::serialize_descriptors_and_emit_setup_function(const std::string& filename)
+{
+    std::stringstream ss;
+    std::ofstream desc_file(filename, std::ios::out | std::ios::binary);
+    ss << "ifstream desc_file (\"" << filename << "\", ios::in | ios::binary);\n";
+    for (auto primitive : get_mkldnn_primitives())
+    {
+        mkldnn_primitive_kind_t kind;
+        mkldnn_primitive_desc_query(
+            primitive->get_primitive_desc(), mkldnn_query_primitive_kind, 0, &kind);
+
+        if (kind == mkldnn_memory)
+        {
+            //write part
+            mkldnn::memory::desc md =
+                (static_cast<mkldnn::memory*>(primitive))->get_primitive_desc().desc();
+            desc_file.write(reinterpret_cast<char*>(&md), sizeof(md));
+
+            //read part
+            ss << "{\n";
+            ss << "mkldnn::memory::desc md;\n";
+            ss << "desc_file.read(reinterpret_cast<char*>(&md), sizeof(mkldnn::memory::desc));\n";
+            ss << "primitives.push_back(new mkldnn::memory({md, AOT::global_cpu_engine}, "
+                  "nullptr));\n;";
+            ss << "}\n";
+        }
+        else
+        {
+            throw ngraph_error("Unsupported primitive!");
+        }
+    }
 }
 
 mkldnn::memory::desc
