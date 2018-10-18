@@ -9848,9 +9848,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_4D_axis_3_i64)
     auto result = backend->create_tensor(element::i64, rshape);
     backend->call_with_validate(f, {result}, {a});
     EXPECT_EQ((test::NDArray<int64_t, 3>({{{0, 4, 1, 1, 3},   // ch0
-                                       {4, 1, 3, 2, 1}},  //
-                                      {{0, 1, 0, 2, 0},   // ch1
-                                       {2, 0, 3, 3, 1}}}) //
+                                           {4, 1, 3, 2, 1}},  //
+                                          {{0, 1, 0, 2, 0},   // ch1
+                                           {2, 0, 3, 3, 1}}}) //
                    .get_vector()),
               read_vector<int64_t>(result));
 }
