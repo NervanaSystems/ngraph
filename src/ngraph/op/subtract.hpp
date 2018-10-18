@@ -23,19 +23,6 @@ namespace ngraph
     namespace op
     {
         /// \brief Elementwise subtraction operation.
-        ///
-        /// ## Inputs
-        ///
-        /// |        | Type                              | Description                                            |
-        /// | ------ | --------------------------------- | ------------------------------------------------------ |
-        /// | `arg0` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and numeric element type.        |
-        /// | `arg1` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of the same shape and element type as `arg0`. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                   | Description                                                                                                    |
-        /// | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
-        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg0}[i_1,\dots,i_n] - \texttt{arg1}[i_1,\dots,i_n]\f$ |
         class Subtract : public util::BinaryElementwiseArithmetic
         {
         public:

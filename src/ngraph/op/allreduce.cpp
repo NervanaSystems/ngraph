@@ -27,6 +27,11 @@ op::AllReduce::AllReduce(const shared_ptr<Node>& arg)
 
 void op::AllReduce::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     NODE_VALIDATION_ASSERT(this,
                            get_input_element_type(0).is_dynamic() ||
                                get_input_element_type(0) == element::f32 ||

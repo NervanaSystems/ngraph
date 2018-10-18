@@ -89,7 +89,7 @@ namespace ngraph
 
             /// \brief Create an nGraph pooling operation based on an ONNX pooling op.
             ///
-            /// \param T Class of an nGraph pooling operation (e.g. AveragePool, MaxPool)
+            /// \tparam T Class of an nGraph pooling operation (e.g. AveragePool, MaxPool)
             /// \param node incoming ONNX opearation
             /// \return nGraph node equivalent of the ONNX operation
             template <class T>
