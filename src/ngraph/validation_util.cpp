@@ -65,7 +65,6 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
                 << "Window dilation (" << window_dilation << ") has zero dimension at axis " << i
                 << ".";
 
-            Dimension output_dim{Dimension::dynamic()};
             if (data_shape.rank().is_static() && data_shape[i].is_static() &&
                 window_shape.rank().is_static() && window_shape[i].is_static())
             {
@@ -96,11 +95,10 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
                     << ") and this is not "
                     << "allowed.";
 
-                output_dim =
+                output_shape[i] =
                     ceil_div(size_t(data_padded_dilated_dim) - size_t(window_dilated_dim) + 1,
                              window_strides[i]);
             }
-            output_shape[i] = output_dim;
         }
     }
 
