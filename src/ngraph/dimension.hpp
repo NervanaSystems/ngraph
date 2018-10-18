@@ -89,6 +89,27 @@ namespace ngraph
         /// Two dimensions are considered compatible if it is possible to merge them. (See
         /// Dimension::merge.)
         bool compatible(const Dimension& d) const;
+
+        /// \brief Check whether this dimension is a relaxation of the argument.
+        /// \param d The dimension to compare this dimension with.
+        /// \return `true` if this dimension relaxes `d`, else `false`.
+        ///
+        /// A dimension `d1` _relaxes_ (or _is a relaxation of_) `d2` if `d1` and `d2` are static
+        /// and equal, or `d1` is dynamic.
+        ///
+        /// `d1.relaxes(d2)` is equivalent to `d2.refines(d1)`.
+        bool relaxes(const Dimension& d) const;
+
+        /// \brief Check whether this dimension is a refinement of the argument.
+        /// \param d The dimension to compare this dimension with.
+        /// \return `true` if this dimension relaxes `d`, else `false`.
+        ///
+        /// A dimension `d2` _refines_ (or _is a refinement of_) `d1` if `d1` and `d2` are static
+        /// and equal, or `d2` is dynamic.
+        ///
+        /// `d1.refines(d2)` is equivalent to `d2.relaxes(d1)`.
+        bool refines(const Dimension& d) const;
+
         /// \brief Create a dynamic dimension.
         /// \return A dynamic dimension.
         static Dimension dynamic() { return Dimension(); }

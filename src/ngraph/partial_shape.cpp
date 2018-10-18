@@ -136,6 +136,52 @@ bool PartialShape::same_scheme(const PartialShape& s) const
     }
 }
 
+bool PartialShape::relaxes(const PartialShape& s) const
+{
+    if (rank().is_dynamic())
+    {
+        return true;
+    }
+    else if (s.rank().is_static() && size_t(rank()) == size_t(s.rank()))
+    {
+        bool all_relax = true;
+
+        for (size_t i = 0; i < size_t(rank()); i++)
+        {
+            all_relax &= ((*this)[i].relaxes(s[i]));
+        }
+
+        return all_relax;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool PartialShape::refines(const PartialShape& s) const
+{
+    if (s.rank().is_dynamic())
+    {
+        return true;
+    }
+    else if (rank().is_static() && size_t(rank()) == size_t(s.rank()))
+    {
+        bool all_refine = true;
+
+        for (size_t i = 0; i < size_t(rank()); i++)
+        {
+            all_refine &= ((*this)[i].refines(s[i]));
+        }
+
+        return all_refine;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 Shape PartialShape::to_shape() const
 {
     if (is_dynamic())

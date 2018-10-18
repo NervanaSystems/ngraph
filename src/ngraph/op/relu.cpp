@@ -48,6 +48,6 @@ void op::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
 {
     auto delta = deltas.at(0);
 
-    auto backprop = make_shared<op::ReluBackprop>(get_argument(0), delta);
+    auto backprop = make_shared<op::ReluBackprop>(shared_from_this(), delta);
     adjoints.add_delta(get_argument(0), backprop);
 }
