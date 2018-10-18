@@ -71,7 +71,7 @@ if (NGRAPH_GPU_ENABLE)
 	    -gencode=arch=compute_70,code=sm_70;
 	    -gencode=arch=compute_70,code=compute_70)
     endif()
-
+    set_source_files_properties( ${CUDA_SRC} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
     set (DO_CUDA_COMPILE FALSE)
     if (CUDA9_FOUND)
         if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
@@ -101,7 +101,6 @@ if (NGRAPH_GPU_ENABLE)
     endif()
 
     if (DO_CUDA_COMPILE)
-        set_source_files_properties( ${CUDA_SRC} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
         cuda_compile(CUDA_OBJ ${CUDA_SRC} STATIC)
     endif()
 
