@@ -1519,15 +1519,16 @@ vector<runtime::PerformanceCounter>
             {
                 // Let's generate the primitive name that matches to the name in Function
                 const string primitive_name = convert_cldnn_names(func, p.first);
+                size_t usec = 0;
                 for (const auto& q : p.second.get_profiling_info())
                 {
-                    const size_t usec = chrono::duration_cast<
-                                            chrono::duration<double, chrono::milliseconds::period>>(
-                                            q.value->value())
-                                            .count();
-                    const runtime::PerformanceCounter perf_counter(primitive_name.c_str(), usec, 1);
-                    rc.push_back(perf_counter);
+                    usec += chrono::duration_cast<
+                                chrono::duration<int64_t, chrono::milliseconds::period>>(
+                                q.value->value())
+                                .count();
                 }
+                const runtime::PerformanceCounter perf_counter(primitive_name.c_str(), usec, 1);
+                rc.push_back(perf_counter);
             }
         }
     }
