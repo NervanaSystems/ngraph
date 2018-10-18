@@ -414,9 +414,9 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     {
         if (runtime::cpu::IsTracingEnabled() || m_emit_timing)
         {
-            NGRAPH_WARN
-                << "CPU Backend: Tracing and performance breakdowns might not be accurate with "
-                   "TBB enabled due to concurrent graph execution";
+            throw ngraph_error(
+                "CPU Backend: Tracing and performance breakdowns might not be accurate with TBB "
+                "enabled due to concurrent graph execution");
         }
         writer << "#undef __TBB_PREVIEW_LIGHTWEIGHT_POLICY \n";
         writer << "#define __TBB_PREVIEW_LIGHTWEIGHT_POLICY 1\n";
@@ -1152,8 +1152,9 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
     if (m_use_tbb && (runtime::cpu::IsTracingEnabled() || m_emit_timing))
     {
-        NGRAPH_WARN << "CPU Backend: Tracing and performance breakdowns might not be accurate with "
-                       "TBB enabled due to concurrent graph execution";
+        throw ngraph_error(
+            "CPU Backend: Tracing and performance breakdowns might not be accurate with TBB "
+            "enabled due to concurrent graph execution");
     }
 
     // stream writer to dump the debug manifest for the DEX
