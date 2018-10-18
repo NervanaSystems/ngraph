@@ -65,7 +65,7 @@ Attributes
 |                               | everything else to nearest integer                             |
 |                               |                                                                |
 |                               | *ALL_AWAY_FROM_ZERO:*                                          |
-|                               | everything to next integer towards zero                        |
+|                               | everything to next integer away from zero                        |
 |                               |                                                                |
 |                               | *ALL_TOWARD_ZERO:*                                             |
 |                               | everything to next integer towards zero                        |
@@ -76,8 +76,6 @@ Attributes
 |                               | *ALL_TOWARD_NEGATIVE_INFINITY:*                                |
 |                               | everything to next integer towards negative infinity           |
 +-------------------------------+----------------------------------------------------------------+
-
-
 
 Outputs
 -------
