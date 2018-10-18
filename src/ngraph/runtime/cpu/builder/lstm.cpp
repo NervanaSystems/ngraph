@@ -59,6 +59,7 @@ namespace ngraph
                 auto& deps = mkldnn_emitter->get_primitive_deps(index[0]);
                 auto& weights_layer_deps = mkldnn_emitter->get_primitive_deps(index[1]);
                 auto& weights_iter_deps = mkldnn_emitter->get_primitive_deps(index[2]);
+                auto& src_layer_deps = mkldnn_emitter->get_primitive_deps(index[3]);
 
                 auto functor_weights_layer_reorder = [&, index](CPURuntimeContext* ctx) {
                     cpu::mkldnn_utils::set_memory_ptr(
@@ -74,8 +75,15 @@ namespace ngraph
                         ctx, weights_iter_deps[1], ctx->mkldnn_workspaces[weights_iter_deps[2]]);
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, index[2]);
                 };
+                auto functor_src_layer_reorder = [&, index](CPURuntimeContext* ctx) {
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, src_layer_deps[0], src_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, src_layer_deps[1], ctx->mkldnn_workspaces[src_layer_deps[2]]);
+                    cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, index[3]);
+                };
                 auto functor_rnn = [&, index](CPURuntimeContext* ctx) {
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], src_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[0], ctx->mkldnn_workspaces[src_layer_deps[2]]);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], src_iter_tensor);
                     //cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], weights_layer_tensor);
                     //cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], weights_iter_tensor);
@@ -91,9 +99,11 @@ namespace ngraph
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, index[0]);
                 };
                 auto functor = [&,
+                                functor_src_layer_reorder,
                                 functor_rnn,
                                 functor_weights_layer_reorder,
                                 functor_weights_iter_reorder](CPURuntimeContext* ctx) {
+                    functor_src_layer_reorder(ctx);
                     functor_weights_layer_reorder(ctx);
                     functor_weights_iter_reorder(ctx);
                     functor_rnn(ctx);

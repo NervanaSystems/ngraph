@@ -1063,7 +1063,9 @@ std::vector<size_t>
                                      const mkldnn::memory::desc& dst_layer_desc,
                                      const mkldnn::memory::desc& dst_iter_desc,
                                      const mkldnn::memory::desc& wei_layer_reorder_desc,
-                                     const mkldnn::memory::desc& wei_iter_reorder_desc)
+                                     const mkldnn::memory::desc& wei_iter_reorder_desc,
+                                     const mkldnn::memory::desc& src_layer_reorder_desc,
+                                     const mkldnn::memory::desc& dst_layer_reorder_desc)
 {
     size_t src_layer_index = build_memory_primitive(src_layer_desc);
     size_t src_iter_index = build_memory_primitive(src_iter_desc);
@@ -1078,15 +1080,19 @@ std::vector<size_t>
         this->build_reorder(weights_layer_desc, wei_layer_reorder_desc);
     size_t weight_iter_reorder_index =
         this->build_reorder(weights_iter_desc, wei_iter_reorder_desc);
+    size_t src_layer_reorder_index = this->build_reorder(src_layer_desc, src_layer_reorder_desc);
+    size_t dst_layer_reorder_index = this->build_reorder(dst_layer_desc, dst_layer_reorder_desc);
 
     auto& weights_layer_reorder_deps = this->get_primitive_deps(weight_layer_reorder_index);
     auto& weights_iter_reorder_deps = this->get_primitive_deps(weight_iter_reorder_index);
+    auto& src_layer_reorder_deps = this->get_primitive_deps(src_layer_reorder_index);
+    auto& dst_layer_reorder_deps = this->get_primitive_deps(dst_layer_reorder_index);
 
     mkldnn::rnn_cell::desc rnn_cell(mkldnn::algorithm::vanilla_lstm);
     mkldnn::rnn_forward::desc rnn_layer_desc(mkldnn::prop_kind::forward_training,
                                              rnn_cell,
                                              mkldnn::rnn_direction::unidirectional_left2right,
-                                             src_layer_desc,
+                                             src_layer_reorder_desc,
                                              src_iter_desc,
                                              wei_layer_reorder_desc,
                                              wei_iter_reorder_desc,
@@ -1111,9 +1117,17 @@ std::vector<size_t>
         new MKLDNNWorkspace(rnn_layer_prim_desc.weights_iter_primitive_desc().get_size()));
     auto workspace_wei_iter_buf_index = insert_workspace(workspace_wei_iter);
 
+    auto workspace_src_layer = std::unique_ptr<MKLDNNWorkspace>(
+        new MKLDNNWorkspace(rnn_layer_prim_desc.src_layer_primitive_desc().get_size()));
+    auto workspace_src_layer_buf_index = insert_workspace(workspace_src_layer);
+
+    //auto workspace_dst_layer = std::unique_ptr<MKLDNNWorkspace>(
+    //    new MKLDNNWorkspace(rnn_layer_prim_desc.dst_layer_primitive_desc().get_size()));
+    //auto workspace_dst_layer_buf_index = insert_workspace(workspace_dst_layer);
+
     size_t rnn_index = insert_primitive(new mkldnn::rnn_forward(
         rnn_layer_prim_desc,
-        mkldnn::primitive::at(*m_mkldnn_primitives[src_layer_index]),
+        mkldnn::primitive::at(*m_mkldnn_primitives[src_layer_reorder_deps[1]]),
         mkldnn::primitive::at(*m_mkldnn_primitives[src_iter_index]),
         mkldnn::primitive::at(*m_mkldnn_primitives[weights_layer_reorder_deps[1]]),
         mkldnn::primitive::at(*m_mkldnn_primitives[weights_iter_reorder_deps[1]]),
@@ -1122,21 +1136,22 @@ std::vector<size_t>
         static_cast<mkldnn::memory>(*m_mkldnn_primitives[dst_iter_index]),
         static_cast<mkldnn::memory>(*m_mkldnn_primitives[workspace_index])));
 
-    m_primitive_deps[rnn_index] = {src_layer_index,
+    m_primitive_deps[rnn_index] = {src_layer_reorder_deps[1],
                                    src_iter_index,
-                                   weights_layer_index,
-                                   weights_iter_index,
+                                   weights_layer_reorder_deps[1],
+                                   weights_iter_reorder_deps[1],
                                    bias_index,
                                    dst_layer_index,
                                    dst_iter_index,
                                    workspace_index,
                                    workspace_buf_index};
 
+    m_primitive_deps[src_layer_reorder_index].push_back(workspace_src_layer_buf_index);
     m_primitive_deps[weight_layer_reorder_index].push_back(workspace_wei_layer_buf_index);
     m_primitive_deps[weight_iter_reorder_index].push_back(workspace_wei_iter_buf_index);
 
     std::vector<size_t> primitive_index{
-        rnn_index, weight_layer_reorder_index, weight_iter_reorder_index};
+        rnn_index, weight_layer_reorder_index, weight_iter_reorder_index, src_layer_reorder_index};
     return primitive_index;
 }
 

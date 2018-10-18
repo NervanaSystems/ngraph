@@ -535,7 +535,7 @@ namespace ngraph
 
                     // We create the memory descriptors used by the user
                     auto src_layer_md = build_memory_descriptor(
-                        src_layer_tz, args[0].get_element_type(), mkldnn::memory::format::tnc);
+                        src_layer_tz, args[0].get_element_type(), mkldnn::memory::format::ntc);
                     auto src_iter_md = build_memory_descriptor(
                         src_iter_tz, args[1].get_element_type(), mkldnn::memory::format::ldsnc);
                     auto wei_layer_md = build_memory_descriptor(
@@ -550,6 +550,10 @@ namespace ngraph
                         dst_iter_tz, out[1].get_element_type(), mkldnn::memory::format::ldsnc);
 
                     // define the reorder for the weights (ldgoi) -> (ldigo)
+                    auto src_layer_reorder = build_memory_descriptor(
+                        src_layer_tz, args[0].get_element_type(), mkldnn::memory::format::tnc);
+                    auto dst_layer_reorder = build_memory_descriptor(
+                        dst_layer_tz, out[0].get_element_type(), mkldnn::memory::format::tnc);
                     auto wei_layer_reorder = build_memory_descriptor(
                         wei_layer_tz, args[2].get_element_type(), mkldnn::memory::format::ldigo);
                     auto wei_iter_reorder = build_memory_descriptor(
@@ -563,7 +567,9 @@ namespace ngraph
                                              dst_layer_md,
                                              dst_iter_md,
                                              wei_layer_reorder,
-                                             wei_iter_reorder);
+                                             wei_iter_reorder,
+                                             src_layer_reorder,
+                                             dst_layer_reorder);
                 }
 
                 std::vector<size_t>
@@ -575,7 +581,9 @@ namespace ngraph
                                       const mkldnn::memory::desc& dst_layer_desc,
                                       const mkldnn::memory::desc& dst_iter_desc,
                                       const mkldnn::memory::desc& wei_layer_reorder_desc,
-                                      const mkldnn::memory::desc& wei_iter_reorder_desc);
+                                      const mkldnn::memory::desc& wei_iter_reorder_desc,
+                                      const mkldnn::memory::desc& src_layer_reorder_desc,
+                                      const mkldnn::memory::desc& dst_layer_reorder_desc);
 
                 size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                     const mkldnn::memory::desc& result_desc,
