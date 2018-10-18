@@ -26,14 +26,17 @@ namespace ngraph
         Model::Model(const onnx::ModelProto& model_proto)
             : m_model_proto{&model_proto}
         {
+            // Walk through the elements of opset_import field and register operator sets
+            // for each domain. An exception UnknownDomain() will raise if the domain is
+            // unknown or invalid.
             for (const auto& id : m_model_proto->opset_import())
             {
                 m_opset.emplace(id.domain(),
                                 OperatorsBridge::get_operator_set(
                                     id.version(), (id.domain() == "ai.onnx" ? "" : id.domain())));
             }
-            // onnx.proto(.3): the empty string ("") or absence of this field implies
-            // the operator set that is defined as part of the ONNX specification.
+            // onnx.proto(.3): the empty string ("") for domain or absence of opset_import field
+            // implies the operator set that is defined as part of the ONNX specification.
             const auto dm = m_opset.find("");
             if (dm == std::end(m_opset))
             {
