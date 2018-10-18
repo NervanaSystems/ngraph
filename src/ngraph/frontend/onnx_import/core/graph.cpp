@@ -34,11 +34,17 @@ namespace ngraph
                 }
                 return result;
             }
+
+            inline std::string to_string(const onnx::NodeProto& node_proto)
+            {
+                return (node_proto.domain().empty() ? "" : node_proto.domain() + ".") +
+                       node_proto.op_type();
+            }
         }
 
-        Graph::Graph(const onnx::GraphProto& graph_proto, const OperatorSet& opset)
+        Graph::Graph(const onnx::GraphProto& graph_proto, const Model& model)
             : m_graph_proto{&graph_proto}
-            , m_opset{&opset}
+            , m_model{&model}
         {
             for (const auto& tensor : m_graph_proto->initializer())
             {
@@ -65,10 +71,9 @@ namespace ngraph
             std::set<std::string> unknown_operator_types;
             for (const auto& node_proto : m_graph_proto->node())
             {
-                auto it = m_opset->find(node_proto.op_type());
-                if (it == std::end(*m_opset))
+                if (!m_model->is_available(node_proto))
                 {
-                    unknown_operator_types.emplace(node_proto.op_type());
+                    unknown_operator_types.emplace(detail::to_string(node_proto));
                 }
             }
 
@@ -78,7 +83,7 @@ namespace ngraph
             // Process ONNX graph nodes, convert to nGraph nodes
             for (const auto& node_proto : m_graph_proto->node())
             {
-                m_nodes.emplace_back(node_proto, this);
+                m_nodes.emplace_back(node_proto, *this);
                 const Node& node{m_nodes.back()};
                 NodeVector ng_nodes{node.get_ng_nodes()};
                 for (int i = 0; i < ng_nodes.size(); i++)

@@ -17,6 +17,7 @@
 #include <onnx-ml.pb.h>
 
 #include "model.hpp"
+#include "ops_bridge.hpp"
 
 namespace ngraph
 {
@@ -27,13 +28,43 @@ namespace ngraph
         {
             for (const auto& id : m_model_proto->opset_import())
             {
-                // onnx.proto(.3): the empty string ("") or absence of this field implies
-                // the operator set that is defined as part of the ONNX specification.
-                if (id.domain().empty())
-                {
-                    m_opset_version = id.version();
-                }
+                m_opset.emplace(id.domain(),
+                                OperatorsBridge::get_operator_set(
+                                    id.version(), (id.domain() == "ai.onnx" ? "" : id.domain())));
             }
+            // onnx.proto(.3): the empty string ("") or absence of this field implies
+            // the operator set that is defined as part of the ONNX specification.
+            const auto dm = m_opset.find("");
+            if (dm == std::end(m_opset))
+            {
+                m_opset.emplace("", OperatorsBridge::get_operator_set(ONNX_OPSET_VERSION, ""));
+            }
+        }
+
+        const Operator& Model::at(const std::string& name, const std::string& domain) const
+        {
+            const auto dm = m_opset.find(domain);
+            if (dm == std::end(m_opset))
+            {
+                throw error::UnknownDomain{domain};
+            }
+            const auto op = dm->second.find(name);
+            if (op == std::end(dm->second))
+            {
+                throw error::UnknownOperator{name, domain};
+            }
+            return op->second;
+        }
+
+        bool Model::is_available(const onnx::NodeProto& node_proto) const
+        {
+            const auto dm = m_opset.find(node_proto.domain());
+            if (dm == std::end(m_opset))
+            {
+                return false;
+            }
+            const auto op = dm->second.find(node_proto.op_type());
+            return (op != std::end(dm->second));
         }
 
     } // namespace onnx_import

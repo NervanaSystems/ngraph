@@ -16,9 +16,13 @@
 
 #pragma once
 
-#include <ostream>
-
 #include <onnx-ml.pb.h>
+
+#include <ostream>
+#include <string>
+#include <unordered_map>
+
+#include "operator_set.hpp"
 
 namespace ngraph
 {
@@ -44,10 +48,12 @@ namespace ngraph
                 return m_model_proto->producer_version();
             }
 
-            std::int64_t get_opset_version() const { return m_opset_version; }
+            const Operator& at(const std::string& name, const std::string& domain) const;
+            bool is_available(const onnx::NodeProto& node_proto) const;
+
         private:
             const onnx::ModelProto* m_model_proto;
-            std::int64_t m_opset_version{ONNX_OPSET_VERSION};
+            std::unordered_map<std::string, OperatorSet> m_opset;
         };
 
         inline std::ostream& operator<<(std::ostream& outs, const Model& model)
