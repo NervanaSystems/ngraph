@@ -236,12 +236,6 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
 
     case ReductionMode::ArgReduce:
     {
-        // std::stringstream ss_er;
-        // ss_er
-        //     << "Unsupported Type: Only uint32 currently supported for indices in op ArgReduce ";
-        // throw std::invalid_argument(ss_er.str());
-
-        // TODO: Issue #1782
         if (output_type == element::i32 || output_type == element::i64)
         {
             size_t indices_size = shape_size(output_shape) * output_type.size();
@@ -308,6 +302,13 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
                         debug_sync();
                     }});
             }
+        }
+        else
+        {
+            std::stringstream ss_er;
+            ss_er << "Unsupported Type: Only uint32 & uint64 currently supported for indices in op "
+                     "ArgReduce";
+            throw std::invalid_argument(ss_er.str());
         }
         break;
     }
