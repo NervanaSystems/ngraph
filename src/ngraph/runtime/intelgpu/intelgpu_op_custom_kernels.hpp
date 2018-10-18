@@ -186,6 +186,14 @@ namespace ngraph
                                           const size_t reduction_axis,
                                           const bool is_max);
 
+            void do_negative_operation(cldnn::topology& topology,
+                                       const std::string& input_name,
+                                       const Shape& input_shape,
+                                       const element::Type& input_type,
+                                       const std::string& output_name,
+                                       const Shape& output_shape,
+                                       const element::Type& output_type);
+
             // Helper functions used in cldnn::custom_gpu_primitive kernels
             std::string get_opencl_type_name(const element::Type& ngraph_type);
             std::vector<cldnn_arg> get_kernel_args(size_t input, size_t output);

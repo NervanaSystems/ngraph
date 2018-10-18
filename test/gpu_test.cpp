@@ -83,6 +83,30 @@ TEST(gpu_test, memory_manager_extract_arguments)
     EXPECT_EQ(host, fp32_args);
 }
 
+// This test is add to catch a potential bug in allocator
+// previously allocator will copy extra data
+// for exampele: alignment = 8 bytes, you reserve 4 bytes space
+// previously allocator will copy 8 bytes data from input_args, this will lead to two potential bug:
+// 1. copy extrea data intead of initial alignment data to 0.
+// 2. out of boundary access for input_args which lead to undefined behavior
+TEST(gpu_test, memory_manager_argspace_alignment)
+{
+    size_t alignment = 8;
+    std::vector<char> input_args = {0, 1, 2, 3, 4, 5, 6, 7};
+    std::vector<char> ref_args = {0, 1, 2, 3, 0, 0, 0, 0};
+    std::vector<char> result_args(alignment, 0);
+    size_t idx;
+    runtime::gpu::GPUPrimitiveEmitter emitter;
+    {
+        auto allocator = emitter.get_memory_allocator();
+        idx = allocator.reserve_argspace(input_args.data(), 4 * sizeof(char));
+    }
+    emitter.allocate_primitive_memory();
+    runtime::gpu::memory_primitive& mem_primitive = emitter.get_memory_primitives()[idx];
+    runtime::gpu::cuda_memcpyDtH(result_args.data(), mem_primitive(), alignment * sizeof(char));
+    EXPECT_EQ(result_args, ref_args);
+}
+
 TEST(gpu_test, memory_manager_argspace_size)
 {
     std::vector<float> fp32_args = {2112.0f, 2112.0f};
