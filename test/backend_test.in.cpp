@@ -7402,9 +7402,7 @@ protected:
 };
 
 // avg_pool_3d test code using params
-NGRAPH_TEST_P(${BACKEND_NAME},
-              avg_pool_3d_params,
-              avg_pool_3d_uneven_strided_padded_include_pad)
+NGRAPH_TEST_P(${BACKEND_NAME}, avg_pool_3d_params, avg_pool_3d_uneven_strided_padded_include_pad)
 {
     Shape shape_a{64, 3, 12, 13, 15};
     Shape window_shape{4, 5, 4};
@@ -7440,10 +7438,7 @@ NGRAPH_TEST_P(${BACKEND_NAME},
 }
 
 // avg_pool_3d case generation
-NGRAPH_INSTANTIATE_TEST_CASE_P(${BACKEND_NAME},
-                               include_pad,
-                               avg_pool_3d_params,
-                               testing::Bool(), );
+NGRAPH_INSTANTIATE_TEST_CASE_P(${BACKEND_NAME}, include_pad, avg_pool_3d_params, testing::Bool(), );
 
 NGRAPH_TEST(${BACKEND_NAME}, pad_interior_1d)
 {
