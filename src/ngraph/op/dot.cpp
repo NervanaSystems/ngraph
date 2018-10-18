@@ -104,10 +104,9 @@ void op::Dot::validate_and_infer_types()
             NODE_VALIDATION_ASSERT(
                 this, arg0_shape[axis_index_arg0].compatible(arg1_shape[axis_index_arg1]))
                 << "Paired axes (axis " << axis_index_arg0 << " from arg0, axis " << axis_index_arg1
-                << " from arg1) "
-                << "do not have same length (arg0 shape: " << arg0_shape
-                << ", arg1 shape: " << arg1_shape << ", "
-                << "reduction axes count: " << m_reduction_axes_count << ").";
+                << " from arg1) do not have same length (arg0 shape: " << arg0_shape
+                << ", arg1 shape: " << arg1_shape
+                << ", reduction axes count: " << m_reduction_axes_count << ").";
         }
 
         std::vector<Dimension> result_dims(size_t(arg0_shape.rank()) + size_t(arg1_shape.rank()) -
