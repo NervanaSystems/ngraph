@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 //================================================================================================
-// bfloat16 type 
+// bfloat16 type
 //================================================================================================
 
 #pragma once
@@ -27,29 +27,26 @@
 
 namespace ngraph
 {
-    class bfloat16 
+    class bfloat16
     {
     public:
         bfloat16() {}
         bfloat16(float value);
-        bfloat16(uint16_t value);
-        bfloat16& operator=(const bfloat16&);
+        bfloat16& operator=(const bfloat16&) = default;
         virtual ~bfloat16() {}
-        const std::string to_string() const;
+        std::string to_string() const;
         size_t size() const;
         bool operator==(const bfloat16& other) const;
         bool operator!=(const bfloat16& other) const { return !(*this == other); }
         bool operator<(const bfloat16& other) const;
-        operator float() const;         
-        operator uint16_t() const { return m_value;}
+        operator float() const;
 
-        static std::vector<float> to_float_vector(std::vector<bfloat16>);
-        static std::vector<bfloat16> from_float_vector(std::vector<float>);
-        static std::vector<uint16_t> to_u16_vector(std::vector<bfloat16>);
-        static std::vector<bfloat16> from_u16_vector(std::vector<uint16_t>);
+        static std::vector<float> to_float_vector(const std::vector<bfloat16>&);
+        static std::vector<bfloat16> from_float_vector(const std::vector<float>&);
 
         friend std::ostream& operator<<(std::ostream&, const bfloat16&);
-     private:
+
+    private:
         uint16_t m_value{0};
-     };
+    };
 }

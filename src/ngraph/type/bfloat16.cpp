@@ -22,34 +22,18 @@
 using namespace std;
 using namespace ngraph;
 
-std::vector<float> bfloat16::to_float_vector(std::vector<bfloat16> v_bf16)
+std::vector<float> bfloat16::to_float_vector(const std::vector<bfloat16>& v_bf16)
 {
     std::vector<float> v_f32(v_bf16.begin(), v_bf16.end());
     return v_f32;
 }
 
-std::vector<bfloat16> bfloat16::from_float_vector(std::vector<float> v_f32)
+std::vector<bfloat16> bfloat16::from_float_vector(const std::vector<float>& v_f32)
 {
     std::vector<bfloat16> v_bf16(v_f32.size());
-    for(float a : v_f32)
+    for (float a : v_f32)
     {
-        v_bf16.push_back(bfloat16(a));
-    }
-    return v_bf16;
-}
-
-std::vector<uint16_t> bfloat16::to_u16_vector(std::vector<bfloat16> v_bf16)
-{
-    std::vector<uint16_t> v_u16(v_bf16.begin(), v_bf16.end());
-    return v_u16;
-}
-
-std::vector<bfloat16> bfloat16::from_u16_vector(std::vector<uint16_t> v_u16)
-{
-    std::vector<bfloat16> v_bf16(v_u16.size());
-    for(uint16_t a : v_u16)
-    {
-        v_bf16.push_back(bfloat16(a));
+        v_bf16.push_back(static_cast<bfloat16>(a));
     }
     return v_bf16;
 }
@@ -61,24 +45,18 @@ bfloat16::bfloat16(float value)
     m_value = *u16_ptr;
 }
 
-bfloat16::bfloat16(uint16_t value)
-{
-    m_value = value;
-}
-
-bfloat16& bfloat16::operator=(const bfloat16& t)
-{
-    m_value = t.m_value;
-    return *this;
-}
-
-const std::string bfloat16::to_string() const
+std::string bfloat16::to_string() const
 {
     uint32_t u32_value = m_value;
-    u32_value = u32_value << 16; 
+    u32_value = u32_value << 16;
     float* f32_ptr = reinterpret_cast<float*>(&u32_value);
     float f32_value = *f32_ptr;
     return std::to_string(f32_value);
+}
+
+size_t bfloat16::size() const
+{
+    return sizeof(m_value);
 }
 
 bool bfloat16::operator==(const bfloat16& other) const
@@ -88,12 +66,7 @@ bool bfloat16::operator==(const bfloat16& other) const
 
 bool bfloat16::operator<(const bfloat16& other) const
 {
-    return (int16_t)m_value < (int16_t)(other.m_value);
-}
-
-size_t bfloat16::size() const
-{
-    return sizeof(m_value);
+    return static_cast<int16_t>(m_value) < static_cast<int16_t>(other.m_value);
 }
 
 bfloat16::operator float() const
