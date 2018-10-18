@@ -21,8 +21,10 @@
 #include <typeinfo>
 
 #include "gpu_layout.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/gpu/gpu_op_annotations.hpp"
 
 using namespace std;
@@ -79,6 +81,64 @@ namespace ngraph
                         reshape->set_op_annotations(op_annotations);
                     }
                 }
+
+                template <>
+                void GPULayout::LAYOUT_DECL(ngraph::op::TopK)
+                {
+                    auto topk = static_cast<ngraph::op::TopK*>(node.get());
+                    auto topk_axis = topk->get_top_k_axis();
+                    auto topk_k = topk->get_k();
+                    auto parent_node = topk->get_argument(0);
+
+                    auto in_shape = topk->get_input_shape(0);
+                    auto out_shape = in_shape;
+                    out_shape[topk_axis] = topk_k;
+                    size_t ndim = static_cast<size_t>(in_shape.size());
+                    AxisVector reshape_axis_order(ndim);
+                    iota(reshape_axis_order.begin(), reshape_axis_order.end(), 0);
+                    reshape_axis_order.erase(reshape_axis_order.begin() + topk_axis);
+                    reshape_axis_order.push_back(topk_axis);
+
+                    Shape pre_reshape_out;
+                    for (size_t j = 0; j < ndim; j++)
+                    {
+                        pre_reshape_out.push_back(in_shape[reshape_axis_order[j]]);
+                    }
+
+                    Shape pre_2d_reshape_out(2);
+                    pre_2d_reshape_out[1] = pre_reshape_out[ndim - 1];
+                    pre_2d_reshape_out[0] = static_cast<size_t>(
+                        ngraph::shape_size(pre_reshape_out) / pre_2d_reshape_out[1]);
+
+                    auto pre_reshape = make_shared<ngraph::op::Reshape>(
+                        parent_node, reshape_axis_order, pre_reshape_out);
+
+                    AxisVector axis_order(ndim);
+                    iota(axis_order.begin(), axis_order.end(), 0);
+                    auto pre_2d_reshape = make_shared<ngraph::op::Reshape>(
+                        pre_reshape, axis_order, pre_2d_reshape_out);
+
+                    insert_new_node_between(parent_node, node, pre_reshape);
+                    parent_node = topk->get_argument(0);
+                    insert_new_node_between(parent_node, node, pre_2d_reshape);
+
+                    auto new_topk = make_shared<ngraph::op::TopK>(topk->get_argument(0),
+                                                                  1,
+                                                                  topk->get_index_element_type(),
+                                                                  topk->get_k(),
+                                                                  topk->get_compute_max());
+
+                    ngraph::replace_node(node, new_topk);
+
+                    NodeVector goes = op::get_output_elements(node);
+                    for (auto& goe : goes)
+                    {
+                        auto out_idx =
+                            std::dynamic_pointer_cast<op::GetOutputElement>(goe)->get_n();
+                        auto new_goe = std::make_shared<op::GetOutputElement>(new_topk, out_idx);
+                        ngraph::replace_node(goe, new_goe);
+                    }
+                }
             }
         }
     }
@@ -90,6 +150,7 @@ static const runtime::gpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::ReplaceSlice),
      &runtime::gpu::pass::GPULayout::layout<ngraph::op::ReplaceSlice>},
     {TI(ngraph::op::Reshape), &runtime::gpu::pass::GPULayout::layout<ngraph::op::Reshape>},
+    {TI(ngraph::op::TopK), &runtime::gpu::pass::GPULayout::layout<ngraph::op::TopK>},
 };
 
 bool runtime::gpu::pass::GPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
