@@ -58,9 +58,36 @@ namespace ngraph
                     {
                         qvalue = std::round(qvalue);
                     }
+                    else if (round_mode == op::Quantize::RoundMode::HALF_TOWARD_ZERO)
+                    {
+                        auto abs_qvalue = std::fabs(qvalue);
+                        auto abs_qvalue_half_toward_zero = std::ceil(abs_qvalue - 0.5);
+                        qvalue = (qvalue < 0.0) ? -abs_qvalue_half_toward_zero
+                                                : abs_qvalue_half_toward_zero;
+                    }
+                    else if (round_mode == op::Quantize::RoundMode::HALF_TOWARD_POSITIVE_INFINITY)
+                    {
+                        qvalue = std::floor(qvalue + 0.5);
+                    }
+                    else if (round_mode == op::Quantize::RoundMode::HALF_TOWARD_NEGATIVE_INFINITY)
+                    {
+                        qvalue = std::ceil(qvalue - 0.5);
+                    }
                     else if (round_mode == op::Quantize::RoundMode::HALF_TO_EVEN)
                     {
                         std::fesetround(FE_TONEAREST);
+                        qvalue = std::nearbyint(qvalue);
+                    }
+                    else if (round_mode == op::Quantize::RoundMode::ALL_AWAY_FROM_ZERO)
+                    {
+                        auto abs_qvalue = std::fabs(qvalue);
+                        auto abs_qvalue_away_from_zero = std::ceil(abs_qvalue);
+                        qvalue =
+                            (qvalue < 0.0) ? -abs_qvalue_away_from_zero : abs_qvalue_away_from_zero;
+                    }
+                    else if (round_mode == op::Quantize::RoundMode::ALL_TOWARD_ZERO)
+                    {
+                        std::fesetround(FE_TOWARDZERO);
                         qvalue = std::nearbyint(qvalue);
                     }
                     else if (round_mode == op::Quantize::RoundMode::ALL_TOWARD_POSITIVE_INFINITY)
@@ -71,11 +98,6 @@ namespace ngraph
                     else if (round_mode == op::Quantize::RoundMode::ALL_TOWARD_NEGATIVE_INFINITY)
                     {
                         std::fesetround(FE_DOWNWARD);
-                        qvalue = std::nearbyint(qvalue);
-                    }
-                    else if (round_mode == op::Quantize::RoundMode::ALL_TOWARD_ZERO)
-                    {
-                        std::fesetround(FE_TOWARDZERO);
                         qvalue = std::nearbyint(qvalue);
                     }
 

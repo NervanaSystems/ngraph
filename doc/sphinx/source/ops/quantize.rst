@@ -45,18 +45,36 @@ Attributes
 |                               | -x.5 to -(x+1)                                                 |
 |                               | everything else to nearest integer                             |
 |                               |                                                                |
+|                               | *HALF_TOWARD_ZERO:*                                            |
+|                               | x.5 to x-1                                                     |
+|                               | -x.5 to -(x-1)                                                 |
+|                               | everything else to nearest integer                             |
+|                               |                                                                |
+|                               | *HALF_TOWARD_POSITIVE_INFINITY:*                               |
+|                               | x.5 to x+1                                                     |
+|                               | -x.5 to -x                                                     |
+|                               | everything else to nearest integer                             |
+|                               |                                                                |
+|                               | *HALF_TOWARD_NEGATIVE_INFINITY:*                               |
+|                               | x.5 to x                                                       |
+|                               | -x.5 to -(x+1)                                                 |
+|                               | everything else to nearest integer                             |
+|                               |                                                                |
 |                               | *HALF_TO_EVEN:*                                                |
 |                               | x.5 and -x.5 to nearest even ineger                            |
 |                               | everything else to nearest integer                             |
+|                               |                                                                |
+|                               | *ALL_AWAY_FROM_ZERO:*                                          |
+|                               | everything to next integer towards zero                        |
+|                               |                                                                |
+|                               | *ALL_TOWARD_ZERO:*                                             |
+|                               | everything to next integer towards zero                        |
 |                               |                                                                |
 |                               | *ALL_TOWARD_POSITIVE_INFINITY:*                                |
 |                               | everything to next integer towards infinity                    |
 |                               |                                                                |
 |                               | *ALL_TOWARD_NEGATIVE_INFINITY:*                                |
 |                               | everything to next integer towards negative infinity           |
-|                               |                                                                |
-|                               | *ALL_TOWARD_ZERO:*                                             |
-|                               | everything to next integer towards zero                        |
 +-------------------------------+----------------------------------------------------------------+
 
 
