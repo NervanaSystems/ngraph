@@ -40,6 +40,11 @@ op::Broadcast::Broadcast(const shared_ptr<Node>& arg,
 
 void op::Broadcast::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     infer_shape();
     Shape target_shape = m_shape;
     for (auto i = m_broadcast_axes.rbegin(); i != m_broadcast_axes.rend(); ++i)

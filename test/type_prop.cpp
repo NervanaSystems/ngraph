@@ -476,9 +476,7 @@ void test_binary(std::string node_type,
         }
         catch (const NodeValidationError& error)
         {
-            EXPECT_HAS_SUBSTRING(
-                error.what(),
-                std::string("Argument 0 shape Shape{2, 4} differs in shape from argument 1"));
+            EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent"));
         }
         catch (...)
         {
@@ -497,10 +495,8 @@ void test_binary(std::string node_type,
         }
         catch (const NodeValidationError& error)
         {
-            EXPECT_HAS_SUBSTRING(
-                error.what(),
-                std::string("Argument 0 element type element::Type{32, 1, "
-                            "1, 0, \"float\"} differs in element type from argument 1"));
+            EXPECT_HAS_SUBSTRING(error.what(),
+                                 std::string("Argument element types are inconsistent"));
         }
         catch (...)
         {
@@ -572,9 +568,7 @@ void test_binary_logical(std::string node_type,
         }
         catch (const NodeValidationError& error)
         {
-            EXPECT_HAS_SUBSTRING(
-                error.what(),
-                std::string("Argument 0 shape Shape{2, 4} differs in shape from argument 1"));
+            EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent"));
         }
         catch (...)
         {
@@ -593,10 +587,8 @@ void test_binary_logical(std::string node_type,
         }
         catch (const NodeValidationError& error)
         {
-            EXPECT_HAS_SUBSTRING(
-                error.what(),
-                std::string("Argument 0 element type element::Type{8, 0, 1, 0, \"char\"} "
-                            "differs in element type from argument 1"));
+            EXPECT_HAS_SUBSTRING(error.what(),
+                                 std::string("Argument element types are inconsistent"));
         }
         catch (...)
         {
@@ -624,7 +616,7 @@ void test_binary_logical(std::string node_type,
     };
 
     test_binary_differ_arguments_view_element_types(tv0_2_4_param_0, tv0_2_4_param_2);
-    test_binary_non_bool_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_0);
+    test_binary_differ_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_0);
     test_binary_non_bool_arguments_view_element_types(tv0_2_4_param_2, tv0_2_4_param_3);
 
     auto test_binary_good_arguments = [&](const shared_ptr<Node>& x, const shared_ptr<Node>& y) {
@@ -1234,6 +1226,117 @@ TEST(type_prop, reshape_deduce_wrong_output_shape)
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("Product of output shape dimensions does not match "
                                          "product of argument shape dimensions"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+//
+// Input shape rank dynamic, so we should set the desired output shape if the axis vector is not
+// known invalid (invalid means it's not a permutation of {0,...,n-1} for any n).
+//
+TEST(type_prop, reshape_partial_rank_dynamic_axisvector_ok)
+{
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto r = make_shared<op::Reshape>(param, AxisVector{2, 1, 0, 3}, Shape{3, 1, 8, 2});
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_TRUE(r->get_output_partial_shape(0).is_static());
+    ASSERT_EQ(r->get_shape(), (Shape{3, 1, 8, 2}));
+}
+
+TEST(type_prop, reshape_partial_rank_dynamic_axisvector_not_ok)
+{
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    try
+    {
+        auto r = make_shared<op::Reshape>(param, AxisVector{2, 1, 0, 4}, Shape{3, 1, 8, 2});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect malformed AxisVector (input shape rank dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Input axis order is not a permutation of argument's axis indices"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+//
+// Input shape rank static but input shape is dynamic, so should set desired output shape if the
+// axis vector is consistent with the static rank.
+//
+TEST(type_prop, reshape_partial_rank_static_dynamic_axisvector_ok)
+{
+    auto param_shape =
+        PartialShape{Dimension::dynamic(), 6, Dimension::dynamic(), Dimension::dynamic()};
+    auto param = make_shared<op::Parameter>(element::f32, param_shape);
+    auto r = make_shared<op::Reshape>(param, AxisVector{2, 1, 0, 3}, Shape{3, 1, 8, 2});
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_TRUE(r->get_output_partial_shape(0).is_static());
+    ASSERT_EQ(r->get_shape(), (Shape{3, 1, 8, 2}));
+}
+
+TEST(type_prop, reshape_partial_rank_static_dynamic_axisvector_not_ok)
+{
+    auto param_shape =
+        PartialShape{Dimension::dynamic(), 6, Dimension::dynamic(), Dimension::dynamic()};
+    auto param = make_shared<op::Parameter>(element::f32, param_shape);
+    try
+    {
+        auto r = make_shared<op::Reshape>(param, AxisVector{2, 1, 0}, Shape{3, 1, 8, 2});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect AxisVector inconsistent with rank (rank-static dynamic shape)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Input axis order is not a permutation of argument's axis indices"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+//
+// Input shape rank static but input shape is dynamic, _but_ one of its static dimensions is zero,
+// so should set desired output shape only if it also has zero elements.
+//
+TEST(type_prop, reshape_partial_rank_static_dynamic_but_zero_ok)
+{
+    auto param_shape =
+        PartialShape{Dimension::dynamic(), 0, Dimension::dynamic(), Dimension::dynamic()};
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto r = make_shared<op::Reshape>(param, AxisVector{2, 1, 0, 3}, Shape{3, 1, 0, 2});
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_TRUE(r->get_output_partial_shape(0).is_static());
+    ASSERT_EQ(r->get_shape(), (Shape{3, 1, 0, 2}));
+}
+
+TEST(type_prop, reshape_partial_rank_static_dynamic_but_zero_not_ok)
+{
+    auto param_shape =
+        PartialShape{Dimension::dynamic(), 0, Dimension::dynamic(), Dimension::dynamic()};
+    auto param = make_shared<op::Parameter>(element::f32, param_shape);
+    try
+    {
+        auto r = make_shared<op::Reshape>(param, AxisVector{2, 1, 0}, Shape{3, 1, 8, 2});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect inconsistent output shape with static-zero-element rank-dynamic"
+                  " static input shape";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Input axis order is not a permutation of argument's axis indices"));
     }
     catch (...)
     {
@@ -4014,6 +4117,53 @@ TEST(type_prop, reverse_3d_deduce_oob)
     }
 }
 
+//
+// If the input rank is dynamic, we should pass unconditionally.
+//
+TEST(type_prop, reverse_partial_rank_dynamic)
+{
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto rev = make_shared<op::Reverse>(param, AxisSet{0, 2, 1776, 90909});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_TRUE(rev->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+//
+// If the input rank is static but the shape is dynamic, we should pass if the axis indices are
+// in bounds.
+//
+TEST(type_prop, reverse_partial_rank_static_dynamic_axes_ok)
+{
+    PartialShape param_shape{Dimension::dynamic(), Dimension::dynamic(), 2, 3};
+    auto param = make_shared<op::Parameter>(element::f32, param_shape);
+    auto rev = make_shared<op::Reverse>(param, AxisSet{0, 2});
+
+    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_TRUE(rev->get_output_partial_shape(0).same_scheme(param_shape));
+}
+
+TEST(type_prop, reverse_partial_rank_static_dynamic_axes_oob)
+{
+    PartialShape param_shape{Dimension::dynamic(), Dimension::dynamic(), 2, 3};
+    auto param = make_shared<op::Parameter>(element::f32, param_shape);
+    try
+    {
+        auto rev = make_shared<op::Reverse>(param, AxisSet{0, 4, 2});
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Axis out of bounds not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reverse axis (4) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, reverse_sequence_1_dim)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2});
@@ -4095,6 +4245,187 @@ TEST(type_prop, reverse_sequence_seq_len_size_equal_to_batch_dim)
         EXPECT_HAS_SUBSTRING(
             error.what(),
             std::string("Sequence length (3) is not equal to batch axis dimension (4)"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reverse_sequence_partial_both_rank_dynamic)
+{
+    auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    // Unrealistic values, but they don't matter here.
+    size_t batch_axis = 202;
+    size_t seq_axis = 909;
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_TRUE(rs->get_output_partial_shape(0).is_dynamic());
+    EXPECT_EQ(rs->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop, reverse_sequence_partial_left_rank_dynamic)
+{
+    auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{3});
+    // Unrealistic values, but they don't matter here.
+    size_t batch_axis = 202;
+    size_t seq_axis = 909;
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_TRUE(rs->get_output_partial_shape(0).is_dynamic());
+    EXPECT_EQ(rs->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop, reverse_sequence_partial_right_rank_dynamic)
+{
+    auto data = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    size_t batch_axis = 0;
+    size_t seq_axis = 1;
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_TRUE(rs->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
+    EXPECT_EQ(rs->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop, reverse_sequence_partial_both_rank_static_dynamic)
+{
+    auto data = make_shared<op::Parameter>(element::f32,
+                                           PartialShape{Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic()});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    size_t batch_axis = 0;
+    size_t seq_axis = 1;
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_TRUE(rs->get_output_partial_shape(0).same_scheme(PartialShape{
+        Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+    EXPECT_EQ(rs->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop, reverse_sequence_partial_both_rank_static_dynamic_batch_axis_oob)
+{
+    auto data = make_shared<op::Parameter>(element::f32,
+                                           PartialShape{Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic()});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic()});
+    size_t batch_axis = 4;
+    size_t seq_axis = 1;
+    try
+    {
+        auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+        FAIL() << "Batch axis out of bounds not detected (rank-static dynamic shape)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Batch axis index (4) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, reverse_sequence_partial_both_rank_static_dynamic_sequence_axis_oob)
+{
+    auto data = make_shared<op::Parameter>(element::f32,
+                                           PartialShape{Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic()});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic()});
+    size_t batch_axis = 1;
+    size_t seq_axis = 4;
+    try
+    {
+        auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+        FAIL() << "Sequence axis out of bounds not detected (rank-static dynamic shape)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Sequence axis index (4) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     reverse_sequence_partial_left_rank_static_dynamic_right_static_left_seq_length_dynamic)
+{
+    auto data = make_shared<op::Parameter>(element::f32,
+                                           PartialShape{Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic(),
+                                                        Dimension::dynamic()});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{3});
+    size_t batch_axis = 2;
+    size_t seq_axis = 1;
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_TRUE(rs->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 3, Dimension::dynamic()}));
+    EXPECT_EQ(rs->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop, reverse_sequence_partial_both_rank_static_dynamic_right_seq_length_dynamic)
+{
+    auto data = make_shared<op::Parameter>(
+        element::f32,
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 3, Dimension::dynamic()});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic()});
+    size_t batch_axis = 2;
+    size_t seq_axis = 1;
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_TRUE(rs->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 3, Dimension::dynamic()}));
+    EXPECT_EQ(rs->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop,
+     reverse_sequence_partial_left_rank_static_dynamic_right_static_left_seq_length_static)
+{
+    auto data = make_shared<op::Parameter>(
+        element::f32,
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 3, Dimension::dynamic()});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{3});
+    size_t batch_axis = 2;
+    size_t seq_axis = 1;
+    auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+
+    EXPECT_TRUE(rs->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 3, Dimension::dynamic()}));
+    EXPECT_EQ(rs->get_output_element_type(0), element::f32);
+}
+
+TEST(
+    type_prop,
+    reverse_sequence_partial_left_rank_static_dynamic_right_static_left_seq_length_static_inconsistent)
+{
+    auto data = make_shared<op::Parameter>(
+        element::f32,
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 3, Dimension::dynamic()});
+    auto seq_lengths = make_shared<op::Parameter>(element::f32, PartialShape{4});
+    size_t batch_axis = 2;
+    size_t seq_axis = 1;
+    try
+    {
+        auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
+        FAIL() << "Inconsistent sequence length not detected (rank-static dynamic shape)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Sequence length (4) is not equal to batch axis dimension (3)"));
     }
     catch (...)
     {
@@ -6360,7 +6691,8 @@ TEST(type_prop, pad_deduce_below_padding_wrong_rank)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Rank for padding below does not match the rank of the data argument"));
+            std::string("Ranks for padding below (Shape{5, 3, 0, 6}), padding above (Shape{6, 9, "
+                        "4}) and interior padding (Shape{2, 3, 0}) do not match"));
     }
     catch (...)
     {
@@ -6386,9 +6718,10 @@ TEST(type_prop, pad_deduce_above_padding_wrong_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Rank for padding above does not match the rank of the data argument"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Ranks for padding below (Shape{5, 3, 0}), "
+                                         "padding above (Shape{6, 9}) and interior "
+                                         "padding (Shape{2, 3, 0}) do not match"));
     }
     catch (...)
     {
@@ -6416,7 +6749,158 @@ TEST(type_prop, pad_deduce_interior_padding_wrong_rank)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Rank for interior padding does not match the rank of the data argument"));
+            std::string("Ranks for padding below (Shape{5, 3, 0}), padding above (Shape{6, 9, 4}) "
+                        "and interior padding (Shape{2, 3, 0, 9, 3}) do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_partial_data_rank_dynamic_padding_rank_dynamic_ok)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+
+    Shape padding_below{2, 4, 6};
+    Shape padding_above{8, 2, 3};
+    Shape padding_interior{1, 0, 1};
+
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+
+    ASSERT_EQ(pad->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(pad->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(type_prop, pad_partial_data_rank_dynamic_padding_rank_dynamic_attribs_rank_inconsistent)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+
+    Shape padding_below{2, 4, 6};
+    Shape padding_above{8, 2, 3, 0};
+    Shape padding_interior{1, 0, 1};
+
+    try
+    {
+        auto pad =
+            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        FAIL() << "Inconsistent attribute ranks not detected (rank-dynamic/rank-dynamic arguments)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Ranks for padding below (Shape{2, 4, 6}), padding above (Shape{8, 2, 3, "
+                        "0}) and interior padding (Shape{1, 0, 1}) do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_partial_data_rank_static_dynamic_padding_rank_dynamic_ok)
+{
+    auto param0 = make_shared<op::Parameter>(
+        element::f32,
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+
+    Shape padding_below{2, 4, 6};
+    Shape padding_above{8, 2, 3};
+    Shape padding_interior{1, 0, 1};
+
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+
+    ASSERT_EQ(pad->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(pad->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(type_prop, pad_partial_data_rank_static_dynamic_some_dims_known_padding_rank_dynamic_ok)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{3, 5, Dimension::dynamic()});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+
+    Shape padding_below{2, 4, 6};
+    Shape padding_above{8, 2, 3};
+    Shape padding_interior{1, 0, 1};
+
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+
+    ASSERT_EQ(pad->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(
+        pad->get_output_partial_shape(0).same_scheme(PartialShape{15, 11, Dimension::dynamic()}));
+}
+
+TEST(type_prop, pad_partial_data_rank_dynamic_padding_static_ok)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    Shape padding_below{2, 4, 6};
+    Shape padding_above{8, 2, 3};
+    Shape padding_interior{1, 0, 1};
+
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+
+    ASSERT_EQ(pad->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(pad->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(type_prop, pad_partial_data_rank_dynamic_padding_static_wrong_padding_rank)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 8});
+
+    Shape padding_below{2, 4, 6};
+    Shape padding_above{8, 2, 3};
+    Shape padding_interior{1, 0, 1};
+
+    try
+    {
+        auto pad =
+            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        FAIL() << "Wrong padding rank not detected (rank-dynamic/static arguments)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Argument for padding value is not a scalar (shape: {2,3,8})"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_partial_data_rank_dynamic_padding_static_attribs_rank_inconsistent)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+
+    Shape padding_below{2, 4, 6};
+    Shape padding_above{8, 2, 3, 4};
+    Shape padding_interior{1, 0, 1};
+
+    try
+    {
+        auto pad =
+            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        FAIL() << "Wrong padding rank not detected (rank-dynamic/static arguments)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Ranks for padding below (Shape{2, 4, 6}), padding above (Shape{8, 2, 3, "
+                        "4}) and interior padding (Shape{1, 0, 1}) do not match"));
     }
     catch (...)
     {
@@ -6458,6 +6942,61 @@ TEST(type_prop, sum_axis_oob)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis (2) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, sum_partial_rank_dynamic)
+{
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto summation_axes = AxisSet{2385, 0, 4404}; // arbitrary
+    auto sum = make_shared<op::Sum>(param, summation_axes);
+
+    EXPECT_EQ(sum->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(sum->get_output_partial_shape(0).is_dynamic());
+}
+
+TEST(type_prop, sum_partial_rank_static_dynamic_ok_result_static)
+{
+    auto param =
+        make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic(), 4, 5});
+    auto summation_axes = AxisSet{2, 3};
+    auto sum = make_shared<op::Sum>(param, summation_axes);
+
+    EXPECT_EQ(sum->get_output_element_type(0), element::f32);
+    EXPECT_EQ(sum->get_shape(), (Shape{1, 2, 5}));
+}
+
+TEST(type_prop, sum_partial_rank_static_dynamic_ok_result_dynamic)
+{
+    auto param = make_shared<op::Parameter>(
+        element::f32, PartialShape{1, 2, Dimension::dynamic(), 4, Dimension::dynamic()});
+    auto summation_axes = AxisSet{2, 3};
+    auto sum = make_shared<op::Sum>(param, summation_axes);
+
+    EXPECT_EQ(sum->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(
+        sum->get_output_partial_shape(0).same_scheme(PartialShape{1, 2, Dimension::dynamic()}));
+}
+
+TEST(type_prop, sum_partial_rank_static_dynamic_axes_oob)
+{
+    auto param = make_shared<op::Parameter>(
+        element::f32, PartialShape{1, 2, Dimension::dynamic(), 4, Dimension::dynamic()});
+    auto summation_axes = AxisSet{2, 5, 1};
+
+    try
+    {
+        auto sum = make_shared<op::Sum>(param, summation_axes);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect out-of-bound axis for sum (rank-static dynamic input)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis (5) is out of bounds"));
     }
     catch (...)
     {
@@ -6596,6 +7135,420 @@ TEST(type_prop, topk_invalid_k)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, param_partial_rank_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+
+    auto& pshape = a->get_output_partial_shape(0);
+
+    ASSERT_TRUE(pshape.is_dynamic());
+    ASSERT_TRUE(pshape.rank().is_dynamic());
+}
+
+TEST(type_prop, param_partial_rank_static)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3, 4});
+
+    auto& pshape = a->get_output_partial_shape(0);
+
+    ASSERT_TRUE(pshape.is_dynamic());
+    ASSERT_EQ(size_t(pshape.rank()), 4);
+    ASSERT_TRUE(pshape[0].is_static() && size_t(pshape[0]) == 2);
+    ASSERT_TRUE(pshape[1].is_dynamic());
+    ASSERT_TRUE(pshape[2].is_static() && size_t(pshape[2]) == 3);
+    ASSERT_TRUE(pshape[3].is_static() && size_t(pshape[3]) == 4);
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_both_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_rank_dynamic_right_static)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto b = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).is_static());
+    ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_static_right_rank_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).is_static());
+    ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_rank_static_dynamic_right_rank_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::dynamic(), 3});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).rank().is_static());
+    ASSERT_TRUE(add->get_output_partial_shape(0).is_dynamic());
+    ASSERT_TRUE(
+        add->get_output_partial_shape(0).same_scheme(PartialShape{1, Dimension::dynamic(), 3}));
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_rank_dynamic_right_rank_static_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::dynamic(), 3});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).rank().is_static());
+    ASSERT_TRUE(add->get_output_partial_shape(0).is_dynamic());
+    ASSERT_TRUE(
+        add->get_output_partial_shape(0).same_scheme(PartialShape{1, Dimension::dynamic(), 3}));
+}
+
+TEST(type_prop,
+     binary_elementwise_arithmetic_left_rank_static_dynamic_right_rank_static_dynamic_result_static)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::dynamic(), 3});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).is_static());
+    ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
+}
+
+TEST(
+    type_prop,
+    binary_elementwise_arithmetic_left_rank_static_dynamic_right_rank_static_dynamic_result_rank_static_dynamic)
+{
+    auto a = make_shared<op::Parameter>(
+        element::f32, PartialShape{1, Dimension::dynamic(), Dimension::dynamic()});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).rank().is_static());
+    ASSERT_TRUE(add->get_output_partial_shape(0).is_dynamic());
+    ASSERT_TRUE(
+        add->get_output_partial_shape(0).same_scheme(PartialShape{1, 2, Dimension::dynamic()}));
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_static_right_rank_static_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).is_static());
+    ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_rank_static_dynamic_right_static)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_partial_shape(0).is_static());
+    ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_rank_static_dynamic_inconsistent)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 3, 3});
+
+    try
+    {
+        auto add = make_shared<op::Add>(a, b);
+        FAIL() << "Inconsistent partial shapes not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_right_rank_static_dynamic_inconsistent)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, 3, 3});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
+
+    try
+    {
+        auto add = make_shared<op::Add>(a, b);
+        FAIL() << "Inconsistent partial shapes not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_both_rank_static_dynamic_inconsistent)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 3, 3});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
+
+    try
+    {
+        auto add = make_shared<op::Add>(a, b);
+        FAIL() << "Inconsistent partial shapes not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_rank_static_dynamic_different_rank)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3, 4});
+
+    try
+    {
+        auto add = make_shared<op::Add>(a, b);
+        FAIL() << "Inconsistent partial shapes not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_right_rank_static_dynamic_different_rank)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3, 4});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
+
+    try
+    {
+        auto add = make_shared<op::Add>(a, b);
+        FAIL() << "Inconsistent partial shapes not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_both_rank_static_dynamic_different_rank)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::dynamic(), 3, 4});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, Dimension::dynamic()});
+
+    try
+    {
+        auto add = make_shared<op::Add>(a, b);
+        FAIL() << "Inconsistent partial shapes not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument shapes are inconsistent");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_both_et_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
+    auto b = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_TRUE(add->get_output_element_type(0).is_dynamic());
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_left_et_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
+    auto b = make_shared<op::Parameter>(element::u32, Shape{1, 2, 3, 4});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_EQ(add->get_output_element_type(0), element::u32);
+}
+
+TEST(type_prop, binary_elementwise_arithmetic_right_et_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::i64, Shape{1, 2, 3, 4});
+    auto b = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
+    auto add = make_shared<op::Add>(a, b);
+
+    ASSERT_EQ(add->get_output_element_type(0), element::i64);
+}
+
+TEST(type_prop, logic_arith_compare_partial_et)
+{
+    auto test_logic = [](element::Type et0, element::Type et1) -> std::shared_ptr<Node> {
+        auto param0 = std::make_shared<op::Parameter>(et0, Shape{1, 2, 3});
+        auto param1 = std::make_shared<op::Parameter>(et1, Shape{1, 2, 3});
+        return std::make_shared<op::And>(param0, param1);
+    };
+
+    auto test_arith = [](element::Type et0, element::Type et1) -> std::shared_ptr<Node> {
+        auto param0 = std::make_shared<op::Parameter>(et0, Shape{1, 2, 3});
+        auto param1 = std::make_shared<op::Parameter>(et1, Shape{1, 2, 3});
+        return std::make_shared<op::Add>(param0, param1);
+    };
+
+    auto test_compare = [](element::Type et0, element::Type et1) -> std::shared_ptr<Node> {
+        auto param0 = std::make_shared<op::Parameter>(et0, Shape{1, 2, 3});
+        auto param1 = std::make_shared<op::Parameter>(et1, Shape{1, 2, 3});
+        return std::make_shared<op::Greater>(param0, param1);
+    };
+
+    auto test_not = [](element::Type et) -> std::shared_ptr<Node> {
+        auto param = std::make_shared<op::Parameter>(et, Shape{1, 2, 3});
+        return std::make_shared<op::Not>(param);
+    };
+
+    // Logical ops:
+    //
+    // int int -> !
+    // int boo -> !
+    // int dyn -> !
+    // boo int -> !
+    // boo boo -> boo
+    // boo dyn -> boo
+    // dyn int -> !
+    // dyn boo -> boo
+    // dyn dyn -> boo
+    ASSERT_ANY_THROW({ test_logic(element::i32, element::i32); });
+    ASSERT_ANY_THROW({ test_logic(element::i32, element::boolean); });
+    ASSERT_ANY_THROW({ test_logic(element::i32, element::dynamic); });
+    ASSERT_ANY_THROW({ test_logic(element::boolean, element::i32); });
+    ASSERT_EQ(test_logic(element::boolean, element::boolean)->get_element_type(), element::boolean);
+    ASSERT_EQ(test_logic(element::boolean, element::dynamic)->get_element_type(), element::boolean);
+    ASSERT_ANY_THROW({ test_logic(element::dynamic, element::i32); });
+    ASSERT_EQ(test_logic(element::dynamic, element::boolean)->get_element_type(), element::boolean);
+    ASSERT_EQ(test_logic(element::dynamic, element::dynamic)->get_element_type(), element::boolean);
+
+    // Arith ops:
+    //
+    // int int -> int
+    // int boo -> !
+    // int dyn -> int
+    // boo int -> !
+    // boo boo -> !
+    // boo dyn -> !
+    // dyn int -> int
+    // dyn boo -> !
+    // dyn dyn -> dyn
+    ASSERT_EQ(test_arith(element::i32, element::i32)->get_element_type(), element::i32);
+    ASSERT_ANY_THROW({ test_arith(element::i32, element::boolean); });
+    ASSERT_EQ(test_arith(element::i32, element::dynamic)->get_element_type(), element::i32);
+    ASSERT_ANY_THROW({ test_arith(element::boolean, element::i32); });
+    ASSERT_ANY_THROW({ test_arith(element::boolean, element::boolean); });
+    ASSERT_ANY_THROW({ test_arith(element::boolean, element::dynamic); });
+    ASSERT_EQ(test_arith(element::dynamic, element::i32)->get_element_type(), element::i32);
+    ASSERT_ANY_THROW({ test_arith(element::dynamic, element::boolean); });
+    ASSERT_EQ(test_arith(element::dynamic, element::dynamic)->get_element_type(), element::dynamic);
+
+    // Comparison ops:
+    //
+    // int int -> boo
+    // int boo -> !
+    // int dyn -> boo
+    // boo int -> !
+    // boo boo -> boo
+    // boo dyn -> boo
+    // dyn int -> boo
+    // dyn boo -> boo
+    // dyn dyn -> boo
+    ASSERT_EQ(test_compare(element::i32, element::i32)->get_element_type(), element::boolean);
+    ASSERT_ANY_THROW({ test_compare(element::i32, element::boolean); });
+    ASSERT_EQ(test_compare(element::i32, element::dynamic)->get_element_type(), element::boolean);
+    ASSERT_ANY_THROW({ test_compare(element::boolean, element::i32); });
+    ASSERT_EQ(test_compare(element::boolean, element::boolean)->get_element_type(),
+              element::boolean);
+    ASSERT_EQ(test_compare(element::boolean, element::dynamic)->get_element_type(),
+              element::boolean);
+    ASSERT_EQ(test_compare(element::dynamic, element::i32)->get_element_type(), element::boolean);
+    ASSERT_EQ(test_compare(element::dynamic, element::boolean)->get_element_type(),
+              element::boolean);
+    ASSERT_EQ(test_compare(element::dynamic, element::dynamic)->get_element_type(),
+              element::boolean);
+
+    // Logical negation op:
+    //
+    // Current behavior:
+    // int -> int
+    // boo -> boo
+    // dyn -> dyn
+    //
+    // TODO(amprocte): I believe the behavior should actually be:
+    // int -> !
+    // boo -> boo
+    // dyn -> boo
+    ASSERT_EQ(test_not(element::i32)->get_element_type(), element::i32);
+    ASSERT_EQ(test_not(element::boolean)->get_element_type(), element::boolean);
+    ASSERT_EQ(test_not(element::dynamic)->get_element_type(), element::dynamic);
+}
+
+TEST(type_prop, get_output_element_partial_et_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
+    auto b = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
+    auto add = make_shared<op::Add>(a, b);
+    auto goe = make_shared<op::GetOutputElement>(add, 0);
+
+    ASSERT_EQ(goe->get_output_element_type(0), element::dynamic);
+    ASSERT_EQ(goe->get_output_shape(0), (Shape{1, 2, 3, 4}));
+}
+
+TEST(type_prop, get_output_element_partial_rank_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto b = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto add = make_shared<op::Add>(a, b);
+    auto goe = make_shared<op::GetOutputElement>(add, 0);
+
+    ASSERT_EQ(goe->get_output_element_type(0), element::i32);
+    ASSERT_TRUE(goe->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, get_output_element_partial_rank_static_dynamic)
+{
+    auto a = make_shared<op::Parameter>(
+        element::i32, PartialShape{Dimension::dynamic(), 2, 3, Dimension::dynamic()});
+    auto b = make_shared<op::Parameter>(
+        element::i32, PartialShape{Dimension::dynamic(), 2, Dimension::dynamic(), 4});
+    auto add = make_shared<op::Add>(a, b);
+    auto goe = make_shared<op::GetOutputElement>(add, 0);
+
+    ASSERT_EQ(goe->get_output_element_type(0), element::i32);
+    ASSERT_TRUE(
+        goe->get_output_partial_shape(0).same_scheme(PartialShape{Dimension::dynamic(), 2, 3, 4}));
 }
 
 TEST(type_prop, quantize_f32_to_i8_nchw_per_channel_ok)
@@ -7542,4 +8495,21 @@ TEST(type_prop, dequantize_offset_shape_mismatch_different_rank_fails)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+//
+// This is testing a temporary hack for ops that do not yet support partial-shape validation.
+// The graph we construct here is bogus, but because there is some partiality in the input shapes,
+// it should still pass validation but set the output shape and element types to be dynamic.
+//
+TEST(type_prop, validate_punt_if_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::i64, Shape{1, 2, 3, 4});
+    auto b = make_shared<op::Parameter>(element::u32, PartialShape{1, Dimension::dynamic(), 3});
+    auto c = make_shared<op::Parameter>(element::i32, Shape{1, 8, 3});
+    auto concat = make_shared<op::Concat>(NodeVector{a, b, c}, /*concatenation axis=*/1234);
+
+    ASSERT_EQ(concat->get_output_size(), 1);
+    ASSERT_TRUE(concat->get_output_partial_shape(0).rank().is_dynamic());
+    ASSERT_TRUE(concat->get_output_element_type(0).is_dynamic());
 }
