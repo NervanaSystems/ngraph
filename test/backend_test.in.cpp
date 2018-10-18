@@ -10802,8 +10802,13 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_all_toward_zero)
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
     auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
-    auto quantize =
-        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
+    auto quantize = make_shared<op::Quantize>(
+        X,
+        scale,
+        offset,
+        output_type,
+        quantization_axes,
+        static_cast<op::Quantize::RoundMode>(static_cast<int>(round_mode)));
     auto f = make_shared<Function>(quantize, op::ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
