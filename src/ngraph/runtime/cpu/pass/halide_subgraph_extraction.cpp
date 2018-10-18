@@ -25,7 +25,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/relu.hpp"
 
-#include "ngraph/runtime/cpu/op/halide_subgraph.hpp"
+#include "ngraph/runtime/cpu/op/halide_op.hpp"
 #include "ngraph/runtime/cpu/pass/halide_subgraph_extraction.hpp"
 
 using namespace std;
@@ -116,10 +116,10 @@ bool runtime::cpu::pass::HalideSubgraphExtraction::run_on_function(
         }
     }
     ordered_ops.reverse();
-    auto subgraph = make_shared<cpu::op::HalideSubgraph>(liveins,
-                                                         ordered_ops,
-                                                         function->get_result()->get_element_type(),
-                                                         function->get_result()->get_shape());
+    auto subgraph = make_shared<cpu::op::HalideOp>(liveins,
+                                                   ordered_ops,
+                                                   function->get_result()->get_element_type(),
+                                                   function->get_result()->get_shape());
 
     replace_node(function->get_result()->get_argument(0), subgraph);
     return true;

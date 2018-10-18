@@ -81,7 +81,7 @@ set(SRC
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/group_conv.cpp
-    op/halide_subgraph.cpp
+    op/halide_op.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
@@ -118,7 +118,7 @@ endif()
 if (NGRAPH_HALIDE)
     set(SRC
         ${SRC}
-        builder/halide_subgraph.cpp
+        builder/halide_op.cpp
         pass/halide_subgraph_extraction.cpp
         )
 endif()

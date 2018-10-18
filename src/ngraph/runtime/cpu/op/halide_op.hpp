@@ -29,13 +29,13 @@ namespace ngraph
         {
             namespace op
             {
-                class HalideSubgraph : public ngraph::op::Op
+                class HalideOp : public ngraph::op::Op
                 {
                 public:
-                    HalideSubgraph(const NodeVector& args,
-                                   const std::list<std::shared_ptr<Node>>& ops,
-                                   const element::Type& out_type,
-                                   const Shape& out_shape);
+                    HalideOp(const NodeVector& args,
+                             const std::list<std::shared_ptr<Node>>& ops,
+                             const element::Type& out_type,
+                             const Shape& out_shape);
 
                     virtual void validate_and_infer_types() override;
 

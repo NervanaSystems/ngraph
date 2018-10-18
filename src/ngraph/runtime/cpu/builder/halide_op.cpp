@@ -27,7 +27,7 @@
 #include "ngraph/op/relu.hpp"
 
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/op/halide_subgraph.hpp"
+#include "ngraph/runtime/cpu/op/halide_op.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -67,10 +67,10 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::runtime::cpu::op::HalideSubgraph)
+            void Builder::BUILDER_DECL(ngraph::runtime::cpu::op::HalideOp)
             {
-                const ngraph::runtime::cpu::op::HalideSubgraph* hs =
-                    static_cast<const ngraph::runtime::cpu::op::HalideSubgraph*>(node);
+                const ngraph::runtime::cpu::op::HalideOp* hs =
+                    static_cast<const ngraph::runtime::cpu::op::HalideOp*>(node);
 
                 auto& halide_functions = external_function->get_halide_functions();
                 auto& subgraph_params = external_function->get_subgraph_params();
