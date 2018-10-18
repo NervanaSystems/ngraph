@@ -65,35 +65,48 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
                 << "Window dilation (" << window_dilation << ") has zero dimension at axis " << i
                 << ".";
 
-            if (data_shape.rank().is_static() && data_shape[i].is_static() &&
-                window_shape.rank().is_static() && window_shape[i].is_static())
+            bool data_dim_static = data_shape.rank().is_static() && data_shape[i].is_static();
+            bool window_dim_static = window_shape.rank().is_static() && window_shape[i].is_static();
+
+            ptrdiff_t data_padded_dilated_dim = -1;
+            if (data_dim_static)
             {
-                ptrdiff_t data_padded_dilated_dim =
+                data_padded_dilated_dim =
                     (ptrdiff_t(data_dilation[i]) * (ptrdiff_t(data_shape[i]) - 1)) + 1 +
                     data_padding_below[i] + data_padding_above[i];
-                ptrdiff_t window_dilated_dim =
-                    ptrdiff_t(window_dilation[i]) * (ptrdiff_t(window_shape[i]) - 1) + 1;
-
                 NODE_VALIDATION_ASSERT(node, data_padded_dilated_dim > 0)
                     << "Data shape after padding and dilation has dimension less than 1 (dim: "
                     << data_padded_dilated_dim << ") at axis " << i << ".";
+            }
+
+            ptrdiff_t window_dilated_dim = -1;
+            if (window_dim_static)
+            {
+                window_dilated_dim =
+                    ptrdiff_t(window_dilation[i]) * (ptrdiff_t(window_shape[i]) - 1) + 1;
+
                 NODE_VALIDATION_ASSERT(node, window_dilated_dim > 0)
                     << "Window after dilation has dimension less than 1 (dim: "
                     << window_dilated_dim << ") at axis " << i << ".";
-                NODE_VALIDATION_ASSERT(node, window_dilated_dim <= data_padded_dilated_dim)
-                    << "Window after dilation has dimension (dim: " << window_dilated_dim
-                    << ") larger than the data shape after padding (dim: "
-                    << data_padded_dilated_dim << ") at axis " << i << ".";
+
                 NODE_VALIDATION_ASSERT(node,
                                        is_window_all_in_padding_allowed ||
-                                           (window_dilated_dim >= data_padding_below[i] &&
-                                            window_dilated_dim >= data_padding_above[i]))
+                                           (window_dilated_dim > data_padding_below[i] &&
+                                            window_dilated_dim > data_padding_above[i]))
                     << "Window after dilation is sometimes entirely in the padding area for axis "
-                    << i << "(dilated window dimension: " << window_dilated_dim
+                    << i << " (dilated window dimension: " << window_dilated_dim
                     << ", padding below dimension: " << data_padding_below[i]
                     << ", padding above dimension: " << data_padding_above[i]
                     << ") and this is not "
                     << "allowed.";
+            }
+
+            if (data_dim_static && window_dim_static)
+            {
+                NODE_VALIDATION_ASSERT(node, window_dilated_dim <= data_padded_dilated_dim)
+                    << "Window after dilation has dimension (dim: " << window_dilated_dim
+                    << ") larger than the data shape after padding (dim: "
+                    << data_padded_dilated_dim << ") at axis " << i << ".";
 
                 output_shape[i] =
                     ceil_div(size_t(data_padded_dilated_dim) - size_t(window_dilated_dim) + 1,

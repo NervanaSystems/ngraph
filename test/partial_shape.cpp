@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/validation_util.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
@@ -830,4 +831,525 @@ TEST(partial_shape, merge_rank_static_static_fail)
 
     ASSERT_FALSE(s.merge_rank(5));
     ASSERT_TRUE(s.same_scheme(PartialShape{2, 3, Dimension::dynamic(), 5}));
+}
+
+TEST(partial_shape, infer_windowed_reduction_rank_dynamic_rank_dynamic_ok)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{PartialShape::dynamic()};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 0, 0};
+    CoordinateDiff data_padding_above{0, 0, 0, 0};
+    PartialShape window_shape{PartialShape::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 1, 1};
+    bool is_window_all_in_padding_allowed = true;
+
+    PartialShape result_shape =
+        infer_windowed_reduction_output_shape(node.get(),
+                                              data_shape,
+                                              data_dilation,
+                                              data_padding_below,
+                                              data_padding_above,
+                                              window_shape,
+                                              window_strides,
+                                              window_dilation,
+                                              is_window_all_in_padding_allowed);
+
+    ASSERT_TRUE(result_shape.same_scheme(PartialShape{
+        Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(partial_shape, infer_windowed_reduction_rank_dynamic_rank_dynamic_zero_data_dilation)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{PartialShape::dynamic()};
+    Strides data_dilation{1, 1, 0, 1};
+    CoordinateDiff data_padding_below{0, 0, 0, 0};
+    CoordinateDiff data_padding_above{0, 0, 0, 0};
+    PartialShape window_shape{PartialShape::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 1, 1};
+    bool is_window_all_in_padding_allowed = true;
+    ASSERT_THROW(
+        {
+            PartialShape result_shape =
+                infer_windowed_reduction_output_shape(node.get(),
+                                                      data_shape,
+                                                      data_dilation,
+                                                      data_padding_below,
+                                                      data_padding_above,
+                                                      window_shape,
+                                                      window_strides,
+                                                      window_dilation,
+                                                      is_window_all_in_padding_allowed);
+        },
+        NodeValidationError);
+}
+
+TEST(partial_shape, infer_windowed_reduction_rank_dynamic_rank_dynamic_zero_window_dilation)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{PartialShape::dynamic()};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 0, 0};
+    CoordinateDiff data_padding_above{0, 0, 0, 0};
+    PartialShape window_shape{PartialShape::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 0, 1, 1};
+    bool is_window_all_in_padding_allowed = true;
+    ASSERT_THROW(
+        {
+            PartialShape result_shape =
+                infer_windowed_reduction_output_shape(node.get(),
+                                                      data_shape,
+                                                      data_dilation,
+                                                      data_padding_below,
+                                                      data_padding_above,
+                                                      window_shape,
+                                                      window_strides,
+                                                      window_dilation,
+                                                      is_window_all_in_padding_allowed);
+        },
+        NodeValidationError);
+}
+
+TEST(partial_shape, infer_windowed_reduction_rank_dynamic_rank_dynamic_zero_window_strides)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{PartialShape::dynamic()};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 0, 0};
+    CoordinateDiff data_padding_above{0, 0, 0, 0};
+    PartialShape window_shape{PartialShape::dynamic()};
+    Strides window_strides{1, 1, 1, 0};
+    Strides window_dilation{1, 1, 1, 1};
+    bool is_window_all_in_padding_allowed = true;
+    ASSERT_THROW(
+        {
+            PartialShape result_shape =
+                infer_windowed_reduction_output_shape(node.get(),
+                                                      data_shape,
+                                                      data_dilation,
+                                                      data_padding_below,
+                                                      data_padding_above,
+                                                      window_shape,
+                                                      window_strides,
+                                                      window_dilation,
+                                                      is_window_all_in_padding_allowed);
+        },
+        NodeValidationError);
+}
+
+TEST(partial_shape, infer_windowed_reduction_rank_static_dynamic_rank_dynamic_ok)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 0, 0};
+    CoordinateDiff data_padding_above{0, 0, 0, 0};
+    PartialShape window_shape{PartialShape::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 1, 1};
+    bool is_window_all_in_padding_allowed = true;
+
+    PartialShape result_shape =
+        infer_windowed_reduction_output_shape(node.get(),
+                                              data_shape,
+                                              data_dilation,
+                                              data_padding_below,
+                                              data_padding_above,
+                                              window_shape,
+                                              window_strides,
+                                              window_dilation,
+                                              is_window_all_in_padding_allowed);
+
+    ASSERT_TRUE(result_shape.same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(partial_shape,
+     infer_windowed_reduction_rank_static_dynamic_rank_dynamic_zero_data_post_padding)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, -1, 0, 0};
+    CoordinateDiff data_padding_above{0, -1, 0, 0};
+    PartialShape window_shape{PartialShape::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 1, 1};
+    bool is_window_all_in_padding_allowed = true;
+    ASSERT_THROW(
+        {
+            PartialShape result_shape =
+                infer_windowed_reduction_output_shape(node.get(),
+                                                      data_shape,
+                                                      data_dilation,
+                                                      data_padding_below,
+                                                      data_padding_above,
+                                                      window_shape,
+                                                      window_strides,
+                                                      window_dilation,
+                                                      is_window_all_in_padding_allowed);
+        },
+        NodeValidationError);
+}
+
+TEST(partial_shape, infer_windowed_reduction_rank_static_dynamic_rank_dynamic_neg_padding_ok)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{Dimension::dynamic(), 4, 3, Dimension::dynamic()};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, -1, 0, 0};
+    CoordinateDiff data_padding_above{0, -2, 0, 0};
+    PartialShape window_shape{PartialShape::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 1, 1};
+    bool is_window_all_in_padding_allowed = true;
+    PartialShape result_shape =
+        infer_windowed_reduction_output_shape(node.get(),
+                                              data_shape,
+                                              data_dilation,
+                                              data_padding_below,
+                                              data_padding_above,
+                                              window_shape,
+                                              window_strides,
+                                              window_dilation,
+                                              is_window_all_in_padding_allowed);
+
+    ASSERT_TRUE(result_shape.same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(partial_shape, infer_windowed_reduction_rank_dynamic_rank_static_dynamic_ok)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{PartialShape::dynamic()};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 0, 0};
+    CoordinateDiff data_padding_above{0, 0, 0, 0};
+    PartialShape window_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 1, 1};
+    bool is_window_all_in_padding_allowed = true;
+
+    PartialShape result_shape =
+        infer_windowed_reduction_output_shape(node.get(),
+                                              data_shape,
+                                              data_dilation,
+                                              data_padding_below,
+                                              data_padding_above,
+                                              window_shape,
+                                              window_strides,
+                                              window_dilation,
+                                              is_window_all_in_padding_allowed);
+
+    ASSERT_TRUE(result_shape.same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(partial_shape, infer_windowed_reduction_rank_dynamic_rank_static_dynamic_window_dim_zero)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{PartialShape::dynamic()};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 0, 0};
+    CoordinateDiff data_padding_above{0, 0, 0, 0};
+    PartialShape window_shape{Dimension::dynamic(), 2, 0, Dimension::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 1, 1};
+    bool is_window_all_in_padding_allowed = true;
+
+    ASSERT_THROW(
+        {
+            PartialShape result_shape =
+                infer_windowed_reduction_output_shape(node.get(),
+                                                      data_shape,
+                                                      data_dilation,
+                                                      data_padding_below,
+                                                      data_padding_above,
+                                                      window_shape,
+                                                      window_strides,
+                                                      window_dilation,
+                                                      is_window_all_in_padding_allowed);
+        },
+        NodeValidationError);
+}
+
+TEST(partial_shape,
+     infer_windowed_reduction_rank_dynamic_rank_static_dynamic_window_dilated_dim_zero)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{PartialShape::dynamic()};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 0, 0};
+    CoordinateDiff data_padding_above{0, 0, 0, 0};
+    PartialShape window_shape{Dimension::dynamic(), 2, 0, Dimension::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 3, 1};
+    bool is_window_all_in_padding_allowed = true;
+
+    ASSERT_THROW(
+        {
+            PartialShape result_shape =
+                infer_windowed_reduction_output_shape(node.get(),
+                                                      data_shape,
+                                                      data_dilation,
+                                                      data_padding_below,
+                                                      data_padding_above,
+                                                      window_shape,
+                                                      window_strides,
+                                                      window_dilation,
+                                                      is_window_all_in_padding_allowed);
+        },
+        NodeValidationError);
+}
+
+TEST(partial_shape,
+     infer_windowed_reduction_rank_dynamic_rank_static_dynamic_window_all_in_padding_ok)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{PartialShape::dynamic()};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 3, 0};
+    CoordinateDiff data_padding_above{0, 0, 0, 0};
+    PartialShape window_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 1, 1};
+    bool is_window_all_in_padding_allowed = true;
+
+    PartialShape result_shape =
+        infer_windowed_reduction_output_shape(node.get(),
+                                              data_shape,
+                                              data_dilation,
+                                              data_padding_below,
+                                              data_padding_above,
+                                              window_shape,
+                                              window_strides,
+                                              window_dilation,
+                                              is_window_all_in_padding_allowed);
+
+    ASSERT_TRUE(result_shape.same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(partial_shape,
+     infer_windowed_reduction_rank_dynamic_rank_static_dynamic_window_all_in_padding_not_ok)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{PartialShape::dynamic()};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 3, 0};
+    CoordinateDiff data_padding_above{0, 0, 0, 0};
+    PartialShape window_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 1, 1};
+    bool is_window_all_in_padding_allowed = false;
+
+    ASSERT_THROW(
+        {
+            PartialShape result_shape =
+                infer_windowed_reduction_output_shape(node.get(),
+                                                      data_shape,
+                                                      data_dilation,
+                                                      data_padding_below,
+                                                      data_padding_above,
+                                                      window_shape,
+                                                      window_strides,
+                                                      window_dilation,
+                                                      is_window_all_in_padding_allowed);
+        },
+        NodeValidationError);
+}
+
+TEST(partial_shape,
+     infer_windowed_reduction_rank_dynamic_rank_static_dynamic_dilated_window_not_all_in_padding)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{PartialShape::dynamic()};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 3, 0};
+    CoordinateDiff data_padding_above{0, 0, 0, 0};
+    PartialShape window_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 2, 1};
+    bool is_window_all_in_padding_allowed = false;
+
+    PartialShape result_shape =
+        infer_windowed_reduction_output_shape(node.get(),
+                                              data_shape,
+                                              data_dilation,
+                                              data_padding_below,
+                                              data_padding_above,
+                                              window_shape,
+                                              window_strides,
+                                              window_dilation,
+                                              is_window_all_in_padding_allowed);
+
+    ASSERT_TRUE(result_shape.same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(partial_shape, infer_windowed_reduction_rank_static_dynamic_rank_static_dynamic_ok)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{Dimension::dynamic(), Dimension::dynamic(), 6, 4};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 0, 0};
+    CoordinateDiff data_padding_above{0, 0, 0, 0};
+    PartialShape window_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 1, 1};
+    bool is_window_all_in_padding_allowed = true;
+
+    PartialShape result_shape =
+        infer_windowed_reduction_output_shape(node.get(),
+                                              data_shape,
+                                              data_dilation,
+                                              data_padding_below,
+                                              data_padding_above,
+                                              window_shape,
+                                              window_strides,
+                                              window_dilation,
+                                              is_window_all_in_padding_allowed);
+
+    ASSERT_TRUE(result_shape.same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 4, Dimension::dynamic()}));
+}
+
+TEST(partial_shape,
+     infer_windowed_reduction_rank_static_dynamic_rank_static_dynamic_with_padding_ok)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{Dimension::dynamic(), Dimension::dynamic(), 6, 4};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 2, 0};
+    CoordinateDiff data_padding_above{0, 0, -1, 0};
+    PartialShape window_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 1, 1};
+    bool is_window_all_in_padding_allowed = true;
+
+    PartialShape result_shape =
+        infer_windowed_reduction_output_shape(node.get(),
+                                              data_shape,
+                                              data_dilation,
+                                              data_padding_below,
+                                              data_padding_above,
+                                              window_shape,
+                                              window_strides,
+                                              window_dilation,
+                                              is_window_all_in_padding_allowed);
+
+    ASSERT_TRUE(result_shape.same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 5, Dimension::dynamic()}));
+}
+
+TEST(partial_shape,
+     infer_windowed_reduction_rank_static_dynamic_rank_static_dynamic_with_padding_and_stride_ok)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{Dimension::dynamic(), Dimension::dynamic(), 6, 4};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 2, 0};
+    CoordinateDiff data_padding_above{0, 0, -1, 0};
+    PartialShape window_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
+    Strides window_strides{1, 1, 2, 1};
+    Strides window_dilation{1, 1, 1, 1};
+    bool is_window_all_in_padding_allowed = true;
+
+    PartialShape result_shape =
+        infer_windowed_reduction_output_shape(node.get(),
+                                              data_shape,
+                                              data_dilation,
+                                              data_padding_below,
+                                              data_padding_above,
+                                              window_shape,
+                                              window_strides,
+                                              window_dilation,
+                                              is_window_all_in_padding_allowed);
+
+    ASSERT_TRUE(result_shape.same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 3, Dimension::dynamic()}));
+}
+
+TEST(partial_shape, infer_windowed_reduction_rank_static_dynamic_rank_static_dynamic_window_too_big)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{Dimension::dynamic(), Dimension::dynamic(), 6, 4};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 0, 0};
+    CoordinateDiff data_padding_above{0, 0, 0, 0};
+    PartialShape window_shape{Dimension::dynamic(), 2, 7, Dimension::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 1, 1};
+    bool is_window_all_in_padding_allowed = true;
+
+    ASSERT_THROW(
+        {
+            PartialShape result_shape =
+                infer_windowed_reduction_output_shape(node.get(),
+                                                      data_shape,
+                                                      data_dilation,
+                                                      data_padding_below,
+                                                      data_padding_above,
+                                                      window_shape,
+                                                      window_strides,
+                                                      window_dilation,
+                                                      is_window_all_in_padding_allowed);
+        },
+        NodeValidationError);
+}
+
+TEST(partial_shape,
+     infer_windowed_reduction_rank_static_dynamic_rank_static_dynamic_window_not_too_big_padding)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{Dimension::dynamic(), Dimension::dynamic(), 6, 4};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 5, 0};
+    CoordinateDiff data_padding_above{0, 0, -3, 0};
+    PartialShape window_shape{Dimension::dynamic(), 2, 7, Dimension::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 1, 1};
+    bool is_window_all_in_padding_allowed = true;
+
+    PartialShape result_shape =
+        infer_windowed_reduction_output_shape(node.get(),
+                                              data_shape,
+                                              data_dilation,
+                                              data_padding_below,
+                                              data_padding_above,
+                                              window_shape,
+                                              window_strides,
+                                              window_dilation,
+                                              is_window_all_in_padding_allowed);
+
+    ASSERT_TRUE(result_shape.same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic(), 2, Dimension::dynamic()}));
+}
+
+TEST(partial_shape,
+     infer_windowed_reduction_rank_static_dynamic_rank_static_dynamic_window_dilated_too_big)
+{
+    auto node = std::make_shared<op::Parameter>(element::f32, Shape{});
+    PartialShape data_shape{Dimension::dynamic(), Dimension::dynamic(), 6, 4};
+    Strides data_dilation{1, 1, 1, 1};
+    CoordinateDiff data_padding_below{0, 0, 5, 0};
+    CoordinateDiff data_padding_above{0, 0, -3, 0};
+    PartialShape window_shape{Dimension::dynamic(), 2, 7, Dimension::dynamic()};
+    Strides window_strides{1, 1, 1, 1};
+    Strides window_dilation{1, 1, 2, 1};
+    bool is_window_all_in_padding_allowed = true;
+
+    ASSERT_THROW(
+        {
+            PartialShape result_shape =
+                infer_windowed_reduction_output_shape(node.get(),
+                                                      data_shape,
+                                                      data_dilation,
+                                                      data_padding_below,
+                                                      data_padding_above,
+                                                      window_shape,
+                                                      window_strides,
+                                                      window_dilation,
+                                                      is_window_all_in_padding_allowed);
+        },
+        NodeValidationError);
 }
