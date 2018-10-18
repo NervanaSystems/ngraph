@@ -65,6 +65,11 @@ ngraph::op::BatchNormTraining::BatchNormTraining(double eps,
 
 void ngraph::op::BatchNormInference::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     auto bn_input_shape = get_input_shape(INPUT);
     BatchNormBase::validate_and_infer_types();
     auto in_size = get_input_size();
@@ -75,6 +80,11 @@ void ngraph::op::BatchNormInference::validate_and_infer_types()
 
 void ngraph::op::BatchNormTraining::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     auto bn_input_shape = get_input_shape(INPUT);
     BatchNormBase::validate_and_infer_types();
     auto in_size = get_input_size();
@@ -156,6 +166,11 @@ ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(
 
 void ngraph::op::BatchNormTrainingBackprop::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     set_output_size(3);
 
     NODE_VALIDATION_ASSERT(this, get_input_shape(INPUT).size() == 4)

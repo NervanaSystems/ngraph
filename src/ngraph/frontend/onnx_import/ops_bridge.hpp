@@ -16,8 +16,9 @@
 
 #pragma once
 
-#include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include <cstdint>
+
+#include "core/operator_set.hpp"
 
 namespace ngraph
 {
@@ -25,9 +26,9 @@ namespace ngraph
     {
         namespace ops_bridge
         {
-            NodeVector make_ng_nodes(const onnx_import::Node&);
-            bool is_op_type_supported(const std::string& op_type);
-        }
+            const OperatorSet& get_operator_set(std::int64_t version);
+
+        } // namespace ops_bridge
 
     } // namespace onnx_import
 
