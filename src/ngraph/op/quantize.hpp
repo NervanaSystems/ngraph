@@ -25,8 +25,8 @@ namespace ngraph
     namespace op
     {
         /// \brief Quantize operation
-        ///        Maps real input (r) to quantized output (q) using scale (s), offset (o) and round mode
-        ///        q = ROUND(r / s) - o
+        ///        Maps real input (r) to quantized output (q) using scale (s), offset (o) and round mode:
+        ///        q = ROUND(r / s) + o
         class Quantize : public ngraph::op::Op
         {
         public:
@@ -179,8 +179,8 @@ namespace ngraph
 
             /// \brief Constructs a Quantize operation
             /// \param input real input
-            /// \param scale element type: same as `input`, shape: `input` shape projected along `axes`
-            /// \param offset element type: same as `type`, shape: `input` shape projected along `axes`
+            /// \param scale scale used for mapping
+            /// \param offset offset used for mapping
             /// \param type output element type
             /// \param axes axis positions on which `scale` and `offset` are specified
             /// \param round_mode describes how to perform ROUND function (see above)
