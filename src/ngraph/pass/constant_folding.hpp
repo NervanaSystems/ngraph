@@ -28,6 +28,7 @@ namespace ngraph
 
 class ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
 {
+public:
     enum class CFTransformations
     {
         RESHAPE,
@@ -39,7 +40,6 @@ class ngraph::pass::ConstantFolding : public ngraph::pass::GraphRewrite
         QUANTIZE
     };
 
-public:
     ConstantFolding()
         : GraphRewrite()
     {

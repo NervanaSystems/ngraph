@@ -484,3 +484,309 @@ TEST(partial_shape, partial_shape_merge_both_static_different_rank)
     const PartialShape s2{1, 2, 3, 4};
     ASSERT_FALSE(PartialShape::merge_into(s1, s2));
 }
+
+TEST(partial_shape, dim_pluseq_left_dynamic)
+{
+    Dimension d1{Dimension::dynamic()};
+    Dimension d2{2};
+
+    d1 += d2;
+
+    ASSERT_TRUE(d1.is_dynamic());
+}
+
+TEST(partial_shape, dim_pluseq_right_dynamic)
+{
+    Dimension d1{2};
+    Dimension d2{Dimension::dynamic()};
+
+    d1 += d2;
+
+    ASSERT_TRUE(d1.is_dynamic());
+}
+
+TEST(partial_shape, dim_pluseq_both_static)
+{
+    Dimension d1{3};
+    Dimension d2{2};
+
+    d1 += d2;
+
+    ASSERT_TRUE(d1.is_static());
+    ASSERT_EQ(size_t(d1), 5);
+}
+
+TEST(partial_shape, dim_timeseq_left_dynamic_right_nonzero)
+{
+    Dimension d1{Dimension::dynamic()};
+    Dimension d2{2};
+
+    d1 *= d2;
+
+    ASSERT_TRUE(d1.is_dynamic());
+}
+
+TEST(partial_shape, dim_timeseq_left_dynamic_right_zero)
+{
+    Dimension d1{Dimension::dynamic()};
+    Dimension d2{0};
+
+    d1 *= d2;
+
+    ASSERT_TRUE(d1.is_static());
+    ASSERT_EQ(size_t(d1), 0);
+}
+
+TEST(partial_shape, dim_timeseq_right_dynamic_left_nonzero)
+{
+    Dimension d1{2};
+    Dimension d2{Dimension::dynamic()};
+
+    d1 *= d2;
+
+    ASSERT_TRUE(d1.is_dynamic());
+}
+
+TEST(partial_shape, dim_timeseq_right_dynamic_left_zero)
+{
+    Dimension d1{0};
+    Dimension d2{Dimension::dynamic()};
+
+    d1 *= d2;
+
+    ASSERT_TRUE(d1.is_static());
+    ASSERT_EQ(size_t(d1), 0);
+}
+
+TEST(partial_shape, dim_timeseq_both_static)
+{
+    Dimension d1{3};
+    Dimension d2{2};
+
+    d1 *= d2;
+
+    ASSERT_TRUE(d1.is_static());
+    ASSERT_EQ(size_t(d1), 6);
+}
+
+TEST(partial_shape, dim_relaxes_refines_dyn_dyn)
+{
+    Dimension d1{Dimension::dynamic()};
+    Dimension d2{Dimension::dynamic()};
+
+    ASSERT_TRUE(d1.refines(d2));
+    ASSERT_TRUE(d1.relaxes(d2));
+    ASSERT_TRUE(d2.refines(d1));
+    ASSERT_TRUE(d2.relaxes(d1));
+}
+
+TEST(partial_shape, dim_relaxes_refines_dyn_static)
+{
+    Dimension d1{Dimension::dynamic()};
+    Dimension d2{3};
+
+    ASSERT_FALSE(d1.refines(d2));
+    ASSERT_TRUE(d1.relaxes(d2));
+    ASSERT_TRUE(d2.refines(d1));
+    ASSERT_FALSE(d2.relaxes(d1));
+}
+
+TEST(partial_shape, dim_relaxes_refines_static_static_eq)
+{
+    Dimension d1{3};
+    Dimension d2{3};
+
+    ASSERT_TRUE(d1.refines(d2));
+    ASSERT_TRUE(d1.relaxes(d2));
+    ASSERT_TRUE(d2.refines(d1));
+    ASSERT_TRUE(d2.relaxes(d1));
+}
+
+TEST(partial_shape, dim_relaxes_refines_static_static_not_eq)
+{
+    Dimension d1{3};
+    Dimension d2{4};
+
+    ASSERT_FALSE(d1.refines(d2));
+    ASSERT_FALSE(d1.relaxes(d2));
+    ASSERT_FALSE(d2.refines(d1));
+    ASSERT_FALSE(d2.relaxes(d1));
+}
+
+TEST(partial_shape, partial_shape_relaxes_refines_rank_dynamic_rank_dynamic)
+{
+    PartialShape s1{PartialShape::dynamic()};
+    PartialShape s2{PartialShape::dynamic()};
+
+    ASSERT_TRUE(s1.refines(s2));
+    ASSERT_TRUE(s1.relaxes(s2));
+    ASSERT_TRUE(s2.refines(s1));
+    ASSERT_TRUE(s2.relaxes(s1));
+}
+
+TEST(partial_shape, partial_shape_relaxes_refines_rank_dynamic_rank_static_dynamic)
+{
+    PartialShape s1{PartialShape::dynamic()};
+    PartialShape s2{3, Dimension::dynamic(), 7, 9};
+
+    ASSERT_FALSE(s1.refines(s2));
+    ASSERT_TRUE(s1.relaxes(s2));
+    ASSERT_TRUE(s2.refines(s1));
+    ASSERT_FALSE(s2.relaxes(s1));
+}
+
+TEST(partial_shape, partial_shape_relaxes_refines_rank_dynamic_static)
+{
+    PartialShape s1{PartialShape::dynamic()};
+    PartialShape s2{3, 5, 7, 9};
+
+    ASSERT_FALSE(s1.refines(s2));
+    ASSERT_TRUE(s1.relaxes(s2));
+    ASSERT_TRUE(s2.refines(s1));
+    ASSERT_FALSE(s2.relaxes(s1));
+}
+
+TEST(partial_shape,
+     partial_shape_relaxes_refines_rank_dynamic_static_rank_dynamic_static_incompatible)
+{
+    PartialShape s1{3, 5, Dimension::dynamic(), 9};
+    PartialShape s2{4, Dimension::dynamic(), 7, 9};
+
+    ASSERT_FALSE(s1.refines(s2));
+    ASSERT_FALSE(s1.relaxes(s2));
+    ASSERT_FALSE(s2.refines(s1));
+    ASSERT_FALSE(s2.relaxes(s1));
+}
+
+TEST(partial_shape,
+     partial_shape_relaxes_refines_rank_dynamic_static_rank_dynamic_static_compatible_neither)
+{
+    PartialShape s1{3, 5, Dimension::dynamic(), 9};
+    PartialShape s2{3, Dimension::dynamic(), 7, 9};
+
+    ASSERT_FALSE(s1.refines(s2));
+    ASSERT_FALSE(s1.relaxes(s2));
+    ASSERT_FALSE(s2.refines(s1));
+    ASSERT_FALSE(s2.relaxes(s1));
+}
+
+TEST(partial_shape,
+     partial_shape_relaxes_refines_rank_dynamic_static_rank_dynamic_static_compatible_one_way)
+{
+    PartialShape s1{3, Dimension::dynamic(), Dimension::dynamic(), 9};
+    PartialShape s2{3, Dimension::dynamic(), 7, 9};
+
+    ASSERT_FALSE(s1.refines(s2));
+    ASSERT_TRUE(s1.relaxes(s2));
+    ASSERT_TRUE(s2.refines(s1));
+    ASSERT_FALSE(s2.relaxes(s1));
+}
+
+TEST(partial_shape,
+     partial_shape_relaxes_refines_rank_dynamic_static_rank_dynamic_static_compatible_both_ways)
+{
+    PartialShape s1{3, Dimension::dynamic(), 7, 9};
+    PartialShape s2{3, Dimension::dynamic(), 7, 9};
+
+    ASSERT_TRUE(s1.refines(s2));
+    ASSERT_TRUE(s1.relaxes(s2));
+    ASSERT_TRUE(s2.refines(s1));
+    ASSERT_TRUE(s2.relaxes(s1));
+}
+
+TEST(partial_shape, partial_shape_relaxes_refines_rank_dynamic_static_static_incompatible)
+{
+    PartialShape s1{3, Dimension::dynamic(), 7, 9};
+    PartialShape s2{4, 5, 7, 9};
+
+    ASSERT_FALSE(s1.refines(s2));
+    ASSERT_FALSE(s1.relaxes(s2));
+    ASSERT_FALSE(s2.refines(s1));
+    ASSERT_FALSE(s2.relaxes(s1));
+}
+
+TEST(partial_shape, partial_shape_relaxes_refines_rank_dynamic_static_static_compatible)
+{
+    PartialShape s1{3, Dimension::dynamic(), 7, 9};
+    PartialShape s2{3, 5, 7, 9};
+
+    ASSERT_FALSE(s1.refines(s2));
+    ASSERT_TRUE(s1.relaxes(s2));
+    ASSERT_TRUE(s2.refines(s1));
+    ASSERT_FALSE(s2.relaxes(s1));
+}
+
+TEST(partial_shape, partial_shape_relaxes_refines_static_static_eq)
+{
+    PartialShape s1{3, 5, 7, 9};
+    PartialShape s2{3, 5, 7, 9};
+
+    ASSERT_TRUE(s1.refines(s2));
+    ASSERT_TRUE(s1.relaxes(s2));
+    ASSERT_TRUE(s2.refines(s1));
+    ASSERT_TRUE(s2.relaxes(s1));
+}
+
+TEST(partial_shape, partial_shape_relaxes_refines_static_static_not_eq)
+{
+    PartialShape s1{3, 5, 7, 9};
+    PartialShape s2{4, 5, 7, 9};
+
+    ASSERT_FALSE(s1.refines(s2));
+    ASSERT_FALSE(s1.relaxes(s2));
+    ASSERT_FALSE(s2.refines(s1));
+    ASSERT_FALSE(s2.relaxes(s1));
+}
+
+TEST(partial_shape, partial_shape_project_rank_dynamic)
+{
+    PartialShape s1{PartialShape::dynamic()};
+    PartialShape s2 = project(s1, AxisSet{284, 0, 103});
+
+    ASSERT_TRUE(s2.rank().is_dynamic());
+}
+
+TEST(partial_shape, partial_shape_project_rank_static_dynamic)
+{
+    PartialShape s1{Dimension::dynamic(), 2, Dimension::dynamic(), 3};
+    PartialShape s2 = project(s1, AxisSet{0, 3});
+
+    ASSERT_TRUE(s2.same_scheme(PartialShape{Dimension::dynamic(), 3}));
+}
+
+TEST(partial_shape, partial_shape_reduce_rank_dynamic)
+{
+    PartialShape s1{PartialShape::dynamic()};
+    PartialShape s2 = reduce(s1, AxisSet{284, 0, 103});
+
+    ASSERT_TRUE(s2.rank().is_dynamic());
+}
+
+TEST(partial_shape, partial_shape_reduce_rank_static_dynamic)
+{
+    PartialShape s1{Dimension::dynamic(), 2, Dimension::dynamic(), 3};
+    PartialShape s2 = reduce(s1, AxisSet{0, 3});
+
+    ASSERT_TRUE(s2.same_scheme(PartialShape{2, Dimension::dynamic()}));
+}
+
+TEST(partial_shape, partial_shape_inject_pairs_rank_dynamic)
+{
+    PartialShape s1{PartialShape::dynamic()};
+    PartialShape s2 = inject_pairs(
+        s1, std::vector<std::pair<size_t, Dimension>>{{0, Dimension::dynamic()}, {207, 909}});
+
+    ASSERT_TRUE(s2.rank().is_dynamic());
+}
+
+TEST(partial_shape, partial_shape_inject_pairs_rank_static)
+{
+    PartialShape s1{1, Dimension::dynamic()};
+    PartialShape s2 =
+        inject_pairs(s1,
+                     std::vector<std::pair<size_t, Dimension>>{
+                         {0, Dimension::dynamic()}, {2, 909}, {4, Dimension::dynamic()}});
+
+    ASSERT_TRUE(s2.same_scheme(
+        PartialShape{Dimension::dynamic(), 1, 909, Dimension::dynamic(), Dimension::dynamic()}));
+}

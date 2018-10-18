@@ -30,7 +30,7 @@ op::GetOutputElement::GetOutputElement(const shared_ptr<Node>& arg, size_t n)
         << "Output at index " << m_n << " requested, but argument has only "
         << arg->get_output_size() << " outputs.";
 
-    set_output_type(0, arg->get_output_element_type(n), arg->get_output_shape(n));
+    set_output_type(0, arg->get_output_element_type(n), arg->get_output_partial_shape(n));
 }
 
 shared_ptr<Node> op::GetOutputElement::copy_with_new_args(const NodeVector& new_args) const
