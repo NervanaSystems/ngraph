@@ -31,7 +31,7 @@ set(SRC
     gpu_external_function.cpp
     gpu_invoke.cpp
     gpu_kernel_emitters.cpp
-	gpu_memory_manager.cpp
+    gpu_memory_manager.cpp
     gpu_primitive_emitter.cpp
     gpu_runtime_context.cpp
     gpu_tensor_wrapper.cpp
@@ -44,19 +44,50 @@ set(SRC
     pass/gpu_rnn_fusion.cpp
     op/rnn.cpp
     )
+set(CUDA_SRC
+    nvcc/example.cu.cpp
+    )
 
 if (NGRAPH_GPU_ENABLE)
-    add_library(gpu_backend SHARED ${SRC})
+    find_package(CUDA 9 QUIET)
+        if (CUDA_FOUND)
+            set(CUDA9_FOUND TRUE)
+        else()
+            find_package(CUDA 8 REQUIRED)
+        endif()
+
+	set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};
+	    --compiler-options -fPIC;
+	    -arch=sm_30;
+	    -gencode=arch=compute_35,code=sm_35;
+	    -gencode=arch=compute_50,code=sm_50;
+	    -gencode=arch=compute_52,code=sm_52;
+	    -gencode=arch=compute_60,code=sm_60;
+	    -gencode=arch=compute_61,code=sm_61;
+	    -gencode=arch=compute_61,code=compute_61)
+    if (CUDA9_FOUND)
+        set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};
+            -gencode=arch=compute_62,code=sm_62;
+	    -gencode=arch=compute_70,code=sm_70;
+	    -gencode=arch=compute_70,code=compute_70)
+    endif()
+
+    set_source_files_properties( ${CUDA_SRC} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
+    cuda_compile(CUDA_OBJ ${CUDA_SRC} STATIC)
+
+    add_library(gpu_backend SHARED ${SRC} ${CUDA_OBJ})
     set_target_properties(gpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
     target_link_libraries(gpu_backend PUBLIC ngraph codegen)
     find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
     find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
-    find_package(CUDA 8 REQUIRED)
+    find_library(CUDA_cudart_LIBRARY libcudart_static.a /usr/local/cuda/lib64)
+
     find_package(CUDNN 7 REQUIRED)
     target_include_directories(gpu_backend SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
     target_link_libraries(gpu_backend PUBLIC
         ${CUDA_cuda_LIBRARY}
         ${CUDA_nvrtc_LIBRARY}
+        ${CUDA_cudart_LIBRARY}
         ${CUDA_LIBRARIES}
         ${CUDA_CUBLAS_LIBRARIES}
         ${CUDNN_LIBRARIES})
