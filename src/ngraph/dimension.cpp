@@ -66,6 +66,16 @@ bool Dimension::compatible(const Dimension& d) const
     return (is_dynamic() || d.is_dynamic() || m_dimension == size_t(d));
 }
 
+bool Dimension::relaxes(const Dimension& d) const
+{
+    return (is_dynamic() || (d.is_static() && size_t(*this) == size_t(d)));
+}
+
+bool Dimension::refines(const Dimension& d) const
+{
+    return (d.is_dynamic() || (is_static() && size_t(d) == size_t(*this)));
+}
+
 bool Dimension::merge(Dimension& dst, const Dimension d1, const Dimension d2)
 {
     if (d1.is_dynamic())
