@@ -58,7 +58,6 @@ namespace ngraph
                 char* const* mkldnn_workspaces;
                 tbb::flow::graph* G;
                 tbb::global_control* c;
-                tbb::task_scheduler_init* init;
             };
             }
 

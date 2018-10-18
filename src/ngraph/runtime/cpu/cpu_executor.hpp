@@ -20,10 +20,12 @@
 
 #include <mkldnn.hpp>
 
+#include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
+
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#define NGRAPH_CPU_THREAD_POOLS 1
+#include "tbb/task_arena.h"
 
 namespace ngraph
 {
@@ -46,9 +48,15 @@ namespace ngraph
                         return *m_thread_pool_devices[id].get();
                     }
 
+                    void execute(CPUKernelFunctor& f,
+                                 CPURuntimeContext* ctx,
+                                 CPUExecutionContext* ectx,
+                                 bool use_tbb = false);
+
                 private:
                     std::vector<std::unique_ptr<Eigen::ThreadPool>> m_thread_pools;
                     std::vector<std::unique_ptr<Eigen::ThreadPoolDevice>> m_thread_pool_devices;
+                    std::vector<tbb::task_arena> m_tbb_arenas;
                     int m_num_thread_pools;
                 };
 

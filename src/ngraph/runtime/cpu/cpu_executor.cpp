@@ -28,7 +28,7 @@ static int GetNumCores()
     {
         return count;
     }
-    else if (ngraph_intra_op_parallelism && (count == std::atoi(ngraph_intra_op_parallelism)))
+    else if (ngraph_intra_op_parallelism && (count = std::atoi(ngraph_intra_op_parallelism)))
     {
         return count;
     }
@@ -37,6 +37,19 @@ static int GetNumCores()
         count = std::thread::hardware_concurrency() >> 1;
     }
     return count ? count : 1;
+}
+
+static int GetNumThreadPools()
+{
+    const auto ngraph_inter_op_parallelism = std::getenv("NGRAPH_INTER_OP_PARALLELISM");
+    int count = 0;
+
+    if (ngraph_inter_op_parallelism && (count = std::atoi(ngraph_inter_op_parallelism)))
+    {
+        return count;
+    }
+
+    return 1;
 }
 
 namespace ngraph
@@ -62,12 +75,29 @@ namespace ngraph
                             new Eigen::ThreadPool(num_threads_per_pool)));
                         m_thread_pool_devices.push_back(std::unique_ptr<Eigen::ThreadPoolDevice>(
                             new Eigen::ThreadPoolDevice(m_thread_pools[i].get(), GetNumCores())));
+                        m_tbb_arenas.emplace_back(1);
+                    }
+                }
+
+                void CPUExecutor::execute(CPUKernelFunctor& f,
+                                          CPURuntimeContext* ctx,
+                                          CPUExecutionContext* ectx,
+                                          bool use_tbb)
+                {
+                    auto tbb_functor = [&]() { f(ctx, ectx); };
+                    if (use_tbb)
+                    {
+                        m_tbb_arenas[ectx->arena].execute(tbb_functor);
+                    }
+                    else
+                    {
+                        f(ctx, ectx);
                     }
                 }
 
                 CPUExecutor& GetCPUExecutor()
                 {
-                    static CPUExecutor cpu_executor(NGRAPH_CPU_THREAD_POOLS);
+                    static CPUExecutor cpu_executor(GetNumThreadPools());
                     return cpu_executor;
                 }
 

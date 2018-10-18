@@ -139,6 +139,7 @@
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
@@ -1464,7 +1465,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                         start_ts = cpu::Clock::now();
                                     }
                                     CPUExecutionContext ectx{0};
-                                    (*functor)(ctx, &ectx);
+                                    executor::GetCPUExecutor().execute(*functor, ctx, &ectx, true);
                                     if (runtime::cpu::IsTracingEnabled())
                                     {
                                         ctx->op_durations[profiler_count++] =
@@ -1540,7 +1541,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                         start_ts = cpu::Clock::now();
                     }
                     CPUExecutionContext ectx{0};
-                    (*functor)(ctx, &ectx);
+                    executor::GetCPUExecutor().execute(*functor, ctx, &ectx);
                     if (runtime::cpu::IsTracingEnabled())
                     {
                         ctx->op_durations[profiler_count++] =
