@@ -20,6 +20,7 @@
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
+#include "ngraph/shape_util.hpp"
 
 namespace ngraph
 {
