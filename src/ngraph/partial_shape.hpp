@@ -152,6 +152,12 @@ namespace ngraph
         ///      either `s2[i]` is dynamic, or `s1[i]` == `s2[i]`.
         bool refines(const PartialShape& s) const;
 
+        /// \brief Checks that this shape's rank is compatible with `r`, and, if this shape's
+        ///        rank is dynamic and `r` is static, updates this shape to have a rank of `r`
+        ///        with dimensions all dynamic.
+        /// \return `true` if this shape's rank is compatible with `r`, else `false`.
+        bool merge_rank(Rank r);
+
         /// \brief Convert a static PartialShape to a Shape.
         /// \return A new Shape `s` where `s[i] = size_t((*this)[i])`.
         /// \throws std::invalid_argument If this PartialShape is dynamic.

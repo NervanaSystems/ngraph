@@ -182,6 +182,24 @@ bool PartialShape::refines(const PartialShape& s) const
     }
 }
 
+bool PartialShape::merge_rank(Rank r)
+{
+    if (r.is_dynamic())
+    {
+        return true;
+    }
+    else if (!m_rank_is_static)
+    {
+        m_rank_is_static = true;
+        m_dimensions = std::vector<Dimension>(size_t(r), Dimension::dynamic());
+        return true;
+    }
+    else
+    {
+        return (m_dimensions.size() == size_t(r));
+    }
+}
+
 Shape PartialShape::to_shape() const
 {
     if (is_dynamic())

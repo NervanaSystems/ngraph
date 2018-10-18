@@ -790,3 +790,44 @@ TEST(partial_shape, partial_shape_inject_pairs_rank_static)
     ASSERT_TRUE(s2.same_scheme(
         PartialShape{Dimension::dynamic(), 1, 909, Dimension::dynamic(), Dimension::dynamic()}));
 }
+
+TEST(partial_shape, merge_rank_dyn_dyn)
+{
+    PartialShape s{PartialShape::dynamic()};
+
+    ASSERT_TRUE(s.merge_rank(Rank::dynamic()));
+    ASSERT_TRUE(s.rank().is_dynamic());
+}
+
+TEST(partial_shape, merge_rank_dyn_static)
+{
+    PartialShape s{PartialShape::dynamic()};
+
+    ASSERT_TRUE(s.merge_rank(4));
+    ASSERT_TRUE(s.same_scheme(PartialShape{
+        Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(partial_shape, merge_rank_static_dyn)
+{
+    PartialShape s{2, 3, Dimension::dynamic(), 5};
+
+    ASSERT_TRUE(s.merge_rank(Rank::dynamic()));
+    ASSERT_TRUE(s.same_scheme(PartialShape{2, 3, Dimension::dynamic(), 5}));
+}
+
+TEST(partial_shape, merge_rank_static_static_ok)
+{
+    PartialShape s{2, 3, Dimension::dynamic(), 5};
+
+    ASSERT_TRUE(s.merge_rank(4));
+    ASSERT_TRUE(s.same_scheme(PartialShape{2, 3, Dimension::dynamic(), 5}));
+}
+
+TEST(partial_shape, merge_rank_static_static_fail)
+{
+    PartialShape s{2, 3, Dimension::dynamic(), 5};
+
+    ASSERT_FALSE(s.merge_rank(5));
+    ASSERT_TRUE(s.same_scheme(PartialShape{2, 3, Dimension::dynamic(), 5}));
+}
