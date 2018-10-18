@@ -91,9 +91,13 @@ bool runtime::cpu::CPU_CallFrame::step(
         return false;
     }
 
+    bool is_set = ctx->breakpoints.count(ctx->pc + 1) != 0;
     ctx->breakpoints.insert(ctx->pc + 1);
     inner_call(output_tvs, input_tvs);
-    ctx->breakpoints.erase(ctx->pc);
+    if (!is_set)
+    {
+        ctx->breakpoints.erase(ctx->pc);
+    }
     return true;
 }
 

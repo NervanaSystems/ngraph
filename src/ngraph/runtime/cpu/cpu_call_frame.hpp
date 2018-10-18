@@ -63,7 +63,7 @@ namespace ngraph
 
                 /// \brief Add a breakpoint to a node
                 bool add_breakpoint(std::shared_ptr<Node> op);
-                /// \brief Remove a breakpoint to a node
+                /// \brief Remove a breakpoint from a node
                 bool delete_breakpoint(std::shared_ptr<Node> op);
 
                 void* inspect(std::shared_ptr<Node> op, size_t output_index = 0);
