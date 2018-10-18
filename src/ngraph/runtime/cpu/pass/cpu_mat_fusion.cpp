@@ -217,6 +217,12 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             auto weights = it.first.first;
             auto bias = it.first.second;
 
+            //if there's just one data node skip the optimization
+            if (it.second.size() < 2)
+            {
+                return;
+            }
+
             if (map_weights_to_pattern[weights].size() !=
                 map_weights_bias_to_data[std::make_pair(weights, bias)].size())
             {

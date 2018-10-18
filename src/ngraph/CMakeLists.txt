@@ -20,6 +20,7 @@ set (SRC
     autodiff/adjoints.cpp
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
+    builder/quantization.cpp
     builder/reduce_ops.cpp
     coordinate.cpp
     coordinate_diff.cpp
@@ -84,6 +85,11 @@ set (SRC
     op/power.cpp
     op/product.cpp
     op/quantize.cpp
+    op/experimental/quantized_avg_pool.cpp
+    op/experimental/quantized_conv_bias.cpp
+    op/experimental/quantized_conv_relu.cpp
+    op/experimental/quantized_conv.cpp
+    op/experimental/quantized_max_pool.cpp
     op/reduce.cpp
     op/reduce_window.cpp
     op/relu.cpp
@@ -146,9 +152,11 @@ set (SRC
     runtime/tensor.cpp
     serializer.cpp
     shape.cpp
+    shape_util.cpp
     strides.cpp
     type/element_type.cpp
     util.cpp
+    validation_util.cpp
     graph_util.cpp
     placement.cpp
     cpio.cpp
