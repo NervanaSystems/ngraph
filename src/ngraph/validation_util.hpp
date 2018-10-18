@@ -23,15 +23,15 @@
 
 namespace ngraph
 {
-    Shape infer_windowed_reduction_output_shape(const Node* node,
-                                                const Shape& data_shape,
-                                                const Strides& data_dilation,
-                                                const CoordinateDiff& data_padding_below,
-                                                const CoordinateDiff& data_padding_above,
-                                                const Shape& window_shape,
-                                                const Strides& window_strides,
-                                                const Strides& window_dilation,
-                                                bool is_window_all_in_padding_allowed);
+    PartialShape infer_windowed_reduction_output_shape(const Node* node,
+                                                       const PartialShape& data_shape,
+                                                       const Strides& data_dilation,
+                                                       const CoordinateDiff& data_padding_below,
+                                                       const CoordinateDiff& data_padding_above,
+                                                       const PartialShape& window_shape,
+                                                       const Strides& window_strides,
+                                                       const Strides& window_dilation,
+                                                       bool is_window_all_in_padding_allowed);
 
     std::tuple<element::Type, Shape>
         infer_convolution_forward(const Node* node,

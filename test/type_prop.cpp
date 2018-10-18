@@ -3136,9 +3136,12 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_many)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data shape (Shape{10, 10}) does not have same rank as "
-                                         "the window shape (Shape{3, 3, 3})"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
+                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), "
+                        "window shape ({3,3,3}), window strides (Strides{1, 1}), and window "
+                        "dilation (Strides{1, 1}) do not match"));
     }
     catch (...)
     {
@@ -3160,9 +3163,12 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_few)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data shape (Shape{10, 10}) does not have "
-                                         "same rank as the window shape (Shape{3})"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
+                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), "
+                        "window shape ({3}), window strides (Strides{1, 1}), and window dilation "
+                        "(Strides{1, 1}) do not match"));
     }
     catch (...)
     {
@@ -3231,9 +3237,12 @@ TEST(type_prop, conv_invalid_movement_stride_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data shape (Shape{10, 10}) does not have same rank as "
-                                         "the window strides (Strides{2, 3, 8})"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
+                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), "
+                        "window shape ({3,3}), window strides (Strides{2, 3, 8}), and window "
+                        "dilation (Strides{1, 1}) do not match"));
     }
     catch (...)
     {
@@ -3255,9 +3264,12 @@ TEST(type_prop, conv_invalid_window_dilation_stride_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data shape (Shape{10, 10}) does not have same rank as "
-                                         "the window dilation (Strides{2, 3, 8})"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
+                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), "
+                        "window shape ({3,3}), window strides (Strides{2, 3}), and window dilation "
+                        "(Strides{2, 3, 8}) do not match"));
     }
     catch (...)
     {
@@ -3285,9 +3297,12 @@ TEST(type_prop, conv_invalid_data_dilation_stride_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data shape (Shape{10, 10}) does not have same rank as "
-                                         "the data dilation (Strides{2, 3, 8})"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Ranks for data shape ({10,10}), data dilation (Strides{2, 3, 8}), padding "
+                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), "
+                        "window shape ({3,3}), window strides (Strides{2, 3}), and window dilation "
+                        "(Strides{2, 3}) do not match"));
     }
     catch (...)
     {
@@ -3314,9 +3329,12 @@ TEST(type_prop, conv_invalid_padding_below_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data shape (Shape{10, 10}) does not have same rank as "
-                                         "the data padding below (CoordinateDiff{0, 0, 0})"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
+                        "below (CoordinateDiff{0, 0, 0}), padding above (CoordinateDiff{0, 0}), "
+                        "window shape ({3,3}), window strides (Strides{2, 3}), and window dilation "
+                        "(Strides{1, 1}) do not match"));
     }
     catch (...)
     {
@@ -3343,9 +3361,12 @@ TEST(type_prop, conv_invalid_padding_above_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data shape (Shape{10, 10}) does not have same rank as "
-                                         "the data padding above (CoordinateDiff{0, 0, 0})"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
+                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0, 0}), "
+                        "window shape ({3,3}), window strides (Strides{2, 3}), and window dilation "
+                        "(Strides{2, 3}) do not match"));
     }
     catch (...)
     {

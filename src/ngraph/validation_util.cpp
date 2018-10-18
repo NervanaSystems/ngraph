@@ -24,160 +24,84 @@ using namespace ngraph;
 // Infers the output shape of a windowed reduction operation, where the data may be dilated and/or
 // padded, and the reduction window may be strided and/or dilated.
 //
-Shape ngraph::infer_windowed_reduction_output_shape(const Node* node,
-                                                    const Shape& data_shape,
-                                                    const Strides& data_dilation,
-                                                    const CoordinateDiff& data_padding_below,
-                                                    const CoordinateDiff& data_padding_above,
-                                                    const Shape& window_shape,
-                                                    const Strides& window_strides,
-                                                    const Strides& window_dilation,
-                                                    bool is_window_all_in_padding_allowed)
+PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
+                                                           const PartialShape& data_shape,
+                                                           const Strides& data_dilation,
+                                                           const CoordinateDiff& data_padding_below,
+                                                           const CoordinateDiff& data_padding_above,
+                                                           const PartialShape& window_shape,
+                                                           const Strides& window_strides,
+                                                           const Strides& window_dilation,
+                                                           bool is_window_all_in_padding_allowed)
 {
-#if 0
-    Rank data_rank = data_shape.rank();
+    PartialShape data_shape_merged{PartialShape::dynamic()};
 
-    PartialShape data_shape_merged = data_shape;
-    data_shape_merged.merge_rank(data_dilation.size())
-    data_shape_merged.merge_rank(data_padding_below.size())
-
-    NODE_VALIDATION_ASSERT(node, data_shape.size() == data_dilation.size())
-        << "Data shape (" << data_shape << ") does not have same rank as "
-        << "the data dilation (" << data_dilation << ").";
-
-    NODE_VALIDATION_ASSERT(node, data_shape.size() == data_padding_below.size())
-        << "Data shape (" << data_shape << ") does not have same rank as "
-        << "the data padding below (" << data_padding_below << ").";
-
-    NODE_VALIDATION_ASSERT(node, data_shape.size() == data_padding_above.size())
-        << "Data shape (" << data_shape << ") does not have same rank as "
-        << "the data padding above (" << data_padding_above << ").";
-
-    NODE_VALIDATION_ASSERT(node, data_shape.size() == window_shape.size())
-        << "Data shape (" << data_shape << ") does not have same rank as "
-        << "the window shape (" << window_shape << ").";
-
-    NODE_VALIDATION_ASSERT(node, data_shape.size() == window_strides.size())
-        << "Data shape (" << data_shape << ") does not have same rank as "
-        << "the window strides (" << window_strides << ").";
-
-    NODE_VALIDATION_ASSERT(node, data_shape.size() == window_dilation.size())
-        << "Data shape (" << data_shape << ") does not have same rank as "
-        << "the window dilation (" << window_dilation << ").";
+    NODE_VALIDATION_ASSERT(node,
+                           data_shape_merged.merge_rank(data_shape.rank()) &&
+                               data_shape_merged.merge_rank(data_dilation.size()) &&
+                               data_shape_merged.merge_rank(data_padding_below.size()) &&
+                               data_shape_merged.merge_rank(data_padding_above.size()) &&
+                               data_shape_merged.merge_rank(window_shape.rank()) &&
+                               data_shape_merged.merge_rank(window_strides.size()) &&
+                               data_shape_merged.merge_rank(window_dilation.size()))
+        << "Ranks for data shape (" << data_shape << "), data dilation (" << data_dilation
+        << "), padding below (" << data_padding_below << "), padding above (" << data_padding_above
+        << "), window shape (" << window_shape << "), window strides (" << window_strides
+        << "), and window dilation (" << window_dilation << ") do not match.";
 
     PartialShape output_shape = PartialShape::dynamic(data_shape_merged.rank());
 
     if (output_shape.rank().is_static())
     {
-        for (size_t i = 0; i < data_shape.size(); i++)
+        for (size_t i = 0; i < size_t(output_shape.rank()); i++)
         {
             NODE_VALIDATION_ASSERT(node, data_dilation[i] > 0)
-                << "Data dilation (" << data_dilation << ") has zero dimension at axis " << i << ".";
+                << "Data dilation (" << data_dilation << ") has zero dimension at axis " << i
+                << ".";
             NODE_VALIDATION_ASSERT(node, window_strides[i] > 0)
-                << "Window strides (" << window_strides << ") has zero dimension at axis " << i << ".";
+                << "Window strides (" << window_strides << ") has zero dimension at axis " << i
+                << ".";
             NODE_VALIDATION_ASSERT(node, window_dilation[i] > 0)
                 << "Window dilation (" << window_dilation << ") has zero dimension at axis " << i
                 << ".";
 
-            ptrdiff_t data_padded_dilated_dim =
-                (ptrdiff_t(data_dilation[i]) * (ptrdiff_t(data_shape[i]) - 1)) + 1 +
-                data_padding_below[i] + data_padding_above[i];
-            ptrdiff_t window_dilated_dim =
-                ptrdiff_t(window_dilation[i]) * (ptrdiff_t(window_shape[i]) - 1) + 1;
+            Dimension output_dim{Dimension::dynamic()};
+            if (data_shape.rank().is_static() && data_shape[i].is_static() &&
+                window_shape.rank().is_static() && window_shape[i].is_static())
+            {
+                ptrdiff_t data_padded_dilated_dim =
+                    (ptrdiff_t(data_dilation[i]) * (ptrdiff_t(data_shape[i]) - 1)) + 1 +
+                    data_padding_below[i] + data_padding_above[i];
+                ptrdiff_t window_dilated_dim =
+                    ptrdiff_t(window_dilation[i]) * (ptrdiff_t(window_shape[i]) - 1) + 1;
 
-            NODE_VALIDATION_ASSERT(node, data_padded_dilated_dim > 0)
-                << "Data shape after padding and dilation has dimension less than 1 (dim: "
-                << data_padded_dilated_dim << ") at axis " << i << ".";
-            NODE_VALIDATION_ASSERT(node, window_dilated_dim > 0)
-                << "Window after dilation has dimension less than 1 (dim: " << window_dilated_dim
-                << ") at axis " << i << ".";
-            NODE_VALIDATION_ASSERT(node, window_dilated_dim <= data_padded_dilated_dim)
-                << "Window after dilation has dimension (dim: " << window_dilated_dim
-                << ") larger than the data shape after padding (dim: " << data_padded_dilated_dim
-                << ") at axis " << i << ".";
-            NODE_VALIDATION_ASSERT(node,
-                                is_window_all_in_padding_allowed ||
-                                    (window_dilated_dim >= data_padding_below[i] &&
-                                        window_dilated_dim >= data_padding_above[i]))
-                << "Window after dilation is sometimes entirely in the padding area for axis " << i
-                << "(dilated window dimension: " << window_dilated_dim
-                << ", padding below dimension: " << data_padding_below[i]
-                << ", padding above dimension: " << data_padding_above[i] << ") and this is not "
-                << "allowed.";
+                NODE_VALIDATION_ASSERT(node, data_padded_dilated_dim > 0)
+                    << "Data shape after padding and dilation has dimension less than 1 (dim: "
+                    << data_padded_dilated_dim << ") at axis " << i << ".";
+                NODE_VALIDATION_ASSERT(node, window_dilated_dim > 0)
+                    << "Window after dilation has dimension less than 1 (dim: "
+                    << window_dilated_dim << ") at axis " << i << ".";
+                NODE_VALIDATION_ASSERT(node, window_dilated_dim <= data_padded_dilated_dim)
+                    << "Window after dilation has dimension (dim: " << window_dilated_dim
+                    << ") larger than the data shape after padding (dim: "
+                    << data_padded_dilated_dim << ") at axis " << i << ".";
+                NODE_VALIDATION_ASSERT(node,
+                                       is_window_all_in_padding_allowed ||
+                                           (window_dilated_dim >= data_padding_below[i] &&
+                                            window_dilated_dim >= data_padding_above[i]))
+                    << "Window after dilation is sometimes entirely in the padding area for axis "
+                    << i << "(dilated window dimension: " << window_dilated_dim
+                    << ", padding below dimension: " << data_padding_below[i]
+                    << ", padding above dimension: " << data_padding_above[i]
+                    << ") and this is not "
+                    << "allowed.";
 
-            size_t output_dim = ceil_div(
-                size_t(data_padded_dilated_dim) - size_t(window_dilated_dim) + 1, window_strides[i]);
+                output_dim =
+                    ceil_div(size_t(data_padded_dilated_dim) - size_t(window_dilated_dim) + 1,
+                             window_strides[i]);
+            }
             output_shape[i] = output_dim;
         }
-    }
-
-    return output_shape;
-#endif
-    NODE_VALIDATION_ASSERT(node, data_shape.size() == data_dilation.size())
-        << "Data shape (" << data_shape << ") does not have same rank as "
-        << "the data dilation (" << data_dilation << ").";
-
-    NODE_VALIDATION_ASSERT(node, data_shape.size() == data_padding_below.size())
-        << "Data shape (" << data_shape << ") does not have same rank as "
-        << "the data padding below (" << data_padding_below << ").";
-
-    NODE_VALIDATION_ASSERT(node, data_shape.size() == data_padding_above.size())
-        << "Data shape (" << data_shape << ") does not have same rank as "
-        << "the data padding above (" << data_padding_above << ").";
-
-    NODE_VALIDATION_ASSERT(node, data_shape.size() == window_shape.size())
-        << "Data shape (" << data_shape << ") does not have same rank as "
-        << "the window shape (" << window_shape << ").";
-
-    NODE_VALIDATION_ASSERT(node, data_shape.size() == window_strides.size())
-        << "Data shape (" << data_shape << ") does not have same rank as "
-        << "the window strides (" << window_strides << ").";
-
-    NODE_VALIDATION_ASSERT(node, data_shape.size() == window_dilation.size())
-        << "Data shape (" << data_shape << ") does not have same rank as "
-        << "the window dilation (" << window_dilation << ").";
-
-    Shape output_shape(data_shape.size());
-
-    for (size_t i = 0; i < data_shape.size(); i++)
-    {
-        NODE_VALIDATION_ASSERT(node, data_dilation[i] > 0)
-            << "Data dilation (" << data_dilation << ") has zero dimension at axis " << i << ".";
-        NODE_VALIDATION_ASSERT(node, window_strides[i] > 0)
-            << "Window strides (" << window_strides << ") has zero dimension at axis " << i << ".";
-        NODE_VALIDATION_ASSERT(node, window_dilation[i] > 0)
-            << "Window dilation (" << window_dilation << ") has zero dimension at axis " << i
-            << ".";
-
-        ptrdiff_t data_padded_dilated_dim =
-            (ptrdiff_t(data_dilation[i]) * (ptrdiff_t(data_shape[i]) - 1)) + 1 +
-            data_padding_below[i] + data_padding_above[i];
-        ptrdiff_t window_dilated_dim =
-            ptrdiff_t(window_dilation[i]) * (ptrdiff_t(window_shape[i]) - 1) + 1;
-
-        NODE_VALIDATION_ASSERT(node, data_padded_dilated_dim > 0)
-            << "Data shape after padding and dilation has dimension less than 1 (dim: "
-            << data_padded_dilated_dim << ") at axis " << i << ".";
-        NODE_VALIDATION_ASSERT(node, window_dilated_dim > 0)
-            << "Window after dilation has dimension less than 1 (dim: " << window_dilated_dim
-            << ") at axis " << i << ".";
-        NODE_VALIDATION_ASSERT(node, window_dilated_dim <= data_padded_dilated_dim)
-            << "Window after dilation has dimension (dim: " << window_dilated_dim
-            << ") larger than the data shape after padding (dim: " << data_padded_dilated_dim
-            << ") at axis " << i << ".";
-        NODE_VALIDATION_ASSERT(node,
-                               is_window_all_in_padding_allowed ||
-                                   (window_dilated_dim >= data_padding_below[i] &&
-                                    window_dilated_dim >= data_padding_above[i]))
-            << "Window after dilation is sometimes entirely in the padding area for axis " << i
-            << "(dilated window dimension: " << window_dilated_dim
-            << ", padding below dimension: " << data_padding_below[i]
-            << ", padding above dimension: " << data_padding_above[i] << ") and this is not "
-            << "allowed.";
-
-        size_t output_dim = ceil_div(
-            size_t(data_padded_dilated_dim) - size_t(window_dilated_dim) + 1, window_strides[i]);
-        output_shape[i] = output_dim;
     }
 
     return output_shape;
@@ -239,7 +163,8 @@ std::tuple<element::Type, Shape>
                                                                     filter_spatial_shape,
                                                                     filter_strides,
                                                                     filter_dilation,
-                                                                    true);
+                                                                    true)
+                                  .to_shape();
 
     Shape batch_output_shape(data_batch_shape.size());
     batch_output_shape[0] = batch_size;
@@ -304,7 +229,8 @@ Shape ngraph::infer_batched_pooling_forward(const Node* node,
                                               window_shape,
                                               window_strides,
                                               window_dilation,
-                                              is_window_all_in_padding_allowed);
+                                              is_window_all_in_padding_allowed)
+            .to_shape();
 
     Shape batch_output_shape(data_batch_shape.size());
     batch_output_shape[0] = batch_size;

@@ -88,9 +88,9 @@ namespace ngraph
         /// \return The rank of the shape. This will be Rank::dynamic() if the rank of
         ///         the shape is dynamic.
         Rank rank() const { return m_rank_is_static ? Rank(m_dimensions.size()) : Rank::dynamic(); }
-        /// \brief Construct a PartialShape with dynamic rank.
-        /// \return A PartialShape with dynamic rank.
-        static PartialShape dynamic() { return PartialShape(false, {}); }
+        /// \brief Construct a PartialShape with the given rank and all dimensions (if any) dynamic.
+        /// \return A PartialShape with the given rank, and all dimensions (if any) dynamic.
+        static PartialShape dynamic(Rank r = Rank::dynamic());
         /// \brief Check whether this shape is compatible with the argument, i.e., whether it is
         ///        possible to merge them.
         /// \param s The shape to be checked for compatibility with this shape.
@@ -205,11 +205,10 @@ namespace ngraph
         static bool merge_into(PartialShape& dst, const PartialShape& src);
 
     private:
-        // Private constructor so PartialShape::dynamic() can construct a shape with
-        // m_rank_is_static set to false.
-        PartialShape(bool rank_is_static, std::initializer_list<Dimension> init)
+        // Private constructor for PartialShape::dynamic().
+        PartialShape(bool rank_is_static, std::vector<Dimension> dimensions)
             : m_rank_is_static(rank_is_static)
-            , m_dimensions(init)
+            , m_dimensions(dimensions)
         {
         }
 
