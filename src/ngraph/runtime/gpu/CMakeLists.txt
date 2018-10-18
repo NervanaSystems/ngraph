@@ -88,7 +88,6 @@ if (NGRAPH_GPU_ENABLE)
     else()
         # CUDA 8 (minimum version of CUDA we support)
         if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
-            # CUDA 8 (minimum version of CUDA we support)
             # Current release of CUDA 8 supports up to gcc 5.4
             if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.5)
                 set (DO_CUDA_COMPILE TRUE)
