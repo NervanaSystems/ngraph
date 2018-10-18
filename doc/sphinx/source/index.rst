@@ -15,14 +15,14 @@
 
 
 .. This documentation is available online at 
-.. http://ngraph.nervanasys.com/docs/latest/
+.. https://ngraph.nervanasys.com/docs/latest/
 
 
-########
-nGraph™ 
-########
+###############
+nGraph Library 
+###############
 
-Welcome to the nGraph™ documentation site. nGraph is an open-source C++ library 
+Welcome to the nGraph documentation site. nGraph is an open-source C++ library 
 and runtime / compiler suite for :abbr:`Deep Learning (DL)` ecosystems. Our goal 
 is to empower algorithm designers, data scientists, framework architects, 
 software engineers, and others with the means to make their work :ref:`portable`, 
@@ -147,6 +147,7 @@ Contents
    frameworks/index.rst
    fusion/index.rst
    programmable/index.rst
+   quant/index.rst
    distr/index.rst
    python_api/index.rst
    project/index.rst
