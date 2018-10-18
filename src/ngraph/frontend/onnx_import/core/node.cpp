@@ -64,6 +64,7 @@ namespace ngraph
             const Graph* m_graph;
             std::vector<Attribute> m_attributes;
             std::vector<std::reference_wrapper<const std::string>> m_output_names;
+            mutable std::string m_description;
         };
 
         const onnx::NodeProto& Node::Impl::node_proto() const { return *m_node_proto; }
@@ -128,22 +129,21 @@ namespace ngraph
 
         const std::string& Node::Impl::description() const
         {
-            static std::string description;
-            if (description.empty())
+            if (m_description.empty())
             {
                 if (!name().empty())
                 {
-                    description = name();
+                    m_description = name();
                 }
                 else
                 {
                     for (std::size_t index = 0; index < m_output_names.size(); ++index)
                     {
-                        description += (index != 0 ? ", " : "") + m_output_names.at(index).get();
+                        m_description += (index != 0 ? ", " : "") + m_output_names.at(index).get();
                     }
                 }
             }
-            return description;
+            return m_description;
         }
 
         Node::Node(const onnx::NodeProto& node_proto, const Graph& graph)
