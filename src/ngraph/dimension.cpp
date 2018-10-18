@@ -47,14 +47,33 @@ std::ostream& ngraph::operator<<(std::ostream& str, const Dimension& dimension)
     }
 }
 
-Dimension ngraph::operator+(const Dimension& d1, const Dimension& d2)
+Dimension Dimension::operator+(const Dimension& dim) const
 {
-    return (d1.is_static() && d2.is_static() ? size_t(d1) + size_t(d2) : Dimension::dynamic());
+    return (is_static() && dim.is_static() ? m_dimension + size_t(dim) : Dimension::dynamic());
+}
+
+Dimension Dimension::operator*(const Dimension& dim) const
+{
+    return ((is_static() && dim.is_static())
+                ? m_dimension * size_t(dim)
+                : (is_static() && m_dimension == 0)
+                      ? 0
+                      : (dim.is_static() && size_t(dim) == 0) ? 0 : Dimension::dynamic());
 }
 
 bool Dimension::compatible(const Dimension& d) const
 {
     return (is_dynamic() || d.is_dynamic() || m_dimension == size_t(d));
+}
+
+bool Dimension::relaxes(const Dimension& d) const
+{
+    return (is_dynamic() || (d.is_static() && size_t(*this) == size_t(d)));
+}
+
+bool Dimension::refines(const Dimension& d) const
+{
+    return (d.is_dynamic() || (is_static() && size_t(d) == size_t(*this)));
 }
 
 bool Dimension::merge(Dimension& dst, const Dimension d1, const Dimension d2)
