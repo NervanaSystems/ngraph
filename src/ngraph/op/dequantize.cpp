@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/shape_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -34,6 +35,11 @@ op::Dequantize::Dequantize(shared_ptr<Node> input,
 
 void op::Dequantize::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     enum
     {
         INPUT,
