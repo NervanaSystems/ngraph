@@ -847,15 +847,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
                                                                    pattern_map[mean],
                                                                    pattern_map[var]);
         }
-        else if (auto bn_training = std::dynamic_pointer_cast<op::BatchNormTraining>(bn_match))
-        {
-            bn_relu = std::make_shared<op::BatchNormTrainingRelu>(bn_training->get_eps_value(),
-                                                                  pattern_map[gamma],
-                                                                  pattern_map[beta],
-                                                                  pattern_map[input],
-                                                                  pattern_map[mean],
-                                                                  pattern_map[var]);
-        }
 
         if (bn_relu)
         {
