@@ -306,7 +306,8 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
         else
         {
             std::stringstream ss_er;
-            ss_er << "Unsupported Type: Only uint32 & uint64 currently supported for indices in op "
+            ss_er << "Unsupported Type: " << output_type.c_type_string()
+                  << ". Only uint32 & uint64 currently supported for indices in op "
                      "ArgReduce";
             throw std::invalid_argument(ss_er.str());
         }
