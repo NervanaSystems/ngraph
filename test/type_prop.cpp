@@ -6718,9 +6718,10 @@ TEST(type_prop, pad_deduce_above_padding_wrong_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Ranks for padding below (Shape{5, 3, 0}), "
-                                                       "padding above (Shape{6, 9}) and interior "
-                                                       "padding (Shape{2, 3, 0}) do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Ranks for padding below (Shape{5, 3, 0}), "
+                                         "padding above (Shape{6, 9}) and interior "
+                                         "padding (Shape{2, 3, 0}) do not match"));
     }
     catch (...)
     {
