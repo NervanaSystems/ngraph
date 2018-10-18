@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cstdint>
 #include <memory>
 
 #include "ngraph/node_vector.hpp"
@@ -39,8 +40,8 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> mean{nullptr};
                     std::shared_ptr<ngraph::Node> var{nullptr};
 
-                    int is_test{node.get_attribute_value<int>("is_test", 1)};
-                    int spatial{node.get_attribute_value<int>("spatial", 1)};
+                    std::int64_t is_test{node.get_attribute_value<std::int64_t>("is_test", 1)};
+                    std::int64_t spatial{node.get_attribute_value<std::int64_t>("spatial", 1)};
                     double epsilon{node.get_attribute_value<double>("epsilon", 1e-5)};
 
                     // TODO: Implement learning mode support

@@ -156,6 +156,11 @@ ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(
 
 void ngraph::op::BatchNormTrainingBackprop::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     set_output_size(3);
 
     NODE_VALIDATION_ASSERT(this, get_input_shape(INPUT).size() == 4)
