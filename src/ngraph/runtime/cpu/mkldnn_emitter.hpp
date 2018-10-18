@@ -553,7 +553,7 @@ namespace ngraph
                     auto src_layer_reorder = build_memory_descriptor(
                         src_layer_tz, args[0].get_element_type(), mkldnn::memory::format::tnc);
                     auto dst_layer_reorder = build_memory_descriptor(
-                        dst_layer_tz, out[0].get_element_type(), mkldnn::memory::format::tnc);
+                        dst_layer_tz, out[0].get_element_type(), mkldnn::memory::format::ntc);
                     auto wei_layer_reorder = build_memory_descriptor(
                         wei_layer_tz, args[2].get_element_type(), mkldnn::memory::format::ldigo);
                     auto wei_iter_reorder = build_memory_descriptor(

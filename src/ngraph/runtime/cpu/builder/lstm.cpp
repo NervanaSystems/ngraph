@@ -60,6 +60,7 @@ namespace ngraph
                 auto& weights_layer_deps = mkldnn_emitter->get_primitive_deps(index[1]);
                 auto& weights_iter_deps = mkldnn_emitter->get_primitive_deps(index[2]);
                 auto& src_layer_deps = mkldnn_emitter->get_primitive_deps(index[3]);
+                auto& dst_layer_deps = mkldnn_emitter->get_primitive_deps(index[4]);
 
                 auto functor_weights_layer_reorder = [&, index](CPURuntimeContext* ctx) {
                     cpu::mkldnn_utils::set_memory_ptr(
@@ -81,18 +82,23 @@ namespace ngraph
                         ctx, src_layer_deps[1], ctx->mkldnn_workspaces[src_layer_deps[2]]);
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, index[3]);
                 };
+                auto functor_dst_layer_reorder = [&, index](CPURuntimeContext* ctx) {
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, dst_layer_deps[0], ctx->mkldnn_workspaces[dst_layer_deps[2]]);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, dst_layer_deps[1], dst_layer_tensor);
+                    cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, index[4]);
+                };
                 auto functor_rnn = [&, index](CPURuntimeContext* ctx) {
                     cpu::mkldnn_utils::set_memory_ptr(
                         ctx, deps[0], ctx->mkldnn_workspaces[src_layer_deps[2]]);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], src_iter_tensor);
-                    //cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], weights_layer_tensor);
-                    //cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], weights_iter_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(
                         ctx, deps[2], ctx->mkldnn_workspaces[weights_layer_deps[2]]);
                     cpu::mkldnn_utils::set_memory_ptr(
                         ctx, deps[3], ctx->mkldnn_workspaces[weights_iter_deps[2]]);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[4], bias_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[5], dst_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[5], ctx->mkldnn_workspaces[dst_layer_deps[2]]);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[6], dst_iter_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(
                         ctx, deps[7], ctx->mkldnn_workspaces[deps[8]]);
@@ -100,6 +106,7 @@ namespace ngraph
                 };
                 auto functor = [&,
                                 functor_src_layer_reorder,
+                                functor_dst_layer_reorder,
                                 functor_rnn,
                                 functor_weights_layer_reorder,
                                 functor_weights_iter_reorder](CPURuntimeContext* ctx) {
@@ -107,6 +114,7 @@ namespace ngraph
                     functor_weights_layer_reorder(ctx);
                     functor_weights_iter_reorder(ctx);
                     functor_rnn(ctx);
+                    functor_dst_layer_reorder(ctx);
                 };
                 functors.emplace_back(functor);
             }
