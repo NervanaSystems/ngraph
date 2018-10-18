@@ -1598,3 +1598,43 @@ void runtime::intelgpu::do_arg_max_min_operation(cldnn::topology& topology,
                                                      gws);
     topology.add(op_arg_max_min);
 }
+
+void runtime::intelgpu::do_negative_operation(cldnn::topology& topology,
+                                              const string& input_name,
+                                              const Shape& input_shape,
+                                              const element::Type& input_type,
+                                              const string& output_name,
+                                              const Shape& output_shape,
+                                              const element::Type& output_type)
+{
+    const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, output_shape);
+    const string entry_point_name = "negative_" + output_name;
+    const string& input_type_name = get_opencl_type_name(input_type);
+    const string& output_type_name = get_opencl_type_name(output_type);
+    codegen::CodeWriter writer;
+    vector<size_t> gws;
+
+    gen_func_def(
+        writer, entry_point_name, {input_type_name}, {input_shape}, output_type_name, output_shape);
+
+    writer.block_begin();
+    {
+        gws = generate_loops(writer, output_shape, true);
+
+        writer << "output" << access_dims(output_shape) << " = - (input0"
+               << access_dims(input_shape) << ");\n";
+
+        generate_loops(writer, output_shape, false);
+    }
+    writer.block_end();
+
+    const cldnn::custom_gpu_primitive op_negative(output_name,
+                                                  {input_name},
+                                                  {writer.get_code()},
+                                                  entry_point_name,
+                                                  get_kernel_args(1, 1),
+                                                  "",
+                                                  layout,
+                                                  gws);
+    topology.add(op_negative);
+}

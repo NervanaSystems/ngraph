@@ -16,17 +16,27 @@
 
 #include "attribute.hpp"
 #include "graph.hpp"
+#include "operator_set.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        std::vector<Graph> Attribute::get_graph_array() const
+        std::vector<Graph> Attribute::get_graph_array(const OperatorSet& opset) const
         {
-            return {std::begin(m_attribute_proto->graphs()), std::end(m_attribute_proto->graphs())};
+            std::vector<Graph> result;
+            for (const auto& graph : m_attribute_proto->graphs())
+            {
+                result.emplace_back(graph, opset);
+            }
+            return result;
         }
 
-        Graph Attribute::get_graph() const { return Graph{m_attribute_proto->g()}; }
+        Graph Attribute::get_graph(const OperatorSet& opset) const
+        {
+            return Graph{m_attribute_proto->g(), opset};
+        }
+
     } // namespace onnx_import
 
 } // namespace ngraph

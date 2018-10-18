@@ -14,28 +14,19 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <onnx-ml.pb.h>
+#include <iostream>
+#include "ngraph/runtime/gpu/nvcc/kernels.hpp"
+using namespace ngraph;
 
-#include "model.hpp"
-
-namespace ngraph
+__global__ void example()
 {
-    namespace onnx_import
-    {
-        Model::Model(const onnx::ModelProto& model_proto)
-            : m_model_proto{&model_proto}
-        {
-            for (const auto& id : m_model_proto->opset_import())
-            {
-                // onnx.proto(.3): the empty string ("") or absence of this field implies
-                // the operator set that is defined as part of the ONNX specification.
-                if (id.domain().empty())
-                {
-                    m_opset_version = id.version();
-                }
-            }
-        }
+    size_t tid = blockDim.x * blockIdx.x + threadIdx.x;
+    printf("Hello from tid = %d\n", tid);
+    __syncthreads();
+}
 
-    } // namespace onnx_import
-
-} // namespace ngraph
+void runtime::gpu::example_kernel()
+{
+    example<<<1, 32>>>();
+    return;
+}

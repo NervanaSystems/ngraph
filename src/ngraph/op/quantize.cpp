@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/shape_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -36,6 +37,11 @@ op::Quantize::Quantize(shared_ptr<Node> input,
 
 void op::Quantize::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     enum
     {
         INPUT,

@@ -22,6 +22,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <tuple>
 #include <typeindex>
 #include <unordered_map>
 #include <unordered_set>
@@ -94,13 +95,20 @@ namespace ngraph
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
 
-        void validate_and_infer_elementwise(element::Type result_type);
-        void validate_and_infer_elementwise()
-        {
-            validate_and_infer_elementwise(get_input_element_type(0));
-        }
+        std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args();
         void validate_and_infer_elementwise_arithmetic();
         void validate_and_infer_elementwise_logical();
+
+        // Temporary hack while partial shape propagation is being implemented. If any input has
+        // dynamic shape or dynamic element type, sets all outputs to have a shape of dynamic
+        // rank and dynamic element type. Ops where we haven't yet implemented partial shape
+        // propagation can add this boilerplate at the top of their validate_and_infer_types():
+        //
+        //   if (validate_punt_if_dynamic())
+        //   {
+        //       return;
+        //   }
+        bool validate_punt_if_dynamic();
 
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
 
@@ -125,7 +133,9 @@ namespace ngraph
             return std::type_index(typeid(*this)) == std::type_index(typeid(*n));
         }
 
-        void set_output_type(size_t i, const element::Type& element_type, const Shape& shape);
+        void set_output_type(size_t i,
+                             const element::Type& element_type,
+                             const PartialShape& pshape);
 
         bool is_parameter() const;
         virtual bool is_output() const;
