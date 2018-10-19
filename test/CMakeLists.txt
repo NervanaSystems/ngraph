@@ -178,8 +178,7 @@ if (NGRAPH_INTERPRETER_ENABLE)
 endif()
 
 if (NGRAPH_HYBRID_ENABLE)
-    add_definitions(-DNGRAPH_HYBRID_ENABLE)
-    target_link_libraries(unit-test hybrid_backend)
+    target_link_libraries(unit-test PRIVATE hybrid_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)
