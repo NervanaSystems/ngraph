@@ -25,17 +25,182 @@ using namespace ngraph;
 #define EXPECT_HAS_SUBSTRING(haystack, needle)                                                     \
     EXPECT_PRED_FORMAT2(testing::IsSubstring, needle, haystack)
 
-//
-// Tests for broadcast.
-//
 TEST(type_prop, broadcast_deduce)
 {
-    // Deduce type
     auto param = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     Shape bc_shape{2, 3, 4};
     auto bc = make_shared<op::Broadcast>(param, bc_shape, AxisSet{1});
     ASSERT_EQ(bc->get_element_type(), element::f32);
     ASSERT_EQ(bc->get_shape(), bc_shape);
+}
+
+TEST(type_prop, broadcast_axes_oob)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = Shape{2, 3, 4};
+
+    try
+    {
+        auto bc = make_shared<op::Broadcast>(param, bc_shape, AxisSet{1, 3});
+        FAIL() << "Broadcast axis out of bounds not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Broadcast axis index (3) exceeds specified output shape rank");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, broadcast_shape_mismatch_wrong_rank)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = Shape{2, 3, 4, 5};
+
+    try
+    {
+        auto bc = make_shared<op::Broadcast>(param, bc_shape, AxisSet{1});
+        FAIL() << "Output shape mismatch (wrong rank) not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Broadcast argument shape, specified output shape, and axes are incompatible");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, broadcast_shape_mismatch_wrong_size)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = Shape{2, 3, 5};
+
+    try
+    {
+        auto bc = make_shared<op::Broadcast>(param, bc_shape, AxisSet{1});
+        FAIL() << "Output shape mismatch (wrong size) not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Broadcast argument shape, specified output shape, and axes are incompatible");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, broadcast_partial_rank_dynamic_ok)
+{
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    Shape bc_shape{2, 3, 4};
+    auto bc = make_shared<op::Broadcast>(param, bc_shape, AxisSet{1});
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), bc_shape);
+}
+
+TEST(type_prop, broadcast_partial_rank_dynamic_axes_oob)
+{
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto bc_shape = Shape{2, 3, 4};
+
+    try
+    {
+        auto bc = make_shared<op::Broadcast>(param, bc_shape, AxisSet{1, 3});
+        FAIL() << "Broadcast axis out of bounds not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Broadcast axis index (3) exceeds specified output shape rank");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, broadcast_partial_rank_static_dynamic_ok)
+{
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 4});
+    Shape bc_shape{2, 3, 4};
+    auto bc = make_shared<op::Broadcast>(param, bc_shape, AxisSet{1});
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), bc_shape);
+}
+
+TEST(type_prop, broadcast_partial_rank_static_dynamic_axes_oob)
+{
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 4});
+    auto bc_shape = Shape{2, 3, 4};
+
+    try
+    {
+        auto bc = make_shared<op::Broadcast>(param, bc_shape, AxisSet{1, 3});
+        FAIL() << "Broadcast axis out of bounds not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Broadcast axis index (3) exceeds specified output shape rank");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, broadcast_partial_rank_static_dynamic_shape_mismatch_wrong_rank)
+{
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 4});
+    auto bc_shape = Shape{2, 3, 4, 5};
+
+    try
+    {
+        auto bc = make_shared<op::Broadcast>(param, bc_shape, AxisSet{1});
+        FAIL() << "Output shape mismatch (wrong rank) not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Broadcast argument shape, specified output shape, and axes are incompatible");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, broadcast_partial_rank_static_dynamic_shape_mismatch_wrong_size)
+{
+    auto param = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 4});
+    auto bc_shape = Shape{2, 3, 5};
+
+    try
+    {
+        auto bc = make_shared<op::Broadcast>(param, bc_shape, AxisSet{1});
+        FAIL() << "Output shape mismatch (wrong size) not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Broadcast argument shape, specified output shape, and axes are incompatible");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }
 
 TEST(type_prop, batchnorm_rank_less_than_2)
@@ -949,7 +1114,7 @@ TEST(type_prop, select_shape_mismatch_a)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Arguments do not all have the same shape"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent"));
     }
     catch (...)
     {
@@ -970,7 +1135,7 @@ TEST(type_prop, select_shape_mismatch_b)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Arguments do not all have the same shape"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent"));
     }
     catch (...)
     {
@@ -991,7 +1156,7 @@ TEST(type_prop, select_shape_mismatch_c)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Arguments do not all have the same shape"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent"));
     }
     catch (...)
     {
@@ -1035,7 +1200,160 @@ TEST(type_prop, select_elem_mismatch_bc)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Arguments 1 and 2 do not have the same element type"));
+                             std::string("Argument 1 and 2 element types are inconsistent"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_partial_all_rank_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::boolean, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param2 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+
+    auto sel = make_shared<op::Select>(param0, param1, param2);
+
+    ASSERT_EQ(sel->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(sel->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, select_partial_all_rank_dynamic_arg0_et_dynamic_arg1_arg2_et_mismatch)
+{
+    auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param2 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+
+    try
+    {
+        auto sel = make_shared<op::Select>(param0, param1, param2);
+        FAIL() << "Did not detect mismatched element types for args 1 and 2 (element type-dynamic "
+                  "arg0)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Argument 1 and 2 element types are inconsistent"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, select_partial_all_rank_dynamic_arg0_arg1_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param2 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+
+    auto sel = make_shared<op::Select>(param0, param1, param2);
+
+    ASSERT_EQ(sel->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(sel->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, select_partial_all_rank_dynamic_arg0_arg2_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param2 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+
+    auto sel = make_shared<op::Select>(param0, param1, param2);
+
+    ASSERT_EQ(sel->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(sel->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, select_partial_all_rank_dynamic_arg0_arg1_arg2_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param2 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+
+    auto sel = make_shared<op::Select>(param0, param1, param2);
+
+    ASSERT_EQ(sel->get_output_element_type(0), element::dynamic);
+    ASSERT_TRUE(sel->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, select_partial_arg0_rank_dynamic_static_arg1_arg2_rank_dynamic_ok)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::boolean, PartialShape{2, Dimension::dynamic(), 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param2 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+
+    auto sel = make_shared<op::Select>(param0, param1, param2);
+
+    ASSERT_EQ(sel->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(
+        sel->get_output_partial_shape(0).same_scheme(PartialShape{2, Dimension::dynamic(), 3}));
+}
+
+TEST(type_prop, select_partial_arg1_rank_dynamic_static_arg0_arg2_rank_dynamic_ok)
+{
+    auto param0 = make_shared<op::Parameter>(element::boolean, PartialShape::dynamic());
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+    auto param2 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+
+    auto sel = make_shared<op::Select>(param0, param1, param2);
+
+    ASSERT_EQ(sel->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(
+        sel->get_output_partial_shape(0).same_scheme(PartialShape{2, Dimension::dynamic(), 3}));
+}
+
+TEST(type_prop, select_partial_arg2_rank_dynamic_static_arg0_arg1_rank_dynamic_ok)
+{
+    auto param0 = make_shared<op::Parameter>(element::boolean, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param2 =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+
+    auto sel = make_shared<op::Select>(param0, param1, param2);
+
+    ASSERT_EQ(sel->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(
+        sel->get_output_partial_shape(0).same_scheme(PartialShape{2, Dimension::dynamic(), 3}));
+}
+
+TEST(type_prop, select_partial_all_rank_static_dynamic_ok)
+{
+    auto param0 = make_shared<op::Parameter>(
+        element::boolean, PartialShape{2, Dimension::dynamic(), Dimension::dynamic()});
+    auto param1 = make_shared<op::Parameter>(
+        element::f32, PartialShape{Dimension::dynamic(), 8, Dimension::dynamic()});
+    auto param2 = make_shared<op::Parameter>(
+        element::f32, PartialShape{Dimension::dynamic(), Dimension::dynamic(), 3});
+
+    auto sel = make_shared<op::Select>(param0, param1, param2);
+
+    ASSERT_EQ(sel->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(sel->get_output_partial_shape(0).is_static());
+    ASSERT_EQ(sel->get_output_shape(0), (Shape{2, 8, 3}));
+}
+
+TEST(type_prop, select_partial_all_rank_static_intransitive_incompatibility)
+{
+    auto param0 = make_shared<op::Parameter>(
+        element::boolean, PartialShape{2, Dimension::dynamic(), Dimension::dynamic()});
+    auto param1 = make_shared<op::Parameter>(
+        element::f32, PartialShape{Dimension::dynamic(), 8, Dimension::dynamic()});
+    auto param2 =
+        make_shared<op::Parameter>(element::f32, PartialShape{3, Dimension::dynamic(), 3});
+
+    try
+    {
+        auto sel = make_shared<op::Select>(param0, param1, param2);
+        FAIL() << "Did not detect intransitive partial-shape incompatibility";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent"));
     }
     catch (...)
     {
