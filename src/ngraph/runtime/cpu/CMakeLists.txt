@@ -40,8 +40,6 @@ set(SRC
     builder/convert_layout.cpp
     builder/quantized_conv.cpp
     builder/convolution.cpp
-    builder/dequantize.cpp
-    builder/quantize.cpp
     builder/dot.cpp
     builder/function_call.cpp
     builder/lstm.cpp
@@ -70,6 +68,7 @@ set(SRC
     builder/softmax.cpp
     builder/sum.cpp
     builder/topk.cpp
+    builder/quantization.cpp
     kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
@@ -82,20 +81,14 @@ set(SRC
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/group_conv.cpp
+    op/halide_op.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
-    op/quantized_conv.cpp
     op/convert_layout.cpp
-    op/dequantize.cpp
-    op/quantize.cpp
     op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
     op/max_pool_with_indices.cpp
-    op/quantized_max_pool.cpp
-    op/quantized_avg_pool.cpp
-    op/quantized_conv_relu.cpp
-    op/quantized_conv_bias.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
     op/conv_add.cpp
@@ -113,6 +106,14 @@ set(SRC
     pass/cpu_reshape_sinking.cpp
 )
 
+if (NGRAPH_HYBRID_ENABLE)
+    set(SRC
+        ${SRC}
+        cpu_placement.cpp
+        )
+endif()
+
+
 if (NOT NGRAPH_DEX_ONLY)
     set(SRC
         ${SRC}
@@ -122,11 +123,12 @@ if (NOT NGRAPH_DEX_ONLY)
         )
 endif()
 
-if (NGRAPH_HYBRID_ENABLE)
+if (NGRAPH_HALIDE)
     set(SRC
         ${SRC}
-        cpu_placement.cpp
-    )
+        builder/halide_op.cpp
+        pass/halide_subgraph_extraction.cpp
+        )
 endif()
 
 if (NGRAPH_TBB_ENABLE)
@@ -166,6 +168,12 @@ if (NGRAPH_CPU_ENABLE)
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     endif()
+    if (NGRAPH_HALIDE)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_HALIDE")
+        ExternalProject_Get_Property(ext_halide BINARY_DIR)
+        target_include_directories(cpu_backend SYSTEM PRIVATE ${BINARY_DIR}/include)
+        target_link_libraries(cpu_backend PRIVATE ${BINARY_DIR}/lib/libHalide.so)
+    endif()
 
     if(OPENMP_FOUND)
         target_compile_options(cpu_backend PRIVATE "${OpenMP_CXX_FLAGS}")
@@ -176,10 +184,12 @@ if (NGRAPH_CPU_ENABLE)
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
         find_package(MPI REQUIRED)
-        add_definitions(-DNGRAPH_DISTRIBUTED)
-        include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-        link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-        target_link_libraries(cpu_backend PRIVATE ${MPI_CXX_LIBRARIES})
+        target_compile_definitions(cpu_backend
+            PRIVATE NGRAPH_DISTRIBUTED)
+        target_include_directories(cpu_backend
+            SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+        target_link_libraries(cpu_backend
+            PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
     endif()
 
     add_dependencies(cpu_backend ext_mkldnn ext_eigen)

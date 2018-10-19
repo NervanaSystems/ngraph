@@ -88,7 +88,6 @@ public:
 
     void open(std::ostream& out);
     void open(const std::string& filename);
-    void close();
     void write(const std::string& file_name, const void* data, uint32_t size_in_bytes);
 
 private:
