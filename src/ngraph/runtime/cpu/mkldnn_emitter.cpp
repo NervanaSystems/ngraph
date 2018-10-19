@@ -99,8 +99,10 @@ std::string
     std::stringstream ss;
     std::ofstream desc_file(filename, std::ios::out | std::ios::binary);
     ss << "ifstream desc_file (\"" << filename << "\", ios::in | ios::binary);\n";
-    for (auto primitive : get_mkldnn_primitives())
+
+    for (size_t i = 0; i < m_mkldnn_primitives.size(); i++)
     {
+        auto primitive = m_mkldnn_primitives.at(i); //TODO
         mkldnn_primitive_kind_t kind;
         mkldnn_primitive_desc_query(
             primitive->get_primitive_desc(), mkldnn_query_primitive_kind, 0, &kind);
@@ -114,10 +116,33 @@ std::string
 
             //read part
             ss << "{\n";
-            ss << "mkldnn::memory::desc md;\n";
-            ss << "desc_file.read(reinterpret_cast<char*>(&md), sizeof(mkldnn::memory::desc));\n";
-            ss << "primitives.push_back(new mkldnn::memory({md, AOT::global_cpu_engine}, "
-                  "nullptr));\n;";
+            ss << "\tmkldnn::memory::desc md;\n";
+            ss << "\tdesc_file.read(reinterpret_cast<char*>(&md), sizeof(mkldnn::memory::desc));\n";
+            ss << "\tprimitives.push_back(new mkldnn::memory({md, AOT::global_cpu_engine}, "
+                  "\tnullptr));\n;";
+            ss << "}\n";
+        }
+        else if (kind == mkldnn_sum)
+        {
+            //write
+
+            //read
+            auto deps = m_primitive_deps[i];
+            ss << "{\n";
+            ss << "\tstd::vector<mkldnn::memory::primitive::at> inputs_primitive;";
+            ss << "\tinputs_primitive.push_back(primitives.at(" << deps[0] << "));\n";
+            ss << "\tinputs_primitive.push_back(primitives.at(" << deps[1] << "));\n";
+            ss << "\tstd::vector<mkldnn::memory::primitive_desc> inputs_pd;\n";
+            ss << "\tinputs_pd.push_back(&static_cast<mkldnn::memory*>(primitives.at(" << deps[0]
+               << "))->get_primitive_desc())\n;";
+            ss << "\tinputs_pd.push_back(&static_cast<mkldnn::memory*>(primitives.at(" << deps[1]
+               << "))->get_primitive_desc())\n;";
+            ss << "\tmkldnn::memory::desc result_desc = static_cast<mkldnn::memory*>(primitives.at("
+               << deps[1] << "))->get_primitive_desc()->desc();\n";
+            ss << "\tmkldnn::sum::primitive_desc sum_pd = mkldnn::sum::primitive_desc(result_desc, "
+                  "scale_vector, inputs_pd);";
+            ss << "\tprimitives.push_back(new mkldnn::sum(sum_pd, inputs_primitive, primitives.at(("
+               << deps[2] << "))));\n";
             ss << "}\n";
         }
         else
