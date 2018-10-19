@@ -29,11 +29,14 @@
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/runtime/cpu/cpu_placement.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/runtime/interpreter/int_placement.hpp"
 #include "ngraph/util.hpp"
+
+#ifdef NGRAPH_CPU_ENABLE
+#include "ngraph/runtime/cpu/cpu_placement.hpp"
+#endif
 
 using namespace std;
 using namespace ngraph;
@@ -109,13 +112,15 @@ bool runtime::hybrid::HYBRIDBackend::compile(shared_ptr<Function> function)
 
         pass::Manager pass_manager;
 
-        // fall back to CPU as the base transformer
-        // pass_manager.register_pass<pass::AssignPlacement>(
-        //     runtime::interpreter::default_placement_policy);
+        // Place all ops by default on interpreter
+        pass_manager.register_pass<pass::AssignPlacement>(
+            runtime::interpreter::default_placement_policy);
 
-        // fall back to Interpreter as the base transformer
+#ifdef NGRAPH_CPU_ENABLE
+        // Fall back to Interpreter as the base transformer
+        // for unsupported ops
         pass_manager.register_pass<pass::AssignPlacement>(runtime::cpu::default_placement_policy);
-
+#endif
         pass_manager.run_passes(instance.m_function);
 
         NGRAPH_INFO << "hybrid compile -begin split  ";

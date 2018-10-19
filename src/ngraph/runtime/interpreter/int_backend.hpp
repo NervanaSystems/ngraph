@@ -797,6 +797,7 @@ private:
         }
         case OP_TYPEID::Multiply:
         {
+            NGRAPH_INFO << "INTERPRETER MULTIPLY";
             reference::multiply<T>(args[0]->get_data_ptr<T>(),
                                    args[1]->get_data_ptr<T>(),
                                    out[0]->get_data_ptr<T>(),

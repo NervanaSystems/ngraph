@@ -39,37 +39,9 @@ Placement runtime::interpreter::default_placement_policy(const std::shared_ptr<N
 {
     NGRAPH_INFO << "runtime::interpreter::default_placement_policy -Begin " + node->description();
 
-    // clang-format off
-    static unordered_set<string> fully_supported_ops = {
-        "Abs",
-        "Add", 
-        "Parameter",
-        "Result"
-    };
-    static unordered_set<string> partially_supported_ops = {
-        "Dot"
-    };
-
-    // clang-format on
-    string node_op = node->description();
-    if (fully_supported_ops.count(node_op) == 0 && partially_supported_ops.count(node_op) == 0)
-    {
-        NGRAPH_INFO
-            << "runtime::interpreter::default_placement_policy  placement done on CPU for " +
-                   node->description();
-        return Placement::CPU;
-    }
-
-    if (node_op == "Dot")
-    {
-        // Experimental
-        if (shape_size(node->get_shape()) > 50000)
-        {
-            return Placement::CPU;
-        }
-    }
-
     NGRAPH_INFO
         << "runtime::interpreter::default_placement_policy -End & placement on INTERPRETER ";
+    // All ops by default are supported on interpreter
+    // this is nGraph feature
     return Placement::INTERPRETER;
 }
