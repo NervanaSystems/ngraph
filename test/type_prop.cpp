@@ -3974,6 +3974,11 @@ TEST(type_prop, max_pool_invalid_movement_stride_0)
     }
 }
 
+TEST(type_prop, max_pool_partial_fail_for_reminder)
+{
+    FAIL() << "Adam P needs to write MaxPool partial shape/type tests";
+}
+
 TEST(type_prop, reverse_0d_deduce)
 {
     // Deduce type
@@ -6578,6 +6583,11 @@ TEST(type_prop, avg_pool_invalid_movement_stride_0)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, avg_pool_partial_fail_for_reminder)
+{
+    FAIL() << "Adam P needs to write AvgPool partial shape/type tests";
 }
 
 TEST(type_prop, pad_deduce_1d_exterior)
