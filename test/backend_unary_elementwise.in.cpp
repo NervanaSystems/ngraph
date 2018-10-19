@@ -279,6 +279,23 @@ NGRAPH_TEST(${BACKEND_NAME}, negative)
     EXPECT_EQ((vector<float>{-1, 2, 0, 4.75f, -8.75f, 8.75f}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, not)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::Not>(A), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::boolean, shape);
+    copy_data(a, vector<char>{1, 0, 2, 0});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<char>{0, 1, 0, 1}), read_vector<char>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, sign)
 {
     Shape shape{2, 3};
