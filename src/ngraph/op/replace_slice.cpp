@@ -55,8 +55,8 @@ void op::ReplaceSlice::validate_and_infer_types()
         m_strides = Strides(m_lower_bounds.size(), 1);
     }
 
-    PartialShape arg0_shape = get_input_partial_shape(0);
-    PartialShape arg1_shape = get_input_partial_shape(1);
+    const PartialShape& arg0_shape = get_input_partial_shape(0);
+    const PartialShape& arg1_shape = get_input_partial_shape(1);
     Dimension merged_args_rank;
 
     NODE_VALIDATION_ASSERT(this,
