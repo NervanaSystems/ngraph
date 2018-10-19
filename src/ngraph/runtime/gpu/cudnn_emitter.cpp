@@ -167,9 +167,9 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
     auto input_type = dtypes[0];
     auto output_type = dtypes[1];
     std::stringstream ss;
-    ss << "reduce_" << reduce_op << input_type.c_type_string() << "_reduction_mode_"
-       << static_cast<int>(reduction_mode) << "_i" << join(input_shape, "_") << "_ra"
-       << join(reduction_axes, "_");
+    ss << "reduce_" << reduce_op << "_" << input_type.c_type_string() << "_"
+       << output_type.c_type_string() << "_reduction_mode_" << static_cast<int>(reduction_mode)
+       << "_i" << join(input_shape, "_") << "_ra" << join(reduction_axes, "_");
     std::string hash = ss.str();
 
     // check if the requested kernel is already an inserted primitive
@@ -306,7 +306,8 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
         else
         {
             std::stringstream ss_er;
-            ss_er << "Unsupported Type: Only uint32 & uint64 currently supported for indices in op "
+            ss_er << "Unsupported Type: " << output_type.c_type_string()
+                  << ". Only uint32 & uint64 currently supported for indices in op "
                      "ArgReduce";
             throw std::invalid_argument(ss_er.str());
         }
