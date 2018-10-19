@@ -54,6 +54,11 @@ namespace ngraph
                 private:
                     GPU_ExternalFunction* m_external_function;
                 };
+
+                NodeVector insert_new_reshape_after(NodeVector& parents,
+                                                    const AxisVector& axis_vector,
+                                                    const Shape& out_shape);
+                AxisVector get_ordered_axis_vector(size_t n, size_t init = 0);
             }
         }
     }
