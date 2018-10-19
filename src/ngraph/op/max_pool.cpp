@@ -150,7 +150,8 @@ void op::MaxPoolBackprop::validate_and_infer_types()
                                                                padding_above,
                                                                m_window_shape,
                                                                m_window_movement_strides,
-                                                               true);
+                                                               true)
+                                     .to_shape();
 
     NODE_VALIDATION_ASSERT(this, forward_result_shape == delta_shape)
         << "Inferred forward output shape does not match delta shape (inferred forward output "

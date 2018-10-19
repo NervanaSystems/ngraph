@@ -137,14 +137,14 @@ void op::AvgPoolBackprop::validate_and_infer_types()
     CoordinateDiff padding_below(m_padding_below.begin(), m_padding_below.end());
     CoordinateDiff padding_above(m_padding_above.begin(), m_padding_above.end());
 
-    Shape forward_result_shape =
-        infer_batched_pooling_forward(this,
-                                      m_forward_arg_shape,
-                                      padding_below,
-                                      padding_above,
-                                      m_window_shape,
-                                      m_window_movement_strides,
-                                      m_include_padding_in_avg_computation);
+    Shape forward_result_shape = infer_batched_pooling_forward(this,
+                                                               m_forward_arg_shape,
+                                                               padding_below,
+                                                               padding_above,
+                                                               m_window_shape,
+                                                               m_window_movement_strides,
+                                                               m_include_padding_in_avg_computation)
+                                     .to_shape();
 
     NODE_VALIDATION_ASSERT(this, forward_result_shape == delta_shape)
         << "Inferred forward output shape does not match delta shape (inferred forward output "

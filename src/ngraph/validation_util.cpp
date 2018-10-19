@@ -188,65 +188,78 @@ std::tuple<element::Type, Shape>
 //
 // Infers the output batch shape and element type for batched pooling fprop.
 //
-Shape ngraph::infer_batched_pooling_forward(const Node* node,
-                                            const Shape& data_batch_shape,
-                                            const CoordinateDiff& data_padding_below,
-                                            const CoordinateDiff& data_padding_above,
-                                            const Shape& window_shape,
-                                            const Strides& window_strides,
-                                            bool is_window_all_in_padding_allowed)
+PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
+                                                   const PartialShape& data_batch_shape,
+                                                   const CoordinateDiff& data_padding_below,
+                                                   const CoordinateDiff& data_padding_above,
+                                                   const PartialShape& window_shape,
+                                                   const Strides& window_strides,
+                                                   bool is_window_all_in_padding_allowed)
 {
-    NODE_VALIDATION_ASSERT(node, data_batch_shape.size() >= 3)
+    NODE_VALIDATION_ASSERT(
+        node, data_batch_shape.rank().is_dynamic() || size_t(data_batch_shape.rank()) >= 3)
         << "Data batch must have rank of at least 3 (one batch axis, "
         << "one input-channel axis, and at least one spatial dimension) "
         << "(data batch shape: " << data_batch_shape << ").";
 
-    size_t spatial_dimension_count = data_batch_shape.size() - 2;
+    PartialShape data_spatial_shape{PartialShape::dynamic()};
 
-    NODE_VALIDATION_ASSERT(node, data_padding_below.size() == spatial_dimension_count)
-        << "Data padding below (" << data_padding_below << ") does not have required rank ("
-        << spatial_dimension_count << ").";
+    NODE_VALIDATION_ASSERT(node,
+                           data_spatial_shape.merge_rank(data_batch_shape.rank() - 2) &&
+                               data_spatial_shape.merge_rank(data_padding_below.size()) &&
+                               data_spatial_shape.merge_rank(data_padding_above.size()) &&
+                               data_spatial_shape.merge_rank(window_shape.rank()) &&
+                               data_spatial_shape.merge_rank(window_strides.size()))
+        << "Ranks for data item shape (data batch has shape " << data_batch_shape
+        << ", so data item rank is " << (data_batch_shape.rank() - 2) << "), padding below ("
+        << data_padding_below << "), padding above (" << data_padding_above << "), window shape ("
+        << window_shape << "), and window strides (" << window_strides << ") do not match.";
 
-    NODE_VALIDATION_ASSERT(node, data_padding_above.size() == spatial_dimension_count)
-        << "Data padding above (" << data_padding_above << ") does not have required rank ("
-        << spatial_dimension_count << ").";
+    Dimension batch_size{Dimension::dynamic()};
+    Dimension channel_count{Dimension::dynamic()};
+    PartialShape data_output_spatial_shape{PartialShape::dynamic(data_spatial_shape.rank())};
 
-    NODE_VALIDATION_ASSERT(node, window_shape.size() == spatial_dimension_count)
-        << "Window shape (" << window_shape << ") does not have required rank ("
-        << spatial_dimension_count << ").";
+    if (data_batch_shape.rank().is_static())
+    {
+        batch_size = data_batch_shape[0];
+        channel_count = data_batch_shape[1];
 
-    NODE_VALIDATION_ASSERT(node, window_strides.size() == spatial_dimension_count)
-        << "Window shape (" << window_strides << ") does not have required rank ("
-        << spatial_dimension_count << ").";
+        for (size_t i = 0; i < size_t(data_spatial_shape.rank()); i++)
+        {
+            data_spatial_shape[i] = data_batch_shape[i + 2];
+        }
 
-    size_t batch_size = data_batch_shape[0];
-    size_t channel_count = data_batch_shape[1];
-    Shape data_spatial_shape(data_batch_shape.begin() + 2, data_batch_shape.end());
+        NODE_VALIDATION_ASSERT(node, batch_size.is_dynamic() || size_t(batch_size) > 0)
+            << "Batch size is zero.";
 
-    NODE_VALIDATION_ASSERT(node, batch_size > 0) << "Batch size is zero.";
+        NODE_VALIDATION_ASSERT(node, channel_count.is_dynamic() || size_t(channel_count) > 0)
+            << "Channel count is zero.";
 
-    NODE_VALIDATION_ASSERT(node, channel_count > 0) << "Channel count is zero.";
+        // For pooling ops we don't need dilation, so we fill in the identity value (all 1).
+        Strides data_dilation(size_t(data_spatial_shape.rank()), 1);
+        Strides window_dilation(size_t(data_spatial_shape.rank()), 1);
 
-    // For pooling ops we don't need dilation, so we fill in the identity value (all 1).
-    Strides data_dilation(spatial_dimension_count, 1);
-    Strides window_dilation(spatial_dimension_count, 1);
+        data_output_spatial_shape =
+            infer_windowed_reduction_output_shape(node,
+                                                  data_spatial_shape,
+                                                  data_dilation,
+                                                  data_padding_below,
+                                                  data_padding_above,
+                                                  window_shape,
+                                                  window_strides,
+                                                  window_dilation,
+                                                  is_window_all_in_padding_allowed);
+    }
 
-    Shape data_output_shape =
-        infer_windowed_reduction_output_shape(node,
-                                              data_spatial_shape,
-                                              data_dilation,
-                                              data_padding_below,
-                                              data_padding_above,
-                                              window_shape,
-                                              window_strides,
-                                              window_dilation,
-                                              is_window_all_in_padding_allowed)
-            .to_shape();
+    PartialShape data_batch_output_shape{
+        PartialShape::dynamic(data_output_spatial_shape.rank() + 2)};
+    data_batch_output_shape[0] = batch_size;
+    data_batch_output_shape[1] = channel_count;
 
-    Shape batch_output_shape(data_batch_shape.size());
-    batch_output_shape[0] = batch_size;
-    batch_output_shape[1] = channel_count;
-    std::copy(data_output_shape.begin(), data_output_shape.end(), batch_output_shape.begin() + 2);
+    for (size_t i = 0; i < size_t(data_spatial_shape.rank()); i++)
+    {
+        data_batch_output_shape[i + 2] = data_output_spatial_shape[i];
+    }
 
-    return batch_output_shape;
+    return data_batch_output_shape;
 }

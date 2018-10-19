@@ -45,11 +45,11 @@ namespace ngraph
                                   const Strides& filter_strides,
                                   const Strides& filter_dilation);
 
-    Shape infer_batched_pooling_forward(const Node* node,
-                                        const Shape& data_batch_shape,
-                                        const CoordinateDiff& data_padding_below,
-                                        const CoordinateDiff& data_padding_above,
-                                        const Shape& window_shape,
-                                        const Strides& window_strides,
-                                        bool is_window_all_in_padding_allowed);
+    PartialShape infer_batched_pooling_forward(const Node* node,
+                                               const PartialShape& data_batch_shape,
+                                               const CoordinateDiff& data_padding_below,
+                                               const CoordinateDiff& data_padding_above,
+                                               const PartialShape& window_shape,
+                                               const Strides& window_strides,
+                                               bool is_window_all_in_padding_allowed);
 }

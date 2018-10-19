@@ -132,6 +132,12 @@ namespace ngraph
         ///         dimension with value `size_t(*this)+size_t(dim)`.
         Dimension operator+(const Dimension& dim) const;
 
+        /// \brief Subtraction operator for Dimension.
+        /// \param dim Right operand for subtraction.
+        /// \return Dimension::dynamic() if either of `*this` or `dim` is dynamic; else, a static
+        ///         dimension with value `size_t(*this)-size_t(dim)`.
+        Dimension operator-(const Dimension& dim) const;
+
         /// \brief Multiplication operator for Dimension.
         /// \param dim Right operand for multiplicaiton.
         /// \return 0 if either of `*this` or `dim` is static and 0; else, Dimension::dynamic() if

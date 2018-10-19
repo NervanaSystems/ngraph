@@ -3814,7 +3814,10 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_many)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Window shape (Shape{3, 3, 3}) does not have required rank (2)"));
+            std::string("Ranks for data item shape (data batch has shape {6,2,10,10}, so data item "
+                        "rank is 2), padding below (CoordinateDiff{0, 0}), padding above "
+                        "(CoordinateDiff{0, 0}), window shape ({3,3,3}), and window strides "
+                        "(Strides{1, 1}) do not match"));
     }
     catch (...)
     {
@@ -3837,7 +3840,11 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_few)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), std::string("Window shape (Shape{3}) does not have required rank (2)"));
+            error.what(),
+            std::string("Ranks for data item shape (data batch has shape {6,2,10,10}, so data item "
+                        "rank is 2), padding below (CoordinateDiff{0, 0}), padding above "
+                        "(CoordinateDiff{0, 0}), window shape ({3}), and window strides "
+                        "(Strides{1, 1}) do not match"));
     }
     catch (...)
     {
@@ -3862,7 +3869,10 @@ TEST(type_prop, max_pool_invalid_movement_stride_rank)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Window shape (Strides{2, 3, 8}) does not have required rank (2)"));
+            std::string("Ranks for data item shape (data batch has shape {6,2,10,10}, so data item "
+                        "rank is 2), padding below (CoordinateDiff{0, 0}), padding above "
+                        "(CoordinateDiff{0, 0}), window shape ({3,3}), and window strides "
+                        "(Strides{2, 3, 8}) do not match"));
     }
     catch (...)
     {
@@ -6334,7 +6344,10 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_many)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Window shape (Shape{3, 3, 3}) does not have required rank (2)");
+                             "Ranks for data item shape (data batch has shape {6,2,10,10}, so data "
+                             "item rank is 2), padding below (CoordinateDiff{0, 0}), padding above "
+                             "(CoordinateDiff{0, 0}), window shape ({3,3,3}), and window strides "
+                             "(Strides{1, 1}) do not match");
     }
     catch (...)
     {
@@ -6357,7 +6370,10 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_few)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Window shape (Shape{3}) does not have required rank (2)");
+                             "Ranks for data item shape (data batch has shape {6,2,10,10}, so data "
+                             "item rank is 2), padding below (CoordinateDiff{0, 0}), padding above "
+                             "(CoordinateDiff{0, 0}), window shape ({3}), and window strides "
+                             "(Strides{1, 1}) do not match");
     }
     catch (...)
     {
@@ -6381,7 +6397,10 @@ TEST(type_prop, avg_pool_invalid_movement_stride_rank)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Window shape (Strides{2, 3, 8}) does not have required rank (2)");
+                             "Ranks for data item shape (data batch has shape {6,2,10,10}, so data "
+                             "item rank is 2), padding below (CoordinateDiff{0, 0}), padding above "
+                             "(CoordinateDiff{0, 0}), window shape ({3,3}), and window strides "
+                             "(Strides{2, 3, 8}) do not match");
     }
     catch (...)
     {
@@ -6407,9 +6426,11 @@ TEST(type_prop, avg_pool_invalid_padding_below_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Data padding below (CoordinateDiff{1, 2, 3}) does not have required rank (2)");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Ranks for data item shape (data batch has shape {6,2,10,10}, so data "
+                             "item rank is 2), padding below (CoordinateDiff{1, 2, 3}), padding "
+                             "above (CoordinateDiff{1, 2}), window shape ({3,3}), and window "
+                             "strides (Strides{2, 3}) do not match");
     }
     catch (...)
     {
@@ -6435,9 +6456,11 @@ TEST(type_prop, avg_pool_invalid_padding_above_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Data padding above (CoordinateDiff{1, 2, 3}) does not have required rank (2");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Ranks for data item shape (data batch has shape {6,2,10,10}, so data "
+                             "item rank is 2), padding below (CoordinateDiff{1, 2}), padding above "
+                             "(CoordinateDiff{1, 2, 3}), window shape ({3,3}), and window strides "
+                             "(Strides{2, 3}) do not match");
     }
     catch (...)
     {
