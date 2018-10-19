@@ -133,4 +133,5 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/shape_util.hpp"
 #include "ngraph/type/element_type.hpp"
