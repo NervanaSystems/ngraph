@@ -3699,8 +3699,7 @@ TEST(type_prop, max_pool_invalid_0d_input)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data input shape does not have rank of at least 3"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch must have rank of at least 3"));
     }
     catch (...)
     {
@@ -3722,8 +3721,7 @@ TEST(type_prop, max_pool_invalid_1d_input)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data input shape does not have rank of at least 3"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch must have rank of at least 3"));
     }
     catch (...)
     {
@@ -3745,8 +3743,7 @@ TEST(type_prop, max_pool_invalid_2d_input)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data input shape does not have rank of at least 3"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch must have rank of at least 3"));
     }
     catch (...)
     {
@@ -3815,9 +3812,9 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_many)
         EXPECT_HAS_SUBSTRING(
             error.what(),
             std::string("Ranks for data item shape (data batch has shape {6,2,10,10}, so data item "
-                        "rank is 2), padding below (CoordinateDiff{0, 0}), padding above "
-                        "(CoordinateDiff{0, 0}), window shape ({3,3,3}), and window strides "
-                        "(Strides{1, 1}) do not match"));
+                        "rank is 2), padding below (CoordinateDiff{0, 0, 0}), padding above "
+                        "(CoordinateDiff{0, 0, 0}), window shape ({3,3,3}), and window strides "
+                        "(Strides{1, 1, 1}) do not match"));
     }
     catch (...)
     {
@@ -3842,9 +3839,9 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_few)
         EXPECT_HAS_SUBSTRING(
             error.what(),
             std::string("Ranks for data item shape (data batch has shape {6,2,10,10}, so data item "
-                        "rank is 2), padding below (CoordinateDiff{0, 0}), padding above "
-                        "(CoordinateDiff{0, 0}), window shape ({3}), and window strides "
-                        "(Strides{1, 1}) do not match"));
+                        "rank is 2), padding below (CoordinateDiff{0}), padding above "
+                        "(CoordinateDiff{0}), window shape ({3}), and window strides (Strides{1}) "
+                        "do not match"));
     }
     catch (...)
     {
@@ -6233,7 +6230,9 @@ TEST(type_prop, avg_pool_invalid_0d_input)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "Data input shape does not have rank of at least 3");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Data batch must have rank of at least 3 (one batch axis, one "
+                             "input-channel axis, and at least one spatial dimension)");
     }
     catch (...)
     {
@@ -6255,7 +6254,9 @@ TEST(type_prop, avg_pool_invalid_1d_input)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "Data input shape does not have rank of at least 3");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Data batch must have rank of at least 3 (one batch axis, one "
+                             "input-channel axis, and at least one spatial dimension)");
     }
     catch (...)
     {
@@ -6277,7 +6278,9 @@ TEST(type_prop, avg_pool_invalid_2d_input)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "Data input shape does not have rank of at least 3");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Data batch must have rank of at least 3 (one batch axis, one "
+                             "input-channel axis, and at least one spatial dimension)");
     }
     catch (...)
     {
@@ -6345,9 +6348,9 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_many)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Ranks for data item shape (data batch has shape {6,2,10,10}, so data "
-                             "item rank is 2), padding below (CoordinateDiff{0, 0}), padding above "
-                             "(CoordinateDiff{0, 0}), window shape ({3,3,3}), and window strides "
-                             "(Strides{1, 1}) do not match");
+                             "item rank is 2), padding below (CoordinateDiff{0, 0, 0}), padding "
+                             "above (CoordinateDiff{0, 0, 0}), window shape ({3,3,3}), and window "
+                             "strides (Strides{1, 1, 1}) do not match");
     }
     catch (...)
     {
@@ -6371,9 +6374,9 @@ TEST(type_prop, avg_pool_invalid_wrong_number_of_window_dimensions_too_few)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Ranks for data item shape (data batch has shape {6,2,10,10}, so data "
-                             "item rank is 2), padding below (CoordinateDiff{0, 0}), padding above "
-                             "(CoordinateDiff{0, 0}), window shape ({3}), and window strides "
-                             "(Strides{1, 1}) do not match");
+                             "item rank is 2), padding below (CoordinateDiff{0}), padding above "
+                             "(CoordinateDiff{0}), window shape ({3}), and window strides "
+                             "(Strides{1}) do not match");
     }
     catch (...)
     {

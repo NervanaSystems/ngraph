@@ -40,31 +40,22 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
 
 void op::AvgPool::validate_and_infer_types()
 {
-    if (validate_punt_if_dynamic())
+    if (0 == m_window_movement_strides.size())
     {
-        return;
+        m_window_movement_strides = Strides(m_window_shape.size(), 1);
     }
 
-    auto& arg_shape = get_input_shape(0);
-
-    NODE_VALIDATION_ASSERT(this, arg_shape.size() >= 3)
-        << "Data input shape does not have rank of at least 3 (data input shape: " << arg_shape
-        << ").";
-
-    if (0 == m_window_movement_strides.size() && arg_shape.size() > 2)
+    if (0 == m_padding_below.size())
     {
-        m_window_movement_strides = Strides(arg_shape.size() - 2, 1);
+        m_padding_below = Shape(m_window_shape.size(), 0);
     }
 
-    if (0 == m_padding_below.size() && arg_shape.size() > 2)
+    if (0 == m_padding_above.size())
     {
-        m_padding_below = Shape(arg_shape.size() - 2, 0);
+        m_padding_above = Shape(m_window_shape.size(), 0);
     }
 
-    if (0 == m_padding_above.size() && arg_shape.size() > 2)
-    {
-        m_padding_above = Shape(arg_shape.size() - 2, 0);
-    }
+    const PartialShape& arg_shape = get_input_partial_shape(0);
 
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).
