@@ -81,6 +81,7 @@ set(SRC
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/group_conv.cpp
+    op/halide_op.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
@@ -112,6 +113,14 @@ if (NOT NGRAPH_DEX_ONLY)
         cpu_emitter.cpp
         cpu_kernel_emitters.cpp
         cpu_kernel_utils.cpp
+        )
+endif()
+
+if (NGRAPH_HALIDE)
+    set(SRC
+        ${SRC}
+        builder/halide_op.cpp
+        pass/halide_subgraph_extraction.cpp
         )
 endif()
 
@@ -151,6 +160,12 @@ if (NGRAPH_CPU_ENABLE)
     set_target_properties(cpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
+    endif()
+    if (NGRAPH_HALIDE)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_HALIDE")
+        ExternalProject_Get_Property(ext_halide BINARY_DIR)
+        target_include_directories(cpu_backend SYSTEM PRIVATE ${BINARY_DIR}/include)
+        target_link_libraries(cpu_backend PRIVATE ${BINARY_DIR}/lib/libHalide.so)
     endif()
 
     if(OPENMP_FOUND)
