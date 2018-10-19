@@ -39,18 +39,9 @@ Placement runtime::cpu::default_placement_policy(const std::shared_ptr<Node>& no
 {
     NGRAPH_INFO << "runtime::cpu::default_placement_policy -Begin " + node->description();
 
-    // clang-format off
-    static unordered_set<string> fully_supported_ops = {
-        "Abs",
-        "Add", 
-        "Parameter",
-        "Result"
-    };
-    static unordered_set<string> partially_supported_ops = {
-        "Dot"
-    };
+    static unordered_set<string> fully_supported_ops = {"Abs", "Add", "Parameter", "Result"};
+    static unordered_set<string> partially_supported_ops = {"Dot"};
 
-    // clang-format on
     string node_op = node->description();
     if (fully_supported_ops.count(node_op) == 0 && partially_supported_ops.count(node_op) == 0)
     {
