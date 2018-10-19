@@ -40,40 +40,40 @@ Attributes
 +-------------------------------+----------------------------------------------------------------+
 | ``axes``                      | Axis positions on which ``scale`` and ``offset`` are specified |
 +-------------------------------+----------------------------------------------------------------+
-| ``round_mode``                | *HALF_AWAY_FROM_ZERO:*                                         |
+| ``round_mode``                | *ROUND_NEAREST_TOWARD_INFINITY:*                               |
 |                               | x.5 to x+1                                                     |
 |                               | -x.5 to -(x+1)                                                 |
 |                               | everything else to nearest integer                             |
 |                               |                                                                |
-|                               | *HALF_TOWARD_ZERO:*                                            |
+|                               | *ROUND_NEAREST_TOWARD_ZERO:*                                   |
 |                               | x.5 to x-1                                                     |
 |                               | -x.5 to -(x-1)                                                 |
 |                               | everything else to nearest integer                             |
 |                               |                                                                |
-|                               | *HALF_TOWARD_POSITIVE_INFINITY:*                               |
+|                               | *ROUND_NEAREST_UPWARD:*                                        |
 |                               | x.5 to x+1                                                     |
 |                               | -x.5 to -x                                                     |
 |                               | everything else to nearest integer                             |
 |                               |                                                                |
-|                               | *HALF_TOWARD_NEGATIVE_INFINITY:*                               |
+|                               | *ROUND_NEAREST_DOWNWARD:*                                      |
 |                               | x.5 to x                                                       |
 |                               | -x.5 to -(x+1)                                                 |
 |                               | everything else to nearest integer                             |
 |                               |                                                                |
-|                               | *HALF_TO_EVEN:*                                                |
+|                               | *ROUND_NEAREST_TOWARD_EVEN:*                                   |
 |                               | x.5 and -x.5 to nearest even ineger                            |
 |                               | everything else to nearest integer                             |
 |                               |                                                                |
-|                               | *ALL_AWAY_FROM_ZERO:*                                          |
-|                               | everything to next integer away from zero                        |
+|                               | *ROUND_TOWARD_INFINITY:*                                       |
+|                               | everything to next integer away from zero                      |
 |                               |                                                                |
-|                               | *ALL_TOWARD_ZERO:*                                             |
+|                               | *ROUND_TOWARD_ZERO:*                                           |
 |                               | everything to next integer towards zero                        |
 |                               |                                                                |
-|                               | *ALL_TOWARD_POSITIVE_INFINITY:*                                |
+|                               | *ROUND_UP:*                                                    |
 |                               | everything to next integer towards infinity                    |
 |                               |                                                                |
-|                               | *ALL_TOWARD_NEGATIVE_INFINITY:*                                |
+|                               | *ROUND_DOWN:*                                                  |
 |                               | everything to next integer towards negative infinity           |
 +-------------------------------+----------------------------------------------------------------+
 

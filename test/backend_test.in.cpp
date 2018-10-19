@@ -10455,7 +10455,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize)
     typedef float input_c_type;
     typedef uint8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {2});
@@ -10524,7 +10524,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_axes)
     typedef float input_c_type;
     typedef uint8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {2, 3, 4, 5});
@@ -10593,7 +10593,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_int8)
     typedef float input_c_type;
     typedef int8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {2});
@@ -10662,7 +10662,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp)
     typedef float input_c_type;
     typedef int8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {0.00001});
@@ -10683,7 +10683,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp)
         read_vector<output_c_type>(y));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, quantize_round_half_toward_zero)
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_TOWARD_ZERO)
 {
     Shape input_shape{4, 3};
     Shape scale_offset_shape;
@@ -10695,7 +10695,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_half_toward_zero)
     typedef float input_c_type;
     typedef int8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_TOWARD_ZERO;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_ZERO;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
@@ -10717,7 +10717,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_half_toward_zero)
               read_vector<output_c_type>(y));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, quantize_round_half_toward_positive_infinity)
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_UPWARD)
 {
     Shape input_shape{4, 3};
     Shape scale_offset_shape;
@@ -10729,7 +10729,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_half_toward_positive_infinity)
     typedef float input_c_type;
     typedef int8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_TOWARD_POSITIVE_INFINITY;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_UPWARD;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
@@ -10751,7 +10751,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_half_toward_positive_infinity)
               read_vector<output_c_type>(y));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, quantize_round_half_toward_negative_infinity)
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_DOWNWARD)
 {
     Shape input_shape{4, 3};
     Shape scale_offset_shape;
@@ -10763,7 +10763,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_half_toward_negative_infinity)
     typedef float input_c_type;
     typedef int8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_TOWARD_NEGATIVE_INFINITY;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_DOWNWARD;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
@@ -10785,7 +10785,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_half_toward_negative_infinity)
               read_vector<output_c_type>(y));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, quantize_round_half_to_even)
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_TOWARD_EVEN)
 {
     Shape input_shape{4, 3};
     Shape scale_offset_shape;
@@ -10797,7 +10797,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_half_to_even)
     typedef float input_c_type;
     typedef int8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_TO_EVEN;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
@@ -10819,7 +10819,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_half_to_even)
               read_vector<output_c_type>(y));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, quantize_round_all_away_from_zero)
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_TOWARD_INFINITY)
 {
     Shape input_shape{4, 3};
     Shape scale_offset_shape;
@@ -10831,7 +10831,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_all_away_from_zero)
     typedef float input_c_type;
     typedef int8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ALL_AWAY_FROM_ZERO;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_TOWARD_INFINITY;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
@@ -10858,7 +10858,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_all_away_from_zero)
               read_vector<output_c_type>(y));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, quantize_round_all_toward_zero)
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_TOWARD_ZERO)
 {
     Shape input_shape{4, 3};
     Shape scale_offset_shape;
@@ -10870,7 +10870,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_all_toward_zero)
     typedef float input_c_type;
     typedef int8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ALL_TOWARD_ZERO;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_TOWARD_ZERO;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
@@ -10897,7 +10897,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_all_toward_zero)
               read_vector<output_c_type>(y));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, quantize_round_all_toward_positive_infinity)
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_UP)
 {
     Shape input_shape{4, 3};
     Shape scale_offset_shape;
@@ -10909,7 +10909,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_all_toward_positive_infinity)
     typedef float input_c_type;
     typedef int8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ALL_TOWARD_POSITIVE_INFINITY;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_UP;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
@@ -10931,7 +10931,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_all_toward_positive_infinity)
               read_vector<output_c_type>(y));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, quantize_round_all_toward_negative_infinity)
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_DOWN)
 {
     Shape input_shape{4, 3};
     Shape scale_offset_shape;
@@ -10943,7 +10943,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_round_all_toward_negative_infinity)
     typedef float input_c_type;
     typedef int8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ALL_TOWARD_NEGATIVE_INFINITY;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_DOWN;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {4});

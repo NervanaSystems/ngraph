@@ -47,7 +47,7 @@ namespace ngraph
                 // -3.25 -> -3.0
                 // -3.50 -> -4.0
                 // -3.75 -> -4.0
-                HALF_AWAY_FROM_ZERO,
+                ROUND_NEAREST_TOWARD_INFINITY,
 
                 // x.5 to x-1
                 // -x.5 to -(x-1)
@@ -64,7 +64,7 @@ namespace ngraph
                 // -3.25 -> -3.0
                 // -3.50 -> -3.0
                 // -3.75 -> -4.0
-                HALF_TOWARD_ZERO,
+                ROUND_NEAREST_TOWARD_ZERO,
 
                 // x.5 to x+1
                 // -x.5 to -x
@@ -81,7 +81,7 @@ namespace ngraph
                 // -3.25 -> -3.0
                 // -3.50 -> -3.0
                 // -3.75 -> -4.0
-                HALF_TOWARD_POSITIVE_INFINITY,
+                ROUND_NEAREST_UPWARD,
 
                 // x.5 to x
                 // -x.5 to -(x+1)
@@ -98,7 +98,7 @@ namespace ngraph
                 // -3.25 -> -3.0
                 // -3.50 -> -4.0
                 // -3.75 -> -4.0
-                HALF_TOWARD_NEGATIVE_INFINITY,
+                ROUND_NEAREST_DOWNWARD,
 
                 // x.5 and -x.5 to nearest even integer
                 // everything else to nearest integer
@@ -114,7 +114,7 @@ namespace ngraph
                 // -3.25 -> -3.0
                 // -3.50 -> -4.0
                 // -3.75 -> -4.0
-                HALF_TO_EVEN,
+                ROUND_NEAREST_TOWARD_EVEN,
 
                 // everything to next integer away from zero
                 //  2.25 ->  3.0
@@ -129,7 +129,7 @@ namespace ngraph
                 // -3.25 -> -4.0
                 // -3.50 -> -4.0
                 // -3.75 -> -4.0
-                ALL_AWAY_FROM_ZERO,
+                ROUND_TOWARD_INFINITY,
 
                 // everything to next integer towards zero
                 //  2.25 ->  2.0
@@ -144,7 +144,7 @@ namespace ngraph
                 // -3.25 -> -3.0
                 // -3.50 -> -3.0
                 // -3.75 -> -3.0
-                ALL_TOWARD_ZERO,
+                ROUND_TOWARD_ZERO,
 
                 // everything to next integer towards infinity
                 //  2.25 ->  3.0
@@ -159,7 +159,7 @@ namespace ngraph
                 // -3.25 -> -3.0
                 // -3.50 -> -3.0
                 // -3.75 -> -3.0
-                ALL_TOWARD_POSITIVE_INFINITY,
+                ROUND_UP,
 
                 // everything to next integer towards negative infinity
                 //  2.25 ->  2.0
@@ -174,7 +174,8 @@ namespace ngraph
                 // -3.25 -> -4.0
                 // -3.50 -> -4.0
                 // -3.75 -> -4.0
-                ALL_TOWARD_NEGATIVE_INFINITY
+                ROUND_DOWN,
+                HALF_AWAY_FROM_ZERO
             };
 
             /// \brief Constructs a Quantize operation
