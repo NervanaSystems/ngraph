@@ -116,31 +116,29 @@ op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
 
 void op::AvgPoolBackprop::validate_and_infer_types()
 {
-    if (validate_punt_if_dynamic())
-    {
-        return;
-    }
-
-    auto& delta_shape = get_input_shape(0);
-
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).
     CoordinateDiff padding_below(m_padding_below.begin(), m_padding_below.end());
     CoordinateDiff padding_above(m_padding_above.begin(), m_padding_above.end());
 
-    Shape forward_result_shape = infer_batched_pooling_forward(this,
-                                                               m_forward_arg_shape,
-                                                               padding_below,
-                                                               padding_above,
-                                                               m_window_shape,
-                                                               m_window_movement_strides,
-                                                               m_include_padding_in_avg_computation)
-                                     .to_shape();
+    PartialShape forward_result_shape =
+        infer_batched_pooling_forward(this,
+                                      m_forward_arg_shape,
+                                      padding_below,
+                                      padding_above,
+                                      m_window_shape,
+                                      m_window_movement_strides,
+                                      m_include_padding_in_avg_computation);
 
-    NODE_VALIDATION_ASSERT(this, forward_result_shape == delta_shape)
+    const PartialShape& delta_shape = get_input_shape(0);
+
+    NODE_VALIDATION_ASSERT(this, forward_result_shape.compatible(delta_shape))
         << "Inferred forward output shape does not match delta shape (inferred forward output "
         << "shape: " << forward_result_shape << ", delta shape: " << delta_shape << ").";
 
+    // TODO(amprocte): Once m_forward_arg_shape is allowed to be dynamic, we may technically be
+    // able to infer some extra information from forward_result_shape that was not present in the
+    // forward arg shape---namely batch size and channel count. Merge that info in.
     set_output_type(0, get_input_element_type(0), m_forward_arg_shape);
 }
 

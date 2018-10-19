@@ -116,17 +116,12 @@ op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
 
 void op::MaxPoolBackprop::validate_and_infer_types()
 {
-    if (validate_punt_if_dynamic())
-    {
-        return;
-    }
+    element::Type forward_arg_et = get_input_element_type(0);
+    element::Type delta_et = get_input_element_type(1);
 
-    auto forward_arg_et = get_input_element_type(0);
-    auto& forward_arg_shape = get_input_shape(0);
-    auto delta_et = get_input_element_type(1);
-    auto& delta_shape = get_input_shape(1);
+    element::Type result_et;
 
-    NODE_VALIDATION_ASSERT(this, forward_arg_et == delta_et)
+    NODE_VALIDATION_ASSERT(this, element::Type::merge(result_et, forward_arg_et, delta_et))
         << "Element types for forward argument (" << forward_arg_et << ") and delta (" << delta_et
         << ") do not match.";
 
@@ -135,19 +130,25 @@ void op::MaxPoolBackprop::validate_and_infer_types()
     CoordinateDiff padding_below(m_padding_below.begin(), m_padding_below.end());
     CoordinateDiff padding_above(m_padding_above.begin(), m_padding_above.end());
 
-    Shape forward_result_shape = infer_batched_pooling_forward(this,
-                                                               forward_arg_shape,
-                                                               padding_below,
-                                                               padding_above,
-                                                               m_window_shape,
-                                                               m_window_movement_strides,
-                                                               true)
-                                     .to_shape();
+    const PartialShape& forward_arg_shape = get_input_partial_shape(0);
 
-    NODE_VALIDATION_ASSERT(this, forward_result_shape == delta_shape)
+    PartialShape forward_result_shape = infer_batched_pooling_forward(this,
+                                                                      forward_arg_shape,
+                                                                      padding_below,
+                                                                      padding_above,
+                                                                      m_window_shape,
+                                                                      m_window_movement_strides,
+                                                                      true);
+
+    const PartialShape& delta_shape = get_input_partial_shape(1);
+
+    NODE_VALIDATION_ASSERT(this, forward_result_shape.compatible(delta_shape))
         << "Inferred forward output shape does not match delta shape (inferred forward output "
         << "shape: " << forward_result_shape << ", delta shape: " << delta_shape << ").";
 
+    // TODO(amprocte): We may technically be able to infer some extra information from
+    // forward_result_shape that was not present in the forward arg shape---namely batch size and
+    // channel count. Merge that info in.
     set_output_type(0, get_input_element_type(0), forward_arg_shape);
 }
 
