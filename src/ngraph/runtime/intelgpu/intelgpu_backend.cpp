@@ -14,6 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <iomanip>
+#include <sys/resource.h>
+#include <sys/time.h>
+
 #include <CPP/activation.hpp>
 #include <CPP/activation_grad.hpp>
 #include <CPP/arg_max_min.hpp>
@@ -276,15 +280,46 @@ extern "C" void delete_backend(runtime::Backend* backend)
     delete backend;
 }
 
+static size_t get_max_memory_rss_in_kb()
+{
+    size_t result = 0;
+    struct rusage usage;
+
+    if (getrusage(RUSAGE_SELF, &usage) == 0)
+    {
+        result = usage.ru_maxrss; // the value is in kilobytes
+    }
+
+    return result;
+}
+
 runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
 {
     bool profiling = false;
 
+    // This should be used to allow nbench work with "--timing_detail" option
     if (getenv("NGRAPH_INTELGPU_STAT") != nullptr)
     {
         profiling = true;
     }
 
+    // Print out default profile and statistic to the output
+    if (getenv("NGRAPH_INTELGPU_PROFILE") != nullptr)
+    {
+        profiling = true;
+        m_profile_enable = true;
+    }
+
+    // Control the number of lines in ::call profile
+    const char* profile_lines_count = getenv("NGRAPH_INTELGPU_PROFILE_LINES");
+    if (profile_lines_count != nullptr)
+    {
+        profiling = true;
+        m_profile_enable = true;
+        m_profile_lines_limit_count = strtol(profile_lines_count, nullptr, 10);
+    }
+
+    // Disables the backend Function (graph) level optimizations
     if (getenv("NGRAPH_INTELGPU_DISABLE_OPTIMIZATIONS") != nullptr)
     {
         m_disable_backend_optimizations = true;
@@ -1435,6 +1470,17 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
                                               const vector<shared_ptr<runtime::Tensor>>& outputs,
                                               const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    size_t mem_before_call = 0;
+    size_t mem_after_compilation = 0;
+    size_t mem_after_call = 0;
+    stopwatch timer_call;
+    stopwatch timer_compile;
+
+    if (m_profile_enable)
+    {
+        mem_before_call = get_max_memory_rss_in_kb();
+        timer_compile.start();
+    }
     validate_call(func, outputs, inputs);
 
     FunctionInstance& instance = ocl_networks[func];
@@ -1444,6 +1490,13 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
         {
             return false;
         }
+    }
+
+    if (m_profile_enable)
+    {
+        timer_compile.stop();
+        mem_after_compilation = get_max_memory_rss_in_kb();
+        timer_call.start();
     }
 
     shared_ptr<cldnn::network> network = instance.ocl_network;
@@ -1474,6 +1527,20 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
 
         auto result_memory = result.at(tensor_name).get_memory().pointer<char>();
         ngraph_res->write(result_memory.data(), 0, result_memory.size());
+    }
+
+    if (m_profile_enable)
+    {
+        timer_call.stop();
+        mem_after_call = get_max_memory_rss_in_kb();
+
+        print_call_performance(network,
+                               func,
+                               timer_compile.get_milliseconds(),
+                               timer_call.get_milliseconds(),
+                               mem_before_call,
+                               mem_after_compilation,
+                               mem_after_call);
     }
 
     return true;
@@ -1550,4 +1617,120 @@ vector<runtime::PerformanceCounter>
         }
     }
     return rc;
+}
+
+static Shape get_shape_by_name(const shared_ptr<Function> func, const string& name)
+{
+    for (shared_ptr<Node> node : func->get_ops())
+    {
+        if (node->get_name() == name)
+        {
+            return node->get_output_shape(0);
+        }
+    }
+
+    return Shape();
+}
+
+void runtime::intelgpu::IntelGPUBackend::print_call_performance(
+    const shared_ptr<cldnn::network> network,
+    const shared_ptr<Function> func,
+    size_t time_compile,
+    size_t time_call,
+    size_t mem_before_call,
+    size_t mem_after_compilation,
+    size_t mem_after_call) const
+{
+    struct data_item
+    {
+        string item_name;
+        map<string, double> item_times;
+    };
+    const string& func_name = func->get_name();
+    const map<cldnn::primitive_id, cldnn::event>& primitives = network->get_executed_primitives();
+    size_t limit_count = m_profile_lines_limit_count;
+    multimap<double, data_item> data;
+    map<string, double> total_interval_times;
+    double total_executing_time = 0;
+    size_t total_items_count = 0;
+    size_t max_item_name_size = 0;
+
+    ios_base::fmtflags saved_stream_flags(cout.flags()); // Save stream flags to restore them later
+
+    if (m_profile_lines_limit_count > 0)
+    {
+        // Extract profiling statistic, calculate summary and sort
+        for (auto& prim : primitives)
+        {
+            double executing_time = 0;
+            data_item item;
+            item.item_name = prim.first;
+            max_item_name_size = max(max_item_name_size, prim.first.size());
+
+            for (auto& prof_info : prim.second.get_profiling_info())
+            {
+                const string& interval_name = prof_info.name;
+                double interval =
+                    chrono::duration_cast<chrono::duration<double, chrono::milliseconds::period>>(
+                        prof_info.value->value())
+                        .count();
+
+                item.item_times[interval_name] = interval;
+
+                // Get the Key time to sort by
+                if (interval_name == "executing")
+                {
+                    executing_time += interval;
+                }
+
+                // Accumulate total time for each interval
+                if (total_interval_times.find(interval_name) == total_interval_times.end())
+                {
+                    total_interval_times[interval_name] = interval;
+                }
+                else
+                {
+                    total_interval_times[interval_name] += interval;
+                }
+            }
+            data.emplace(executing_time, item);
+            total_executing_time += executing_time;
+            ++total_items_count;
+        }
+
+        // Print statistic for each primitive in the cldnn::network
+        for (auto it = data.rbegin(); (it != data.rend()) && (limit_count > 0); ++it, --limit_count)
+        {
+            const string ngraph_node_name = convert_cldnn_names(func, it->second.item_name);
+            const Shape ngraph_node_shape = get_shape_by_name(func, ngraph_node_name);
+
+            cout << func_name << delim << setw(max_item_name_size) << it->second.item_name << delim
+                 << "time(ms)" << delim << scientific << setprecision(2) << it->first;
+            for (auto item : it->second.item_times)
+            {
+                cout << delim << item.first << "(ms)" << delim << item.second;
+            }
+            cout << delim << ngraph_node_name << delim << ngraph_node_shape << "\n";
+        }
+
+        // Print bottom line summary
+        const string total_items_count_string = "Total(cldnn " + to_string(total_items_count) +
+                                                ", ngraph " + to_string(func->get_ops().size()) +
+                                                ")";
+        cout << func_name << delim << setw(max_item_name_size) << total_items_count_string << delim
+             << "time(ms)" << delim << scientific << setprecision(2) << total_executing_time;
+        for (auto item_times : total_interval_times)
+        {
+            cout << delim << item_times.first << "(ms)" << delim << item_times.second;
+        }
+        cout << "\n";
+    }
+
+    // Print time and memory consumed in ::call function
+    cout << func_name << delim << " Backend compilation(ms)" << delim << time_compile << " call(ms)"
+         << delim << time_call << delim << "memory before call(KB)" << delim << mem_before_call
+         << delim << "after compilation(KB)" << delim << mem_after_compilation << delim
+         << "after call(KB)" << delim << mem_after_call << endl;
+
+    cout.flags(saved_stream_flags); // Restore stream configuration to leave it in original state
 }
