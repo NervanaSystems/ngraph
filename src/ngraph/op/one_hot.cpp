@@ -37,7 +37,7 @@ void op::OneHot::validate_and_infer_types()
     NODE_VALIDATION_ASSERT(this, m_shape.rank().is_static())
         << "Requested result shape has dynamic rank.";
 
-    NODE_VALIDATION_ASSERT(this, m_one_hot_axis < size_t(m_shape.rank()))
+    NODE_VALIDATION_ASSERT(this, m_one_hot_axis < size_t{m_shape.rank()})
         << "One-hot axis (" << m_one_hot_axis
         << ") is out of bounds (requested result shape: " << m_shape << ").";
 
@@ -49,8 +49,8 @@ void op::OneHot::validate_and_infer_types()
 
     if (arg_rank.is_static())
     {
-        std::vector<Dimension> expected_input_dims(size_t(m_shape.rank()));
-        for (size_t i = 0; i < size_t(m_shape.rank()); i++)
+        std::vector<Dimension> expected_input_dims(size_t{m_shape.rank()});
+        for (size_t i = 0; i < size_t{m_shape.rank()}; i++)
         {
             expected_input_dims[i] = m_shape[i];
         }
@@ -62,8 +62,8 @@ void op::OneHot::validate_and_infer_types()
             << "Argument shape " << arg_shape << " does not match the expected shape of "
             << expected_input_shape << ".";
 
-        std::vector<Dimension> output_dims(size_t(merged_input_shape.rank()));
-        for (size_t i = 0; i < size_t(merged_input_shape.rank()); i++)
+        std::vector<Dimension> output_dims(size_t{merged_input_shape.rank()});
+        for (size_t i = 0; i < size_t{merged_input_shape.rank()}; i++)
         {
             output_dims[i] = merged_input_shape[i];
         }

@@ -157,7 +157,7 @@ static json write_dimension(Dimension d)
     }
     else
     {
-        return size_t(d);
+        return size_t{d};
     }
 }
 
@@ -169,7 +169,7 @@ static Dimension read_dimension(const json& j)
     }
     else
     {
-        return Dimension(size_t(j));
+        return Dimension(size_t{j});
     }
 }
 
@@ -181,7 +181,7 @@ static json write_partial_shape(const PartialShape& s)
     }
     else
     {
-        std::vector<json> vals(size_t(s.rank()));
+        std::vector<json> vals(size_t{s.rank()});
         for (size_t i = 0; i < vals.size(); i++)
         {
             vals[i] = write_dimension(s[i]);
