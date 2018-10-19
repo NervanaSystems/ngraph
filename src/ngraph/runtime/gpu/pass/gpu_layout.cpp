@@ -122,6 +122,8 @@ namespace ngraph
                     parent_node = topk->get_argument(0);
                     insert_new_node_between(parent_node, node, pre_2d_reshape);
 
+                    NodeVector goes = op::get_output_elements(node);
+
                     auto new_topk = make_shared<ngraph::op::TopK>(topk->get_argument(0),
                                                                   1,
                                                                   topk->get_index_element_type(),
@@ -129,14 +131,65 @@ namespace ngraph
                                                                   topk->get_compute_max());
 
                     ngraph::replace_node(node, new_topk);
-
-                    NodeVector goes = op::get_output_elements(node);
+                    NodeVector new_goes;
                     for (auto& goe : goes)
                     {
                         auto out_idx =
                             std::dynamic_pointer_cast<op::GetOutputElement>(goe)->get_n();
                         auto new_goe = std::make_shared<op::GetOutputElement>(new_topk, out_idx);
                         ngraph::replace_node(goe, new_goe);
+                        new_goes.push_back(new_goe);
+                    }
+
+                    Shape reordered_out_shape;
+                    for (size_t j = 0; j < ndim; j++)
+                    {
+                        reordered_out_shape.push_back(out_shape[reshape_axis_order[j]]);
+                    }
+
+                    NodeVector post_2d_reshapes;
+                    for (auto& new_goe : new_goes)
+                    {
+
+                        for (auto node : new_goe->get_users())
+                        {
+
+                            for (size_t i = 0; i < node->get_input_size(); i++)
+                            {
+                                if (node->get_argument(i) == new_goe)
+                                {
+                                    auto post_2d_reshape = make_shared<ngraph::op::Reshape>(
+                                        new_goe, AxisVector{0, 1}, reordered_out_shape);
+
+                                    node->get_inputs().at(i).replace_output(
+                                        post_2d_reshape->get_outputs().at(0));
+                                    post_2d_reshapes.push_back(post_2d_reshape);
+                                }
+                            }
+                        }
+                    }
+
+
+                    axis_order.pop_back();
+                    axis_order.insert(axis_order.begin()+ topk_axis, 1, ndim-1);
+
+                    for (auto& new_reshape : post_2d_reshapes)
+                    {
+
+                        for (auto node : new_reshape->get_users())
+                        {
+                            for (size_t i = 0; i < node->get_input_size(); i++)
+                            {
+                                if (node->get_argument(i) == new_reshape)
+                                {
+                                    auto post_reshape = make_shared<ngraph::op::Reshape>(
+                                        new_reshape, axis_order, out_shape);
+ 
+                                    node->get_inputs().at(i).replace_output(
+                                        post_reshape->get_outputs().at(0));
+                                }
+                            }
+                        }
                     }
                 }
             }
