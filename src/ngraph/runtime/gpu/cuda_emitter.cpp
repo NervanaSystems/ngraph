@@ -108,13 +108,17 @@ size_t runtime::gpu::CUDAEmitter::build_allreduce(const element::Type& element_t
         throw runtime_error("only float and double is supported by MPI_Allreduce.");
     }
 
-    float* cpu_input = new float[count];
-    float* cpu_output = new float[count];
     size_t data_size = element_type.size();
+    // get an allocator for transient per kernel gpu memory
+    GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    size_t idx_cpu_input = allocator.reserve_hostspace(count * data_size);
+    size_t idx_cpu_output = allocator.reserve_hostspace(count * data_size);
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
                                                                          void** outputs) mutable {
+        void* cpu_input = runtime::gpu::invoke_memory_primitive(m_ctx, idx_cpu_input);
+        void* cpu_output = runtime::gpu::invoke_memory_primitive(m_ctx, idx_cpu_output);
         runtime::gpu::cuda_memcpyDtH(cpu_input, inputs[0], count * data_size);
         MPI_Allreduce(cpu_input, cpu_output, count, data_type, MPI_SUM, MPI_COMM_WORLD);
         runtime::gpu::cuda_memcpyHtD(outputs[0],cpu_output, count * data_size);

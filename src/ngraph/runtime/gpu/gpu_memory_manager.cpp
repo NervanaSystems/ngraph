@@ -26,7 +26,9 @@ constexpr const uint32_t initial_buffer_size = 10 * 1024 * 1024;
 
 runtime::gpu::GPUMemoryManager::GPUMemoryManager(GPUPrimitiveEmitter* emitter)
     : m_buffer_offset(0)
+    , m_host_offset(0)
     , m_buffered_mem(initial_buffer_size, 0)
+    , m_host_mem(initial_buffer_size, 0)
     , m_workspace_manager(new pass::MemoryManager(runtime::gpu::GPUMemoryManager::alignment))
     , m_argspace_mem(1, {nullptr, 0})
     , m_workspace_mem(1, {nullptr, 0})
@@ -123,6 +125,32 @@ size_t runtime::gpu::GPUMemoryManager::queue_for_transfer(const void* data, size
     return offset;
 }
 
+size_t runtime::gpu::GPUMemoryManager::reserve_hostspace(size_t size)
+{
+    // if the current allocation will overflow the host buffer
+    size_t aligned_size =
+        ngraph::pass::MemoryManager::align(size, runtime::gpu::GPUMemoryManager::alignment);
+    size_t new_size = m_host_offset + aligned_size;
+    size_t buffer_size = m_host_mem.size();
+    bool need_resize = false;
+    while (buffer_size < new_size)
+    {
+        // add more space to the managed buffer
+        buffer_size <<= 1;
+        need_resize = true;
+    }
+
+    if (need_resize)
+    {
+        m_host_mem.resize(buffer_size, 0);
+    }
+
+    size_t offset = m_host_offset;
+    m_host_offset += aligned_size;
+
+    return offset;
+}
+
 runtime::gpu::GPUAllocator::GPUAllocator(GPUMemoryManager* mgr)
     : m_manager(mgr)
 {
@@ -180,6 +208,29 @@ size_t runtime::gpu::GPUAllocator::reserve_workspace(size_t size, bool zero_init
         return workspace_ptr;
     };
     return m_manager->m_primitive_emitter->insert(std::move(mem_primitive));
+}
+
+size_t runtime::gpu::GPUAllocator::reserve_hostspace(size_t size, bool zero_initialize)
+{
+    // add parameter data to host buffer that will be transfered to device
+    size_t offset = m_manager->reserve_hostspace(size);
+    // return a lambda that will yield the gpu memory address. this
+    // should only be evaluated by the runtime invoked primitive
+    gpu::memory_primitive mem_primitive = [=]() {
+        void* hostspace = m_manager->m_host_mem.data();
+        if (hostspace == nullptr)
+        {
+            throw std::runtime_error("An attempt was made to use unallocated host memory.");
+        }
+        auto host_mem = static_cast<uint8_t*>(hostspace);
+        auto workspace_ptr = static_cast<void*>(host_mem + offset);
+        if(zero_initialize)
+        {
+            memset(workspace_ptr, 0, size);
+        }
+        return workspace_ptr;
+    };
+    return m_manager->m_primitive_emitter->insert(mem_primitive);
 }
 
 void runtime::gpu::GPUAllocator::close()

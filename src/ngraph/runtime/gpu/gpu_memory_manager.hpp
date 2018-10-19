@@ -48,6 +48,7 @@ namespace ngraph
                 }
                 size_t reserve_argspace(const void* data, size_t size);
                 size_t reserve_workspace(size_t size, bool zero_initialize = true);
+                size_t reserve_hostspace(size_t size, bool zero_initialize = true);
 
                 void close();
 
@@ -70,9 +71,12 @@ namespace ngraph
             private:
                 GPUMemoryManager(GPUPrimitiveEmitter* emitter);
                 size_t queue_for_transfer(const void* data, size_t size);
+                size_t reserve_hostspace(size_t size);
 
                 size_t m_buffer_offset;
+                size_t m_host_offset;
                 std::vector<uint8_t> m_buffered_mem;
+                std::vector<uint8_t> m_host_mem;
                 std::unique_ptr<ngraph::pass::MemoryManager> m_workspace_manager;
                 static constexpr const uint16_t alignment = 8;
 
