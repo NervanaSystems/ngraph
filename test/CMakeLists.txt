@@ -92,8 +92,11 @@ add_subdirectory(util)
 # such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
 set(MULTI_TEST_SRC
     autodiff.in.cpp
+    backend_binary_elementwise.in.cpp
     backend_comparison.in.cpp
+    backend_reduce.in.cpp
     backend_test.in.cpp
+    backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
 )
 if(NGRAPH_DISTRIBUTED_ENABLE)
@@ -139,7 +142,7 @@ endif()
 if(NGRAPH_DISTRIBUTED_ENABLE)
     find_package(MPI REQUIRED)
     target_compile_definitions(unit-test PRIVATE NGRAPH_DISTRIBUTED)
-    target_include_directories(unit-test 
+    target_include_directories(unit-test
         SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
     target_link_libraries(unit-test PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 endif()
