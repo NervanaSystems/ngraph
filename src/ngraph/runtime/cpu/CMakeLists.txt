@@ -81,6 +81,7 @@ set(SRC
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/group_conv.cpp
+    op/halide_op.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
@@ -111,6 +112,14 @@ if (NOT NGRAPH_DEX_ONLY)
         cpu_emitter.cpp
         cpu_kernel_emitters.cpp
         cpu_kernel_utils.cpp
+        )
+endif()
+
+if (NGRAPH_HALIDE)
+    set(SRC
+        ${SRC}
+        builder/halide_op.cpp
+        pass/halide_subgraph_extraction.cpp
         )
 endif()
 
@@ -151,6 +160,12 @@ if (NGRAPH_CPU_ENABLE)
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     endif()
+    if (NGRAPH_HALIDE)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_HALIDE")
+        ExternalProject_Get_Property(ext_halide BINARY_DIR)
+        target_include_directories(cpu_backend SYSTEM PRIVATE ${BINARY_DIR}/include)
+        target_link_libraries(cpu_backend PRIVATE ${BINARY_DIR}/lib/libHalide.so)
+    endif()
 
     if(OPENMP_FOUND)
         target_compile_options(cpu_backend PRIVATE "${OpenMP_CXX_FLAGS}")
@@ -161,10 +176,12 @@ if (NGRAPH_CPU_ENABLE)
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
         find_package(MPI REQUIRED)
-        add_definitions(-DNGRAPH_DISTRIBUTED)
-        include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-        link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-        target_link_libraries(cpu_backend PRIVATE ${MPI_CXX_LIBRARIES})
+        target_compile_definitions(cpu_backend
+            PRIVATE NGRAPH_DISTRIBUTED)
+        target_include_directories(cpu_backend
+            SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+        target_link_libraries(cpu_backend
+            PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
     endif()
 
     add_dependencies(cpu_backend ext_mkldnn ext_eigen)
