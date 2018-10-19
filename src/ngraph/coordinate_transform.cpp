@@ -456,21 +456,21 @@ bool CoordinateTransform::Iterator::operator!=(const Iterator& it)
 
 bool CoordinateTransform::Iterator::operator==(const Iterator& it)
 {
-    if (m_target_shape != it.m_target_shape)
+    if (it.m_oob)
+    {
+        // Out-of-bounds iterators are always equal; in other words, an iterator is always equal to
+        // end() even if the internally stored coordinates are different.
+
+        // If one iterator is out of bounds and the other is not, they are unequal even if their
+        // target coordinates happen to match.
+        return m_oob;
+    }
+    else if (m_oob)
     {
         return false;
     }
 
-    // Out-of-bounds iterators are always equal; in other words, an iterator is always equal to
-    // end() even if the internally stored coordinates are different.
-    if (m_oob && it.m_oob)
-    {
-        return true;
-    }
-
-    // If one iterator is out of bounds and the other is not, they are unequal even if their target
-    // coordinates happen to match.
-    if (m_oob != it.m_oob)
+    if (m_target_shape != it.m_target_shape)
     {
         return false;
     }

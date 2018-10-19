@@ -29,6 +29,7 @@ set(SRC
     element_type.cpp
     file_util.cpp
     graph_partition.cpp
+    includes.cpp
     inliner.cpp
     input_output_assign.cpp
     main.cpp
@@ -49,6 +50,9 @@ set(SRC
     zero_dim_tensor_elimination.cpp
 )
 
+set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
+    NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
+
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND SRC onnx_import.cpp)
     if (NGRAPH_ONNXIFI_ENABLE)
@@ -57,40 +61,48 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
 endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
-    set(SRC ${SRC} backend_debug_api.cpp builder.cpp backend_api.cpp)
+    list(APPEND SRC backend_debug_api.cpp builder.cpp backend_api.cpp)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    set(SRC ${SRC} core_fusion.cpp quantize_cpu.cpp)
+    list(APPEND SRC core_fusion.cpp quantize_cpu.cpp)
+    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp debugger.cpp)
+    if (NGRAPH_HALIDE)
+        list(APPEND SRC halide.cpp)
+    endif()
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
+endif()
+
+if(NGRAPH_GPU_ENABLE)
+    list(APPEND SRC cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
+endif()
+
+if (NGRAPH_INTELGPU_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
 endif()
 
 add_subdirectory(models)
 add_subdirectory(files)
 add_subdirectory(util)
 
-if(NGRAPH_CPU_ENABLE)
-    set(SRC ${SRC} backend_performance.cpp cpu_fusion.cpp cpu_test.cpp debugger.cpp)
+# backend specific test files must meet the following requirements:
+# 1) The must be named <name>.in.cpp
+# 2) They must be in the test directory
+# 3) add the line `static string s_manifest = "${MANIFEST}";` to your cpp file
+# All such files are configured via cmake which replaces all instances of cmake variables
+# such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
+set(MULTI_TEST_SRC
+    autodiff.in.cpp
+    backend_test.in.cpp
+    convolution_test.in.cpp
+)
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    list(APPEND MULTI_TEST_SRC distributed.in.cpp)
 endif()
 
-if(NGRAPH_GPU_ENABLE)
-    set(SRC ${SRC} cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
-endif()
-
-foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
-    string(FIND ${TEST_CONFIG} "@" OFFSET)
-    string(SUBSTRING ${TEST_CONFIG} 0 ${OFFSET} BACKEND_NAME)
-    math(EXPR OFFSET ${OFFSET}+1)
-    string(SUBSTRING ${TEST_CONFIG} ${OFFSET} -1 MANIFEST)
-
-    configure_file(backend_test.in.cpp backend_test_${BACKEND_NAME}.cpp)
-    configure_file(convolution_test.in.cpp convolution_test_${BACKEND_NAME}.cpp)
-    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/backend_test_${BACKEND_NAME}.cpp ${SRC})
-    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/convolution_test_${BACKEND_NAME}.cpp ${SRC})
-    if(NGRAPH_DISTRIBUTED_ENABLE)
-        configure_file(distributed.cpp distributed_${BACKEND_NAME}.cpp)
-        set(SRC ${CMAKE_CURRENT_BINARY_DIR}/distributed_${BACKEND_NAME}.cpp  ${SRC})
-    endif()
-
+foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     # Some---but not all---autodiff tests go through multiple iterations with
     # different random seeds. On the CPU backend this is currently very slow
     # because the autodiff tests recompile with each iteration. That behavior
@@ -102,13 +114,21 @@ foreach(TEST_CONFIG ${UNIT_TEST_CONFIG_LIST})
         set(TEST_LOOPS 2)
     endif()
 
-    configure_file(autodiff.in.cpp autodiff_${BACKEND_NAME}.cpp)
-    set(SRC ${CMAKE_CURRENT_BINARY_DIR}/autodiff_${BACKEND_NAME}.cpp ${SRC})
+    string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
+    set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+
+    foreach(TEST_SRC ${MULTI_TEST_SRC})
+        string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
+        configure_file(${TEST_SRC} ${TARGET_NAME})
+        set(SRC ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} ${SRC})
+    endforeach()
 
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
 endforeach()
 
-include_directories(".")
+add_executable(unit-test ${SRC})
+
+target_include_directories(unit-test PRIVATE ".")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
@@ -120,16 +140,15 @@ endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     find_package(MPI REQUIRED)
-    add_definitions(-DNGRAPH_DISTRIBUTED)
-    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    link_libraries(${MPI_CXX_LIBRARIES})
+    target_compile_definitions(unit-test PRIVATE NGRAPH_DISTRIBUTED)
+    target_include_directories(unit-test 
+        SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    target_link_libraries(unit-test PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 endif()
 
-add_executable(unit-test ${SRC})
-target_link_libraries(unit-test ngraph_test_util)
-target_link_libraries(unit-test ngraph libgtest libjson pthread)
-target_link_libraries(unit-test ${CMAKE_DL_LIBS})
+target_link_libraries(unit-test PRIVATE ngraph_test_util)
+target_link_libraries(unit-test PRIVATE ngraph libgtest libjson pthread)
+target_link_libraries(unit-test PRIVATE ${CMAKE_DL_LIBS})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro)
@@ -137,26 +156,26 @@ endif()
 
 if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
-    target_link_libraries(unit-test cpu_backend interpreter_backend)
-    target_link_libraries(unit-test libmkldnn)
+    target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
+    target_link_libraries(unit-test PRIVATE libmkldnn)
 endif()
 
 if (NGRAPH_TBB_ENABLE)
-    add_definitions(-DNGRAPH_TBB_ENABLE)
+    target_compile_definitions(unit-test PRIVATE NGRAPH_TBB_ENABLE)
 endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
-    add_definitions(-DNGRAPH_INTERPRETER_ENABLE)
-    target_link_libraries(unit-test interpreter_backend)
+    target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
+    target_link_libraries(unit-test PRIVATE interpreter_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)
-    target_link_libraries(unit-test gpu_backend)
+    target_link_libraries(unit-test PRIVATE gpu_backend)
 endif()
 
 if (NGRAPH_ONNXIFI_ENABLE)
     target_include_directories(unit-test SYSTEM PUBLIC ${ONNX_INCLUDE_DIR})
-    target_link_libraries(unit-test onnxifi-ngraph)
+    target_link_libraries(unit-test PRIVATE onnxifi-ngraph)
 endif()
 
 add_custom_target(unit-test-check

@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/runtime/cpu/pass/cpu_horizontal_fusion.hpp"
 #include "ngraph/graph_util.hpp"
@@ -124,7 +124,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
             NGRAPH_DEBUG << "conv_horizontal_fusion: slice shape " << slice_shape << "\n";
             auto lower_bounds = Coordinate{0, index, 0, 0};
             index += slice_shape[1];
-            auto upper_bounds = Coordinate{slice_shape[0], index, slice_shape[2], slice_shape[2]};
+            auto upper_bounds = Coordinate{slice_shape[0], index, slice_shape[2], slice_shape[3]};
             NGRAPH_DEBUG << "conv_horizontal_fusion: lower_bounds " << lower_bounds << "\n";
             NGRAPH_DEBUG << "conv_horizontal_fusion: upper_bounds " << upper_bounds << "\n";
             auto slice =

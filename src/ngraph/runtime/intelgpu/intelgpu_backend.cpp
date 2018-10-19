@@ -40,6 +40,7 @@
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
@@ -277,7 +278,20 @@ extern "C" void delete_backend(runtime::Backend* backend)
 
 runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
 {
-    ocl_engine = make_shared<cldnn::engine>();
+    bool profiling = false;
+
+    if (getenv("NGRAPH_INTELGPU_STAT") != nullptr)
+    {
+        profiling = true;
+    }
+
+    if (getenv("NGRAPH_INTELGPU_DISABLE_OPTIMIZATIONS") != nullptr)
+    {
+        m_disable_backend_optimizations = true;
+    }
+
+    cldnn::engine_configuration cldnn_configuration(profiling);
+    ocl_engine = make_shared<cldnn::engine>(cldnn_configuration);
 }
 
 shared_ptr<runtime::Tensor>
@@ -303,16 +317,21 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     }
 
     cldnn::topology topology;
-    ngraph::pass::Manager pass_manager;
 
-    pass_manager.register_pass<ngraph::pass::NopElimination>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+    if (!m_disable_backend_optimizations)
+    {
+        ngraph::pass::Manager pass_manager;
 
-    // GetOutputElementElimination must be after CommonSubexpressionElimination
-    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+        pass_manager.register_pass<ngraph::pass::NopElimination>();
+        pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+        pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+        pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
 
-    pass_manager.run_passes(func);
+        // GetOutputElementElimination must be after CommonSubexpressionElimination
+        pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+
+        pass_manager.run_passes(func);
+    }
 
     for (shared_ptr<Node> op : func->get_ops())
     {
@@ -768,8 +787,25 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
         case OP_TYPEID::Negative:
         {
-            const cldnn_activation_additional_params param = {-1.f, 0.f};
-            do_unary_operation(topology, op, activation_linear, param);
+            if (get_input_type(op) == ngraph::element::i32)
+            {
+                // This is workaround to enable GNMT in training mode.
+                // clDNN doesn't support i32 data type for activation primitive.
+                // Exception from clDNN:  implementation_map for N5cldnn10activationE
+                // could not find any implementation to match key
+                do_negative_operation(topology,
+                                      get_input_name(op),
+                                      get_input_shape(op),
+                                      get_input_type(op),
+                                      get_output_name(op),
+                                      get_output_shape(op),
+                                      get_output_type(op));
+            }
+            else
+            {
+                const cldnn_activation_additional_params param = {-1.f, 0.f};
+                do_unary_operation(topology, op, activation_linear, param);
+            }
             break;
         }
         case OP_TYPEID::Relu:
@@ -1441,4 +1477,77 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     }
 
     return true;
+}
+
+void runtime::intelgpu::IntelGPUBackend::remove_compiled_function(shared_ptr<Function> func)
+{
+    ocl_networks.erase(func);
+}
+
+void runtime::intelgpu::IntelGPUBackend::enable_performance_data(shared_ptr<Function> func,
+                                                                 bool enable)
+{
+    FunctionInstance& instance = ocl_networks[func];
+    if (instance.ocl_network != nullptr)
+    {
+        throw runtime_error("Performance data collection must be enabled prior to compiling.");
+    }
+
+    instance.m_performance_counters_enabled = enable;
+}
+
+// The cldnn::network contains something like "generic_layer_0_Parameter_254_0" names
+// This function should return "Parameter_254" from the example above
+static string convert_cldnn_names(shared_ptr<Function> func, const string& cldnn_name)
+{
+    const string key("_");
+    string result;
+
+    const size_t last_key = cldnn_name.rfind(key);
+    const size_t pre_last_key = cldnn_name.rfind(key, last_key - 1);
+    const size_t pre_pre_last_key = cldnn_name.rfind(key, pre_last_key - 1);
+
+    if (pre_pre_last_key == std::string::npos)
+    {
+        result = cldnn_name.substr(0, last_key);
+    }
+    else
+    {
+        result = cldnn_name.substr(pre_pre_last_key + 1, last_key - pre_pre_last_key - 1);
+    }
+
+    return result;
+}
+
+vector<runtime::PerformanceCounter>
+    runtime::intelgpu::IntelGPUBackend::get_performance_data(shared_ptr<Function> func) const
+{
+    vector<runtime::PerformanceCounter> rc;
+    auto it = ocl_networks.find(func);
+    if (it != ocl_networks.end())
+    {
+        const shared_ptr<cldnn::network> network = it->second.ocl_network;
+
+        if (network != nullptr && it->second.m_performance_counters_enabled)
+        {
+            const map<cldnn::primitive_id, cldnn::event>& primitives =
+                network->get_executed_primitives();
+            for (const auto& p : primitives)
+            {
+                // Let's generate the primitive name that matches to the name in Function
+                const string primitive_name = convert_cldnn_names(func, p.first);
+                size_t usec = 0;
+                for (const auto& q : p.second.get_profiling_info())
+                {
+                    usec += chrono::duration_cast<
+                                chrono::duration<int64_t, chrono::milliseconds::period>>(
+                                q.value->value())
+                                .count();
+                }
+                const runtime::PerformanceCounter perf_counter(primitive_name.c_str(), usec, 1);
+                rc.push_back(perf_counter);
+            }
+        }
+    }
+    return rc;
 }

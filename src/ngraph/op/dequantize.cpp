@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/shape_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -34,6 +35,11 @@ op::Dequantize::Dequantize(shared_ptr<Node> input,
 
 void op::Dequantize::validate_and_infer_types()
 {
+    if (validate_punt_if_dynamic())
+    {
+        return;
+    }
+
     enum
     {
         INPUT,
@@ -50,9 +56,9 @@ void op::Dequantize::validate_and_infer_types()
     NODE_VALIDATION_ASSERT(this, m_type.is_real()) << "Output element type (" << m_type
                                                    << ") must be a floating point number";
 
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(SCALE).is_real())
+    NODE_VALIDATION_ASSERT(this, get_input_element_type(SCALE) == m_type)
         << "Scale element type (" << get_input_element_type(SCALE)
-        << ") must be a floating point number";
+        << ") must match the output element type (" << m_type << ")";
 
     NODE_VALIDATION_ASSERT(this, get_input_element_type(OFFSET) == get_input_element_type(INPUT))
         << "Offset element type (" << get_input_element_type(OFFSET)
@@ -61,7 +67,7 @@ void op::Dequantize::validate_and_infer_types()
     for (auto axis : m_axes)
     {
         NODE_VALIDATION_ASSERT(this, axis < get_shape().size())
-            << "Quantizaztion axis (" << axis << ") is greater than input shape rank ("
+            << "Quantization axis (" << axis << ") must be less than input shape rank ("
             << get_shape().size() << ")";
     }
 

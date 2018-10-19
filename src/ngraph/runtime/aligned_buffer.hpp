@@ -34,7 +34,6 @@ class ngraph::runtime::AlignedBuffer
 public:
     AlignedBuffer(size_t byte_size, size_t alignment);
     AlignedBuffer();
-    void initialize(size_t byte_size, size_t alignment);
     ~AlignedBuffer();
 
     size_t size() const { return m_byte_size; }

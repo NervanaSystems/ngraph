@@ -23,6 +23,7 @@
 #include <unordered_map>
 
 #include "cpu_mat_fusion.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
@@ -147,6 +148,26 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             auto matched_weight = matcher_v2->get_pattern_map()[W]->get_argument(0);
             auto matched_data = matcher_v2->get_pattern_map()[input_data];
             auto matched_bias = matcher_v2->get_pattern_map()[b]->get_argument(0);
+            std::vector<size_t> supported_ranks{2, 3};
+
+            if (!ngraph::is_valid_rank(matcher_v2->get_match_root(), supported_ranks))
+            {
+                NGRAPH_DEBUG << "Add (mat_fusion_v2) " << matcher_v2->get_match_root()->get_name()
+                             << " isn't 2D or 3D";
+                continue;
+            }
+            if (!ngraph::is_valid_rank(matched_weight, supported_ranks))
+            {
+                NGRAPH_DEBUG << "Weights (mat_fusion_v2) " << matched_weight << " isn't 2D or 3D";
+                continue;
+            }
+
+            if (!ngraph::is_valid_rank(matched_data, supported_ranks))
+            {
+                NGRAPH_DEBUG << "Data (mat_fusion_v2) " << matched_data << " isn't 2D or 3D";
+                continue;
+            }
+
             map_weights_to_pattern[matched_weight].push_back(matcher_v2->get_match_root());
             map_weights_bias_to_data[std::make_pair(matched_weight, matched_bias)].push_back(
                 matched_data);
@@ -196,6 +217,12 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             auto weights = it.first.first;
             auto bias = it.first.second;
 
+            //if there's just one data node skip the optimization
+            if (it.second.size() < 2)
+            {
+                return;
+            }
+
             if (map_weights_to_pattern[weights].size() !=
                 map_weights_bias_to_data[std::make_pair(weights, bias)].size())
             {
@@ -234,6 +261,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
                     concated_data, data_order, Shape{data_shape[0] * data_shape[1], data_shape[2]});
             }
             auto new_input_node = data_shape.size() == 2 ? concated_data : input_reshape_node;
+            NGRAPH_ASSERT(new_input_node);
             auto w_reshape_node = std::make_shared<op::Reshape>(
                 weights, AxisVector{1, 0}, Shape{w_shape[1], w_shape[0]});
             auto new_dot = std::make_shared<op::Dot>(new_input_node, w_reshape_node);
@@ -248,8 +276,15 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             size_t end_index = batch_size;
             for (auto& matched_root_node : map_weights_to_pattern[weights])
             {
-                auto slice_node = std::make_shared<op::Slice>(
+                std::shared_ptr<Node> slice_node = std::make_shared<op::Slice>(
                     new_add_bias, Coordinate{start_index, 0}, Coordinate{end_index, shape_axis_1});
+
+                if (matched_root_node->get_shape().size() != 2)
+                {
+                    NGRAPH_ASSERT(matched_root_node->get_shape().size() == 3);
+                    slice_node = std::make_shared<op::Reshape>(
+                        slice_node, AxisVector{0, 1}, matched_root_node->get_shape());
+                }
                 start_index += batch_size;
                 end_index += batch_size;
                 NGRAPH_DEBUG << "Replacing op " << matched_root_node->get_name() << " with "

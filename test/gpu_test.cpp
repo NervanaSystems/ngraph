@@ -40,6 +40,20 @@ TEST(gpu_test, memory_manager_unallocated)
     ASSERT_ANY_THROW(mem_primitive());
 }
 
+TEST(gpu_test, memory_manager_zero_workspace)
+{
+    runtime::gpu::GPUPrimitiveEmitter emitter;
+    size_t idx_null, idx_not_null;
+    {
+        auto allocator = emitter.get_memory_allocator();
+        idx_null = allocator.reserve_workspace(0);
+        idx_not_null = allocator.reserve_workspace(10);
+    }
+    emitter.allocate_primitive_memory();
+    EXPECT_EQ(emitter.get_memory_primitives()[idx_null](), nullptr);
+    EXPECT_NE(emitter.get_memory_primitives()[idx_not_null](), nullptr);
+}
+
 TEST(gpu_test, memory_manager_allocated)
 {
     runtime::gpu::GPUPrimitiveEmitter emitter;
@@ -67,6 +81,30 @@ TEST(gpu_test, memory_manager_extract_arguments)
     std::vector<float> host(2, 0);
     runtime::gpu::cuda_memcpyDtH(host.data(), mem_primitive(), host.size() * sizeof(float));
     EXPECT_EQ(host, fp32_args);
+}
+
+// This test is add to catch a potential bug in allocator
+// previously allocator will copy extra data
+// for exampele: alignment = 8 bytes, you reserve 4 bytes space
+// previously allocator will copy 8 bytes data from input_args, this will lead to two potential bug:
+// 1. copy extrea data intead of initial alignment data to 0.
+// 2. out of boundary access for input_args which lead to undefined behavior
+TEST(gpu_test, memory_manager_argspace_alignment)
+{
+    size_t alignment = 8;
+    std::vector<char> input_args = {0, 1, 2, 3, 4, 5, 6, 7};
+    std::vector<char> ref_args = {0, 1, 2, 3, 0, 0, 0, 0};
+    std::vector<char> result_args(alignment, 0);
+    size_t idx;
+    runtime::gpu::GPUPrimitiveEmitter emitter;
+    {
+        auto allocator = emitter.get_memory_allocator();
+        idx = allocator.reserve_argspace(input_args.data(), 4 * sizeof(char));
+    }
+    emitter.allocate_primitive_memory();
+    runtime::gpu::memory_primitive& mem_primitive = emitter.get_memory_primitives()[idx];
+    runtime::gpu::cuda_memcpyDtH(result_args.data(), mem_primitive(), alignment * sizeof(char));
+    EXPECT_EQ(result_args, ref_args);
 }
 
 TEST(gpu_test, memory_manager_argspace_size)

@@ -15,13 +15,13 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-nGraph™ Library docs  
-====================
+nGraph Library docs  
+===================
 
 Read this for changes affecting anything in ``ngraph/doc``
 ----------------------------------------------------------
 
-For updates to the Intel® nGraph™ Library ``/doc`` repo, please submit a PR with 
+For updates to the Intel® nGraph Library ``/doc`` repo, please submit a PR with 
 any changes or ideas you'd like integrated. This helps us maintain trackability 
 with respect to additions or feature requests.
 
@@ -116,7 +116,7 @@ Build the documentation
    ``doc/sphinx`` folder removes any generated files.
 
 Right now the minimal version of Sphinx needed to build the documentation is 
-Sphinx v. 1.6.5.  This can be installed with :command:`pip3`, either to a virtual 
+Sphinx v. 1.7.5.  This can be installed with :command:`pip3`, either to a virtual 
 environment, or to your base system if you plan to contribute much core code or
 documentation. For C++ API docs that contain inheritance diagrams and collaboration
 diagrams which are helpful for framework integratons, building bridge code, or 
@@ -127,7 +127,8 @@ To build documentation locally, run:
 
    .. code-block:: console
 
-      $ pip3 install [-I] Sphinx==1.6.5 [--user] 
+      $ sudo apt-get install python3-sphinx
+      $ pip3 install [-I] Sphinx==1.7.5 [--user] 
       $ pip3 install [-I] breathe numpy [--user]
       $ cd doc/sphinx/
       $ make html
@@ -142,7 +143,7 @@ To build documentation in a python3 virtualenv, run:
 
       $ python3 -m venv py3doc
       $ . py3doc/bin/activate
-      (py3doc)$ pip install sphinx breathe numpy
+      (py3doc)$ pip install python3-sphinx breathe numpy
       (py3doc)$ cd doc/sphinx
       (py3doc)$ make html
       (py3doc)$ cd build/html
@@ -150,11 +151,16 @@ To build documentation in a python3 virtualenv, run:
 
 Then point your browser at ``localhost:8000``.
 
+.. note:: For docs built in a virtual env, Sphinx latest changes may break 
+   documentation; try building with a specific version of Sphinx.  
+
+
+
 For tips on writing reStructuredText-formatted documentation, see the `sphinx`_ 
 stable reST documentation.
 
-.. _ngraph repo: https://github.com/NervanaSystems/ngraph-cpp/
-.. _documentation repo: https://github.com/NervanaSystems/private-ngraph/tree/master/doc
+.. _ngraph repo: https://github.com/NervanaSystems/ngraph/
+.. _documentation repo: https://github.com/NervanaSystems/ngraph/tree/master/doc
 .. _sphinx: http://www.sphinx-doc.org/en/stable/rest.html
 .. _wiki: https://github.com/NervanaSystems/ngraph/wiki/
 .. _breathe: https://breathe.readthedocs.io/en/latest/

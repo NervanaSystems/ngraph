@@ -27,13 +27,17 @@ namespace ngraph
     {
         namespace op
         {
-            inline NodeVector relu(const Node& node)
+            namespace set_1
             {
-                NodeVector ng_inputs{node.get_ng_inputs()};
-                return {std::make_shared<ngraph::op::Relu>(ng_inputs.at(0))};
-            }
+                inline NodeVector relu(const Node& node)
+                {
+                    NodeVector ng_inputs{node.get_ng_inputs()};
+                    return {std::make_shared<ngraph::op::Relu>(ng_inputs.at(0))};
+                }
 
-        } // namespace op
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 

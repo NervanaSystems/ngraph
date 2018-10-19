@@ -16,13 +16,12 @@
 
 #include "node.hpp"
 #include "graph.hpp"
-#include "ops_bridge.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        NodeVector Node::get_ng_nodes() const { return ops_bridge::make_ng_nodes(*this); }
+        NodeVector Node::get_ng_nodes() const { return m_graph->make_ng_nodes(*this); }
         NodeVector Node::get_ng_inputs() const
         {
             NodeVector result;
