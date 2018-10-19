@@ -154,7 +154,20 @@ void runtime::gpu::GPU_Emitter::emit_Add(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)
 {
+#ifdef NGRAPH_DISTRIBUTED
+    auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
+
+    auto index = cuda_emitter->build_allreduce(out[0].get_type(), out[0].get_size());
+    writer.block_begin();
+    {
+        writer << "void* input[] = {" << node_names(args) << "};\n";
+        writer << "void* output[] = {" << node_names(out) << "};\n";
+        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+    }
+    writer.block_end();
+#else
     throw unsupported_op("Unsupported op '" + node->description() + "'");
+#endif
 }
 
 void runtime::gpu::GPU_Emitter::emit_And(EMIT_ARGS)

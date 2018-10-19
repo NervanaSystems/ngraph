@@ -21,6 +21,10 @@
 #include <string>
 #include <vector>
 
+#ifdef NGRAPH_DISTRIBUTED
+#include "mpi.h"
+#endif
+
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/cuda_emitter.hpp"
 #include "ngraph/runtime/gpu/cudnn_emitter.hpp"
@@ -74,6 +78,51 @@ runtime::gpu::CUDAEmitter::CUDAEmitter(runtime::gpu::GPUPrimitiveEmitter* emitte
 {
     m_ctx = ctx;
 }
+
+#ifdef NGRAPH_DISTRIBUTED
+size_t runtime::gpu::CUDAEmitter::build_allreduce(const element::Type& element_type,
+                                               size_t count)
+{
+    std::stringstream hash;
+    kernel_name << "allreduce_" << element_type.c_type_string() << "_c_" << count;
+
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash.str());
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    auto data_type = MPI_FLOAT;
+
+    if (element_type == element::f32)
+    {
+        data_type = MPI_FLOAT;
+    }
+    else if (element_type == element::f64)
+    {
+        data_type = MPI_DOUBLE;
+    }
+    else
+    {
+        throw runtime_error("only float and double is supported by MPI_Allreduce.");
+    }
+
+    float* cpu_input = new float[count];
+    float* cpu_output = new float[count];
+    size_t data_size = element_type.size();
+
+    // create the launch primitive
+    std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
+                                                                         void** outputs) mutable {
+        runtime::gpu::cuda_memcpyDtH(cpu_input, inputs[0], count * data_size);
+        MPI_Allreduce(cpu_input, cpu_output, count, data_type, MPI_SUM, MPI_COMM_WORLD);
+        runtime::gpu::cuda_memcpyHtD(outputs[0],cpu_output, count * data_size);
+    }});
+
+    return this->m_primitive_emitter->register_primitive(kernel_launch, hash.str());
+}
+#endif
 
 size_t runtime::gpu::CUDAEmitter::build_concat(const std::vector<std::string>& dtypes,
                                                std::vector<NVShape> input_shapes,

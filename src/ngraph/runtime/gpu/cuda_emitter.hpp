@@ -50,6 +50,10 @@ namespace ngraph
                 size_t build_primitive(const op::ReplaceSlice* node, bool in_place_op);
 
             public:
+#ifdef NGRAPH_DISTRIBUTED
+                size_t build_allreduce(const std::string& dtype, size_t count);
+#endif
+
                 size_t build_pad(const std::vector<std::string>& dtypes,
                                  NVShape input_shape,
                                  NVShape output_shape,
