@@ -169,6 +169,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
+#include "ngraph/runtime/cpu/pass/halide_subgraph_extraction.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/op/allreduce.hpp"
@@ -1023,6 +1024,10 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     // pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
+#if defined(NGRAPH_HALIDE)
+    pass_manager.register_pass<ngraph::runtime::cpu::pass::HalideSubgraphExtraction>();
+#endif
+
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);

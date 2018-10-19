@@ -27,6 +27,10 @@
 #include <utility>
 #include <vector>
 
+#if defined(NGRAPH_HALIDE)
+#include <Halide.h>
+#endif
+
 #if !defined(NGRAPH_DEX_ONLY)
 
 #include "ngraph/codegen/code_writer.hpp"
@@ -137,6 +141,26 @@ namespace ngraph
 
                 const std::vector<PerformanceCounter>& get_perf_counters();
 
+#if defined(NGRAPH_HALIDE)
+                std::unordered_map<std::string, Halide::Func>& get_halide_functions()
+                {
+                    return halide_functions;
+                }
+                std::unordered_map<std::string, Halide::ImageParam>& get_subgraph_params()
+                {
+                    return subgraph_params;
+                }
+                std::unordered_map<std::string, int>& get_subgraph_param_sizes()
+                {
+                    return subgraph_param_sizes;
+                }
+                std::unordered_map<std::string, std::reference_wrapper<void*>>&
+                    get_subgraph_param_ptrs()
+                {
+                    return subgraph_param_ptrs;
+                }
+#endif
+
             protected:
                 void build();
 
@@ -233,6 +257,13 @@ namespace ngraph
                 bool m_is_built;
                 bool m_direct_execution;
                 std::vector<runtime::PerformanceCounter> m_perf_counters;
+
+#if defined(NGRAPH_HALIDE)
+                std::unordered_map<std::string, Halide::Func> halide_functions;
+                std::unordered_map<std::string, Halide::ImageParam> subgraph_params;
+                std::unordered_map<std::string, int> subgraph_param_sizes;
+                std::unordered_map<std::string, std::reference_wrapper<void*>> subgraph_param_ptrs;
+#endif
             };
         }
     }
