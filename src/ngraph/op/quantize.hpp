@@ -48,6 +48,7 @@ namespace ngraph
                 // -3.50 -> -4.0
                 // -3.75 -> -4.0
                 ROUND_NEAREST_TOWARD_INFINITY,
+                HALF_AWAY_FROM_ZERO, // TF mode for backward compatability
 
                 // x.5 to x-1
                 // -x.5 to -(x-1)
@@ -175,7 +176,6 @@ namespace ngraph
                 // -3.50 -> -4.0
                 // -3.75 -> -4.0
                 ROUND_DOWN,
-                HALF_AWAY_FROM_ZERO
             };
 
             /// \brief Constructs a Quantize operation

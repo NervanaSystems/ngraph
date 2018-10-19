@@ -16,13 +16,8 @@
 
 #pragma once
 
-#include <cfenv>
-#include <cmath>
-
-#include "ngraph/axis_set.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/op/quantize.hpp"
-#include "ngraph/shape_util.hpp"
 
 namespace ngraph
 {
@@ -51,20 +46,19 @@ namespace ngraph
                     REAL qvalue = input[input_transform.index(input_coord)] /
                                   scale[scale_offset_transform.index(scale_offset_coord)];
 
-                    auto fe_round_mode = std::fegetround();
-
                     // round
                     if (round_mode == op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY ||
-                    round_mode == op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO)
+                        round_mode == op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO)
                     {
-                        qvalue = std::round(qvalue);
+                        auto abs_qvalue = std::fabs(qvalue);
+                        auto abs_qvalue_toward_inf = std::floor(abs_qvalue + 0.5);
+                        qvalue = (qvalue < 0.0) ? -abs_qvalue_toward_inf : abs_qvalue_toward_inf;
                     }
                     else if (round_mode == op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_ZERO)
                     {
                         auto abs_qvalue = std::fabs(qvalue);
-                        auto abs_qvalue_half_toward_zero = std::ceil(abs_qvalue - 0.5);
-                        qvalue = (qvalue < 0.0) ? -abs_qvalue_half_toward_zero
-                                                : abs_qvalue_half_toward_zero;
+                        auto abs_qvalue_toward_zero = std::ceil(abs_qvalue - 0.5);
+                        qvalue = (qvalue < 0.0) ? -abs_qvalue_toward_zero : abs_qvalue_toward_zero;
                     }
                     else if (round_mode == op::Quantize::RoundMode::ROUND_NEAREST_UPWARD)
                     {
@@ -76,33 +70,31 @@ namespace ngraph
                     }
                     else if (round_mode == op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN)
                     {
-                        std::fesetround(FE_TONEAREST);
-                        qvalue = std::nearbyint(qvalue);
+                        auto up_qvalue = std::floor(qvalue + 0.5);
+                        auto dn_qvalue = std::ceil(qvalue - 0.5);
+                        auto x = std::fmod(up_qvalue, 2.0);
+                        qvalue = (x == 0.0) ? up_qvalue : dn_qvalue;
                     }
                     else if (round_mode == op::Quantize::RoundMode::ROUND_TOWARD_INFINITY)
                     {
                         auto abs_qvalue = std::fabs(qvalue);
-                        auto abs_qvalue_away_from_zero = std::ceil(abs_qvalue);
-                        qvalue =
-                            (qvalue < 0.0) ? -abs_qvalue_away_from_zero : abs_qvalue_away_from_zero;
+                        auto abs_qvalue_toward_inf = std::ceil(abs_qvalue);
+                        qvalue = (qvalue < 0.0) ? -abs_qvalue_toward_inf : abs_qvalue_toward_inf;
                     }
                     else if (round_mode == op::Quantize::RoundMode::ROUND_TOWARD_ZERO)
                     {
-                        std::fesetround(FE_TOWARDZERO);
-                        qvalue = std::nearbyint(qvalue);
+                        auto abs_qvalue = std::fabs(qvalue);
+                        auto abs_qvalue_toward_zero = std::floor(abs_qvalue);
+                        qvalue = (qvalue < 0.0) ? -abs_qvalue_toward_zero : abs_qvalue_toward_zero;
                     }
                     else if (round_mode == op::Quantize::RoundMode::ROUND_UP)
                     {
-                        std::fesetround(FE_UPWARD);
-                        qvalue = std::nearbyint(qvalue);
+                        qvalue = std::ceil(qvalue);
                     }
                     else if (round_mode == op::Quantize::RoundMode::ROUND_DOWN)
                     {
-                        std::fesetround(FE_DOWNWARD);
-                        qvalue = std::nearbyint(qvalue);
+                        qvalue = std::floor(qvalue);
                     }
-
-                    std::fesetround(fe_round_mode);
 
                     // apply offset
                     qvalue += offset[scale_offset_transform.index(scale_offset_coord)];
