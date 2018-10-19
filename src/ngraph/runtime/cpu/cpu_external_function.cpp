@@ -1172,10 +1172,17 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_concat(
                     bool found_last_concat = true;
                     for (auto user : concat->get_users())
                     {
-                        if (dynamic_pointer_cast<ngraph::op::Concat>(user))
+                        if (auto user_concat = dynamic_pointer_cast<ngraph::op::Concat>(user))
                         {
-                            found_last_concat = false;
-                            break;
+                            if (auto op_annotations = user_concat->get_op_annotations())
+                            {
+                                auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                                if (in_place_oi_pairs.size() > 0)
+                                {
+                                    found_last_concat = false;
+                                    break;
+                                }
+                            }
                         }
                     }
 
