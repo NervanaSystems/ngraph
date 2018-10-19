@@ -41,40 +41,46 @@ Attributes
 | ``axes``                      | Axis positions on which ``scale`` and ``offset`` are specified |
 +-------------------------------+----------------------------------------------------------------+
 | ``round_mode``                | *ROUND_NEAREST_TOWARD_INFINITY:*                               |
-|                               | x.5 to x+1                                                     |
-|                               | -x.5 to -(x+1)                                                 |
-|                               | everything else to nearest integer                             |
+|                               | round to nearest integer                                       |
+|                               | in case of two equally near integers round away from zero e.g. |
+|                               | 2.5 -> 3                                                       |
+|                               | -3.5 -> -4                                                     |
 |                               |                                                                |
 |                               | *ROUND_NEAREST_TOWARD_ZERO:*                                   |
-|                               | x.5 to x-1                                                     |
-|                               | -x.5 to -(x-1)                                                 |
-|                               | everything else to nearest integer                             |
+|                               | round to nearest integer                                       |
+|                               | in case of two equally near integers round toward zero e.g.    |
+|                               | 2.5 -> 2                                                       |
+|                               | -3.5 to -3                                                     |
 |                               |                                                                |
 |                               | *ROUND_NEAREST_UPWARD:*                                        |
-|                               | x.5 to x+1                                                     |
-|                               | -x.5 to -x                                                     |
-|                               | everything else to nearest integer                             |
+|                               | round to nearest integer                                       |
+|                               | in case of two equally near integers round up e.g.             |
+|                               | 2.5 to 3                                                       |
+|                               | -3.5 to -3                                                     |
 |                               |                                                                |
 |                               | *ROUND_NEAREST_DOWNWARD:*                                      |
-|                               | x.5 to x                                                       |
-|                               | -x.5 to -(x+1)                                                 |
-|                               | everything else to nearest integer                             |
+|                               | round to nearest integer                                       |
+|                               | in case of two equally near integers round down e.g.           |
+|                               | 2.5 to 2                                                       |
+|                               | -3.5 to -4                                                     |
 |                               |                                                                |
 |                               | *ROUND_NEAREST_TOWARD_EVEN:*                                   |
-|                               | x.5 and -x.5 to nearest even ineger                            |
-|                               | everything else to nearest integer                             |
+|                               | round to nearest integer                                       |
+|                               | in case of two equally near integers round to even e.g.        |
+|                               | 2.5 to 2                                                       |
+|                               | -3.5 to -4                                                     |
 |                               |                                                                |
 |                               | *ROUND_TOWARD_INFINITY:*                                       |
-|                               | everything to next integer away from zero                      |
+|                               | round to nearest integer away from zero                        |
 |                               |                                                                |
 |                               | *ROUND_TOWARD_ZERO:*                                           |
-|                               | everything to next integer towards zero                        |
+|                               | round to nearest integer toward zero                           |
 |                               |                                                                |
 |                               | *ROUND_UP:*                                                    |
-|                               | everything to next integer towards infinity                    |
+|                               | round to nearest integer toward infinity                       |
 |                               |                                                                |
 |                               | *ROUND_DOWN:*                                                  |
-|                               | everything to next integer towards negative infinity           |
+|                               | round to nearest integer toward negative infinity              |
 +-------------------------------+----------------------------------------------------------------+
 
 Outputs

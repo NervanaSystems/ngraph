@@ -32,149 +32,47 @@ namespace ngraph
         public:
             enum class RoundMode
             {
-                // x.5 to x+1
-                // -x.5 to -(x+1)
-                // everything else to nearest integer
-                //  2.25 ->  2.0
-                //  2.50 ->  3.0
-                //  2.75 ->  3.0
-                // -2.25 -> -2.0
-                // -2.50 -> -3.0
-                // -2.75 -> -3.0
-                //  3.25 ->  3.0
-                //  3.50 ->  4.0
-                //  3.75 ->  4.0
-                // -3.25 -> -3.0
-                // -3.50 -> -4.0
-                // -3.75 -> -4.0
+                // round to nearest integer
+                // in case of two equally near integers round away from zero e.g.
+                // 2.5 -> 3
+                // -3.5 -> -4
                 ROUND_NEAREST_TOWARD_INFINITY,
                 HALF_AWAY_FROM_ZERO, // TF mode for backward compatability
 
-                // x.5 to x-1
-                // -x.5 to -(x-1)
-                // everything else to nearest integer
-                //  2.25 ->  2.0
-                //  2.50 ->  2.0
-                //  2.75 ->  3.0
-                // -2.25 -> -2.0
-                // -2.50 -> -2.0
-                // -2.75 -> -3.0
-                //  3.25 ->  3.0
-                //  3.50 ->  3.0
-                //  3.75 ->  4.0
-                // -3.25 -> -3.0
-                // -3.50 -> -3.0
-                // -3.75 -> -4.0
+                // round to nearest integer
+                // in case of two equally near integers round toward zero e.g.
+                // 2.5 -> 2
+                // -3.5 -> -3
                 ROUND_NEAREST_TOWARD_ZERO,
 
-                // x.5 to x+1
-                // -x.5 to -x
-                // everything else to nearest integer
-                //  2.25 ->  2.0
-                //  2.50 ->  3.0
-                //  2.75 ->  3.0
-                // -2.25 -> -2.0
-                // -2.50 -> -2.0
-                // -2.75 -> -3.0
-                //  3.25 ->  3.0
-                //  3.50 ->  4.0
-                //  3.75 ->  4.0
-                // -3.25 -> -3.0
-                // -3.50 -> -3.0
-                // -3.75 -> -4.0
+                // round to nearest integer
+                // in case of two equally near integers round up e.g.
+                // 2.5 -> 3
+                // -3.5 -> -3
                 ROUND_NEAREST_UPWARD,
 
-                // x.5 to x
-                // -x.5 to -(x+1)
-                // everything else to nearest integer
-                //  2.25 ->  2.0
-                //  2.50 ->  2.0
-                //  2.75 ->  3.0
-                // -2.25 -> -2.0
-                // -2.50 -> -3.0
-                // -2.75 -> -3.0
-                //  3.25 ->  3.0
-                //  3.50 ->  3.0
-                //  3.75 ->  4.0
-                // -3.25 -> -3.0
-                // -3.50 -> -4.0
-                // -3.75 -> -4.0
+                // round to nearest integer
+                // in case of two equally near integers round down e.g.
+                // 2.5 -> 2
+                // -3.5 -> -4
                 ROUND_NEAREST_DOWNWARD,
 
-                // x.5 and -x.5 to nearest even integer
-                // everything else to nearest integer
-                //  2.25 ->  2.0
-                //  2.50 ->  2.0
-                //  2.75 ->  3.0
-                // -2.25 -> -2.0
-                // -2.50 -> -2.0
-                // -2.75 -> -3.0
-                //  3.25 ->  3.0
-                //  3.50 ->  4.0
-                //  3.75 ->  4.0
-                // -3.25 -> -3.0
-                // -3.50 -> -4.0
-                // -3.75 -> -4.0
+                // round to nearest integer
+                // in case of two equally near integers round to even e.g.
+                // 2.5 -> 2
+                // -3.5 -> -4
                 ROUND_NEAREST_TOWARD_EVEN,
 
-                // everything to next integer away from zero
-                //  2.25 ->  3.0
-                //  2.50 ->  3.0
-                //  2.75 ->  3.0
-                // -2.25 -> -3.0
-                // -2.50 -> -3.0
-                // -2.75 -> -3.0
-                //  3.25 ->  4.0
-                //  3.50 ->  4.0
-                //  3.75 ->  4.0
-                // -3.25 -> -4.0
-                // -3.50 -> -4.0
-                // -3.75 -> -4.0
+                // round to nearest integer away from zero
                 ROUND_TOWARD_INFINITY,
 
-                // everything to next integer towards zero
-                //  2.25 ->  2.0
-                //  2.50 ->  2.0
-                //  2.75 ->  2.0
-                // -2.25 -> -2.0
-                // -2.50 -> -2.0
-                // -2.75 -> -2.0
-                //  3.25 ->  3.0
-                //  3.50 ->  3.0
-                //  3.75 ->  3.0
-                // -3.25 -> -3.0
-                // -3.50 -> -3.0
-                // -3.75 -> -3.0
+                // round to nearest integer toward zero
                 ROUND_TOWARD_ZERO,
 
-                // everything to next integer towards infinity
-                //  2.25 ->  3.0
-                //  2.50 ->  3.0
-                //  2.75 ->  3.0
-                // -2.25 -> -2.0
-                // -2.50 -> -2.0
-                // -2.75 -> -2.0
-                //  3.25 ->  4.0
-                //  3.50 ->  4.0
-                //  3.75 ->  4.0
-                // -3.25 -> -3.0
-                // -3.50 -> -3.0
-                // -3.75 -> -3.0
+                // round to nearest integer toward infinity (ceiling)
                 ROUND_UP,
 
-                // everything to next integer towards negative infinity
-                //  2.25 ->  2.0
-                //  2.50 ->  2.0
-                //  2.75 ->  2.0
-                // -2.25 -> -3.0
-                // -2.50 -> -3.0
-                // -2.75 -> -3.0
-                //  3.25 ->  3.0
-                //  3.50 ->  3.0
-                //  3.75 ->  3.0
-                // -3.25 -> -4.0
-                // -3.50 -> -4.0
-                // -3.75 -> -4.0
+                // round to nearest integer toward negative infinity (floor)
                 ROUND_DOWN,
             };
 

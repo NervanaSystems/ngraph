@@ -72,8 +72,8 @@ namespace ngraph
                     {
                         auto up_qvalue = std::floor(qvalue + 0.5);
                         auto dn_qvalue = std::ceil(qvalue - 0.5);
-                        auto x = std::fmod(up_qvalue, 2.0);
-                        qvalue = (x == 0.0) ? up_qvalue : dn_qvalue;
+                        auto rem = std::fmod(up_qvalue, 2.0);
+                        qvalue = (rem == 0.0) ? up_qvalue : dn_qvalue;
                     }
                     else if (round_mode == op::Quantize::RoundMode::ROUND_TOWARD_INFINITY)
                     {
