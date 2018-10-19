@@ -95,7 +95,11 @@ set(MULTI_TEST_SRC
     backend_binary_elementwise.in.cpp
     backend_broadcast.in.cpp
     backend_comparison.in.cpp
+    backend_dot.in.cpp
+    backend_one_hot.in.cpp
     backend_reduce.in.cpp
+    backend_reshape.in.cpp
+    backend_sum.in.cpp
     backend_test.in.cpp
     backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
