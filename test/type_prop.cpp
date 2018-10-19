@@ -853,6 +853,232 @@ TEST(type_prop, dot_deduce_reduction_axes_size_mismatch)
     }
 }
 
+TEST(type_prop, dot_partial_both_rank_dynamic_axis_count_implicit)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::Dot>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, dot_partial_both_rank_dynamic_axis_count_explicit)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::Dot>(param0, param1, /*reduction axis count=*/1234);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, dot_partial_left_rank_dynamic_right_rank_static_dynamic_axis_count_implicit)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto d = make_shared<op::Dot>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, dot_partial_left_rank_dynamic_right_rank_static_dynamic_axis_count_explicit_ok)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/3);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop,
+     dot_partial_left_rank_dynamic_right_rank_static_dynamic_axis_count_explicit_too_many)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    try
+    {
+        auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/4);
+        FAIL()
+            << "Too many reduction axes not detected (rank-dynamic/rank-static dynamic operands)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Reduction axes count (4) is too large");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dot_partial_left_rank_static_dynamic_right_rank_dynamic_axis_count_implicit)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::Dot>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, dot_partial_left_rank_static_dynamic_right_rank_dynamic_axis_count_explicit_ok)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/3);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop,
+     dot_partial_left_rank_static_dynamic_right_rank_dynamic_axis_count_explicit_too_many)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    try
+    {
+        auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/4);
+        FAIL()
+            << "Too many reduction axes not detected (rank-dynamic/rank-static dynamic operands)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Reduction axes count (4) is too large");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     dot_partial_left_rank_static_dynamic_right_rank_static_dynamic_axis_count_implicit_1_ok)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 2});
+    auto param1 = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), 4, Dimension::dynamic(), 5});
+    auto d = make_shared<op::Dot>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), 2, Dimension::dynamic(), 4, Dimension::dynamic(), 5}));
+}
+
+TEST(type_prop,
+     dot_partial_left_rank_static_dynamic_right_rank_static_dynamic_axis_count_implicit_0_ok)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape{});
+    auto param1 = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), 4, Dimension::dynamic(), 5});
+    auto d = make_shared<op::Dot>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).same_scheme(
+        PartialShape{2, Dimension::dynamic(), 4, Dimension::dynamic(), 5}));
+}
+
+TEST(
+    type_prop,
+    dot_partial_left_rank_static_dynamic_right_rank_static_dynamic_axis_count_explicit_too_many_for_left)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3, 5, 6});
+    try
+    {
+        auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/4);
+        FAIL() << "Too many reduction axes not detected (rank-static dynamic/rank-static dynamic "
+                  "operands)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Reduction axes count (4) is too large");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    dot_partial_left_rank_static_dynamic_right_rank_static_dynamic_axis_count_explicit_too_many_for_right)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3, 5, 6});
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    try
+    {
+        auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/4);
+        FAIL() << "Too many reduction axes not detected (rank-static dynamic/rank-static dynamic "
+                  "operands)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Reduction axes count (4) is too large");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    dot_partial_left_rank_static_dynamic_right_rank_static_dynamic_axis_count_explicit_too_many_for_both)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    try
+    {
+        auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/4);
+        FAIL() << "Too many reduction axes not detected (rank-static dynamic/rank-static dynamic "
+                  "operands)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Reduction axes count (4) is too large");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dot_partial_left_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/3);
+
+    ASSERT_EQ(d->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop, dot_partial_right_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/3);
+
+    ASSERT_EQ(d->get_output_element_type(0), element::i32);
+}
+
+TEST(type_prop, dot_partial_both_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto d = make_shared<op::Dot>(param0, param1, /* reduction axis count=*/3);
+
+    ASSERT_EQ(d->get_output_element_type(0), element::dynamic);
+}
+
 //
 // Tests for binary elementwise ops.
 //
@@ -1972,7 +2198,9 @@ TEST(type_prop, slice_deduce_vector_invalid_strides)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), std::string("Rank of strides (2) does not match rank of argument (1)"));
+            error.what(),
+            std::string("Ranks of lower bounds (Coordinate{0}), upper bounds "
+                        "(Coordinate{7}) and strides (Strides{1, 2}) do not match"));
     }
     catch (...)
     {
@@ -2075,7 +2303,8 @@ TEST(type_prop, slice_deduce_matrix_lower_missing)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Rank of lower bounds (1) does not match rank of argument (2)"));
+            std::string("Ranks of lower bounds (Coordinate{0}), upper bounds "
+                        "(Coordinate{5, 5}) and strides (Strides{1}) do not match"));
     }
     catch (...)
     {
@@ -2096,7 +2325,8 @@ TEST(type_prop, slice_deduce_matrix_upper_missing)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Rank of upper bounds (1) does not match rank of argument (2)"));
+            std::string("Ranks of lower bounds (Coordinate{0, 0}), upper bounds "
+                        "(Coordinate{5}) and strides (Strides{1, 1}) do not match"));
     }
     catch (...)
     {
@@ -2115,9 +2345,10 @@ TEST(type_prop, slice_deduce_matrix_lower_extra)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Rank of lower bounds (3) does not match rank of argument (2)"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Ranks of lower bounds (Coordinate{0, 0, "
+                                         "0}), upper bounds (Coordinate{5, 5}) and "
+                                         "strides (Strides{1, 1, 1}) do not match"));
     }
     catch (...)
     {
@@ -2136,9 +2367,168 @@ TEST(type_prop, slice_deduce_matrix_upper_extra)
     }
     catch (const NodeValidationError& error)
     {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Ranks of lower bounds (Coordinate{0, 0}), "
+                                         "upper bounds (Coordinate{5, 5, 5}) and "
+                                         "strides (Strides{1, 1}) do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, slice_partial_arg_input_rank_dynamic_attribs_ok)
+{
+    PartialShape input_shape{PartialShape::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto sl = make_shared<op::Slice>(param, lower_bounds, upper_bounds, strides);
+
+    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_shape(), (Shape{0, 1, 2, 2}));
+}
+
+TEST(type_prop, slice_partial_arg_rank_dynamic_attribs_rank_mismatch)
+{
+    PartialShape input_shape{PartialShape::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5};
+    Strides strides{1, 1, 1, 2};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    try
+    {
+        auto sl = make_shared<op::Slice>(param, lower_bounds, upper_bounds, strides);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Mismatch of lower-bounds/upper-bounds/strides ranks not detected (argument "
+                  "rank-dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Rank of upper bounds (3) does not match rank of argument (2)"));
+            std::string("Ranks of lower bounds (Coordinate{1, 2, 3, 4}), upper bounds "
+                        "(Coordinate{1, 3, 5}) and strides (Strides{1, 1, 1, 2}) do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, slice_partial_arg_rank_dynamic_attribs_bounds_crossing)
+{
+    PartialShape input_shape{PartialShape::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 8};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    try
+    {
+        auto sl = make_shared<op::Slice>(param, lower_bounds, upper_bounds, strides);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Crossing lower/upper bounds not detected (argument rank-dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Lower bound for slice is greater than upper bound at axis 3 (lower "
+                        "bounds: Coordinate{1, 2, 3, 8}, upper bounds: Coordinate{1, 3, 5, 7})"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, slice_partial_arg_rank_static_dynamic_ok)
+{
+    PartialShape input_shape{
+        Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto sl = make_shared<op::Slice>(param, lower_bounds, upper_bounds, strides);
+
+    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_shape(), (Shape{0, 1, 2, 2}));
+}
+
+TEST(type_prop, slice_partial_arg_rank_static_dynamic_some_dims_known_ok)
+{
+    PartialShape input_shape{2, 4, 10, Dimension::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto sl = make_shared<op::Slice>(param, lower_bounds, upper_bounds, strides);
+
+    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_shape(), (Shape{0, 1, 2, 2}));
+}
+
+TEST(type_prop, slice_partial_arg_rank_static_dynamic_attribs_rank_mismatches_arg)
+{
+    PartialShape input_shape{Dimension::dynamic(),
+                             Dimension::dynamic(),
+                             Dimension::dynamic(),
+                             Dimension::dynamic(),
+                             Dimension::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    try
+    {
+        auto sl = make_shared<op::Slice>(param, lower_bounds, upper_bounds, strides);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Mismatch of attrib ranks with arg ranks not detected (argument rank-static "
+                  "dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input rank does not match the "
+                                         "rank of the lower bounds (Coordinate{1, 2, "
+                                         "3, 4}), upper bounds (Coordinate{1, 3, 5, "
+                                         "7}), and strides (Strides{1, 1, 1, 2})"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, slice_partial_arg_rank_static_dynamic_some_dims_known_upper_bounds_oob)
+{
+    PartialShape input_shape{2, 2, 10, Dimension::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    try
+    {
+        auto sl = make_shared<op::Slice>(param, lower_bounds, upper_bounds, strides);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Upper bounds out of bounds not detected (argument rank-static dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Upper bound for slice at axis 1 is out of "
+                                         "range (upper bounds: Coordinate{1, 3, 5, "
+                                         "7}, argument shape: {2,2,10,?})"));
     }
     catch (...)
     {
@@ -2282,7 +2672,9 @@ TEST(type_prop, replace_slice_deduce_vector_invalid_strides)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), std::string("Rank of strides (2) does not match rank of argument (1)"));
+            error.what(),
+            std::string("Ranks of lower bounds (Coordinate{0}), upper bounds "
+                        "(Coordinate{7}) and strides (Strides{1, 2}) do not match"));
     }
     catch (...)
     {
@@ -2345,9 +2737,10 @@ TEST(type_prop, replace_slice_deduce_matrix_slice_shape_mismatch)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Shape of replacement tensor (Shape{3, 6}) does not match "
-                                         "the slice shape (Shape{4, 6})"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Shape of replacement tensor ({3,6}) does not match the slice shape ({4,6})"));
     }
     catch (...)
     {
@@ -2371,7 +2764,7 @@ TEST(type_prop, replace_slice_deduce_matrix_slice_shape_mismatch_strided)
         EXPECT_HAS_SUBSTRING(
             error.what(),
             std::string(
-                "Shape of replacement tensor (Shape{4, 6}) does not match the slice shape"));
+                "Shape of replacement tensor ({4,6}) does not match the slice shape ({4,3})"));
     }
     catch (...)
     {
@@ -2481,7 +2874,8 @@ TEST(type_prop, replace_slice_deduce_matrix_lower_missing)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Rank of lower bounds (1) does not match rank of argument (2)"));
+            std::string("Ranks of lower bounds (Coordinate{0}), upper bounds "
+                        "(Coordinate{5, 5}) and strides (Strides{1}) do not match"));
     }
     catch (...)
     {
@@ -2503,7 +2897,8 @@ TEST(type_prop, replace_slice_deduce_matrix_upper_missing)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Rank of upper bounds (1) does not match rank of argument (2)"));
+            std::string("Ranks of lower bounds (Coordinate{0, 0}), upper bounds "
+                        "(Coordinate{5}) and strides (Strides{1, 1}) do not match"));
     }
     catch (...)
     {
@@ -2524,9 +2919,10 @@ TEST(type_prop, replace_slice_deduce_matrix_lower_extra)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Rank of lower bounds (3) does not match rank of argument (2)"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Ranks of lower bounds (Coordinate{0, 0, "
+                                         "0}), upper bounds (Coordinate{5, 5}) and "
+                                         "strides (Strides{1, 1, 1}) do not match"));
     }
     catch (...)
     {
@@ -2547,9 +2943,336 @@ TEST(type_prop, replace_slice_deduce_matrix_upper_extra)
     }
     catch (const NodeValidationError& error)
     {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Ranks of lower bounds (Coordinate{0, 0}), "
+                                         "upper bounds (Coordinate{5, 5, 5}) and "
+                                         "strides (Strides{1, 1}) do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, replace_slice_partial_input_rank_dynamic_replacement_rank_dynamic_attribs_ok)
+{
+    PartialShape input_shape{PartialShape::dynamic()};
+    PartialShape replacement_shape{PartialShape::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
+    auto rsl = make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
+
+    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_TRUE(rsl->get_output_partial_shape(0).same_scheme(PartialShape{
+        Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(type_prop,
+     replace_slice_partial_input_rank_dynamic_replacement_rank_dynamic_attribs_rank_mismatch)
+{
+    PartialShape input_shape{PartialShape::dynamic()};
+    PartialShape replacement_shape{PartialShape::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5};
+    Strides strides{1, 1, 1, 2};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
+    try
+    {
+        auto rsl =
+            make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Mismatch of lower-bounds/upper-bounds/strides ranks not detected (argument "
+                  "rank-dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Rank of upper bounds (3) does not match rank of argument (2)"));
+            std::string("Ranks of lower bounds (Coordinate{1, 2, 3, 4}), upper bounds "
+                        "(Coordinate{1, 3, 5}) and strides (Strides{1, 1, 1, 2}) do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     replace_slice_partial_input_rank_dynamic_replacement_rank_dynamic_attribs_bounds_crossing)
+{
+    PartialShape input_shape{PartialShape::dynamic()};
+    PartialShape replacement_shape{PartialShape::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 8};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
+    try
+    {
+        auto rsl =
+            make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Crossing lower/upper bounds not detected (argument rank-dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Lower bound for slice is greater than upper bound at axis 3 (lower "
+                        "bounds: Coordinate{1, 2, 3, 8}, upper bounds: Coordinate{1, 3, 5, 7})"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, replace_slice_partial_input_rank_static_dynamic_replacement_rank_dynamic_ok)
+{
+    PartialShape input_shape{
+        Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape replacement_shape{PartialShape::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
+    auto rsl = make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
+
+    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_TRUE(rsl->get_output_partial_shape(0).same_scheme(PartialShape{
+        Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(type_prop,
+     replace_slice_partial_input_rank_static_dynamic_some_dims_known_replacement_rank_dynamic_ok)
+{
+    PartialShape input_shape{2, 4, 10, Dimension::dynamic()};
+    PartialShape replacement_shape{PartialShape::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
+    auto rsl = make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
+
+    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_TRUE(
+        rsl->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 10, Dimension::dynamic()}));
+}
+
+TEST(
+    type_prop,
+    replace_slice_partial_input_rank_static_dynamic_replacement_rank_dynamic_attribs_rank_mismatches_input)
+{
+    PartialShape input_shape{Dimension::dynamic(),
+                             Dimension::dynamic(),
+                             Dimension::dynamic(),
+                             Dimension::dynamic(),
+                             Dimension::dynamic()};
+    PartialShape replacement_shape{PartialShape::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
+    try
+    {
+        auto rsl =
+            make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Mismatch of attrib ranks with arg ranks not detected (argument rank-static "
+                  "dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Argument ranks do not match the rank of the lower bounds "
+                                         "(Coordinate{1, 2, 3, 4}), upper bounds (Coordinate{1, 3, "
+                                         "5, 7}), and strides (Strides{1, 1, 1, 2})"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    replace_slice_partial_input_rank_static_dynamic_some_dims_known_replacement_rank_dynamic_upper_bounds_oob)
+{
+    PartialShape input_shape{2, 2, 10, Dimension::dynamic()};
+    PartialShape replacement_shape{PartialShape::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
+    try
+    {
+        auto rsl =
+            make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Upper bounds out of bounds not detected (argument rank-static dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Upper bound for slice at axis 1 is out of "
+                                         "range (upper bounds: Coordinate{1, 3, 5, "
+                                         "7}, argument shape: {2,2,10,?})"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, replace_slice_partial_input_rank_dynamic_replacement_rank_static_dynamic_ok)
+{
+    PartialShape input_shape{PartialShape::dynamic()};
+    PartialShape replacement_shape{
+        Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
+    auto rsl = make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
+
+    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_TRUE(rsl->get_output_partial_shape(0).same_scheme(PartialShape{
+        Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(type_prop,
+     replace_slice_partial_input_rank_dynamic_replacement_rank_static_dynamic_some_dims_known_ok)
+{
+    PartialShape input_shape{PartialShape::dynamic()};
+    PartialShape replacement_shape{0, Dimension::dynamic(), Dimension::dynamic(), 2};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
+    auto rsl = make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
+
+    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_TRUE(rsl->get_output_partial_shape(0).same_scheme(PartialShape{
+        Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(
+    type_prop,
+    replace_slice_partial_input_rank_dynamic_replacement_rank_static_dynamic_some_dims_known_attribs_mismatch_replacement_shape)
+{
+    PartialShape input_shape{PartialShape::dynamic()};
+    PartialShape replacement_shape{1, Dimension::dynamic(), Dimension::dynamic(), 2};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
+    try
+    {
+        auto rsl =
+            make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Mismatch of shape inferred from attributes with provided replacement shape not "
+                  "detected (rank-dynamic/rank-static dynamic inputs)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Shape of replacement tensor ({1,?,?,2}) does not match "
+                                         "the slice shape ({0,1,2,2})"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    replace_slice_partial_input_rank_dynamic_replacement_rank_static_dynamic_attribs_rank_mismatches_replacement)
+{
+    PartialShape input_shape{PartialShape::dynamic()};
+    PartialShape replacement_shape{Dimension::dynamic(),
+                                   Dimension::dynamic(),
+                                   Dimension::dynamic(),
+                                   Dimension::dynamic(),
+                                   Dimension::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
+    try
+    {
+        auto rsl =
+            make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Mismatch of attrib ranks with arg ranks not detected (arguments "
+                  "rank-dynamic/rank-static "
+                  "dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Argument ranks do not match the rank of the lower bounds "
+                                         "(Coordinate{1, 2, 3, 4}), upper bounds (Coordinate{1, 3, "
+                                         "5, 7}), and strides (Strides{1, 1, 1, 2})"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    replace_slice_partial_input_rank_static_dynamic_replacement_rank_static_dynamic_argument_ranks_mismatch)
+{
+    PartialShape input_shape{
+        Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape replacement_shape{Dimension::dynamic(),
+                                   Dimension::dynamic(),
+                                   Dimension::dynamic(),
+                                   Dimension::dynamic(),
+                                   Dimension::dynamic()};
+    Coordinate lower_bounds{1, 2, 3, 4};
+    Coordinate upper_bounds{1, 3, 5, 7};
+    Strides strides{1, 1, 1, 2};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
+    try
+    {
+        auto rsl =
+            make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Mismatching input/replacement ranks not detected (arguments both rank-static "
+                  "dynamic)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument ranks do not match"));
     }
     catch (...)
     {
