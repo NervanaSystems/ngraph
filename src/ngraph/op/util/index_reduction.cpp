@@ -34,8 +34,8 @@ op::util::IndexReduction::IndexReduction(const std::string& node_type,
 
 void op::util::IndexReduction::validate_and_infer_types()
 {
-    auto arg_shape = get_input_partial_shape(0);
-    auto rank = arg_shape.rank();
+    const PartialShape& arg_shape = get_input_partial_shape(0);
+    Rank rank = arg_shape.rank();
 
     NODE_VALIDATION_ASSERT(this, rank.is_dynamic() || size_t(rank) >= 1)
         << "Argument rank is zero.";
