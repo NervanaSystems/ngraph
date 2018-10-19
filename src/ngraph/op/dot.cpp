@@ -55,8 +55,8 @@ void op::Dot::validate_and_infer_types()
         << get_input_element_type(0) << ", arg1 element type: " << get_input_element_type(1)
         << ").";
 
-    PartialShape arg0_shape = get_input_partial_shape(0);
-    PartialShape arg1_shape = get_input_partial_shape(1);
+    const PartialShape& arg0_shape = get_input_partial_shape(0);
+    const PartialShape& arg1_shape = get_input_partial_shape(1);
 
     // If an explicit value was not passed for reduction axis count at construction time, we have
     // some extra work to do.
