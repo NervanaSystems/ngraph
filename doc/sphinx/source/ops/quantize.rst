@@ -11,24 +11,24 @@ Quantize
 Description
 ===========
 
-Produces a tensor of element type ``type`` and the same shape as ``input``
-where the value of each coordinate :math:`i` of ``output`` is the corresponding 
-coordinate of ``input`` divided by ``scale`` rounded as specified by 
-``round_mode`` minus ``offset``. The coordinate :math:`j` of ``scale`` and 
-``offset`` is the coordinate of ``output`` projected onto ``axes``.
+Produces a tensor of element type ``type`` and the same shape as ``input`` 
+where the value of each coordinate :math:`i` of ``output`` is the corresponding coordinate of 
+``input`` divided by ``scale`` rounded as specified by ``round_mode`` plus ``offset``.
+The coordinate :math:`j` of ``scale`` and ``offset`` is the coordinate of ``output`` 
+projected onto ``axes``.
 
 Inputs
 ------
 
-+-----------------+-------------------------+---------------------------------------+
-| Name            | Element Type            | Shape                                 |
-+=================+=========================+=======================================+
-| ``input``       | is_real()               | Any                                   |
-+-----------------+-------------------------+---------------------------------------+
-| ``scale``       | Same as ``input``       | ``input`` shape projected on ``axes`` |
-+-----------------+-------------------------+---------------------------------------+
-| ``offset``      | Same as ``output``      | ``input`` shape projected on ``axes`` |
-+-----------------+-------------------------+---------------------------------------+
++-----------------+-------------------------+------------------------------------------+
+| Name            | Element Type            | Shape                                    |
++=================+=========================+==========================================+
+| ``input``       | Any real type           | Any                                      |
++-----------------+-------------------------+------------------------------------------+
+| ``scale``       | Same as ``input``       | ``input`` shape projected onto ``axes``  |
++-----------------+-------------------------+------------------------------------------+
+| ``offset``      | Same as ``output``      | ``input`` shape projected onto ``axes``  |
++-----------------+-------------------------+------------------------------------------+
 
 Attributes
 ----------
@@ -36,7 +36,7 @@ Attributes
 +-------------------------------+----------------------------------------------------------------+
 | Name                          | Description                                                    |
 +===============================+================================================================+
-| ``type``                      | The output element type, which must be a quantized type        |
+| ``type``                      | ``output`` element type; any quantized type                    |
 +-------------------------------+----------------------------------------------------------------+
 | ``axes``                      | Axis positions on which ``scale`` and ``offset`` are specified |
 +-------------------------------+----------------------------------------------------------------+
@@ -51,7 +51,7 @@ Outputs
 +-----------------+-------------------------+---------------------------------------+
 | Name            | Element Type            | Shape                                 |
 +=================+=========================+=======================================+
-| ``output``      | type                    | Same as ``input``                     |
+| ``output``      | ``type``                | Same as ``input``                     |
 +-----------------+-------------------------+---------------------------------------+
 
 Mathematical Definition
@@ -59,9 +59,7 @@ Mathematical Definition
 
 .. math::
   
-   \mathtt{output}_{i} = \mathtt{round}(\frac{\mathtt{input}_{i}}{\mathtt{scale}_{j}}) - \mathtt{offset}_{j}    
-
-
+   \mathtt{output}_{i,j} = \mathtt{round}\left(\frac{\mathtt{input}_{i,j}}{\mathtt{scale}_{j}}\right) + \mathtt{offset}_{j}    
 
 C++ Interface
 =============
