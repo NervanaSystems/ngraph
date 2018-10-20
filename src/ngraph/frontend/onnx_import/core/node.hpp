@@ -70,6 +70,7 @@ namespace ngraph
             NodeVector get_ng_nodes() const;
             NodeVector get_ng_inputs() const;
 
+            const std::string& domain() const { return m_node_proto->domain(); }
             const std::string& op_type() const { return m_node_proto->op_type(); }
             const std::string& get_name() const { return m_node_proto->name(); }
             /// @brief Describe the ONNX Node to make debugging graphs easier
