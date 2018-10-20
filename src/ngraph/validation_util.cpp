@@ -56,7 +56,7 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
 
     if (output_shape.rank().is_static())
     {
-        for (size_t i = 0; i < size_t(output_shape.rank()); i++)
+        for (size_t i = 0; i < static_cast<size_t>(output_shape.rank()); i++)
         {
             NODE_VALIDATION_ASSERT(node, data_dilation[i] > 0)
                 << "Data dilation (" << data_dilation << ") has zero dimension at axis " << i
@@ -74,9 +74,9 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             ptrdiff_t data_padded_dilated_dim = -1;
             if (data_dim_static)
             {
-                data_padded_dilated_dim =
-                    (ptrdiff_t(data_dilation[i]) * (ptrdiff_t(data_shape[i]) - 1)) + 1 +
-                    data_padding_below[i] + data_padding_above[i];
+                data_padded_dilated_dim = (static_cast<ptrdiff_t>(data_dilation[i]) *
+                                           (static_cast<ptrdiff_t>(data_shape[i]) - 1)) +
+                                          1 + data_padding_below[i] + data_padding_above[i];
                 NODE_VALIDATION_ASSERT(node, data_padded_dilated_dim > 0)
                     << "Data shape after padding and dilation has dimension less than 1 (dim: "
                     << data_padded_dilated_dim << ") at axis " << i << ".";
@@ -85,8 +85,9 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             ptrdiff_t window_dilated_dim = -1;
             if (window_dim_static)
             {
-                window_dilated_dim =
-                    ptrdiff_t(window_dilation[i]) * (ptrdiff_t(window_shape[i]) - 1) + 1;
+                window_dilated_dim = static_cast<ptrdiff_t>(window_dilation[i]) *
+                                         (static_cast<ptrdiff_t>(window_shape[i]) - 1) +
+                                     1;
 
                 NODE_VALIDATION_ASSERT(node, window_dilated_dim > 0)
                     << "Window after dilation has dimension less than 1 (dim: "
@@ -111,9 +112,9 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
                     << ") larger than the data shape after padding (dim: "
                     << data_padded_dilated_dim << ") at axis " << i << ".";
 
-                output_shape[i] =
-                    ceil_div(size_t(data_padded_dilated_dim) - size_t(window_dilated_dim) + 1,
-                             window_strides[i]);
+                output_shape[i] = ceil_div(static_cast<size_t>(data_padded_dilated_dim) -
+                                               static_cast<size_t>(window_dilated_dim) + 1,
+                                           window_strides[i]);
             }
         }
     }
@@ -199,8 +200,9 @@ PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
                                                    const Strides& window_strides,
                                                    bool is_window_all_in_padding_allowed)
 {
-    NODE_VALIDATION_ASSERT(
-        node, data_batch_shape.rank().is_dynamic() || size_t(data_batch_shape.rank()) >= 3)
+    NODE_VALIDATION_ASSERT(node,
+                           data_batch_shape.rank().is_dynamic() ||
+                               static_cast<size_t>(data_batch_shape.rank()) >= 3)
         << "Data batch must have rank of at least 3 (one batch axis, "
         << "one input-channel axis, and at least one spatial dimension) "
         << "(data batch shape: " << data_batch_shape << ").";
@@ -227,20 +229,21 @@ PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
         batch_size = data_batch_shape[0];
         channel_count = data_batch_shape[1];
 
-        for (size_t i = 0; i < size_t(data_spatial_shape.rank()); i++)
+        for (size_t i = 0; i < static_cast<size_t>(data_spatial_shape.rank()); i++)
         {
             data_spatial_shape[i] = data_batch_shape[i + 2];
         }
 
-        NODE_VALIDATION_ASSERT(node, batch_size.is_dynamic() || size_t(batch_size) > 0)
+        NODE_VALIDATION_ASSERT(node, batch_size.is_dynamic() || static_cast<size_t>(batch_size) > 0)
             << "Batch size is zero.";
 
-        NODE_VALIDATION_ASSERT(node, channel_count.is_dynamic() || size_t(channel_count) > 0)
+        NODE_VALIDATION_ASSERT(node,
+                               channel_count.is_dynamic() || static_cast<size_t>(channel_count) > 0)
             << "Channel count is zero.";
 
         // For pooling ops we don't need dilation, so we fill in the identity value (all 1).
-        Strides data_dilation(size_t(data_spatial_shape.rank()), 1);
-        Strides window_dilation(size_t(data_spatial_shape.rank()), 1);
+        Strides data_dilation(static_cast<size_t>(data_spatial_shape.rank()), 1);
+        Strides window_dilation(static_cast<size_t>(data_spatial_shape.rank()), 1);
 
         data_output_spatial_shape =
             infer_windowed_reduction_output_shape(node,
@@ -259,7 +262,7 @@ PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
     data_batch_output_shape[0] = batch_size;
     data_batch_output_shape[1] = channel_count;
 
-    for (size_t i = 0; i < size_t(data_spatial_shape.rank()); i++)
+    for (size_t i = 0; i < static_cast<size_t>(data_spatial_shape.rank()); i++)
     {
         data_batch_output_shape[i + 2] = data_output_spatial_shape[i];
     }
