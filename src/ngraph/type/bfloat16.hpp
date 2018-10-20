@@ -31,7 +31,7 @@ namespace ngraph
     {
     public:
         bfloat16() {}
-        bfloat16(float value);
+        bfloat16(float value, bool rounding = false);
         bfloat16& operator=(const bfloat16&) = default;
         virtual ~bfloat16() {}
         std::string to_string() const;
@@ -39,6 +39,9 @@ namespace ngraph
         bool operator==(const bfloat16& other) const;
         bool operator!=(const bfloat16& other) const { return !(*this == other); }
         bool operator<(const bfloat16& other) const;
+        bool operator<=(const bfloat16& other) const;
+        bool operator>(const bfloat16& other) const;
+        bool operator>=(const bfloat16& other) const;
         operator float() const;
 
         static std::vector<float> to_float_vector(const std::vector<bfloat16>&);
