@@ -24,6 +24,9 @@ using namespace ngraph;
 // Infers the output shape of a windowed reduction operation, where the data may be dilated and/or
 // padded, and the reduction window may be strided and/or dilated.
 //
+// TODO(amprocte): The messages here would be a bit friendlier if we didn't say "after
+// padding/after dilation" for cases where there is actually no padding/dilation.
+//
 PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
                                                            const PartialShape& data_shape,
                                                            const Strides& data_dilation,
