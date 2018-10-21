@@ -280,7 +280,7 @@ extern "C" void delete_backend(runtime::Backend* backend)
     delete backend;
 }
 
-static size_t get_max_memory_rss_in_kb()
+static size_t get_max_memory_rss()
 {
     size_t result = 0;
     struct rusage usage;
@@ -288,6 +288,9 @@ static size_t get_max_memory_rss_in_kb()
     if (getrusage(RUSAGE_SELF, &usage) == 0)
     {
         result = usage.ru_maxrss; // the value is in kilobytes
+
+        // aligne result to return bytes
+        result *= 1000;
     }
 
     return result;
@@ -1470,15 +1473,15 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
                                               const vector<shared_ptr<runtime::Tensor>>& outputs,
                                               const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    size_t mem_before_call = 0;
-    size_t mem_after_compilation = 0;
-    size_t mem_after_call = 0;
+    double mem_before_call = 0.0f;
+    double mem_after_compilation = 0.0f;
+    double mem_after_call = 0.0f;
     stopwatch timer_call;
     stopwatch timer_compile;
 
     if (m_profile_enable)
     {
-        mem_before_call = get_max_memory_rss_in_kb();
+        mem_before_call = get_max_memory_rss();
         timer_compile.start();
     }
     validate_call(func, outputs, inputs);
@@ -1495,7 +1498,7 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     if (m_profile_enable)
     {
         timer_compile.stop();
-        mem_after_compilation = get_max_memory_rss_in_kb();
+        mem_after_compilation = get_max_memory_rss();
         timer_call.start();
     }
 
@@ -1532,7 +1535,7 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     if (m_profile_enable)
     {
         timer_call.stop();
-        mem_after_call = get_max_memory_rss_in_kb();
+        mem_after_call = get_max_memory_rss();
 
         print_call_performance(network,
                                func,
@@ -1637,9 +1640,9 @@ void runtime::intelgpu::IntelGPUBackend::print_call_performance(
     const shared_ptr<Function> func,
     size_t time_compile,
     size_t time_call,
-    size_t mem_before_call,
-    size_t mem_after_compilation,
-    size_t mem_after_call) const
+    double mem_before_call,
+    double mem_after_compilation,
+    double mem_after_call) const
 {
     struct data_item
     {
@@ -1728,9 +1731,9 @@ void runtime::intelgpu::IntelGPUBackend::print_call_performance(
 
     // Print time and memory consumed in ::call function
     cout << func_name << delim << " Backend compilation(ms)" << delim << time_compile << " call(ms)"
-         << delim << time_call << delim << "memory before call(KB)" << delim << mem_before_call
-         << delim << "after compilation(KB)" << delim << mem_after_compilation << delim
-         << "after call(KB)" << delim << mem_after_call << endl;
+         << delim << time_call << delim << "memory before call(B)" << delim << mem_before_call
+         << delim << "after compilation(B)" << delim << mem_after_compilation << delim
+         << "after call(B)" << delim << mem_after_call << endl;
 
     cout.flags(saved_stream_flags); // Restore stream configuration to leave it in original state
 }
