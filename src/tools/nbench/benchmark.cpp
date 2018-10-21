@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <random>
+#include <xmmintrin.h>
 
 #include "benchmark.hpp"
 #include "ngraph/file_util.hpp"
