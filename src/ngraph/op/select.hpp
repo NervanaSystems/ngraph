@@ -53,6 +53,7 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
+            void validate_and_infer_types() override;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
         };
