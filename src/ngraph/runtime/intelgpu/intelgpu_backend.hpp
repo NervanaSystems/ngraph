@@ -70,4 +70,17 @@ private:
     std::shared_ptr<cldnn::engine> ocl_engine;
 
     bool m_disable_backend_optimizations = false;
+
+    // Statistic related things
+    void print_call_performance(const std::shared_ptr<cldnn::network> network,
+                                const std::shared_ptr<Function> func,
+                                size_t time_compile,
+                                size_t time_call,
+                                double mem_before_call,
+                                double mem_after_compilation,
+                                double mem_after_call) const;
+
+    bool m_profile_enable = false;
+    long m_profile_lines_limit_count = 10;
+    std::string delim = std::string(":");
 };
