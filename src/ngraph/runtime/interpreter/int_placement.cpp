@@ -37,10 +37,6 @@ using namespace ngraph;
 // - Unsupported: Not listed at all
 Placement runtime::interpreter::default_placement_policy(const std::shared_ptr<Node>& node)
 {
-    NGRAPH_INFO << "runtime::interpreter::default_placement_policy -Begin " + node->description();
-
-    NGRAPH_INFO
-        << "runtime::interpreter::default_placement_policy -End & placement on INTERPRETER ";
     // All ops by default are supported on interpreter
     // this is nGraph feature
     return Placement::INTERPRETER;

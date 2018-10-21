@@ -103,7 +103,6 @@ shared_ptr<runtime::Tensor> runtime::hybrid::HYBRIDBackend::create_tensor(const 
 
 bool runtime::hybrid::HYBRIDBackend::compile(shared_ptr<Function> function)
 {
-    NGRAPH_INFO << "hybrid compile -Begin ";
     if (m_function_map.find(function) == m_function_map.end())
     {
         // Clone function
@@ -123,14 +122,10 @@ bool runtime::hybrid::HYBRIDBackend::compile(shared_ptr<Function> function)
 #endif
         pass_manager.run_passes(instance.m_function);
 
-        NGRAPH_INFO << "hybrid compile -begin split  ";
         // Split function to sub_functions
         tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
             split_function_by_placement(instance.m_function);
-        NGRAPH_INFO << "hybrid compile -End split  ";
-
         m_function_map.insert({function, instance});
-        NGRAPH_INFO << "hybrid compile -map incertion successful";
 
         // Compile subfunctions in corresponding backends
         for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
@@ -140,7 +135,6 @@ bool runtime::hybrid::HYBRIDBackend::compile(shared_ptr<Function> function)
             backend->compile(sub_function);
         }
     }
-    NGRAPH_INFO << "hybrid compile -End ";
     return true;
 }
 
@@ -148,8 +142,6 @@ bool runtime::hybrid::HYBRIDBackend::call(shared_ptr<Function> function,
                                           const vector<shared_ptr<runtime::Tensor>>& outputs,
                                           const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    NGRAPH_INFO << "hybrid call -Begin ";
-
     validate_call(function, outputs, inputs);
 
     // Get FunctionInstance
@@ -224,6 +216,5 @@ bool runtime::hybrid::HYBRIDBackend::call(shared_ptr<Function> function,
         // Call
         backend->call_with_validate(sub_function, result_tvs, parameter_tvs);
     }
-    NGRAPH_INFO << "hybrid call -End ";
     return rc;
 }

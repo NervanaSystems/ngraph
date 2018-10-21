@@ -37,17 +37,12 @@ using namespace ngraph;
 // - Unsupported: Not listed at all
 Placement runtime::cpu::default_placement_policy(const std::shared_ptr<Node>& node)
 {
-    NGRAPH_INFO << "runtime::cpu::default_placement_policy -Begin " + node->description();
-
     static unordered_set<string> fully_supported_ops = {"Abs", "Add", "Parameter", "Result"};
     static unordered_set<string> partially_supported_ops = {"Dot"};
 
     string node_op = node->description();
     if (fully_supported_ops.count(node_op) == 0 && partially_supported_ops.count(node_op) == 0)
     {
-        NGRAPH_INFO
-            << "runtime::cpu::default_placement_policy  placement done on INTERPRETER for " +
-                   node->description();
         return Placement::INTERPRETER;
     }
 
@@ -60,6 +55,5 @@ Placement runtime::cpu::default_placement_policy(const std::shared_ptr<Node>& no
         }
     }
 
-    NGRAPH_INFO << "runtime::cpu::default_placement_policy -End & placement on CPU ";
     return Placement::CPU;
 }
