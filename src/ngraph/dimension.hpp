@@ -56,6 +56,16 @@ namespace ngraph
             }
             return m_dimension;
         }
+        /// \brief Convert this dimension to `ptrdiff_t`. This dimension must be static.
+        /// \throws std::invalid_argument If this dimension is dynamic.
+        explicit operator ptrdiff_t() const
+        {
+            if (is_dynamic())
+            {
+                throw std::invalid_argument("Cannot convert dynamic dimension to ptrdiff_t");
+            }
+            return static_cast<ptrdiff_t>(m_dimension);
+        }
 
         /// \brief Check whether this dimension represents the same scheme as the argument (both
         ///        dynamic, or equal).
@@ -121,6 +131,12 @@ namespace ngraph
         /// \return Dimension::dynamic() if either of `*this` or `dim` is dynamic; else, a static
         ///         dimension with value `size_t(*this)+size_t(dim)`.
         Dimension operator+(const Dimension& dim) const;
+
+        /// \brief Subtraction operator for Dimension.
+        /// \param dim Right operand for subtraction.
+        /// \return Dimension::dynamic() if either of `*this` or `dim` is dynamic; else, a static
+        ///         dimension with value `size_t(*this)-size_t(dim)`.
+        Dimension operator-(const Dimension& dim) const;
 
         /// \brief Multiplication operator for Dimension.
         /// \param dim Right operand for multiplicaiton.
