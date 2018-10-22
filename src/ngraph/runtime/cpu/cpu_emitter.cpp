@@ -575,15 +575,16 @@ namespace ngraph
                        << ");\n";
             }
 
+            template <typename T>
             void CPU_Emitter::emitBatchNorm(CPU_ExternalFunction* external_function,
                                             codegen::CodeWriter& writer,
                                             const ngraph::Node* node,
                                             const std::vector<TensorViewWrapper>& args,
                                             const std::vector<TensorViewWrapper>& out,
-                                            bool append_relu)
+                                            bool append_relu,
+                                            bool training)
             {
-                const ngraph::op::BatchNorm* batchnorm =
-                    static_cast<const ngraph::op::BatchNorm*>(node);
+                const T* batchnorm = static_cast<const T*>(node);
 
                 writer.block_begin();
                 // define weights
@@ -606,7 +607,7 @@ namespace ngraph
                         ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
                 }
 
-                if (batchnorm->get_training_flag() && args.size() == 3)
+                if (training && args.size() == 3)
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto weights_shape = Shape{2, args[0].get_size()};
@@ -625,7 +626,7 @@ namespace ngraph
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
                                                                 false,
-                                                                batchnorm->get_training_flag(),
+                                                                training,
                                                                 ops);
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
@@ -662,7 +663,7 @@ namespace ngraph
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
                                                                 true,
-                                                                batchnorm->get_training_flag(),
+                                                                training,
                                                                 ops);
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
@@ -684,14 +685,14 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNorm)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormTraining)
             {
                 if (!mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    const ngraph::op::BatchNorm* batchnorm =
-                        static_cast<const ngraph::op::BatchNorm*>(node);
+                    const ngraph::op::BatchNormTraining* batchnorm =
+                        static_cast<const ngraph::op::BatchNormTraining*>(node);
 
-                    if (batchnorm->get_training_flag() && args.size() == 3)
+                    if (args.size() == 3)
                     {
                         writer << "reference::batch_norm_three_outputs("
                                << batchnorm->get_eps_value() << ",\n";
@@ -718,25 +719,63 @@ namespace ngraph
                 }
                 else
                 {
-                    emitBatchNorm(external_function, writer, node, args, out, false);
+                    emitBatchNorm<ngraph::op::BatchNormTraining>(
+                        external_function, writer, node, args, out, false, true);
                 }
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormRelu)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormInference)
+            {
+                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    const ngraph::op::BatchNormInference* batchnorm =
+                        static_cast<const ngraph::op::BatchNormInference*>(node);
+
+                    writer << "reference::batch_norm_one_output(" << batchnorm->get_eps_value()
+                           << ",\n";
+                    writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            " << args[1].get_name() << ",\n";
+                    writer << "            " << args[2].get_name() << ",\n";
+                    writer << "            " << args[3].get_name() << ",\n";
+                    writer << "            " << args[4].get_name() << ",\n";
+                    writer << "            " << out[0].get_name() << ",\n";
+                    writer << "            {" << join(args[2].get_shape()) << "});\n";
+                }
+                else
+                {
+                    emitBatchNorm<ngraph::op::BatchNormInference>(
+                        external_function, writer, node, args, out, false, false);
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormTrainingRelu)
             {
                 if (!mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     throw ngraph_error("BatchNormRelu is only supported with 4-D MKLDNN kernel.");
                 }
-                emitBatchNorm(external_function, writer, node, args, out, true);
+                emitBatchNorm<ngraph::op::BatchNormTrainingRelu>(
+                    external_function, writer, node, args, out, true, true);
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormBackprop)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormInferenceRelu)
             {
-                const ngraph::op::BatchNormBackprop* batchnorm =
-                    static_cast<const ngraph::op::BatchNormBackprop*>(node);
+                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    throw ngraph_error("BatchNormRelu is only supported with 4-D MKLDNN kernel.");
+                }
+                emitBatchNorm<ngraph::op::BatchNormTrainingRelu>(
+                    external_function, writer, node, args, out, true, false);
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormTrainingBackprop)
+            {
+                const ngraph::op::BatchNormTrainingBackprop* batchnorm =
+                    static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
 
                 writer.block_begin();
                 // define weights
