@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/shape_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -41,41 +42,82 @@ void op::Dequantize::validate_and_infer_types()
         OFFSET
     };
 
-    set_output_size(1);
-    set_output_type(0, m_type, get_input_shape(INPUT));
-
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(INPUT).is_quantized())
-        << "Input element type (" << get_input_element_type(INPUT) << ") must be a quantized type";
+    NODE_VALIDATION_ASSERT(this, m_type.is_static()) << "Output element type must not be dynamic";
 
     NODE_VALIDATION_ASSERT(this, m_type.is_real()) << "Output element type (" << m_type
-                                                   << ") must be a floating point number";
+                                                   << ") must be a floating point type";
 
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(SCALE).is_real())
-        << "Scale element type (" << get_input_element_type(SCALE)
-        << ") must be a floating point number";
+    element::Type quantized_type;
 
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(OFFSET) == get_input_element_type(INPUT))
+    NODE_VALIDATION_ASSERT(this,
+                           element::Type::merge(quantized_type,
+                                                get_input_element_type(INPUT),
+                                                get_input_element_type(OFFSET)))
         << "Offset element type (" << get_input_element_type(OFFSET)
         << ") must match input element type (" << get_input_element_type(INPUT) << ")";
 
+    NODE_VALIDATION_ASSERT(this, quantized_type.is_dynamic() || quantized_type.is_quantized())
+        << "Offset/input element type (" << quantized_type << ") must be a quantized type";
+
+    element::Type unquantized_type;
+
+    NODE_VALIDATION_ASSERT(
+        this, element::Type::merge(unquantized_type, get_input_element_type(SCALE), m_type))
+        << "Scale element type (" << get_input_element_type(SCALE)
+        << ") must match output element type (" << m_type << ")";
+
+    PartialShape input_shape = get_input_partial_shape(0);
+    Dimension input_rank = input_shape.rank();
+
     for (auto axis : m_axes)
     {
-        NODE_VALIDATION_ASSERT(this, axis < get_shape().size())
-            << "Quantizaztion axis (" << axis << ") is greater than input shape rank ("
-            << get_shape().size() << ")";
+        NODE_VALIDATION_ASSERT(this, input_rank.is_dynamic() || axis < size_t(input_rank))
+            << "Quantization axis (" << axis << ") must be less than input shape rank ("
+            << input_rank << ")";
     }
 
-    Shape projected_shape = project(get_input_shape(INPUT), m_axes);
+    PartialShape scale_offset_shape = get_input_partial_shape(SCALE);
 
-    NODE_VALIDATION_ASSERT(this, get_input_shape(SCALE) == projected_shape)
-        << "Scale shape (" << get_input_shape(SCALE)
-        << ") must match input shape projected along the quantization axes (" << projected_shape
-        << ")";
+    NODE_VALIDATION_ASSERT(
+        this, PartialShape::merge_into(scale_offset_shape, get_input_partial_shape(OFFSET)))
+        << "Scale shape (" << get_input_partial_shape(SCALE) << ") and offset shape ("
+        << get_input_partial_shape(OFFSET) << ") must match";
 
-    NODE_VALIDATION_ASSERT(this, get_input_shape(OFFSET) == projected_shape)
-        << "Offset shape (" << get_input_shape(OFFSET)
-        << ") must match input shape projected along the quantization axes (" << projected_shape
-        << ")";
+    NODE_VALIDATION_ASSERT(this, scale_offset_shape.rank().compatible(m_axes.size()))
+        << "Scale/offset rank (" << scale_offset_shape.rank() << ") does not match the number of "
+        << "quantization axes (" << m_axes.size() << ")";
+
+    set_output_size(1);
+
+    if (input_shape.rank().is_static() && scale_offset_shape.rank().is_static())
+    {
+        size_t i = 0;
+
+        std::vector<Dimension> injected_scale_offset_dims;
+
+        for (size_t j = 0; j < size_t(input_shape.rank()); j++)
+        {
+            if (m_axes.count(j) != 0)
+            {
+                injected_scale_offset_dims.push_back(scale_offset_shape[i++]);
+            }
+            else
+            {
+                injected_scale_offset_dims.push_back(Dimension::dynamic());
+            }
+        }
+
+        PartialShape result_shape = input_shape;
+        NODE_VALIDATION_ASSERT(
+            this, PartialShape::merge_into(result_shape, PartialShape{injected_scale_offset_dims}))
+            << "Scale/offset shape (" << scale_offset_shape << ") must match input shape ("
+            << input_shape << ") at the quantization axes (" << m_axes << ")";
+        set_output_type(0, unquantized_type, result_shape);
+    }
+    else
+    {
+        set_output_type(0, unquantized_type, PartialShape::dynamic());
+    }
 }
 
 shared_ptr<Node> op::Dequantize::copy_with_new_args(const NodeVector& new_args) const

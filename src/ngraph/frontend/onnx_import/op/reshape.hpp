@@ -26,16 +26,20 @@ namespace ngraph
     {
         namespace op
         {
-            ///
-            /// \brief      Reshape the input tensor similar to numpy.reshape.
-            ///
-            /// \param[in]  node  The ONNX node representing this operation.
-            ///
-            /// \return     Ngraph node representing this operation.
-            ///
-            NodeVector reshape(const Node& node);
+            namespace set_1
+            {
+                ///
+                /// \brief      Reshape the input tensor similar to numpy.reshape.
+                ///
+                /// \param[in]  node  The ONNX node representing this operation.
+                ///
+                /// \return     Ngraph node representing this operation.
+                ///
+                NodeVector reshape(const Node& node);
 
-        } // namespace op
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 

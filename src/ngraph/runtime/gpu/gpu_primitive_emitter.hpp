@@ -44,7 +44,7 @@ namespace ngraph
                 }
                 size_t insert(std::unique_ptr<gpu::primitive>&& f);
                 size_t insert(const gpu::memory_primitive& f);
-                size_t lookup(std::string hash);
+                size_t lookup(const std::string& hash);
                 void cache(const std::string& hash, const size_t& index);
                 GPUAllocator get_memory_allocator() { return m_memory_manager.build_allocator(); }
                 void allocate_primitive_memory() { m_memory_manager.allocate(); }

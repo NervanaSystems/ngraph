@@ -176,15 +176,29 @@ void runtime::gpu::GPU_Emitter::emit_ArgMin(EMIT_ARGS)
         external_function, writer, node, args, out, reduce_op);
 }
 
-void runtime::gpu::GPU_Emitter::emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t reduce_mode)
+void runtime::gpu::GPU_Emitter::emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t reduce_op)
 {
     if (out[0].get_size() == 0)
     {
         return;
     }
-    auto argmax = static_cast<const ngraph::op::ArgMax*>(node);
-    std::vector<size_t> axes{argmax->get_reduction_axis()};
-    auto axis_set = AxisSet(axes);
+
+    size_t axis;
+    if (reduce_op == CUDNN_REDUCE_TENSOR_MIN)
+    {
+        auto argmin = static_cast<const ngraph::op::ArgMin*>(node);
+        axis = argmin->get_reduction_axis();
+    }
+    else if (reduce_op == CUDNN_REDUCE_TENSOR_MAX)
+    {
+        auto argmax = static_cast<const ngraph::op::ArgMax*>(node);
+        axis = argmax->get_reduction_axis();
+    }
+    else
+    {
+        throw std::runtime_error("Not supported. Only Min/Max op are supported by ArgReduce.");
+    }
+    auto axis_set = AxisSet{axis};
 
     std::vector<element::Type> dtypes{args[0].get_element_type(), out[0].get_element_type()};
 
@@ -192,7 +206,7 @@ void runtime::gpu::GPU_Emitter::emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t 
     {
         auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
-        auto index = cudnn_emitter->build_reduce_forward(reduce_mode,
+        auto index = cudnn_emitter->build_reduce_forward(reduce_op,
                                                          dtypes,
                                                          args[0].get_shape(),
                                                          axis_set,
@@ -233,35 +247,33 @@ void runtime::gpu::GPU_Emitter::emit_AvgPool(EMIT_ARGS)
         {
             auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
 
-            index = cuda_emitter->build_avg_pool({{args[0].get_type(), out[0].get_type()}},
+            index =
+                cuda_emitter->build_avg_pool({{args[0].get_type(), out[0].get_type()}},
+                                             input_shape,
+                                             result_shape,
+                                             avg_pool->get_window_shape(),
+                                             avg_pool->get_window_movement_strides(),
+                                             padding_below,
+                                             avg_pool->get_include_padding_in_avg_computation());
+        }
+        // 2d and 3d avg pool (NCHW) with either symetric padding or no padding
+        else if (input_shape.size() == 4 || input_shape.size() == 5)
+        {
+            auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
+
+            auto cudnn_avg_type = avg_pool->get_include_padding_in_avg_computation()
+                                      ? CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING
+                                      : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
+
+            index = cudnn_emitter->build_pooling(cudnn_avg_type,
+                                                 out[0].get_type(),
+                                                 CUDNNEmitter::Prop::Forward,
                                                  input_shape,
                                                  result_shape,
-                                                 avg_pool->get_window_shape(),
                                                  avg_pool->get_window_movement_strides(),
-                                                 padding_below);
-        }
-        else if (input_shape.size() <= 5)
-        {
-            // 2d and 3d avg pool (NCHW) with either symetric padding or no padding
-            if (input_shape.size() == 4 || input_shape.size() == 5)
-            {
-                auto& cudnn_emitter =
-                    external_function->get_primitive_emitter()->get_cudnn_emitter();
-
-                auto cudnn_avg_type = avg_pool->get_include_padding_in_avg_computation()
-                                          ? CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING
-                                          : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
-
-                index = cudnn_emitter->build_pooling(cudnn_avg_type,
-                                                     out[0].get_type(),
-                                                     CUDNNEmitter::Prop::Forward,
-                                                     input_shape,
-                                                     result_shape,
-                                                     avg_pool->get_window_movement_strides(),
-                                                     avg_pool->get_window_shape(),
-                                                     padding_below,
-                                                     padding_above);
-            }
+                                                 avg_pool->get_window_shape(),
+                                                 padding_below,
+                                                 padding_above);
         }
         else
         {

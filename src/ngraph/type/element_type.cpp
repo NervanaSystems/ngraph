@@ -21,8 +21,9 @@
 
 using namespace ngraph;
 
-const element::Type element::unspecified(0, false, false, false, "unspecified");
+const element::Type element::dynamic(0, false, false, false, "dynamic");
 const element::Type element::boolean(8, false, true, false, "char");
+const element::Type element::bf16(16, true, true, false, "bfloat16");
 const element::Type element::f32(32, true, true, false, "float");
 const element::Type element::f64(64, true, true, false, "double");
 const element::Type element::i8(8, false, true, true, "int8_t");
@@ -37,6 +38,7 @@ const element::Type element::u64(64, false, false, false, "uint64_t");
 std::vector<const element::Type*> element::Type::get_known_types()
 {
     std::vector<const element::Type*> rc = {&element::boolean,
+                                            &element::bf16,
                                             &element::f32,
                                             &element::f64,
                                             &element::i8,
@@ -175,6 +177,11 @@ namespace ngraph
         {
             return u64;
         }
+        template <>
+        const Type& from<ngraph::bfloat16>()
+        {
+            return bf16;
+        }
     }
 }
 
@@ -183,4 +190,27 @@ std::ostream& element::operator<<(std::ostream& out, const element::Type& obj)
     out << "element::Type{" << obj.m_bitwidth << ", " << obj.m_is_real << ", " << obj.m_is_signed
         << ", " << obj.m_is_quantized << ", \"" << obj.m_cname << "\"}";
     return out;
+}
+
+bool element::Type::merge(element::Type& dst, const element::Type& t1, const element::Type& t2)
+{
+    if (t1.is_dynamic())
+    {
+        dst = t2;
+        return true;
+    }
+    else if (t2.is_dynamic())
+    {
+        dst = t1;
+        return true;
+    }
+    else if (t1 == t2)
+    {
+        dst = t1;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }

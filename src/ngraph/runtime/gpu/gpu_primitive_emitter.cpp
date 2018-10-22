@@ -64,11 +64,12 @@ size_t GPUPrimitiveEmitter::insert(const gpu::memory_primitive& f)
     m_gpu_mem_primitives.push_back(f);
     return m_gpu_mem_primitives.size() - 1;
 }
-size_t GPUPrimitiveEmitter::lookup(std::string hash)
+size_t GPUPrimitiveEmitter::lookup(const std::string& hash)
 {
-    if (m_primitive_map.count(hash) > 0)
+    auto it = m_primitive_map.find(hash);
+    if (it != m_primitive_map.end())
     {
-        return m_primitive_map[hash];
+        return it->second;
     }
     return std::numeric_limits<size_t>::max();
 }

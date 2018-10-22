@@ -25,11 +25,11 @@ using namespace ngraph;
 Dimension::Dimension(size_t dimension)
     : m_dimension(dimension)
 {
-    if (dimension == s_undetermined_val)
+    if (dimension == s_dynamic_val)
     {
         std::stringstream ss;
-        ss << "Cannot convert the value 0x" << std::uppercase << std::hex << s_undetermined_val
-           << " to Dimension: this value is used internally to represent an undetermined "
+        ss << "Cannot convert the value 0x" << std::uppercase << std::hex << s_dynamic_val
+           << " to Dimension: this value is used internally to represent a dynamic "
               "dimension.";
         throw std::invalid_argument(ss.str());
     }
@@ -37,7 +37,7 @@ Dimension::Dimension(size_t dimension)
 
 std::ostream& ngraph::operator<<(std::ostream& str, const Dimension& dimension)
 {
-    if (dimension.is_determined())
+    if (dimension.is_static())
     {
         return (str << size_t(dimension));
     }
@@ -47,13 +47,59 @@ std::ostream& ngraph::operator<<(std::ostream& str, const Dimension& dimension)
     }
 }
 
-Dimension ngraph::operator+(const Dimension& d1, const Dimension& d2)
+Dimension Dimension::operator+(const Dimension& dim) const
 {
-    return (d1.is_determined() && d2.is_determined() ? size_t(d1) + size_t(d2)
-                                                     : Dimension::undetermined());
+    return (is_static() && dim.is_static() ? m_dimension + size_t(dim) : Dimension::dynamic());
+}
+
+Dimension Dimension::operator-(const Dimension& dim) const
+{
+    return (is_static() && dim.is_static() ? m_dimension - size_t(dim) : Dimension::dynamic());
+}
+
+Dimension Dimension::operator*(const Dimension& dim) const
+{
+    return ((is_static() && dim.is_static())
+                ? m_dimension * size_t(dim)
+                : (is_static() && m_dimension == 0)
+                      ? 0
+                      : (dim.is_static() && size_t(dim) == 0) ? 0 : Dimension::dynamic());
 }
 
 bool Dimension::compatible(const Dimension& d) const
 {
-    return (!is_determined() || !d.is_determined() || m_dimension == size_t(d));
+    return (is_dynamic() || d.is_dynamic() || m_dimension == size_t(d));
+}
+
+bool Dimension::relaxes(const Dimension& d) const
+{
+    return (is_dynamic() || (d.is_static() && size_t(*this) == size_t(d)));
+}
+
+bool Dimension::refines(const Dimension& d) const
+{
+    return (d.is_dynamic() || (is_static() && size_t(d) == size_t(*this)));
+}
+
+bool Dimension::merge(Dimension& dst, const Dimension d1, const Dimension d2)
+{
+    if (d1.is_dynamic())
+    {
+        dst = d2;
+        return true;
+    }
+    else if (d2.is_dynamic())
+    {
+        dst = d1;
+        return true;
+    }
+    else if (size_t(d1) != size_t(d2))
+    {
+        return false;
+    }
+    else
+    {
+        dst = d1;
+        return true;
+    }
 }
