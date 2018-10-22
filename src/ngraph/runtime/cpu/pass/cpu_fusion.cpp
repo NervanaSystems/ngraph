@@ -1761,10 +1761,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
 
     // add Relu as well for matching
-    //auto prelu = std::make_shared<op::Relu>(conv_label);
+    auto prelu = std::make_shared<op::Relu>(conv_label);
 
-    float const1 = 1.0;
-    auto prelu = std::make_shared<op::BoundedRelu>(conv_label, const1);
+    //float const1 = 1.0;
+    //auto prelu = std::make_shared<op::BoundedRelu>(conv_label, const1);
 
     // TODO: try adding the below pattern for BoundedRelu here and then it should be done... 
     /*auto relu = std::make_shared<op::Relu>(conv_label);
@@ -1790,7 +1790,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::
 
             //auto conv_m = std::dynamic_pointer_cast<op::GroupConvolutionBias>(m.get_match_root());
             auto conv_m = std::static_pointer_cast<op::GroupConvolution>(pattern_map[conv_label]);
-            auto b_relu_m = std::dynamic_pointer_cast<op::BoundedRelu>(m.get_match_root());
+            auto relu_m = std::dynamic_pointer_cast<op::Relu>(m.get_match_root());
+            //auto b_relu_m = std::dynamic_pointer_cast<op::BoundedRelu>(m.get_match_root());
             /*auto min_m = std::dynamic_pointer_cast<op::Minimum>(m.get_match_root());
 
             if (conv_m->get_users().size() > 1)
@@ -1813,7 +1814,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::
             auto alpha_const_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[alpha]);
             float alpha_val = *(static_cast<float const*>(alpha_const_op->get_data_ptr()));
             */
-            float alpha_val = b_relu_m->get_alpha();
+            float alpha_val = 1.0; // b_relu_m->get_alpha();
             //NGRAPH_DEBUG << "relu_input (conv output): " << pattern_map[conv_label] << " min_val: "
             //             << *(static_cast<float const*>(alpha_const_op->get_data_ptr()));
 

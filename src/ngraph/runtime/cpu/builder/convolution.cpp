@@ -531,14 +531,14 @@ namespace ngraph
                     auto filter_strides = convolution->get_window_movement_strides();
 
                     const float ops_scale = 1.f;
-                    const float ops_alpha = convolution->get_alpha(); //upper bound
-                    const float ops_beta = 0.f; //unused
+                    const float ops_alpha = -0.f; // relu negative slope
+                    const float ops_beta = 0.f;
 
                     mkldnn::post_ops ops;
                     if (convolution->with_relu())
                     {
                         ops.append_eltwise(
-                            ops_scale, mkldnn::algorithm::eltwise_bounded_relu, ops_alpha, ops_beta);
+                            ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
                     }
 
                     size_t conv_index =
