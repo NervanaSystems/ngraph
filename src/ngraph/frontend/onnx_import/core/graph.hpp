@@ -48,7 +48,7 @@ namespace ngraph
             const std::string& get_name() const { return m_graph_proto->name(); }
             NodeVector make_ng_nodes(const Node& node) const
             {
-                return m_model->at(node.op_type(), node.domain())(node);
+                return m_model->get_operator(node.op_type(), node.domain())(node);
             }
 
         private:

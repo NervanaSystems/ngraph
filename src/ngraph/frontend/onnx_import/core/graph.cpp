@@ -71,7 +71,7 @@ namespace ngraph
             std::set<std::string> unknown_operator_types;
             for (const auto& node_proto : m_graph_proto->node())
             {
-                if (!m_model->is_available(node_proto))
+                if (!m_model->is_operator_available(node_proto))
                 {
                     unknown_operator_types.emplace(detail::to_string(node_proto));
                 }

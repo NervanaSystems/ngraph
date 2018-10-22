@@ -44,7 +44,8 @@ namespace ngraph
             }
         }
 
-        const Operator& Model::at(const std::string& name, const std::string& domain) const
+        const Operator& Model::get_operator(const std::string& name,
+                                            const std::string& domain) const
         {
             const auto dm = m_opset.find(domain);
             if (dm == std::end(m_opset))
@@ -59,7 +60,7 @@ namespace ngraph
             return op->second;
         }
 
-        bool Model::is_available(const onnx::NodeProto& node_proto) const
+        bool Model::is_operator_available(const onnx::NodeProto& node_proto) const
         {
             const auto dm = m_opset.find(node_proto.domain());
             if (dm == std::end(m_opset))
