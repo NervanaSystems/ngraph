@@ -325,24 +325,38 @@ void runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
     writer.block_end();
 }
 
-void runtime::gpu::GPU_Emitter::emit_BatchNorm(EMIT_ARGS)
+void runtime::gpu::GPU_Emitter::emit_BatchNormInference(EMIT_ARGS)
 {
-    const ngraph::op::BatchNorm* batchnorm = static_cast<const ngraph::op::BatchNorm*>(node);
+    const ngraph::op::BatchNormInference* batchnorm =
+        static_cast<const ngraph::op::BatchNormInference*>(node);
+
+    CUDNNEmitter::Prop direction = CUDNNEmitter::Prop::Inference;
 
     auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
-
-    bool global_stats = false;
-    CUDNNEmitter::Prop direction;
-    if (batchnorm->get_training_flag())
+    auto index = cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
+                                                out[0].get_type(),
+                                                direction,
+                                                args[2].get_shape(),
+                                                args[0].get_shape(),
+                                                batchnorm->get_eps_value());
+    writer.block_begin();
     {
-        direction = CUDNNEmitter::Prop::Forward;
-        global_stats = (batchnorm->get_arguments().size() == 5);
+        writer << "void* input[] = {" << node_names(args) << "};\n";
+        writer << "void* output[] = {" << node_names(out) << "};\n";
+        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
     }
-    else
-    {
-        direction = CUDNNEmitter::Prop::Inference;
-    }
+    writer.block_end();
+}
 
+void runtime::gpu::GPU_Emitter::emit_BatchNormTraining(EMIT_ARGS)
+{
+    const ngraph::op::BatchNormTraining* batchnorm =
+        static_cast<const ngraph::op::BatchNormTraining*>(node);
+
+    CUDNNEmitter::Prop direction = CUDNNEmitter::Prop::Forward;
+    bool global_stats = (batchnorm->get_arguments().size() == 5);
+
+    auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
     auto index = cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
                                                 out[0].get_type(),
                                                 direction,
@@ -360,10 +374,10 @@ void runtime::gpu::GPU_Emitter::emit_BatchNorm(EMIT_ARGS)
     writer.block_end();
 }
 
-void runtime::gpu::GPU_Emitter::emit_BatchNormBackprop(EMIT_ARGS)
+void runtime::gpu::GPU_Emitter::emit_BatchNormTrainingBackprop(EMIT_ARGS)
 {
-    const ngraph::op::BatchNormBackprop* batchnorm =
-        static_cast<const ngraph::op::BatchNormBackprop*>(node);
+    const ngraph::op::BatchNormTrainingBackprop* batchnorm =
+        static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
 
     auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 

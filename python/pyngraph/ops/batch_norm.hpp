@@ -20,5 +20,6 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_BatchNorm(py::module m);
-void regclass_pyngraph_op_BatchNormBackprop(py::module m);
+void regclass_pyngraph_op_BatchNormTraining(py::module m);
+void regclass_pyngraph_op_BatchNormInference(py::module m);
+void regclass_pyngraph_op_BatchNormTrainingBackprop(py::module m);
