@@ -14,15 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <ostream>
-#include <set>
-
 #include <onnx-ml.pb.h>
 
-#include "assertion.hpp"
-
 #include "model.hpp"
-#include "ops_bridge.hpp"
 
 namespace ngraph
 {
@@ -31,30 +25,15 @@ namespace ngraph
         Model::Model(const onnx::ModelProto& model_proto)
             : m_model_proto{&model_proto}
         {
-            // Verify that the ONNX graph contains only nodes of supported op_type
-            assert_all_op_types_supported();
-        }
-
-        void Model::assert_all_op_types_supported()
-        {
-            std::set<std::string> unsupported_ops;
-            for (const auto& node_proto : get_graph().node())
+            for (const auto& id : m_model_proto->opset_import())
             {
-                std::string op_type = node_proto.op_type();
-                if (!ops_bridge::is_op_type_supported(op_type))
+                // onnx.proto(.3): the empty string ("") or absence of this field implies
+                // the operator set that is defined as part of the ONNX specification.
+                if (id.domain().empty())
                 {
-                    unsupported_ops.insert(op_type);
+                    m_opset_version = id.version();
                 }
             }
-
-            std::string unsupported_ops_str;
-            std::size_t index = 0;
-            for (const auto& op_type : unsupported_ops)
-            {
-                unsupported_ops_str += (index++ != 0 ? ", " : "");
-                unsupported_ops_str += op_type;
-            }
-            NGRAPH_ASSERT(unsupported_ops.empty()) << "unknown operations: " << unsupported_ops_str;
         }
 
     } // namespace onnx_import

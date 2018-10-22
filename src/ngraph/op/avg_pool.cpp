@@ -40,26 +40,22 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
 
 void op::AvgPool::validate_and_infer_types()
 {
-    auto& arg_shape = get_input_shape(0);
-
-    NODE_VALIDATION_ASSERT(this, arg_shape.size() >= 3)
-        << "Data input shape does not have rank of at least 3 (data input shape: " << arg_shape
-        << ").";
-
-    if (0 == m_window_movement_strides.size() && arg_shape.size() > 2)
+    if (0 == m_window_movement_strides.size())
     {
-        m_window_movement_strides = Strides(arg_shape.size() - 2, 1);
+        m_window_movement_strides = Strides(m_window_shape.size(), 1);
     }
 
-    if (0 == m_padding_below.size() && arg_shape.size() > 2)
+    if (0 == m_padding_below.size())
     {
-        m_padding_below = Shape(arg_shape.size() - 2, 0);
+        m_padding_below = Shape(m_window_shape.size(), 0);
     }
 
-    if (0 == m_padding_above.size() && arg_shape.size() > 2)
+    if (0 == m_padding_above.size())
     {
-        m_padding_above = Shape(arg_shape.size() - 2, 0);
+        m_padding_above = Shape(m_window_shape.size(), 0);
     }
+
+    const PartialShape& arg_shape = get_input_partial_shape(0);
 
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).
@@ -120,14 +116,12 @@ op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
 
 void op::AvgPoolBackprop::validate_and_infer_types()
 {
-    auto& delta_shape = get_input_shape(0);
-
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).
     CoordinateDiff padding_below(m_padding_below.begin(), m_padding_below.end());
     CoordinateDiff padding_above(m_padding_above.begin(), m_padding_above.end());
 
-    Shape forward_result_shape =
+    PartialShape forward_result_shape =
         infer_batched_pooling_forward(this,
                                       m_forward_arg_shape,
                                       padding_below,
@@ -136,10 +130,15 @@ void op::AvgPoolBackprop::validate_and_infer_types()
                                       m_window_movement_strides,
                                       m_include_padding_in_avg_computation);
 
-    NODE_VALIDATION_ASSERT(this, forward_result_shape == delta_shape)
+    const PartialShape& delta_shape = get_input_shape(0);
+
+    NODE_VALIDATION_ASSERT(this, forward_result_shape.compatible(delta_shape))
         << "Inferred forward output shape does not match delta shape (inferred forward output "
         << "shape: " << forward_result_shape << ", delta shape: " << delta_shape << ").";
 
+    // TODO(amprocte): Once m_forward_arg_shape is allowed to be dynamic, we may technically be
+    // able to infer some extra information from forward_result_shape that was not present in the
+    // forward arg shape---namely batch size and channel count. Merge that info in.
     set_output_type(0, get_input_element_type(0), m_forward_arg_shape);
 }
 

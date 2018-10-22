@@ -71,6 +71,15 @@ vector<string> op::Constant::get_value_strings() const
             rc.push_back(to_string(value));
         }
     }
+    else if (m_element_type == element::bf16)
+    {
+        float temp = 0;
+        for (bfloat16 value : get_vector<bfloat16>())
+        {
+            temp = static_cast<float>(value);
+            rc.push_back(to_cpp_string(temp));
+        }
+    }
     else if (m_element_type == element::f32)
     {
         for (float value : get_vector<float>())
