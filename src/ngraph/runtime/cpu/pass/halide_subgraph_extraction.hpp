@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,32 +16,24 @@
 
 #pragma once
 
-#include <cstddef>
-#include <string>
+#include "ngraph/pass/pass.hpp"
+#include "ngraph/runtime/cpu/cpu_external_function.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        class PerformanceCounter
+        namespace cpu
         {
-        public:
-            PerformanceCounter(const char* n, size_t us, size_t calls)
-                : m_name(n)
-                , m_total_microseconds(us)
-                , m_call_count(calls)
+            namespace pass
             {
+                class HalideSubgraphExtraction : public ngraph::pass::FunctionPass
+                {
+                public:
+                    HalideSubgraphExtraction() {}
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                };
             }
-            const std::string& name() const { return m_name; }
-            size_t total_microseconds() const { return m_total_microseconds; }
-            size_t microseconds() const
-            {
-                return m_call_count == 0 ? 0 : m_total_microseconds / m_call_count;
-            }
-            size_t call_count() const { return m_call_count; }
-            std::string m_name;
-            size_t m_total_microseconds;
-            size_t m_call_count;
-        };
+        }
     }
 }
