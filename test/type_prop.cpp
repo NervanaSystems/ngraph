@@ -3367,8 +3367,244 @@ TEST(type_prop, one_hot_deduce_shape_incompatible)
     catch (const ngraph_error& error)
     {
         EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("Argument shape {12,24} does not match the expected shape"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, one_hot_partial_rank_dynamic_rank_dynamic)
+{
+    PartialShape input_shape{PartialShape::dynamic()};
+    PartialShape requested_shape{PartialShape::dynamic()};
+    size_t one_hot_axis{3000};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    try
+    {
+        auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Dynamic rank for requested result shape not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Requested result shape has dynamic rank"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, one_hot_partial_rank_dynamic_rank_static_dynamic_ok)
+{
+    PartialShape input_shape{PartialShape::dynamic()};
+    PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
+    size_t one_hot_axis{2};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
+
+    ASSERT_EQ(oh->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(oh->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), 2, 3, Dimension::dynamic()}));
+}
+
+TEST(type_prop, one_hot_partial_rank_dynamic_rank_static_dynamic_one_hot_dim_dynamic)
+{
+    PartialShape input_shape{PartialShape::dynamic()};
+    PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
+    size_t one_hot_axis{3};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    try
+    {
+        auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Dynamic one-hot dimension not detected";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Requested result shape ({?,2,3,?}) has dynamic dimension "
+                                         "at the one-hot axis (3)"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, one_hot_partial_rank_dynamic_rank_static_dynamic_one_hot_axis_oob)
+{
+    PartialShape input_shape{PartialShape::dynamic()};
+    PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
+    size_t one_hot_axis{4};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    try
+    {
+        auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "One-hot axis out of bounds not detected (rank-dynamic argument, rank-static "
+                  "dynamic result shape)";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Argument shape Shape{12, 24} does not match the expected shape"));
+            std::string("One-hot axis (4) is out of bounds (requested result shape: {?,2,3,?})"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_ok)
+{
+    PartialShape input_shape{3, Dimension::dynamic(), Dimension::dynamic(), 4};
+    PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
+    size_t one_hot_axis{2};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
+
+    ASSERT_EQ(oh->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(oh->get_output_partial_shape(0).same_scheme(
+        PartialShape{3, 2, 3, Dimension::dynamic(), 4}));
+}
+
+TEST(type_prop,
+     one_hot_partial_rank_static_dynamic_rank_static_dynamic_incompatible_rank_input_short)
+{
+    PartialShape input_shape{3, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
+    size_t one_hot_axis{2};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    try
+    {
+        auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incompatible input/output ranks not detected (rank-static dynamic argument, "
+                  "rank-static dynamic result shape)";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Argument shape {3,?,?} does not match the expected shape of {?,2,?,4}"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     one_hot_partial_rank_static_dynamic_rank_static_dynamic_incompatible_rank_input_long)
+{
+    PartialShape input_shape{3, Dimension::dynamic(), Dimension::dynamic(), 4, 5};
+    PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
+    size_t one_hot_axis{2};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    try
+    {
+        auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incompatible input/output ranks not detected (rank-static dynamic argument, "
+                  "rank-static dynamic result shape)";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Argument shape {3,?,?,4,5} does not match the expected shape of {?,2,?,4}"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_incompatible_dim)
+{
+    PartialShape input_shape{3, Dimension::dynamic(), Dimension::dynamic(), 5};
+    PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
+    size_t one_hot_axis{2};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    try
+    {
+        auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incompatible input/output dimensions not detected (rank-static dynamic "
+                  "argument, rank-static dynamic result shape)";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Argument shape {3,?,?,5} does not match the expected shape of {?,2,?,4}"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_one_hot_dim_dynamic)
+{
+    PartialShape input_shape{3, Dimension::dynamic(), Dimension::dynamic(), 4};
+    PartialShape requested_shape{
+        Dimension::dynamic(), 2, Dimension::dynamic(), Dimension::dynamic(), 4};
+    size_t one_hot_axis{2};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    try
+    {
+        auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Dynamic one-hot dimension not detected (rank-static dynamic argument, "
+                  "rank-static dynamic result shape)";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Requested result shape ({?,2,?,?,4}) has dynamic "
+                                         "dimension at the one-hot axis (2)"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_one_hot_axis_oob)
+{
+    PartialShape input_shape{3, Dimension::dynamic(), Dimension::dynamic(), 4};
+    PartialShape requested_shape{
+        Dimension::dynamic(), 2, Dimension::dynamic(), Dimension::dynamic(), 4};
+    size_t one_hot_axis{2};
+
+    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    try
+    {
+        auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "One-hot axis out of bounds not detected (rank-static dynamic argument, "
+                  "rank-static dynamic result shape)";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Requested result shape ({?,2,?,?,4}) has dynamic "
+                                         "dimension at the one-hot axis (2)"));
     }
     catch (...)
     {
@@ -8717,7 +8953,7 @@ TEST(type_prop, index_reduction_scalar)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "Argument rank must be at least 1");
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument rank is zero");
     }
     catch (...)
     {
@@ -8736,7 +8972,7 @@ TEST(type_prop, index_reduction_invalid_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "is greater than rank of");
+        EXPECT_HAS_SUBSTRING(error.what(), "Reduction axis (2) is not less than argument rank (2)");
     }
     catch (...)
     {
@@ -8755,12 +8991,114 @@ TEST(type_prop, index_reduction_invalid_index_type)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "Index element type must be");
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element is neither i64 or i32");
     }
     catch (...)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, index_reduction_partial_rank_dynamic_output_et_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    size_t axis = 228;
+    auto output_et = element::dynamic;
+
+    try
+    {
+        auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+        FAIL() << "Invalid output type of element::dynamic not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element is neither i64 or i32");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, index_reduction_partial_rank_dynamic_output_et_invalid)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    size_t axis = 228;
+    auto output_et = element::dynamic;
+
+    try
+    {
+        auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+        FAIL() << "Invalid output type of element::f32 not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element is neither i64 or i32");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, index_reduction_partial_rank_dynamic_ok)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    size_t axis = 228;
+    auto output_et = element::i32;
+
+    auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+
+    ASSERT_EQ(argmax->get_output_element_type(0), element::i32);
+    ASSERT_TRUE(argmax->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, index_reduction_partial_rank_static_dynamic_axis_oob)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3, 4});
+    size_t axis = 4;
+    auto output_et = element::i32;
+
+    try
+    {
+        auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+        FAIL() << "Out-of-bounds reduction axis not detected (rank-static dynamic argument)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Reduction axis (4) is not less than argument rank (4)");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, index_reduction_partial_rank_static_dynamic_ok)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3, 4});
+    size_t axis = 2;
+    auto output_et = element::i32;
+
+    auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+
+    ASSERT_EQ(argmax->get_output_element_type(0), element::i32);
+    ASSERT_TRUE(
+        argmax->get_output_partial_shape(0).same_scheme(PartialShape{Dimension::dynamic(), 2, 4}));
+}
+
+TEST(type_prop, index_reduction_partial_et_dynamic_rank_static_dynamic_ok)
+{
+    auto a =
+        make_shared<op::Parameter>(element::dynamic, PartialShape{Dimension::dynamic(), 2, 3, 4});
+    size_t axis = 2;
+    auto output_et = element::i32;
+
+    auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+
+    ASSERT_EQ(argmax->get_output_element_type(0), element::i32);
+    ASSERT_TRUE(
+        argmax->get_output_partial_shape(0).same_scheme(PartialShape{Dimension::dynamic(), 2, 4}));
 }
 
 TEST(type_prop, topk_invalid_rank)
