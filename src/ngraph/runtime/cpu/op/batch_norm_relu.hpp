@@ -35,13 +35,6 @@ namespace ngraph
                                   std::shared_ptr<Node> beta,
                                   std::shared_ptr<Node> input);
 
-            BatchNormTrainingRelu(double eps,
-                                  std::shared_ptr<ngraph::Node> gamma,
-                                  std::shared_ptr<ngraph::Node> beta,
-                                  std::shared_ptr<ngraph::Node> input,
-                                  std::shared_ptr<ngraph::Node> mean,
-                                  std::shared_ptr<ngraph::Node> variance);
-
             double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
