@@ -33,15 +33,16 @@ function run() {
     cd "${CI_PATH}"    
     if [[ -z $(docker ps -a | grep -i "${DOCKER_CONTAINER}") ]];
     then
-        docker run -h "$(hostname)" --privileged --name "${DOCKER_CONTAINER}" -v "${REPO_ROOT}":/root \ 
+        docker run -h "$(hostname)" --privileged --name "${DOCKER_CONTAINER}" -v "${REPO_ROOT}":/root \
             -d ngraph-onnx:ubuntu-16_04 tail -f /dev/null
         BUILD="TRUE"
     fi
 
     if [[ "${BUILD}" == "TRUE" ]]; 
     then         
-        BUILD_NGRAPH_CMD='cd /root &&\
-            mkdir -p ./build && cd ./build &&\
+        BUILD_NGRAPH_CMD='cd /root && \
+            mkdir -p ./build && \
+            cd ./build && \
             cmake ../ -DNGRAPH_TOOLS_ENABLE=FALSE -DNGRAPH_UNIT_TEST_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE \
             -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX=/root/ngraph_dist && \
             make -j $(lscpu --parse=CORE | grep -v '"'#'"' | sort | uniq | wc -l) && \
@@ -71,7 +72,7 @@ function run() {
 function cleanup_ngraph() {
     set -x
     
-    docker exec "${DOCKER_CONTAINER}" bash -c 'rm -rf /root/ngraph_dist /root/python/dist'
+    docker exec "${DOCKER_CONTAINER}" bash -c 'rm -rf /root/build/* /root/ngraph_dist /root/python/dist'
 }
 
 # Function cleanup() removes items created during script execution
