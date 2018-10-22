@@ -94,7 +94,8 @@ Shape op::GroupConvolutionBias::get_weights_dimensions()
 op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolution>& conv,
                                                const shared_ptr<Node>& bias,
                                                const size_t groups,
-                                               bool with_relu)
+                                               bool with_relu,
+                                               float alpha)
     : Op("GroupConvolutionBias",
          check_single_output_args({conv->get_argument(0), conv->get_argument(1), bias}))
     , m_window_movement_strides(conv->get_window_movement_strides())
@@ -104,6 +105,7 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolu
     , m_data_dilation_strides(conv->get_data_dilation_strides())
     , m_with_relu(with_relu)
     , m_groups(groups)
+    , m_alpha(alpha)
 {
     constructor_validate_and_infer_types();
 
@@ -127,7 +129,8 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<Node>& data_batc
                                                const CoordinateDiff& padding_above,
                                                const Strides& data_dilation_strides,
                                                const size_t groups,
-                                               bool with_relu)
+                                               bool with_relu,
+                                               float alpha)
     : Op("GroupConvolutionBias", check_single_output_args({data_batch, filters, bias}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
@@ -136,6 +139,7 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<Node>& data_batc
     , m_data_dilation_strides(data_dilation_strides)
     , m_with_relu(with_relu)
     , m_groups(groups)
+    , m_alpha(alpha)
 {
     cout << "** GroupConvolutionBias ctor called \n";
     constructor_validate_and_infer_types();
@@ -191,7 +195,8 @@ shared_ptr<Node> op::GroupConvolutionBias::copy_with_new_args(const NodeVector& 
                                                      get_padding_above(),
                                                      get_data_dilation_strides(),
                                                      get_groups(),
-                                                     m_with_relu));
+                                                     m_with_relu,
+                                                     get_alpha()));
 }
 
 void op::GroupConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,

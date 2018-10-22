@@ -63,18 +63,19 @@ public:
             construct_zero_padded_reshaped_conv();
             construct_zero_padded_conv();
             construct_zero_padded_conv_backprop_filters();
+            construct_bounded_relu();
             construct_conv_bias_bprop();
             construct_conv_bias_folded_batch_norm();
             construct_conv_bias_affine_folding();
             construct_groupconv_batchnorm_global_stats_folding(); //must be called before BNRelu
-            construct_groupconv_batchnorm_global_stats_folding_relu();
+            construct_groupconv_batchnorm_global_stats_folding_boundedrelu();
             construct_batch_norm_relu();
             construct_batch_norm_relu_global_stats();
             construct_conv_relu();
             construct_conv_bias_relu();
             construct_conv_bias_add();
             construct_conv_bias_add_relu();
-            construct_bounded_relu();
+
             // construct_conv_add() should always be after construct_conv_bias()
             construct_conv_add();
             construct_conv_add_relu();
@@ -103,5 +104,5 @@ private:
     void construct_conv_bias_folded_batch_norm();
     void construct_conv_bias_affine_folding();
     void construct_groupconv_batchnorm_global_stats_folding();
-    void construct_groupconv_batchnorm_global_stats_folding_relu();
+    void construct_groupconv_batchnorm_global_stats_folding_boundedrelu();
 };

@@ -1719,7 +1719,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
                                                            conv_m->get_padding_above(),
                                                            conv_m->get_data_dilation_strides(),
                                                            conv_m->get_groups(),
-                                                           false);
+                                                           false,
+                                                           1.0);
             std::cout << "\t--> cpu_fusion: make_shared\n";
             ngraph::replace_node(m.get_match_root(), g_conv_bias);
 
@@ -1731,8 +1732,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
 }
 
 void ngraph::runtime::cpu::pass::CPUFusion::
-    construct_groupconv_batchnorm_global_stats_folding_relu()
+    construct_groupconv_batchnorm_global_stats_folding_boundedrelu()
 {
+    std::cout << "------- construct_groupconv_batchnorm_global_stats_folding_boundedrelu -------\n";
     Shape shape_a{1, 32, 2, 2}; //GD: Copied shapes from cpu_fusion test for groupconv
     Shape shape_b{32, 1, 1, 1};
     Shape shape_r{1, 32, 2, 2};
@@ -1754,28 +1756,66 @@ void ngraph::runtime::cpu::pass::CPUFusion::
                                                            CoordinateDiff{0, 0},
                                                            Strides{1, 1},
                                                            input->get_shape().size(),
-                                                           false);
+                                                           false,
+                                                           1.0);
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
 
     // add Relu as well for matching
-    auto prelu = std::make_shared<op::Relu>(conv_label);
+    //auto prelu = std::make_shared<op::Relu>(conv_label);
+
+    float const1 = 1.0;
+    auto prelu = std::make_shared<op::BoundedRelu>(conv_label, const1);
+
+    // TODO: try adding the below pattern for BoundedRelu here and then it should be done... 
+    /*auto relu = std::make_shared<op::Relu>(conv_label);
+
+    //auto iconst1 = op::Constant::create(element::f32, Shape{}, {1});
+    auto iconst1 = op::Constant::create(element::f32, relu->get_shape(), {1});
+    auto alpha = std::make_shared<pattern::op::Label>(iconst1);
+    auto broadcast_pred = [](std::shared_ptr<Node> n) {
+        return (std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr);
+    };
+    auto skip_broadcast = std::make_shared<pattern::op::Skip>(alpha, broadcast_pred);
+    auto min = std::make_shared<op::Minimum>(relu, skip_broadcast);*/
+
 
     ngraph::pattern::graph_rewrite_callback callback =
-        [input, filters, bias, num, conv_label, prelu](pattern::Matcher& m) {
+        //[input, filters, bias, num, conv_label, alpha, min](pattern::Matcher& m) {
+        [input, filters, bias, num, conv_label,  prelu](pattern::Matcher& m) {
 
-            std::cout << " GD ****** found groupConvBias + Relu match ****** \n";
-            NGRAPH_DEBUG << "In callback for groupconvBias + Relu folding against node = "
+            std::cout << " GD ****** found groupConvBias + BoundedRelu match ****** \n";
+            NGRAPH_DEBUG << "In callback for groupconvBias + BoundedRelu folding against node = "
                          << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
 
             //auto conv_m = std::dynamic_pointer_cast<op::GroupConvolutionBias>(m.get_match_root());
             auto conv_m = std::static_pointer_cast<op::GroupConvolution>(pattern_map[conv_label]);
+            auto b_relu_m = std::dynamic_pointer_cast<op::BoundedRelu>(m.get_match_root());
+            /*auto min_m = std::dynamic_pointer_cast<op::Minimum>(m.get_match_root());
 
             if (conv_m->get_users().size() > 1)
             {
                 NGRAPH_DEBUG << "GroupConvolutionBias has more than one user";
                 return false;
             }
+
+            if (!std::dynamic_pointer_cast<op::Constant>(pattern_map[alpha]))
+            {
+                NGRAPH_DEBUG << "alpha must be constant for bounded relu";
+                return false;
+            }
+
+            // we wont fuse if the alpha and the Relu output element type are not same
+            if (pattern_map[alpha]->get_element_type() != pattern_map[conv_label]->get_element_type())
+            {
+                return false;
+            }
+            auto alpha_const_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[alpha]);
+            float alpha_val = *(static_cast<float const*>(alpha_const_op->get_data_ptr()));
+            */
+            float alpha_val = b_relu_m->get_alpha();
+            //NGRAPH_DEBUG << "relu_input (conv output): " << pattern_map[conv_label] << " min_val: "
+            //             << *(static_cast<float const*>(alpha_const_op->get_data_ptr()));
 
             std::cout << "\t num_groups = " << conv_m->get_groups() << "\n";
             auto g_conv_bias_relu = std::make_shared<op::GroupConvolutionBias>(
@@ -1788,7 +1828,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::
                 conv_m->get_padding_above(),
                 conv_m->get_data_dilation_strides(),
                 conv_m->get_groups(),
-                true);
+                true,
+                alpha_val);
             std::cout << "\t--> cpu_fusion : with_relu: make_shared\n";
             ngraph::replace_node(m.get_match_root(), g_conv_bias_relu);
 
@@ -1796,6 +1837,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::
         };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(prelu, callback);
+    //auto m = std::make_shared<ngraph::pattern::Matcher>(min, callback);
     this->add_matcher(m);
 }
 

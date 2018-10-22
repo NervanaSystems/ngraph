@@ -1091,16 +1091,15 @@ TEST(cpu_fusion, conv_add)
 }
 
 // CHECK: do we care if this is in-place only??
-// ConvolutionAdd relies on an in-place fused MKLDNN kernel.
-// Need to ensure that it is fused only when in-place buffer allocation is feasible
-shared_ptr<Function> gen_groupconv_bias()
+shared_ptr<Function> gen_groupconv_batchnorm()
 {
-    const size_t GROUPS = 32;
-    Shape shape_a{1, 32, 5, 5};
+    const int NUM = 32;
+    const size_t GROUPS = NUM;
+    Shape shape_a{1, NUM, 5, 5};
     auto input = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_b{32, 1, 3, 3};
+    Shape shape_b{NUM, 1, 3, 3};
     auto weights = make_shared<op::Parameter>(element::f32, shape_b);
-    Shape shape_r{1, 32, 3, 3};
+    Shape shape_r{1, NUM, 3, 3};
     auto group_conv = make_shared<op::GroupConvolution>(input,
                                                         weights,
                                                         Strides{1, 1},
@@ -1122,9 +1121,9 @@ shared_ptr<Function> gen_groupconv_bias()
     return f;
 }
 
-TEST(cpu_fusion, fuse_groupconv_bias)
+TEST(cpu_fusion, fuse_groupconv_batchnorm)
 {
-    auto func_fuse = gen_groupconv_bias();
+    auto func_fuse = gen_groupconv_batchnorm();
 
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
@@ -1132,26 +1131,91 @@ TEST(cpu_fusion, fuse_groupconv_bias)
     ASSERT_EQ(count_ops_of_type<op::GroupConvolutionBias>(func_fuse), 1);
 }
 
-TEST(cpu_fusion, groupconv_bias)
+TEST(cpu_fusion, groupconv_batchnorm)
 {
-    auto int_f = gen_groupconv_bias();
-    auto cpu_f = gen_groupconv_bias();
+    shared_ptr<Function> cpu_func = gen_groupconv_batchnorm();
+    shared_ptr<Function> int_func = gen_groupconv_batchnorm();
 
-    vector<vector<float>> args{{1.25f, 2.25f, 5.25f, 6.25f, -1.25f, -1.25f, 3.25f, -4.25f},
-                               {-1.25f},
-                               {1.25f, 2.25f, -3.25f, 2.25f, 4.25f, 4.25f, 1.25f, 2.25f}};
+    test::Uniform<float> rng(1.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
 
-    auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
-    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
-
-    int_f = gen_conv_add(false, true);
-    cpu_f = gen_conv_add(false, true);
-
-    int_results = execute(int_f, args, "INTERPRETER");
-    cpu_results = execute(cpu_f, args, "CPU");
+    auto int_results = execute(int_func, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_func, args, "CPU");
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
+
+/*shared_ptr<Function> gen_groupconv_batchnorm_boundedrelu()
+{
+    const int NUM = 32;
+    const size_t GROUPS = NUM;
+    Shape shape_a{1, NUM, 5, 5};
+    auto input = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{NUM, 1, 3, 3};
+    auto weights = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1, NUM, 3, 3};
+    auto group_conv = make_shared<op::GroupConvolution>(input,
+                                                        weights,
+                                                        Strides{1, 1},
+                                                        Strides{1, 1},
+                                                        CoordinateDiff{0, 0},
+                                                        CoordinateDiff{0, 0},
+                                                        Strides{1, 1},
+                                                        GROUPS,
+                                                        shape_r);
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+
+    double eps = 0.001;
+    auto gamma = std::make_shared<op::Parameter>(element::f32, Shape{32});
+    auto beta = std::make_shared<op::Parameter>(element::f32, Shape{32});
+    auto mean = std::make_shared<op::Parameter>(element::f32, Shape{32});
+    auto var = std::make_shared<op::Parameter>(element::f32, Shape{32});
+    auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, group_conv, mean, var);
+
+    float alpha_val = 6.0;
+    auto alpha = op::Constant::create<float>(
+            element::f32, shape_a, std::vector<float>(1.0f, alpha_val));
+    //auto prelu = std::make_shared<op::BoundedRelu>(group_conv, alpha);
+
+    //auto f = make_shared<Function>(NodeVector{prelu},
+    //                               op::ParameterVector{input, weights, gamma, beta, mean, var});
+    return f;
+}
+
+TEST(cpu_fusion, fuse_groupconv_batchnorm_boundedrelu)
+{
+    auto func_fuse = gen_groupconv_batchnorm_boundedrelu();
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.run_passes(func_fuse);
+    ASSERT_EQ(count_ops_of_type<op::GroupConvolutionBias>(func_fuse), 1);
+    ASSERT_EQ(count_ops_of_type<op::BoundedRelu>(func_fuse), 0);
+}
+
+TEST(cpu_fusion, groupconv_batchnorm_boundedrelu)
+{
+    shared_ptr<Function> cpu_func = gen_groupconv_batchnorm_boundedrelu();
+    shared_ptr<Function> int_func = gen_groupconv_batchnorm_boundedrelu();
+
+    test::Uniform<float> rng(1.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto int_results = execute(int_func, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_func, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}*/
 
 std::vector<shared_ptr<runtime::Tensor>> rnn_matrix_fusion_eval(const size_t time_steps,
                                                                 const Shape& data_shape,
