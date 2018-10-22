@@ -74,26 +74,33 @@ if (NGRAPH_GPU_ENABLE)
 
     set (DO_CUDA_COMPILE FALSE)
     if (CUDA9_FOUND)
-        set (DO_CUDA_COMPILE TRUE)
         if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
             # CUDA 9 supports up to gcc 6.x
             if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
                 set (DO_CUDA_COMPILE TRUE)
             endif()
-        # CUDA 9 supports up to clang 3.9
-        elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.0)
-            set (DO_CUDA_COMPILE TRUE)
+        elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+            # CUDA 9 supports up to clang 3.9
+            if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.0)
+                set (DO_CUDA_COMPILE TRUE)
+            endif()
         endif()
-    elseif (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
-        # All variants of CUDA 8 support up to gcc 5.3
-        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.4)
-            set (DO_CUDA_COMPILE TRUE)
+    else()
+        # CUDA 8 (minimum version of CUDA we support)
+        if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
+            # Current release of CUDA 8 supports up to gcc 5.4
+            if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.5)
+                set (DO_CUDA_COMPILE TRUE)
+            endif()
+        elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+            # CUDA 8 supports up to clang 3.8
+            if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.9)
+                set (DO_CUDA_COMPILE TRUE)
+            endif()
         endif()
-    # CUDA 8 supports up to clang 3.8
-    elseif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.9)
-        set (DO_CUDA_COMPILE TRUE)
     endif()
-     if (DO_CUDA_COMPILE)
+
+    if (DO_CUDA_COMPILE)
         set_source_files_properties( ${CUDA_SRC} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
         cuda_compile(CUDA_OBJ ${CUDA_SRC} STATIC)
     endif()
