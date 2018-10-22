@@ -16,6 +16,10 @@
 
 include(ExternalProject)
 
+if(NOT NGRAPH_LLVM_CODEGEN_ENABLE)
+    return()
+endif()
+
 ExternalProject_Add(
     ext_clang
     GIT_REPOSITORY https://github.com/llvm-mirror/clang.git

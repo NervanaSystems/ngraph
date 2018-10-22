@@ -16,6 +16,10 @@
 
 include(ExternalProject)
 
+if(NOT NGRAPH_LLVM_CODEGEN_ENABLE)
+    return()
+endif()
+
 find_package(ZLIB REQUIRED)
 
 # Override default LLVM binaries
