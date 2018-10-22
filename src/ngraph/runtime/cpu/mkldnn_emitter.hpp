@@ -514,60 +514,62 @@ namespace ngraph
                             "feature size ");
                     }
 
-                    Shape src_layer_tz{
+                    Shape src_layer_dims{
                         src_sequence_length_max,
                         batch,
                         static_cast<unsigned long>(rnn_node->get_src_layer_feature_size())};
-                    Shape src_iter_tz{
+                    Shape src_iter_dims{
                         num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
-                    Shape wei_layer_tz{
+                    Shape wei_layer_dims{
                         num_fused_layers,
                         direction,
                         static_cast<unsigned long>(rnn_node->get_src_layer_feature_size()),
                         rnn_cell_n_gates,
                         feature_size};
-                    Shape wei_iter_tz{
+                    Shape wei_iter_dims{
                         num_fused_layers, direction, feature_size, rnn_cell_n_gates, feature_size};
-                    Shape bias_tz{num_fused_layers, direction, rnn_cell_n_gates, feature_size};
-                    Shape dst_layer_tz{src_sequence_length_max, batch, feature_size};
-                    Shape dst_iter_tz{
+                    Shape bias_dims{num_fused_layers, direction, rnn_cell_n_gates, feature_size};
+                    Shape dst_layer_dims{src_sequence_length_max, batch, feature_size};
+                    Shape dst_iter_dims{
                         num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
 
                     // We create the memory descriptors used by the user
-                    auto src_layer_md = build_memory_descriptor(
-                        src_layer_tz, args[0].get_element_type(), mkldnn::memory::format::ntc);
-                    auto src_iter_md = build_memory_descriptor(
-                        src_iter_tz, args[1].get_element_type(), mkldnn::memory::format::ldsnc);
-                    auto wei_layer_md = build_memory_descriptor(
-                        wei_layer_tz, args[2].get_element_type(), mkldnn::memory::format::ldgoi);
-                    auto wei_iter_md = build_memory_descriptor(
-                        wei_iter_tz, args[3].get_element_type(), mkldnn::memory::format::ldgoi);
-                    auto bias_md = build_memory_descriptor(
-                        bias_tz, args[4].get_element_type(), mkldnn::memory::format::ldgo);
-                    auto dst_layer_md = build_memory_descriptor(
-                        dst_layer_tz, out[0].get_element_type(), mkldnn::memory::format::tnc);
-                    auto dst_iter_md = build_memory_descriptor(
-                        dst_iter_tz, out[1].get_element_type(), mkldnn::memory::format::ldsnc);
+                    auto user_src_layer_md = build_memory_descriptor(
+                        src_layer_dims, args[0].get_element_type(), mkldnn::memory::format::tnc);
+                    auto user_src_iter_md = build_memory_descriptor(
+                        src_iter_dims, args[1].get_element_type(), mkldnn::memory::format::ldsnc);
+                    auto user_wei_layer_md = build_memory_descriptor(
+                        wei_layer_dims, args[2].get_element_type(), mkldnn::memory::format::ldgoi);
+                    auto user_wei_iter_md = build_memory_descriptor(
+                        wei_iter_dims, args[3].get_element_type(), mkldnn::memory::format::ldgoi);
+                    auto user_bias_md = build_memory_descriptor(
+                        bias_dims, args[4].get_element_type(), mkldnn::memory::format::ldgo);
+
+                    // MKLDNN for now, just support TNC format for dst_layer
+                    auto rnn_dst_layer_md = build_memory_descriptor(
+                        dst_layer_dims, out[0].get_element_type(), mkldnn::memory::format::tnc);
+                    auto rnn_dst_iter_md = build_memory_descriptor(
+                        dst_iter_dims, out[1].get_element_type(), mkldnn::memory::format::ldsnc);
 
                     // define the reorder for the weights (ldgoi) -> (ldigo)
                     auto src_layer_reorder = build_memory_descriptor(
-                        src_layer_tz, args[0].get_element_type(), mkldnn::memory::format::tnc);
+                        src_layer_dims, args[0].get_element_type(), mkldnn::memory::format::tnc);
                     auto dst_layer_reorder = build_memory_descriptor(
-                        dst_layer_tz, out[0].get_element_type(), mkldnn::memory::format::ntc);
-                    auto wei_layer_reorder = build_memory_descriptor(
-                        wei_layer_tz, args[2].get_element_type(), mkldnn::memory::format::ldigo);
-                    auto wei_iter_reorder = build_memory_descriptor(
-                        wei_iter_tz, args[3].get_element_type(), mkldnn::memory::format::ldigo);
+                        dst_layer_dims, out[0].get_element_type(), mkldnn::memory::format::ntc);
+                    auto rnn_wei_layer_md = build_memory_descriptor(
+                        wei_layer_dims, args[2].get_element_type(), mkldnn::memory::format::any);
+                    auto rnn_wei_iter_md = build_memory_descriptor(
+                        wei_iter_dims, args[3].get_element_type(), mkldnn::memory::format::any);
 
-                    return build_rnn_forward(src_layer_md,
-                                             src_iter_md,
-                                             wei_layer_md,
-                                             wei_iter_md,
-                                             bias_md,
-                                             dst_layer_md,
-                                             dst_iter_md,
-                                             wei_layer_reorder,
-                                             wei_iter_reorder,
+                    return build_rnn_forward(user_src_layer_md,
+                                             user_src_iter_md,
+                                             user_wei_layer_md,
+                                             user_wei_iter_md,
+                                             user_bias_md,
+                                             rnn_dst_layer_md,
+                                             rnn_dst_iter_md,
+                                             rnn_wei_layer_md,
+                                             rnn_wei_iter_md,
                                              src_layer_reorder,
                                              dst_layer_reorder);
                 }
@@ -580,8 +582,8 @@ namespace ngraph
                                       const mkldnn::memory::desc& bias_desc,
                                       const mkldnn::memory::desc& dst_layer_desc,
                                       const mkldnn::memory::desc& dst_iter_desc,
-                                      const mkldnn::memory::desc& wei_layer_reorder_desc,
-                                      const mkldnn::memory::desc& wei_iter_reorder_desc,
+                                      const mkldnn::memory::desc& rnn_wei_layer_desc,
+                                      const mkldnn::memory::desc& rnn_wei_iter_desc,
                                       const mkldnn::memory::desc& src_layer_reorder_desc,
                                       const mkldnn::memory::desc& dst_layer_reorder_desc);
 

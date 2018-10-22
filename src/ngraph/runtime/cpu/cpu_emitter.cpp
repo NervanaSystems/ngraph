@@ -525,27 +525,53 @@ namespace ngraph
                 }
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto lstm_index = mkldnn_emitter->build_rnn<ngraph::op::Lstm>(node, args, out);
-                auto& deps = mkldnn_emitter->get_primitive_deps(lstm_index[0]);
+                auto& deps = mkldnn_emitter->get_primitive_deps(lstm_index[2]);
+                auto& weights_layer_deps = mkldnn_emitter->get_primitive_deps(lstm_index[0]);
+                auto& weights_iter_deps = mkldnn_emitter->get_primitive_deps(lstm_index[1]);
+                // weights reorder for src_layer from ldgoi -> ldigo
+                {
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
+                           << to_string(weights_layer_deps[1]) << ", " << args[2].get_name()
+                           << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
+                           << to_string(weights_layer_deps[2]) << ", ctx->mkldnn_workspaces["
+                           << weights_layer_deps[2] << "]);\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(lstm_index[0]) << ");\n";
+                }
+                // weights reorder for src_iter from ldgoi -> ldigo
+                {
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
+                           << to_string(weights_iter_deps[1]) << ", " << args[3].get_name()
+                           << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
+                           << to_string(weights_iter_deps[2]) << ", ctx->mkldnn_workspaces["
+                           << weights_iter_deps[2] << "]);\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(lstm_index[1]) << ");\n";
+                }
+                // rnn primitive executionn
+                {
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", ctx->mkldnn_workspaces[" << weights_layer_deps[2] << "]);\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", ctx->mkldnn_workspaces[" << weights_iter_deps[2] << "]);\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4])
+                           << ", " << args[4].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[5])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6])
+                           << ", " << out[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[7])
+                           << ", ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
 
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
-                       << args[0].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
-                       << args[1].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
-                       << args[2].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3]) << ", "
-                       << args[3].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4]) << ", "
-                       << args[4].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[5]) << ", "
-                       << out[0].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6]) << ", "
-                       << out[1].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[7])
-                       << ", ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
-
-                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                       << to_string(lstm_index[0]) << ");\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(lstm_index[2]) << ");\n";
+                }
             }
 
             template <>
@@ -553,26 +579,54 @@ namespace ngraph
             {
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto rnn_index = mkldnn_emitter->build_rnn<ngraph::op::Rnn>(node, args, out);
-                auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index[0]);
+                auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index[2]);
+                auto& weights_layer_deps = mkldnn_emitter->get_primitive_deps(rnn_index[0]);
+                auto& weights_iter_deps = mkldnn_emitter->get_primitive_deps(rnn_index[1]);
 
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
-                       << args[0].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
-                       << args[1].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
-                       << args[2].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3]) << ", "
-                       << args[3].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4]) << ", "
-                       << args[4].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[5]) << ", "
-                       << out[0].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6]) << ", "
-                       << out[1].get_name() << ");\n";
-                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[7])
-                       << ", ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
-                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                       << to_string(rnn_index[0]) << ");\n";
+                // weights reorder for src_layer from ldgoi -> ldigo
+                {
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
+                           << to_string(weights_layer_deps[1]) << ", " << args[2].get_name()
+                           << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
+                           << to_string(weights_layer_deps[2]) << ", ctx->mkldnn_workspaces["
+                           << weights_layer_deps[2] << "]);\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(rnn_index[0]) << ");\n";
+                }
+                // weights reorder for src_iter from ldgoi -> ldigo
+                {
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
+                           << to_string(weights_iter_deps[1]) << ", " << args[3].get_name()
+                           << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
+                           << to_string(weights_iter_deps[2]) << ", ctx->mkldnn_workspaces["
+                           << weights_iter_deps[2] << "]);\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(rnn_index[1]) << ");\n";
+                }
+                // rnn primitive execution
+                {
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", ctx->mkldnn_workspaces[" << weights_layer_deps[2] << "]);\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", ctx->mkldnn_workspaces[" << weights_iter_deps[2] << "]);\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4])
+                           << ", " << args[4].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[5])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6])
+                           << ", " << out[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[7])
+                           << ", ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(rnn_index[2]) << ");\n";
+                }
             }
 
             void CPU_Emitter::emitBatchNorm(CPU_ExternalFunction* external_function,
