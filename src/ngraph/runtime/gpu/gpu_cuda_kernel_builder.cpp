@@ -616,8 +616,9 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
     {
         writer << data_type << "* in" << i << ", ";
     }
-    writer << data_types[num_inputs]
-           << "* out, uint32_t* inputs_strides, uint32_t output_stride, uint32_t split_output_stride, uint32_t split_input_stride_offset, uint32_t input_offset, uint32_t n)\n";
+    writer << data_type << "* out, uint32_t* inputs_strides, uint32_t output_stride, uint32_t "
+                           "split_output_stride, uint32_t split_input_stride_offset, uint32_t "
+                           "input_offset, uint32_t n)\n";
     writer.block_begin();
     {
         writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
@@ -626,12 +627,15 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
         {
             writer << "uint32_t block_id = tid / split_output_stride;\n";
             writer << "uint32_t block_idx = tid % split_output_stride;\n";
-            writer << "uint32_t output_idx = block_id * output_stride + block_idx + split_input_stride_offset;\n";
+            writer << "uint32_t output_idx = block_id * output_stride + block_idx + "
+                      "split_input_stride_offset;\n";
             writer << "out[output_idx] = 1;\n";
             writer << "bool processed = false;\n";
             for (size_t i = 0; i < num_inputs; i++)
             {
-                writer << "if(!processed && (block_idx + split_input_stride_offset < inputs_strides[" << i << " + input_offset]))\n";
+                writer
+                    << "if(!processed && (block_idx + split_input_stride_offset < inputs_strides["
+                    << i << " + input_offset]))\n";
                 writer.block_begin();
                 {
                     writer << "out[output_idx] = in" << i << "[block_id * inputs_strides[" << i

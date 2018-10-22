@@ -117,7 +117,8 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::string& dtype,
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_concat_op(writer, kernel_name_1.str(), dtype, split_input_size);
-        compiled_kernel_1 = m_ctx->compiled_kernel_pool->set(kernel_name_1.str(), writer.get_code());
+        compiled_kernel_1 =
+            m_ctx->compiled_kernel_pool->set(kernel_name_1.str(), writer.get_code());
     }
     auto compiled_kernel_2 = m_ctx->compiled_kernel_pool->get(kernel_name_2.str());
     if (compiled_kernel_2 == nullptr && residue != 0)
@@ -125,7 +126,8 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::string& dtype,
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         CudaKernelBuilder::get_concat_op(writer, kernel_name_2.str(), dtype, residue);
-        compiled_kernel_2 = m_ctx->compiled_kernel_pool->set(kernel_name_2.str(), writer.get_code());
+        compiled_kernel_2 =
+            m_ctx->compiled_kernel_pool->set(kernel_name_2.str(), writer.get_code());
     }
 
     std::vector<uint32_t> inputs_strides(input_num, 1);
@@ -149,22 +151,25 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::string& dtype,
 
     split_input_stride_offsets.push_back(0);
     size_t split_input_stride_offset = 0;
-    for(uint32_t i = 0; i < input_num; i += split_input_size)
+    for (uint32_t i = 0; i < input_num; i += split_input_size)
     {
         size_t nthread = 0;
         size_t split_output_stride = 0;
-        for(j = i; j < i + split_input_size && j < input_num; j++)
+        for (uint32_t j = i; j < i + split_input_size && j < input_num; j++)
         {
-            nthread += shape_size(input_shape[j]);
+            nthread += shape_size(input_shapes[j]);
             split_output_stride += inputs_strides[j];
         }
         split_input_stride_offset += split_output_stride;
         split_input_stride_offsets.push_back(split_input_stride_offset);
         split_output_strides.push_back(split_output_stride);
         split_nthreads.push_back(static_cast<uint32_t>(nthread));
-        split_aligned_grid_size_x.push_back(align_to_block_size(split_nthreads.back(), block_size_x));
+        split_aligned_grid_size_x.push_back(
+            align_to_block_size(split_nthreads.back(), block_size_x));
     }
-
+    NGRAPH_INFO << join(split_input_stride_offsets);
+    NGRAPH_INFO << join(split_output_strides);
+    NGRAPH_INFO << join(split_nthreads);
 
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
@@ -174,11 +179,12 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::string& dtype,
     // create the launch primitive
     std::unique_ptr<gpu::primitive> kernel_launch(new gpu::primitive{[=](void** inputs,
                                                                          void** outputs) mutable {
-        void* param_inputs_strides = runtime::gpu::invoke_memory_primitive(m_ctx, idx_inputs_strides);
-        for(uint32_t i = 0, n = 0; i < input_num; i += split_input_size, n++)
+        void* param_inputs_strides =
+            runtime::gpu::invoke_memory_primitive(m_ctx, idx_inputs_strides);
+        for (uint32_t i = 0, n = 0; i < input_num; i += split_input_size, n++)
         {
             std::vector<void*> args_list;
-            for(j = i; j < i + split_input_size && j < input_num; j++)
+            for (uint32_t j = i; j < i + split_input_size && j < input_num; j++)
             {
                 args_list.push_back(&inputs[i]);
             }
@@ -188,19 +194,20 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::string& dtype,
             args_list.push_back(&split_output_strides[n]);
             args_list.push_back(&split_input_stride_offsets[n]);
             args_list.push_back(&i);
-            args_list.push_back(&nthreads[n]);
-            auto compiled_kernel = (args_list.size() == split_input_size + 7) ? compiled_kernel_1 : compiled_kernel_2;
+            args_list.push_back(&split_nthreads[n]);
+            auto compiled_kernel =
+                (args_list.size() == split_input_size + 7) ? compiled_kernel_1 : compiled_kernel_2;
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                aligned_grid_size_x,
-                                1,
-                                1, // grid dim
-                                block_size_x,
-                                1,
-                                1, // block dim
-                                0,
-                                NULL, // shared mem and stream
-                                args_list.data(),
-                                0)); // arguments
+                                          split_aligned_grid_size_x[n],
+                                          1,
+                                          1, // grid dim
+                                          block_size_x,
+                                          1,
+                                          1, // block dim
+                                          0,
+                                          NULL, // shared mem and stream
+                                          args_list.data(),
+                                          0)); // arguments
             debug_sync();
         }
     }});

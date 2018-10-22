@@ -100,7 +100,7 @@ if (NGRAPH_GPU_ENABLE)
         endif()
     endif()
 
-    if (DO_CUDA_COMPILE)
+    if (CUDA9_FOUND)
         set_source_files_properties( ${CUDA_SRC} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
         cuda_compile(CUDA_OBJ ${CUDA_SRC} STATIC)
     endif()

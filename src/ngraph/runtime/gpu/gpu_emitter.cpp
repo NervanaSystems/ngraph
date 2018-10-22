@@ -451,7 +451,8 @@ void runtime::gpu::GPU_Emitter::emit_Concat(EMIT_ARGS)
     }
 
     auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
-    auto index = cuda_emitter->build_concat(out[0].get_type(), input_shapes, axis, out[0].get_shape());
+    auto index =
+        cuda_emitter->build_concat(out[0].get_type(), input_shapes, axis, out[0].get_shape());
 
     writer.block_begin();
     {
