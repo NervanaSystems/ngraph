@@ -18,7 +18,9 @@ cmake_minimum_required (VERSION 3.1)
 
 include(cmake/Modules/git_tags.cmake)
 
-NGRAPH_GET_VERSION_LABEL()
+if (NOT DEFINED NGRAPH_VERSION_LABEL)
+  NGRAPH_GET_VERSION_LABEL()
+endif()
 
 string(REGEX MATCH "([0-9]+)\.([0-9]+)\.([0-9]+)" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
 string(REGEX MATCH "([0-9]+)\.([0-9]+)" NGRAPH_API_VERSION "${NGRAPH_VERSION_LABEL}")
