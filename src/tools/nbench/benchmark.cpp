@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <random>
+#include <xmmintrin.h>
 
 #include "benchmark.hpp"
 #include "ngraph/file_util.hpp"
@@ -28,6 +29,15 @@ using namespace std;
 using namespace ngraph;
 
 static default_random_engine s_random_engine;
+
+void set_denormals_flush_to_zero()
+{
+#if defined(__x86_64__) || defined(__amd64__)
+    // Avoids perf impact from denormals while benchmarking with random data
+    _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+    _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+#endif
+}
 
 template <typename T>
 void init_int_tv(shared_ptr<runtime::Tensor> tv, T min, T max)
@@ -176,6 +186,8 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
         arg_data.push_back(tensor_data);
         args_cacheable.push_back(param->get_cacheable());
     }
+    set_denormals_flush_to_zero();
+
     vector<shared_ptr<runtime::HostTensor>> result_data;
     vector<shared_ptr<runtime::Tensor>> results;
     for (shared_ptr<Node> out : f->get_results())
