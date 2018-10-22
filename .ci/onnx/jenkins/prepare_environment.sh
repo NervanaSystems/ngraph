@@ -22,6 +22,7 @@ set -e
 NGRAPH_CACHE_DIR="/home"
 
 function check_cached_ngraph() {
+    set -x
     # if no ngraph in /home - clone
     if [ ! -e "${NGRAPH_CACHE_DIR}/ngraph" ]; then
         cd /home/
@@ -30,6 +31,7 @@ function check_cached_ngraph() {
 }
 
 function build_ngraph() {
+    set -x
     # directory containing ngraph repo
     local ngraph_directory="$1"
     local func_parameters="$2"
@@ -63,26 +65,29 @@ function build_ngraph() {
     mkdir -p ./build
     cd ./build
     cmake ../ -DNGRAPH_TOOLS_ENABLE=FALSE -DNGRAPH_UNIT_TEST_ENABLE=FALSE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DCMAKE_INSTALL_PREFIX="${ngraph_directory}/ngraph_dist" || return 1
-    rm -f "${ngraph_directory}"/ngraph/python/dist/ngraph*.whl
     make -j $(lscpu --parse=CORE | grep -v '#' | sort | uniq | wc -l) || return 1
     make install || return 1
     cd "${ngraph_directory}/ngraph/python"
     if [ ! -d ./pybind11 ]; then
-        git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
+        git clone --recursive https://github.com/pybind/pybind11.git
     fi
+    rm -f "${ngraph_directory}"/ngraph/python/dist/ngraph*.whl
+    rm -rf "${ngraph_directory}/ngraph/python/*.so ${ngraph_directory}/ngraph/python/build"
     export PYBIND_HEADERS_PATH="${ngraph_directory}/ngraph/python/pybind11"
     export NGRAPH_CPP_BUILD_PATH="${ngraph_directory}/ngraph_dist"
+    export NGRAPH_ONNX_IMPORT_ENABLE="TRUE"
     python3 setup.py bdist_wheel
+    # Clean build artifacts
+    rm -rf "${ngraph_directory}/ngraph_dist"
     return 0
 }
+
+# Link Onnx models
+mkdir -p /home/onnx_models/.onnx
+ln -s /home/onnx_models/.onnx /root/.onnx
 
 # Copy stored nGraph master and use it to build PR branch
 if ! build_ngraph "/root" "USE_CACHED"; then
     build_ngraph "${NGRAPH_CACHE_DIR}" "UPDATE REBUILD"
     build_ngraph "/root" "REBUILD USE_CACHED"
-fi
-
-# Copy Onnx models
-if [ -d /home/onnx_models/.onnx ]; then
-    rsync -avhz /home/onnx_models/.onnx /root/ngraph-onnx/
 fi

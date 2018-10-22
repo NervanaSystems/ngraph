@@ -14,8 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <algorithm>
 #include <functional>
+#include <iterator>
+#include <map>
+#include <string>
+#include <unordered_map>
 
 #include "core/attribute.hpp"
 #include "op/abs.hpp"
@@ -36,6 +39,8 @@
 #include "op/flatten.hpp"
 #include "op/floor.hpp"
 #include "op/gemm.hpp"
+#include "op/global_average_pool.hpp"
+#include "op/global_max_pool.hpp"
 #include "op/greater.hpp"
 #include "op/hard_sigmoid.hpp"
 #include "op/identity.hpp"
@@ -82,144 +87,208 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        namespace detail
+        const OperatorSet& OperatorsBridge::get_operator_set_version_1() const
         {
-            namespace error
+            static OperatorSet operator_set;
+            if (operator_set.empty())
             {
-                struct unknown_operation : ngraph_error
+                for (const auto& op : m_map)
                 {
-                    explicit unknown_operation(const std::string& op_type)
-                        : ngraph_error{"unknown operation: " + op_type}
+                    for (const auto& it : op.second)
                     {
+                        if (it.first == 1)
+                        {
+                            operator_set.emplace(op.first, it.second);
+                        }
                     }
-                };
-
-            } // namespace error
-
-            class ops_bridge
-            {
-            public:
-                ops_bridge(const ops_bridge&) = delete;
-                ops_bridge& operator=(const ops_bridge&) = delete;
-                ops_bridge(ops_bridge&&) = delete;
-                ops_bridge& operator=(ops_bridge&&) = delete;
-
-                static NodeVector make_ng_nodes(const Node& node)
-                {
-                    return ops_bridge::get()(node);
                 }
-
-            private:
-                std::map<std::string, std::function<NodeVector(const Node&)>> m_map;
-
-                static const ops_bridge& get()
-                {
-                    static ops_bridge instance;
-                    return instance;
-                }
-
-                ops_bridge()
-                {
-                    m_map.emplace("Abs", std::bind(op::abs, std::placeholders::_1));
-                    m_map.emplace("Add", std::bind(op::add, std::placeholders::_1));
-                    m_map.emplace("And", std::bind(op::logical_and, std::placeholders::_1));
-                    m_map.emplace("AveragePool",
-                                  std::bind(op::average_pool, std::placeholders::_1));
-                    m_map.emplace("BatchNormalization",
-                                  std::bind(op::batch_norm, std::placeholders::_1));
-                    m_map.emplace("Cast", std::bind(op::cast, std::placeholders::_1));
-                    m_map.emplace("Ceil", std::bind(op::ceil, std::placeholders::_1));
-                    m_map.emplace("Clip", std::bind(op::clip, std::placeholders::_1));
-                    m_map.emplace("Concat", std::bind(op::concat, std::placeholders::_1));
-                    m_map.emplace("Constant", std::bind(op::constant, std::placeholders::_1));
-                    m_map.emplace("Conv", std::bind(op::conv, std::placeholders::_1));
-                    m_map.emplace("Div", std::bind(op::div, std::placeholders::_1));
-                    m_map.emplace("Dropout", std::bind(op::identity, std::placeholders::_1));
-                    m_map.emplace("Elu", std::bind(op::elu, std::placeholders::_1));
-                    m_map.emplace("Equal", std::bind(op::equal, std::placeholders::_1));
-                    m_map.emplace("Exp", std::bind(op::exp, std::placeholders::_1));
-                    m_map.emplace("Flatten", std::bind(op::flatten, std::placeholders::_1));
-                    m_map.emplace("Floor", std::bind(op::floor, std::placeholders::_1));
-                    m_map.emplace("Gemm", std::bind(op::gemm, std::placeholders::_1));
-                    m_map.emplace("Greater", std::bind(op::greater, std::placeholders::_1));
-                    m_map.emplace("HardSigmoid",
-                                  std::bind(op::hard_sigmoid, std::placeholders::_1));
-                    m_map.emplace("Identity", std::bind(op::identity, std::placeholders::_1));
-                    m_map.emplace("LeakyRelu", std::bind(op::leaky_relu, std::placeholders::_1));
-                    m_map.emplace("Less", std::bind(op::less, std::placeholders::_1));
-                    m_map.emplace("Log", std::bind(op::log, std::placeholders::_1));
-                    m_map.emplace("LogSoftmax", std::bind(op::log_softmax, std::placeholders::_1));
-                    m_map.emplace("LRN", std::bind(op::lrn, std::placeholders::_1));
-                    m_map.emplace("MatMul", std::bind(op::matmul, std::placeholders::_1));
-                    m_map.emplace("MaxPool", std::bind(op::max_pool, std::placeholders::_1));
-                    m_map.emplace("Max", std::bind(op::max, std::placeholders::_1));
-                    m_map.emplace("Mean", std::bind(op::mean, std::placeholders::_1));
-                    m_map.emplace("Min", std::bind(op::min, std::placeholders::_1));
-                    m_map.emplace("Mul", std::bind(op::mul, std::placeholders::_1));
-                    m_map.emplace("Neg", std::bind(op::neg, std::placeholders::_1));
-                    m_map.emplace("Not", std::bind(op::logical_not, std::placeholders::_1));
-                    m_map.emplace("Or", std::bind(op::logical_or, std::placeholders::_1));
-                    m_map.emplace("Pow", std::bind(op::pow, std::placeholders::_1));
-                    m_map.emplace("PRelu", std::bind(op::prelu, std::placeholders::_1));
-                    m_map.emplace("Reciprocal", std::bind(op::reciprocal, std::placeholders::_1));
-                    m_map.emplace("ReduceLogSum",
-                                  std::bind(op::reduce_log_sum, std::placeholders::_1));
-                    m_map.emplace("ReduceLogSumExp",
-                                  std::bind(op::reduce_log_sum_exp, std::placeholders::_1));
-                    m_map.emplace("ReduceL1", std::bind(op::reduce_l1, std::placeholders::_1));
-                    m_map.emplace("ReduceL2", std::bind(op::reduce_l2, std::placeholders::_1));
-                    m_map.emplace("ReduceMax", std::bind(op::reduce_max, std::placeholders::_1));
-                    m_map.emplace("ReduceMean", std::bind(op::reduce_mean, std::placeholders::_1));
-                    m_map.emplace("ReduceMin", std::bind(op::reduce_min, std::placeholders::_1));
-                    m_map.emplace("ReduceProd", std::bind(op::reduce_prod, std::placeholders::_1));
-                    m_map.emplace("ReduceSum", std::bind(op::reduce_sum, std::placeholders::_1));
-                    m_map.emplace("ReduceSumSquare",
-                                  std::bind(op::reduce_sum_square, std::placeholders::_1));
-                    m_map.emplace("Relu", std::bind(op::relu, std::placeholders::_1));
-                    m_map.emplace("Reshape", std::bind(op::reshape, std::placeholders::_1));
-                    m_map.emplace("Selu", std::bind(op::selu, std::placeholders::_1));
-                    m_map.emplace("Shape", std::bind(op::shape, std::placeholders::_1));
-                    m_map.emplace("Sigmoid", std::bind(op::sigmoid, std::placeholders::_1));
-                    m_map.emplace("Slice", std::bind(op::slice, std::placeholders::_1));
-                    m_map.emplace("Softmax", std::bind(op::softmax, std::placeholders::_1));
-                    m_map.emplace("Softplus", std::bind(op::softplus, std::placeholders::_1));
-                    m_map.emplace("Softsign", std::bind(op::softsign, std::placeholders::_1));
-                    m_map.emplace("Split", std::bind(op::split, std::placeholders::_1));
-                    m_map.emplace("Sqrt", std::bind(op::sqrt, std::placeholders::_1));
-                    m_map.emplace("Squeeze", std::bind(op::squeeze, std::placeholders::_1));
-                    m_map.emplace("Sub", std::bind(op::sub, std::placeholders::_1));
-                    m_map.emplace("Sum", std::bind(op::sum, std::placeholders::_1));
-                    m_map.emplace("Tanh", std::bind(op::tanh, std::placeholders::_1));
-                    m_map.emplace("ThresholdedRelu",
-                                  std::bind(op::thresholded_relu, std::placeholders::_1));
-                    m_map.emplace("Transpose", std::bind(op::transpose, std::placeholders::_1));
-                    m_map.emplace("Unsqueeze", std::bind(op::unsqueeze, std::placeholders::_1));
-                    m_map.emplace("Xor", std::bind(op::logical_xor, std::placeholders::_1));
-                }
-
-                NodeVector operator()(const Node& node) const
-                {
-                    auto it = m_map.find(node.op_type());
-                    if (it == m_map.end())
-                    {
-                        throw detail::error::unknown_operation{node.op_type()};
-                    }
-
-                    std::function<NodeVector(const Node&)> factory{it->second};
-                    return factory(node);
-                }
-            };
-
-        } // namespace detail
-
-        namespace ops_bridge
-        {
-            NodeVector make_ng_nodes(const Node& node)
-            {
-                return detail::ops_bridge::make_ng_nodes(node);
             }
+            return operator_set;
+        }
 
-        } // namespace ops_bridge
+        const OperatorSet& OperatorsBridge::get_operator_set_version_2() const
+        {
+            static OperatorSet operator_set;
+            if (operator_set.empty())
+            {
+                operator_set = get_operator_set_version_1();
+            }
+            return operator_set;
+        }
+
+        const OperatorSet& OperatorsBridge::get_operator_set_version_3() const
+        {
+            static OperatorSet operator_set;
+            if (operator_set.empty())
+            {
+                operator_set = get_operator_set_version_2();
+            }
+            return operator_set;
+        }
+
+        const OperatorSet& OperatorsBridge::get_operator_set_version_4() const
+        {
+            static OperatorSet operator_set;
+            if (operator_set.empty())
+            {
+                operator_set = get_operator_set_version_3();
+            }
+            return operator_set;
+        }
+
+        const OperatorSet& OperatorsBridge::get_operator_set_version_5() const
+        {
+            static OperatorSet operator_set;
+            if (operator_set.empty())
+            {
+                operator_set = get_operator_set_version_4();
+            }
+            return operator_set;
+        }
+
+        const OperatorSet& OperatorsBridge::get_operator_set_version_6() const
+        {
+            static OperatorSet operator_set;
+            if (operator_set.empty())
+            {
+                operator_set = get_operator_set_version_5();
+            }
+            return operator_set;
+        }
+
+        const OperatorSet& OperatorsBridge::get_operator_set_version_7() const
+        {
+            static OperatorSet operator_set;
+            if (operator_set.empty())
+            {
+                operator_set = get_operator_set_version_6();
+            }
+            return operator_set;
+        }
+
+        const OperatorSet& OperatorsBridge::get_operator_set_version_8() const
+        {
+            static OperatorSet operator_set;
+            if (operator_set.empty())
+            {
+                operator_set = get_operator_set_version_7();
+            }
+            return operator_set;
+        }
+
+        const OperatorSet& OperatorsBridge::get_operator_set_version_9() const
+        {
+            static OperatorSet operator_set;
+            if (operator_set.empty())
+            {
+                operator_set = get_operator_set_version_8();
+            }
+            return operator_set;
+        }
+
+#define OPERATOR_SET_NAME(version_) get_operator_set_version_##version_()
+
+#define GET_OPERATOR_SET(version_)                                                                 \
+    case version_:                                                                                 \
+        return OPERATOR_SET_NAME(version_)
+
+#define OPERATOR_SET_NAME_HELPER(version_) OPERATOR_SET_NAME(version_)
+
+#define DEFAULT_OPERATOR_SET() return OPERATOR_SET_NAME_HELPER(ONNX_OPSET_VERSION)
+
+        const OperatorSet& OperatorsBridge::get_operator_set_version(std::int64_t version) const
+        {
+            switch (version)
+            {
+                GET_OPERATOR_SET(1);
+                GET_OPERATOR_SET(2);
+                GET_OPERATOR_SET(3);
+                GET_OPERATOR_SET(4);
+                GET_OPERATOR_SET(5);
+                GET_OPERATOR_SET(6);
+                GET_OPERATOR_SET(7);
+                GET_OPERATOR_SET(8);
+                GET_OPERATOR_SET(9);
+            default: DEFAULT_OPERATOR_SET();
+            }
+        }
+
+#define REGISTER_OPERATOR(name_, version_, fn_)                                                    \
+    m_map[name_].emplace(version_, std::bind(op::set_##version_::fn_, std::placeholders::_1))
+
+        OperatorsBridge::OperatorsBridge()
+        {
+            REGISTER_OPERATOR("Abs", 1, abs);
+            REGISTER_OPERATOR("Add", 1, add);
+            REGISTER_OPERATOR("And", 1, logical_and);
+            REGISTER_OPERATOR("AveragePool", 1, average_pool);
+            REGISTER_OPERATOR("BatchNormalization", 1, batch_norm);
+            REGISTER_OPERATOR("Cast", 1, cast);
+            REGISTER_OPERATOR("Ceil", 1, ceil);
+            REGISTER_OPERATOR("Clip", 1, clip);
+            REGISTER_OPERATOR("Concat", 1, concat);
+            REGISTER_OPERATOR("Constant", 1, constant);
+            REGISTER_OPERATOR("Conv", 1, conv);
+            REGISTER_OPERATOR("Div", 1, div);
+            REGISTER_OPERATOR("Dropout", 1, identity);
+            REGISTER_OPERATOR("Elu", 1, elu);
+            REGISTER_OPERATOR("Equal", 1, equal);
+            REGISTER_OPERATOR("Exp", 1, exp);
+            REGISTER_OPERATOR("Flatten", 1, flatten);
+            REGISTER_OPERATOR("Floor", 1, floor);
+            REGISTER_OPERATOR("Gemm", 1, gemm);
+            REGISTER_OPERATOR("GlobalAveragePool", 1, global_average_pool);
+            REGISTER_OPERATOR("GlobalMaxPool", 1, global_max_pool);
+            REGISTER_OPERATOR("Greater", 1, greater);
+            REGISTER_OPERATOR("HardSigmoid", 1, hard_sigmoid);
+            REGISTER_OPERATOR("Identity", 1, identity);
+            REGISTER_OPERATOR("LeakyRelu", 1, leaky_relu);
+            REGISTER_OPERATOR("Less", 1, less);
+            REGISTER_OPERATOR("Log", 1, log);
+            REGISTER_OPERATOR("LogSoftmax", 1, log_softmax);
+            REGISTER_OPERATOR("LRN", 1, lrn);
+            REGISTER_OPERATOR("MatMul", 1, matmul);
+            REGISTER_OPERATOR("MaxPool", 1, max_pool);
+            REGISTER_OPERATOR("Max", 1, max);
+            REGISTER_OPERATOR("Mean", 1, mean);
+            REGISTER_OPERATOR("Min", 1, min);
+            REGISTER_OPERATOR("Mul", 1, mul);
+            REGISTER_OPERATOR("Neg", 1, neg);
+            REGISTER_OPERATOR("Not", 1, logical_not);
+            REGISTER_OPERATOR("Or", 1, logical_or);
+            REGISTER_OPERATOR("Pow", 1, pow);
+            REGISTER_OPERATOR("PRelu", 1, prelu);
+            REGISTER_OPERATOR("Reciprocal", 1, reciprocal);
+            REGISTER_OPERATOR("ReduceLogSum", 1, reduce_log_sum);
+            REGISTER_OPERATOR("ReduceLogSumExp", 1, reduce_log_sum_exp);
+            REGISTER_OPERATOR("ReduceL1", 1, reduce_l1);
+            REGISTER_OPERATOR("ReduceL2", 1, reduce_l2);
+            REGISTER_OPERATOR("ReduceMax", 1, reduce_max);
+            REGISTER_OPERATOR("ReduceMean", 1, reduce_mean);
+            REGISTER_OPERATOR("ReduceMin", 1, reduce_min);
+            REGISTER_OPERATOR("ReduceProd", 1, reduce_prod);
+            REGISTER_OPERATOR("ReduceSum", 1, reduce_sum);
+            REGISTER_OPERATOR("ReduceSumSquare", 1, reduce_sum_square);
+            REGISTER_OPERATOR("Relu", 1, relu);
+            REGISTER_OPERATOR("Reshape", 1, reshape);
+            REGISTER_OPERATOR("Selu", 1, selu);
+            REGISTER_OPERATOR("Shape", 1, shape);
+            REGISTER_OPERATOR("Sigmoid", 1, sigmoid);
+            REGISTER_OPERATOR("Slice", 1, slice);
+            REGISTER_OPERATOR("Softmax", 1, softmax);
+            REGISTER_OPERATOR("Softplus", 1, softplus);
+            REGISTER_OPERATOR("Softsign", 1, softsign);
+            REGISTER_OPERATOR("Split", 1, split);
+            REGISTER_OPERATOR("Sqrt", 1, sqrt);
+            REGISTER_OPERATOR("Squeeze", 1, squeeze);
+            REGISTER_OPERATOR("Sub", 1, sub);
+            REGISTER_OPERATOR("Sum", 1, sum);
+            REGISTER_OPERATOR("Tanh", 1, tanh);
+            REGISTER_OPERATOR("ThresholdedRelu", 1, thresholded_relu);
+            REGISTER_OPERATOR("Transpose", 1, transpose);
+            REGISTER_OPERATOR("Unsqueeze", 1, unsqueeze);
+            REGISTER_OPERATOR("Xor", 1, logical_xor);
+        }
 
     } // namespace onnx_import
 

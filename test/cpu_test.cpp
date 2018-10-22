@@ -195,8 +195,9 @@ TEST(cpu_test, mkldnn_layouts)
     EXPECT_EQ(vector<float>{expected_result}, rv);
 }
 
-TEST(cpu_test, reshape_squeeze)
+TEST(cpu_test, reshape_layout_optimizations1)
 {
+    // Squeeze outermost dimension
     auto make_function = []() -> std::shared_ptr<Function> {
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 2, 2});
         auto B = make_shared<op::Parameter>(element::f32, Shape{32, 16, 1, 1});
@@ -233,8 +234,9 @@ TEST(cpu_test, reshape_squeeze)
     }
 }
 
-TEST(cpu_test, reshape_expand)
+TEST(cpu_test, reshape_layout_optimizations2)
 {
+    // ExpandDims - inner most and internal dims
     auto make_function = []() -> std::shared_ptr<Function> {
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 2, 2});
         auto B = make_shared<op::Parameter>(element::f32, Shape{32, 16, 1, 1});
@@ -271,8 +273,9 @@ TEST(cpu_test, reshape_expand)
     }
 }
 
-TEST(cpu_test, reshape_squeeze_padded)
+TEST(cpu_test, reshape_layout_optimizations3)
 {
+    // Squeeze padded dimension
     auto make_function = []() -> std::shared_ptr<Function> {
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 2, 2});
         auto B = make_shared<op::Parameter>(element::f32, Shape{1, 16, 1, 1});
@@ -310,8 +313,9 @@ TEST(cpu_test, reshape_squeeze_padded)
     }
 }
 
-TEST(cpu_test, reshape_expand_squeeze)
+TEST(cpu_test, reshape_layout_optimizations4)
 {
+    // Squeeze and expand dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 1, 8});
         auto B1 = make_shared<op::Parameter>(element::f32, Shape{32, 16, 1, 1});
@@ -322,7 +326,7 @@ TEST(cpu_test, reshape_expand_squeeze)
                                                   CoordinateDiff{0, 0},
                                                   CoordinateDiff{0, 0},
                                                   Strides{1, 1});
-        auto squeeze = make_shared<op::Reshape>(conv1, AxisVector{0, 1, 2, 3}, Shape{1, 32, 8});
+        auto squeeze = make_shared<op::Reshape>(conv1, AxisVector{0, 1, 2, 3}, Shape{32, 1, 8});
         auto relu = make_shared<op::Relu>(squeeze);
         auto expand = make_shared<op::Reshape>(relu, AxisVector{0, 1, 2}, Shape{1, 32, 1, 8});
         auto B2 = make_shared<op::Parameter>(element::f32, Shape{8, 32, 1, 1});
@@ -356,4 +360,155 @@ TEST(cpu_test, reshape_expand_squeeze)
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
     EXPECT_LE(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 4);
+}
+
+TEST(cpu_test, reshape_layout_optimizations5)
+{
+    auto make_function = []() -> std::shared_ptr<Function> {
+        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 1, 8});
+        auto B1 = make_shared<op::Parameter>(element::f32, Shape{32, 16, 1, 1});
+        auto conv1 = make_shared<op::Convolution>(A,
+                                                  B1,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{0, 0},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1});
+        auto expand =
+            make_shared<op::Reshape>(conv1, AxisVector{0, 1, 2, 3}, Shape{1, 1, 32, 1, 8});
+        auto relu = make_shared<op::Relu>(expand);
+        auto squeeze =
+            make_shared<op::Reshape>(relu, AxisVector{0, 1, 2, 3, 4}, Shape{1, 32, 1, 8});
+        auto B2 = make_shared<op::Parameter>(element::f32, Shape{8, 32, 1, 1});
+        auto conv2 = make_shared<op::Convolution>(squeeze,
+                                                  B2,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{0, 0},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1});
+        return make_shared<Function>(NodeVector{conv2}, op::ParameterVector{A, B1, B2});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_function();
+    auto int_f = make_function();
+
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+    EXPECT_LE(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 4);
+}
+
+TEST(cpu_test, reshape_layout_optimizations6)
+{
+    // Squeeze and expand dimensions. Ensure no extra conversions downstream
+    auto make_function = []() -> std::shared_ptr<Function> {
+        auto A = make_shared<op::Parameter>(element::f32, Shape{2, 4, 3, 2});
+        auto mul = make_shared<op::Multiply>(A, A);
+        auto sum = make_shared<op::Sum>(mul, AxisVector{0});
+        auto reshape = make_shared<op::Reshape>(sum, AxisVector{0, 1, 2}, Shape{1, 4, 3, 2});
+        auto sqrt = make_shared<op::Sqrt>(reshape);
+        return make_shared<Function>(NodeVector{sqrt}, op::ParameterVector{A});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_function();
+    auto int_f = make_function();
+
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+    EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 0);
+}
+
+TEST(cpu_test, reshape_layout_optimizations7)
+{
+    // Expand multiple dimensions. Ensure no extra conversions downstream
+    auto make_function = []() -> std::shared_ptr<Function> {
+        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
+        auto mul = make_shared<op::Multiply>(A, A);
+        auto sum = make_shared<op::Sum>(mul, AxisVector{0, 1});
+        auto reshape = make_shared<op::Reshape>(sum, AxisVector{0, 1, 2}, Shape{1, 1, 10, 6, 10});
+        return make_shared<Function>(NodeVector{reshape}, op::ParameterVector{A});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_function();
+    auto int_f = make_function();
+
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+    EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 0);
+}
+
+TEST(cpu_test, collapse_dims1)
+{
+    // Expand multiple dimensions. Ensure no extra conversions downstream
+    auto make_function = []() -> std::shared_ptr<Function> {
+        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
+        auto sum1 = make_shared<op::Sum>(A, AxisVector{1});    // Shape{1, 10, 6, 10}
+        auto sum2 = make_shared<op::Sum>(sum1, AxisVector{0}); // Shape{10, 6, 10}
+        return make_shared<Function>(NodeVector{sum2}, op::ParameterVector{A});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_function();
+    auto int_f = make_function();
+
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+    // sum1 will have two reshapes added around it. sum2 will be replaced
+    // with a reshape
+    EXPECT_EQ(count_ops_of_type<op::Reshape>(cpu_f), 3);
 }

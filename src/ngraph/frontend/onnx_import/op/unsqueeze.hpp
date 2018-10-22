@@ -26,9 +26,14 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector unsqueeze(const Node& node);
-        } // namespace  op
+            namespace set_1
+            {
+                NodeVector unsqueeze(const Node& node);
 
-    } // namespace  onnx_import
+            } // namespace set_1
 
-} // namespace  ngraph
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

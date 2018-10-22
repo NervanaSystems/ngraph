@@ -30,16 +30,20 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector shape(const Node& node)
+            namespace set_1
             {
-                auto data = node.get_ng_inputs().at(0);
-                auto data_shape = data->get_shape();
+                NodeVector shape(const Node& node)
+                {
+                    auto data = node.get_ng_inputs().at(0);
+                    auto data_shape = data->get_shape();
 
-                return {std::make_shared<ngraph::op::Constant>(
-                    ngraph::element::i64, Shape{data_shape.size()}, data_shape)};
-            }
+                    return {std::make_shared<ngraph::op::Constant>(
+                        ngraph::element::i64, Shape{data_shape.size()}, data_shape)};
+                }
 
-        } // namespace op
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 

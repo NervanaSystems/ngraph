@@ -48,8 +48,9 @@ std::unordered_set<std::type_index>& runtime::cpu::mkldnn_utils::get_op_registry
         TI(ngraph::op::Add),
         TI(ngraph::op::AvgPool),
         TI(ngraph::op::AvgPoolBackprop),
-        TI(ngraph::op::BatchNorm),
-        TI(ngraph::op::BatchNormBackprop),
+        TI(ngraph::op::BatchNormTraining),
+        TI(ngraph::op::BatchNormInference),
+        TI(ngraph::op::BatchNormTrainingBackprop),
         TI(ngraph::op::Concat),
         TI(ngraph::op::Convolution),
         TI(ngraph::op::ConvolutionBackpropData),
@@ -529,7 +530,7 @@ memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& i
     size_t k = 0;
     for (size_t i = 0, j = 0; j < md.ndims; j++)
     {
-        if (j == axis_list[k])
+        if (k < axis_list.size() && j == axis_list[k])
         {
             k++;
             md.dims[j] = 1;
@@ -545,7 +546,8 @@ memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& i
             }
             else
             {
-                md.layout_desc.blocking.strides[1][j] = 0;
+                md.layout_desc.blocking.strides[1][j] =
+                    in.data.layout_desc.blocking.strides[0][in.data.ndims - 1];
                 size_t nelems = 1;
                 for (size_t idx = 0; idx < in.data.ndims; idx++)
                     nelems *= in.data.dims[idx];

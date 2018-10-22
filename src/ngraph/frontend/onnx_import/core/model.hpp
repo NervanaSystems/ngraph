@@ -16,8 +16,9 @@
 
 #pragma once
 
-#include <onnx.pb.h>
 #include <ostream>
+
+#include <onnx-ml.pb.h>
 
 namespace ngraph
 {
@@ -27,10 +28,7 @@ namespace ngraph
         {
         public:
             Model() = delete;
-            explicit Model(const onnx::ModelProto& model_proto)
-                : m_model_proto{&model_proto}
-            {
-            }
+            explicit Model(const onnx::ModelProto& model_proto);
 
             Model(Model&&) noexcept = default;
             Model(const Model&) = default;
@@ -46,8 +44,10 @@ namespace ngraph
                 return m_model_proto->producer_version();
             }
 
+            std::int64_t get_opset_version() const { return m_opset_version; }
         private:
             const onnx::ModelProto* m_model_proto;
+            std::int64_t m_opset_version{ONNX_OPSET_VERSION};
         };
 
         inline std::ostream& operator<<(std::ostream& outs, const Model& model)
