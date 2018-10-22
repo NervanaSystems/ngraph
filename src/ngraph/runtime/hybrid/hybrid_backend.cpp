@@ -31,12 +31,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
-#include "ngraph/runtime/interpreter/int_placement.hpp"
 #include "ngraph/util.hpp"
-
-#ifdef NGRAPH_CPU_ENABLE
-#include "ngraph/runtime/cpu/cpu_placement.hpp"
-#endif
 
 using namespace std;
 using namespace ngraph;
@@ -110,30 +105,7 @@ bool runtime::hybrid::HYBRIDBackend::compile(shared_ptr<Function> function)
         instance.m_function = clone_function(*function);
 
         pass::Manager pass_manager;
-
-        // Place all ops by default on interpreter
-        pass_manager.register_pass<pass::AssignPlacement>(
-            runtime::interpreter::default_placement_policy);
-
-#ifdef NGRAPH_CPU_ENABLE
-        // Fall back to Interpreter as the base transformer
-        // for unsupported ops
-        pass_manager.register_pass<pass::AssignPlacement>(runtime::cpu::default_placement_policy);
-#endif
         pass_manager.run_passes(instance.m_function);
-
-        // Split function to sub_functions
-        tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
-            split_function_by_placement(instance.m_function);
-        m_function_map.insert({function, instance});
-
-        // Compile subfunctions in corresponding backends
-        for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
-        {
-            Placement placement = get_colocated_function_placement(sub_function);
-            auto backend = get_cached_backend(placement);
-            backend->compile(sub_function);
-        }
     }
     return true;
 }
@@ -146,5 +118,5 @@ bool runtime::hybrid::HYBRIDBackend::call(shared_ptr<Function> function,
 
     compile(function);
 
-    return rc;
+    return true;
 }

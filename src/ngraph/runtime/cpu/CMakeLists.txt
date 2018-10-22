@@ -106,14 +106,6 @@ set(SRC
     pass/cpu_reshape_sinking.cpp
 )
 
-if (NGRAPH_HYBRID_ENABLE)
-    set(SRC
-        ${SRC}
-        cpu_placement.cpp
-        )
-endif()
-
-
 if (NOT NGRAPH_DEX_ONLY)
     set(SRC
         ${SRC}
