@@ -101,6 +101,7 @@ namespace ngraph
         }
         void validate_and_infer_elementwise_arithmetic();
         void validate_and_infer_elementwise_logical();
+        void populate_output_tensor_layout();
 
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
 

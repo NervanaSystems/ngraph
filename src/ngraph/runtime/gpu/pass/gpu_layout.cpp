@@ -26,6 +26,8 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/gpu/gpu_op_annotations.hpp"
+//#include "ngraph/descriptor/layout/tensor_layout.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -85,75 +87,90 @@ namespace ngraph
                 template <>
                 void GPULayout::LAYOUT_DECL(ngraph::op::TopK)
                 {
-                    auto topk = static_cast<ngraph::op::TopK*>(node.get());
+                    auto topk = std::dynamic_pointer_cast<ngraph::op::TopK>(node);
                     auto topk_axis = topk->get_top_k_axis();
                     auto topk_k = topk->get_k();
                     auto parent_node = topk->get_argument(0);
 
                     auto in_shape = topk->get_input_shape(0);
-                    auto out_shape = in_shape;
-                    out_shape[topk_axis] = topk_k;
-                    size_t ndim = static_cast<size_t>(in_shape.size());
 
-                    AxisVector reshape_axis_order = get_ordered_axis_vector(ndim);
-                    reshape_axis_order.erase(reshape_axis_order.begin() + topk_axis);
-                    reshape_axis_order.push_back(topk_axis);
-
-                    Shape pre_reshape_out;
-                    for (size_t j = 0; j < ndim; j++)
+                    if (in_shape.size() == 2 && topk_axis == 1)
                     {
-                        pre_reshape_out.push_back(in_shape[reshape_axis_order[j]]);
+                        return;
                     }
-
-                    Shape pre_2d_reshape_out(2);
-                    pre_2d_reshape_out[1] = pre_reshape_out[ndim - 1];
-                    pre_2d_reshape_out[0] = static_cast<size_t>(
-                        ngraph::shape_size(pre_reshape_out) / pre_2d_reshape_out[1]);
-
-                    auto pre_reshape = make_shared<ngraph::op::Reshape>(
-                        parent_node, reshape_axis_order, pre_reshape_out);
-
-                    AxisVector axis_order = get_ordered_axis_vector(ndim);
-                    auto pre_2d_reshape = make_shared<ngraph::op::Reshape>(
-                        pre_reshape, axis_order, pre_2d_reshape_out);
-
-                    insert_new_node_between(parent_node, node, pre_reshape);
-                    parent_node = topk->get_argument(0);
-                    insert_new_node_between(parent_node, node, pre_2d_reshape);
-
-                    NodeVector goes = op::get_output_elements(node);
-
-                    auto new_topk = make_shared<ngraph::op::TopK>(topk->get_argument(0),
-                                                                  1,
-                                                                  topk->get_index_element_type(),
-                                                                  topk->get_k(),
-                                                                  topk->get_compute_max());
-
-                    ngraph::replace_node(node, new_topk);
-
-                    // Replace old goe with new goe based on new topk
-                    NodeVector new_goes;
-                    for (auto& goe : goes)
+                    else
                     {
-                        auto out_idx =
-                            std::dynamic_pointer_cast<op::GetOutputElement>(goe)->get_n();
-                        auto new_goe = std::make_shared<op::GetOutputElement>(new_topk, out_idx);
-                        ngraph::replace_node(goe, new_goe);
-                        new_goes.push_back(new_goe);
+                        auto out_shape = in_shape;
+                        out_shape[topk_axis] = topk_k;
+                        size_t ndim = in_shape.size();
+
+                        AxisVector reshape_axis_order = get_ordered_axis_vector(ndim);
+                        reshape_axis_order.erase(reshape_axis_order.begin() + topk_axis);
+                        reshape_axis_order.push_back(topk_axis);
+
+                        Shape pre_reshape_out;
+                        for (size_t j = 0; j < ndim; j++)
+                        {
+                            pre_reshape_out.push_back(in_shape[reshape_axis_order[j]]);
+                        }
+
+                        Shape pre_2d_reshape_out(2);
+                        pre_2d_reshape_out[1] = pre_reshape_out[ndim - 1];
+                        pre_2d_reshape_out[0] = static_cast<size_t>(
+                            ngraph::shape_size(pre_reshape_out) / pre_2d_reshape_out[1]);
+
+                        auto pre_reshape = make_shared<ngraph::op::Reshape>(
+                            parent_node, reshape_axis_order, pre_reshape_out);
+
+                        populate_output_tensor_layout(pre_reshape);
+
+                        AxisVector axis_order = get_ordered_axis_vector(ndim);
+                        auto pre_2d_reshape = make_shared<ngraph::op::Reshape>(
+                            pre_reshape, axis_order, pre_2d_reshape_out);
+
+                        populate_output_tensor_layout(pre_2d_reshape);
+
+                        insert_new_node_between(parent_node, topk, pre_reshape);
+                        insert_new_node_between(pre_reshape, topk, pre_2d_reshape);
+
+                        NodeVector goes = op::get_output_elements(topk);
+
+                        auto new_topk =
+                            make_shared<ngraph::op::TopK>(pre_2d_reshape,
+                                                          1,
+                                                          topk->get_index_element_type(),
+                                                          topk->get_k(),
+                                                          topk->get_compute_max());
+                        populate_output_tensor_layout(new_topk);
+
+                        ngraph::replace_node(topk, new_topk);
+
+                        // Replace old goe with new goe based on new topk
+                        NodeVector new_goes;
+                        for (auto& goe : goes)
+                        {
+                            auto out_idx =
+                                std::dynamic_pointer_cast<op::GetOutputElement>(goe)->get_n();
+                            auto new_goe =
+                                std::make_shared<op::GetOutputElement>(new_topk, out_idx);
+                            populate_output_tensor_layout(new_goe);
+                            ngraph::replace_node(goe, new_goe);
+                            new_goes.push_back(new_goe);
+                        }
+
+                        Shape reordered_out_shape;
+                        for (size_t j = 0; j < ndim; j++)
+                        {
+                            reordered_out_shape.push_back(out_shape[reshape_axis_order[j]]);
+                        }
+
+                        NodeVector post_2d_reshapes = insert_new_reshape_after(
+                            new_goes, AxisVector{0, 1}, reordered_out_shape);
+
+                        axis_order.pop_back();
+                        axis_order.insert(axis_order.begin() + topk_axis, 1, ndim - 1);
+                        insert_new_reshape_after(post_2d_reshapes, axis_order, out_shape);
                     }
-
-                    Shape reordered_out_shape;
-                    for (size_t j = 0; j < ndim; j++)
-                    {
-                        reordered_out_shape.push_back(out_shape[reshape_axis_order[j]]);
-                    }
-
-                    NodeVector post_2d_reshapes =
-                        insert_new_reshape_after(new_goes, AxisVector{0, 1}, reordered_out_shape);
-
-                    axis_order.pop_back();
-                    axis_order.insert(axis_order.begin() + topk_axis, 1, ndim - 1);
-                    insert_new_reshape_after(post_2d_reshapes, axis_order, out_shape);
                 }
 
                 NodeVector insert_new_reshape_after(NodeVector& parents,
@@ -171,6 +188,7 @@ namespace ngraph
                                 {
                                     auto new_reshape = make_shared<ngraph::op::Reshape>(
                                         parent, axis_vector, out_shape);
+                                    populate_output_tensor_layout(new_reshape);
 
                                     node->get_inputs().at(i).replace_output(
                                         new_reshape->get_outputs().at(0));
@@ -188,6 +206,19 @@ namespace ngraph
                     AxisVector axis_order(n);
                     iota(axis_order.begin(), axis_order.end(), init);
                     return axis_order;
+                }
+
+                void populate_output_tensor_layout(const std::shared_ptr<ngraph::Node>& node)
+                {
+                    for (auto& output : node->get_outputs())
+                    {
+                        auto tv = output.get_tensor_ptr();
+                        auto tvl = make_shared<descriptor::layout::DenseTensorLayout>(*tv);
+                        if (tv->get_tensor_layout() == nullptr)
+                        {
+                            tv->set_tensor_layout(tvl);
+                        }
+                    }
                 }
             }
         }

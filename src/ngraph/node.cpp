@@ -20,6 +20,7 @@
 #include <typeinfo>
 
 #include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
@@ -58,6 +59,21 @@ void Node::constructor_validate_and_infer_types()
     if (in_transition)
     {
         validate_and_infer_types();
+    }
+
+    //populate_output_tensor_layout();
+}
+
+void Node::populate_output_tensor_layout()
+{
+    for (auto& output : this->get_outputs())
+    {
+        auto tv = output.get_tensor_ptr();
+        auto tvl = make_shared<descriptor::layout::DenseTensorLayout>(*tv);
+        if (!tv->get_tensor_layout())
+        {
+            tv->set_tensor_layout(tvl);
+        }
     }
 }
 
