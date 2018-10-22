@@ -101,6 +101,7 @@ Not currently a comprehensive list.
    * :doc:`sign`
    * :doc:`sin`
    * :doc:`sinh`
+   * :doc:`slice`
    * :doc:`softmax`
    * :doc:`sqrt`
    * :doc:`subtract`
@@ -166,6 +167,7 @@ Not currently a comprehensive list.
    sign.rst
    sin.rst
    sinh.rst
+   slice.rst
    softmax.rst
    sqrt.rst
    subtract.rst
