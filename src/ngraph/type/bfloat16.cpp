@@ -14,9 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-// Contain code logic referece from TF
+// Contains logic derived from TensorFlow’s bfloat16 implementation
 // https://github.com/tensorflow/tensorflow/blob/d354efc/tensorflow/core/lib/bfloat16/bfloat16.h
-// Copyright convered by following.
+// Copyright notice from original source file is as follows.
 
 //*******************************************************************************
 //  Copyright 2016 The TensorFlow Authors. All Rights Reserved.
