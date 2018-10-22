@@ -22,38 +22,50 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_BatchNorm(py::module m)
+void regclass_pyngraph_op_BatchNormTraining(py::module m)
 {
-    py::class_<ngraph::op::BatchNorm, std::shared_ptr<ngraph::op::BatchNorm>, ngraph::op::Op>
-        batch_norm(m, "BatchNorm");
-    batch_norm.doc() = "ngraph.impl.op.BatchNorm wraps ngraph::op::BatchNorm";
-    batch_norm.def(py::init<double,
-                            const std::shared_ptr<ngraph::Node>&,
-                            const std::shared_ptr<ngraph::Node>&,
-                            const std::shared_ptr<ngraph::Node>&>());
-
-    batch_norm.def(py::init<double,
-                            const std::shared_ptr<ngraph::Node>&,
-                            const std::shared_ptr<ngraph::Node>&,
-                            const std::shared_ptr<ngraph::Node>&,
-                            const std::shared_ptr<ngraph::Node>&,
-                            const std::shared_ptr<ngraph::Node>&,
-                            bool&>());
-}
-
-void regclass_pyngraph_op_BatchNormBackprop(py::module m)
-{
-    py::class_<ngraph::op::BatchNormBackprop,
-               std::shared_ptr<ngraph::op::BatchNormBackprop>,
+    py::class_<ngraph::op::BatchNormTraining,
+               std::shared_ptr<ngraph::op::BatchNormTraining>,
                ngraph::op::Op>
-        batch_norm_backprop(m, "BatchNormBackprop");
-    batch_norm_backprop.doc() =
-        "ngraph.impl.op.BatchNormBackprop wraps ngraph::op::BatchNormBackprop";
-    batch_norm_backprop.def(py::init<double,
-                                     const std::shared_ptr<ngraph::Node>&,
-                                     const std::shared_ptr<ngraph::Node>&,
-                                     const std::shared_ptr<ngraph::Node>&,
+        batch_norm_training(m, "BatchNormTraining");
+    batch_norm_training.doc() =
+        "ngraph.impl.op.BatchNormTraining wraps ngraph::op::BatchNormTraining";
+    batch_norm_training.def(py::init<double,
                                      const std::shared_ptr<ngraph::Node>&,
                                      const std::shared_ptr<ngraph::Node>&,
                                      const std::shared_ptr<ngraph::Node>&>());
+}
+
+void regclass_pyngraph_op_BatchNormInference(py::module m)
+{
+    py::class_<ngraph::op::BatchNormInference,
+               std::shared_ptr<ngraph::op::BatchNormInference>,
+               ngraph::op::Op>
+        batch_norm_inference(m, "BatchNormInference");
+    batch_norm_inference.doc() =
+        "ngraph.impl.op.BatchNormInference wraps ngraph::op::BatchNormInference";
+
+    batch_norm_inference.def(py::init<double,
+                                      const std::shared_ptr<ngraph::Node>&,
+                                      const std::shared_ptr<ngraph::Node>&,
+                                      const std::shared_ptr<ngraph::Node>&,
+                                      const std::shared_ptr<ngraph::Node>&,
+                                      const std::shared_ptr<ngraph::Node>&>());
+}
+
+void regclass_pyngraph_op_BatchNormTrainingBackprop(py::module m)
+{
+    py::class_<ngraph::op::BatchNormTrainingBackprop,
+               std::shared_ptr<ngraph::op::BatchNormTrainingBackprop>,
+               ngraph::op::Op>
+        batch_norm_training_backprop(m, "BatchNormTrainingBackprop");
+    batch_norm_training_backprop.doc() =
+        "ngraph.impl.op.BatchNormTrainingBackprop wraps ngraph::op::BatchNormTrainingBackprop";
+    batch_norm_training_backprop.def(py::init<double,
+                                              const std::shared_ptr<ngraph::Node>&,
+                                              const std::shared_ptr<ngraph::Node>&,
+                                              const std::shared_ptr<ngraph::Node>&,
+                                              const std::shared_ptr<ngraph::Node>&,
+                                              const std::shared_ptr<ngraph::Node>&,
+                                              const std::shared_ptr<ngraph::Node>&>());
 }
