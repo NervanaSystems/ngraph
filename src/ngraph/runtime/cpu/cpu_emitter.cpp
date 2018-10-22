@@ -4660,7 +4660,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Quantize)
             {
-                auto quantize = static_cast<const ngraph::op::Dequantize*>(node);
+                auto quantize = static_cast<const ngraph::op::Quantize*>(node);
                 writer << "reference::quantize(";
                 writer << "            " << args[0].get_name() << ",\n";
                 writer << "            " << args[1].get_name() << ",\n";
@@ -4668,7 +4668,9 @@ namespace ngraph
                 writer << "            " << out[0].get_name() << ",\n";
                 writer << "            {" << join(args[0].get_shape()) << "},\n";
                 writer << "            {" << join(args[1].get_shape()) << "},\n";
-                writer << "            {" << join(quantize->get_axes()) << "});\n";
+                writer << "            {" << join(quantize->get_axes()) << "},\n";
+                writer << "            static_cast<op::Quantize::RoundMode>("
+                       << static_cast<int>(quantize->get_round_mode()) << "));\n";
             }
 
 #undef TI
