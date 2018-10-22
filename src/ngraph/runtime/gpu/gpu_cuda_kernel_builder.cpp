@@ -643,7 +643,7 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
                     writer << "processed = true;\n";
                 }
                 writer.block_end();
-                writer << "block_idx -= inputs_strides[" << i << "];\n";
+                writer << "block_idx -= inputs_strides[" << i << " + input_offset];\n";
             }
         }
         writer.block_end();
