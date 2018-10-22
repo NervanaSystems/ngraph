@@ -4529,7 +4529,7 @@ TEST(type_prop, conv_invalid_0d_input)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data batch must have rank of at least 3 "
+                             std::string("Data batch and filters must have rank of at least 3 "
                                          "(one batch axis, one input-channel axis, "
                                          "and at least one spatial dimension)"));
     }
@@ -4554,7 +4554,7 @@ TEST(type_prop, conv_invalid_1d_input)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data batch must have rank of at least 3 "
+                             std::string("Data batch and filters must have rank of at least 3 "
                                          "(one batch axis, one input-channel axis, "
                                          "and at least one spatial dimension)"));
     }
@@ -4579,7 +4579,7 @@ TEST(type_prop, conv_invalid_2d_input)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data batch must have rank of at least 3 "
+                             std::string("Data batch and filters must have rank of at least 3 "
                                          "(one batch axis, one input-channel axis, "
                                          "and at least one spatial dimension)"));
     }
@@ -4625,7 +4625,9 @@ TEST(type_prop, conv_invalid_0_input_channels)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch channel count is zero"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Data batch channel count and/or filter input channel count is zero"));
     }
     catch (...)
     {
@@ -4647,12 +4649,7 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_many)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
-                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), "
-                        "window shape ({3,3,3}), window strides (Strides{1, 1}), and window "
-                        "dilation (Strides{1, 1}) do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch and filters rank do not match"));
     }
     catch (...)
     {
@@ -4674,12 +4671,7 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_few)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
-                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), "
-                        "window shape ({3}), window strides (Strides{1, 1}), and window dilation "
-                        "(Strides{1, 1}) do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch and filters rank do not match"));
     }
     catch (...)
     {
@@ -4750,10 +4742,12 @@ TEST(type_prop, conv_invalid_movement_stride_rank)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
-                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), "
-                        "window shape ({3,3}), window strides (Strides{2, 3, 8}), and window "
-                        "dilation (Strides{1, 1}) do not match"));
+            std::string("Ranks for data item shape/filters shape (data batch has shape "
+                        "{6,2,10,10}, so data item rank is 2 and filters have shape {6,2,3,3}, so "
+                        "filters spatial rank is 2), data dilation (Strides{1, 1}), padding below "
+                        "(CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), filter "
+                        "strides (Strides{2, 3, 8}), and filter dilation (Strides{1, 1}) do not "
+                        "match"));
     }
     catch (...)
     {
@@ -4777,10 +4771,12 @@ TEST(type_prop, conv_invalid_window_dilation_stride_rank)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
-                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), "
-                        "window shape ({3,3}), window strides (Strides{2, 3}), and window dilation "
-                        "(Strides{2, 3, 8}) do not match"));
+            std::string("Ranks for data item shape/filters shape (data batch has shape "
+                        "{6,2,10,10}, so data item rank is 2 and filters have shape {6,2,3,3}, so "
+                        "filters spatial rank is 2), data dilation (Strides{1, 1}), padding below "
+                        "(CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), filter "
+                        "strides (Strides{2, 3}), and filter dilation (Strides{2, 3, 8}) do not "
+                        "match"));
     }
     catch (...)
     {
@@ -4810,10 +4806,12 @@ TEST(type_prop, conv_invalid_data_dilation_stride_rank)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Ranks for data shape ({10,10}), data dilation (Strides{2, 3, 8}), padding "
+            std::string("Ranks for data item shape/filters shape (data batch has shape "
+                        "{6,2,10,10}, so data item rank is 2 and filters have shape {6,2,3,3}, so "
+                        "filters spatial rank is 2), data dilation (Strides{2, 3, 8}), padding "
                         "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), "
-                        "window shape ({3,3}), window strides (Strides{2, 3}), and window dilation "
-                        "(Strides{2, 3}) do not match"));
+                        "filter strides (Strides{2, 3}), and filter dilation (Strides{2, 3}) do "
+                        "not match"));
     }
     catch (...)
     {
@@ -4842,10 +4840,12 @@ TEST(type_prop, conv_invalid_padding_below_rank)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
-                        "below (CoordinateDiff{0, 0, 0}), padding above (CoordinateDiff{0, 0}), "
-                        "window shape ({3,3}), window strides (Strides{2, 3}), and window dilation "
-                        "(Strides{1, 1}) do not match"));
+            std::string(
+                "Ranks for data item shape/filters shape (data batch has shape "
+                "{6,2,10,10}, so data item rank is 2 and filters have shape {6,2,3,3}, so "
+                "filters spatial rank is 2), data dilation (Strides{1, 1}), padding below "
+                "(CoordinateDiff{0, 0, 0}), padding above (CoordinateDiff{0, 0}), filter "
+                "strides (Strides{2, 3}), and filter dilation (Strides{1, 1}) do not match"));
     }
     catch (...)
     {
@@ -4874,10 +4874,12 @@ TEST(type_prop, conv_invalid_padding_above_rank)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
-                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0, 0}), "
-                        "window shape ({3,3}), window strides (Strides{2, 3}), and window dilation "
-                        "(Strides{2, 3}) do not match"));
+            std::string(
+                "Ranks for data item shape/filters shape (data batch has shape "
+                "{6,2,10,10}, so data item rank is 2 and filters have shape {6,2,3,3}, so "
+                "filters spatial rank is 2), data dilation (Strides{1, 1}), padding below "
+                "(CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0, 0}), filter "
+                "strides (Strides{2, 3}), and filter dilation (Strides{2, 3}) do not match"));
     }
     catch (...)
     {
@@ -5091,6 +5093,12 @@ TEST(type_prop, conv_invalid_movement_stride_0)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, conv_fail_for_reminder)
+{
+    FAIL() << "Adam P needs to implement unit tests for partial shapes/element type propagation "
+              "for Convolution";
 }
 
 TEST(type_prop, max_pool_1d_deduce)
