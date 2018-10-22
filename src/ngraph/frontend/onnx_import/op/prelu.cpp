@@ -79,7 +79,7 @@ namespace ngraph
                         std::make_shared<ngraph::op::Convert>(
                             std::make_shared<ngraph::op::Greater>(data, zero_node),
                             data->get_element_type());
-                    
+
                     slope = negative_map * slope + positive_map;
 
                     return {data * slope};
