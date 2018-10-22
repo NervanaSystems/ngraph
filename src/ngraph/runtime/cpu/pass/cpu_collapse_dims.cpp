@@ -162,7 +162,7 @@ static bool collapse_reduction(std::shared_ptr<Node> n)
         ngraph::replace_node(n, node->get_argument(0));
         replaced = true;
     }
-    else if (input_shape.size() != cshape.rshape.size())
+    else if (input_shape.size() != cshape.fshape.size())
     {
         // Reshape arg to collapsed input_shape
         AxisVector input_axis_order = ngraph::get_default_order(input_shape);
