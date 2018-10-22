@@ -79,6 +79,12 @@ std::ostream& ngraph::operator<<(std::ostream& str, const PartialShape& shape)
     }
 }
 
+PartialShape PartialShape::dynamic(Rank r)
+{
+    return PartialShape(
+        r.is_static(), std::vector<Dimension>(r.is_static() ? size_t(r) : 0, Dimension::dynamic()));
+}
+
 bool PartialShape::compatible(const PartialShape& s) const
 {
     // If we don't know *this's rank, or we don't know s's rank, they are compatible.
@@ -179,6 +185,24 @@ bool PartialShape::refines(const PartialShape& s) const
     else
     {
         return false;
+    }
+}
+
+bool PartialShape::merge_rank(Rank r)
+{
+    if (r.is_dynamic())
+    {
+        return true;
+    }
+    else if (!m_rank_is_static)
+    {
+        m_rank_is_static = true;
+        m_dimensions = std::vector<Dimension>(size_t(r), Dimension::dynamic());
+        return true;
+    }
+    else
+    {
+        return (m_dimensions.size() == size_t(r));
     }
 }
 
