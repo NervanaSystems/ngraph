@@ -5615,3 +5615,46 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop)
     auto results = execute(func, args, "${BACKEND_NAME}");
     EXPECT_TRUE(test::all_close_f(std::vector<float>{350.957, -388.67}, results.at(0)));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop_2step)
+{
+    Shape sca{1};
+    Shape vec{1, 1, 1, 2};
+    double eps = 1.0e-04;
+
+    auto g = std::make_shared<op::Parameter>(element::f32, sca);
+    auto b = std::make_shared<op::Parameter>(element::f32, sca);
+    auto input = std::make_shared<op::Parameter>(element::f32, vec);
+    auto bn_fp = std::make_shared<op::BatchNorm>(eps, g, b, input);
+    auto bnorm = std::make_shared<op::GetOutputElement>(bn_fp, 0);
+    auto mean = std::make_shared<op::GetOutputElement>(bn_fp, 1);
+    auto var = std::make_shared<op::GetOutputElement>(bn_fp, 2);
+
+    auto func_bn = std::make_shared<Function>(NodeVector{bnorm, mean, var}, op::ParameterVector{g, b, input});
+
+    std::vector<std::vector<float>> args = {
+        {1.0f},       // gamma
+        {1.0f},       // beta
+        {1.1f, 1.0f}, // x
+    };
+    auto results = execute(func_bn, args, "${BACKEND_NAME}");
+
+    g = std::make_shared<op::Parameter>(element::f32, sca);
+    b = std::make_shared<op::Parameter>(element::f32, sca);
+    auto bn_output = std::make_shared<op::Parameter>(element::f32, vec);
+    auto m = std::make_shared<op::Parameter>(element::f32, sca);
+    auto v = std::make_shared<op::Parameter>(element::f32, sca);
+    auto delta = std::make_shared<op::Parameter>(element::f32, vec);
+    auto bn_bp = std::make_shared<op::BatchNormBackprop>(eps, g, b, bn_output, m, v, delta);
+    auto dx = std::make_shared<op::GetOutputElement>(bn_bp, 0);
+
+    args.pop_back(); // remove x
+    args.push_back(results.at(0)); // bn_output
+    args.push_back(results.at(1)); // m
+    args.push_back(results.at(2)); // v
+    args.push_back({1.0f, 1.0f});  // dy
+
+    auto func = std::make_shared<Function>(dx, op::ParameterVector{g, b, bn_output, m, v, delta});
+    results = execute(func, args, "${BACKEND_NAME}");
+    EXPECT_TRUE(test::all_close_f(std::vector<float>{350.957, -388.67}, results.at(0)));
+}
