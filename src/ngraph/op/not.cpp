@@ -26,9 +26,14 @@ op::Not::Not(const shared_ptr<Node>& arg)
     constructor_validate_and_infer_types();
 }
 
+// TODO(amprocte): Update this to allow only boolean, for consistency with logical binops.
 void op::Not::validate_and_infer_types()
 {
-    validate_and_infer_elementwise();
+    auto args_et_pshape = validate_and_infer_elementwise_args();
+    element::Type& args_et = std::get<0>(args_et_pshape);
+    PartialShape& args_pshape = std::get<1>(args_et_pshape);
+
+    set_output_type(0, args_et, args_pshape);
 }
 
 shared_ptr<Node> op::Not::copy_with_new_args(const NodeVector& new_args) const

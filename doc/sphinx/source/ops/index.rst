@@ -65,6 +65,7 @@ Not currently a comprehensive list.
    * :doc:`convolution`
    * :doc:`cos`
    * :doc:`cosh`
+   * :doc:`dequantize`
    * :doc:`divide`
    * :doc:`dot`
    * :doc:`drop_out`
@@ -93,12 +94,14 @@ Not currently a comprehensive list.
    * :doc:`parameter`
    * :doc:`power`
    * :doc:`product`
+   * :doc:`quantize`
    * :doc:`relu`
    * :doc:`result`
    * :doc:`sigmoid`
    * :doc:`sign`
    * :doc:`sin`
    * :doc:`sinh`
+   * :doc:`slice`
    * :doc:`softmax`
    * :doc:`sqrt`
    * :doc:`subtract`
@@ -128,6 +131,7 @@ Not currently a comprehensive list.
    convolution.rst
    cos.rst
    cosh.rst
+   dequantize.rst
    divide.rst
    dot.rst
    drop_out.rst
@@ -156,12 +160,14 @@ Not currently a comprehensive list.
    parameter.rst
    power.rst
    product.rst
+   quantize.rst
    relu.rst
    result.rst
    sigmoid.rst
    sign.rst
    sin.rst
    sinh.rst
+   slice.rst
    softmax.rst
    sqrt.rst
    subtract.rst

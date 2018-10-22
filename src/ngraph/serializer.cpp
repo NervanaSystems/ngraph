@@ -149,6 +149,64 @@ static json write(const ngraph::Node&, bool binary_constant_data);
 static string
     serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data);
 
+static json write_dimension(Dimension d)
+{
+    if (d.is_dynamic())
+    {
+        return nullptr;
+    }
+    else
+    {
+        return static_cast<size_t>(d);
+    }
+}
+
+static Dimension read_dimension(const json& j)
+{
+    if (j.is_null())
+    {
+        return Dimension::dynamic();
+    }
+    else
+    {
+        return Dimension(static_cast<size_t>(j));
+    }
+}
+
+static json write_partial_shape(const PartialShape& s)
+{
+    if (s.rank().is_dynamic())
+    {
+        return nullptr;
+    }
+    else
+    {
+        std::vector<json> vals(static_cast<size_t>(s.rank()));
+        for (size_t i = 0; i < vals.size(); i++)
+        {
+            vals[i] = write_dimension(s[i]);
+        }
+        return vals;
+    }
+}
+
+static PartialShape read_partial_shape(const json& j)
+{
+    if (j.is_null())
+    {
+        return PartialShape::dynamic();
+    }
+    else
+    {
+        std::vector<Dimension> dims(j.size());
+        for (size_t i = 0; i < j.size(); i++)
+        {
+            dims[i] = read_dimension(j[i]);
+        }
+        return PartialShape(dims);
+    }
+}
+
 static json write_element_type(const ngraph::element::Type& n)
 {
     json j;
@@ -815,7 +873,7 @@ static shared_ptr<ngraph::Function>
             {
                 auto shape = node_js.at("shape").get<vector<size_t>>();
                 auto one_hot_axis = node_js.at("one_hot_axis").get<size_t>();
-                node = make_shared<op::OneHot>(args[0], shape, one_hot_axis);
+                node = make_shared<op::OneHot>(args[0], read_partial_shape(shape), one_hot_axis);
                 break;
             }
             case OP_TYPEID::Or:
@@ -839,7 +897,8 @@ static shared_ptr<ngraph::Function>
                 auto element_type = read_element_type(type_node_js.at("element_type"));
                 auto shape = type_node_js.at("shape");
                 auto cacheable = get_or_default<bool>(node_js, "cacheable", false);
-                node = make_shared<op::Parameter>(element_type, shape, cacheable);
+                node =
+                    make_shared<op::Parameter>(element_type, read_partial_shape(shape), cacheable);
                 break;
             }
             case OP_TYPEID::Power:
@@ -1372,7 +1431,7 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::OneHot:
     {
         auto tmp = dynamic_cast<const op::OneHot*>(&n);
-        node["shape"] = tmp->get_shape();
+        node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
         node["one_hot_axis"] = tmp->get_one_hot_axis();
         break;
     }
@@ -1389,7 +1448,7 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Parameter:
     {
         auto tmp = dynamic_cast<const op::Parameter*>(&n);
-        node["shape"] = tmp->get_shape();
+        node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
         node["cacheable"] = tmp->get_cacheable();
         node["element_type"] = write_element_type(tmp->get_element_type());
         break;
