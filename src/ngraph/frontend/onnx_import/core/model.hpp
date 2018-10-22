@@ -34,11 +34,11 @@ namespace ngraph
             Model() = delete;
             explicit Model(const onnx::ModelProto& model_proto);
 
-            Model(Model&&) noexcept = default;
             Model(const Model&) = default;
+            Model(Model&&) = default;
 
-            Model& operator=(Model&&) noexcept = delete;
             Model& operator=(const Model&) = delete;
+            Model& operator=(Model&&) = delete;
 
             const std::string& get_producer_name() const { return m_model_proto->producer_name(); }
             const onnx::GraphProto& get_graph() const { return m_model_proto->graph(); }
