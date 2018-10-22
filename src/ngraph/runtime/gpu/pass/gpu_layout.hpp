@@ -58,8 +58,7 @@ namespace ngraph
                 NodeVector insert_new_reshape_after(NodeVector& parents,
                                                     const AxisVector& axis_vector,
                                                     const Shape& out_shape);
-                AxisVector get_ordered_axis_vector(size_t n, size_t init = 0);
-                void populate_output_tensor_layout(const std::shared_ptr<ngraph::Node>& node);
+
             }
         }
     }

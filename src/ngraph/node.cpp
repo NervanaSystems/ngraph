@@ -60,21 +60,6 @@ void Node::constructor_validate_and_infer_types()
     {
         validate_and_infer_types();
     }
-
-    //populate_output_tensor_layout();
-}
-
-void Node::populate_output_tensor_layout()
-{
-    for (auto& output : this->get_outputs())
-    {
-        auto tv = output.get_tensor_ptr();
-        auto tvl = make_shared<descriptor::layout::DenseTensorLayout>(*tv);
-        if (!tv->get_tensor_layout())
-        {
-            tv->set_tensor_layout(tvl);
-        }
-    }
 }
 
 void Node::delayed_validate_and_infer_types()
