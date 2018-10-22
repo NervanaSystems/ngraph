@@ -45,8 +45,9 @@ from _pyngraph.op import Asin
 from _pyngraph.op import Atan
 from _pyngraph.op import AvgPool
 from _pyngraph.op import AvgPoolBackprop
-from _pyngraph.op import BatchNorm
-from _pyngraph.op import BatchNormBackprop
+from _pyngraph.op import BatchNormTraining
+from _pyngraph.op import BatchNormInference
+from _pyngraph.op import BatchNormTrainingBackprop
 from _pyngraph.op import Broadcast
 from _pyngraph.op import Ceiling
 from _pyngraph.op import Concat
