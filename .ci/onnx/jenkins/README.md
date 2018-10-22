@@ -11,3 +11,9 @@ To remove all items created during script execution (files, directories, docker 
 ```
 ./runCI.sh --cleanup
 ```
+
+After first run, executing the script will rerun tox tests. To rebuild nGraph and run tests use:
+
+```
+./runCI.sh --rebuild
+```
