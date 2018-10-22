@@ -76,9 +76,10 @@ namespace ngraph
                     beta_node = make_broadcast_node(beta_node, input_c->get_shape());
 
                     input_c = std::make_shared<ngraph::op::Multiply>(beta_node, input_c);
-                    input_c = make_broadcast_node(input_c, a_dot_b->get_shape());
+                    NodeVector broadcasted_nodes = numpy_style_broadcast_for_binary_operation(
+                                                        a_dot_b, input_c);
 
-                    return {std::make_shared<ngraph::op::Add>(a_dot_b, input_c)};
+                    return {std::make_shared<ngraph::op::Add>(a_dot_b, broadcasted_nodes.at(1))};
                 }
 
             } // namespace set_1
