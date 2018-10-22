@@ -1660,7 +1660,8 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
                                                    const Shape& param_shape,
                                                    double epsilon,
                                                    bool global_stats,
-                                                   bool save_stats)
+                                                   bool save_stats,
+                                                   bool invert_variance)
 {
     // Assumes NC{d1...dN} format
     std::stringstream ss;
@@ -1668,7 +1669,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
 
     ss << "bn_op" << bn_op << "_dtype_" << dtype << "_dir" << static_cast<int>(direction) << "_ts"
        << join(tensor_shape, "_") << "_ps" << join(param_shape, "_") << "_eps" << epsilon << "_g"
-       << global_stats << "_s" << save_stats;
+       << global_stats << "_s" << save_stats << "_invvar" << invert_variance;
     std::string hash = ss.str();
     std::replace(hash.begin(), hash.end(), '.', '_');
 
@@ -1773,7 +1774,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
     }
     case Prop::Backward:
     {
-        batchnorm.reset(new gpu::primitive{[=, &tensor_desc, &derived_param_desc](void** inputs,
+        gpu::primitive bnbp = [=, &tensor_desc, &derived_param_desc](void** inputs,
                                                                                   void** outputs) {
             CUDNN_SAFE_CALL(cudnnBatchNormalizationBackward(*m_ctx->cudnn_handle,
                                                             bn_op,
@@ -1795,7 +1796,30 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
                                                             inputs[3],   // batch mean
                                                             inputs[4])); // batch inverse variance
             debug_sync();
-        }});
+        };
+
+        if (invert_variance)
+        {
+            GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+            size_t inv_var_idx =
+                allocator.reserve_workspace(tensor_shape[1] * dtype.size());
+            auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
+            auto reciprocal_idx = cuda_emitter->build_cudnn_bn_inv_var({dtype, dtype}, Shape{tensor_shape[1]}, epsilon);
+            batchnorm.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
+                        void* inv_var = runtime::gpu::invoke_memory_primitive(m_ctx, inv_var_idx);
+                        gpu::invoke_primitive(m_ctx, reciprocal_idx, &inputs[4], &inv_var);
+                        inputs[4] = inv_var;
+                        bnbp(inputs,outputs);
+                    }});
+        }
+        else
+        {
+            batchnorm.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
+                        bnbp(inputs,outputs);
+                    }});
+
+        }
+
         break;
     }
     }
