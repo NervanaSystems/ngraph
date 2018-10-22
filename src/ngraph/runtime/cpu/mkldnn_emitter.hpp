@@ -534,15 +534,15 @@ namespace ngraph
                         num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
 
                     // We create the memory descriptors used by the user
-                    auto user_src_layer_md = build_memory_descriptor(
+                    auto rnn_src_layer_md = build_memory_descriptor(
                         src_layer_dims, args[0].get_element_type(), mkldnn::memory::format::tnc);
-                    auto user_src_iter_md = build_memory_descriptor(
+                    auto rnn_src_iter_md = build_memory_descriptor(
                         src_iter_dims, args[1].get_element_type(), mkldnn::memory::format::ldsnc);
                     auto user_wei_layer_md = build_memory_descriptor(
                         wei_layer_dims, args[2].get_element_type(), mkldnn::memory::format::ldgoi);
                     auto user_wei_iter_md = build_memory_descriptor(
                         wei_iter_dims, args[3].get_element_type(), mkldnn::memory::format::ldgoi);
-                    auto user_bias_md = build_memory_descriptor(
+                    auto rnn_bias_md = build_memory_descriptor(
                         bias_dims, args[4].get_element_type(), mkldnn::memory::format::ldgo);
 
                     // MKLDNN for now, just support TNC format for dst_layer
@@ -551,41 +551,34 @@ namespace ngraph
                     auto rnn_dst_iter_md = build_memory_descriptor(
                         dst_iter_dims, out[1].get_element_type(), mkldnn::memory::format::ldsnc);
 
-                    // define the reorder for the weights (ldgoi) -> (ldigo)
-                    auto src_layer_reorder = build_memory_descriptor(
-                        src_layer_dims, args[0].get_element_type(), mkldnn::memory::format::tnc);
-                    auto dst_layer_reorder = build_memory_descriptor(
-                        dst_layer_dims, out[0].get_element_type(), mkldnn::memory::format::ntc);
+                    // define the weights in the generic layout and query rnn primitive for the
+                    // preferred weights format
                     auto rnn_wei_layer_md = build_memory_descriptor(
                         wei_layer_dims, args[2].get_element_type(), mkldnn::memory::format::any);
                     auto rnn_wei_iter_md = build_memory_descriptor(
                         wei_iter_dims, args[3].get_element_type(), mkldnn::memory::format::any);
 
-                    return build_rnn_forward(user_src_layer_md,
-                                             user_src_iter_md,
+                    return build_rnn_forward(rnn_src_layer_md,
+                                             rnn_src_iter_md,
                                              user_wei_layer_md,
                                              user_wei_iter_md,
-                                             user_bias_md,
+                                             rnn_bias_md,
                                              rnn_dst_layer_md,
                                              rnn_dst_iter_md,
                                              rnn_wei_layer_md,
-                                             rnn_wei_iter_md,
-                                             src_layer_reorder,
-                                             dst_layer_reorder);
+                                             rnn_wei_iter_md);
                 }
 
                 std::vector<size_t>
-                    build_rnn_forward(const mkldnn::memory::desc& src_layer_desc,
-                                      const mkldnn::memory::desc& src_iter_desc,
-                                      const mkldnn::memory::desc& weights_layer_desc,
-                                      const mkldnn::memory::desc& weights_iter_desc,
-                                      const mkldnn::memory::desc& bias_desc,
-                                      const mkldnn::memory::desc& dst_layer_desc,
-                                      const mkldnn::memory::desc& dst_iter_desc,
+                    build_rnn_forward(const mkldnn::memory::desc& rnn_src_layer_desc,
+                                      const mkldnn::memory::desc& rnn_src_iter_desc,
+                                      const mkldnn::memory::desc& user_weights_layer_desc,
+                                      const mkldnn::memory::desc& user_weights_iter_desc,
+                                      const mkldnn::memory::desc& rnn_bias_desc,
+                                      const mkldnn::memory::desc& rnn_dst_layer_desc,
+                                      const mkldnn::memory::desc& rnn_dst_iter_desc,
                                       const mkldnn::memory::desc& rnn_wei_layer_desc,
-                                      const mkldnn::memory::desc& rnn_wei_iter_desc,
-                                      const mkldnn::memory::desc& src_layer_reorder_desc,
-                                      const mkldnn::memory::desc& dst_layer_reorder_desc);
+                                      const mkldnn::memory::desc& rnn_wei_iter_desc);
 
                 size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                     const mkldnn::memory::desc& result_desc,

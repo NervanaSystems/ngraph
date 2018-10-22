@@ -1055,36 +1055,35 @@ size_t MKLDNNEmitter::build_batchnorm_backward(const mkldnn::memory::desc& weigh
 }
 
 std::vector<size_t>
-    MKLDNNEmitter::build_rnn_forward(const mkldnn::memory::desc& src_layer_desc,
-                                     const mkldnn::memory::desc& src_iter_desc,
-                                     const mkldnn::memory::desc& weights_layer_desc,
-                                     const mkldnn::memory::desc& weights_iter_desc,
-                                     const mkldnn::memory::desc& bias_desc,
-                                     const mkldnn::memory::desc& dst_layer_desc,
-                                     const mkldnn::memory::desc& dst_iter_desc,
+    MKLDNNEmitter::build_rnn_forward(const mkldnn::memory::desc& rnn_src_layer_desc,
+                                     const mkldnn::memory::desc& rnn_src_iter_desc,
+                                     const mkldnn::memory::desc& user_weights_layer_desc,
+                                     const mkldnn::memory::desc& user_weights_iter_desc,
+                                     const mkldnn::memory::desc& rnn_bias_desc,
+                                     const mkldnn::memory::desc& rnn_dst_layer_desc,
+                                     const mkldnn::memory::desc& rnn_dst_iter_desc,
                                      const mkldnn::memory::desc& rnn_wei_layer_desc,
-                                     const mkldnn::memory::desc& rnn_wei_iter_desc,
-                                     const mkldnn::memory::desc& src_layer_reorder_desc,
-                                     const mkldnn::memory::desc& dst_layer_reorder_desc)
+                                     const mkldnn::memory::desc& rnn_wei_iter_desc)
 {
-    size_t src_layer_index = build_memory_primitive(src_layer_desc);
-    size_t src_iter_index = build_memory_primitive(src_iter_desc);
-    size_t bias_index = build_memory_primitive(bias_desc);
-    size_t dst_layer_index = build_memory_primitive(dst_layer_desc);
-    size_t dst_iter_index = build_memory_primitive(dst_iter_desc);
+    size_t src_layer_index = build_memory_primitive(rnn_src_layer_desc);
+    size_t src_iter_index = build_memory_primitive(rnn_src_iter_desc);
+    size_t bias_index = build_memory_primitive(rnn_bias_desc);
+    size_t dst_layer_index = build_memory_primitive(rnn_dst_layer_desc);
+    size_t dst_iter_index = build_memory_primitive(rnn_dst_iter_desc);
+
     std::vector<size_t> primitive_index;
 
     mkldnn::rnn_cell::desc rnn_cell(mkldnn::algorithm::vanilla_lstm);
     mkldnn::rnn_forward::desc rnn_layer_desc(mkldnn::prop_kind::forward_training,
                                              rnn_cell,
                                              mkldnn::rnn_direction::unidirectional_left2right,
-                                             src_layer_desc,
-                                             src_iter_desc,
+                                             rnn_src_layer_desc,
+                                             rnn_src_iter_desc,
                                              rnn_wei_layer_desc,
                                              rnn_wei_iter_desc,
-                                             bias_desc,
-                                             dst_layer_desc,
-                                             dst_iter_desc);
+                                             rnn_bias_desc,
+                                             rnn_dst_layer_desc,
+                                             rnn_dst_iter_desc);
     auto rnn_layer_prim_desc =
         mkldnn::rnn_forward::primitive_desc(rnn_layer_desc, mkldnn_utils::global_cpu_engine);
 
@@ -1093,7 +1092,7 @@ std::vector<size_t>
 
     // reorder weights_layer from ldgoi to the mkldnn preferred format
     size_t weight_layer_reorder_index =
-        this->build_reorder(weights_layer_desc, wei_layer_reorder_desc);
+        this->build_reorder(user_weights_layer_desc, wei_layer_reorder_desc);
     auto workspace_wei_layer = std::unique_ptr<MKLDNNWorkspace>(
         new MKLDNNWorkspace(rnn_layer_prim_desc.weights_layer_primitive_desc().get_size()));
     auto workspace_wei_layer_buf_index = insert_workspace(workspace_wei_layer);
@@ -1103,7 +1102,7 @@ std::vector<size_t>
 
     // reorder weights_iter from ldgoi to the mkldnn preferred format
     size_t weight_iter_reorder_index =
-        this->build_reorder(weights_iter_desc, wei_iter_reorder_desc);
+        this->build_reorder(user_weights_iter_desc, wei_iter_reorder_desc);
     auto workspace_wei_iter = std::unique_ptr<MKLDNNWorkspace>(
         new MKLDNNWorkspace(rnn_layer_prim_desc.weights_iter_primitive_desc().get_size()));
     auto workspace_wei_iter_buf_index = insert_workspace(workspace_wei_iter);
