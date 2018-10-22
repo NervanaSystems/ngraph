@@ -33,32 +33,32 @@ namespace ngraph
             enum class RoundMode
             {
                 // round to nearest integer
-                // in case of two equally near integers round away from zero e.g.
+                // in case of two equidistant integers round away from zero e.g.
                 // 2.5 -> 3
                 // -3.5 -> -4
                 ROUND_NEAREST_TOWARD_INFINITY,
                 HALF_AWAY_FROM_ZERO, // TF mode for backward compatability
 
                 // round to nearest integer
-                // in case of two equally near integers round toward zero e.g.
+                // in case of two equidistant integers round toward zero e.g.
                 // 2.5 -> 2
                 // -3.5 -> -3
                 ROUND_NEAREST_TOWARD_ZERO,
 
                 // round to nearest integer
-                // in case of two equally near integers round up e.g.
+                // in case of two equidistant integers round up e.g.
                 // 2.5 -> 3
                 // -3.5 -> -3
                 ROUND_NEAREST_UPWARD,
 
                 // round to nearest integer
-                // in case of two equally near integers round down e.g.
+                // in case of two equidistant integers round down e.g.
                 // 2.5 -> 2
                 // -3.5 -> -4
                 ROUND_NEAREST_DOWNWARD,
 
                 // round to nearest integer
-                // in case of two equally near integers round to even e.g.
+                // in case of two equidistant integers round to even e.g.
                 // 2.5 -> 2
                 // -3.5 -> -4
                 ROUND_NEAREST_TOWARD_EVEN,

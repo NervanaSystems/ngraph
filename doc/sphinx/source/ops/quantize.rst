@@ -42,31 +42,31 @@ Attributes
 +-------------------------------+----------------------------------------------------------------+
 | ``round_mode``                | *ROUND_NEAREST_TOWARD_INFINITY:*                               |
 |                               | round to nearest integer                                       |
-|                               | in case of two equally near integers round away from zero e.g. |
+|                               | in case of two equidistant integers round away from zero e.g.  |
 |                               | 2.5 -> 3                                                       |
 |                               | -3.5 -> -4                                                     |
 |                               |                                                                |
 |                               | *ROUND_NEAREST_TOWARD_ZERO:*                                   |
 |                               | round to nearest integer                                       |
-|                               | in case of two equally near integers round toward zero e.g.    |
+|                               | in case of two equidistant integers round toward zero e.g.     |
 |                               | 2.5 -> 2                                                       |
 |                               | -3.5 to -3                                                     |
 |                               |                                                                |
 |                               | *ROUND_NEAREST_UPWARD:*                                        |
 |                               | round to nearest integer                                       |
-|                               | in case of two equally near integers round up e.g.             |
+|                               | in case of two equidistant integers round up e.g.              |
 |                               | 2.5 to 3                                                       |
 |                               | -3.5 to -3                                                     |
 |                               |                                                                |
 |                               | *ROUND_NEAREST_DOWNWARD:*                                      |
 |                               | round to nearest integer                                       |
-|                               | in case of two equally near integers round down e.g.           |
+|                               | in case of two equidistant integers round down e.g.            |
 |                               | 2.5 to 2                                                       |
 |                               | -3.5 to -4                                                     |
 |                               |                                                                |
 |                               | *ROUND_NEAREST_TOWARD_EVEN:*                                   |
 |                               | round to nearest integer                                       |
-|                               | in case of two equally near integers round to even e.g.        |
+|                               | in case of two equidistant integers round to even e.g.         |
 |                               | 2.5 to 2                                                       |
 |                               | -3.5 to -4                                                     |
 |                               |                                                                |
@@ -77,10 +77,10 @@ Attributes
 |                               | round to nearest integer toward zero                           |
 |                               |                                                                |
 |                               | *ROUND_UP:*                                                    |
-|                               | round to nearest integer toward infinity                       |
+|                               | round to nearest integer toward infinity (ceiling)             |
 |                               |                                                                |
 |                               | *ROUND_DOWN:*                                                  |
-|                               | round to nearest integer toward negative infinity              |
+|                               | round to nearest integer toward negative infinity (floor)      |
 +-------------------------------+----------------------------------------------------------------+
 
 Outputs
