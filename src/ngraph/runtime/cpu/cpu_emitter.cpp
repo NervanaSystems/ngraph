@@ -1004,15 +1004,17 @@ namespace ngraph
                         auto offset = 0;
                         for (auto i = 0; i < args.size(); i++)
                         {
+#if 0
                             writer << "if (" << args[i].get_name() << " < " << out[0].get_name()
                                    << " || " << args[i].get_name() << " >= " << out[0].get_name()
                                    << " + " << out[0].get_size() << ")\n";
                             writer.block_begin();
+#endif
                             writer << "memcpy(" << out[0].get_name() << " + " << offset << ", "
                                    << args[i].get_name() << ", "
                                    << args[i].get_size() * out[0].get_element_type().size()
                                    << ");\n";
-                            writer.block_end();
+                            //writer.block_end();
                             offset += args[i].get_size();
                         }
                         return;
