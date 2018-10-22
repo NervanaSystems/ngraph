@@ -8953,7 +8953,7 @@ TEST(type_prop, index_reduction_scalar)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "Argument rank must be at least 1");
+        EXPECT_HAS_SUBSTRING(error.what(), "Argument rank is zero");
     }
     catch (...)
     {
@@ -8972,7 +8972,7 @@ TEST(type_prop, index_reduction_invalid_rank)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "is greater than rank of");
+        EXPECT_HAS_SUBSTRING(error.what(), "Reduction axis (2) is not less than argument rank (2)");
     }
     catch (...)
     {
@@ -8991,12 +8991,114 @@ TEST(type_prop, index_reduction_invalid_index_type)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "Index element type must be");
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element is neither i64 or i32");
     }
     catch (...)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, index_reduction_partial_rank_dynamic_output_et_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    size_t axis = 228;
+    auto output_et = element::dynamic;
+
+    try
+    {
+        auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+        FAIL() << "Invalid output type of element::dynamic not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element is neither i64 or i32");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, index_reduction_partial_rank_dynamic_output_et_invalid)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    size_t axis = 228;
+    auto output_et = element::dynamic;
+
+    try
+    {
+        auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+        FAIL() << "Invalid output type of element::f32 not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element is neither i64 or i32");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, index_reduction_partial_rank_dynamic_ok)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    size_t axis = 228;
+    auto output_et = element::i32;
+
+    auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+
+    ASSERT_EQ(argmax->get_output_element_type(0), element::i32);
+    ASSERT_TRUE(argmax->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, index_reduction_partial_rank_static_dynamic_axis_oob)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3, 4});
+    size_t axis = 4;
+    auto output_et = element::i32;
+
+    try
+    {
+        auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+        FAIL() << "Out-of-bounds reduction axis not detected (rank-static dynamic argument)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Reduction axis (4) is not less than argument rank (4)");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, index_reduction_partial_rank_static_dynamic_ok)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3, 4});
+    size_t axis = 2;
+    auto output_et = element::i32;
+
+    auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+
+    ASSERT_EQ(argmax->get_output_element_type(0), element::i32);
+    ASSERT_TRUE(
+        argmax->get_output_partial_shape(0).same_scheme(PartialShape{Dimension::dynamic(), 2, 4}));
+}
+
+TEST(type_prop, index_reduction_partial_et_dynamic_rank_static_dynamic_ok)
+{
+    auto a =
+        make_shared<op::Parameter>(element::dynamic, PartialShape{Dimension::dynamic(), 2, 3, 4});
+    size_t axis = 2;
+    auto output_et = element::i32;
+
+    auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+
+    ASSERT_EQ(argmax->get_output_element_type(0), element::i32);
+    ASSERT_TRUE(
+        argmax->get_output_partial_shape(0).same_scheme(PartialShape{Dimension::dynamic(), 2, 4}));
 }
 
 TEST(type_prop, topk_invalid_rank)
