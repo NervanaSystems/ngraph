@@ -88,9 +88,9 @@ namespace ngraph
         /// \return The rank of the shape. This will be Rank::dynamic() if the rank of
         ///         the shape is dynamic.
         Rank rank() const { return m_rank_is_static ? Rank(m_dimensions.size()) : Rank::dynamic(); }
-        /// \brief Construct a PartialShape with dynamic rank.
-        /// \return A PartialShape with dynamic rank.
-        static PartialShape dynamic() { return PartialShape(false, {}); }
+        /// \brief Construct a PartialShape with the given rank and all dimensions (if any) dynamic.
+        /// \return A PartialShape with the given rank, and all dimensions (if any) dynamic.
+        static PartialShape dynamic(Rank r = Rank::dynamic());
         /// \brief Check whether this shape is compatible with the argument, i.e., whether it is
         ///        possible to merge them.
         /// \param s The shape to be checked for compatibility with this shape.
@@ -152,6 +152,12 @@ namespace ngraph
         ///      either `s2[i]` is dynamic, or `s1[i]` == `s2[i]`.
         bool refines(const PartialShape& s) const;
 
+        /// \brief Checks that this shape's rank is compatible with `r`, and, if this shape's
+        ///        rank is dynamic and `r` is static, updates this shape to have a rank of `r`
+        ///        with dimensions all dynamic.
+        /// \return `true` if this shape's rank is compatible with `r`, else `false`.
+        bool merge_rank(Rank r);
+
         /// \brief Convert a static PartialShape to a Shape.
         /// \return A new Shape `s` where `s[i] = size_t((*this)[i])`.
         /// \throws std::invalid_argument If this PartialShape is dynamic.
@@ -199,11 +205,10 @@ namespace ngraph
         static bool merge_into(PartialShape& dst, const PartialShape& src);
 
     private:
-        // Private constructor so PartialShape::dynamic() can construct a shape with
-        // m_rank_is_static set to false.
-        PartialShape(bool rank_is_static, std::initializer_list<Dimension> init)
+        // Private constructor for PartialShape::dynamic().
+        PartialShape(bool rank_is_static, std::vector<Dimension> dimensions)
             : m_rank_is_static(rank_is_static)
-            , m_dimensions(init)
+            , m_dimensions(dimensions)
         {
         }
 
