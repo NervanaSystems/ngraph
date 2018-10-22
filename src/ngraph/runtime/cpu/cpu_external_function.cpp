@@ -1360,7 +1360,14 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
     if ((std::getenv("NGRAPH_DEX_DEBUG") != nullptr))
     {
+        int my_rank;
+#ifdef NGRAPH_DISTRIBUTED
+        MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+#endif
         string filename = file_util::path_join(s_debug_dir, m_function_name + "_debug.txt");
+#ifdef NGRAPH_DISTRIBUTED
+        string filename = file_util::path_join(s_debug_dir, m_function_name + "_" + to_string(my_rank) + "_debug.txt");
+#endif
         std::stringstream strm;
         auto find_role = [](CPUTensorRole tensor_role) -> string {
             switch (tensor_role)
