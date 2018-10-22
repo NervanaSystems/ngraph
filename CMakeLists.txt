@@ -248,8 +248,11 @@ include(cmake/external_json.cmake)
 include(cmake/external_eigen.cmake)
 include(cmake/external_mkldnn.cmake)
 
-if (NGRAPH_GPU_ENABLE OR (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY))
-    set(NGRAPH_LLVM_CODEGEN_ENABLE TRUE)
+# Auto enable LLVM build for some target configurations
+if (NOT NGRAPH_LLVM_CODEGEN_ENABLE)
+    if (NGRAPH_GPU_ENABLE OR (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY))
+       set(NGRAPH_LLVM_CODEGEN_ENABLE TRUE)
+    endif()
 endif()
 
 if($ENV{NGRAPH_USE_PREBUILT_LLVM})
