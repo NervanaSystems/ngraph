@@ -1235,7 +1235,8 @@ size_t runtime::gpu::CUDAEmitter::build_cudnn_bn_inv_var(const std::vector<std::
     uint32_t nthreads = static_cast<uint32_t>(shape_size(tensor_shape));
     // kernel_name is used to check if the cuda kernel has been previously compiled
     std::stringstream kernel_name;
-    kernel_name << "cudnn_bn_inv_var" << "_" << join(dtypes, "_");
+    kernel_name << "cudnn_bn_inv_var"
+                << "_" << join(dtypes, "_");
 
     // hash is used to check if the emitted primitive already exists
     std::stringstream ss;

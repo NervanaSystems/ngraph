@@ -106,8 +106,8 @@
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
-#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_op_annotations.hpp"
+#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/runtime/gpu/op/batch_norm.hpp"
 #include "ngraph/runtime/gpu/op/rnn.hpp"
@@ -384,7 +384,8 @@ void runtime::gpu::GPU_Emitter::emit_BatchNormBackprop(EMIT_ARGS)
     auto annotation = batchnorm->get_op_annotations();
     if (annotation)
     {
-        auto bnbp_annotation = std::dynamic_pointer_cast<runtime::gpu::BatchNormBackpropAnnotations>(annotation);
+        auto bnbp_annotation =
+            std::dynamic_pointer_cast<runtime::gpu::BatchNormBackpropAnnotations>(annotation);
         if (bnbp_annotation && bnbp_annotation->has_inverted_variance() == false)
         {
             needs_variance_inversion = true;

@@ -1738,7 +1738,7 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
     case Prop::Backward:
     {
         gpu::primitive bnbp = [=, &tensor_desc, &derived_param_desc](void** inputs,
-                                                                                  void** outputs) {
+                                                                     void** outputs) {
             CUDNN_SAFE_CALL(cudnnBatchNormalizationBackward(*m_ctx->cudnn_handle,
                                                             bn_op,
                                                             alpha,
@@ -1764,23 +1764,21 @@ size_t runtime::gpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& b
         if (invert_variance)
         {
             GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
-            size_t inv_var_idx =
-                allocator.reserve_workspace(tensor_shape[1] * dtype.size());
+            size_t inv_var_idx = allocator.reserve_workspace(tensor_shape[1] * dtype.size());
             auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-            auto reciprocal_idx = cuda_emitter->build_cudnn_bn_inv_var({dtype, dtype}, Shape{tensor_shape[1]}, epsilon);
+            auto reciprocal_idx = cuda_emitter->build_cudnn_bn_inv_var(
+                {dtype, dtype}, Shape{tensor_shape[1]}, epsilon);
             batchnorm.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
-                        void* inv_var = runtime::gpu::invoke_memory_primitive(m_ctx, inv_var_idx);
-                        gpu::invoke_primitive(m_ctx, reciprocal_idx, &inputs[4], &inv_var);
-                        inputs[4] = inv_var;
-                        bnbp(inputs,outputs);
-                    }});
+                void* inv_var = runtime::gpu::invoke_memory_primitive(m_ctx, inv_var_idx);
+                gpu::invoke_primitive(m_ctx, reciprocal_idx, &inputs[4], &inv_var);
+                inputs[4] = inv_var;
+                bnbp(inputs, outputs);
+            }});
         }
         else
         {
-            batchnorm.reset(new gpu::primitive{[=](void** inputs, void** outputs) {
-                        bnbp(inputs,outputs);
-                    }});
-
+            batchnorm.reset(
+                new gpu::primitive{[=](void** inputs, void** outputs) { bnbp(inputs, outputs); }});
         }
 
         break;
