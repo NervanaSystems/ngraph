@@ -172,6 +172,8 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 
         // get op type
         element::Type type;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
         switch (type_id)
         {
         case OP_TYPEID::Convert:
@@ -190,6 +192,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
             break;
         default: type = op->get_outputs().at(0).get_element_type(); break;
         }
+#pragma GCC diagnostic pop
 
         if (instance.m_performance_counters_enabled)
         {

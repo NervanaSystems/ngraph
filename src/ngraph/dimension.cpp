@@ -52,6 +52,11 @@ Dimension Dimension::operator+(const Dimension& dim) const
     return (is_static() && dim.is_static() ? m_dimension + size_t(dim) : Dimension::dynamic());
 }
 
+Dimension Dimension::operator-(const Dimension& dim) const
+{
+    return (is_static() && dim.is_static() ? m_dimension - size_t(dim) : Dimension::dynamic());
+}
+
 Dimension Dimension::operator*(const Dimension& dim) const
 {
     return ((is_static() && dim.is_static())
