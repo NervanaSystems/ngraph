@@ -22,36 +22,38 @@
 #include "ngraph/log.hpp"
 #include "ngraph/pattern/matcher.hpp"
 
-bool ngraph::pass::GraphRewrite::run_matchers_on_nodes_list(
-    const std::list<std::shared_ptr<ngraph::Node>>& nodes,
-    const std::vector<std::shared_ptr<pattern::Matcher>>& matchers,
-    std::shared_ptr<ngraph::Function> f)
+bool ngraph::pass::GraphRewrite::run_on_function(std::shared_ptr<ngraph::Function> f)
 {
     bool rewritten = false;
-    for (auto node : nodes)
+    const size_t NUM_TRIES = 10;
+    size_t tries = NUM_TRIES;
+    do
     {
-        for (auto matcher : matchers)
+        rewritten = false;
+        std::vector<std::shared_ptr<pattern::Matcher>> matchers{m_matchers};
+        m_matchers.clear();
+        for (auto node : f->get_ordered_ops())
         {
-            NGRAPH_DEBUG << "Running matcher " << matcher->get_name() << "("
-                         << matcher->get_pattern()->get_name() << ") on " << node->get_name();
-            if (matcher->match(node))
+            for (auto matcher : matchers)
             {
-                NGRAPH_DEBUG << "Matcher " << matcher << matcher->get_name() << " matched "
-                             << node->get_name();
-                rewritten = true;
-                if (matcher->process_match())
+                NGRAPH_DEBUG << "Running matcher " << matcher->get_name() << "("
+                             << matcher->get_pattern()->get_name() << ") on " << node->get_name();
+                if (matcher->match(node))
                 {
-                    break;
+                    NGRAPH_DEBUG << "Matcher " << matcher << matcher->get_name() << " matched "
+                                 << node->get_name();
+                    rewritten = true;
+                    if (matcher->process_match())
+                    {
+                        break;
+                    }
                 }
             }
         }
-    }
-    return rewritten;
-}
 
-bool ngraph::pass::GraphRewrite::run_on_function(std::shared_ptr<ngraph::Function> f)
-{
-    return run_matchers_on_nodes_list(f->get_ordered_ops(), m_matchers, f);
+    } while (rewritten && m_matchers.size() > 0 && tries--);
+
+    return (NUM_TRIES - tries) > 1; //this means a graph was transformed
 }
 
 bool ngraph::pass::RecurrentGraphRewrite::run_on_function(std::shared_ptr<ngraph::Function> f)
