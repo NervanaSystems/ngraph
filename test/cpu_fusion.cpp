@@ -82,44 +82,6 @@
 using namespace ngraph;
 using namespace std;
 
-TEST(cpu_fusion, broadcast_gauri)
-{
-    Shape shape_a{4};
-    Shape shape_r{4, 1, 3, 3};
-    AxisSet axis{1, 2, 3};
-    //broadcast_test_helper(shape_a, shape_r, axis);
-
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-
-    vector<float> inp_data(shape_size<const Shape>(shape_a));
-    iota(inp_data.begin(), inp_data.end(), 1);
-
-    auto f =
-        make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, axis), op::ParameterVector{A});
-
-    auto ref_backend = runtime::Backend::create("INTERPRETER");
-    auto wrk_backend = runtime::Backend::create("CPU");
-
-    auto wrk_a = wrk_backend->create_tensor(element::f32, shape_a);
-    copy_data(wrk_a, inp_data);
-
-    auto ref_a = ref_backend->create_tensor(element::f32, shape_a);
-    copy_data(ref_a, inp_data);
-
-    shared_ptr<runtime::Tensor> wrk_result = wrk_backend->create_tensor(element::f32, shape_r);
-    shared_ptr<runtime::Tensor> ref_result = ref_backend->create_tensor(element::f32, shape_r);
-
-    wrk_backend->call_with_validate(f, {wrk_result}, {wrk_a});
-    ref_backend->call_with_validate(f, {ref_result}, {ref_a});
-
-    vector<float> tmp = read_vector<float>(wrk_result);
-    for (size_t i = 0; i < wrk_result->get_element_count(); ++i)
-    {
-        std::cout << i << ": " << tmp[i] << "\n";
-    }
-    EXPECT_EQ(read_vector<float>(ref_result), read_vector<float>(wrk_result));
-}
-
 TEST(cpu_fusion, gemm_pattern)
 {
     Shape shape_w{2, 4};
@@ -1114,10 +1076,8 @@ shared_ptr<Function> gen_groupconv_batchnorm(bool add_goe, bool with_relu)
     auto beta = std::make_shared<op::Parameter>(element::f32, Shape{NUM});
     auto mean = std::make_shared<op::Parameter>(element::f32, Shape{NUM});
     auto var = std::make_shared<op::Parameter>(element::f32, Shape{NUM});
-    //auto bn1 = std::make_shared<op::BatchNorm>(eps, gamma, beta, group_conv, mean, var);
 
     auto goe_bn = std::make_shared<op::GetOutputElement>(group_conv, 0);
-    //auto bn2 = std::make_shared<op::BatchNorm>(eps, gamma, beta, output_rt, mean, var);
 
     auto bn = add_goe ? std::make_shared<op::BatchNorm>(eps, gamma, beta, goe_bn, mean, var)
                       : std::make_shared<op::BatchNorm>(eps, gamma, beta, group_conv, mean, var);
@@ -1191,73 +1151,6 @@ TEST(cpu_fusion, groupconv_batchnorm_relu)
     auto nofuse_results = execute(nofuse_func, args, "CPU");
     EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
 }
-
-/*shared_ptr<Function> gen_groupconv_batchnorm_boundedrelu()
-{
-    const int NUM = 32;
-    const size_t GROUPS = NUM;
-    Shape shape_a{1, NUM, 5, 5};
-    auto input = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_b{NUM, 1, 3, 3};
-    auto weights = make_shared<op::Parameter>(element::f32, shape_b);
-    Shape shape_r{1, NUM, 3, 3};
-    auto group_conv = make_shared<op::GroupConvolution>(input,
-                                                        weights,
-                                                        Strides{1, 1},
-                                                        Strides{1, 1},
-                                                        CoordinateDiff{0, 0},
-                                                        CoordinateDiff{0, 0},
-                                                        Strides{1, 1},
-                                                        GROUPS,
-                                                        shape_r);
-    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
-
-    double eps = 0.001;
-    auto gamma = std::make_shared<op::Parameter>(element::f32, Shape{32});
-    auto beta = std::make_shared<op::Parameter>(element::f32, Shape{32});
-    auto mean = std::make_shared<op::Parameter>(element::f32, Shape{32});
-    auto var = std::make_shared<op::Parameter>(element::f32, Shape{32});
-    auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, group_conv, mean, var);
-
-    float alpha_val = 6.0;
-    auto alpha = op::Constant::create<float>(
-            element::f32, shape_a, std::vector<float>(1.0f, alpha_val));
-    //auto prelu = std::make_shared<op::BoundedRelu>(group_conv, alpha);
-
-    //auto f = make_shared<Function>(NodeVector{prelu},
-    //                               op::ParameterVector{input, weights, gamma, beta, mean, var});
-    return f;
-}
-
-TEST(cpu_fusion, fuse_groupconv_batchnorm_boundedrelu)
-{
-    auto func_fuse = gen_groupconv_batchnorm_boundedrelu();
-
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.run_passes(func_fuse);
-    ASSERT_EQ(count_ops_of_type<op::GroupConvolutionBias>(func_fuse), 1);
-    ASSERT_EQ(count_ops_of_type<op::BoundedRelu>(func_fuse), 0);
-}
-
-TEST(cpu_fusion, groupconv_batchnorm_boundedrelu)
-{
-    shared_ptr<Function> cpu_func = gen_groupconv_batchnorm_boundedrelu();
-    shared_ptr<Function> int_func = gen_groupconv_batchnorm_boundedrelu();
-
-    test::Uniform<float> rng(1.0f, 100.0f);
-    vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_func->get_parameters())
-    {
-        vector<float> tensor_val(shape_size(param->get_shape()));
-        rng.initialize(tensor_val);
-        args.push_back(tensor_val);
-    }
-
-    auto int_results = execute(int_func, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_func, args, "CPU");
-    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
-}*/
 
 std::vector<shared_ptr<runtime::Tensor>> rnn_matrix_fusion_eval(const size_t time_steps,
                                                                 const Shape& data_shape,
