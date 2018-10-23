@@ -5882,7 +5882,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop)
     auto var = std::make_shared<op::GetOutputElement>(bn_fp, 2);
 
     auto delta = std::make_shared<op::Parameter>(element::f32, vec);
-    auto bn_bp = std::make_shared<op::BatchNormBackprop>(eps, g, b, bnorm, mean, var, delta);
+    auto bn_bp = std::make_shared<op::BatchNormTrainingBackprop>(eps, g, b, bnorm, mean, var, delta);
     auto dx = std::make_shared<op::GetOutputElement>(bn_bp, 0);
 
     std::vector<std::vector<float>> args = {
@@ -5927,7 +5927,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop_2step)
     auto m = std::make_shared<op::Parameter>(element::f32, sca);
     auto v = std::make_shared<op::Parameter>(element::f32, sca);
     auto delta = std::make_shared<op::Parameter>(element::f32, vec);
-    auto bn_bp = std::make_shared<op::BatchNormBackprop>(eps, g, b, bn_output, m, v, delta);
+    auto bn_bp = std::make_shared<op::BatchNormTrainingBackprop>(eps, g, b, bn_output, m, v, delta);
     auto dx = std::make_shared<op::GetOutputElement>(bn_bp, 0);
 
     args.pop_back();               // remove x
