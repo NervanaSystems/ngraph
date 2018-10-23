@@ -630,16 +630,14 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
             writer << "uint32_t output_idx = block_id * output_stride + block_idx + "
                       "split_input_stride_offset;\n";
             writer << "out[output_idx] = 1;\n";
-            writer << "bool processed = false;\n";
             for (size_t i = 0; i < num_inputs; i++)
             {
-                writer << "if(!processed && (block_idx < inputs_strides[" << i
-                       << " + input_offset]))\n";
+                writer << "if(block_idx < inputs_strides[" << i << " + input_offset])\n";
                 writer.block_begin();
                 {
                     writer << "out[output_idx] = in" << i << "[block_id * inputs_strides[" << i
-                           << " + input_offset] + block_idx];";
-                    writer << "processed = true;\n";
+                           << " + input_offset] + block_idx];\n";
+                    writer << "return;\n";
                 }
                 writer.block_end();
                 writer << "block_idx -= inputs_strides[" << i << " + input_offset];\n";
