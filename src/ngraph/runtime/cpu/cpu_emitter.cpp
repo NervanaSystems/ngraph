@@ -2817,7 +2817,7 @@ namespace ngraph
                                                                   padding_above,
                                                                   ops);
 
-                    // invoke group convolution
+                    // invoke group convolution bias
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
@@ -2833,7 +2833,7 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("unsupported parameters for GroupConvolutionBias");
+                    throw ngraph_error("Unsupported parameters for GroupConvolutionBias");
                 }
             }
 

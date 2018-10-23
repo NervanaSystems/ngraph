@@ -52,13 +52,13 @@ namespace ngraph
                 else if (input_desc.data.format == mkldnn_nchw && input_desc.data.ndims == 4 &&
                          result_desc.data.ndims == 5 && node->get_users().size() == 1)
                 {
+                    // find if the node is groupconv or groupconvbias to get right dimensions
                     auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
                         *(begin(node->get_users())));
-                    //hack
+
                     auto gconvbias = std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(
                         *(begin(node->get_users())));
 
-                    cout << "gconv = " << gconv << ", gconv_bias = " << gconvbias << "\n";
                     if (gconv)
                     {
                         Shape weights_shape_groups = gconv->get_weights_dimensions();

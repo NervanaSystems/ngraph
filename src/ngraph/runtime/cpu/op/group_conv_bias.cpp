@@ -19,7 +19,6 @@
 #include "group_conv.hpp"
 #include "group_conv_bias.hpp"
 
-//#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/util.hpp"
 
@@ -30,7 +29,6 @@ void op::util::validate_groupconvbias_shapes(const Shape& data_shape,
                                              const Shape& filters_shape,
                                              const Shape& bias_shape)
 {
-    cout << "** GroupConvolutionBias validate_groupconvbias_shapes called \n";
     if (bias_shape.size() != 1)
     {
         throw ngraph_error("GroupConvolutionBias bias is expected to be 1D, but has shape: " +
@@ -38,19 +36,15 @@ void op::util::validate_groupconvbias_shapes(const Shape& data_shape,
     }
     if (bias_shape[0] != filters_shape[0] && bias_shape[0] != filters_shape[0] * filters_shape[1])
     {
-        cout << "bias shape: " << bias_shape << ", filter_shape: " << filters_shape << "\n";
         throw ngraph_error(
             "GroupConvolutionBias bias element size does not match number of filters. bias_size "
             "= " +
             std::to_string(bias_shape[0]) + ", num_filters = " + std::to_string(filters_shape[0]));
     }
 
-    // Note: the subtle match here
+    // Note: the subtle match difference here
     if (data_shape[1] != filters_shape[0] && data_shape[1] != filters_shape[0] * filters_shape[1])
     {
-        cout << " GroupConvolutionBias: data_shape: " << data_shape
-             << ", filter_shape: " << filters_shape << "\n";
-        // CHECK: Should we support if data_shape[1] == filters_shape[0] * filters_shape[1] ??
         throw ngraph_error(
             "GroupConvolution+bias data and filter have different number of channels: "
             "data_channel=" +
@@ -66,10 +60,7 @@ Shape op::GroupConvolutionBias::get_weights_dimensions()
     const size_t OC_IN_OUTPUT = 1;
     const size_t IC = 1;
 
-    cout << "\t Node name : " << get_name() << ", input_shape: " << get_inputs().at(0).get_shape()
-         << "\n";
     Shape weights_shape_groups{get_inputs().at(1).get_shape()};
-    cout << "\tnum_groups: " << get_groups() << ", get_wts_dims: " << weights_shape_groups << "\n";
 
     // when called from convertLayout, m_groups is 0, don't know why?!
     // hack for now
@@ -80,14 +71,10 @@ Shape op::GroupConvolutionBias::get_weights_dimensions()
     // adjust output and channel given a number of groups
 
     weights_shape_groups.at(OC) = get_shape().at(OC_IN_OUTPUT) / get_groups();
-    cout << "\tOC, get_wts_dims: " << get_shape().at(OC_IN_OUTPUT) / get_groups() << " \n";
-
     weights_shape_groups.at(IC) = get_inputs().at(0).get_shape().at(IC) / get_groups();
-    cout << "\tIC, get_wts_dims: " << get_inputs().at(0).get_shape().at(IC) / get_groups() << " \n";
-    cout << "\twights_shape_groups: " << weights_shape_groups << "\n";
+
     // push_front the number of groups
     weights_shape_groups.insert(weights_shape_groups.begin(), get_groups());
-    cout << "\tweights shape: " << weights_shape_groups << "\n\t-------------\n";
     return weights_shape_groups;
 }
 
@@ -141,7 +128,6 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<Node>& data_batc
     , m_groups(groups)
     , m_alpha(alpha)
 {
-    cout << "** GroupConvolutionBias ctor called \n";
     constructor_validate_and_infer_types();
 
     auto& data_batch_shape = data_batch->get_shape();
@@ -175,12 +161,10 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<Node>& data_batc
                                                          0, /* batch_axis_result,            */
                                                          1  /* output_channel_axis_result,   */
                                                          ));
-    cout << "** GroupConvolutionBias ctor done ** \n";
 }
 
 shared_ptr<Node> op::GroupConvolutionBias::copy_with_new_args(const NodeVector& new_args) const
 {
-    cout << "** GroupConvolutionBias copy_with_new_args called \n";
     if (new_args.size() != 3)
     {
         throw ngraph_error("Incorrect number of new arguments");

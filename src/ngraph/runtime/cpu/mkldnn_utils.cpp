@@ -107,7 +107,7 @@ std::map<element::Type, const std::string>&
 std::map<memory::format, const std::string>&
     runtime::cpu::mkldnn_utils::get_mkldnn_format_string_map()
 {
-    // TODO (jbobba): Add the rest of memory formats to this map as well
+    // Added rest of memory formats to this map as well
     static std::map<memory::format, const std::string> s_mkldnn_format_string_map{
         {memory::format::format_undef, "memory::format::format_undef"},
         {memory::format::any, "memory::format::any"},
@@ -273,10 +273,8 @@ const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_format_string(memory::
 {
     auto it = get_mkldnn_format_string_map().find(fmt);
     if (it == get_mkldnn_format_string_map().end())
-    {
         throw ngraph_error("No MKLDNN format exists for the given format type " +
                            std::to_string(fmt));
-    }
     return it->second;
 }
 

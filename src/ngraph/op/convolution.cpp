@@ -591,7 +591,6 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
 
     if (node->get_friendly_name().find("GroupConvolution") != std::string::npos)
     {
-        cout << " node name : " << node->get_name() << "\n";
         NODE_VALIDATION_ASSERT(node, filters_shape.at(0) == input_channel_count)
             << "Input channel count for filters (" << filters_shape.at(0) << ") "
             << "does not match the number of channels in the data batch (" << input_channel_count
@@ -601,7 +600,6 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
     }
     else
     {
-        //cout << " node name : " << node->get_name() << "\n";
         NODE_VALIDATION_ASSERT(node, filters_shape[input_channel_axis_filters] == input_channel_count)
             << "Input channel count for filters (" << filters_shape[input_channel_axis_filters] << ") "
             << "does not match the number of channels in the data batch (" << input_channel_count

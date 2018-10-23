@@ -192,7 +192,6 @@ namespace ngraph
 
                     if (can_use_mkldnn_conv<ngraph::op::GroupConvolutionBias>(node))
                     {
-                        cout << "## cpu_assignment groupConvBias \n";
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);

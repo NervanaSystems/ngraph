@@ -1090,10 +1090,9 @@ TEST(cpu_fusion, conv_add)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
-// CHECK: do we care if this is in-place only??
-shared_ptr<Function> gen_groupconv_batchnorm()
+shared_ptr<Function> gen_groupconv_batchnorm(bool add_goe, bool with_relu)
 {
-    const int NUM = 32;
+    const int NUM = 2;
     const size_t GROUPS = NUM;
     Shape shape_a{1, NUM, 5, 5};
     auto input = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1111,43 +1110,87 @@ shared_ptr<Function> gen_groupconv_batchnorm()
                                                         shape_r);
 
     double eps = 0.001;
-    auto gamma = std::make_shared<op::Parameter>(element::f32, Shape{32});
-    auto beta = std::make_shared<op::Parameter>(element::f32, Shape{32});
-    auto mean = std::make_shared<op::Parameter>(element::f32, Shape{32});
-    auto var = std::make_shared<op::Parameter>(element::f32, Shape{32});
-    auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, group_conv, mean, var);
-    auto f = make_shared<Function>(NodeVector{bn},
-                                   op::ParameterVector{input, weights, gamma, beta, mean, var});
-    return f;
+    auto gamma = std::make_shared<op::Parameter>(element::f32, Shape{NUM});
+    auto beta = std::make_shared<op::Parameter>(element::f32, Shape{NUM});
+    auto mean = std::make_shared<op::Parameter>(element::f32, Shape{NUM});
+    auto var = std::make_shared<op::Parameter>(element::f32, Shape{NUM});
+    //auto bn1 = std::make_shared<op::BatchNorm>(eps, gamma, beta, group_conv, mean, var);
+
+    auto goe_bn = std::make_shared<op::GetOutputElement>(group_conv, 0);
+    //auto bn2 = std::make_shared<op::BatchNorm>(eps, gamma, beta, output_rt, mean, var);
+
+    auto bn = add_goe ? std::make_shared<op::BatchNorm>(eps, gamma, beta, goe_bn, mean, var) :
+                        std::make_shared<op::BatchNorm>(eps, gamma, beta, group_conv, mean, var);
+    if (with_relu) 
+    {
+        auto prelu = std::make_shared<op::Relu>(bn);
+        auto f = make_shared<Function>(NodeVector{prelu},
+                                    op::ParameterVector{input, weights, gamma, beta, mean, var});
+        return f;
+    }
+    else
+    {
+        auto f = make_shared<Function>(NodeVector{bn},
+                                    op::ParameterVector{input, weights, gamma, beta, mean, var});
+        return f;
+    }
 }
 
 TEST(cpu_fusion, fuse_groupconv_batchnorm)
 {
-    auto func_fuse = gen_groupconv_batchnorm();
+    auto func_fuse = gen_groupconv_batchnorm(false, false);
+    auto func_fuse2 = gen_groupconv_batchnorm(false, true);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.run_passes(func_fuse);
     ASSERT_EQ(count_ops_of_type<op::GroupConvolutionBias>(func_fuse), 1);
+
+    // test groupconv + batchnorm + relu fusion
+    pass_manager.run_passes(func_fuse2);
+    ASSERT_EQ(count_ops_of_type<op::GroupConvolutionBias>(func_fuse2), 1);
+    ASSERT_EQ(count_ops_of_type<op::Relu>(func_fuse2), 0);
 }
 
 TEST(cpu_fusion, groupconv_batchnorm)
 {
-    shared_ptr<Function> cpu_func = gen_groupconv_batchnorm();
-    shared_ptr<Function> int_func = gen_groupconv_batchnorm();
+    shared_ptr<Function> fuse_func = gen_groupconv_batchnorm(false, false);
+    shared_ptr<Function> nofuse_func = gen_groupconv_batchnorm(true, false);
 
     test::Uniform<float> rng(1.0f, 100.0f);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_func->get_parameters())
+    for (shared_ptr<op::Parameter> param : fuse_func->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_shape()));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
 
-    auto int_results = execute(int_func, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_func, args, "CPU");
-    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+    auto fuse_results = execute(fuse_func, args, "CPU");
+    auto nofuse_results = execute(nofuse_func, args, "CPU");
+
+    EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
+}
+TEST(cpu_fusion, groupconv_batchnorm_relu)
+{
+    shared_ptr<Function> fuse_func = gen_groupconv_batchnorm(false, true);
+    shared_ptr<Function> nofuse_func = gen_groupconv_batchnorm(true, true);
+
+    test::Uniform<float> rng(1.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : fuse_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    // Note: Interpreter backend doesn't support GroupConvolution Op. Which is tested elsewhere.
+    // So, Testing the values here with and without fusion.
+    auto fuse_results = execute(fuse_func, args, "CPU");
+    auto nofuse_results = execute(nofuse_func, args, "CPU");
+    EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
+
 }
 
 /*shared_ptr<Function> gen_groupconv_batchnorm_boundedrelu()

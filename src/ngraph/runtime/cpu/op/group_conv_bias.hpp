@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief GroupConvolution + bias + BoundedRelu forward prop for 
+        /// \brief GroupConvolution + Bias + Relu forward prop for 
         ///  batched GroupConvolution operation.
         class GroupConvolutionBias : public Op
         {

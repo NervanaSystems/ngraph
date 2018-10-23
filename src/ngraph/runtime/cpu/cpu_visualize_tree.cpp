@@ -51,14 +51,10 @@ static void visualize_reshape(const Node& node, ostream& ss)
 
         if (!in_tvl || !out_tvl)
         {
-            cout << " GD: can't get cpu layout descriptors"
-                 << "\n";
             return;
         }
         if (!in_tvl->is_mkldnn_layout() || !out_tvl->is_mkldnn_layout())
         {
-            cout << " GD:  cpu layout descriptors NOT mkldnn"
-                 << "\n";
             return;
         }
         ss << "\nin="
@@ -71,8 +67,7 @@ static void visualize_reshape(const Node& node, ostream& ss)
     }
     catch (...)
     {
-        cout << "---- GD: exception in visualize_reshape"
-             << "\n";
+        NGRAPH_DEBUG << "Exception in visualize_reshape \n";
     }
 }
 
@@ -86,7 +81,8 @@ namespace ngraph
             {
                 const static visualize_tree_ops_map_t vtom{
                     {TI(runtime::cpu::op::ConvertLayout), visualize_convert_layout},
-                    {TI(ngraph::op::Reshape), visualize_reshape}};
+                    //{TI(ngraph::op::Reshape), visualize_reshape}
+                    };
                 return vtom;
             }
         }

@@ -285,15 +285,11 @@ namespace ngraph
                         arg1_shape =
                             std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node)
                                 ->get_weights_dimensions();
-                        cout << "\t$$ cpu_layout: ConvolutionLayout GroupConvBias filterShapes :  "
-                             << arg1_shape << " \n";
                     }
                     else if (default_weights_format)
                     {
                         arg1_shape = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node)
                                          ->get_weights_dimensions();
-                        cout << "\t$$ cpu_layout: ConvolutionLayout ConvBias filterShapes :  "
-                             << arg1_shape << " \n";
                     }
                     auto result_shape = node->get_output_shape(0);
                     auto filter_strides = convolution->get_window_movement_strides();
@@ -449,7 +445,6 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        cout << " !! cpu_layout : GroupConvolution called\n";
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
                         ConvolutionLayout<ngraph::op::GroupConvolution, false, true>(
@@ -470,8 +465,6 @@ namespace ngraph
                     auto num_groups =
                         std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node)
                             ->get_groups();
-                    cout << " !! cpu_layout : GroupConvolutionBias called. name: "
-                         << node->get_name() << ", num_groups: " << num_groups << "\n";
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
@@ -481,13 +474,11 @@ namespace ngraph
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
-                        cout << "\t cpu_layout : GroupConvolutionBias after set_output_layouts\n";
                     }
                     else
                     {
                         set_native_layouts(external_function, node);
                     }
-                    cout << " !! cpu_layout : GroupConvolutionBias done\n";
                 }
 
                 template <>

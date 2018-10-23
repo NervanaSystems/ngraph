@@ -445,8 +445,6 @@ namespace ngraph
                 auto arg1_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                cout << "++ GD: builder_conv: inShape: " << arg0_shape
-                     << ", wtShape: " << arg1_shape << ", resultShape << " << result_shape << "\n";
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     Strides window_dilation_strides_adjusted;
@@ -509,8 +507,6 @@ namespace ngraph
                 auto arg2_shape = args[2].get_shape();
                 auto result_shape = out[0].get_shape();
 
-                cout << "++ GD: builder_conv: inShape: " << arg0_shape
-                     << ", wtShape: " << arg1_shape << ", resultShape << " << result_shape << "\n";
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     Strides window_dilation_strides_adjusted;
@@ -555,8 +551,6 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&, conv_index](CPURuntimeContext* ctx) {
-
-                        // group convolution
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
