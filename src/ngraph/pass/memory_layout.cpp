@@ -51,8 +51,10 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                     auto input = &node->get_inputs().at(oi_pair.input).get_tensor();
                     auto input_node = node->get_inputs().at(oi_pair.input).get_output().get_node();
 
-                    // an input tensor can be reused if this is the last use
-                    if (node->liveness_free_list.count(input) != 0 &&
+                    // For destructive kernel, this should be the last use
+                    // Non-destructive kernels can pass through if memory sharing is disabled
+                    if ((node->liveness_free_list.count(input) != 0 ||
+                         (m_disable_memory_sharing && !oi_pair.destructive)) &&
                         node->liveness_new_list.count(output) != 0)
                     {
                         in_place_outputs.insert({output, input});

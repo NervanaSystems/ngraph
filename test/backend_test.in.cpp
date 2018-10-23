@@ -18,7 +18,6 @@
 #include <cinttypes>
 #include <cmath>
 #include <cstdlib>
-#include <fstream>
 #include <random>
 #include <string>
 #include "gtest/gtest.h"
@@ -291,7 +290,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_one_output)
     auto Gamma =
         op::Constant::create(element::f64, shape_mean, {1.75437676, 0.37950502, 1.13727544});
 
-    auto BN = make_shared<op::BatchNorm>(1e-3, Gamma, Beta, A, Mean, Variance, false);
+    auto BN = make_shared<op::BatchNormInference>(1e-3, Gamma, Beta, A, Mean, Variance);
     auto f = make_shared<Function>(BN, op::ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -321,7 +320,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_three_outputs)
     auto Gamma =
         op::Constant::create(element::f64, shape_mean, {1.75437676, 0.37950502, 1.13727544});
 
-    auto BN = make_shared<op::BatchNorm>(1e-3, Gamma, Beta, A);
+    auto BN = make_shared<op::BatchNormTraining>(1e-3, Gamma, Beta, A);
 
     auto f0 =
         make_shared<Function>(make_shared<op::GetOutputElement>(BN, 0), op::ParameterVector{A});
@@ -4230,7 +4229,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b1c2h2w2)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{1, 2, 2, 2};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
+    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
 
     auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
     auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
@@ -4293,7 +4292,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
+    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
 
     auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
     auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
@@ -4350,7 +4349,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_bprop_n4c3h2w2)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{4, 3, 2, 2};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input);
+    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
     auto bn_dx = make_shared<op::GetOutputElement>(bn, 0);
     auto bn_dgamma = make_shared<op::GetOutputElement>(bn, 1);
     auto bn_dbeta = make_shared<op::GetOutputElement>(bn, 2);
@@ -4445,7 +4444,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_inference_b2c2h2w1)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var);
+    auto bn = make_shared<op::BatchNormInference>(eps, gamma, beta, input, mean, var);
 
     auto f = make_shared<Function>(bn, op::ParameterVector{input, gamma, beta, mean, var});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -4470,8 +4469,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_inference_b2c2h2w1)
     auto _var = backend->create_tensor(element::f32, var_shape);
     copy_data(_var, vector<float>{0.0119972f, 0.0282681f});
     auto bn_output = backend->create_tensor(element::f32, shape_r);
-    auto result_mean = backend->create_tensor(element::f32, mean_shape);
-    auto result_variance = backend->create_tensor(element::f32, var_shape);
+
     vector<float> expected_result{
         -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
     backend->call_with_validate(f, {bn_output}, {_input, _gamma, _beta, _mean, _var});
@@ -4480,6 +4478,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_inference_b2c2h2w1)
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
 }
 
+#if 0
 NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_globalstats_b2c2w2h1)
 {
     auto input_shape = Shape{2, 2, 2, 1};
@@ -4494,7 +4493,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_globalstats_b2c2w2h1)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNorm>(eps, gamma, beta, input, mean, var, true);
+    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input, mean, var);
 
     auto f = make_shared<Function>(bn, op::ParameterVector{gamma, beta, input, mean, var});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -4519,8 +4518,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_globalstats_b2c2w2h1)
     auto _var = backend->create_tensor(element::f32, var_shape);
     copy_data(_var, vector<float>{0.0119972f, 0.0282681f});
     auto bn_output = backend->create_tensor(element::f32, shape_r);
-    auto result_mean = backend->create_tensor(element::f32, mean_shape);
-    auto result_variance = backend->create_tensor(element::f32, var_shape);
+
     vector<float> expected_result{
         -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
     backend->call_with_validate(f, {bn_output}, {_gamma, _beta, _input, _mean, _var});
@@ -4528,6 +4526,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_globalstats_b2c2w2h1)
     ASSERT_TRUE(
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
 }
+#endif
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n2c3h4w2)
 {
@@ -5358,7 +5357,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize)
     typedef float input_c_type;
     typedef uint8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {2});
@@ -5427,7 +5426,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_axes)
     typedef float input_c_type;
     typedef uint8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {2, 3, 4, 5});
@@ -5496,7 +5495,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_int8)
     typedef float input_c_type;
     typedef int8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {2});
@@ -5565,7 +5564,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp)
     typedef float input_c_type;
     typedef int8_t output_c_type;
 
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto scale = op::Constant::create(input_type, scale_offset_shape, {0.00001});
@@ -5586,6 +5585,288 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp)
         read_vector<output_c_type>(y));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_TOWARD_ZERO)
+{
+    Shape input_shape{4, 3};
+    Shape scale_offset_shape;
+    AxisSet quantization_axes;
+
+    auto input_type = element::f32;
+    auto output_type = element::i8;
+
+    typedef float input_c_type;
+    typedef int8_t output_c_type;
+
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_ZERO;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
+    auto quantize =
+        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
+    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+
+    copy_data(x, vector<input_c_type>{9, 10, 11, -9, -10, -11, 13, 14, 15, -13, -14, -15});
+    // divide by scale                4   4   4   4    4    4   4   4   4    4    4    4
+    // equals (rounded)               2   2   3  -2   -2   -3   3   3   4   -3   -3   -4
+
+    backend->call_with_validate(f, {y}, {x});
+    EXPECT_EQ((vector<output_c_type>{2, 2, 3, -2, -2, -3, 3, 3, 4, -3, -3, -4}),
+              read_vector<output_c_type>(y));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_UPWARD)
+{
+    Shape input_shape{4, 3};
+    Shape scale_offset_shape;
+    AxisSet quantization_axes;
+
+    auto input_type = element::f32;
+    auto output_type = element::i8;
+
+    typedef float input_c_type;
+    typedef int8_t output_c_type;
+
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_UPWARD;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
+    auto quantize =
+        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
+    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+
+    copy_data(x, vector<input_c_type>{9, 10, 11, -9, -10, -11, 13, 14, 15, -13, -14, -15});
+    // divide by scale                4   4   4   4    4    4   4   4   4    4    4    4
+    // equals (rounded)               2   3   3  -2   -2   -3   3   4   4   -3   -3   -4
+
+    backend->call_with_validate(f, {y}, {x});
+    EXPECT_EQ((vector<output_c_type>{2, 3, 3, -2, -2, -3, 3, 4, 4, -3, -3, -4}),
+              read_vector<output_c_type>(y));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_DOWNWARD)
+{
+    Shape input_shape{4, 3};
+    Shape scale_offset_shape;
+    AxisSet quantization_axes;
+
+    auto input_type = element::f32;
+    auto output_type = element::i8;
+
+    typedef float input_c_type;
+    typedef int8_t output_c_type;
+
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_DOWNWARD;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
+    auto quantize =
+        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
+    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+
+    copy_data(x, vector<input_c_type>{9, 10, 11, -9, -10, -11, 13, 14, 15, -13, -14, -15});
+    // divide by scale                4   4   4   4    4    4   4   4   4    4    4    4
+    // equals (rounded)               2   2   3  -2   -3   -3   3   3   4   -3   -4   -4
+
+    backend->call_with_validate(f, {y}, {x});
+    EXPECT_EQ((vector<output_c_type>{2, 2, 3, -2, -3, -3, 3, 3, 4, -3, -4, -4}),
+              read_vector<output_c_type>(y));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_TOWARD_EVEN)
+{
+    Shape input_shape{4, 3};
+    Shape scale_offset_shape;
+    AxisSet quantization_axes;
+
+    auto input_type = element::f32;
+    auto output_type = element::i8;
+
+    typedef float input_c_type;
+    typedef int8_t output_c_type;
+
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
+    auto quantize =
+        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
+    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+
+    copy_data(x, vector<input_c_type>{9, 10, 11, -9, -10, -11, 13, 14, 15, -13, -14, -15});
+    // divide by scale                4   4   4   4    4    4   4   4   4    4    4    4
+    // equals (rounded)               2   2   3  -2   -2   -3   3   4   4   -3   -4   -4
+
+    backend->call_with_validate(f, {y}, {x});
+    EXPECT_EQ((vector<output_c_type>{2, 2, 3, -2, -2, -3, 3, 4, 4, -3, -4, -4}),
+              read_vector<output_c_type>(y));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_TOWARD_INFINITY)
+{
+    Shape input_shape{4, 3};
+    Shape scale_offset_shape;
+    AxisSet quantization_axes;
+
+    auto input_type = element::f32;
+    auto output_type = element::i8;
+
+    typedef float input_c_type;
+    typedef int8_t output_c_type;
+
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_TOWARD_INFINITY;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
+    auto quantize = make_shared<op::Quantize>(
+        X,
+        scale,
+        offset,
+        output_type,
+        quantization_axes,
+        static_cast<op::Quantize::RoundMode>(static_cast<int>(round_mode)));
+    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+
+    copy_data(x, vector<input_c_type>{9, 10, 11, -9, -10, -11, 13, 14, 15, -13, -14, -15});
+    // divide by scale                4   4   4   4    4    4   4   4   4    4    4    4
+    // equals (rounded)               3   3   3  -3   -3   -3   4   4   4   -4   -4   -4
+
+    backend->call_with_validate(f, {y}, {x});
+    EXPECT_EQ((vector<output_c_type>{3, 3, 3, -3, -3, -3, 4, 4, 4, -4, -4, -4}),
+              read_vector<output_c_type>(y));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_TOWARD_ZERO)
+{
+    Shape input_shape{4, 3};
+    Shape scale_offset_shape;
+    AxisSet quantization_axes;
+
+    auto input_type = element::f32;
+    auto output_type = element::i8;
+
+    typedef float input_c_type;
+    typedef int8_t output_c_type;
+
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_TOWARD_ZERO;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
+    auto quantize = make_shared<op::Quantize>(
+        X,
+        scale,
+        offset,
+        output_type,
+        quantization_axes,
+        static_cast<op::Quantize::RoundMode>(static_cast<int>(round_mode)));
+    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+
+    copy_data(x, vector<input_c_type>{9, 10, 11, -9, -10, -11, 13, 14, 15, -13, -14, -15});
+    // divide by scale                4   4   4   4    4    4   4   4   4    4    4    4
+    // equals (rounded)               2   2   2  -2   -2   -2   3   3   3   -3   -3   -3
+
+    backend->call_with_validate(f, {y}, {x});
+    EXPECT_EQ((vector<output_c_type>{2, 2, 2, -2, -2, -2, 3, 3, 3, -3, -3, -3}),
+              read_vector<output_c_type>(y));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_UP)
+{
+    Shape input_shape{4, 3};
+    Shape scale_offset_shape;
+    AxisSet quantization_axes;
+
+    auto input_type = element::f32;
+    auto output_type = element::i8;
+
+    typedef float input_c_type;
+    typedef int8_t output_c_type;
+
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_UP;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
+    auto quantize =
+        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
+    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+
+    copy_data(x, vector<input_c_type>{9, 10, 11, -9, -10, -11, 13, 14, 15, -13, -14, -15});
+    // divide by scale                4   4   4   4    4    4   4   4   4    4    4    4
+    // equals (rounded)               3   3   3  -2   -2   -2   4   4   4   -3   -3   -3
+
+    backend->call_with_validate(f, {y}, {x});
+    EXPECT_EQ((vector<output_c_type>{3, 3, 3, -2, -2, -2, 4, 4, 4, -3, -3, -3}),
+              read_vector<output_c_type>(y));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_DOWN)
+{
+    Shape input_shape{4, 3};
+    Shape scale_offset_shape;
+    AxisSet quantization_axes;
+
+    auto input_type = element::f32;
+    auto output_type = element::i8;
+
+    typedef float input_c_type;
+    typedef int8_t output_c_type;
+
+    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_DOWN;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = op::Constant::create(input_type, scale_offset_shape, {4});
+    auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
+    auto quantize =
+        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
+    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+
+    copy_data(x, vector<input_c_type>{9, 10, 11, -9, -10, -11, 13, 14, 15, -13, -14, -15});
+    // divide by scale                4   4   4   4    4    4   4   4   4    4    4    4
+    // equals (rounded)               2   2   2  -3   -3   -3   3   3   3   -4   -4   -4
+
+    backend->call_with_validate(f, {y}, {x});
+    EXPECT_EQ((vector<output_c_type>{2, 2, 2, -3, -3, -3, 3, 3, 3, -4, -4, -4}),
+              read_vector<output_c_type>(y));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop)
 {
     Shape sca{1};
@@ -5595,13 +5876,13 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop)
     auto g = std::make_shared<op::Parameter>(element::f32, sca);
     auto b = std::make_shared<op::Parameter>(element::f32, sca);
     auto input = std::make_shared<op::Parameter>(element::f32, vec);
-    auto bn_fp = std::make_shared<op::BatchNorm>(eps, g, b, input);
+    auto bn_fp = std::make_shared<op::BatchNormTraining>(eps, g, b, input);
     auto bnorm = std::make_shared<op::GetOutputElement>(bn_fp, 0);
     auto mean = std::make_shared<op::GetOutputElement>(bn_fp, 1);
     auto var = std::make_shared<op::GetOutputElement>(bn_fp, 2);
 
     auto delta = std::make_shared<op::Parameter>(element::f32, vec);
-    auto bn_bp = std::make_shared<op::BatchNormBackprop>(eps, g, b, bnorm, mean, var, delta);
+    auto bn_bp = std::make_shared<op::BatchNormTrainingBackprop>(eps, g, b, bnorm, mean, var, delta);
     auto dx = std::make_shared<op::GetOutputElement>(bn_bp, 0);
 
     std::vector<std::vector<float>> args = {
