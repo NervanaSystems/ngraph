@@ -31,7 +31,7 @@ namespace ngraph
     {
         namespace gpu
         {
-            class CUDNNBatchNorm : public ngraph::op::BatchNorm
+            class CUDNNBatchNorm : public ngraph::op::BatchNormTraining
             {
             public:
                 CUDNNBatchNorm(double eps,

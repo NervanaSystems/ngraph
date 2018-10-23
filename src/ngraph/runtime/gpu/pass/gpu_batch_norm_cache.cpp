@@ -31,7 +31,7 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
     bool replaced = false;
     for (auto n : f->get_ordered_ops())
     {
-        if (auto bnbp = std::dynamic_pointer_cast<op::BatchNormBackprop>(n))
+        if (auto bnbp = std::dynamic_pointer_cast<op::BatchNormTrainingBackprop>(n))
         {
             // pass must be run prior to GOE elimination
             // collect all batch norm inputs to batch norm backward op
@@ -40,8 +40,8 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
             {
                 if (auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(arg))
                 {
-                    if (auto bn =
-                            std::dynamic_pointer_cast<op::BatchNorm>(goe->get_arguments().at(0)))
+                    if (auto bn = std::dynamic_pointer_cast<op::BatchNormTraining>(
+                            goe->get_arguments().at(0)))
                     {
                         goes.push_back(goe);
                     }
@@ -51,7 +51,7 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
             // only replace if some of the inputs to backprop are from fprop directly
             if (goes.size())
             {
-                if (auto target = std::dynamic_pointer_cast<op::BatchNorm>(
+                if (auto target = std::dynamic_pointer_cast<op::BatchNormTraining>(
                         goes.front()->get_arguments().at(0)))
                 {
                     auto replacement =
