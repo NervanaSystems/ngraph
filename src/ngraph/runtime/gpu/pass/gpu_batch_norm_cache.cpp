@@ -59,11 +59,11 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
                 if (auto target = std::dynamic_pointer_cast<op::BatchNormTraining>(
                         goes.front()->get_arguments().at(0)))
                 {
-                    auto replacement =
-                        std::make_shared<op::gpu::CUDNNBatchNorm>(target->get_eps_value(),
-                                                                  target->get_argument(0),
-                                                                  target->get_argument(1),
-                                                                  target->get_argument(2));
+                    auto replacement = std::make_shared<op::gpu::BatchNormTrainingWithStats>(
+                        target->get_eps_value(),
+                        target->get_argument(0),
+                        target->get_argument(1),
+                        target->get_argument(2));
 
                     // replace all users of old batchnorm with cudnn batchnorm
                     for (size_t i = 0; i < target->get_outputs().size(); i++)

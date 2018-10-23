@@ -31,21 +31,21 @@ namespace ngraph
     {
         namespace gpu
         {
-            class CUDNNBatchNorm : public ngraph::op::BatchNormTraining
+            class BatchNormTrainingWithStats : public ngraph::op::BatchNormTraining
             {
             public:
-                CUDNNBatchNorm(double eps,
-                               std::shared_ptr<Node> gamma,
-                               std::shared_ptr<Node> beta,
-                               std::shared_ptr<Node> input);
+                BatchNormTrainingWithStats(double eps,
+                                           std::shared_ptr<Node> gamma,
+                                           std::shared_ptr<Node> beta,
+                                           std::shared_ptr<Node> input);
 
-                CUDNNBatchNorm(double eps,
-                               std::shared_ptr<ngraph::Node> gamma,
-                               std::shared_ptr<ngraph::Node> beta,
-                               std::shared_ptr<ngraph::Node> input,
-                               std::shared_ptr<ngraph::Node> mean,
-                               std::shared_ptr<ngraph::Node> variance,
-                               bool training = false);
+                BatchNormTrainingWithStats(double eps,
+                                           std::shared_ptr<ngraph::Node> gamma,
+                                           std::shared_ptr<ngraph::Node> beta,
+                                           std::shared_ptr<ngraph::Node> input,
+                                           std::shared_ptr<ngraph::Node> mean,
+                                           std::shared_ptr<ngraph::Node> variance,
+                                           bool training = false);
 
             protected:
                 virtual std::shared_ptr<Node>

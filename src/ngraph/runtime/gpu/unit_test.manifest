@@ -54,3 +54,11 @@ quantize_clamp
 dequantize
 dequantize_axes
 dequantize_int8
+quantize_ROUND_NEAREST_TOWARD_ZERO
+quantize_ROUND_NEAREST_UPWARD
+quantize_ROUND_NEAREST_DOWNWARD
+quantize_ROUND_NEAREST_TOWARD_EVEN
+quantize_ROUND_TOWARD_INFINITY
+quantize_ROUND_TOWARD_ZERO
+quantize_ROUND_UP
+quantize_ROUND_DOWN

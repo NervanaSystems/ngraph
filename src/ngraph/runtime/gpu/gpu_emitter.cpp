@@ -370,7 +370,7 @@ void runtime::gpu::GPU_Emitter::emit_BatchNormTraining(EMIT_ARGS)
         external_function, writer, node, args, out, CUDNNEmitter::Prop::Forward, false);
 }
 
-void runtime::gpu::GPU_Emitter::emit_CUDNNBatchNorm(EMIT_ARGS)
+void runtime::gpu::GPU_Emitter::emit_BatchNormTrainingWithStats(EMIT_ARGS)
 {
     ::emit_BatchNorm(external_function, writer, node, args, out, CUDNNEmitter::Prop::Forward, true);
 }
