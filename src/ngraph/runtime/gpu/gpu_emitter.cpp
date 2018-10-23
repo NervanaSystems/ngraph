@@ -327,22 +327,17 @@ void runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
     writer.block_end();
 }
 
-static void emit_BatchNorm(EMIT_ARGS, bool save_stats)
+static void emit_BatchNorm(EMIT_ARGS, runtime::gpu::CUDNNEmitter::Prop direction, bool save_stats)
 {
-    const ngraph::op::BatchNorm* batchnorm = static_cast<const ngraph::op::BatchNorm*>(node);
+    const ngraph::op::BatchNormBase* batchnorm =
+        static_cast<const ngraph::op::BatchNormBase*>(node);
 
     auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
     bool global_stats = false;
-    runtime::gpu::CUDNNEmitter::Prop direction;
-    if (batchnorm->get_training_flag())
+    if (direction == runtime::gpu::CUDNNEmitter::Prop::Forward)
     {
-        direction = runtime::gpu::CUDNNEmitter::Prop::Forward;
         global_stats = (batchnorm->get_arguments().size() == 5);
-    }
-    else
-    {
-        direction = runtime::gpu::CUDNNEmitter::Prop::Inference;
     }
 
     auto index = cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
@@ -363,20 +358,27 @@ static void emit_BatchNorm(EMIT_ARGS, bool save_stats)
     writer.block_end();
 }
 
-void runtime::gpu::GPU_Emitter::emit_BatchNorm(EMIT_ARGS)
+void runtime::gpu::GPU_Emitter::emit_BatchNormInference(EMIT_ARGS)
 {
-    ::emit_BatchNorm(external_function, writer, node, args, out, false);
+    ::emit_BatchNorm(
+        external_function, writer, node, args, out, CUDNNEmitter::Prop::Inference, false);
+}
+
+void runtime::gpu::GPU_Emitter::emit_BatchNormTraining(EMIT_ARGS)
+{
+    ::emit_BatchNorm(
+        external_function, writer, node, args, out, CUDNNEmitter::Prop::Forward, false);
 }
 
 void runtime::gpu::GPU_Emitter::emit_CUDNNBatchNorm(EMIT_ARGS)
 {
-    ::emit_BatchNorm(external_function, writer, node, args, out, true);
+    ::emit_BatchNorm(external_function, writer, node, args, out, CUDNNEmitter::Prop::Forward, true);
 }
 
-void runtime::gpu::GPU_Emitter::emit_BatchNormBackprop(EMIT_ARGS)
+void runtime::gpu::GPU_Emitter::emit_BatchNormTrainingBackprop(EMIT_ARGS)
 {
-    const ngraph::op::BatchNormBackprop* batchnorm =
-        static_cast<const ngraph::op::BatchNormBackprop*>(node);
+    const ngraph::op::BatchNormTrainingBackprop* batchnorm =
+        static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
 
     auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
