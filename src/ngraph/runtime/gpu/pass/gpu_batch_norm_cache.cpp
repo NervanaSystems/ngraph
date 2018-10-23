@@ -20,6 +20,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/runtime/gpu/gpu_op_annotations.hpp"
 #include "ngraph/runtime/gpu/op/batch_norm.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_batch_norm_cache.hpp"
 
@@ -33,6 +34,10 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
     {
         if (auto bnbp = std::dynamic_pointer_cast<op::BatchNormTrainingBackprop>(n))
         {
+            // batch norm bprop annotations are used to indicate if variance is in inverse stddev format
+            auto op_annotations =
+                std::make_shared<ngraph::runtime::gpu::BatchNormBackpropAnnotations>();
+
             // pass must be run prior to GOE elimination
             // collect all batch norm inputs to batch norm backward op
             std::vector<std::shared_ptr<op::GetOutputElement>> goes;
@@ -86,8 +91,10 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
                         }
                     }
                     replaced = true;
+                    op_annotations->set_inverted_variance(true);
                 }
             }
+            bnbp->set_op_annotations(op_annotations);
         }
     }
     return replaced;
