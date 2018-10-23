@@ -18,7 +18,10 @@ set(ONNX_OPSET_VERSION 9 CACHE INTERNAL "Supported version of ONNX operator set"
 
 add_library(onnx_import_interface OBJECT
         onnx.cpp
-        onnx.hpp)
+        onnx.hpp
+        core/operator_set.hpp
+        core/node.cpp
+        core/node.hpp)
 
 add_library(onnx_import STATIC
         core/attribute.cpp
@@ -27,7 +30,6 @@ add_library(onnx_import STATIC
         core/graph.hpp
         core/model.cpp
         core/model.hpp
-        core/node.cpp
         core/node.hpp
         core/operator_set.hpp
         core/tensor.hpp

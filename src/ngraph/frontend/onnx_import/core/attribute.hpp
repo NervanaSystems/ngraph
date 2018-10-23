@@ -20,15 +20,15 @@
 
 #include "ngraph/except.hpp"
 
-#include "operator_set.hpp"
 #include "tensor.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        // forward declaration
+        // forward declarations
         class Graph;
+        class Model;
 
         namespace error
         {
@@ -272,7 +272,7 @@ namespace ngraph
             float get_float() const { return m_attribute_proto->f(); }
             int64_t get_integer() const { return m_attribute_proto->i(); }
             const std::string& get_string() const { return m_attribute_proto->s(); }
-            Graph get_graph(const OperatorSet& opset) const;
+            Graph get_graph(const Model&) const;
 
             std::vector<Tensor> get_tensor_array() const
             {
@@ -297,7 +297,7 @@ namespace ngraph
                         std::end(m_attribute_proto->strings())};
             }
 
-            std::vector<Graph> get_graph_array(const OperatorSet&) const;
+            std::vector<Graph> get_graph_array(const Model&) const;
 
             /* explicit */ operator onnx::AttributeProto_AttributeType() const
             {
