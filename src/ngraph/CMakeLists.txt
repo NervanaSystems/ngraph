@@ -154,6 +154,7 @@ set (SRC
     shape.cpp
     shape_util.cpp
     strides.cpp
+    type/bfloat16.cpp
     type/element_type.cpp
     util.cpp
     validation_util.cpp
