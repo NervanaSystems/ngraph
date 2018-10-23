@@ -27,6 +27,7 @@ bool ngraph::pass::GraphRewrite::run_on_function(std::shared_ptr<ngraph::Functio
     bool rewritten = false;
     const size_t NUM_TRIES = 10;
     size_t tries = NUM_TRIES;
+    std::vector<std::shared_ptr<pattern::Matcher>> original_matchers{m_matchers};
     do
     {
         rewritten = false;
@@ -53,6 +54,7 @@ bool ngraph::pass::GraphRewrite::run_on_function(std::shared_ptr<ngraph::Functio
 
     } while (rewritten && m_matchers.size() > 0 && tries--);
 
+    m_matchers.assign(original_matchers.begin(), original_matchers.end());
     return (NUM_TRIES - tries) > 1; //this means a graph was transformed
 }
 
