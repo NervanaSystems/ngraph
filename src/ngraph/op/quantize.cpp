@@ -44,9 +44,6 @@ void op::Quantize::validate_and_infer_types()
         OFFSET
     };
 
-    NODE_VALIDATION_ASSERT(this, m_round_mode == RoundMode::HALF_AWAY_FROM_ZERO)
-        << "Only RoundMode = HALF_AWAY_FROM_ZERO is supported, for now";
-
     NODE_VALIDATION_ASSERT(this, m_type.is_static()) << "Output element type must not be dynamic";
 
     NODE_VALIDATION_ASSERT(this, m_type.is_quantized()) << "Output element type (" << m_type
