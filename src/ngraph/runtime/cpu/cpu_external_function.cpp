@@ -182,17 +182,17 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
     : m_function(function)
     , m_release_function(release_function)
-    , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
-    , m_compiled_function(nullptr)
     , m_emit_timing(false)
-    , m_function_name(function->get_name())
-    , m_is_built(false)
+    , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
 #if !defined(NGRAPH_DEX_ONLY)
     , m_is_compiled(false)
     , m_direct_execution(!std::getenv("NGRAPH_CODEGEN"))
 #else
     , m_direct_execution(true)
 #endif
+    , m_compiled_function(nullptr)
+    , m_function_name(function->get_name())
+    , m_is_built(false)
 {
 }
 
@@ -333,9 +333,14 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::AvgPool), &runtime::cpu::CPU_Emitter::emit<op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::AvgPoolBackprop>},
     {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::emit<op::Pad>},
-    {TI(ngraph::op::BatchNorm), &runtime::cpu::CPU_Emitter::emit<op::BatchNorm>},
-    {TI(ngraph::op::BatchNormRelu), &runtime::cpu::CPU_Emitter::emit<op::BatchNormRelu>},
-    {TI(ngraph::op::BatchNormBackprop), &runtime::cpu::CPU_Emitter::emit<op::BatchNormBackprop>},
+    {TI(ngraph::op::BatchNormTraining), &runtime::cpu::CPU_Emitter::emit<op::BatchNormTraining>},
+    {TI(ngraph::op::BatchNormInference), &runtime::cpu::CPU_Emitter::emit<op::BatchNormInference>},
+    {TI(ngraph::op::BatchNormTrainingRelu),
+     &runtime::cpu::CPU_Emitter::emit<op::BatchNormTrainingRelu>},
+    {TI(ngraph::op::BatchNormInferenceRelu),
+     &runtime::cpu::CPU_Emitter::emit<op::BatchNormInferenceRelu>},
+    {TI(ngraph::op::BatchNormTrainingBackprop),
+     &runtime::cpu::CPU_Emitter::emit<op::BatchNormTrainingBackprop>},
     {TI(ngraph::op::BoundedRelu), &runtime::cpu::CPU_Emitter::emit<op::BoundedRelu>},
     {TI(ngraph::op::Lstm), &runtime::cpu::CPU_Emitter::emit<op::Lstm>},
     {TI(ngraph::op::MaxPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::MaxPoolBackprop>},
@@ -546,7 +551,7 @@ using namespace ngraph::runtime;
     {
         for (shared_ptr<Node> node : function_ordered_ops.at(current_function))
         {
-            const ngraph::op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
+            ngraph::op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
             if (c)
             {
                 m_active_constants.push_back(node);
@@ -670,6 +675,15 @@ using namespace ngraph::runtime;
                    << " = new tbb::flow::continue_node<tbb::flow::continue_msg, "
                       "tbb::flow::lightweight>"
                       "(*(ctx->G), [&](const tbb::flow::continue_msg &msg)\n{});\n";
+        }
+
+        for (shared_ptr<Node> node : ordered_ops)
+        {
+            if (dynamic_cast<ngraph::op::Constant*>(node.get()))
+            {
+                shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
+                propagate_in_place_constant(&node->get_outputs().at(0), tv->get_name(), false);
+            }
         }
 
         // Add inputs to the variable name map
@@ -1097,6 +1111,53 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_input(
     }
 }
 
+void runtime::cpu::CPU_ExternalFunction::propagate_in_place_constant(
+    ngraph::descriptor::Output* output, std::string input_name, bool dex)
+{
+    std::deque<ngraph::descriptor::Output*> stack;
+    stack.push_front(output);
+
+    while (stack.size() > 0)
+    {
+        ngraph::descriptor::Output* it = stack.front();
+        stack.pop_front();
+        for (auto input : it->get_inputs())
+        {
+            auto c_op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node());
+            if (!c_op || c_op->is_output())
+            {
+                continue;
+            }
+
+            if (auto op_annotations = c_op->get_op_annotations())
+            {
+                for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
+                {
+                    if (oi_pair.input == input->get_index() && !oi_pair.destructive)
+                    {
+                        size_t output_index = oi_pair.output;
+                        auto& output_tensor = c_op->get_outputs().at(output_index).get_tensor();
+
+                        if (dex)
+                        {
+                            tensor_alias[output_tensor.get_name()] = input_name;
+                        }
+                        else
+                        {
+                            m_variable_name_map[output_tensor.get_name()] = input_name;
+                        }
+                        m_tensor_roles[output_tensor.get_name()] = CPUTensorRole::CONSTANT;
+
+                        NGRAPH_DEBUG << " CPU: Forwarding " << input_name << " through "
+                                     << output_tensor.get_name();
+                        stack.push_back(&c_op->get_outputs().at(output_index));
+                    }
+                }
+            }
+        }
+    }
+}
+
 void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
     ngraph::descriptor::Output* res_src_output, std::string output_name, bool dex)
 {
@@ -1234,6 +1295,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
             tensor_data[tv->get_name()] =
                 const_cast<void*>(static_pointer_cast<ngraph::op::Constant>(node)->get_data_ptr());
             m_tensor_roles[tv->get_name()] = CPUTensorRole::CONSTANT;
+            propagate_in_place_constant(&node->get_outputs().at(0), tv->get_name(), true);
         }
     }
 

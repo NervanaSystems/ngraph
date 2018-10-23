@@ -27,7 +27,28 @@ namespace ngraph
 {
     namespace op
     {
-        class BatchNorm : public Op
+        class BatchNormBase : public Op
+        {
+        public:
+            BatchNormBase(const std::string& node_type, double eps, const NodeVector& args);
+
+            void validate_and_infer_types() override;
+            double get_eps_value() const { return m_epsilon; }
+        protected:
+            enum
+            {
+                GAMMA,
+                BETA,
+                INPUT,
+                MEAN,
+                VARIANCE,
+                DELTA
+            };
+
+            double m_epsilon;
+        };
+
+        class BatchNormTraining : public BatchNormBase
         {
         public:
             // In this version of BatchNorm:
@@ -49,20 +70,20 @@ namespace ngraph
             //   output[0]: shall have the same shape as 'input'.
             //   output[1]: shall have rank 1, with the same span as input's channel axis.
             //   output[2]: shall have rank 1, with the same span as input's channel axis.
-            BatchNorm(double eps,
-                      std::shared_ptr<Node> gamma,
-                      std::shared_ptr<Node> beta,
-                      std::shared_ptr<Node> input);
+            BatchNormTraining(double eps,
+                              std::shared_ptr<Node> gamma,
+                              std::shared_ptr<Node> beta,
+                              std::shared_ptr<Node> input);
 
             // In this version of BatchNorm:
             //
             // MEAN AND VARIANCE: provided by the 'mean' and 'variance' parameters.
             //
             // OUTPUT VALUE: a single tensor with the normalized value of 'input'.
+            // mean and variance will also be updated inplace
             //
             // AUTODIFF SUPPORT:
-            //   - when 'training' is true, yes: 'generate_adjoints(...)' works as expected.
-            //   - when 'training' is false, no: 'generate_adjoints(...) may throw an exception.
+            //   'generate_adjoints(...)' works as expected.
             //
             // SHAPE DETAILS:
             //   gamma:    must have rank 1, with the same span as input's channel axis.
@@ -72,56 +93,73 @@ namespace ngraph
             //   mean:     must have rank 1, with the same span as input's channel axis.
             //   variance: must have rank 1, with the same span as input's channel axis.
             //   output:   shall have the same shape as 'input'.
-            BatchNorm(double eps,
-                      std::shared_ptr<ngraph::Node> gamma,
-                      std::shared_ptr<ngraph::Node> beta,
-                      std::shared_ptr<ngraph::Node> input,
-                      std::shared_ptr<ngraph::Node> mean,
-                      std::shared_ptr<ngraph::Node> variance,
-                      bool training = false);
+            BatchNormTraining(double eps,
+                              std::shared_ptr<ngraph::Node> gamma,
+                              std::shared_ptr<ngraph::Node> beta,
+                              std::shared_ptr<ngraph::Node> input,
+                              std::shared_ptr<ngraph::Node> mean,
+                              std::shared_ptr<ngraph::Node> variance);
 
             void validate_and_infer_types() override;
 
-            const Shape& get_inputs_shape() const { return m_bn_input_shape; }
-            const Shape& get_variance_shape() const { return m_bn_variance_shape; }
-            const Shape& get_mean_shape() const { return m_bn_mean_shape; }
-            double get_eps_value() const { return m_epsilon; }
-            bool get_training_flag() const { return m_training; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-
-        private:
-            enum
-            {
-                GAMMA,
-                BETA,
-                INPUT,
-                MEAN,
-                VARIANCE,
-                DELTA
-            };
-
-            Shape m_bn_input_shape;
-            Shape m_bn_variance_shape;
-            Shape m_bn_mean_shape;
-            double m_epsilon;
-            bool m_training;
         };
 
-        class BatchNormBackprop : public Op
+        class BatchNormInference : public BatchNormBase
         {
         public:
-            BatchNormBackprop(double eps,
-                              std::shared_ptr<Node> gamma,
-                              std::shared_ptr<Node> beta,
-                              std::shared_ptr<Node> input,
-                              std::shared_ptr<Node> mean,
-                              std::shared_ptr<Node> variance,
-                              std::shared_ptr<Node> delta);
+            // In this version of BatchNorm:
+            //
+            // MEAN AND VARIANCE: provided by the 'mean' and 'variance' parameters.
+            //
+            // OUTPUT VALUE: a single tensor with the normalized value of 'input'.
+            //
+            // AUTODIFF SUPPORT:
+            //   - 'generate_adjoints(...) may throw an exception.
+            //
+            // SHAPE DETAILS:
+            //   gamma:    must have rank 1, with the same span as input's channel axis.
+            //   beta:     must have rank 1, with the same span as input's channel axis.
+            //   input:    must have rank >= 2. The second dimension represents the channel axis and
+            //             must have a span of at least 1.
+            //   mean:     must have rank 1, with the same span as input's channel axis.
+            //   variance: must have rank 1, with the same span as input's channel axis.
+            //   output:   shall have the same shape as 'input'.
+            BatchNormInference(double eps,
+                               std::shared_ptr<ngraph::Node> gamma,
+                               std::shared_ptr<ngraph::Node> beta,
+                               std::shared_ptr<ngraph::Node> input,
+                               std::shared_ptr<ngraph::Node> mean,
+                               std::shared_ptr<ngraph::Node> variance);
+
+            void validate_and_infer_types() override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+        protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const NodeVector& deltas) override
+            {
+                throw ngraph_error("Invalid operation");
+            }
+        };
+
+        class BatchNormTrainingBackprop : public Op
+        {
+        public:
+            BatchNormTrainingBackprop(double eps,
+                                      std::shared_ptr<Node> gamma,
+                                      std::shared_ptr<Node> beta,
+                                      std::shared_ptr<Node> input,
+                                      std::shared_ptr<Node> mean,
+                                      std::shared_ptr<Node> variance,
+                                      std::shared_ptr<Node> delta);
 
             void validate_and_infer_types() override;
 
