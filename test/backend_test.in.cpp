@@ -448,22 +448,21 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_vector_large)
     Shape shape_a{1};
     NodeVector inputs;
     op::ParameterVector inputs_param;
-    for(uint32_t i = 0; i < 999; i++)
+    for (uint32_t i = 0; i < 999; i++)
     {
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
         inputs_param.push_back(A);
         inputs.push_back(A);
     }
     Shape shape_r{999};
-    auto f = make_shared<Function>(make_shared<op::Concat>(inputs, 0),
-                                   inputs_param);
+    auto f = make_shared<Function>(make_shared<op::Concat>(inputs, 0), inputs_param);
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     std::vector<std::shared_ptr<runtime::Tensor>> inputs_value;
     std::vector<float> ref_result;
-    for(uint32_t i = 0; i < 999; i++)
+    for (uint32_t i = 0; i < 999; i++)
     {
         auto a = backend->create_tensor(element::f32, shape_a);
         copy_data(a, vector<float>{static_cast<float>(i)});
