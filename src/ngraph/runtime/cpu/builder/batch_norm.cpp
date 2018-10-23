@@ -38,7 +38,8 @@ namespace ngraph
                                          const ngraph::Node* node,
                                          const std::vector<TensorViewWrapper>& args,
                                          const std::vector<TensorViewWrapper>& out,
-                                         bool append_relu)
+                                         bool append_relu,
+                                         bool training)
             {
                 auto& functors = external_function->get_functors();
 
@@ -72,7 +73,7 @@ namespace ngraph
                         ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
                 }
 
-                if (batchnorm->get_training_flag() && args.size() == 3)
+                if (training && args.size() == 3)
                 {
                     auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
                     auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
@@ -94,7 +95,7 @@ namespace ngraph
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
                                                                 false,
-                                                                batchnorm->get_training_flag(),
+                                                                training,
                                                                 ops);
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
@@ -136,7 +137,7 @@ namespace ngraph
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
                                                                 true,
-                                                                batchnorm->get_training_flag(),
+                                                                training,
                                                                 ops);
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
@@ -160,14 +161,14 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::BatchNorm)
+            void Builder::BUILDER_DECL(ngraph::op::BatchNormTraining)
             {
                 if (!mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    const ngraph::op::BatchNorm* batchnorm =
-                        static_cast<const ngraph::op::BatchNorm*>(node);
+                    const ngraph::op::BatchNormTraining* batchnorm =
+                        static_cast<const ngraph::op::BatchNormTraining*>(node);
 
-                    if (batchnorm->get_training_flag() && args.size() == 3)
+                    if (args.size() == 3)
                     {
                         auto& functors = external_function->get_functors();
 
@@ -237,16 +238,62 @@ namespace ngraph
                 }
                 else
                 {
-                    build_batch_norm<ngraph::op::BatchNorm>(
-                        external_function, node, args, out, false);
+                    build_batch_norm<ngraph::op::BatchNormTraining>(
+                        external_function, node, args, out, false, true);
                 }
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::BatchNormBackprop)
+            void Builder::BUILDER_DECL(ngraph::op::BatchNormInference)
             {
-                const ngraph::op::BatchNormBackprop* batchnorm =
-                    static_cast<const ngraph::op::BatchNormBackprop*>(node);
+                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    const ngraph::op::BatchNormInference* batchnorm =
+                        static_cast<const ngraph::op::BatchNormInference*>(node);
+
+                    auto& functors = external_function->get_functors();
+
+                    std::function<decltype(runtime::cpu::kernel::batch_norm_one_output<float>)>
+                        kernel;
+
+                    SELECT_KERNEL(kernel,
+                                  args[0].get_element_type(),
+                                  runtime::cpu::kernel::batch_norm_one_output);
+
+                    auto arg2_shape = args[2].get_shape();
+                    auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                    auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                    auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                    auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
+                    auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
+
+                    auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                    auto eps = batchnorm->get_eps_value();
+
+                    auto functor = [&, kernel, arg2_shape, eps](CPURuntimeContext* ctx) {
+                        kernel(eps,
+                               arg0_tensor,
+                               arg1_tensor,
+                               arg2_tensor,
+                               arg3_tensor,
+                               arg4_tensor,
+                               out0_tensor,
+                               arg2_shape);
+                    };
+                    functors.emplace_back(functor);
+                }
+                else
+                {
+                    build_batch_norm<ngraph::op::BatchNormInference>(
+                        external_function, node, args, out, false, false);
+                }
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::BatchNormTrainingBackprop)
+            {
+                const ngraph::op::BatchNormTrainingBackprop* batchnorm =
+                    static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
 
                 auto& functors = external_function->get_functors();
 
@@ -323,18 +370,32 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::BatchNormRelu)
+            void Builder::BUILDER_DECL(ngraph::op::BatchNormTrainingRelu)
             {
                 if (!mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     throw ngraph_error("BatchNormRelu is only supported with 4-D MKLDNN kernel.");
                 }
-                build_batch_norm<ngraph::op::BatchNormRelu>(
-                    external_function, node, args, out, true);
+                build_batch_norm<ngraph::op::BatchNormTrainingRelu>(
+                    external_function, node, args, out, true, true);
             }
-            REGISTER_OP_BUILDER(BatchNorm);
-            REGISTER_OP_BUILDER(BatchNormRelu);
-            REGISTER_OP_BUILDER(BatchNormBackprop);
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::BatchNormInferenceRelu)
+            {
+                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    throw ngraph_error("BatchNormRelu is only supported with 4-D MKLDNN kernel.");
+                }
+                build_batch_norm<ngraph::op::BatchNormInferenceRelu>(
+                    external_function, node, args, out, true, false);
+            }
+
+            REGISTER_OP_BUILDER(BatchNormTraining);
+            REGISTER_OP_BUILDER(BatchNormInference);
+            REGISTER_OP_BUILDER(BatchNormTrainingRelu);
+            REGISTER_OP_BUILDER(BatchNormInferenceRelu);
+            REGISTER_OP_BUILDER(BatchNormTrainingBackprop);
         }
     }
 }

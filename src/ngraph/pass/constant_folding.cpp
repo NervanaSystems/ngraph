@@ -547,7 +547,8 @@ shared_ptr<op::Constant> make_constant_quantize(shared_ptr<op::Constant> constan
                                               out_vec.data(),
                                               constant->get_shape(),
                                               scale->get_shape(),
-                                              quant->get_axes());
+                                              quant->get_axes(),
+                                              quant->get_round_mode());
 
     return make_shared<op::Constant>(quant->get_element_type(), out_shape, out_vec);
 }
