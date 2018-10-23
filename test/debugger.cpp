@@ -28,6 +28,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_debugger.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
@@ -36,40 +37,6 @@
 
 using namespace ngraph;
 using namespace std;
-
-TEST(debugger, stepping)
-{
-    Shape shape{};
-    auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto B = make_shared<op::Parameter>(element::i32, shape);
-
-    auto add = make_shared<op::Add>(A, B);
-    auto absn = make_shared<op::Abs>(add);
-    auto neg = make_shared<op::Negative>(absn);
-
-    auto f = make_shared<Function>(neg, op::ParameterVector{A, B});
-
-    auto backend = runtime::Backend::create("CPU");
-
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
-    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
-    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shape);
-
-    vector<int> dataA{-1};
-    vector<int> dataB{-776};
-    copy_data(a, dataA);
-    copy_data(b, dataB);
-
-    auto cf =
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
-
-    cf->step({result}, {a, b});
-    ASSERT_EQ(*static_cast<int*>(cf->inspect(add)), -777);
-    cf->step({result}, {a, b});
-    ASSERT_EQ(*static_cast<int*>(cf->inspect(absn)), 777);
-    cf->step({result}, {a, b});
-    ASSERT_EQ(*static_cast<int*>(cf->inspect(neg)), -777);
-}
 
 TEST(debugger, add_breakpoint)
 {
@@ -97,12 +64,51 @@ TEST(debugger, add_breakpoint)
     auto cf =
         std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
 
-    cf->add_breakpoint(neg);
-    cf->call({result}, {a, b});
-    ASSERT_EQ(*static_cast<int*>(cf->inspect(add)), -777);
-    ASSERT_EQ(*static_cast<int*>(cf->inspect(absn)), 777);
-    cf->step({result}, {a, b});
-    ASSERT_EQ(*static_cast<int*>(cf->inspect(neg)), -777);
+    ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+
+    dbg.add_breakpoint(neg);
+    dbg.call({result}, {a, b});
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
+    dbg.step();
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
+}
+
+TEST(debugger, stepping)
+{
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto B = make_shared<op::Parameter>(element::i32, shape);
+
+    auto add = make_shared<op::Add>(A, B);
+    auto absn = make_shared<op::Abs>(add);
+    auto neg = make_shared<op::Negative>(absn);
+
+    auto f = make_shared<Function>(neg, op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shape);
+
+    vector<int> dataA{-1};
+    vector<int> dataB{-776};
+    copy_data(a, dataA);
+    copy_data(b, dataB);
+
+    auto cf =
+        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+
+    ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+
+    dbg.add_breakpoint(add);
+    dbg.call({result}, {a, b});
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
+    dbg.step();
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
+    dbg.step();
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
 TEST(debugger, delete_breakpoint)
@@ -131,16 +137,18 @@ TEST(debugger, delete_breakpoint)
     auto cf =
         std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
 
-    cf->add_breakpoint(add);
-    cf->add_breakpoint(absn);
-    cf->add_breakpoint(neg);
-    cf->delete_breakpoint(add);
-    cf->delete_breakpoint(absn);
-    cf->delete_breakpoint(neg);
-    cf->call({result}, {a, b});
-    ASSERT_EQ(*static_cast<int*>(cf->inspect(add)), -777);
-    ASSERT_EQ(*static_cast<int*>(cf->inspect(absn)), 777);
-    ASSERT_EQ(*static_cast<int*>(cf->inspect(neg)), -777);
+    ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+
+    dbg.add_breakpoint(add);
+    dbg.add_breakpoint(absn);
+    dbg.add_breakpoint(neg);
+    dbg.delete_breakpoint(add);
+    dbg.delete_breakpoint(absn);
+    dbg.delete_breakpoint(neg);
+    dbg.call({result}, {a, b});
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
 TEST(debugger, while_stepping)
@@ -169,13 +177,16 @@ TEST(debugger, while_stepping)
     auto cf =
         std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
 
-    while (cf->step({result}, {a, b}))
+    ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+
+    dbg.call({result}, {a, b});
+    dbg.add_breakpoint(add);
+    while (dbg.step())
     {
     };
-    ASSERT_EQ(*static_cast<int*>(cf->inspect(add)), -777);
-    ASSERT_EQ(*static_cast<int*>(cf->inspect(absn)), 777);
-    ASSERT_EQ(*static_cast<int*>(cf->inspect(neg)), -777);
-    cf->call({result}, {a, b});
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
 TEST(debugger, resume)
@@ -204,10 +215,12 @@ TEST(debugger, resume)
     auto cf =
         std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
 
-    cf->add_breakpoint(absn);
-    cf->call({result}, {a, b});
-    ASSERT_EQ(*static_cast<int*>(cf->inspect(add)), -777);
-    cf->resume({result}, {a, b});
-    ASSERT_EQ(*static_cast<int*>(cf->inspect(absn)), 777);
-    ASSERT_EQ(*static_cast<int*>(cf->inspect(neg)), -777);
+    ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+
+    dbg.add_breakpoint(absn);
+    dbg.call({result}, {a, b});
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
+    dbg.resume();
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
+    ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }

@@ -56,6 +56,7 @@ namespace ngraph
             class CPU_ExternalFunction;
             class CPU_Emitter;
             class CPU_CallFrame;
+            class CPU_Debugger;
 
 #if !defined(NGRAPH_DEX_ONLY)
 
@@ -87,6 +88,7 @@ namespace ngraph
             {
                 friend class CPU_Backend;
                 friend class CPU_CallFrame;
+                friend class CPU_Debugger;
 
             public:
                 enum class CPUTensorRole

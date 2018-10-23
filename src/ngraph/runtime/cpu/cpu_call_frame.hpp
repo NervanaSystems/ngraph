@@ -34,6 +34,7 @@ namespace ngraph
         {
             class CPU_CallFrame;
             class CPU_ExternalFunction;
+            class CPU_Debugger;
 
             using EntryPoint_t = void(void** inputs, void** outputs, CPURuntimeContext* ctx);
 
@@ -43,6 +44,8 @@ namespace ngraph
             class CPU_CallFrame
             {
             public:
+                friend class CPU_Debugger;
+
                 CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
                               EntryPoint compiled_function);
                 ~CPU_CallFrame();
@@ -54,19 +57,19 @@ namespace ngraph
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
                 /// \brief Execute a single operation
-                bool step(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+                //bool step(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                //         const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
                 /// \brief Continue to execute from the current PC
-                void resume(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                            const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+                //void resume(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                //            const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
                 /// \brief Add a breakpoint to a node
-                bool add_breakpoint(std::shared_ptr<Node> op);
+                //bool add_breakpoint(std::shared_ptr<Node> op);
                 /// \brief Remove a breakpoint from a node
-                bool delete_breakpoint(std::shared_ptr<Node> op);
+                //bool delete_breakpoint(std::shared_ptr<Node> op);
 
-                void* inspect(std::shared_ptr<Node> op, size_t output_index = 0);
+                //void* inspect(std::shared_ptr<Node> op, size_t output_index = 0);
 
                 void propagate_layouts(const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
                                        const LayoutDescriptorPtrs& layouts) const;
@@ -79,7 +82,7 @@ namespace ngraph
                 CPU_CallFrame(CPU_CallFrame&&) = delete;
                 CPU_CallFrame& operator=(const CPU_CallFrame&) = delete;
 
-                void* inspect(const std::string& tensor_descriptor_name);
+                //void* inspect(const std::string& tensor_descriptor_name);
 
                 void inner_call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                                 const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);

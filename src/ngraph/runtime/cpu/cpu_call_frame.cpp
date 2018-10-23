@@ -82,6 +82,7 @@ void runtime::cpu::CPU_CallFrame::inner_call(
     }
 }
 
+/*
 bool runtime::cpu::CPU_CallFrame::step(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
@@ -113,6 +114,7 @@ void runtime::cpu::CPU_CallFrame::resume(
     inner_call(output_tvs, input_tvs);
     return;
 }
+*/
 
 void runtime::cpu::CPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
@@ -122,6 +124,7 @@ void runtime::cpu::CPU_CallFrame::call(
     inner_call(output_tvs, input_tvs);
 }
 
+/*
 bool runtime::cpu::CPU_CallFrame::add_breakpoint(std::shared_ptr<Node> op)
 {
     auto i_pos = std::find(
@@ -157,6 +160,7 @@ void* runtime::cpu::CPU_CallFrame::inspect(std::shared_ptr<Node> op, size_t outp
 {
     return m_external_function->tensor_data.at(op->get_name() + "_" + to_string(output_index));
 }
+*/
 
 void runtime::cpu::CPU_CallFrame::propagate_layouts(
     const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
