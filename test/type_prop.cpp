@@ -208,7 +208,7 @@ TEST(type_prop, batchnorm_rank_less_than_2)
     auto dummy = make_shared<op::Parameter>(element::f32, Shape{1});
     try
     {
-        auto bc = make_shared<op::BatchNorm>(0.001, dummy, dummy, dummy);
+        auto bc = make_shared<op::BatchNormTraining>(0.001, dummy, dummy, dummy);
         FAIL() << "BatchNorm c-tor should throw for tensors whose rank is less than 2";
     }
     catch (const NodeValidationError& error)
@@ -227,7 +227,7 @@ TEST(type_prop, batchnorm_zero_channel_check)
     auto dummy = make_shared<op::Parameter>(element::f32, Shape{1, 0, 2, 3});
     try
     {
-        auto bc = make_shared<op::BatchNorm>(0.001, dummy, dummy, dummy);
+        auto bc = make_shared<op::BatchNormTraining>(0.001, dummy, dummy, dummy);
         FAIL() << "BatchNorm c-tor should throw for tensors w/ zero-dimension channels";
     }
     catch (const NodeValidationError& error)
@@ -250,7 +250,7 @@ TEST(type_prop, batchnorm_et_check)
 
     try
     {
-        auto bc = make_shared<op::BatchNorm>(0.001, dummy_f32, dummy_f64, param);
+        auto bc = make_shared<op::BatchNormTraining>(0.001, dummy_f32, dummy_f64, param);
         FAIL() << "BatchNorm c-tor should throw for different element types";
     }
     catch (const NodeValidationError& error)
@@ -273,7 +273,7 @@ TEST(type_prop, batchnorm_shape_check)
 
     try
     {
-        auto bc = make_shared<op::BatchNorm>(0.001, dummy_4, dummy_3, param);
+        auto bc = make_shared<op::BatchNormTraining>(0.001, dummy_4, dummy_3, param);
         FAIL() << "BatchNorm c-tor should throw if gamma and beta shapes don't match";
     }
     catch (const NodeValidationError& error)
@@ -295,8 +295,8 @@ TEST(type_prop, batchnorm_backprop_4d_check)
 
     try
     {
-        auto bc =
-            make_shared<op::BatchNormBackprop>(0.001, dummy, dummy, param, dummy, dummy, dummy);
+        auto bc = make_shared<op::BatchNormTrainingBackprop>(
+            0.001, dummy, dummy, param, dummy, dummy, dummy);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
     catch (const NodeValidationError& error)
@@ -317,7 +317,7 @@ TEST(type_prop, batchnorm_backprop_et_check)
 
     try
     {
-        auto bc = make_shared<op::BatchNormBackprop>(
+        auto bc = make_shared<op::BatchNormTrainingBackprop>(
             0.001, dummy_f32, dummy_f64, param, dummy_f32, dummy_f32, dummy_f32);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
@@ -341,8 +341,8 @@ TEST(type_prop, batchnorm_backprop_shape_check)
 
     try
     {
-        auto bc =
-            make_shared<op::BatchNormBackprop>(0.001, dummy, dummy2, param, dummy2, dummy2, dummy2);
+        auto bc = make_shared<op::BatchNormTrainingBackprop>(
+            0.001, dummy, dummy2, param, dummy2, dummy2, dummy2);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
     catch (const NodeValidationError& error)
@@ -366,8 +366,8 @@ TEST(type_prop, batchnorm_backprop_delta_check)
 
     try
     {
-        auto bc =
-            make_shared<op::BatchNormBackprop>(0.001, dummy, dummy, param, dummy, dummy, delta);
+        auto bc = make_shared<op::BatchNormTrainingBackprop>(
+            0.001, dummy, dummy, param, dummy, dummy, delta);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
     catch (const NodeValidationError& error)
@@ -10081,40 +10081,6 @@ TEST(type_prop, quantize_offset_shape_mismatch_different_rank_fails)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
                              "Scale shape ({64,3}) and offset shape ({64,3,2}) must match");
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, quantize_offset_unsupported_round_mode_fails)
-{
-    Shape batch_shape{64, 3, 480, 640};
-    Shape scale_shape{64, 3};
-    Shape offset_shape{64, 3};
-    element::Type unquantized_type = element::f32;
-    element::Type quantized_type = element::i8;
-    element::Type batch_type = unquantized_type;
-    element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
-    AxisSet axes{0, 1};
-    auto round_mode = op::Quantize::RoundMode::HALF_TO_EVEN;
-
-    auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
-    auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-
-    try
-    {
-        auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
-        FAIL() << "Unsupported round mode not detected";
-    }
-    catch (const NodeValidationError& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Only RoundMode = HALF_AWAY_FROM_ZERO is supported, for now");
     }
     catch (...)
     {
