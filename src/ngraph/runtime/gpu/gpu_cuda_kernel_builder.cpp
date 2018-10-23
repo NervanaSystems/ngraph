@@ -634,7 +634,7 @@ void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
             for (size_t i = 0; i < num_inputs; i++)
             {
                 writer
-                    << "if(!processed && (block_idx + split_input_stride_offset < inputs_strides["
+                    << "if(!processed && (block_idx < inputs_strides["
                     << i << " + input_offset]))\n";
                 writer.block_begin();
                 {

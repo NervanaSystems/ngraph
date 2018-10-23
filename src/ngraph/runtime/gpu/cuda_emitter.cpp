@@ -105,14 +105,14 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::string& dtype,
     // a launch primitive for it based on the input tensor shape
     // but do not recompile the kernel. otherwise, do it all:
     // recompile the kernel and then create the primutive
-    size_t split_input_size = 2;
+    size_t split_input_size = 64;
     size_t residue = input_num % split_input_size;
     std::stringstream kernel_name_1;
     std::stringstream kernel_name_2;
     kernel_name_1 << "concat_" << dtype << "_r_" << split_input_size;
     kernel_name_2 << "concat_" << dtype << "_r_" << residue;
     auto compiled_kernel_1 = m_ctx->compiled_kernel_pool->get(kernel_name_1.str());
-    if (compiled_kernel_1 == nullptr && input_num > split_input_size)
+    if (compiled_kernel_1 == nullptr && input_num >= split_input_size)
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
@@ -153,8 +153,8 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::string& dtype,
     size_t split_input_stride_offset = 0;
     for (uint32_t i = 0; i < input_num; i += split_input_size)
     {
-        size_t nthread = 0;
-        size_t split_output_stride = 0;
+        uint32_t nthread = 0;
+        uint32_t split_output_stride = 0;
         for (uint32_t j = i; j < i + split_input_size && j < input_num; j++)
         {
             nthread += shape_size(input_shapes[j]);
@@ -167,9 +167,6 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::string& dtype,
         split_aligned_grid_size_x.push_back(
             align_to_block_size(split_nthreads.back(), block_size_x));
     }
-    NGRAPH_INFO << join(split_input_stride_offsets);
-    NGRAPH_INFO << join(split_output_strides);
-    NGRAPH_INFO << join(split_nthreads);
 
     // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
