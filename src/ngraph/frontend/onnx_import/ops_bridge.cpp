@@ -87,134 +87,51 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        const OperatorSet& OperatorsBridge::get_operator_set_version_1() const
+        namespace detail
         {
-            static OperatorSet operator_set;
-            if (operator_set.empty())
+            const Operator& find(const std::string& name,
+                                 std::int64_t version,
+                                 const std::string& domain,
+                                 const std::map<std::int64_t, Operator>& map)
             {
-                for (const auto& op : m_map)
+                while (version > 0)
                 {
-                    for (const auto& it : op.second)
+                    const auto it = map.find(version--);
+                    if (it != std::end(map))
                     {
-                        if (it.first == 1)
-                        {
-                            operator_set.emplace(op.first, it.second);
-                        }
+                        return it->second;
                     }
                 }
+                throw error::UnsupportedVersion{name, version, domain};
             }
-            return operator_set;
         }
 
-        const OperatorSet& OperatorsBridge::get_operator_set_version_2() const
+        void OperatorsBridge::_register_operator(const std::string& name,
+                                                 std::int64_t version,
+                                                 const std::string& domain,
+                                                 Operator fn)
         {
-            static OperatorSet operator_set;
-            if (operator_set.empty())
-            {
-                operator_set = get_operator_set_version_1();
-            }
-            return operator_set;
+            m_map[domain][name].emplace(version, std::move(fn));
         }
 
-        const OperatorSet& OperatorsBridge::get_operator_set_version_3() const
+        OperatorSet OperatorsBridge::_get_operator_set(std::int64_t version,
+                                                       const std::string& domain)
         {
-            static OperatorSet operator_set;
-            if (operator_set.empty())
+            OperatorSet result;
+            auto dm = m_map.find(domain);
+            if (dm == std::end(m_map))
             {
-                operator_set = get_operator_set_version_2();
+                throw error::UnknownDomain{domain};
             }
-            return operator_set;
+            for (const auto& op : dm->second)
+            {
+                result.emplace(op.first, detail::find(op.first, version, domain, op.second));
+            }
+            return result;
         }
 
-        const OperatorSet& OperatorsBridge::get_operator_set_version_4() const
-        {
-            static OperatorSet operator_set;
-            if (operator_set.empty())
-            {
-                operator_set = get_operator_set_version_3();
-            }
-            return operator_set;
-        }
-
-        const OperatorSet& OperatorsBridge::get_operator_set_version_5() const
-        {
-            static OperatorSet operator_set;
-            if (operator_set.empty())
-            {
-                operator_set = get_operator_set_version_4();
-            }
-            return operator_set;
-        }
-
-        const OperatorSet& OperatorsBridge::get_operator_set_version_6() const
-        {
-            static OperatorSet operator_set;
-            if (operator_set.empty())
-            {
-                operator_set = get_operator_set_version_5();
-            }
-            return operator_set;
-        }
-
-        const OperatorSet& OperatorsBridge::get_operator_set_version_7() const
-        {
-            static OperatorSet operator_set;
-            if (operator_set.empty())
-            {
-                operator_set = get_operator_set_version_6();
-            }
-            return operator_set;
-        }
-
-        const OperatorSet& OperatorsBridge::get_operator_set_version_8() const
-        {
-            static OperatorSet operator_set;
-            if (operator_set.empty())
-            {
-                operator_set = get_operator_set_version_7();
-            }
-            return operator_set;
-        }
-
-        const OperatorSet& OperatorsBridge::get_operator_set_version_9() const
-        {
-            static OperatorSet operator_set;
-            if (operator_set.empty())
-            {
-                operator_set = get_operator_set_version_8();
-            }
-            return operator_set;
-        }
-
-#define OPERATOR_SET_NAME(version_) get_operator_set_version_##version_()
-
-#define GET_OPERATOR_SET(version_)                                                                 \
-    case version_:                                                                                 \
-        return OPERATOR_SET_NAME(version_)
-
-#define OPERATOR_SET_NAME_HELPER(version_) OPERATOR_SET_NAME(version_)
-
-#define DEFAULT_OPERATOR_SET() return OPERATOR_SET_NAME_HELPER(ONNX_OPSET_VERSION)
-
-        const OperatorSet& OperatorsBridge::get_operator_set_version(std::int64_t version) const
-        {
-            switch (version)
-            {
-                GET_OPERATOR_SET(1);
-                GET_OPERATOR_SET(2);
-                GET_OPERATOR_SET(3);
-                GET_OPERATOR_SET(4);
-                GET_OPERATOR_SET(5);
-                GET_OPERATOR_SET(6);
-                GET_OPERATOR_SET(7);
-                GET_OPERATOR_SET(8);
-                GET_OPERATOR_SET(9);
-            default: DEFAULT_OPERATOR_SET();
-            }
-        }
-
-#define REGISTER_OPERATOR(name_, version_, fn_)                                                    \
-    m_map[name_].emplace(version_, std::bind(op::set_##version_::fn_, std::placeholders::_1))
+#define REGISTER_OPERATOR(name_, ver_, fn_)                                                        \
+    m_map[""][name_].emplace(ver_, std::bind(op::set_##ver_::fn_, std::placeholders::_1))
 
         OperatorsBridge::OperatorsBridge()
         {
