@@ -444,14 +444,16 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_vector_large)
 {
     Shape shape_a{1};
     NodeVector inputs;
+    op::ParameterVector inputs_param;
     for(uint32_t i = 0; i < 999; i++)
     {
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        inputs_param.push_back(A);
         inputs.push_back(A);
     }
     Shape shape_r{999};
     auto f = make_shared<Function>(make_shared<op::Concat>(inputs, 0),
-                                   op::ParameterVector(inputs));
+                                   inputs_param);
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
