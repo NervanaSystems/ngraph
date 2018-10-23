@@ -309,6 +309,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
 
             // get epsilon value
             auto eps_ptr = std::dynamic_pointer_cast<op::Constant>(pattern_map[eps_label]);
+            if (!eps_ptr)
+            {
+                NGRAPH_DEBUG << "Eps must be a constant";
+                return false;
+            }
             double epsilon = *(reinterpret_cast<const double*>(eps_ptr->get_data_ptr()));
             auto bn_node = std::make_shared<op::BatchNormTraining>(
                 epsilon, pattern_map[gamma_label], pattern_map[beta_label], pattern_map[input]);
@@ -408,12 +413,17 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_reshaped_conv(
             auto pattern_map = m.get_pattern_map();
 
             auto pad_value_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[pad_value]);
+            if (!pad_value_op)
+            {
+                NGRAPH_DEBUG << "Pad value must be a constant";
+                return false;
+            }
 
             const auto& matched_conv =
-                std::dynamic_pointer_cast<op::Convolution>(pattern_map[conv_label]);
-            const auto& matched_pad = std::dynamic_pointer_cast<op::Pad>(pattern_map[pad_label]);
+                std::static_pointer_cast<op::Convolution>(pattern_map[conv_label]);
+            const auto& matched_pad = std::static_pointer_cast<op::Pad>(pattern_map[pad_label]);
             const auto& matched_reshape =
-                std::dynamic_pointer_cast<op::Reshape>(pattern_map[reshape_label]);
+                std::static_pointer_cast<op::Reshape>(pattern_map[reshape_label]);
 
             const auto& input_order = matched_reshape->get_input_order();
             auto hoisted_reshape_output_shape =
@@ -485,10 +495,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
             auto pattern_map = m.get_pattern_map();
 
             auto pad_value_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[pad_value]);
+            if (!pad_value_op)
+            {
+                NGRAPH_DEBUG << "Pad value must be a constant";
+                return false;
+            }
 
             const auto& matched_conv =
-                std::dynamic_pointer_cast<op::Convolution>(pattern_map[conv_label]);
-            const auto& matched_pad = std::dynamic_pointer_cast<op::Pad>(pattern_map[pad_label]);
+                std::static_pointer_cast<op::Convolution>(pattern_map[conv_label]);
+            const auto& matched_pad = std::static_pointer_cast<op::Pad>(pattern_map[pad_label]);
 
             if (!zero_padded_conv_consistency_check(m.get_match_root(),
                                                     pad_value_op,
@@ -550,10 +565,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv_backprop_
             auto pattern_map = m.get_pattern_map();
 
             auto pad_value_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[pad_value]);
+            if (!pad_value_op)
+            {
+                NGRAPH_DEBUG << "Pad value must be a constant";
+                return false;
+            }
 
             const auto& matched_conv =
-                std::dynamic_pointer_cast<op::ConvolutionBackpropFilters>(pattern_map[conv_label]);
-            const auto& matched_pad = std::dynamic_pointer_cast<op::Pad>(pattern_map[pad_label]);
+                std::static_pointer_cast<op::ConvolutionBackpropFilters>(pattern_map[conv_label]);
+            const auto& matched_pad = std::static_pointer_cast<op::Pad>(pattern_map[pad_label]);
 
             if (!zero_padded_conv_consistency_check(m.get_match_root(),
                                                     pad_value_op,
@@ -615,7 +635,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto conv = std::dynamic_pointer_cast<op::Convolution>(m.get_match_root()->get_argument(0));
+        auto conv = std::static_pointer_cast<op::Convolution>(m.get_match_root()->get_argument(0));
         if (conv->get_input_shape(0).size() == 4)
         {
             auto bias = m.get_match_root()->get_argument(1)->get_argument(0);
@@ -668,7 +688,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
 
         auto pattern_map = m.get_pattern_map();
         auto conv_bprop =
-            std::dynamic_pointer_cast<op::ConvolutionBackpropFilters>(m.get_match_root());
+            std::static_pointer_cast<op::ConvolutionBackpropFilters>(m.get_match_root());
 
         if (conv_bprop->get_input_shape(0).size() == 4 &&
             conv_bprop->get_input_shape(1).size() == 4 &&
@@ -750,7 +770,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        auto m_bn = std::dynamic_pointer_cast<op::BatchNormTraining>(
+        auto m_bn = std::static_pointer_cast<op::BatchNormTraining>(
             m.get_match_root()->get_argument(0)->get_inputs().at(0).get_output().get_node());
 
         // as of now, only MKLDNN supports this fusion
@@ -766,6 +786,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         for (auto bn_in : m_bn->get_output_inputs(0))
         {
             auto mgoe = std::dynamic_pointer_cast<op::GetOutputElement>(bn_in->get_node());
+            NGRAPH_ASSERT(mgoe);
             mgoes[mgoe->get_n()] = mgoe;
         }
 
@@ -881,7 +902,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
         NGRAPH_DEBUG << "In a callback for construct_conv_relu against "
                      << m.get_match_root()->get_name();
 
-        auto conv = std::dynamic_pointer_cast<op::Convolution>(m.get_match_root()->get_argument(0));
+        auto conv = std::static_pointer_cast<op::Convolution>(m.get_match_root()->get_argument(0));
 
         // These checks are to make sure a MKLDNN Convolution kernel can be used.
         bool data_dilated = false;
@@ -949,7 +970,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
                      << m.get_match_root()->get_name();
 
         auto conv =
-            std::dynamic_pointer_cast<op::ConvolutionBias>(m.get_match_root()->get_argument(0));
+            std::static_pointer_cast<op::ConvolutionBias>(m.get_match_root()->get_argument(0));
 
         // These checks are to make sure a MKLDNN Convolution kernel can be used.
         bool data_dilated = false;
@@ -1113,7 +1134,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add_relu()
                      << m.get_match_root()->get_name();
 
         auto conv_m =
-            std::dynamic_pointer_cast<op::ConvolutionAdd>(m.get_match_root()->get_argument(0));
+            std::static_pointer_cast<op::ConvolutionAdd>(m.get_match_root()->get_argument(0));
         if (conv_m->get_users().size() > 1)
         {
             NGRAPH_DEBUG << "Convolution has more than one user";
@@ -1255,7 +1276,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
                      << m.get_match_root()->get_name();
 
         auto conv_m =
-            std::dynamic_pointer_cast<op::ConvolutionBiasAdd>(m.get_match_root()->get_argument(0));
+            std::static_pointer_cast<op::ConvolutionBiasAdd>(m.get_match_root()->get_argument(0));
         if (conv_m->get_users().size() > 1)
         {
             NGRAPH_DEBUG << "Convolution has more than one user";
@@ -1395,7 +1416,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
             return false;
         }
 
-        auto alpha_const_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[alpha]);
+        auto alpha_const_op = std::static_pointer_cast<op::Constant>(pattern_map[alpha]);
         float alpha_val = *(static_cast<float const*>(alpha_const_op->get_data_ptr()));
         NGRAPH_DEBUG << "relu_input: " << pattern_map[relu_input] << " min_val: "
                      << *(static_cast<float const*>(alpha_const_op->get_data_ptr()));
@@ -1437,8 +1458,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
                          << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
 
-            auto m_bn = std::dynamic_pointer_cast<op::BatchNormInference>(m.get_match_root());
-            auto m_conv = std::dynamic_pointer_cast<op::ConvolutionBias>(m_bn->get_argument(2));
+            auto m_bn = std::static_pointer_cast<op::BatchNormInference>(m.get_match_root());
+            auto m_conv = std::staticc_pointer_cast<op::ConvolutionBias>(m_bn->get_argument(2));
 
             if (m_conv->get_users().size() > 1)
             {
