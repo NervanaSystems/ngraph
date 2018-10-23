@@ -182,17 +182,17 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
     : m_function(function)
     , m_release_function(release_function)
-    , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
-    , m_compiled_function(nullptr)
     , m_emit_timing(false)
-    , m_function_name(function->get_name())
-    , m_is_built(false)
+    , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
 #if !defined(NGRAPH_DEX_ONLY)
     , m_is_compiled(false)
     , m_direct_execution(!std::getenv("NGRAPH_CODEGEN"))
 #else
     , m_direct_execution(true)
 #endif
+    , m_compiled_function(nullptr)
+    , m_function_name(function->get_name())
+    , m_is_built(false)
 {
 }
 
