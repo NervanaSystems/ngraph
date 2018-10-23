@@ -600,8 +600,10 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
     }
     else
     {
-        NODE_VALIDATION_ASSERT(node, filters_shape[input_channel_axis_filters] == input_channel_count)
-            << "Input channel count for filters (" << filters_shape[input_channel_axis_filters] << ") "
+        NODE_VALIDATION_ASSERT(node,
+                               filters_shape[input_channel_axis_filters] == input_channel_count)
+            << "Input channel count for filters (" << filters_shape[input_channel_axis_filters]
+            << ") "
             << "does not match the number of channels in the data batch (" << input_channel_count
             << ") "
             << "(filter input shape: " << filters_shape << ", filter input channels on axis "

@@ -1621,7 +1621,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
     auto input = std::make_shared<pattern::op::Label>(element::f32, shape_a);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape_b);
     auto resShape = std::make_shared<pattern::op::Label>(element::f32, shape_r);
-    size_t num_groups = input->get_shape().at(1);
 
     auto conv = std::make_shared<op::GroupConvolution>(input,
                                                        filters,
@@ -1665,7 +1664,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
             {
                 return false;
             }
-
 
             // new weights = old weights * gamma / sqrt(variance + epsilon)
             // new biases = (-mean) * gamma / sqrt(variance + epsilon) + beta
@@ -1721,7 +1719,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape_b);
     auto bias = std::make_shared<pattern::op::Label>(element::f32, shape_bias);
     auto num = std::make_shared<pattern::op::Label>(element::f32, shape_num);
-    size_t num_groups = input->get_shape().at(1);
 
     auto conv = std::make_shared<op::GroupConvolutionBias>(input,
                                                            filters,

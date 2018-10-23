@@ -462,9 +462,6 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::GroupConvolutionBias)
                 {
-                    auto num_groups =
-                        std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node)
-                            ->get_groups();
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;

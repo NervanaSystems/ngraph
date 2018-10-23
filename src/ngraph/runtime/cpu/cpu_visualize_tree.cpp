@@ -82,7 +82,7 @@ namespace ngraph
                 const static visualize_tree_ops_map_t vtom{
                     {TI(runtime::cpu::op::ConvertLayout), visualize_convert_layout},
                     //{TI(ngraph::op::Reshape), visualize_reshape}
-                    };
+                };
                 return vtom;
             }
         }

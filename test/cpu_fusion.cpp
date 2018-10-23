@@ -1119,19 +1119,19 @@ shared_ptr<Function> gen_groupconv_batchnorm(bool add_goe, bool with_relu)
     auto goe_bn = std::make_shared<op::GetOutputElement>(group_conv, 0);
     //auto bn2 = std::make_shared<op::BatchNorm>(eps, gamma, beta, output_rt, mean, var);
 
-    auto bn = add_goe ? std::make_shared<op::BatchNorm>(eps, gamma, beta, goe_bn, mean, var) :
-                        std::make_shared<op::BatchNorm>(eps, gamma, beta, group_conv, mean, var);
-    if (with_relu) 
+    auto bn = add_goe ? std::make_shared<op::BatchNorm>(eps, gamma, beta, goe_bn, mean, var)
+                      : std::make_shared<op::BatchNorm>(eps, gamma, beta, group_conv, mean, var);
+    if (with_relu)
     {
         auto prelu = std::make_shared<op::Relu>(bn);
         auto f = make_shared<Function>(NodeVector{prelu},
-                                    op::ParameterVector{input, weights, gamma, beta, mean, var});
+                                       op::ParameterVector{input, weights, gamma, beta, mean, var});
         return f;
     }
     else
     {
         auto f = make_shared<Function>(NodeVector{bn},
-                                    op::ParameterVector{input, weights, gamma, beta, mean, var});
+                                       op::ParameterVector{input, weights, gamma, beta, mean, var});
         return f;
     }
 }
@@ -1190,7 +1190,6 @@ TEST(cpu_fusion, groupconv_batchnorm_relu)
     auto fuse_results = execute(fuse_func, args, "CPU");
     auto nofuse_results = execute(nofuse_func, args, "CPU");
     EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
-
 }
 
 /*shared_ptr<Function> gen_groupconv_batchnorm_boundedrelu()

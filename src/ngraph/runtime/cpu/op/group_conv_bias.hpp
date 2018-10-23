@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief GroupConvolution + Bias + Relu forward prop for 
+        /// \brief GroupConvolution + Bias + Relu forward prop for
         ///  batched GroupConvolution operation.
         class GroupConvolutionBias : public Op
         {
@@ -31,7 +31,7 @@ namespace ngraph
                                  const std::shared_ptr<Node>& bias,
                                  const size_t groups,
                                  bool with_relu,
-                                 float alpha=1.0);
+                                 float alpha = 1.0);
 
             GroupConvolutionBias(const std::shared_ptr<Node>& data_batch,
                                  const std::shared_ptr<Node>& filters,
@@ -43,7 +43,7 @@ namespace ngraph
                                  const Strides& data_dilation_strides,
                                  const size_t groups,
                                  bool with_relu,
-                                 float alpha=1.0);
+                                 float alpha = 1.0);
 
             Shape get_weights_dimensions();
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
