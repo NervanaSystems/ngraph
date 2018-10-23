@@ -5876,7 +5876,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop)
     auto g = std::make_shared<op::Parameter>(element::f32, sca);
     auto b = std::make_shared<op::Parameter>(element::f32, sca);
     auto input = std::make_shared<op::Parameter>(element::f32, vec);
-    auto bn_fp = std::make_shared<op::BatchNorm>(eps, g, b, input);
+    auto bn_fp = std::make_shared<op::BatchNormTraining>(eps, g, b, input);
     auto bnorm = std::make_shared<op::GetOutputElement>(bn_fp, 0);
     auto mean = std::make_shared<op::GetOutputElement>(bn_fp, 1);
     auto var = std::make_shared<op::GetOutputElement>(bn_fp, 2);
@@ -5906,7 +5906,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop_2step)
     auto g = std::make_shared<op::Parameter>(element::f32, sca);
     auto b = std::make_shared<op::Parameter>(element::f32, sca);
     auto input = std::make_shared<op::Parameter>(element::f32, vec);
-    auto bn_fp = std::make_shared<op::BatchNorm>(eps, g, b, input);
+    auto bn_fp = std::make_shared<op::BatchNormTraining>(eps, g, b, input);
     auto bnorm = std::make_shared<op::GetOutputElement>(bn_fp, 0);
     auto mean = std::make_shared<op::GetOutputElement>(bn_fp, 1);
     auto var = std::make_shared<op::GetOutputElement>(bn_fp, 2);
