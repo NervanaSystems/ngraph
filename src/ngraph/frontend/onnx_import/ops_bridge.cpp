@@ -24,6 +24,7 @@
 #include "op/abs.hpp"
 #include "op/add.hpp"
 #include "op/and.hpp"
+#include "op/argmin.hpp"
 #include "op/average_pool.hpp"
 #include "op/batch_norm.hpp"
 #include "op/cast.hpp"
@@ -138,6 +139,7 @@ namespace ngraph
             REGISTER_OPERATOR("Abs", 1, abs);
             REGISTER_OPERATOR("Add", 1, add);
             REGISTER_OPERATOR("And", 1, logical_and);
+            REGISTER_OPERATOR("ArgMin", 1, argmin);
             REGISTER_OPERATOR("AveragePool", 1, average_pool);
             REGISTER_OPERATOR("BatchNormalization", 1, batch_norm);
             REGISTER_OPERATOR("Cast", 1, cast);

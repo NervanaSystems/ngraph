@@ -37,6 +37,10 @@ add_library(onnx_import STATIC
         exceptions.hpp
         op/add.hpp
         op/and.hpp
+        op/argmax.cpp
+        op/argmax.hpp
+        op/argmin.cpp
+        op/argmin.hpp
         op/average_pool.cpp
         op/average_pool.hpp
         op/batch_norm.cpp
