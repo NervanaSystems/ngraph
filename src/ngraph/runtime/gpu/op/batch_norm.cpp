@@ -16,10 +16,11 @@
 
 #include "ngraph/runtime/gpu/op/batch_norm.hpp"
 
-ngraph::op::gpu::CUDNNBatchNorm::CUDNNBatchNorm(double eps,
-                                                std::shared_ptr<ngraph::Node> gamma,
-                                                std::shared_ptr<ngraph::Node> beta,
-                                                std::shared_ptr<ngraph::Node> input)
+ngraph::op::gpu::BatchNormTrainingWithStats::BatchNormTrainingWithStats(
+    double eps,
+    std::shared_ptr<ngraph::Node> gamma,
+    std::shared_ptr<ngraph::Node> beta,
+    std::shared_ptr<ngraph::Node> input)
     : ngraph::op::BatchNormTraining(eps, gamma, beta, input)
 {
     auto output_index = get_output_size();
@@ -31,13 +32,14 @@ ngraph::op::gpu::CUDNNBatchNorm::CUDNNBatchNorm(double eps,
     set_output_type(output_index++, input->get_element_type(), channel_shape);
 }
 
-ngraph::op::gpu::CUDNNBatchNorm::CUDNNBatchNorm(double eps,
-                                                std::shared_ptr<ngraph::Node> gamma,
-                                                std::shared_ptr<ngraph::Node> beta,
-                                                std::shared_ptr<ngraph::Node> input,
-                                                std::shared_ptr<ngraph::Node> mean,
-                                                std::shared_ptr<ngraph::Node> variance,
-                                                bool training)
+ngraph::op::gpu::BatchNormTrainingWithStats::BatchNormTrainingWithStats(
+    double eps,
+    std::shared_ptr<ngraph::Node> gamma,
+    std::shared_ptr<ngraph::Node> beta,
+    std::shared_ptr<ngraph::Node> input,
+    std::shared_ptr<ngraph::Node> mean,
+    std::shared_ptr<ngraph::Node> variance,
+    bool training)
     : ngraph::op::BatchNormTraining(eps, gamma, beta, input, mean, variance)
 {
     auto output_index = get_output_size();
@@ -49,10 +51,10 @@ ngraph::op::gpu::CUDNNBatchNorm::CUDNNBatchNorm(double eps,
     set_output_type(output_index++, input->get_element_type(), channel_shape);
 }
 
-std::shared_ptr<ngraph::Node>
-    ngraph::op::gpu::CUDNNBatchNorm::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<ngraph::Node> ngraph::op::gpu::BatchNormTrainingWithStats::copy_with_new_args(
+    const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return std::make_shared<ngraph::op::gpu::CUDNNBatchNorm>(
+    return std::make_shared<ngraph::op::gpu::BatchNormTrainingWithStats>(
         get_eps_value(), new_args.at(0), new_args.at(1), new_args.at(2));
 }
