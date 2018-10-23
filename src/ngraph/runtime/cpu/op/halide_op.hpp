@@ -42,11 +42,11 @@ namespace ngraph
                     virtual std::shared_ptr<Node>
                         copy_with_new_args(const NodeVector& new_args) const override;
 
-                    const std::list<std::shared_ptr<Node>>& get_ops() const { return ops; }
+                    const std::list<std::shared_ptr<Node>>& get_ops() const { return m_ops; }
                 private:
-                    std::list<std::shared_ptr<Node>> ops;
-                    element::Type output_type;
-                    Shape output_shape;
+                    std::list<std::shared_ptr<Node>> m_ops;
+                    element::Type m_output_type;
+                    Shape m_output_shape;
                 };
             }
         }

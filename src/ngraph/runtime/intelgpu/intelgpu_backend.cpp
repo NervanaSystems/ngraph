@@ -1105,12 +1105,12 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                              pad_interior);
             break;
         }
-        case OP_TYPEID::BatchNormBackprop:
+        case OP_TYPEID::BatchNormTrainingBackprop:
         {
             arguments_check(op, 6, 3);
 
-            const shared_ptr<op::BatchNormBackprop> batch_norm =
-                static_pointer_cast<op::BatchNormBackprop>(op);
+            const shared_ptr<op::BatchNormTrainingBackprop> batch_norm =
+                static_pointer_cast<op::BatchNormTrainingBackprop>(op);
             const double eps = batch_norm->get_eps_value();
 
             do_create_mean(topology,
@@ -1145,9 +1145,32 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                              get_output_name(op, 2));
             break;
         }
-        case OP_TYPEID::BatchNorm:
+        case OP_TYPEID::BatchNormInference:
         {
-            const shared_ptr<op::BatchNorm> batch_norm = static_pointer_cast<op::BatchNorm>(op);
+            const shared_ptr<op::BatchNormInference> batch_norm =
+                static_pointer_cast<op::BatchNormInference>(op);
+            const double eps = batch_norm->get_eps_value();
+            string mean_name;
+            string variance_name;
+
+            arguments_check(op, 5, 1);
+
+            do_batch_norm_operation(topology,
+                                    get_output_name(op),
+                                    get_output_type(op),
+                                    eps,
+                                    get_input_name(op, 2),
+                                    get_input_shape(op, 2),
+                                    get_input_name(op, 0),
+                                    get_input_name(op, 1),
+                                    get_input_name(op, 3),
+                                    get_input_name(op, 4));
+            break;
+        }
+        case OP_TYPEID::BatchNormTraining:
+        {
+            const shared_ptr<op::BatchNormTraining> batch_norm =
+                static_pointer_cast<op::BatchNormTraining>(op);
             const double eps = batch_norm->get_eps_value();
             string mean_name;
             string variance_name;

@@ -102,7 +102,10 @@ size_t bfloat16::size() const
 
 bool bfloat16::operator==(const bfloat16& other) const
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
     return (static_cast<float>(*this) == static_cast<float>(other));
+#pragma clang diagnostic pop
 }
 
 bool bfloat16::operator<(const bfloat16& other) const
@@ -127,12 +130,17 @@ bool bfloat16::operator>=(const bfloat16& other) const
 
 bfloat16::operator float() const
 {
-    float result = 0;
-    uint16_t* u16_ptr = reinterpret_cast<uint16_t*>(&result);
+    // float result = 0;
+    // uint16_t* u16_ptr = reinterpret_cast<uint16_t*>(&result);
 
-    // Treat the system as little endian (Intel x86 family)
-    u16_ptr[1] = m_value;
-    return result;
+    // // Treat the system as little endian (Intel x86 family)
+    // u16_ptr[1] = m_value;
+    return static_cast<float>(static_cast<uint32_t>(m_value) << 16);
+}
+
+bfloat16::operator double() const
+{
+    return static_cast<float>(m_value);
 }
 
 std::ostream& operator<<(std::ostream& out, const bfloat16& obj)
