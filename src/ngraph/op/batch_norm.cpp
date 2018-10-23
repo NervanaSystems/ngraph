@@ -72,7 +72,6 @@ void ngraph::op::BatchNormInference::validate_and_infer_types()
 
     auto bn_input_shape = get_input_shape(INPUT);
     BatchNormBase::validate_and_infer_types();
-    auto in_size = get_input_size();
     auto& et = get_input_element_type(INPUT);
     set_output_size(1);
     set_output_type(0, et, bn_input_shape);
@@ -87,7 +86,6 @@ void ngraph::op::BatchNormTraining::validate_and_infer_types()
 
     auto bn_input_shape = get_input_shape(INPUT);
     BatchNormBase::validate_and_infer_types();
-    auto in_size = get_input_size();
     auto& et = get_input_element_type(INPUT);
     Shape channel_shape{bn_input_shape[1]};
     set_output_size(3);

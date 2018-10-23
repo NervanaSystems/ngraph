@@ -175,6 +175,11 @@ namespace ngraph
                 void register_common_passes(ngraph::pass::Manager& pass_manager);
 
                 // For non-destructive passthrough kernels, propagate function
+                // constant buffers to internal ops
+                void propagate_in_place_constant(ngraph::descriptor::Output* output,
+                                                 std::string input_name,
+                                                 bool dex);
+                // For non-destructive passthrough kernels, propagate function
                 // input buffers to internal ops
                 void propagate_in_place_input(ngraph::descriptor::Output* output,
                                               std::string input_name,
@@ -207,7 +212,6 @@ namespace ngraph
                 std::string emit_op_as_function(const Node&, const std::string& function_name);
                 std::string strip_comments(const std::string&);
 
-                bool m_is_compiled;
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
 
@@ -224,7 +228,10 @@ namespace ngraph
                 bool m_emit_timing;
 
                 bool m_use_tbb;
-
+#if !defined(NGRAPH_DEX_ONLY)
+                bool m_is_compiled;
+                bool m_direct_execution;
+#endif
                 EntryPoint m_compiled_function;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
 
@@ -255,7 +262,6 @@ namespace ngraph
                 std::list<std::pair<std::reference_wrapper<void*>, size_t>> function_output_index;
                 std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
-                bool m_direct_execution;
                 std::vector<runtime::PerformanceCounter> m_perf_counters;
 
 #if defined(NGRAPH_HALIDE)
