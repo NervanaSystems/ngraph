@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/runtime/plaidml/plaidml_convpool_formatter.hpp"
 
@@ -26,85 +26,85 @@ ngraph::runtime::plaidml::ConvPoolFormatter::ConvPoolFormatter(
     ConvPoolFormatter::OpType op,
     ConvPoolFormatter::DerivType deriv,
     const ngraph::Shape& deriv_output_shape)
-    : rank_{rank}
-    , pad_below_{pad_below}
-    , pad_above_{pad_above}
-    , strides_{strides}
-    , filter_dilation_{filter_dilation}
-    , data_dilation_{data_dilation}
-    , op_{op}
-    , deriv_{deriv}
+    : m_rank{rank}
+    , m_pad_below{pad_below}
+    , m_pad_above{pad_above}
+    , m_strides{strides}
+    , m_filter_dilation{filter_dilation}
+    , m_data_dilation{data_dilation}
+    , m_op{op}
+    , m_deriv{deriv}
 {
-    window_shape_ = Shape(rank, 0); // Not used for convolutions
-    if (op_ != OpType::Conv)
+    m_window_shape = Shape(rank, 0); // Not used for convolutions
+    if (m_op != OpType::Conv)
     {
         throw std::runtime_error{"Using conv-style ctor for pool"};
     }
-    if (pad_below_.size() != rank)
+    if (m_pad_below.size() != rank)
     {
         std::ostringstream msg;
         msg << "Rank mismatch in pad_below ";
         msg << "(expected length " << rank << " to match rank " << rank;
-        msg << " but received length " << pad_below_.size() << ")";
+        msg << " but received length " << m_pad_below.size() << ")";
         throw std::runtime_error{msg.str()};
     }
-    if (pad_above_.size() != rank)
+    if (m_pad_above.size() != rank)
     {
         std::ostringstream msg;
         msg << "Rank mismatch in pad_above ";
         msg << "(expected length " << rank << " to match rank " << rank;
-        msg << " but received length " << pad_above_.size() << ")";
+        msg << " but received length " << m_pad_above.size() << ")";
         throw std::runtime_error{msg.str()};
     }
-    if (strides_.size() != rank)
+    if (m_strides.size() != rank)
     {
         std::ostringstream msg;
         msg << "Rank mismatch in strides ";
         msg << "(expected length " << rank << " to match rank " << rank;
-        msg << " but received length " << strides_.size() << ")";
+        msg << " but received length " << m_strides.size() << ")";
         throw std::runtime_error{msg.str()};
     }
-    if (filter_dilation_.size() != rank)
+    if (m_filter_dilation.size() != rank)
     {
         std::ostringstream msg;
         msg << "Rank mismatch in filter dilation ";
         msg << "(expected length " << rank << " to match rank " << rank;
-        msg << " but received length " << filter_dilation_.size() << ")";
+        msg << " but received length " << m_filter_dilation.size() << ")";
         throw std::runtime_error{msg.str()};
     }
-    if (data_dilation_.size() != rank)
+    if (m_data_dilation.size() != rank)
     {
         std::ostringstream msg;
         msg << "Rank mismatch in data dilation ";
         msg << "(expected length " << rank << " to match rank " << rank;
-        msg << " but received length " << data_dilation_.size() << ")";
+        msg << " but received length " << m_data_dilation.size() << ")";
         throw std::runtime_error{msg.str()};
     }
-    if (deriv_ == DerivType::None && !deriv_output_shape.empty())
+    if (m_deriv == DerivType::None && !deriv_output_shape.empty())
     {
         throw std::runtime_error{"Forward pass given derivative shape"};
     }
-    if (deriv_ == DerivType::Filter)
+    if (m_deriv == DerivType::Filter)
     {
-        filters_shape_ = deriv_output_shape;
-        if (filters_shape_.size() != rank + 2)
+        m_filters_shape = deriv_output_shape;
+        if (m_filters_shape.size() != rank + 2)
         {
             std::ostringstream msg;
             msg << "Rank mismatch in filter shape ";
             msg << "(expected length " << rank + 2 << " to match rank " << rank;
-            msg << " but received length " << filters_shape_.size() << ")";
+            msg << " but received length " << m_filters_shape.size() << ")";
             throw std::runtime_error{msg.str()};
         }
     }
-    if (deriv_ == DerivType::Data)
+    if (m_deriv == DerivType::Data)
     {
-        data_batch_shape_ = deriv_output_shape;
-        if (data_batch_shape_.size() != rank + 2)
+        m_data_batch_shape = deriv_output_shape;
+        if (m_data_batch_shape.size() != rank + 2)
         {
             std::ostringstream msg;
             msg << "Rank mismatch in data batch shape ";
             msg << "(expected length " << rank + 2 << " to match rank " << rank;
-            msg << " but received length " << data_batch_shape_.size() << ")";
+            msg << " but received length " << m_data_batch_shape.size() << ")";
             throw std::runtime_error{msg.str()};
         }
     }
@@ -118,54 +118,54 @@ ngraph::runtime::plaidml::ConvPoolFormatter::ConvPoolFormatter(
     const ngraph::Shape& window_shape,
     ConvPoolFormatter::OpType op,
     ConvPoolFormatter::DerivType deriv)
-    : rank_{rank}
-    , pad_below_{pad_below}
-    , pad_above_{pad_above}
-    , strides_{strides}
-    , window_shape_{window_shape}
-    , op_{op}
-    , deriv_{deriv}
+    : m_rank{rank}
+    , m_pad_below{pad_below}
+    , m_pad_above{pad_above}
+    , m_strides{strides}
+    , m_window_shape{window_shape}
+    , m_op{op}
+    , m_deriv{deriv}
 {
-    filter_dilation_ = ngraph::Strides(rank, 1); // Not used for pools
-    data_dilation_ = ngraph::Strides(rank, 1);   // Nos used for pools
-    if (op_ == OpType::Conv)
+    m_filter_dilation = ngraph::Strides(rank, 1); // Not used for pools
+    m_data_dilation = ngraph::Strides(rank, 1);   // Nos used for pools
+    if (m_op == OpType::Conv)
     {
         throw std::runtime_error{"Using pool-style ctor for conv"};
     }
-    if (deriv_ == DerivType::Filter)
+    if (m_deriv == DerivType::Filter)
     {
         throw std::runtime_error{"Asking for filter deriv for pool"};
     }
-    if (pad_below_.size() != rank)
+    if (m_pad_below.size() != rank)
     {
         std::ostringstream msg;
         msg << "Rank mismatch in pad_below ";
         msg << "(expected length " << rank << " to match rank " << rank;
-        msg << " but received length " << pad_below_.size() << ")";
+        msg << " but received length " << m_pad_below.size() << ")";
         throw std::runtime_error{msg.str()};
     }
-    if (pad_above_.size() != rank)
+    if (m_pad_above.size() != rank)
     {
         std::ostringstream msg;
         msg << "Rank mismatch in pad_above ";
         msg << "(expected length " << rank << " to match rank " << rank;
-        msg << " but received length " << pad_above_.size() << ")";
+        msg << " but received length " << m_pad_above.size() << ")";
         throw std::runtime_error{msg.str()};
     }
-    if (strides_.size() != rank)
+    if (m_strides.size() != rank)
     {
         std::ostringstream msg;
         msg << "Rank mismatch in strides ";
         msg << "(expected length " << rank << " to match rank " << rank;
-        msg << " but received length " << strides_.size() << ")";
+        msg << " but received length " << m_strides.size() << ")";
         throw std::runtime_error{msg.str()};
     }
-    if (window_shape_.size() != rank)
+    if (m_window_shape.size() != rank)
     {
         std::ostringstream msg;
         msg << "Rank mismatch in window shape ";
         msg << "(expected length " << rank << " to match rank " << rank;
-        msg << " but received length " << filter_dilation_.size() << ")";
+        msg << " but received length " << m_filter_dilation.size() << ")";
         throw std::runtime_error{msg.str()};
     }
 }
@@ -173,11 +173,11 @@ ngraph::runtime::plaidml::ConvPoolFormatter::ConvPoolFormatter(
 ngraph::runtime::plaidml::builder::Input
     ngraph::runtime::plaidml::ConvPoolFormatter::F_in_header(vertexai::plaidml::variable var)
 {
-    if (op_ != OpType::Conv)
+    if (m_op != OpType::Conv)
     {
         throw std::runtime_error{"Asked to construct filter F for pooling operation"};
     }
-    if (deriv_ == DerivType::Filter)
+    if (m_deriv == DerivType::Filter)
     {
         throw std::runtime_error{"Asked to construct F as input when computing its gradient"};
     }
@@ -193,14 +193,14 @@ ngraph::runtime::plaidml::builder::Input
 ngraph::runtime::plaidml::builder::Input
     ngraph::runtime::plaidml::ConvPoolFormatter::I_in_header(vertexai::plaidml::variable var)
 {
-    if (deriv_ == DerivType::Data && op_ == OpType::Conv)
+    if (m_deriv == DerivType::Data && m_op == OpType::Conv)
     {
         throw std::runtime_error{
             "Asked to construct I as input to convolution when computing its gradient"};
     }
     builder::Input ret{var, "I"};
     ret.add_dims({N()});
-    if (op_ == OpType::Conv)
+    if (m_op == OpType::Conv)
     {
         ret.add_dims({CI()});
     }
@@ -218,13 +218,13 @@ ngraph::runtime::plaidml::builder::Input
 ngraph::runtime::plaidml::builder::Input
     ngraph::runtime::plaidml::ConvPoolFormatter::O_in_header(vertexai::plaidml::variable var)
 {
-    if (deriv_ == DerivType::None)
+    if (m_deriv == DerivType::None)
     {
         throw std::runtime_error{"Asked to construct O as input in forward pass"};
     }
     builder::Input ret{var, O()};
     ret.add_dims({N()});
-    if (op_ == OpType::Conv)
+    if (m_op == OpType::Conv)
     {
         ret.add_dims({CO()});
     }
@@ -242,11 +242,11 @@ ngraph::runtime::plaidml::builder::Input
 ngraph::runtime::plaidml::builder::Output
     ngraph::runtime::plaidml::ConvPoolFormatter::F_out_header()
 {
-    if (op_ != OpType::Conv)
+    if (m_op != OpType::Conv)
     {
         throw std::runtime_error{"Asked to construct filter F for pooling operation"};
     }
-    if (deriv_ != DerivType::Filter)
+    if (m_deriv != DerivType::Filter)
     {
         throw std::runtime_error{"Asked for output F when not finding gradient w.r.t. F"};
     }
@@ -256,11 +256,11 @@ ngraph::runtime::plaidml::builder::Output
 ngraph::runtime::plaidml::builder::Output
     ngraph::runtime::plaidml::ConvPoolFormatter::I_out_header()
 {
-    if (deriv_ != DerivType::Data)
+    if (m_deriv != DerivType::Data)
     {
         throw std::runtime_error{"Asked to construct I as output in forward pass"};
     }
-    if (op_ == OpType::Conv)
+    if (m_op == OpType::Conv)
     {
         return builder::Output{"DI"};
     }
@@ -274,7 +274,7 @@ ngraph::runtime::plaidml::builder::Output
 ngraph::runtime::plaidml::builder::Output
     ngraph::runtime::plaidml::ConvPoolFormatter::O_out_header()
 {
-    if (deriv_ != DerivType::None)
+    if (m_deriv != DerivType::None)
     {
         throw std::runtime_error{"Asked to construct O as output in gradient pass"};
     }
@@ -284,11 +284,11 @@ ngraph::runtime::plaidml::builder::Output
 ngraph::runtime::plaidml::builder::ContractionOutput
     ngraph::runtime::plaidml::ConvPoolFormatter::F_out_body()
 {
-    if (op_ != OpType::Conv)
+    if (m_op != OpType::Conv)
     {
         throw std::runtime_error{"Asked to construct filter F for pooling operation"};
     }
-    if (deriv_ != DerivType::Filter)
+    if (m_deriv != DerivType::Filter)
     {
         throw std::runtime_error{"Asked for output F when not finding gradient w.r.t. F"};
     }
@@ -309,12 +309,12 @@ ngraph::runtime::plaidml::builder::ContractionOutput
 ngraph::runtime::plaidml::builder::ContractionOutput
     ngraph::runtime::plaidml::ConvPoolFormatter::I_out_body()
 {
-    if (deriv_ != DerivType::Data)
+    if (m_deriv != DerivType::Data)
     {
         throw std::runtime_error{"Asked to construct I as output in forward pass"};
     }
     std::string result_name;
-    if (op_ == OpType::AvgPool)
+    if (m_op == OpType::AvgPool)
     {
         result_name = "DI";
     }
@@ -324,7 +324,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput
     }
     builder::ContractionOutput ret{result_name};
     ret.add_indices({n()});
-    if (op_ == OpType::Conv)
+    if (m_op == OpType::Conv)
     {
         ret.add_indices({ci()});
     }
@@ -337,7 +337,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput
         ret.add_indices({xii});
     }
     ret.add_dims({N()});
-    if (op_ == OpType::Conv)
+    if (m_op == OpType::Conv)
     {
         ret.add_dims({CI()});
     }
@@ -355,17 +355,17 @@ ngraph::runtime::plaidml::builder::ContractionOutput
 ngraph::runtime::plaidml::builder::ContractionOutput
     ngraph::runtime::plaidml::ConvPoolFormatter::O_out_body()
 {
-    if (deriv_ != DerivType::None && op_ == OpType::Conv)
+    if (m_deriv != DerivType::None && m_op == OpType::Conv)
     {
         throw std::runtime_error{"Asked to construct O as output in gradient pass"};
     }
     std::string name;
-    if (op_ == OpType::AvgPool)
+    if (m_op == OpType::AvgPool)
     {
         // Special name to allow final division for AvgPool
         name = "S";
     }
-    else if (op_ == OpType::MaxPool && deriv_ == DerivType::Data)
+    else if (m_op == OpType::MaxPool && m_deriv == DerivType::Data)
     {
         // Special name since forward output is intermediate
         name = "Y";
@@ -376,7 +376,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput
     }
     builder::ContractionOutput ret{name};
     ret.add_indices({n()});
-    if (op_ == OpType::Conv)
+    if (m_op == OpType::Conv)
     {
         ret.add_indices({co()});
     }
@@ -389,7 +389,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput
         ret.add_indices({xoi});
     }
     ret.add_dims({N()});
-    if (op_ == OpType::Conv)
+    if (m_op == OpType::Conv)
     {
         ret.add_dims({CO()});
     }
@@ -407,11 +407,11 @@ ngraph::runtime::plaidml::builder::ContractionOutput
 ngraph::runtime::plaidml::builder::ContractionInput
     ngraph::runtime::plaidml::ConvPoolFormatter::F_in_body()
 {
-    if (op_ != OpType::Conv)
+    if (m_op != OpType::Conv)
     {
         throw std::runtime_error{"Asked to construct filter F for pooling operation"};
     }
-    if (deriv_ == DerivType::Filter)
+    if (m_deriv == DerivType::Filter)
     {
         throw std::runtime_error{"Asked to construct F as input when computing its gradient"};
     }
@@ -427,13 +427,13 @@ ngraph::runtime::plaidml::builder::ContractionInput
 ngraph::runtime::plaidml::builder::ContractionInput
     ngraph::runtime::plaidml::ConvPoolFormatter::I_in_body()
 {
-    if (deriv_ == DerivType::Data && op_ == OpType::Conv)
+    if (m_deriv == DerivType::Data && m_op == OpType::Conv)
     {
         throw std::runtime_error{"Asked to construct I as input when computing its gradient"};
     }
     builder::ContractionInput ret{"I"};
     ret.add_indices({n()});
-    if (op_ == OpType::Conv)
+    if (m_op == OpType::Conv)
     {
         ret.add_indices({ci()});
     }
@@ -451,12 +451,12 @@ ngraph::runtime::plaidml::builder::ContractionInput
 ngraph::runtime::plaidml::builder::ContractionInput
     ngraph::runtime::plaidml::ConvPoolFormatter::O_in_body()
 {
-    if (deriv_ == DerivType::None)
+    if (m_deriv == DerivType::None)
     {
         throw std::runtime_error{"Asked to construct O as input in forward pass"};
     }
     std::string result_name;
-    if (op_ == OpType::AvgPool)
+    if (m_op == OpType::AvgPool)
     {
         result_name = "S";
     }
@@ -466,7 +466,7 @@ ngraph::runtime::plaidml::builder::ContractionInput
     }
     builder::ContractionInput ret{result_name};
     ret.add_indices({n()});
-    if (op_ == OpType::Conv)
+    if (m_op == OpType::Conv)
     {
         ret.add_indices({co()});
     }
@@ -484,13 +484,13 @@ ngraph::runtime::plaidml::builder::ContractionInput
 ngraph::runtime::plaidml::builder::UnaryContraction
     ngraph::runtime::plaidml::ConvPoolFormatter::Broadcast_Ones()
 {
-    if (op_ != OpType::AvgPool)
+    if (m_op != OpType::AvgPool)
     {
         throw std::runtime_error{"Broadcast_Ones should only be used for AvgPool"};
     }
     builder::UnaryContraction ret{"="};
     builder::ContractionOutput ones{"Ones"};
-    ones.add_indices("o", 0, rank_);
+    ones.add_indices("o", 0, m_rank);
     for (const auto& XIi : XIs())
     {
         ones.add_dims({XIi});
@@ -503,7 +503,7 @@ ngraph::runtime::plaidml::builder::UnaryContraction
 ngraph::runtime::plaidml::builder::UnaryContraction
     ngraph::runtime::plaidml::ConvPoolFormatter::Count()
 {
-    if (op_ != OpType::AvgPool)
+    if (m_op != OpType::AvgPool)
     {
         throw std::runtime_error{"Count should only be used for AvgPool"};
     }
@@ -524,10 +524,10 @@ ngraph::runtime::plaidml::builder::UnaryContraction
     }
     ret.set(count).set(ones).add_constraints(
         [&](std::back_insert_iterator<std::list<std::string>> out) {
-            for (std::size_t idx = 0; idx < rank_; ++idx)
+            for (std::size_t idx = 0; idx < m_rank; ++idx)
             {
                 std::ostringstream s;
-                s << "xf" << idx << " < " << window_shape_[idx];
+                s << "xf" << idx << " < " << m_window_shape[idx];
                 out = s.str();
             }
         });
@@ -538,20 +538,20 @@ ngraph::runtime::plaidml::builder::UnaryContraction
     ngraph::runtime::plaidml::ConvPoolFormatter::PoolContraction()
 {
     std::string agg_op;
-    switch (op_)
+    switch (m_op)
     {
     case OpType::AvgPool: agg_op = "+"; break;
     case OpType::MaxPool: agg_op = ">"; break;
     default: throw std::runtime_error("Asked for pool contraction for non-pool op");
     }
     return builder::UnaryContraction{agg_op}
-        .set((op_ == OpType::AvgPool && deriv_ == DerivType::Data) ? I_out_body() : O_out_body())
-        .set((op_ == OpType::AvgPool && deriv_ == DerivType::Data) ? O_in_body() : I_in_body())
+        .set((m_op == OpType::AvgPool && m_deriv == DerivType::Data) ? I_out_body() : O_out_body())
+        .set((m_op == OpType::AvgPool && m_deriv == DerivType::Data) ? O_in_body() : I_in_body())
         .add_constraints([&](std::back_insert_iterator<std::list<std::string>> out) {
-            for (std::size_t idx = 0; idx < rank_; ++idx)
+            for (std::size_t idx = 0; idx < m_rank; ++idx)
             {
                 std::ostringstream s;
-                s << "xf" << idx << " < " << window_shape_[idx];
+                s << "xf" << idx << " < " << m_window_shape[idx];
                 out = s.str();
             }
         });
@@ -599,167 +599,175 @@ std::string ngraph::runtime::plaidml::ConvPoolFormatter::c()
 {
     return "c";
 }
+
 std::string ngraph::runtime::plaidml::ConvPoolFormatter::ci()
 {
     return "ci";
 }
+
 std::string ngraph::runtime::plaidml::ConvPoolFormatter::co()
 {
     return "co";
 }
+
 std::string ngraph::runtime::plaidml::ConvPoolFormatter::n()
 {
     return "n";
 }
+
 std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::xfs()
 {
-    if (xfs_.empty())
+    if (m_xfs.empty())
     {
-        for (int i = 0; i < rank_; ++i)
+        for (int i = 0; i < m_rank; ++i)
         {
             std::ostringstream s;
             s << "xf" << i;
-            xfs_.push_back(s.str());
+            m_xfs.push_back(s.str());
         }
     }
-    return xfs_;
+    return m_xfs;
 }
 
 std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::xis()
 {
-    if (xis_.empty())
+    if (m_xis.empty())
     {
-        for (int i = 0; i < rank_; ++i)
+        for (int i = 0; i < m_rank; ++i)
         {
             std::ostringstream s;
             s << "(";
-            s << strides_[i] << "*xo" << i;
+            s << m_strides[i] << "*xo" << i;
             s << " + ";
-            s << filter_dilation_[i] << "*xf" << i;
-            s << " - " << pad_below_[i];
+            s << m_filter_dilation[i] << "*xf" << i;
+            s << " - " << m_pad_below[i];
             s << ")";
-            if (data_dilation_[i] != 1)
+            if (m_data_dilation[i] != 1)
             {
-                s << " / " << data_dilation_[i];
+                s << " / " << m_data_dilation[i];
             }
-            xis_.push_back(s.str());
+            m_xis.push_back(s.str());
         }
     }
-    return xis_;
+    return m_xis;
 }
 
 std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::xos()
 {
-    if (xos_.empty())
+    if (m_xos.empty())
     {
-        for (int i = 0; i < rank_; ++i)
+        for (int i = 0; i < m_rank; ++i)
         {
             std::ostringstream s;
             s << "xo" << i;
-            xos_.push_back(s.str());
+            m_xos.push_back(s.str());
         }
     }
-    return xos_;
+    return m_xos;
 }
 
 std::string ngraph::runtime::plaidml::ConvPoolFormatter::C()
 {
     return "C";
 }
+
 std::string ngraph::runtime::plaidml::ConvPoolFormatter::CI()
 {
     return "CI";
 }
+
 std::string ngraph::runtime::plaidml::ConvPoolFormatter::CO()
 {
     return "CO";
 }
+
 std::string ngraph::runtime::plaidml::ConvPoolFormatter::N()
 {
     return "N";
 }
+
 std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::XFs()
 {
-    if (XFs_.empty())
+    if (m_XFs.empty())
     {
-        for (int i = 0; i < rank_; ++i)
+        for (int i = 0; i < m_rank; ++i)
         {
             std::ostringstream s;
-            if (deriv_ == DerivType::Filter)
+            if (m_deriv == DerivType::Filter)
             {
-                s << filters_shape_[i + 2];
+                s << m_filters_shape[i + 2];
             }
             else
             {
                 s << "XF" << i;
             }
-            XFs_.push_back(s.str());
+            m_XFs.push_back(s.str());
         }
     }
-    return XFs_;
+    return m_XFs;
 }
 
 std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::XIs()
 {
-    if (XIs_.empty())
+    if (m_XIs.empty())
     {
-        for (int i = 0; i < rank_; ++i)
+        for (int i = 0; i < m_rank; ++i)
         {
             std::ostringstream s;
-            if (deriv_ == DerivType::Data && op_ == OpType::Conv)
+            if (m_deriv == DerivType::Data && m_op == OpType::Conv)
             {
-                s << data_batch_shape_[i + 2];
+                s << m_data_batch_shape[i + 2];
             }
             else
             {
                 s << "XI" << i;
             }
-            XIs_.push_back(s.str());
+            m_XIs.push_back(s.str());
         }
     }
-    return XIs_;
+    return m_XIs;
 }
 
 std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::XOs()
 {
-    if (XOs_.empty())
+    if (m_XOs.empty())
     {
         // TODO: Assumes explicit padding...
-        for (int i = 0; i < rank_; ++i)
+        for (int i = 0; i < m_rank; ++i)
         {
             std::ostringstream s;
-            if (deriv_ == DerivType::None)
+            if (m_deriv == DerivType::None)
             {
                 s << "(";
-                s << data_dilation_[i] << " * ";
+                s << m_data_dilation[i] << " * ";
                 s << "(XI" << i << " - 1) + 1 + ";
-                s << pad_below_[i] + pad_above_[i];
-                if (window_shape_[i] != 0)
+                s << m_pad_below[i] + m_pad_above[i];
+                if (m_window_shape[i] != 0)
                 {
-                    s << " - " << window_shape_[i];
+                    s << " - " << m_window_shape[i];
                 }
-                if (op_ == OpType::Conv)
+                if (m_op == OpType::Conv)
                 {
                     s << " - ";
-                    s << "(" << filter_dilation_[i];
+                    s << "(" << m_filter_dilation[i];
                     s << " * (XF" << i << " - 1) + 1)";
                 }
-                s << " + " << strides_[i] << ")";
-                s << " / " << strides_[i];
+                s << " + " << m_strides[i] << ")";
+                s << " / " << m_strides[i];
             }
             else
             {
                 s << "XO" << i;
             }
-            XOs_.push_back(s.str());
+            m_XOs.push_back(s.str());
         }
     }
-    return XOs_;
+    return m_XOs;
 }
 
 std::string ngraph::runtime::plaidml::ConvPoolFormatter::F()
 {
-    if (deriv_ == DerivType::Filter)
+    if (m_deriv == DerivType::Filter)
     {
         return "DF";
     }
@@ -768,7 +776,7 @@ std::string ngraph::runtime::plaidml::ConvPoolFormatter::F()
 
 std::string ngraph::runtime::plaidml::ConvPoolFormatter::I()
 {
-    if (deriv_ == DerivType::Data && op_ == OpType::Conv)
+    if (m_deriv == DerivType::Data && m_op == OpType::Conv)
     {
         return "DI";
     }
@@ -777,7 +785,7 @@ std::string ngraph::runtime::plaidml::ConvPoolFormatter::I()
 
 std::string ngraph::runtime::plaidml::ConvPoolFormatter::O()
 {
-    if (deriv_ != DerivType::None)
+    if (m_deriv != DerivType::None)
     {
         return "DO";
     }

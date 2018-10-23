@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -115,21 +115,21 @@ public:
     std::string O();
 
 private:
-    std::size_t rank_;
-    ngraph::CoordinateDiff pad_below_;
-    ngraph::CoordinateDiff pad_above_;
-    ngraph::Strides strides_;
-    ngraph::Strides filter_dilation_;
-    ngraph::Strides data_dilation_;
-    ngraph::Shape window_shape_;
-    OpType op_ = OpType::Conv;
-    DerivType deriv_ = DerivType::None;
-    ngraph::Shape filters_shape_;
-    ngraph::Shape data_batch_shape_;
-    std::vector<std::string> xfs_;
-    std::vector<std::string> xis_;
-    std::vector<std::string> xos_;
-    std::vector<std::string> XFs_;
-    std::vector<std::string> XIs_;
-    std::vector<std::string> XOs_;
+    std::size_t m_rank;
+    ngraph::CoordinateDiff m_pad_below;
+    ngraph::CoordinateDiff m_pad_above;
+    ngraph::Strides m_strides;
+    ngraph::Strides m_filter_dilation;
+    ngraph::Strides m_data_dilation;
+    ngraph::Shape m_window_shape;
+    OpType m_op = OpType::Conv;
+    DerivType m_deriv = DerivType::None;
+    ngraph::Shape m_filters_shape;
+    ngraph::Shape m_data_batch_shape;
+    std::vector<std::string> m_xfs;
+    std::vector<std::string> m_xis;
+    std::vector<std::string> m_xos;
+    std::vector<std::string> m_XFs;
+    std::vector<std::string> m_XIs;
+    std::vector<std::string> m_XOs;
 };

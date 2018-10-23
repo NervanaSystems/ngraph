@@ -1,21 +1,20 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/runtime/plaidml/plaidml_translate.hpp"
-
 #include "ngraph/runtime/plaidml/plaidml_builder.hpp"
 
 namespace vp = vertexai::plaidml;
@@ -101,7 +100,7 @@ vp::shape<char> ngraph::runtime::plaidml::to_plaidml(std::shared_ptr<vertexai::c
 }
 
 std::string ngraph::runtime::plaidml::tile_converter(const std::string& tensor_name,
-                                                     vertexai::plaidml::datatype dt)
+                                                     vp::datatype dt)
 {
     switch (dt)
     {
@@ -132,8 +131,7 @@ std::string ngraph::runtime::plaidml::tile_converter(const std::string& tensor_n
     return tile_converter(tensor_name, to_plaidml(element_type));
 }
 
-vertexai::plaidml::variable
-    ngraph::runtime::plaidml::plaidml_logical_to_data(vertexai::plaidml::variable var, bool debug)
+vp::variable ngraph::runtime::plaidml::plaidml_logical_to_data(vp::variable var, bool debug)
 {
     return builder::Function{"logicalToData", debug}
         .add(builder::Input{var, "I"})

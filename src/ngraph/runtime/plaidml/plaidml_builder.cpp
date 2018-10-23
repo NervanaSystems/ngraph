@@ -1,32 +1,31 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
-
-#include "ngraph/runtime/plaidml/plaidml_builder.hpp"
-
-#include "ngraph/runtime/plaidml/plaidml_logger.hpp"
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <sstream>
 #include <stdexcept>
 #include <utility>
 
+#include "ngraph/runtime/plaidml/plaidml_builder.hpp"
+#include "ngraph/runtime/plaidml/plaidml_logger.hpp"
+
 namespace vp = vertexai::plaidml;
 
 ngraph::runtime::plaidml::builder::Function::Function(const std::string& name, bool debug)
-    : name_{name}
-    , debug_{debug}
+    : m_name{name}
+    , m_debug{debug}
 {
 }
 
@@ -35,19 +34,19 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
     std::ostringstream s;
     s << "function (";
     bool first = true;
-    for (const auto& input : inputs_)
+    for (const auto& input : m_inputs)
     {
         if (!first)
         {
             s << ", ";
         }
         first = false;
-        s << input.name_;
-        if (input.dims_.size())
+        s << input.m_name;
+        if (input.m_dims.size())
         {
             s << "[";
             bool first_dim = true;
-            for (const auto& dim : input.dims_)
+            for (const auto& dim : input.m_dims)
             {
                 if (!first_dim)
                 {
@@ -61,39 +60,39 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
     }
     s << ") -> (";
     first = true;
-    for (const auto& output : outputs_)
+    for (const auto& output : m_outputs)
     {
         if (!first)
         {
             s << ", ";
         }
         first = false;
-        s << output.name_;
+        s << output.m_name;
     }
     s << ") {\n";
     std::string name_annotation;
-    if (name_.size())
+    if (m_name.size())
     {
-        name_annotation = "[[name(op" + name_ + ")]]\n  ";
+        name_annotation = "[[name(op" + m_name + ")]]\n  ";
     }
-    for (const std::unique_ptr<Statement>& stmt : stmts_)
+    for (const std::unique_ptr<Statement>& stmt : m_stmts)
     {
         s << "  " << name_annotation;
         {
             const TernaryContraction* tc = dynamic_cast<const TernaryContraction*>(stmt.get());
             if (tc)
             {
-                if (!tc->output_ || !tc->first_ || !tc->second_ || !tc->third_)
+                if (!tc->m_output || !tc->m_first || !tc->m_second || !tc->m_third)
                 {
                     throw std::logic_error{"Incomplete contraction"};
                 }
-                if (tc->output_->indices_.size() != tc->output_->dims_.size())
+                if (tc->m_output->m_indices.size() != tc->m_output->m_dims.size())
                 {
                     throw std::logic_error{"Contraction index count != dimension count"};
                 }
-                s << tc->output_->name_ << "[";
+                s << tc->m_output->m_name << "[";
                 first = true;
-                for (const auto& idx : tc->output_->indices_)
+                for (const auto& idx : tc->m_output->m_indices)
                 {
                     if (!first)
                     {
@@ -102,12 +101,12 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
                     first = false;
                     s << idx;
                 }
-                if (tc->output_->indices_.size())
+                if (tc->m_output->m_indices.size())
                 {
                     s << " : ";
                 }
                 first = true;
-                for (const auto& dim : tc->output_->dims_)
+                for (const auto& dim : tc->m_output->m_dims)
                 {
                     if (!first)
                     {
@@ -116,9 +115,9 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
                     first = false;
                     s << dim;
                 }
-                s << "] = " << tc->agg_op_ << "(" << tc->first_->name_ << "[";
+                s << "] = " << tc->m_agg_op << "(" << tc->m_first->m_name << "[";
                 first = true;
-                for (const auto& idx : tc->first_->indices_)
+                for (const auto& idx : tc->m_first->m_indices)
                 {
                     if (!first)
                     {
@@ -127,9 +126,9 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
                     first = false;
                     s << idx;
                 }
-                s << "] == " << tc->second_->name_ << "[";
+                s << "] == " << tc->m_second->m_name << "[";
                 first = true;
-                for (const auto& idx : tc->second_->indices_)
+                for (const auto& idx : tc->m_second->m_indices)
                 {
                     if (!first)
                     {
@@ -138,9 +137,9 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
                     first = false;
                     s << idx;
                 }
-                s << "] " << tc->comb_op_ << " " << tc->third_->name_ << "[";
+                s << "] " << tc->m_comb_op << " " << tc->m_third->m_name << "[";
                 first = true;
-                for (const auto& idx : tc->third_->indices_)
+                for (const auto& idx : tc->m_third->m_indices)
                 {
                     if (!first)
                     {
@@ -150,7 +149,7 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
                     s << idx;
                 }
                 s << "])";
-                for (const auto& constraint : tc->constraints_)
+                for (const auto& constraint : tc->m_constraints)
                 {
                     s << ", " << constraint;
                 }
@@ -160,17 +159,17 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
             const BinaryContraction* bc = dynamic_cast<const BinaryContraction*>(stmt.get());
             if (bc)
             {
-                if (!bc->output_ || !bc->lhs_ || !bc->rhs_)
+                if (!bc->m_output || !bc->m_lhs || !bc->m_rhs)
                 {
                     throw std::logic_error{"Incomplete contraction"};
                 }
-                if (bc->output_->indices_.size() != bc->output_->dims_.size())
+                if (bc->m_output->m_indices.size() != bc->m_output->m_dims.size())
                 {
                     throw std::logic_error{"Contraction index count != dimension count"};
                 }
-                s << bc->output_->name_ << "[";
+                s << bc->m_output->m_name << "[";
                 first = true;
-                for (const auto& idx : bc->output_->indices_)
+                for (const auto& idx : bc->m_output->m_indices)
                 {
                     if (!first)
                     {
@@ -179,12 +178,12 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
                     first = false;
                     s << idx;
                 }
-                if (bc->output_->indices_.size())
+                if (bc->m_output->m_indices.size())
                 {
                     s << " : ";
                 }
                 first = true;
-                for (const auto& dim : bc->output_->dims_)
+                for (const auto& dim : bc->m_output->m_dims)
                 {
                     if (!first)
                     {
@@ -193,9 +192,9 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
                     first = false;
                     s << dim;
                 }
-                s << "] = " << bc->agg_op_ << "(" << bc->lhs_->name_ << "[";
+                s << "] = " << bc->m_agg_op << "(" << bc->m_lhs->m_name << "[";
                 first = true;
-                for (const auto& idx : bc->lhs_->indices_)
+                for (const auto& idx : bc->m_lhs->m_indices)
                 {
                     if (!first)
                     {
@@ -204,9 +203,9 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
                     first = false;
                     s << idx;
                 }
-                s << "] " << bc->comb_op_ << " " << bc->rhs_->name_ << "[";
+                s << "] " << bc->m_comb_op << " " << bc->m_rhs->m_name << "[";
                 first = true;
-                for (const auto& idx : bc->rhs_->indices_)
+                for (const auto& idx : bc->m_rhs->m_indices)
                 {
                     if (!first)
                     {
@@ -216,14 +215,14 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
                     s << idx;
                 }
                 s << "])";
-                for (const auto& constraint : bc->constraints_)
+                for (const auto& constraint : bc->m_constraints)
                 {
                     s << ", " << constraint;
                 }
                 s << ";\n";
-                if (bc->default_.length())
+                if (bc->m_default.length())
                 {
-                    s << " default " << bc->default_;
+                    s << " default " << bc->m_default;
                 }
                 continue;
             }
@@ -232,17 +231,17 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
             const UnaryContraction* uc = dynamic_cast<const UnaryContraction*>(stmt.get());
             if (uc)
             {
-                if (!uc->output_ || !uc->input_)
+                if (!uc->m_output || !uc->m_input)
                 {
                     throw std::logic_error{"Incomplete contraction"};
                 }
-                if (uc->output_->indices_.size() != uc->output_->dims_.size())
+                if (uc->m_output->m_indices.size() != uc->m_output->m_dims.size())
                 {
                     throw std::logic_error{"Contraction index count != dimension count"};
                 }
-                s << uc->output_->name_ << "[";
+                s << uc->m_output->m_name << "[";
                 first = true;
-                for (const auto& idx : uc->output_->indices_)
+                for (const auto& idx : uc->m_output->m_indices)
                 {
                     if (!first)
                     {
@@ -251,12 +250,12 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
                     first = false;
                     s << idx;
                 }
-                if (uc->output_->indices_.size())
+                if (uc->m_output->m_indices.size())
                 {
                     s << " : ";
                 }
                 first = true;
-                for (const auto& dim : uc->output_->dims_)
+                for (const auto& dim : uc->m_output->m_dims)
                 {
                     if (!first)
                     {
@@ -265,9 +264,9 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
                     first = false;
                     s << dim;
                 }
-                s << "] = " << uc->agg_op_ << "(" << uc->input_->name_ << "[";
+                s << "] = " << uc->m_agg_op << "(" << uc->m_input->m_name << "[";
                 first = true;
-                for (const auto& idx : uc->input_->indices_)
+                for (const auto& idx : uc->m_input->m_indices)
                 {
                     if (!first)
                     {
@@ -277,13 +276,13 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
                     s << idx;
                 }
                 s << "])";
-                for (const auto& constraint : uc->constraints_)
+                for (const auto& constraint : uc->m_constraints)
                 {
                     s << ", " << constraint;
                 }
-                if (uc->default_.length())
+                if (uc->m_default.length())
                 {
-                    s << " default " << uc->default_;
+                    s << " default " << uc->m_default;
                 }
                 s << ";\n";
                 continue;
@@ -293,7 +292,7 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
             const Elementwise* e = dynamic_cast<const Elementwise*>(stmt.get());
             if (e)
             {
-                s << e->lhs_ << " = " << e->rhs_ << ";\n";
+                s << e->m_lhs << " = " << e->m_rhs << ";\n";
                 continue;
             }
         }
@@ -306,12 +305,12 @@ std::string ngraph::runtime::plaidml::builder::Function::to_string() const
 vp::application ngraph::runtime::plaidml::builder::Function::finalize() const
 {
     std::vector<vp::variable> params;
-    for (auto& input : inputs_)
+    for (auto& input : m_inputs)
     {
-        params.emplace_back(input.var_);
+        params.emplace_back(input.m_var);
     }
     auto str = to_string();
-    if (debug_)
+    if (m_debug)
     {
         PLAIDML_DEBUG << "Built Tile code:\n" << str;
     }
@@ -321,35 +320,35 @@ vp::application ngraph::runtime::plaidml::builder::Function::finalize() const
 ngraph::runtime::plaidml::builder::Function&
     ngraph::runtime::plaidml::builder::Function::add(Input input) &
 {
-    inputs_.emplace_back(std::move(input));
+    m_inputs.emplace_back(std::move(input));
     return *this;
 }
 
 ngraph::runtime::plaidml::builder::Function&&
     ngraph::runtime::plaidml::builder::Function::add(Input input) &&
 {
-    inputs_.emplace_back(std::move(input));
+    m_inputs.emplace_back(std::move(input));
     return std::move(*this);
 }
 
 ngraph::runtime::plaidml::builder::Function&
     ngraph::runtime::plaidml::builder::Function::add(Output output) &
 {
-    outputs_.emplace_back(std::move(output));
+    m_outputs.emplace_back(std::move(output));
     return *this;
 }
 
 ngraph::runtime::plaidml::builder::Function&&
     ngraph::runtime::plaidml::builder::Function::add(Output output) &&
 {
-    outputs_.emplace_back(std::move(output));
+    m_outputs.emplace_back(std::move(output));
     return std::move(*this);
 }
 
 ngraph::runtime::plaidml::builder::Function&
     ngraph::runtime::plaidml::builder::Function::add(UnaryContraction contraction) &
 {
-    stmts_.emplace_back(
+    m_stmts.emplace_back(
         std::unique_ptr<UnaryContraction>{new UnaryContraction(std::move(contraction))});
     return *this;
 }
@@ -357,7 +356,7 @@ ngraph::runtime::plaidml::builder::Function&
 ngraph::runtime::plaidml::builder::Function&&
     ngraph::runtime::plaidml::builder::Function::add(UnaryContraction contraction) &&
 {
-    stmts_.emplace_back(
+    m_stmts.emplace_back(
         std::unique_ptr<UnaryContraction>{new UnaryContraction(std::move(contraction))});
     return std::move(*this);
 }
@@ -365,7 +364,7 @@ ngraph::runtime::plaidml::builder::Function&&
 ngraph::runtime::plaidml::builder::Function&
     ngraph::runtime::plaidml::builder::Function::add(BinaryContraction contraction) &
 {
-    stmts_.emplace_back(
+    m_stmts.emplace_back(
         std::unique_ptr<BinaryContraction>{new BinaryContraction(std::move(contraction))});
     return *this;
 }
@@ -373,7 +372,7 @@ ngraph::runtime::plaidml::builder::Function&
 ngraph::runtime::plaidml::builder::Function&&
     ngraph::runtime::plaidml::builder::Function::add(BinaryContraction contraction) &&
 {
-    stmts_.emplace_back(
+    m_stmts.emplace_back(
         std::unique_ptr<BinaryContraction>{new BinaryContraction(std::move(contraction))});
     return std::move(*this);
 }
@@ -381,7 +380,7 @@ ngraph::runtime::plaidml::builder::Function&&
 ngraph::runtime::plaidml::builder::Function&
     ngraph::runtime::plaidml::builder::Function::add(TernaryContraction contraction) &
 {
-    stmts_.emplace_back(
+    m_stmts.emplace_back(
         std::unique_ptr<TernaryContraction>{new TernaryContraction(std::move(contraction))});
     return *this;
 }
@@ -389,7 +388,7 @@ ngraph::runtime::plaidml::builder::Function&
 ngraph::runtime::plaidml::builder::Function&&
     ngraph::runtime::plaidml::builder::Function::add(TernaryContraction contraction) &&
 {
-    stmts_.emplace_back(
+    m_stmts.emplace_back(
         std::unique_ptr<TernaryContraction>{new TernaryContraction(std::move(contraction))});
     return std::move(*this);
 }
@@ -397,20 +396,20 @@ ngraph::runtime::plaidml::builder::Function&&
 ngraph::runtime::plaidml::builder::Function&
     ngraph::runtime::plaidml::builder::Function::add(Elementwise elementwise) &
 {
-    stmts_.emplace_back(std::unique_ptr<Elementwise>{new Elementwise(std::move(elementwise))});
+    m_stmts.emplace_back(std::unique_ptr<Elementwise>{new Elementwise(std::move(elementwise))});
     return *this;
 }
 
 ngraph::runtime::plaidml::builder::Function&&
     ngraph::runtime::plaidml::builder::Function::add(Elementwise elementwise) &&
 {
-    stmts_.emplace_back(std::unique_ptr<Elementwise>{new Elementwise(std::move(elementwise))});
+    m_stmts.emplace_back(std::unique_ptr<Elementwise>{new Elementwise(std::move(elementwise))});
     return std::move(*this);
 }
 
 ngraph::runtime::plaidml::builder::Input::Input(vp::variable var, std::string name)
-    : var_{std::move(var)}
-    , name_{std::move(name)}
+    : m_var{std::move(var)}
+    , m_name{std::move(name)}
 {
 }
 
@@ -419,7 +418,7 @@ ngraph::runtime::plaidml::builder::Input& ngraph::runtime::plaidml::builder::Inp
 {
     for (std::size_t idx = first; idx < limit; ++idx)
     {
-        dims_.emplace_back(prefix + std::to_string(idx));
+        m_dims.emplace_back(prefix + std::to_string(idx));
     }
     return *this;
 }
@@ -429,7 +428,7 @@ ngraph::runtime::plaidml::builder::Input&& ngraph::runtime::plaidml::builder::In
 {
     for (std::size_t idx = first; idx < limit; ++idx)
     {
-        dims_.emplace_back(prefix + std::to_string(idx));
+        m_dims.emplace_back(prefix + std::to_string(idx));
     }
     return std::move(*this);
 }
@@ -439,7 +438,7 @@ ngraph::runtime::plaidml::builder::Input& ngraph::runtime::plaidml::builder::Inp
 {
     for (std::size_t idx = limit; first < idx;)
     {
-        dims_.emplace_back(prefix + std::to_string(--idx));
+        m_dims.emplace_back(prefix + std::to_string(--idx));
     }
     return *this;
 }
@@ -449,7 +448,7 @@ ngraph::runtime::plaidml::builder::Input&& ngraph::runtime::plaidml::builder::In
 {
     for (std::size_t idx = limit; first < idx;)
     {
-        dims_.emplace_back(prefix + std::to_string(--idx));
+        m_dims.emplace_back(prefix + std::to_string(--idx));
     }
     return std::move(*this);
 }
@@ -457,30 +456,30 @@ ngraph::runtime::plaidml::builder::Input&& ngraph::runtime::plaidml::builder::In
 ngraph::runtime::plaidml::builder::Input&
     ngraph::runtime::plaidml::builder::Input::add_dims(std::initializer_list<std::string> s) &
 {
-    dims_.insert(dims_.end(), s.begin(), s.end());
+    m_dims.insert(m_dims.end(), s.begin(), s.end());
     return *this;
 }
 
 ngraph::runtime::plaidml::builder::Input&&
     ngraph::runtime::plaidml::builder::Input::add_dims(std::initializer_list<std::string> s) &&
 {
-    dims_.insert(dims_.end(), s.begin(), s.end());
+    m_dims.insert(m_dims.end(), s.begin(), s.end());
     return std::move(*this);
 }
 
 ngraph::runtime::plaidml::builder::Output::Output(std::string name)
-    : name_{std::move(name)}
+    : m_name{std::move(name)}
 {
 }
 
 ngraph::runtime::plaidml::builder::Elementwise::Elementwise(std::string lhs, std::string rhs)
-    : lhs_{std::move(lhs)}
-    , rhs_{std::move(rhs)}
+    : m_lhs{std::move(lhs)}
+    , m_rhs{std::move(rhs)}
 {
 }
 
 ngraph::runtime::plaidml::builder::ContractionOutput::ContractionOutput(std::string name)
-    : name_{std::move(name)}
+    : m_name{std::move(name)}
 {
 }
 
@@ -491,7 +490,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput&
 {
     for (std::size_t idx = first; idx < limit; ++idx)
     {
-        indices_.emplace_back(prefix + std::to_string(idx));
+        m_indices.emplace_back(prefix + std::to_string(idx));
     }
     return *this;
 }
@@ -503,7 +502,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput&&
 {
     for (std::size_t idx = first; idx < limit; ++idx)
     {
-        indices_.emplace_back(prefix + std::to_string(idx));
+        m_indices.emplace_back(prefix + std::to_string(idx));
     }
     return std::move(*this);
 }
@@ -515,7 +514,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput&
 {
     for (std::size_t idx = limit; first < idx;)
     {
-        indices_.emplace_back(prefix + std::to_string(--idx));
+        m_indices.emplace_back(prefix + std::to_string(--idx));
     }
     return *this;
 }
@@ -527,7 +526,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput&&
 {
     for (std::size_t idx = limit; first < idx;)
     {
-        indices_.emplace_back(prefix + std::to_string(--idx));
+        m_indices.emplace_back(prefix + std::to_string(--idx));
     }
     return std::move(*this);
 }
@@ -536,7 +535,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput&
     ngraph::runtime::plaidml::builder::ContractionOutput::add_indices(
         std::initializer_list<std::string> s) &
 {
-    indices_.insert(indices_.end(), s.begin(), s.end());
+    m_indices.insert(m_indices.end(), s.begin(), s.end());
     return *this;
 }
 
@@ -544,7 +543,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput&&
     ngraph::runtime::plaidml::builder::ContractionOutput::add_indices(
         std::initializer_list<std::string> s) &&
 {
-    indices_.insert(indices_.end(), s.begin(), s.end());
+    m_indices.insert(m_indices.end(), s.begin(), s.end());
     return std::move(*this);
 }
 
@@ -555,7 +554,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput&
 {
     for (std::size_t idx = first; idx < limit; ++idx)
     {
-        dims_.emplace_back(prefix + std::to_string(idx));
+        m_dims.emplace_back(prefix + std::to_string(idx));
     }
     return *this;
 }
@@ -567,7 +566,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput&&
 {
     for (std::size_t idx = first; idx < limit; ++idx)
     {
-        dims_.emplace_back(prefix + std::to_string(idx));
+        m_dims.emplace_back(prefix + std::to_string(idx));
     }
     return std::move(*this);
 }
@@ -579,7 +578,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput&
 {
     for (std::size_t idx = limit; first < idx;)
     {
-        dims_.emplace_back(prefix + std::to_string(--idx));
+        m_dims.emplace_back(prefix + std::to_string(--idx));
     }
     return *this;
 }
@@ -591,7 +590,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput&&
 {
     for (std::size_t idx = limit; first < idx;)
     {
-        dims_.emplace_back(prefix + std::to_string(--idx));
+        m_dims.emplace_back(prefix + std::to_string(--idx));
     }
     return std::move(*this);
 }
@@ -600,7 +599,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput&
     ngraph::runtime::plaidml::builder::ContractionOutput::add_dims(
         std::initializer_list<std::string> s) &
 {
-    dims_.insert(dims_.end(), s.begin(), s.end());
+    m_dims.insert(m_dims.end(), s.begin(), s.end());
     return *this;
 }
 
@@ -608,7 +607,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput&&
     ngraph::runtime::plaidml::builder::ContractionOutput::add_dims(
         std::initializer_list<std::string> s) &&
 {
-    dims_.insert(dims_.end(), s.begin(), s.end());
+    m_dims.insert(m_dims.end(), s.begin(), s.end());
     return std::move(*this);
 }
 
@@ -619,7 +618,7 @@ ngraph::runtime::plaidml::builder::ContractionInput&
 {
     for (std::size_t idx = first; idx < limit; ++idx)
     {
-        indices_.emplace_back(prefix + std::to_string(idx));
+        m_indices.emplace_back(prefix + std::to_string(idx));
     }
     return *this;
 }
@@ -631,7 +630,7 @@ ngraph::runtime::plaidml::builder::ContractionInput&&
 {
     for (std::size_t idx = first; idx < limit; ++idx)
     {
-        indices_.emplace_back(prefix + std::to_string(idx));
+        m_indices.emplace_back(prefix + std::to_string(idx));
     }
     return std::move(*this);
 }
@@ -643,7 +642,7 @@ ngraph::runtime::plaidml::builder::ContractionInput&
 {
     for (std::size_t idx = limit; first < idx;)
     {
-        indices_.emplace_back(prefix + std::to_string(--idx));
+        m_indices.emplace_back(prefix + std::to_string(--idx));
     }
     return *this;
 }
@@ -655,7 +654,7 @@ ngraph::runtime::plaidml::builder::ContractionInput&&
 {
     for (std::size_t idx = limit; first < idx;)
     {
-        indices_.emplace_back(prefix + std::to_string(--idx));
+        m_indices.emplace_back(prefix + std::to_string(--idx));
     }
     return std::move(*this);
 }
@@ -664,7 +663,7 @@ ngraph::runtime::plaidml::builder::ContractionInput&
     ngraph::runtime::plaidml::builder::ContractionInput::add_indices(
         std::initializer_list<std::string> s) &
 {
-    indices_.insert(indices_.end(), s.begin(), s.end());
+    m_indices.insert(m_indices.end(), s.begin(), s.end());
     return *this;
 }
 
@@ -672,179 +671,179 @@ ngraph::runtime::plaidml::builder::ContractionInput&&
     ngraph::runtime::plaidml::builder::ContractionInput::add_indices(
         std::initializer_list<std::string> s) &&
 {
-    indices_.insert(indices_.end(), s.begin(), s.end());
+    m_indices.insert(m_indices.end(), s.begin(), s.end());
     return std::move(*this);
 }
 
 ngraph::runtime::plaidml::builder::UnaryContraction::UnaryContraction(std::string agg_op)
-    : agg_op_{std::move(agg_op)}
+    : m_agg_op{std::move(agg_op)}
 {
 }
 
 ngraph::runtime::plaidml::builder::UnaryContraction&
     ngraph::runtime::plaidml::builder::UnaryContraction::set(ContractionInput input) &
 {
-    input_ = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
+    m_input = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
     return *this;
 }
 
 ngraph::runtime::plaidml::builder::UnaryContraction&&
     ngraph::runtime::plaidml::builder::UnaryContraction::set(ContractionInput input) &&
 {
-    input_ = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
+    m_input = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
     return std::move(*this);
 }
 
 ngraph::runtime::plaidml::builder::UnaryContraction&
     ngraph::runtime::plaidml::builder::UnaryContraction::set(ContractionOutput output) &
 {
-    output_ = std::unique_ptr<ContractionOutput>{new ContractionOutput(std::move(output))};
+    m_output = std::unique_ptr<ContractionOutput>{new ContractionOutput(std::move(output))};
     return *this;
 }
 
 ngraph::runtime::plaidml::builder::UnaryContraction&&
     ngraph::runtime::plaidml::builder::UnaryContraction::set(ContractionOutput output) &&
 {
-    output_ = std::unique_ptr<ContractionOutput>{new ContractionOutput(std::move(output))};
+    m_output = std::unique_ptr<ContractionOutput>{new ContractionOutput(std::move(output))};
     return std::move(*this);
 }
 
 ngraph::runtime::plaidml::builder::UnaryContraction&
     ngraph::runtime::plaidml::builder::UnaryContraction::set_default(std::string tensor) &
 {
-    default_ = std::move(tensor);
+    m_default = std::move(tensor);
     return *this;
 }
 
 ngraph::runtime::plaidml::builder::UnaryContraction&&
     ngraph::runtime::plaidml::builder::UnaryContraction::set_default(std::string tensor) &&
 {
-    default_ = std::move(tensor);
+    m_default = std::move(tensor);
     return std::move(*this);
 }
 
 ngraph::runtime::plaidml::builder::BinaryContraction::BinaryContraction(std::string agg_op,
                                                                         std::string comb_op)
-    : agg_op_{std::move(agg_op)}
-    , comb_op_{std::move(comb_op)}
+    : m_agg_op{std::move(agg_op)}
+    , m_comb_op{std::move(comb_op)}
 {
 }
 
 ngraph::runtime::plaidml::builder::BinaryContraction&
     ngraph::runtime::plaidml::builder::BinaryContraction::set_lhs(ContractionInput input) &
 {
-    lhs_ = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
+    m_lhs = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
     return *this;
 }
 
 ngraph::runtime::plaidml::builder::BinaryContraction&&
     ngraph::runtime::plaidml::builder::BinaryContraction::set_lhs(ContractionInput input) &&
 {
-    lhs_ = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
+    m_lhs = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
     return std::move(*this);
 }
 
 ngraph::runtime::plaidml::builder::BinaryContraction&
     ngraph::runtime::plaidml::builder::BinaryContraction::set_rhs(ContractionInput input) &
 {
-    rhs_ = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
+    m_rhs = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
     return *this;
 }
 
 ngraph::runtime::plaidml::builder::BinaryContraction&&
     ngraph::runtime::plaidml::builder::BinaryContraction::set_rhs(ContractionInput input) &&
 {
-    rhs_ = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
+    m_rhs = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
     return std::move(*this);
 }
 
 ngraph::runtime::plaidml::builder::BinaryContraction&
     ngraph::runtime::plaidml::builder::BinaryContraction::set(ContractionOutput output) &
 {
-    output_ = std::unique_ptr<ContractionOutput>{new ContractionOutput(std::move(output))};
+    m_output = std::unique_ptr<ContractionOutput>{new ContractionOutput(std::move(output))};
     return *this;
 }
 
 ngraph::runtime::plaidml::builder::BinaryContraction&&
     ngraph::runtime::plaidml::builder::BinaryContraction::set(ContractionOutput output) &&
 {
-    output_ = std::unique_ptr<ContractionOutput>{new ContractionOutput(std::move(output))};
+    m_output = std::unique_ptr<ContractionOutput>{new ContractionOutput(std::move(output))};
     return std::move(*this);
 }
 
 ngraph::runtime::plaidml::builder::BinaryContraction&
     ngraph::runtime::plaidml::builder::BinaryContraction::set_default(std::string tensor) &
 {
-    default_ = std::move(tensor);
+    m_default = std::move(tensor);
     return *this;
 }
 
 ngraph::runtime::plaidml::builder::BinaryContraction&&
     ngraph::runtime::plaidml::builder::BinaryContraction::set_default(std::string tensor) &&
 {
-    default_ = std::move(tensor);
+    m_default = std::move(tensor);
     return std::move(*this);
 }
 
 ngraph::runtime::plaidml::builder::TernaryContraction::TernaryContraction(std::string agg_op,
                                                                           std::string comb_op)
-    : agg_op_{std::move(agg_op)}
-    , comb_op_{std::move(comb_op)}
+    : m_agg_op{std::move(agg_op)}
+    , m_comb_op{std::move(comb_op)}
 {
 }
 
 ngraph::runtime::plaidml::builder::TernaryContraction&
     ngraph::runtime::plaidml::builder::TernaryContraction::set_first(ContractionInput input) &
 {
-    first_ = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
+    m_first = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
     return *this;
 }
 
 ngraph::runtime::plaidml::builder::TernaryContraction&&
     ngraph::runtime::plaidml::builder::TernaryContraction::set_first(ContractionInput input) &&
 {
-    first_ = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
+    m_first = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
     return std::move(*this);
 }
 
 ngraph::runtime::plaidml::builder::TernaryContraction&
     ngraph::runtime::plaidml::builder::TernaryContraction::set_second(ContractionInput input) &
 {
-    second_ = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
+    m_second = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
     return *this;
 }
 
 ngraph::runtime::plaidml::builder::TernaryContraction&&
     ngraph::runtime::plaidml::builder::TernaryContraction::set_second(ContractionInput input) &&
 {
-    second_ = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
+    m_second = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
     return std::move(*this);
 }
 
 ngraph::runtime::plaidml::builder::TernaryContraction&
     ngraph::runtime::plaidml::builder::TernaryContraction::set_third(ContractionInput input) &
 {
-    third_ = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
+    m_third = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
     return *this;
 }
 
 ngraph::runtime::plaidml::builder::TernaryContraction&&
     ngraph::runtime::plaidml::builder::TernaryContraction::set_third(ContractionInput input) &&
 {
-    third_ = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
+    m_third = std::unique_ptr<ContractionInput>{new ContractionInput(std::move(input))};
     return std::move(*this);
 }
 
 ngraph::runtime::plaidml::builder::TernaryContraction&
     ngraph::runtime::plaidml::builder::TernaryContraction::set(ContractionOutput output) &
 {
-    output_ = std::unique_ptr<ContractionOutput>{new ContractionOutput(std::move(output))};
+    m_output = std::unique_ptr<ContractionOutput>{new ContractionOutput(std::move(output))};
     return *this;
 }
 
 ngraph::runtime::plaidml::builder::TernaryContraction&&
     ngraph::runtime::plaidml::builder::TernaryContraction::set(ContractionOutput output) &&
 {
-    output_ = std::unique_ptr<ContractionOutput>{new ContractionOutput(std::move(output))};
+    m_output = std::unique_ptr<ContractionOutput>{new ContractionOutput(std::move(output))};
     return std::move(*this);
 }

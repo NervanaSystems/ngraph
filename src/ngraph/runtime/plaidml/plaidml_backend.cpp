@@ -1,21 +1,20 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/runtime/plaidml/plaidml_backend.hpp"
-
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/plaidml/plaidml_compiled_function.hpp"
 #include "ngraph/runtime/plaidml/plaidml_tensor.hpp"
@@ -24,27 +23,27 @@
 namespace vp = vertexai::plaidml;
 
 ngraph::runtime::plaidml::PlaidML_Backend::PlaidML_Backend(const char* configuration_string)
-    : config_{parse_config_string(configuration_string)}
-    , compiler_{&config_}
+    : m_config{parse_config_string(configuration_string)}
+    , m_compiler{&m_config}
 {
 }
 
 std::shared_ptr<ngraph::runtime::Tensor> ngraph::runtime::plaidml::PlaidML_Backend::create_tensor(
     const ngraph::element::Type& element_type, const ngraph::Shape& shape)
 {
-    return std::make_shared<PlaidML_Tensor>(&config_, element_type, shape, "direct_data", nullptr);
+    return std::make_shared<PlaidML_Tensor>(&m_config, element_type, shape, "direct_data", nullptr);
 }
 
 std::shared_ptr<ngraph::runtime::Tensor> ngraph::runtime::plaidml::PlaidML_Backend::create_tensor(
     const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     return std::make_shared<PlaidML_Tensor>(
-        &config_, element_type, shape, "direct_data", memory_pointer);
+        &m_config, element_type, shape, "direct_data", memory_pointer);
 }
 
 bool ngraph::runtime::plaidml::PlaidML_Backend::compile(std::shared_ptr<Function> func)
 {
-    cache_.compile(func, &compiler_);
+    m_cache.compile(func, &m_compiler);
     return true;
 }
 
@@ -53,10 +52,10 @@ bool ngraph::runtime::plaidml::PlaidML_Backend::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
 {
-    auto cfunc = cache_.try_lookup(func);
+    auto cfunc = m_cache.try_lookup(func);
     if (!cfunc)
     {
-        cfunc = compiler_.compile(func);
+        cfunc = m_compiler.compile(func);
     }
     cfunc->schedule_invocation(inputs, outputs);
     return true;
@@ -65,17 +64,17 @@ bool ngraph::runtime::plaidml::PlaidML_Backend::call(
 void ngraph::runtime::plaidml::PlaidML_Backend::remove_compiled_function(
     std::shared_ptr<Function> func)
 {
-    cache_.forget(func);
+    m_cache.forget(func);
 }
 
 void ngraph::runtime::plaidml::PlaidML_Backend::save(std::shared_ptr<Function> func,
                                                      const std::string& filename,
                                                      plaidml_file_format format)
 {
-    auto cfunc = cache_.try_lookup(func);
+    auto cfunc = m_cache.try_lookup(func);
     if (!cfunc)
     {
-        cfunc = compiler_.compile(func);
+        cfunc = m_compiler.compile(func);
     }
     cfunc->save(filename, format);
 }

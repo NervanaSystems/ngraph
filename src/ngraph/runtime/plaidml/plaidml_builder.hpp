@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -52,13 +52,14 @@ namespace ngraph
 }
 
 // Function provides a fluent interface for the construction of the text form of PlaidML functions.
-// It's intended to be simpler to use and produce simpler code than using direct string construction.
+// It's intended to be simpler to use and produce simpler code than using direct string
+// construction.
 //
 // N.B. It's possible to capture the intermediate pieces as they're being added to a function
-// (e.g. in order to directly code loops which call methods on them), but it's important to
-// remember that what's returned are references, not objects; the caller is responsible for
-// instantiating a Function instance and keeping it alive as long as there are any outstanding
-// references to its constituent pieces.
+// (e.g. in order to directly code loops which call methods on them), but it's important to remember
+// that what's returned are references, not objects; the caller is responsible for instantiating a
+// Function instance and keeping it alive as long as there are any outstanding references to its
+// constituent pieces.
 class ngraph::runtime::plaidml::builder::Function final
 {
 public:
@@ -95,11 +96,11 @@ public:
     Function&& add(Elementwise elementwise) &&;
 
 private:
-    std::string name_;
-    bool debug_;
-    std::list<Input> inputs_;
-    std::list<Output> outputs_;
-    std::list<std::unique_ptr<Statement>> stmts_;
+    std::string m_name;
+    bool m_debug;
+    std::list<Input> m_inputs;
+    std::list<Output> m_outputs;
+    std::list<std::unique_ptr<Statement>> m_stmts;
 };
 
 // Input represents an input being added to a function.
@@ -124,23 +125,23 @@ public:
     template <typename L>
     Input& add_dims(L lambda) &
     {
-        lambda(std::back_inserter(dims_));
+        lambda(std::back_inserter(m_dims));
         return *this;
     }
 
     template <typename L>
     Input&& add_dims(L lambda) &&
     {
-        lambda(std::back_inserter(dims_));
+        lambda(std::back_inserter(m_dims));
         return std::move(*this);
     }
 
 private:
     friend class Function;
 
-    vertexai::plaidml::variable var_;
-    std::string name_;
-    std::list<std::string> dims_;
+    vertexai::plaidml::variable m_var;
+    std::string m_name;
+    std::list<std::string> m_dims;
 };
 
 // Output represents an output being added to a function.
@@ -152,7 +153,7 @@ public:
 private:
     friend class Function;
 
-    std::string name_;
+    std::string m_name;
 };
 
 // Statement is the abstract base class for UnaryContraction, BinaryContraction,
@@ -177,8 +178,8 @@ public:
 private:
     friend class Function;
 
-    std::string lhs_;
-    std::string rhs_;
+    std::string m_lhs;
+    std::string m_rhs;
 };
 
 // The output of a contraction
@@ -197,14 +198,14 @@ public:
     template <typename L>
     ContractionOutput& add_indices(L lambda) &
     {
-        lambda(std::back_inserter(indices_));
+        lambda(std::back_inserter(m_indices));
         return *this;
     }
 
     template <typename L>
     ContractionOutput&& add_indices(L lambda) &&
     {
-        lambda(std::back_inserter(indices_));
+        lambda(std::back_inserter(m_indices));
         return std::move(*this);
     }
 
@@ -218,23 +219,23 @@ public:
     template <typename L>
     ContractionOutput& add_dims(L lambda) &
     {
-        lambda(std::back_inserter(dims_));
+        lambda(std::back_inserter(m_dims));
         return *this;
     }
 
     template <typename L>
     ContractionOutput&& add_dims(L lambda) &&
     {
-        lambda(std::back_inserter(dims_));
+        lambda(std::back_inserter(m_dims));
         return std::move(*this);
     }
 
 private:
     friend class Function;
 
-    std::string name_;
-    std::list<std::string> indices_;
-    std::list<std::string> dims_;
+    std::string m_name;
+    std::list<std::string> m_indices;
+    std::list<std::string> m_dims;
 };
 
 // An input to a contraction
@@ -242,7 +243,7 @@ class ngraph::runtime::plaidml::builder::ContractionInput final
 {
 public:
     explicit ContractionInput(std::string name)
-        : name_{std::move(name)}
+        : m_name{std::move(name)}
     {
     }
 
@@ -256,22 +257,22 @@ public:
     template <typename L>
     ContractionInput& add_indices(L lambda) &
     {
-        lambda(std::back_inserter(indices_));
+        lambda(std::back_inserter(m_indices));
         return *this;
     }
 
     template <typename L>
     ContractionInput&& add_indices(L lambda) &&
     {
-        lambda(std::back_inserter(indices_));
+        lambda(std::back_inserter(m_indices));
         return std::move(*this);
     }
 
 private:
     friend class Function;
 
-    std::string name_;
-    std::list<std::string> indices_;
+    std::string m_name;
+    std::list<std::string> m_indices;
 };
 
 // UnaryContraction represents a unary contraction being added to a function.
@@ -290,24 +291,24 @@ public:
     template <typename L>
     UnaryContraction& add_constraints(L lambda) &
     {
-        lambda(std::back_inserter(constraints_));
+        lambda(std::back_inserter(m_constraints));
         return *this;
     }
     template <typename L>
     UnaryContraction&& add_constraints(L lambda) &&
     {
-        lambda(std::back_inserter(constraints_));
+        lambda(std::back_inserter(m_constraints));
         return std::move(*this);
     }
 
 private:
     friend class Function;
 
-    std::string agg_op_;
-    std::list<std::string> constraints_;
-    std::unique_ptr<ContractionOutput> output_;
-    std::unique_ptr<ContractionInput> input_;
-    std::string default_;
+    std::string m_agg_op;
+    std::list<std::string> m_constraints;
+    std::unique_ptr<ContractionOutput> m_output;
+    std::unique_ptr<ContractionInput> m_input;
+    std::string m_default;
 };
 
 // BinaryContraction represents a binary contraction being added to a function.
@@ -328,26 +329,26 @@ public:
     template <typename L>
     BinaryContraction& add_constraints(L lambda) &
     {
-        lambda(std::back_inserter(constraints_));
+        lambda(std::back_inserter(m_constraints));
         return *this;
     }
     template <typename L>
     BinaryContraction&& add_constraints(L lambda) &&
     {
-        lambda(std::back_inserter(constraints_));
+        lambda(std::back_inserter(m_constraints));
         return std::move(*this);
     }
 
 private:
     friend class Function;
 
-    std::string agg_op_;
-    std::string comb_op_;
-    std::list<std::string> constraints_;
-    std::unique_ptr<ContractionOutput> output_;
-    std::unique_ptr<ContractionInput> lhs_;
-    std::unique_ptr<ContractionInput> rhs_;
-    std::string default_;
+    std::string m_agg_op;
+    std::string m_comb_op;
+    std::list<std::string> m_constraints;
+    std::unique_ptr<ContractionOutput> m_output;
+    std::unique_ptr<ContractionInput> m_lhs;
+    std::unique_ptr<ContractionInput> m_rhs;
+    std::string m_default;
 };
 
 // TernaryContraction represents a ternary contraction being added to a function
@@ -368,24 +369,24 @@ public:
     template <typename L>
     TernaryContraction& add_constraints(L lambda) &
     {
-        lambda(std::back_inserter(constraints_));
+        lambda(std::back_inserter(m_constraints));
         return *this;
     }
     template <typename L>
     TernaryContraction&& add_constraints(L lambda) &&
     {
-        lambda(std::back_inserter(constraints_));
+        lambda(std::back_inserter(m_constraints));
         return std::move(*this);
     }
 
 private:
     friend class Function;
 
-    std::string agg_op_;
-    std::string comb_op_;
-    std::list<std::string> constraints_;
-    std::unique_ptr<ContractionOutput> output_;
-    std::unique_ptr<ContractionInput> first_;
-    std::unique_ptr<ContractionInput> second_;
-    std::unique_ptr<ContractionInput> third_;
+    std::string m_agg_op;
+    std::string m_comb_op;
+    std::list<std::string> m_constraints;
+    std::unique_ptr<ContractionOutput> m_output;
+    std::unique_ptr<ContractionInput> m_first;
+    std::unique_ptr<ContractionInput> m_second;
+    std::unique_ptr<ContractionInput> m_third;
 };
