@@ -29,7 +29,7 @@ runtime::Backend::~Backend()
 {
 }
 
-shared_ptr<runtime::Backend> runtime::Backend::create(const string& type)
+unique_ptr<runtime::Backend> runtime::Backend::create(const string& type)
 {
     return BackendManager::create_backend(type);
 }
