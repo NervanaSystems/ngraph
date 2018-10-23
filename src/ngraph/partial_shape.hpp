@@ -88,9 +88,9 @@ namespace ngraph
         /// \return The rank of the shape. This will be Rank::dynamic() if the rank of
         ///         the shape is dynamic.
         Rank rank() const { return m_rank_is_static ? Rank(m_dimensions.size()) : Rank::dynamic(); }
-        /// \brief Construct a PartialShape with dynamic rank.
-        /// \return A PartialShape with dynamic rank.
-        static PartialShape dynamic() { return PartialShape(false, {}); }
+        /// \brief Construct a PartialShape with the given rank and all dimensions (if any) dynamic.
+        /// \return A PartialShape with the given rank, and all dimensions (if any) dynamic.
+        static PartialShape dynamic(Rank r = Rank::dynamic());
         /// \brief Check whether this shape is compatible with the argument, i.e., whether it is
         ///        possible to merge them.
         /// \param s The shape to be checked for compatibility with this shape.
@@ -111,6 +111,52 @@ namespace ngraph
         /// \li they both have static and equal rank `r`, and for every `i` from `0` to `r-1`,
         ///     `s1[i]` represents the same scheme as `s2[i]` (see Dimension::same_scheme()).
         bool same_scheme(const PartialShape& s) const;
+
+        /// \brief Check whether this shape is a relaxation of the argument.
+        /// \param s The shape which is being compared against this shape.
+        /// \return `true` if this shape relaxes `s`, else `false`.
+        ///
+        /// Intuitively, a PartialShape `s1` is said to _relax_ `s2` (or _is a
+        /// relaxation_ of `s2`) if it is "more permissive" than `s2`. In other
+        /// words, `s1` is a relaxation of `s2` if anything you can form by
+        /// plugging things into the dynamic dimensions of `s2` is also
+        /// something you can form by plugging things into the dynamic
+        /// dimensions of `s1`, but not necessarily the other way around.
+        ///
+        /// `s1.relaxes(s2)` is equivalent to `s2.refines(s1)`.
+        ///
+        /// Formally, PartialShape `s1` is said to _relax_ PartialShape `s2`
+        /// if:
+        /// \li `s1` has dynamic rank, or
+        /// \li `s1` and `s2` both have static rank `r`, and for every `i` from `0` to `r-1`,
+        ///      either `s1[i]` is dynamic, or `s1[i]` == `s2[i]`.
+        bool relaxes(const PartialShape& s) const;
+
+        /// \brief Check whether this shape is a refinement of the argument.
+        /// \param s The shape which is being compared against this shape.
+        /// \return `true` if this shape refines `s`, else `false`.
+        ///
+        /// Intuitively, a PartialShape `s1` is said to _relax_ `s2` (or _is a
+        /// relaxation_ of `s2`) if it is "less permissive" than `s2`. In other
+        /// words, `s1` is a relaxation of `s2` if anything you can form by
+        /// plugging things into the dynamic dimensions of `s1` is also
+        /// something you can form by plugging things into the dynamic
+        /// dimensions of `s2`, but not necessarily the other way around.
+        ///
+        /// `s1.refines(s2)` is equivalent to `s2.relaxes(s1)`.
+        ///
+        /// Formally, PartialShape `s1` is said to _refine_ PartialShape `s2`
+        /// if:
+        /// \li `s2` has dynamic rank, or
+        /// \li `s1` and `s2` both have static rank `r`, and for every `i` from `0` to `r-1`,
+        ///      either `s2[i]` is dynamic, or `s1[i]` == `s2[i]`.
+        bool refines(const PartialShape& s) const;
+
+        /// \brief Checks that this shape's rank is compatible with `r`, and, if this shape's
+        ///        rank is dynamic and `r` is static, updates this shape to have a rank of `r`
+        ///        with dimensions all dynamic.
+        /// \return `true` if this shape's rank is compatible with `r`, else `false`.
+        bool merge_rank(Rank r);
 
         /// \brief Convert a static PartialShape to a Shape.
         /// \return A new Shape `s` where `s[i] = size_t((*this)[i])`.
@@ -159,11 +205,10 @@ namespace ngraph
         static bool merge_into(PartialShape& dst, const PartialShape& src);
 
     private:
-        // Private constructor so PartialShape::dynamic() can construct a shape with
-        // m_rank_is_static set to false.
-        PartialShape(bool rank_is_static, std::initializer_list<Dimension> init)
+        // Private constructor for PartialShape::dynamic().
+        PartialShape(bool rank_is_static, std::vector<Dimension> dimensions)
             : m_rank_is_static(rank_is_static)
-            , m_dimensions(init)
+            , m_dimensions(dimensions)
         {
         }
 

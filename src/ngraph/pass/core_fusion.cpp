@@ -202,7 +202,7 @@ void pass::CoreFusion::construct_folded_batch_norm()
     auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{1, 2, 2, 2};
-    auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, pconv, mean, var);
+    auto bn = std::make_shared<op::BatchNormInference>(eps, gamma, beta, pconv, mean, var);
 
     ngraph::pattern::graph_rewrite_callback callback = [input, filters, mean, var, gamma, beta](
         pattern::Matcher& m) {
@@ -210,7 +210,7 @@ void pass::CoreFusion::construct_folded_batch_norm()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto m_bn = std::static_pointer_cast<op::BatchNorm>(m.get_match_root());
+        auto m_bn = std::static_pointer_cast<op::BatchNormInference>(m.get_match_root());
         auto m_conv = std::static_pointer_cast<op::Convolution>(m_bn->get_argument(2));
 
         if (m_conv->get_users().size() > 1)

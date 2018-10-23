@@ -61,8 +61,7 @@ namespace ngraph
             }
             std::vector<std::shared_ptr<Function>> output_functions;
             Model model{model_proto};
-            Graph graph{model_proto.graph(),
-                        ops_bridge::get_operator_set(model.get_opset_version())};
+            Graph graph{model_proto.graph(), model};
             for (const auto& output : graph.get_outputs())
             {
                 output_functions.emplace_back(std::make_shared<Function>(
@@ -89,6 +88,14 @@ namespace ngraph
         std::shared_ptr<Function> import_onnx_function(const std::string& path)
         {
             return load_onnx_model(path).front();
+        }
+
+        void register_operator(const std::string& name,
+                               std::int64_t version,
+                               const std::string& domain,
+                               Operator fn)
+        {
+            OperatorsBridge::register_operator(name, version, domain, std::move(fn));
         }
 
     } // namespace onnx_import

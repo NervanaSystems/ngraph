@@ -183,14 +183,14 @@
         "Parameter_1", "Parameter_2", "Reshape_17", "Parameter_3",
         "Parameter_4"
       ],
-      "name" : "BatchNorm_18",
-      "op" : "BatchNorm",
-      "outputs" : ["BatchNorm_18_0"],
+      "name" : "BatchNormInference_18",
+      "op" : "BatchNormInference",
+      "outputs" : ["BatchNormInference_18_0"],
       "training" : false
     },
     {
       "input_order" : [ 0, 2, 3, 1 ],
-      "inputs" : ["BatchNorm_18"],
+      "inputs" : ["BatchNormInference_18"],
       "name" : "Reshape_19",
       "op" : "Reshape",
       "output_shape" : [ 2, 224, 224, 3 ],
@@ -243,14 +243,14 @@
         "Parameter_6", "Parameter_7", "Reshape_25", "Parameter_8",
         "Parameter_9"
       ],
-      "name" : "BatchNorm_26",
-      "op" : "BatchNorm",
-      "outputs" : ["BatchNorm_26_0"],
+      "name" : "BatchNormInference_26",
+      "op" : "BatchNormInference",
+      "outputs" : ["BatchNormInference_26_0"],
       "training" : false
     },
     {
       "input_order" : [ 0, 2, 3, 1 ],
-      "inputs" : ["BatchNorm_26"],
+      "inputs" : ["BatchNormInference_26"],
       "name" : "Reshape_27",
       "op" : "Reshape",
       "output_shape" : [ 2, 224, 224, 3 ],

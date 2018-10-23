@@ -21,24 +21,21 @@ try{ if(LABEL.trim() == "") {throw new Exception();} }catch(Exception e){LABEL="
 PROJECT_NAME = "ngraph-onnx"            
 CI_ROOT = "ngraph/.ci/onnx/jenkins"
 DOCKER_CONTAINER_NAME = "jenkins_${PROJECT_NAME}_ci"
-NGRAPH_GIT_ADDRESS = "https://www.github.com/NervanaSystems/ngraph.git"
-ONNX_GIT_ADDRESS = "https://www.github.com/NervanaSystems/ngraph-onnx.git"
+NGRAPH_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph.git"
+ONNX_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph-onnx.git"
 JENKINS_GITHUB_CREDENTIAL_ID = "6887a177-8c4d-4fe9-9c3b-fcd71b22bfba"
 ONNX_BRANCH = "$ghprbSourceBranch"
 
 def CloneRepository(String jenkins_github_credential_id, String ngraph_git_address, String onnx_git_address) {
     stage('Clone Repos') {
         try {
-            checkout([$class: 'GitSCM',
-                branches: [[name: "$ghprbSourceBranch"]],
-                doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', timeout: 30]], submoduleCfg: [],
-                userRemoteConfigs: [[credentialsId: "${jenkins_github_credential_id}",
-                url: "${onnx_git_address}"]]])
+            sh "git clone $onnx_git_address -b $ghprbSourceBranch ."
         }
         catch (Exception e) {
             ONNX_BRANCH = "master"
             sh """
                 echo "WARNING! Failed to clone ngraph-onnx branch $ghprbSourceBranch ! Falling back to master."
+                echo "EXCEPTION: $e"
             """
             checkout([$class: 'GitSCM',
                 branches: [[name: "master"]],
