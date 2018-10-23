@@ -526,30 +526,23 @@ static shared_ptr<ngraph::Function>
                                                         include_padding_in_avg_computation);
                 break;
             }
-            case OP_TYPEID::BatchNorm:
+            case OP_TYPEID::BatchNormTraining:
             {
                 auto epsilon = node_js.at("eps").get<double>();
-                bool training = get_or_default<bool>(node_js, "training", true);
-                if (training && args.size() == 3)
-                {
-                    node = make_shared<op::BatchNorm>(epsilon, args[0], args[1], args[2]);
-                }
-                else if (training && args.size() == 5)
-                {
-                    node = make_shared<op::BatchNorm>(
-                        epsilon, args[0], args[1], args[2], args[3], args[4], true);
-                }
-                else
-                {
-                    node = make_shared<op::BatchNorm>(
-                        epsilon, args[0], args[1], args[2], args[3], args[4]);
-                }
+                node = make_shared<op::BatchNormTraining>(epsilon, args[0], args[1], args[2]);
                 break;
             }
-            case OP_TYPEID::BatchNormBackprop:
+            case OP_TYPEID::BatchNormInference:
             {
                 auto epsilon = node_js.at("eps").get<double>();
-                node = make_shared<op::BatchNormBackprop>(
+                node = make_shared<op::BatchNormInference>(
+                    epsilon, args[0], args[1], args[2], args[3], args[4]);
+                break;
+            }
+            case OP_TYPEID::BatchNormTrainingBackprop:
+            {
+                auto epsilon = node_js.at("eps").get<double>();
+                node = make_shared<op::BatchNormTrainingBackprop>(
                     epsilon, args[0], args[1], args[2], args[3], args[4], args[5]);
                 break;
             }
@@ -1254,16 +1247,21 @@ static json write(const Node& n, bool binary_constant_data)
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
         break;
     }
-    case OP_TYPEID::BatchNorm:
+    case OP_TYPEID::BatchNormTraining:
     {
-        auto tmp = dynamic_cast<const op::BatchNorm*>(&n);
+        auto tmp = dynamic_cast<const op::BatchNormTraining*>(&n);
         node["eps"] = tmp->get_eps_value();
-        node["training"] = tmp->get_training_flag();
         break;
     }
-    case OP_TYPEID::BatchNormBackprop:
+    case OP_TYPEID::BatchNormInference:
     {
-        auto tmp = dynamic_cast<const op::BatchNormBackprop*>(&n);
+        auto tmp = dynamic_cast<const op::BatchNormInference*>(&n);
+        node["eps"] = tmp->get_eps_value();
+        break;
+    }
+    case OP_TYPEID::BatchNormTrainingBackprop:
+    {
+        auto tmp = dynamic_cast<const op::BatchNormTrainingBackprop*>(&n);
         node["eps"] = tmp->get_eps_value();
         break;
     }
