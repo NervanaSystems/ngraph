@@ -213,7 +213,7 @@ namespace ngraph
                 }
                 else if (target_type == element::bf16)
                 {
-                    write_buffer<bfloat16, T>(target, source, target_element_count);
+                    write_buffer<float, T>(target, source, target_element_count);
                 }
                 else if (target_type == element::f32)
                 {
