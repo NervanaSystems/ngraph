@@ -35,7 +35,7 @@ namespace ngraph
         class Graph
         {
         public:
-            Graph(const onnx::GraphProto& proto, const Model& model, Weights weights = {});
+            explicit Graph(const onnx::GraphProto& proto, const Model& model, Weights weights = {});
 
             const std::vector<Node>& get_nodes() const { return m_nodes; }
             const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }

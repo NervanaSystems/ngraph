@@ -35,7 +35,17 @@ namespace ngraph
         public:
             enum class Type
             {
-                f16, f32, f64, i8, i16, i32, i64, u8, u16, u32, u64
+                f16,
+                f32,
+                f64,
+                i8,
+                i16,
+                i32,
+                i64,
+                u8,
+                u16,
+                u32,
+                u64
             };
             
             Weight() = delete;
@@ -55,7 +65,7 @@ namespace ngraph
 
         private:
             struct Impl;
-            std::unique_ptr<Impl, void (*)(Impl *) > m_pimpl;
+            std::unique_ptr<Impl, void (*)(Impl*)> m_pimpl;
         };
 
         using Weights = std::unordered_map<std::string, Weight>;

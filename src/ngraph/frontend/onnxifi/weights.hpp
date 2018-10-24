@@ -36,8 +36,8 @@ namespace ngraph
 
             Weight() = delete;
             explicit Weight(const ::onnxTensorDescriptorV1& weight)
-                : m_name{weight.name},
-                  m_type{get_type(weight.dataType)}
+                : m_name{weight.name}
+                , m_type{get_type(weight.dataType)}
             {
                 if (weight.tag != ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1)
                 {
@@ -49,12 +49,12 @@ namespace ngraph
                 }
                 switch (weight.memoryType)
                 {
-                    case ONNXIFI_MEMORY_TYPE_CPU: break;
-                    case ONNXIFI_MEMORY_TYPE_CUDA_BUFFER:
-                    case ONNXIFI_MEMORY_TYPE_OPENCL_BUFFER:
-                    case ONNXIFI_MEMORY_TYPE_OPENGLES_TEXTURE_2D:
-                    case ONNXIFI_MEMORY_TYPE_D3D_RESOURCE: throw status::invalid_memory_type{};
-                    default: throw status::unsupported_memory_type{};
+                case ONNXIFI_MEMORY_TYPE_CPU: break;
+                case ONNXIFI_MEMORY_TYPE_CUDA_BUFFER:
+                case ONNXIFI_MEMORY_TYPE_OPENCL_BUFFER:
+                case ONNXIFI_MEMORY_TYPE_OPENGLES_TEXTURE_2D:
+                case ONNXIFI_MEMORY_TYPE_D3D_RESOURCE: throw status::invalid_memory_type{};
+                default: throw status::unsupported_memory_type{};
                 }
                 if ((weight.dimensions != 0) && (weight.shape == nullptr))
                 {
@@ -94,11 +94,7 @@ namespace ngraph
                 return {m_type, m_shape.size(), m_shape.data(), m_buffer.data()};
             }
 
-            const std::string& name() const
-            {
-                return m_name;
-            }
-
+            const std::string& name() const { return m_name; }
         private:
             std::string m_name{};
             Shape m_shape;
@@ -111,31 +107,19 @@ namespace ngraph
                 switch (type)
                 {
                 case ONNXIFI_DATATYPE_FLOAT16:
-                case ONNXIFI_DATATYPE_FLOAT32:
-                    return onnx_import::Weight::Type::f32;
-                case ONNXIFI_DATATYPE_FLOAT64:
-                    return onnx_import::Weight::Type::f64;
-                case ONNXIFI_DATATYPE_INT8:
-                    return onnx_import::Weight::Type::i8;
-                case ONNXIFI_DATATYPE_INT16:
-                    return onnx_import::Weight::Type::i16;
-                case ONNXIFI_DATATYPE_INT32:
-                    return onnx_import::Weight::Type::i32;
-                case ONNXIFI_DATATYPE_INT64:
-                    return onnx_import::Weight::Type::i64;
-                case ONNXIFI_DATATYPE_UINT8:
-                    return onnx_import::Weight::Type::u8;
-                case ONNXIFI_DATATYPE_UINT16:
-                    return onnx_import::Weight::Type::u16;
-                case ONNXIFI_DATATYPE_UINT32:
-                    return onnx_import::Weight::Type::u32;
-                case ONNXIFI_DATATYPE_UINT64:
-                    return onnx_import::Weight::Type::u64;
+                case ONNXIFI_DATATYPE_FLOAT32: return onnx_import::Weight::Type::f32;
+                case ONNXIFI_DATATYPE_FLOAT64: return onnx_import::Weight::Type::f64;
+                case ONNXIFI_DATATYPE_INT8: return onnx_import::Weight::Type::i8;
+                case ONNXIFI_DATATYPE_INT16: return onnx_import::Weight::Type::i16;
+                case ONNXIFI_DATATYPE_INT32: return onnx_import::Weight::Type::i32;
+                case ONNXIFI_DATATYPE_INT64: return onnx_import::Weight::Type::i64;
+                case ONNXIFI_DATATYPE_UINT8: return onnx_import::Weight::Type::u8;
+                case ONNXIFI_DATATYPE_UINT16: return onnx_import::Weight::Type::u16;
+                case ONNXIFI_DATATYPE_UINT32: return onnx_import::Weight::Type::u32;
+                case ONNXIFI_DATATYPE_UINT64: return onnx_import::Weight::Type::u64;
                 case ONNXIFI_DATATYPE_COMPLEX64:
-                case ONNXIFI_DATATYPE_COMPLEX128:
-                    throw status::invalid_datatype{};
-                default:
-                    throw status::unsupported_datatype{};
+                case ONNXIFI_DATATYPE_COMPLEX128: throw status::invalid_datatype{};
+                default: throw status::unsupported_datatype{};
                 }
             }
 
@@ -144,31 +128,19 @@ namespace ngraph
                 switch (type)
                 {
                 case ONNXIFI_DATATYPE_FLOAT16:
-                case ONNXIFI_DATATYPE_FLOAT32:
-                    return sizeof(float);
-                case ONNXIFI_DATATYPE_FLOAT64:
-                    return sizeof(double);
-                case ONNXIFI_DATATYPE_INT8:
-                    return sizeof(int8_t);
-                case ONNXIFI_DATATYPE_INT16:
-                    return sizeof(int16_t);
-                case ONNXIFI_DATATYPE_INT32:
-                    return sizeof(int32_t);
-                case ONNXIFI_DATATYPE_INT64:
-                    return sizeof(int64_t);
-                case ONNXIFI_DATATYPE_UINT8:
-                    return sizeof(uint8_t);
-                case ONNXIFI_DATATYPE_UINT16:
-                    return sizeof(uint16_t);
-                case ONNXIFI_DATATYPE_UINT32:
-                    return sizeof(uint32_t);
-                case ONNXIFI_DATATYPE_UINT64:
-                    return sizeof(uint64_t);
+                case ONNXIFI_DATATYPE_FLOAT32: return sizeof(float);
+                case ONNXIFI_DATATYPE_FLOAT64: return sizeof(double);
+                case ONNXIFI_DATATYPE_INT8: return sizeof(int8_t);
+                case ONNXIFI_DATATYPE_INT16: return sizeof(int16_t);
+                case ONNXIFI_DATATYPE_INT32: return sizeof(int32_t);
+                case ONNXIFI_DATATYPE_INT64: return sizeof(int64_t);
+                case ONNXIFI_DATATYPE_UINT8: return sizeof(uint8_t);
+                case ONNXIFI_DATATYPE_UINT16: return sizeof(uint16_t);
+                case ONNXIFI_DATATYPE_UINT32: return sizeof(uint32_t);
+                case ONNXIFI_DATATYPE_UINT64: return sizeof(uint64_t);
                 case ONNXIFI_DATATYPE_COMPLEX64:
-                case ONNXIFI_DATATYPE_COMPLEX128:
-                    throw status::invalid_datatype{};
-                default:
-                    throw status::unsupported_datatype{};
+                case ONNXIFI_DATATYPE_COMPLEX128: throw status::invalid_datatype{};
+                default: throw status::unsupported_datatype{};
                 }
             }
         };

@@ -1367,7 +1367,8 @@ namespace
         }
 
         MemoryFence_Template(::onnxBackend backend, ::onnxEvent event)
-            : ::onnxMemoryFenceV1{ONNXIFI_TAG_MEMORY_FENCE_V1, ONNXIFI_SYNCHRONIZATION_EVENT, {event}}
+            : ::onnxMemoryFenceV1{
+                  ONNXIFI_TAG_MEMORY_FENCE_V1, ONNXIFI_SYNCHRONIZATION_EVENT, {event}}
         {
         }
 
@@ -1509,7 +1510,8 @@ TEST(onnxifi, run_graph_unsupported_fence_type)
             ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
-        MemoryFence unsupported_fence_type{backend, static_cast<::onnxEnum>(ONNXIFI_SYNCHRONIZATION_IMPLICIT)};
+        MemoryFence unsupported_fence_type{
+            backend, static_cast<::onnxEnum>(ONNXIFI_SYNCHRONIZATION_IMPLICIT)};
         MemoryFence input_fence{backend}, output_fence{backend};
 
         status = ::onnxRunGraph(graph, &unsupported_fence_type, &output_fence);
@@ -1679,7 +1681,8 @@ TEST(onnxifi, model_add_abc)
         float output_placeholder{-1};
         TensorDescriptor output{"Result", &output_placeholder};
 
-        status = ::onnxSetGraphIO(graph, static_cast<uint32_t>(inputs.size()), inputs.data(), 1, &output);
+        status = ::onnxSetGraphIO(
+            graph, static_cast<uint32_t>(inputs.size()), inputs.data(), 1, &output);
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         MemoryFence input_fence{backend}, output_fence{backend};
@@ -1725,7 +1728,8 @@ TEST(onnxifi, model_add_abc_oneshot)
         float output_placeholder{-1};
         TensorDescriptor output{"Result", &output_placeholder};
 
-        status = ::onnxSetGraphIO(graph, static_cast<uint32_t>(inputs.size()), inputs.data(), 1, &output);
+        status = ::onnxSetGraphIO(
+            graph, static_cast<uint32_t>(inputs.size()), inputs.data(), 1, &output);
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         MemoryFence input_fence{backend};

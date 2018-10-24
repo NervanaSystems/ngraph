@@ -48,9 +48,9 @@ namespace ngraph
             Backend& operator=(const Backend&) = delete;
 
             Backend(Backend&& other, const std::lock_guard<std::mutex>&) noexcept
-                : m_type{std::move(other.m_type)},
-                  m_backend{std::move(other.m_backend)},
-                  m_handle{other.m_handle}
+                : m_type{std::move(other.m_type)}
+                , m_backend{std::move(other.m_backend)}
+                , m_handle{other.m_handle}
             {
             }
 
@@ -99,7 +99,7 @@ namespace ngraph
             }
 
             void from_ng_outputs(const std::vector<std::shared_ptr<runtime::Tensor>>& ng_outputs,
-                std::vector<OutputTensor>& output) const
+                                 std::vector<OutputTensor>& output) const
             {
                 for (std::size_t i{0}; i < ng_outputs.size(); ++i)
                 {
@@ -108,7 +108,7 @@ namespace ngraph
             }
 
             std::vector<std::shared_ptr<runtime::Tensor>>
-            to_ng_outputs(const std::vector<OutputTensor>& outputs) const
+                to_ng_outputs(const std::vector<OutputTensor>& outputs) const
             {
                 std::vector<std::shared_ptr<runtime::Tensor>> result;
                 for (const auto& tensor : outputs)

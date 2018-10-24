@@ -65,9 +65,9 @@ namespace ngraph
             Impl& operator=(Impl&&) = delete;
 
             Impl(const element::Type& type, const Shape& shape, std::vector<char> data)
-                : m_shape{shape},
-                  m_type{type},
-                  m_data{std::move(data)}
+                : m_shape{shape}
+                , m_type{type}
+                , m_data{std::move(data)}
             {
                 for (const auto& value : m_shape)
                 {
@@ -76,31 +76,17 @@ namespace ngraph
             }
 
             Impl(Type type, std::size_t dimensions, const std::size_t* shape, const void* data)
-                : Impl{to_element_type(type), {shape, shape + dimensions},
-                       {reinterpret_cast<const char*>(data), reinterpret_cast<const char*>(data) + dimensions}}
+                : Impl{to_element_type(type),
+                       {shape, shape + dimensions},
+                       {reinterpret_cast<const char*>(data),
+                        reinterpret_cast<const char*>(data) + dimensions}}
             {
             }
 
-            const Shape& shape() const
-            {
-                return m_shape;
-            }
-
-            std::size_t size() const
-            {
-                return m_size;
-            }
-
-            const element::Type& type() const
-            {
-                return m_type;
-            }
-
-            const void* data() const
-            {
-                return reinterpret_cast<const void*>(m_data.data());
-            }
-
+            const Shape& shape() const { return m_shape; }
+            std::size_t size() const { return m_size; }
+            const element::Type& type() const { return m_type; }
+            const void* data() const { return reinterpret_cast<const void*>(m_data.data()); }
         private:
             Shape m_shape{};
             const element::Type& m_type;
@@ -112,31 +98,24 @@ namespace ngraph
                 switch (type)
                 {
                 case Type::f16:
-                case Type::f32:
-                    return element::f32;
-                case Type::f64:
-                    return element::f64;
-                case Type::i8:
-                    return element::i8;
-                case Type::i16:
-                    return element::i16;
-                case Type::i32:
-                    return element::i32;
-                case Type::i64:
-                    return element::i64;
-                case Type::u8:
-                    return element::u8;
-                case Type::u16:
-                    return element::u16;
-                case Type::u32:
-                    return element::u32;
-                case Type::u64:
-                    return element::u64;
+                case Type::f32: return element::f32;
+                case Type::f64: return element::f64;
+                case Type::i8: return element::i8;
+                case Type::i16: return element::i16;
+                case Type::i32: return element::i32;
+                case Type::i64: return element::i64;
+                case Type::u8: return element::u8;
+                case Type::u16: return element::u16;
+                case Type::u32: return element::u32;
+                case Type::u64: return element::u64;
                 }
             }
         };
 
-        Weight::Weight(Type type, std::size_t dimensions, const std::size_t* shape, const void* data)
+        Weight::Weight(Type type,
+                       std::size_t dimensions,
+                       const std::size_t* shape,
+                       const void* data)
             : m_pimpl{new Impl{type, dimensions, shape, data}, [](Impl* impl) { delete impl; }}
         {
         }
@@ -150,28 +129,15 @@ namespace ngraph
         {
             if (this != &other)
             {
-
             }
             return *this;
         }
 
-        const element::Type& Weight::type() const
-        {
-            return m_pimpl->type();
-        }
-
-        const void* Weight::data() const
-        {
-            return m_pimpl->data();
-        }
-
-        const Shape& Weight::shape() const
-        {
-            return m_pimpl->shape();
-        }
-
-        std::vector<std::shared_ptr<Function>> load_onnx_model(std::istream& sin,
-                const Weights& weights)
+        const element::Type& Weight::type() const { return m_pimpl->type(); }
+        const void* Weight::data() const { return m_pimpl->data(); }
+        const Shape& Weight::shape() const { return m_pimpl->shape(); }
+        std::vector<std::shared_ptr<Function>>
+            load_onnx_model(std::istream& sin, const Weights& weights)
         {
             onnx::ModelProto model_proto;
             if (!model_proto.ParseFromIstream(&sin))

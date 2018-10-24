@@ -117,7 +117,6 @@ namespace ngraph
             std::size_t size() const { return m_size; }
             const Shape& get_shape() const { return m_shape; }
             const char* get_name() const { return m_tensor->name; }
-
         protected:
             const ::onnxTensorDescriptorV1* m_tensor;
             Shape m_shape;
