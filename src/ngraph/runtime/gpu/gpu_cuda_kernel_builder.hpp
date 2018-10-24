@@ -40,6 +40,10 @@ namespace ngraph
                                                const std::string& op,
                                                const std::vector<std::string>& data_types);
 
+                static void get_cudnn_bn_inv_var_op(codegen::CodeWriter& writer,
+                                                    const std::string& name,
+                                                    runtime::gpu::GPUKernelArgs& args);
+
                 static void get_broadcast_op(codegen::CodeWriter& writer,
                                              const std::string& name,
                                              GPUKernelArgs& args,
