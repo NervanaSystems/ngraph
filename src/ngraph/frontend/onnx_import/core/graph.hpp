@@ -24,8 +24,8 @@
 #include "ngraph/op/parameter_vector.hpp"
 
 #include "model.hpp"
-#include "operator_set.hpp"
 #include "../onnx.hpp"
+#include "operator_set.hpp"
 #include "value_info.hpp"
 
 namespace ngraph
