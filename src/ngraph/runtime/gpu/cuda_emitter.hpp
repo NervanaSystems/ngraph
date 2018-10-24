@@ -51,7 +51,7 @@ namespace ngraph
 
             public:
                 size_t build_topk(const std::vector<element::Type>& dtypes,
-                                  NVShape input_shape,
+                                  const NVShape& input_shape,
                                   const size_t topk_axis,
                                   size_t topk_k,
                                   const element::Type index_elem_type,

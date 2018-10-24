@@ -87,7 +87,7 @@ namespace ngraph
 
                 static void get_topk(codegen::CodeWriter& writer,
                                      const std::string& name,
-                                     std::vector<std::string>& dtypes,
+                                     const std::vector<std::string>& dtypes,
                                      bool compute_max,
                                      bool use_malloc);
 

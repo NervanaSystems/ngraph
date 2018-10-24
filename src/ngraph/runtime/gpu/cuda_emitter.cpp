@@ -168,7 +168,7 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::vector<std::string>& d
 }
 
 size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& dtypes,
-                                             NVShape input_shape,
+                                             const NVShape& input_shape,
                                              const size_t topk_axis,
                                              size_t topk_k,
                                              const element::Type index_elem_type,
@@ -186,8 +186,7 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
         dtypes_string.push_back(dtype.c_type_string());
     }
     std::stringstream kernel_name;
-    kernel_name << "topk_" << join(dtypes_string, "_") << "_r_"
-                << "_axis_" << topk_axis << "_k_" << topk_k << "_cm_" << compute_max;
+    kernel_name << "topk_" << join(dtypes_string, "_") << "_cm_" << compute_max;
     std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_");
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())

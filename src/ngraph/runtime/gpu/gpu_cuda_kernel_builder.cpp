@@ -204,7 +204,7 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
 
 void runtime::gpu::CudaKernelBuilder::get_topk(codegen::CodeWriter& writer,
                                                const std::string& name,
-                                               std::vector<std::string>& dtypes,
+                                               const std::vector<std::string>& dtypes,
                                                bool compute_max,
                                                bool use_malloc)
 {
@@ -283,7 +283,7 @@ void runtime::gpu::CudaKernelBuilder::get_topk(codegen::CodeWriter& writer,
     {
         writer << "extern \"C\" __global__ void cuda_" << name << "(";
         writer << dtypes[0] << "* in, " << dtypes[1] << "* out_id, " << dtypes[2] << "* out_val, ";
-        writer << "size_t num_cols, size_t topk_k)\n";
+        writer << " size_t num_cols, size_t topk_k)\n";
     }
     writer.block_begin();
     {
