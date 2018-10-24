@@ -228,10 +228,8 @@ namespace ngraph
                 bool m_emit_timing;
 
                 bool m_use_tbb;
-#if !defined(NGRAPH_DEX_ONLY)
                 bool m_is_compiled;
                 bool m_direct_execution;
-#endif
                 EntryPoint m_compiled_function;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
 
