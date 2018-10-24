@@ -41,34 +41,17 @@ namespace ngraph
             BackendManager(BackendManager&&) = delete;
             BackendManager& operator=(BackendManager&&) = delete;
 
-            static void get_backend_ids(::onnxBackendID* backend_ids, std::size_t* count)
-            {
-                instance().get_ids(backend_ids, count);
-            }
+            static void get_backend_ids(::onnxBackendID* backend_ids, std::size_t* count);
+            static void release_backend_id(::onnxBackendID backend_id);
+            static void release_backend(::onnxBackend backend);
 
             static void get_backend_info(::onnxBackendID backend_id,
                                          ::onnxBackendInfo info_type,
                                          void* info_value,
                                          std::size_t* info_value_size);
 
-            static void unregister(::onnxBackendID backend_id)
-            {
-                instance().unregister_backend(backend_id);
-            }
-
-            static Backend& get(::onnxBackendID backend_id)
-            {
-                return instance().get_backend_by_id(backend_id);
-            }
-
             static void init_backend(::onnxBackendID backend_id, ::onnxBackend* backend);
-
-            static void init_graph(::onnxBackend backend,
-                                   const void* onnx_model,
-                                   std::size_t onnx_model_size,
-                                   const ::onnxTensorDescriptorV1* weights,
-                                   std::size_t weights_count,
-                                   ::onnxGraph* graph);
+            static Backend& get_backend(::onnxBackend backend);
 
         private:
             mutable std::mutex m_mutex{};
@@ -82,19 +65,12 @@ namespace ngraph
                 return backend_manager;
             }
 
-            void unregister_backend(::onnxBackendID id)
-            {
-                std::lock_guard<std::mutex> lock{m_mutex};
-                m_registered_backends.erase(id);
-            }
-
+            void release_id(::onnxBackendID id);
+            void release(::onnxBackend backend);
             void get_ids(::onnxBackendID* backend_ids, std::size_t* count) const;
-            Backend& get_backend_by_id(::onnxBackendID id)
-            {
-                std::lock_guard<std::mutex> lock{m_mutex};
-                return m_registered_backends.at(id);
-            }
-            Backend& get_backend(::onnxBackend backend);
+
+            Backend& get_by_handle(::onnxBackend handle);
+            Backend& get_by_id(::onnxBackendID id);
         };
 
     } // namespace onnxifi

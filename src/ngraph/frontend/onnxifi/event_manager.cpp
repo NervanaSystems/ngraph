@@ -25,7 +25,7 @@ namespace ngraph
 {
     namespace onnxifi
     {
-        ::onnxEvent EventManager::acquire()
+        ::onnxEvent EventManager::acquire(const Backend&)
         {
             std::lock_guard<std::mutex> lock{m_mutex};
             std::unique_ptr<Event> event{new Event};
@@ -44,7 +44,7 @@ namespace ngraph
 
         }
 
-        const Event& EventManager::get_by_handle(::onnxEvent event) const
+        Event& EventManager::get_by_handle(::onnxEvent event) const
         {
             std::lock_guard<std::mutex> lock{m_mutex};
             return *m_registered_events.at(event);

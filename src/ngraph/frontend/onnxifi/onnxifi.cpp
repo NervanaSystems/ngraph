@@ -22,8 +22,8 @@
 
 #include "backend_manager.hpp"
 #include "exceptions.hpp"
-
-using namespace ngraph;
+#include "event_manager.hpp"
+#include "graph_manager.hpp"
 
 using namespace ngraph::onnxifi;
 
@@ -37,7 +37,7 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
         BackendManager::get_backend_ids(backendIDs, numBackends);
         return ONNXIFI_STATUS_SUCCESS;
     }
-    catch (const onnxifi::status::runtime& e)
+    catch (const status::runtime& e)
     {
         return e.get_status();
     }
@@ -54,7 +54,19 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
     onnxReleaseBackendID(onnxBackendID backendID)
 {
-    return ONNXIFI_STATUS_INTERNAL_ERROR;
+    try
+    {
+        BackendManager::release_backend_id(backendID);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendInfo(
@@ -62,10 +74,10 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendInfo(
 {
     try
     {
-        onnxifi::BackendManager::get_backend_info(backendID, infoType, infoValue, infoValueSize);
+        BackendManager::get_backend_info(backendID, infoType, infoValue, infoValueSize);
         return ONNXIFI_STATUS_SUCCESS;
     }
-    catch (const onnxifi::status::runtime& e)
+    catch (const status::runtime& e)
     {
         return e.get_status();
     }
@@ -86,7 +98,7 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendInfo(
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetBackendCompatibility(
     onnxBackendID backendID, std::size_t onnxModelSize, const void* onnxModel)
 {
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+    return ONNXIFI_STATUS_SUCCESS;
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxInitBackend(
@@ -94,56 +106,164 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxInitBackend(
 {
     try
     {
-        // Ignore auxPropertiesList, it is not supported in this version
-        // of the nGraph ONNXIFI backend
-        ngraph::onnxifi::BackendManager::init_backend(backendID, backend);
+        if (backend != nullptr)
+        {
+            *backend = nullptr;
+        }
+        // The 'auxPropertiesList' is not used in this version of the nGraph ONNXIFI backend.
+        BackendManager::init_backend(backendID, backend);
         return ONNXIFI_STATUS_SUCCESS;
     }
-    catch (const onnxifi::status::runtime& e)
+    catch (const status::runtime& e)
     {
         return e.get_status();
     }
     catch (const std::out_of_range&)
     {
-        *backend = nullptr;
         return ONNXIFI_STATUS_INVALID_ID;
     }
     catch (const std::bad_alloc&)
     {
-        *backend = nullptr;
         return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
     }
     catch (...)
     {
-        *backend = nullptr;
         return ONNXIFI_STATUS_INTERNAL_ERROR;
     }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseBackend(onnxBackend backend)
 {
-    return ONNXIFI_STATUS_INTERNAL_ERROR;
+    try
+    {
+        BackendManager::release_backend(backend);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::out_of_range&)
+    {
+        return ONNXIFI_STATUS_INVALID_BACKEND;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
-ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxInitEvent(onnxBackend backend,
-                                                                         onnxEvent* event)
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
+    onnxInitEvent(onnxBackend backend, onnxEvent* event)
 {
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+    try
+    {
+        if (event != nullptr)
+        {
+            *event = nullptr;
+        }
+        EventManager::init_event(backend, event);
+        return ONNXIFI_STATUS_SUCCESS;
+
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::bad_alloc&)
+    {
+        return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxSignalEvent(onnxEvent event)
 {
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+    try
+    {
+        EventManager::signal_event(event);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::out_of_range&)
+    {
+        return ONNXIFI_STATUS_INVALID_EVENT;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
+
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
+onnxGetEventState(onnxEvent event, onnxEventState* state)
+{
+    try
+    {
+        EventManager::get_event_state(event, state);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::out_of_range&)
+    {
+        return ONNXIFI_STATUS_INVALID_EVENT;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
+}
+
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxWaitEvent(onnxEvent event)
 {
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+    try
+    {
+        EventManager::wait_event(event);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::out_of_range&)
+    {
+        return ONNXIFI_STATUS_INVALID_EVENT;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseEvent(onnxEvent event)
 {
-    return ONNXIFI_STATUS_INTERNAL_ERROR;
+    try
+    {
+        EventManager::release_event(event);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::out_of_range&)
+    {
+        return ONNXIFI_STATUS_INVALID_EVENT;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INVALID_EVENT;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
@@ -157,24 +277,28 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
 {
     try
     {
-        // Ignore auxPropertiesList, it is not supported in this version
-        // of the nGraph ONNXIFI backend
-        onnxifi::BackendManager::init_graph(
-            backend, onnxModel, onnxModelSize, weightDescriptors, weightsCount, graph);
+        if (graph != nullptr)
+        {
+            *graph = nullptr;
+        }
+        // The 'auxPropertiesList' is not used in this version of the nGraph ONNXIFI backend.
+        GraphManager::init_graph(BackendManager::get_backend(backend), {onnxModel, onnxModelSize}, {weightDescriptors, weightsCount}, graph);
         return ONNXIFI_STATUS_SUCCESS;
     }
-    catch (const onnxifi::status::runtime& e)
+    catch (const status::runtime& e)
     {
         return e.get_status();
     }
     catch (const std::bad_alloc&)
     {
-        *graph = nullptr;
         return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
+    }
+    catch (const std::runtime_error& e)
+    {
+        return ONNXIFI_STATUS_INVALID_PROTOBUF;
     }
     catch (...)
     {
-        *graph = nullptr;
         return ONNXIFI_STATUS_INTERNAL_ERROR;
     }
 }
@@ -186,18 +310,74 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
                    std::uint32_t outputsCount,
                    const onnxTensorDescriptorV1* outputDescriptors)
 {
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+    try
+    {
+        GraphManager::set_graph_io(graph, {inputDescriptors, inputsCount}, {outputDescriptors, outputsCount});
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::out_of_range&)
+    {
+        return ONNXIFI_STATUS_INVALID_GRAPH;
+    }
+    catch (const std::bad_alloc&)
+    {
+        return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxRunGraph(
     onnxGraph graph, const onnxMemoryFenceV1* inputFence, onnxMemoryFenceV1* outputFence)
 {
-    return ONNXIFI_STATUS_BACKEND_UNAVAILABLE;
+    try
+    {
+        GraphManager::run_graph(graph, inputFence, outputFence);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::out_of_range&)
+    {
+        return ONNXIFI_STATUS_INVALID_GRAPH;
+    }
+    catch (const std::bad_alloc&)
+    {
+        return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseGraph(onnxGraph graph)
 {
-    return ONNXIFI_STATUS_INTERNAL_ERROR;
+    try
+    {
+        GraphManager::release_graph(graph);
+        return ONNXIFI_STATUS_SUCCESS;
+    }
+    catch (const status::runtime& e)
+    {
+        return e.get_status();
+    }
+    catch (const std::out_of_range&)
+    {
+        return ONNXIFI_STATUS_INVALID_GRAPH;
+    }
+    catch (...)
+    {
+        return ONNXIFI_STATUS_INTERNAL_ERROR;
+    }
 }
 
 } /* extern "C" */

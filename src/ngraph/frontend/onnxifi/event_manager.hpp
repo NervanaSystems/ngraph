@@ -22,9 +22,9 @@
 
 #include <onnxifi.h>
 
+#include "backend_manager.hpp"
 #include "exceptions.hpp"
 #include "event.hpp"
-
 
 namespace ngraph
 {
@@ -40,19 +40,34 @@ namespace ngraph
             EventManager(EventManager&& other) noexcept = delete;
             EventManager& operator=(EventManager&& other) noexcept = delete;
 
-            static ::onnxEvent register_event()
+            static void init_event(::onnxBackend handle, ::onnxEvent* event)
             {
-                return instance().acquire();
+                if (event == nullptr)
+                {
+                    throw status::null_pointer{};
+                }
+                auto& backend{BackendManager::get_backend(handle)};
+                *event = instance().acquire(backend);
             }
 
-            static void unregister_event(::onnxEvent event)
+            static void release_event(::onnxEvent event)
             {
                 instance().release(event);
             }
 
-            static const Event& get_event(::onnxEvent event)
+            static void signal_event(::onnxEvent event)
             {
-                return instance().get_by_handle(event);
+                instance().get_by_handle(event).signal();
+            }
+
+            static void wait_event(::onnxEvent event)
+            {
+                instance().get_by_handle(event).wait();
+            }
+
+            static void get_event_state(::onnxEvent event, ::onnxEventState* state)
+            {
+                instance().get_by_handle(event).get_state(state);
             }
 
         private:
@@ -67,8 +82,8 @@ namespace ngraph
                 return event_manager;
             }
 
-            const Event& get_by_handle(::onnxEvent event) const;
-            ::onnxEvent acquire();
+            Event& get_by_handle(::onnxEvent event) const;
+            ::onnxEvent acquire(const Backend& backend);
             void release(::onnxEvent event);
         };
 

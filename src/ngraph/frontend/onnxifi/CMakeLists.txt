@@ -14,7 +14,24 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_library(onnxifi-ngraph SHARED onnxifi.cpp backend.hpp backend.cpp backend_manager.hpp backend_manager.cpp graph.hpp graph.cpp event_manager.hpp event_manager.cpp event.hpp)
+add_library(onnxifi-ngraph SHARED
+    onnxifi.cpp
+    backend.hpp
+    backend.cpp
+    backend_manager.hpp
+    backend_manager.cpp
+    graph.hpp
+    graph.cpp
+    event_manager.hpp
+    event_manager.cpp
+    event.hpp
+    span.hpp
+    tensor.hpp
+    tensor.cpp
+    graph_manager.hpp
+    graph_manager.cpp
+    queue.hpp)
+
 target_link_libraries(onnxifi-ngraph PRIVATE ngraph)
 
 add_dependencies(onnxifi-ngraph onnx::libonnx)
