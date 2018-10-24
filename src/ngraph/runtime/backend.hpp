@@ -87,16 +87,16 @@ public:
     /// \param func The function to execute
     /// \returns true if iteration is successful, false otherwise
     virtual bool call(std::shared_ptr<Function> func,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) = 0;
+                      const std::vector<runtime::Tensor*>& outputs,
+                      const std::vector<runtime::Tensor*>& inputs) = 0;
 
     /// \brief Executes a single iteration of a Function. If func is not compiled the call will
     ///     compile it. Optionally validates the inputs and outputs against the function graph.
     /// \param func The function to execute
     /// \returns true if iteration is successful, false otherwise
     bool call_with_validate(std::shared_ptr<Function> func,
-                            const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                            const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
+                            const std::vector<runtime::Tensor*>& outputs,
+                            const std::vector<runtime::Tensor*>& inputs)
     {
         validate_call(func, outputs, inputs);
         return call(func, outputs, inputs);
@@ -125,6 +125,6 @@ public:
 
 protected:
     void validate_call(std::shared_ptr<const Function> func,
-                       const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                       const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+                       const std::vector<runtime::Tensor*>& outputs,
+                       const std::vector<runtime::Tensor*>& inputs);
 };
