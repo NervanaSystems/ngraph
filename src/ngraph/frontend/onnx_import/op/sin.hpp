@@ -14,8 +14,31 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/op_tbl.hpp"
-#if CUDNN_VERSION >= 7200
-NGRAPH_OP(Rnn, ngraph::op::gpu)
-#endif
-NGRAPH_OP(BatchNormTrainingWithStats, ngraph::op::gpu)
+#pragma once
+
+#include <memory>
+
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/sin.hpp"
+
+#include "core/node.hpp"
+
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                inline NodeVector sin(const Node& node)
+                {
+                    return {std::make_shared<ngraph::op::Sin>(node.get_ng_inputs().at(0))};
+                }
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
