@@ -321,10 +321,10 @@ static std::shared_ptr<ngraph::Node>
 
 void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 {
-    auto ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
-    auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
     auto xt = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
     auto weights_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
+    auto ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
+    auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
     auto bias_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto bias_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto rpattern_ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
@@ -345,9 +345,30 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         pattern::RecurrentMatcher& m) {
 
         NGRAPH_DEBUG << " In recurrent RNN fusion callback";
-
         auto ht_1_label = m.get_bound_nodes_for_pattern(ht_1);
 
+        // this checks if all the matched lstm_nodes share the same weights and bias
+        auto validate_rnn_inputs =
+            [&](std::vector<std::shared_ptr<pattern::op::Label>> rnn_labels) -> bool {
+            for (auto& label : rnn_labels)
+            {
+                auto bounded_nodes = m.get_bound_nodes_for_pattern(label);
+                for (auto& rnn_input : bounded_nodes)
+                {
+                    if (rnn_input != bounded_nodes[0])
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        };
+
+        if (!validate_rnn_inputs(std::vector<std::shared_ptr<pattern::op::Label>>{
+                weights_i2h, weights_h2h, bias_i2h, bias_h2h}))
+        {
+            return false;
+        }
         // determine the ht and xt
         std::shared_ptr<ngraph::Node> src_layer = nullptr;
         std::shared_ptr<ngraph::Node> src_iter = nullptr;
@@ -386,7 +407,6 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             // nodes belonging to RNN, instead we will return and can compute LSTM cell wise
             return false;
         }
-
         std::vector<std::shared_ptr<pattern::op::Label>> weights_layer_labels{weights_i2h};
         auto weights_layer = compute_rnn_args(weights_layer_labels, m);
 
