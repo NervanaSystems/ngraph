@@ -46,6 +46,7 @@ namespace ngraph
             Backend(Backend&& other, const std::lock_guard<std::mutex>&) noexcept
                 : m_type{std::move(other.m_type)},
                   m_backend{std::move(other.m_backend)},
+                  m_handle{other.m_handle},
                   m_functions{std::move(other.m_functions)}
             {
             }
@@ -62,6 +63,7 @@ namespace ngraph
                     std::unique_lock<std::mutex> lock{m_mutex, std::defer_lock};
                     std::unique_lock<std::mutex> other_lock{other.m_mutex, std::defer_lock};
                     std::lock(lock, other_lock);
+                    m_handle = other.m_handle;
                     m_functions = std::move(other.m_functions);
                     m_type = std::move(other.m_type);
                     m_backend = std::move(other.m_backend);
@@ -89,7 +91,7 @@ namespace ngraph
                 const auto& fn = m_functions.at(graph);
                 return get().call(fn->get_ng_function(), fn->get_outputs(), fn->get_inputs());
             }
-            
+
             // Implementation of onnxGetBackendInfo() interface function.
             // Refer to https://github.com/onnx/onnx/blob/master/onnx/onnxifi.h for details.
             // Each function method is responsible for obtaining value of a single
@@ -129,18 +131,33 @@ namespace ngraph
             }
 
             const std::string& get_type() const { return m_type; }
+            ::onnxBackend init_handle()
+            {
+                if (m_backend == nullptr)
+                {
+                    m_handle = reinterpret_cast<::onnxBackend>(
+                        (m_backend = runtime::Backend::create(m_type)).get());
+                }
+                return m_handle;
+            }
+
+            ::onnxBackend get_handle() const
+            {
+                return m_handle;
+            }
 
         private:
             mutable std::mutex m_mutex{};
             std::string m_type{};
-            mutable std::shared_ptr<runtime::Backend> m_backend{nullptr};
+            std::shared_ptr<runtime::Backend> m_backend{nullptr};
+            ::onnxBackend m_handle{nullptr};
             std::map<::onnxGraph, std::unique_ptr<Graph>> m_functions{};
 
             runtime::Backend& get() const
             {
                 if (m_backend == nullptr)
                 {
-                    m_backend = runtime::Backend::create(m_type);
+                    throw status::backend_unavailable{};
                 }
                 return *m_backend;
             }

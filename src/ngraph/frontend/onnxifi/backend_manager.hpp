@@ -61,6 +61,8 @@ namespace ngraph
                 return instance().get_backend_by_id(backend_id);
             }
 
+            static void init_backend(::onnxBackendID backend_id, ::onnxBackend* backend);
+
         private:
             mutable std::mutex m_mutex{};
             std::map<::onnxBackendID, Backend> m_registered_backends{};
