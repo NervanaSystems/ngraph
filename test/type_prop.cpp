@@ -650,8 +650,9 @@ TEST(type_prop,
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input channel dimension (4) does not match "
-                                                       "shape for gamma/beta/mean/variance ({3})"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input channel dimension (4) does not match "
+                                         "shape for gamma/beta/mean/variance ({3})"));
     }
     catch (...)
     {
@@ -1400,8 +1401,9 @@ TEST(
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input channel dimension (4) does not match "
-                                                       "shape for gamma/beta/mean/variance ({3})"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input channel dimension (4) does not match "
+                                         "shape for gamma/beta/mean/variance ({3})"));
     }
     catch (...)
     {
@@ -1487,8 +1489,9 @@ TEST(
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), std::string("Shape of delta does not match the shape of the input data "
-                                      "(input data shape: {?,3,?,224}, delta shape: {?,3,?,448})"));
+            error.what(),
+            std::string("Shape of delta does not match the shape of the input data "
+                        "(input data shape: {?,3,?,224}, delta shape: {?,3,?,448})"));
     }
     catch (...)
     {
