@@ -41,11 +41,24 @@ namespace ngraph
                                              const ngraph::AxisSet& axes,
                                              op::Quantize::RoundMode round_mode)
         {
-            float scale =
-                builder::quantization_util::get_quantize_scale(min, max, type.is_signed());
-            auto offset = op::Constant::create(element::f32, Shape{1}, {0});
-            auto quantize_scale = op::Constant::create(element::f32, Shape{1}, {scale});
-            return make_shared<op::Quantize>(input, quantize_scale, offset, type, axes, round_mode);
+            auto offset = op::Constant::create(type, Shape{1}, {0});
+            if (type == element::f32)
+            {
+                float scale = builder::quantization_util::get_quantize_scale<float>(min, max, type);
+                auto quantize_scale =
+                    op::Constant::create(input->get_element_type(), Shape{1}, {scale});
+                return make_shared<op::Quantize>(
+                    input, quantize_scale, offset, type, axes, round_mode);
+            }
+            else if (type == element::f64)
+            {
+                double scale =
+                    builder::quantization_util::get_quantize_scale<double>(min, max, type);
+                auto quantize_scale =
+                    op::Constant::create(input->get_element_type(), Shape{1}, {scale});
+                return make_shared<op::Quantize>(
+                    input, quantize_scale, offset, type, axes, round_mode);
+            }
         }
 
         std::shared_ptr<Node> ScaledDequantize(std::shared_ptr<Node> input,
@@ -55,11 +68,21 @@ namespace ngraph
                                                const ngraph::AxisSet& axes)
         {
             auto input_et = input->get_element_type();
-            float scale =
-                builder::quantization_util::get_dequantize_scale(min, max, input_et.is_signed());
-            auto offset = op::Constant::create(element::f32, Shape{1}, {0});
-            auto dequantize_scale = op::Constant::create(element::f32, Shape{1}, {scale});
-            return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);
+            auto offset = op::Constant::create(input_et, Shape{1}, {0});
+            if (type == element::f32)
+            {
+                float scale =
+                    builder::quantization_util::get_dequantize_scale<float>(min, max, input_et);
+                auto dequantize_scale = op::Constant::create(type, Shape{1}, {scale});
+                return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);
+            }
+            else if (type == element::f64)
+            {
+                double scale =
+                    builder::quantization_util::get_dequantize_scale<double>(min, max, input_et);
+                auto dequantize_scale = op::Constant::create(type, Shape{1}, {scale});
+                return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);
+            }
         }
 
         std::shared_ptr<Node> ScaledQuantizedAvgPool(const std::shared_ptr<Node>& arg,
@@ -112,7 +135,8 @@ namespace ngraph
                                                              padding_below,
                                                              padding_above,
                                                              data_dilation_strides,
-                                                             requantization_scale);
+                                                             requantization_scale,
+                                                             with_relu);
         }
 
         std::shared_ptr<Node>

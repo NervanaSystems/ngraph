@@ -768,7 +768,6 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolutionBias)
                 {
                     auto quantized_conv_bias = static_cast<op::QuantizedConvolutionBias*>(node);
-
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::i8)
                     {
@@ -785,17 +784,22 @@ namespace ngraph
                     auto dequantize = static_cast<op::Dequantize*>(node);
                     auto offset_const_op =
                         std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(2));
-                    float offset = *(static_cast<float const*>(offset_const_op->get_data_ptr()));
-                    if ((node->get_input_element_type(0) == element::u8 ||
-                         node->get_input_element_type(0) == element::i8) &&
-                        offset == 0)
+                    if (node->get_input_element_type(0) == element::u8)
                     {
-                        auto dequantize = static_cast<op::Dequantize*>(node);
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        dequantize->set_op_annotations(op_annotations);
+                        auto offset = offset_const_op->get_vector<uint8_t>();
+                        if (offset[0] != 0)
+                            return;
                     }
+                    if (node->get_input_element_type(0) == element::i8)
+                    {
+                        auto offset = offset_const_op->get_vector<int8_t>();
+                        if (offset[0] != 0)
+                            return;
+                    }
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    op_annotations->set_mkldnn_op(true);
+                    dequantize->set_op_annotations(op_annotations);
                 }
 
                 template <>
@@ -804,16 +808,25 @@ namespace ngraph
                     auto quantize = static_cast<op::Quantize*>(node);
                     auto offset_const_op =
                         std::static_pointer_cast<ngraph::op::Constant>(quantize->get_argument(2));
-                    float offset = *(static_cast<float const*>(offset_const_op->get_data_ptr()));
                     op::Quantize::RoundMode round_mode = quantize->get_round_mode();
-                    if (node->get_input_element_type(0) == element::f32 && offset == 0 &&
-                        round_mode == op::Quantize::RoundMode::HALF_TO_EVEN)
+                    if (node->get_input_element_type(0) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        quantize->set_op_annotations(op_annotations);
+                        auto offset = offset_const_op->get_vector<float>();
+                        if (offset[0] != 0)
+                            return;
                     }
+                    if (node->get_input_element_type(0) == element::f64)
+                    {
+                        auto offset = offset_const_op->get_vector<double>();
+                        if (offset[0] != 0)
+                            return;
+                    }
+                    if (round_mode != op::Quantize::RoundMode::HALF_TO_EVEN)
+                        return;
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    op_annotations->set_mkldnn_op(true);
+                    quantize->set_op_annotations(op_annotations);
                 }
             }
         }
