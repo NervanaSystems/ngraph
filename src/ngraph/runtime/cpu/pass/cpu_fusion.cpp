@@ -830,7 +830,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
     auto gamma = std::make_shared<pattern::op::Label>(element::f32, gamma_shape);
     auto beta_shape = Shape{2};
     auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
-    auto bn_pred = pattern::has_class<op::BatchNormBase>();
+    auto bn_pred = [](std::shared_ptr<Node> node) {
+        return pattern::has_class<op::BatchNormInference>()(node) ||
+               pattern::has_class<op::BatchNormTraining>()(node);
+    };
     auto bn = std::make_shared<pattern::op::Any>(
         input, bn_pred, NodeVector{gamma, beta, input, mean, var});
     auto prelu = std::make_shared<op::Relu>(bn);

@@ -591,7 +591,7 @@ namespace ngraph
                     auto input_rank = input_shape.size();
                     if ((input_rank == 4 && node->get_input_element_type(2) == element::f32))
                     {
-                        auto batchnorm = static_cast<op::BatchNormBase*>(node);
+                        auto batchnorm = static_cast<op::Op*>(node);
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
