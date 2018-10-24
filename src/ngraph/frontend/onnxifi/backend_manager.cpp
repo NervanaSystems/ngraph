@@ -14,8 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cstdlib>   // std::size_t, std::uintptr_t
-#include <stdexcept> // std::invalid_agrument, std::out_of_rage
+#include <cstdlib> // std::size_t, std::uintptr_t
 
 #include <onnxifi.h>
 
@@ -38,15 +37,14 @@ namespace ngraph
             // onnxGetBackendIDs() may result in different number of backends.
             // For now, we don't do the re-discovery.
             auto registered_backends = runtime::BackendManager::get_registered_backends();
-            for (const auto& type : registered_backends)
+            for (auto& type : registered_backends)
             {
-                m_registered_backends.emplace(reinterpret_cast<std::uintptr_t>(&type),
+                m_registered_backends.emplace(reinterpret_cast<::onnxBackendID>(&type),
                                               Backend{type});
             }
         }
 
-        void BackendManager::get_registered_ids(::onnxBackendID* backend_ids,
-                                                std::size_t* count) const
+        void BackendManager::get_ids(::onnxBackendID* backend_ids, std::size_t* count) const
         {
             if (count == nullptr)
             {
@@ -63,9 +61,8 @@ namespace ngraph
                 std::transform(std::begin(m_registered_backends),
                                std::end(m_registered_backends),
                                backend_ids,
-                               [](const std::map<std::uintptr_t, Backend>::value_type& pair)
-                                   -> ::onnxBackendID {
-                                   return reinterpret_cast<::onnxBackendID>(pair.first);
+                               [](const std::map<::onnxBackendID, Backend>::value_type& pair) {
+                                   return pair.first;
                                });
             }
         }

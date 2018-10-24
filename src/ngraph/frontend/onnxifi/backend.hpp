@@ -16,14 +16,21 @@
 
 #pragma once
 
+#include <map>     // std::map
 #include <memory>  // std::shared_ptr
+#include <mutex>   // std::mutex
 #include <string>  // std::string
 #include <utility> // std::move
 #include <vector>  // std::vector
 
+#include <onnxifi.h>
+
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
+
+#include "exceptions.hpp"
+#include "graph.hpp"
 
 namespace ngraph
 {
@@ -36,40 +43,75 @@ namespace ngraph
             Backend(const Backend&) = delete;
             Backend& operator=(const Backend&) = delete;
 
-            Backend(Backend&&) = default;
-            Backend& operator=(Backend&&) = default;
+            Backend(Backend&& other, const std::lock_guard<std::mutex>&) noexcept
+                : m_type{std::move(other.m_type)},
+                  m_backend{std::move(other.m_backend)},
+                  m_functions{std::move(other.m_functions)}
+            {
+            }
+
+            Backend(Backend&& other) noexcept
+                : Backend{std::move(other), std::lock_guard<std::mutex>{other.m_mutex}}
+            {
+            }
+
+            Backend& operator=(Backend&& other) noexcept
+            {
+                if (&other != this)
+                {
+                    std::unique_lock<std::mutex> lock{m_mutex, std::defer_lock};
+                    std::unique_lock<std::mutex> other_lock{other.m_mutex, std::defer_lock};
+                    std::lock(lock, other_lock);
+                    m_functions = std::move(other.m_functions);
+                    m_type = std::move(other.m_type);
+                    m_backend = std::move(other.m_backend);
+                }
+                return *this;
+            }
 
             Backend() = delete;
 
-            explicit Backend(const std::string& type)
-                : m_type{type}
+            explicit Backend(std::string type)
+                : m_type{std::move(type)}
             {
+            }
+
+            bool compile(::onnxGraph graph) const
+            {
+                std::lock_guard<std::mutex> lock{m_mutex};
+                const auto& fn = m_functions.at(graph);
+                return get().compile(fn->get_ng_function());
+            }
+
+            bool call(::onnxGraph graph) const
+            {
+                std::lock_guard<std::mutex> lock{m_mutex};
+                const auto& fn = m_functions.at(graph);
+                return get().call(fn->get_ng_function(), fn->get_outputs(), fn->get_inputs());
+            }
+
+            bool operator==(const Backend& other) const noexcept
+            {
+                std::unique_lock<std::mutex> lock{m_mutex, std::defer_lock};
+                std::unique_lock<std::mutex> other_lock{other.m_mutex, std::defer_lock};
+                std::lock(lock, other_lock);
+                return (m_backend.get() == other.m_backend.get());
+            }
+
+            bool operator!=(const Backend& other) const noexcept { return !(other == *this); }
+            bool operator==(::onnxBackend other) const noexcept
+            {
+                std::lock_guard<std::mutex> lock{m_mutex};
+                return (reinterpret_cast<::onnxBackend>(m_backend.get()) == other);
             }
 
             const std::string& get_type() const { return m_type; }
-            bool compile(const std::shared_ptr<Function>& function) const
-            {
-                return get().compile(function);
-            }
-
-            bool call(const std::shared_ptr<Function>& function,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const
-            {
-                return get().call(function, outputs, inputs);
-            }
-
-            bool call_with_validate(
-                const std::shared_ptr<Function>& function,
-                const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const
-            {
-                return get().call_with_validate(function, outputs, inputs);
-            }
 
         private:
+            mutable std::mutex m_mutex{};
             std::string m_type{};
             mutable std::shared_ptr<runtime::Backend> m_backend{nullptr};
+            std::map<::onnxGraph, std::unique_ptr<Graph>> m_functions{};
 
             runtime::Backend& get() const
             {
