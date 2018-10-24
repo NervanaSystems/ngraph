@@ -16,8 +16,11 @@
 
 #include <onnxifi.h>
 
+#include "onnx.hpp"
+
 #include "backend.hpp"
 #include "graph.hpp"
+
 
 namespace ngraph
 {

@@ -25,7 +25,7 @@
 
 #include "model.hpp"
 #include "operator_set.hpp"
-#include "frontend/onnx_import/weight.hpp"
+#include "../onnx.hpp"
 #include "value_info.hpp"
 
 namespace ngraph

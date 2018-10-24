@@ -35,7 +35,7 @@ namespace ngraph
             Weight& operator=(Weight&&) = default;
 
             Weight() = delete;
-            Weight(const ::onnxTensorDescriptorV1& weight)
+            explicit Weight(const ::onnxTensorDescriptorV1& weight)
                 : m_name{weight.name},
                   m_type{get_type(weight.dataType)}
             {
@@ -86,55 +86,89 @@ namespace ngraph
                     throw status::invalid_memory_location{};
                 }
                 const char* buffer{reinterpret_cast<const char*>(weight.buffer)};
-                m_buffer.assign(buffer, buffer + (m_size * m_type.size()));
+                m_buffer.assign(buffer, buffer + (m_size * get_type_size(weight.dataType)));
             }
 
             onnx_import::Weight get() const
             {
-                return {m_type, m_shape, m_buffer};
+                return {m_type, m_shape.size(), m_shape.data(), m_buffer.data()};
             }
 
-            const std::vector<char>& data() const { return m_buffer; }
-            std::size_t size() const { return m_size; }
-            const Shape& shape() const { return m_shape; }
-            const std::string& name() const { return m_name; }
-            const element::Type& type() const { return m_type; }
+            const std::string& name() const
+            {
+                return m_name;
+            }
 
         private:
             std::string m_name{};
             Shape m_shape;
             std::size_t m_size{1};
-            const element::Type& m_type;
+            onnx_import::Weight::Type m_type;
             std::vector<char> m_buffer;
 
-            const element::Type& get_type(::onnxEnum type)
+            onnx_import::Weight::Type get_type(::onnxEnum type)
             {
                 switch (type)
                 {
-                    case ONNXIFI_DATATYPE_FLOAT16:
-                    case ONNXIFI_DATATYPE_FLOAT32:
-                        return element::f32;
-                    case ONNXIFI_DATATYPE_FLOAT64:
-                        return element::f64;
-                    case ONNXIFI_DATATYPE_INT8:
-                        return element::i8;
-                    case ONNXIFI_DATATYPE_INT16:
-                        return element::i16;
-                    case ONNXIFI_DATATYPE_INT32:
-                        return element::i32;
-                    case ONNXIFI_DATATYPE_INT64:
-                        return element::i64;
-                    case ONNXIFI_DATATYPE_UINT8:
-                        return element::u8;
-                    case ONNXIFI_DATATYPE_UINT16:
-                        return element::u16;
-                    case ONNXIFI_DATATYPE_UINT32:
-                        return element::u32;
-                    case ONNXIFI_DATATYPE_UINT64:
-                        return element::u64;
-                    case ONNXIFI_DATATYPE_COMPLEX64:
-                    case ONNXIFI_DATATYPE_COMPLEX128: throw status::invalid_datatype{};
-                    default: throw status::unsupported_datatype{};
+                case ONNXIFI_DATATYPE_FLOAT16:
+                case ONNXIFI_DATATYPE_FLOAT32:
+                    return onnx_import::Weight::Type::f32;
+                case ONNXIFI_DATATYPE_FLOAT64:
+                    return onnx_import::Weight::Type::f64;
+                case ONNXIFI_DATATYPE_INT8:
+                    return onnx_import::Weight::Type::i8;
+                case ONNXIFI_DATATYPE_INT16:
+                    return onnx_import::Weight::Type::i16;
+                case ONNXIFI_DATATYPE_INT32:
+                    return onnx_import::Weight::Type::i32;
+                case ONNXIFI_DATATYPE_INT64:
+                    return onnx_import::Weight::Type::i64;
+                case ONNXIFI_DATATYPE_UINT8:
+                    return onnx_import::Weight::Type::u8;
+                case ONNXIFI_DATATYPE_UINT16:
+                    return onnx_import::Weight::Type::u16;
+                case ONNXIFI_DATATYPE_UINT32:
+                    return onnx_import::Weight::Type::u32;
+                case ONNXIFI_DATATYPE_UINT64:
+                    return onnx_import::Weight::Type::u64;
+                case ONNXIFI_DATATYPE_COMPLEX64:
+                case ONNXIFI_DATATYPE_COMPLEX128:
+                    throw status::invalid_datatype{};
+                default:
+                    throw status::unsupported_datatype{};
+                }
+            }
+
+            std::size_t get_type_size(::onnxEnum type)
+            {
+                switch (type)
+                {
+                case ONNXIFI_DATATYPE_FLOAT16:
+                case ONNXIFI_DATATYPE_FLOAT32:
+                    return sizeof(float);
+                case ONNXIFI_DATATYPE_FLOAT64:
+                    return sizeof(double);
+                case ONNXIFI_DATATYPE_INT8:
+                    return sizeof(int8_t);
+                case ONNXIFI_DATATYPE_INT16:
+                    return sizeof(int16_t);
+                case ONNXIFI_DATATYPE_INT32:
+                    return sizeof(int32_t);
+                case ONNXIFI_DATATYPE_INT64:
+                    return sizeof(int64_t);
+                case ONNXIFI_DATATYPE_UINT8:
+                    return sizeof(uint8_t);
+                case ONNXIFI_DATATYPE_UINT16:
+                    return sizeof(uint16_t);
+                case ONNXIFI_DATATYPE_UINT32:
+                    return sizeof(uint32_t);
+                case ONNXIFI_DATATYPE_UINT64:
+                    return sizeof(uint64_t);
+                case ONNXIFI_DATATYPE_COMPLEX64:
+                case ONNXIFI_DATATYPE_COMPLEX128:
+                    throw status::invalid_datatype{};
+                default:
+                    throw status::unsupported_datatype{};
                 }
             }
         };

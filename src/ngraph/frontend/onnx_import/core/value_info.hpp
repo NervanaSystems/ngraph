@@ -25,7 +25,6 @@
 
 #include "node.hpp"
 #include "tensor.hpp"
-#include "frontend/onnx_import/weight.hpp"
 
 namespace ngraph
 {
