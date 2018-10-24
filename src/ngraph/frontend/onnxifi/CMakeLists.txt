@@ -30,7 +30,7 @@ add_library(onnxifi-ngraph SHARED
     tensor.cpp
     graph_manager.hpp
     graph_manager.cpp
-    queue.hpp)
+    queue.hpp weights.hpp)
 
 target_link_libraries(onnxifi-ngraph PRIVATE ngraph)
 

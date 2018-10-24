@@ -28,6 +28,7 @@
 #include "backend.hpp"
 #include "span.hpp"
 #include "tensor.hpp"
+#include "weights.hpp"
 
 namespace ngraph
 {
@@ -74,7 +75,7 @@ namespace ngraph
 
         private:
             std::shared_ptr<Function> m_function{nullptr};
-            std::vector<InputTensor> m_weights{};
+            std::vector<Weight> m_weights{};
             std::vector<InputTensor> m_inputs{};
             std::vector<OutputTensor> m_outputs{};
             const Backend& m_backend;
