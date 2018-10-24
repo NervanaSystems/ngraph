@@ -103,8 +103,8 @@ namespace ngraph
             }
             Buffer buffer{onnx_model};
             std::istream sin{&buffer};
-            std::unique_ptr<Graph> graph{new Graph{backend, sin}};
-            graph->set_weights(weights);
+            std::unique_ptr<Graph> graph{new Graph{backend}};
+            graph->load(sin, weights);
             graph->compile();
             std::lock_guard<std::mutex> lock{m_mutex};
             auto it =

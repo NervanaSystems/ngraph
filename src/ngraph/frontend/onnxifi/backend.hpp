@@ -129,17 +129,6 @@ namespace ngraph
                 return result;
             }
 
-            std::vector<std::shared_ptr<runtime::Tensor>>
-            to_ng_inputs(const std::vector<Weight>& weights) const
-            {
-                std::vector<std::shared_ptr<runtime::Tensor>> result;
-                for (const auto& tensor : weights)
-                {
-                    result.emplace_back(tensor.to_ng(*m_backend));
-                }
-                return result;
-            }
-
             // Implementation of onnxGetBackendInfo() interface function.
             // Refer to https://github.com/onnx/onnx/blob/master/onnx/onnxifi.h for details.
             // Each function method is responsible for obtaining value of a single

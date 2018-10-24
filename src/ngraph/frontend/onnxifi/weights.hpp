@@ -16,6 +16,11 @@
 
 #pragma once
 
+#include <onnx.hpp>
+#include <onnxifi.h>
+
+#include "span.hpp"
+
 namespace ngraph
 {
     namespace onnxifi
@@ -84,19 +89,16 @@ namespace ngraph
                 m_buffer.assign(buffer, buffer + (m_size * m_type.size()));
             }
 
-            std::shared_ptr<runtime::Tensor> to_ng(runtime::Backend& backend) const
+            onnx_import::Weight get() const
             {
-                std::shared_ptr<runtime::Tensor> tensor{
-                    backend.create_tensor(m_type, m_shape)
-                };
-                tensor->write(data(), 0, m_type.size() * m_size);
-                return tensor;
+                return {m_type, m_shape, m_buffer};
             }
 
-            const void* data() const { return reinterpret_cast<const void*>(m_buffer.data()); }
+            const std::vector<char>& data() const { return m_buffer; }
             std::size_t size() const { return m_size; }
             const Shape& shape() const { return m_shape; }
             const std::string& name() const { return m_name; }
+            const element::Type& type() const { return m_type; }
 
         private:
             std::string m_name{};
