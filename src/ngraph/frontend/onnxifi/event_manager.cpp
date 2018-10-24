@@ -28,7 +28,7 @@ namespace ngraph
         ::onnxEvent EventManager::acquire(const Backend&)
         {
             std::lock_guard<std::mutex> lock{m_mutex};
-            std::unique_ptr<Event> event{new Event};
+            std::unique_ptr<EventAuto> event{new EventAuto};
             auto pair = m_registered_events.emplace(reinterpret_cast<::onnxEvent>(event.get()),
                                                     std::move(event));
             if (!pair.second)
@@ -44,7 +44,7 @@ namespace ngraph
             m_registered_events.erase(event);
         }
 
-        Event& EventManager::get_by_handle(::onnxEvent event) const
+        EventAuto& EventManager::get_by_handle(::onnxEvent event) const
         {
             std::lock_guard<std::mutex> lock{m_mutex};
             return *m_registered_events.at(event);

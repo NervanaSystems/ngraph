@@ -64,7 +64,7 @@ namespace ngraph
 
         private:
             mutable std::mutex m_mutex{};
-            std::map<::onnxEvent, std::unique_ptr<Event>> m_registered_events{};
+            std::map<::onnxEvent, std::unique_ptr<EventAuto>> m_registered_events{};
 
             EventManager() = default;
 
@@ -74,7 +74,7 @@ namespace ngraph
                 return event_manager;
             }
 
-            Event& get_by_handle(::onnxEvent event) const;
+            EventAuto& get_by_handle(::onnxEvent event) const;
             ::onnxEvent acquire(const Backend& backend);
             void release(::onnxEvent event);
         };
