@@ -143,7 +143,9 @@ namespace ngraph
                                        const Shape& tensor_shape,
                                        const Shape& param_shape,
                                        double epsilon,
-                                       bool global_stats = false);
+                                       bool global_stats = false,
+                                       bool save_stats = false,
+                                       bool invert_variance = false);
 
                 size_t build_lrn(const std::string& dtype,
                                  const Prop& direction,
