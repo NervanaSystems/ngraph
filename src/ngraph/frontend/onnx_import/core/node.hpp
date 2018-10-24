@@ -18,12 +18,14 @@
 
 #include <string>
 
-#include <onnx-ml.pb.h>
-
+#include "ngraph/except.hpp"
 #include "ngraph/node_vector.hpp"
 
-#include "attribute.hpp"
-#include "tensor.hpp"
+namespace onnx
+{
+    // forward declaration
+    class NodeProto;
+}
 
 namespace ngraph
 {
@@ -52,69 +54,41 @@ namespace ngraph
         {
         public:
             Node() = delete;
-            Node(const onnx::NodeProto& node_proto, const Graph* graph)
-                : m_node_proto{&node_proto}
-                , m_graph{graph}
-                , m_attributes{std::begin(node_proto.attribute()), std::end(node_proto.attribute())}
-                , m_output_names{std::begin(node_proto.output()), std::end(node_proto.output())}
-            {
-            }
+            Node(const onnx::NodeProto& node_proto, const Graph& graph);
 
-            Node(Node&&) noexcept = default;
-            Node(const Node&) = default;
+            Node(Node&&) noexcept;
+            Node(const Node&);
 
             Node& operator=(Node&&) noexcept = delete;
             Node& operator=(const Node&) = delete;
 
-            const std::vector<Attribute>& attributes() const { return m_attributes; }
-            NodeVector get_ng_nodes() const;
             NodeVector get_ng_inputs() const;
+            NodeVector get_ng_nodes() const;
+            const std::string& domain() const;
+            const std::string& op_type() const;
+            const std::string& get_name() const;
 
-            const std::string& op_type() const { return m_node_proto->op_type(); }
-            const std::string& get_name() const { return m_node_proto->name(); }
-            /// @brief Describe the ONNX Node to make debugging graphs easier
+            /// \brief Describe the ONNX Node to make debugging graphs easier
             /// Function will return the Node's name if it has one, or the names of its outputs.
             /// \return Description of Node
-            std::string get_description() const;
+            const std::string& get_description() const;
 
-            const std::vector<std::reference_wrapper<const std::string>>& get_output_names() const
-            {
-                return m_output_names;
-            }
-            const std::string& output(int index) const { return m_node_proto->output(index); }
-            template <typename T>
-            T get_attribute_value(const std::string& name, T default_value) const
-            {
-                auto it = std::find_if(
-                    std::begin(m_attributes),
-                    std::end(m_attributes),
-                    [&](const Attribute& attribute) { return attribute.get_name() == name; });
-                if (it == std::end(m_attributes))
-                {
-                    return default_value;
-                }
-                return it->template get_value<T>();
-            }
+            const std::vector<std::reference_wrapper<const std::string>>& get_output_names() const;
+            const std::string& output(int index) const;
 
             template <typename T>
-            T get_attribute_value(const std::string& name) const
-            {
-                auto it = std::find_if(
-                    std::begin(m_attributes),
-                    std::end(m_attributes),
-                    [&](const Attribute& attribute) { return attribute.get_name() == name; });
-                if (it == std::end(m_attributes))
-                {
-                    throw error::node::UnknownAttribute{get_name(), name};
-                }
-                return it->template get_value<T>();
-            }
+            T get_attribute_value(const std::string& name, T default_value) const;
+
+            template <typename T>
+            T get_attribute_value(const std::string& name) const;
 
         private:
-            const onnx::NodeProto* m_node_proto;
-            const Graph* m_graph;
-            std::vector<Attribute> m_attributes;
-            std::vector<std::reference_wrapper<const std::string>> m_output_names;
+            class Impl;
+            // In this case we need custom deleter, because Impl is an incomplete
+            // type. Node's are elements of std::vector. Without custom deleter
+            // compilation fails; the compiler is unable to parameterize an allocator's
+            // default deleter due to incomple type.
+            std::unique_ptr<Impl, void (*)(Impl*)> m_pimpl;
         };
 
         inline std::ostream& operator<<(std::ostream& outs, const Node& node)

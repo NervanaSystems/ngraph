@@ -29,6 +29,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -43,6 +44,7 @@
 #include "ngraph/runtime/reference/multiply.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
+#include "ngraph/runtime/reference/quantize.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
 
@@ -528,4 +530,83 @@ void ngraph::pass::ConstantFolding::construct_constant_dequantize()
 
     auto dequantize_matcher = make_shared<pattern::Matcher>(dequant, constant_dequantize_callback);
     this->add_matcher(dequantize_matcher);
+}
+
+template <class REAL, class QUANT>
+shared_ptr<op::Constant> make_constant_quantize(shared_ptr<op::Constant> constant,
+                                                shared_ptr<op::Quantize> quant,
+                                                shared_ptr<op::Constant> scale,
+                                                shared_ptr<op::Constant> offset)
+{
+    auto out_shape = constant->get_shape();
+    vector<QUANT> out_vec(shape_size(out_shape));
+
+    runtime::reference::quantize<REAL, QUANT>(constant->get_vector<REAL>().data(),
+                                              scale->get_vector<REAL>().data(),
+                                              offset->get_vector<QUANT>().data(),
+                                              out_vec.data(),
+                                              constant->get_shape(),
+                                              scale->get_shape(),
+                                              quant->get_axes(),
+                                              quant->get_round_mode());
+
+    return make_shared<op::Constant>(quant->get_element_type(), out_shape, out_vec);
+}
+
+void ngraph::pass::ConstantFolding::construct_constant_quantize()
+{
+    auto constant_label =
+        make_shared<pattern::op::Label>(element::f32, Shape{2}, pattern::has_class<op::Constant>());
+    auto q_scale = op::Constant::create(element::f32, Shape{}, {1});
+    auto q_offset = op::Constant::create(element::i8, Shape{}, {0});
+    auto mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto quant_op =
+        make_shared<op::Quantize>(constant_label, q_scale, q_offset, element::i8, AxisSet{}, mode);
+    auto quant = make_shared<pattern::op::Label>(quant_op, nullptr, NodeVector{quant_op});
+
+    auto constant_quantize_callback = [constant_label, quant](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_quantize_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
+        auto quant_match = pattern_map[quant];
+        auto quantize_op = dynamic_pointer_cast<op::Quantize>(quant_match);
+        auto args = quant_match->get_arguments();
+        auto scale = static_pointer_cast<op::Constant>(args[1]);
+        auto offset = static_pointer_cast<op::Constant>(args[2]);
+
+        auto type = quant_match->get_element_type();
+
+        if (constant_match->get_element_type() != element::f32)
+        {
+            return false;
+        }
+
+        if (quantize_op->get_round_mode() != op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO)
+        {
+            return false;
+        }
+
+        if (type == element::u8)
+        {
+            replace_node(
+                m.get_match_root(),
+                make_constant_quantize<float, uint8_t>(constant_match, quantize_op, scale, offset));
+            return true;
+        }
+        else if (type == element::i8)
+        {
+            replace_node(
+                m.get_match_root(),
+                make_constant_quantize<float, int8_t>(constant_match, quantize_op, scale, offset));
+            return true;
+        }
+
+        return false;
+    };
+
+    auto quantize_matcher = make_shared<pattern::Matcher>(quant, constant_quantize_callback);
+    this->add_matcher(quantize_matcher);
 }

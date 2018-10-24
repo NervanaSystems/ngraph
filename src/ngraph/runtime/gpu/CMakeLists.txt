@@ -31,7 +31,7 @@ set(SRC
     gpu_external_function.cpp
     gpu_invoke.cpp
     gpu_kernel_emitters.cpp
-	gpu_memory_manager.cpp
+    gpu_memory_manager.cpp
     gpu_primitive_emitter.cpp
     gpu_runtime_context.cpp
     gpu_tensor_wrapper.cpp
@@ -42,21 +42,24 @@ set(SRC
     pass/tensor_memory_reservation.cpp
     gpu_kernel_args.cpp
     pass/gpu_rnn_fusion.cpp
+    pass/gpu_batch_norm_cache.cpp
+    op/batch_norm.cpp
     op/rnn.cpp
     )
 
 if (NGRAPH_GPU_ENABLE)
+    find_package(CUDA 8 REQUIRED)
+    find_package(CUDNN 7 REQUIRED)
     add_library(gpu_backend SHARED ${SRC})
     set_target_properties(gpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
     target_link_libraries(gpu_backend PUBLIC ngraph codegen)
     find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
     find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
-    find_package(CUDA 8 REQUIRED)
-    find_package(CUDNN 7 REQUIRED)
     target_include_directories(gpu_backend SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
     target_link_libraries(gpu_backend PUBLIC
         ${CUDA_cuda_LIBRARY}
         ${CUDA_nvrtc_LIBRARY}
+        ${CUDA_cudart_LIBRARY}
         ${CUDA_LIBRARIES}
         ${CUDA_CUBLAS_LIBRARIES}
         ${CUDNN_LIBRARIES})

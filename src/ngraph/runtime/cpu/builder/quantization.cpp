@@ -192,12 +192,14 @@ namespace ngraph
                     auto arg0_shape = args[0].get_shape();
                     auto arg1_shape = args[1].get_shape();
                     auto daxes = quantize->get_axes();
+                    op::Quantize::RoundMode round_mode = quantize->get_round_mode();
 
                     if (args[0].get_element_type() == element::f32)
                     {
                         if (out[0].get_element_type() == element::i8)
                         {
-                            functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
+                            functor = [&, arg0_shape, arg1_shape, daxes, round_mode](
+                                CPURuntimeContext* ctx) {
                                 ngraph::runtime::reference::quantize<float>(
                                     static_cast<float*>(arg0_tensor),
                                     static_cast<float*>(arg1_tensor),
@@ -205,12 +207,14 @@ namespace ngraph
                                     static_cast<int8_t*>(out_tensor),
                                     arg0_shape,
                                     arg1_shape,
-                                    daxes);
+                                    daxes,
+                                    round_mode);
                             };
                         }
                         else if (out[0].get_element_type() == element::u8)
                         {
-                            functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
+                            functor = [&, arg0_shape, arg1_shape, daxes, round_mode](
+                                CPURuntimeContext* ctx) {
                                 ngraph::runtime::reference::quantize<float>(
                                     static_cast<float*>(arg0_tensor),
                                     static_cast<float*>(arg1_tensor),
@@ -218,7 +222,8 @@ namespace ngraph
                                     static_cast<uint8_t*>(out_tensor),
                                     arg0_shape,
                                     arg1_shape,
-                                    daxes);
+                                    daxes,
+                                    round_mode);
                             };
                         }
                         else
@@ -230,7 +235,8 @@ namespace ngraph
                     {
                         if (out[0].get_element_type() == element::i8)
                         {
-                            functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
+                            functor = [&, arg0_shape, arg1_shape, daxes, round_mode](
+                                CPURuntimeContext* ctx) {
                                 ngraph::runtime::reference::quantize<double>(
                                     static_cast<double*>(arg0_tensor),
                                     static_cast<double*>(arg1_tensor),
@@ -238,12 +244,14 @@ namespace ngraph
                                     static_cast<int8_t*>(out_tensor),
                                     arg0_shape,
                                     arg1_shape,
-                                    daxes);
+                                    daxes,
+                                    round_mode);
                             };
                         }
                         else if (out[0].get_element_type() == element::u8)
                         {
-                            functor = [&, arg0_shape, arg1_shape, daxes](CPURuntimeContext* ctx) {
+                            functor = [&, arg0_shape, arg1_shape, daxes, round_mode](
+                                CPURuntimeContext* ctx) {
                                 ngraph::runtime::reference::quantize<double>(
                                     static_cast<double*>(arg0_tensor),
                                     static_cast<double*>(arg1_tensor),
@@ -251,7 +259,8 @@ namespace ngraph
                                     static_cast<uint8_t*>(out_tensor),
                                     arg0_shape,
                                     arg1_shape,
-                                    daxes);
+                                    daxes,
+                                    round_mode);
                             };
                         }
                         else

@@ -42,7 +42,7 @@ namespace ngraph
                                              op::Quantize::RoundMode round_mode)
         {
             auto offset = op::Constant::create(type, Shape{1}, {0});
-            if (type == element::f32)
+            if (input->get_element_type() == element::f32)
             {
                 float scale = builder::quantization_util::get_quantize_scale<float>(min, max, type);
                 auto quantize_scale =
@@ -50,7 +50,7 @@ namespace ngraph
                 return make_shared<op::Quantize>(
                     input, quantize_scale, offset, type, axes, round_mode);
             }
-            else if (type == element::f64)
+            else if (input->get_element_type() == element::f64)
             {
                 double scale =
                     builder::quantization_util::get_quantize_scale<double>(min, max, type);
@@ -58,6 +58,10 @@ namespace ngraph
                     op::Constant::create(input->get_element_type(), Shape{1}, {scale});
                 return make_shared<op::Quantize>(
                     input, quantize_scale, offset, type, axes, round_mode);
+            }
+            else
+            {
+                throw ngraph_error("Unsupported quantization element type");
             }
         }
 
@@ -82,6 +86,10 @@ namespace ngraph
                     builder::quantization_util::get_dequantize_scale<double>(min, max, input_et);
                 auto dequantize_scale = op::Constant::create(type, Shape{1}, {scale});
                 return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);
+            }
+            else
+            {
+                throw ngraph_error("Unsupported dequantization element type");
             }
         }
 

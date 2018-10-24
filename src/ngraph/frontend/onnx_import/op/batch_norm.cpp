@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cstdint>
 #include <memory>
 
 #include "ngraph/node_vector.hpp"
@@ -39,13 +40,12 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> mean{nullptr};
                     std::shared_ptr<ngraph::Node> var{nullptr};
 
-                    int is_test{node.get_attribute_value<int>("is_test", 1)};
-                    int spatial{node.get_attribute_value<int>("spatial", 1)};
+                    std::int64_t is_test{node.get_attribute_value<std::int64_t>("is_test", 1)};
+                    std::int64_t spatial{node.get_attribute_value<std::int64_t>("spatial", 1)};
                     double epsilon{node.get_attribute_value<double>("epsilon", 1e-5)};
+
                     // TODO: Implement learning mode support
                     // float momentum{node.get_attribute_value<float>("momentum", 0.9f)};
-                    bool training = false;
-
                     ASSERT_IS_SUPPORTED(node, is_test) << "only 'is_test' mode is supported.";
                     ASSERT_IS_SUPPORTED(node, spatial) << "only 'spatial' mode is supported.";
 
@@ -53,11 +53,12 @@ namespace ngraph
                     {
                         mean = inputs.at(3);
                         var = inputs.at(4);
-                        return {std::make_shared<ngraph::op::BatchNorm>(
-                            epsilon, scale, bias, x, mean, var, training)};
+                        return {std::make_shared<ngraph::op::BatchNormInference>(
+                            epsilon, scale, bias, x, mean, var)};
                     }
 
-                    return {std::make_shared<ngraph::op::BatchNorm>(epsilon, scale, bias, x)};
+                    return {
+                        std::make_shared<ngraph::op::BatchNormTraining>(epsilon, scale, bias, x)};
                 }
 
             } // namespace set_1
