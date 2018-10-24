@@ -89,7 +89,30 @@ namespace ngraph
                 const auto& fn = m_functions.at(graph);
                 return get().call(fn->get_ng_function(), fn->get_outputs(), fn->get_inputs());
             }
+            
+            // Implementation of onnxGetBackendInfo() interface function.
+            // Refer to https://github.com/onnx/onnx/blob/master/onnx/onnxifi.h for details.
+            // Each function method is responsible for obtaining value of a single
+            // attribute. The function method names are reflecting the attribute names.
 
+            void get_onnxifi_version(void* info_value, std::size_t* info_value_size) const;
+            void get_name(void* info_value, std::size_t* info_value_size) const;
+            void get_vendor(void* info_value, std::size_t* info_value_size) const;
+            void get_version(void* info_value, std::size_t* info_value_size) const;
+            void get_extensions(void* info_value, std::size_t* info_value_size) const;
+            void get_device(void* info_value, std::size_t* info_value_size) const;
+            void get_device_type(void* info_value, std::size_t* info_value_size) const;
+            void get_onnx_ir_version(void* info_value, std::size_t* info_value_size) const;
+            void get_opset_version(void* info_value, std::size_t* info_value_size) const;
+            void get_capabilities(void* info_value, std::size_t* info_value_size) const;
+            void get_init_properties(void* info_value, std::size_t* info_value_size) const;
+            void get_memory_types(void* info_value, std::size_t* info_value_size) const;
+            void get_graph_init_properties(void* info_value, std::size_t* info_value_size) const;
+            void get_synchronization_types(void* info_value, std::size_t* info_value_size) const;
+            void get_memory_size(void* info_value, std::size_t* info_value_size) const;
+            void get_max_graph_size(void* info_value, std::size_t* info_value_size) const;
+            void get_max_graph_count(void* info_value, std::size_t* info_value_size) const;
+ 
             bool operator==(const Backend& other) const noexcept
             {
                 std::unique_lock<std::mutex> lock{m_mutex, std::defer_lock};

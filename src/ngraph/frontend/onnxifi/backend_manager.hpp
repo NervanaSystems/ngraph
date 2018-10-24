@@ -46,6 +46,11 @@ namespace ngraph
                 instance().get_ids(backend_ids, count);
             }
 
+            static void get_backend_info(::onnxBackendID backend_id,
+                                         ::onnxBackendInfo info_type,
+                                         void* info_value,
+                                         std::size_t* info_value_size);
+
             static void unregister(::onnxBackendID backend_id)
             {
                 instance().unregister_backend(backend_id);
