@@ -1006,19 +1006,19 @@ namespace ngraph
                         {
                             writer << "if (" << args[i].get_name() << " < " << out[0].get_name()
                                    << " || " << args[i].get_name() << " >= " << out[0].get_name()
-                                   << " + " << out[0].get_size() << ")\n";
+                                   << " + " << out[0].get_size() * out[0].get_element_type().size()
+                                   << ")\n";
                             writer.block_begin();
                             writer << "memcpy(" << out[0].get_name() << " + " << offset << ", "
                                    << args[i].get_name() << ", "
                                    << args[i].get_size() * out[0].get_element_type().size()
                                    << ");\n";
                             writer.block_end();
-                            offset += args[i].get_size();
+                            offset += args[i].get_size() * out[0].get_element_type().size();
                         }
                         return;
                     }
                 }
-
                 auto result_shape = out[0].get_shape();
 
 #if USE_EIGEN_CORE_INLINE == 1
