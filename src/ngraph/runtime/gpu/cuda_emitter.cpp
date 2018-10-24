@@ -211,7 +211,6 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
         CudaKernelBuilder::add_pod_typedefs(writer);
         runtime::gpu::CudaKernelBuilder::get_topk(
             writer, kernel_name.str(), args, dtypes_string, compute_max);
-        std::cout << writer.get_code() << std::endl;
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
     if (shared_data_bytes > (48 << 10))

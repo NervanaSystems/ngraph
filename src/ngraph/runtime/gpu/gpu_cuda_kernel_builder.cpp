@@ -271,6 +271,68 @@ void runtime::gpu::CudaKernelBuilder::get_topk(codegen::CodeWriter& writer,
         writer.block_end();
     }
     writer.block_end();
+
+    if (args.get_size() == 5)
+    {
+        writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
+    }
+    else
+    {
+        writer << "extern \"C\" __global__ void cuda_" << name << "(";
+        writer << dtypes[0] << "* in, " << dtypes[1] << "* out_id, " << dtypes[2] << "* out_val, "
+               << " Entry* entry,";
+        writer << "size_t num_cols, size_t topk_k)\n";
+    }
+    writer.block_begin();
+    {
+        writer << "in = in + blockIdx.x * num_cols;\n";
+        if (args.get_size() != 5)
+        {
+            writer << "entry = entry + + blockIdx.x * num_cols;\n";
+        }
+        writer << "out_id = out_id + blockIdx.x * topk_k;\n";
+        writer << "out_val = out_val + blockIdx.x * topk_k;\n";
+        if (args.get_size() == 5)
+        {
+            writer << "extern __shared__ Entry entry[];\n";
+        }
+
+        writer << "for (size_t i = threadIdx.x; i < num_cols; i += blockDim.x)\n";
+        writer.block_begin();
+        {
+            writer << "entry[i].set_value(in[i]);\n";
+            writer << "entry[i].set_index(i);\n";
+        }
+        writer.block_end();
+
+        writer << "__syncthreads();\n";
+
+        writer << "if (threadIdx.x == 0)\n";
+        writer.block_begin();
+        {
+            writer << "create_and_build(entry, num_cols);\n";
+
+            writer << "size_t changed_size_of_heap = num_cols;\n";
+            writer << "size_t k = 0;\n";
+            writer << "while (k++ < topk_k)\n";
+            writer.block_begin();
+            {
+                writer << "swap(*entry, entry[changed_size_of_heap - 1]);\n";
+                writer << "heapify(entry, --changed_size_of_heap, 0);\n";
+            }
+            writer.block_end();
+
+            writer << "for (size_t i = threadIdx.x; i < topk_k; i++)\n";
+            writer.block_begin();
+            {
+                writer << "out_val[i] = entry[num_cols - 1 - i].get_value();\n";
+                writer << "out_id[i] = entry[num_cols - 1 - i].get_index();\n";
+            }
+            writer.block_end();
+        }
+        writer.block_end();
+    }
+    writer.block_end();
 }
 
 //each thread calculate the whole reduction of one output
