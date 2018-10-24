@@ -42,6 +42,8 @@ set(SRC
     pass/tensor_memory_reservation.cpp
     gpu_kernel_args.cpp
     pass/gpu_rnn_fusion.cpp
+    pass/gpu_batch_norm_cache.cpp
+    op/batch_norm.cpp
     op/rnn.cpp
     )
 
