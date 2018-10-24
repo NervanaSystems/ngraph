@@ -58,8 +58,6 @@ namespace ngraph
             {
             }
 
-            explicit operator ::onnxGraph() const;
-
             void set_weights(const Span<::onnxTensorDescriptorV1>& weights);
             void set_inputs(const Span<::onnxTensorDescriptorV1>& inputs);
             void set_outputs(const Span<::onnxTensorDescriptorV1>& outputs);
@@ -69,8 +67,6 @@ namespace ngraph
             void configure_memory_fences(const ::onnxMemoryFenceV1* input_fence,
                                          ::onnxMemoryFenceV1* output_fence);
 
-            void from_stream(std::istream& sin);
-
             bool operator==(const Graph& other) const noexcept;
             bool operator!=(const Graph& other) const noexcept;
 
@@ -78,6 +74,7 @@ namespace ngraph
 
         private:
             std::shared_ptr<Function> m_function{nullptr};
+            std::vector<InputTensor> m_weights{};
             std::vector<InputTensor> m_inputs{};
             std::vector<OutputTensor> m_outputs{};
             const Backend& m_backend;
@@ -95,9 +92,26 @@ namespace ngraph
             return !(*this == other);
         }
 
-        inline void Graph::from_stream(std::istream& sin)
+        inline void Graph::set_weights(const Span<::onnxTensorDescriptorV1>& weights)
         {
-            m_function = onnx_import::import_onnx_function(sin);
+            if (weights.data() != nullptr)
+            {
+                if (weights.empty())
+                {
+                    throw status::invalid_size{};
+                }
+                for (const auto& descriptor : weights)
+                {
+                    m_weights.emplace_back(descriptor);
+                }
+            }
+            else
+            {
+                if (!weights.empty())
+                {
+                    throw status::null_pointer{};
+                }
+            }
         }
 
         inline void Graph::set_inputs(const Span<::onnxTensorDescriptorV1>& inputs)

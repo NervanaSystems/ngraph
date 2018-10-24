@@ -94,6 +94,7 @@ namespace ngraph
                     {
                         // todo: log failure running computation on graph
                     }
+
                 }
             }};
 

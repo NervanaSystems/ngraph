@@ -85,34 +85,11 @@ namespace ngraph
             {
                 throw status::runtime{status};
             }
-            if (state != ONNXIFI_EVENT_STATE_NONSIGNALLED)
-            {
-                throw status::invalid_state{};
-            }
             m_input_fence = input_fence;
             m_output_fence = output_fence;
         }
 
         bool Graph::compile() { return m_backend.compile(m_function); }
-        void Graph::set_weights(const Span<onnxTensorDescriptorV1>& weights)
-        {
-            if (weights.data() != nullptr)
-            {
-                if (weights.empty())
-                {
-                    throw status::invalid_size{};
-                }
-
-                /* TODO: apply weights to the graph */
-            }
-            else
-            {
-                if (!weights.empty())
-                {
-                    throw status::null_pointer{};
-                }
-            }
-        }
 
     } // namespace onnxifi
 
