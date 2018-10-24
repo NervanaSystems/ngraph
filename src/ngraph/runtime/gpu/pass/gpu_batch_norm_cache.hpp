@@ -16,13 +16,29 @@
 
 #pragma once
 
+#include "ngraph/pass/pass.hpp"
+
 namespace ngraph
 {
     namespace runtime
     {
         namespace gpu
         {
-            void example_kernel();
+            namespace pass
+            {
+                class BatchNormCache;
+            }
         }
     }
 }
+
+class ngraph::runtime::gpu::pass::BatchNormCache : public ngraph::pass::FunctionPass
+{
+public:
+    BatchNormCache()
+        : FunctionPass()
+    {
+    }
+
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
+};

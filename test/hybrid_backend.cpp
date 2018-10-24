@@ -13,20 +13,3 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-
-#include <iostream>
-#include "ngraph/runtime/gpu/nvcc/kernels.hpp"
-using namespace ngraph;
-
-__global__ void example()
-{
-    size_t tid = blockDim.x * blockIdx.x + threadIdx.x;
-    printf("Hello from tid = %d\n", tid);
-    __syncthreads();
-}
-
-void runtime::gpu::example_kernel()
-{
-    example<<<1, 32>>>();
-    return;
-}
