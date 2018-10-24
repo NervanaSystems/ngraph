@@ -21,6 +21,9 @@
 #include <onnxifi.h>
 
 #include "backend_manager.hpp"
+#include "exceptions.hpp"
+
+using namespace ngraph;
 
 using namespace ngraph::onnxifi;
 
@@ -34,17 +37,13 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
         BackendManager::get_backend_ids(backendIDs, numBackends);
         return ONNXIFI_STATUS_SUCCESS;
     }
-    catch (const std::invalid_argument&)
+    catch (const onnxifi::status::runtime& e)
     {
-        return ONNXIFI_STATUS_INVALID_POINTER;
+        return e.get_status();
     }
     catch (const std::bad_alloc&)
     {
         return ONNXIFI_STATUS_NO_SYSTEM_MEMORY;
-    }
-    catch (const std::length_error&)
-    {
-        return ONNXIFI_STATUS_FALLBACK;
     }
     catch (...)
     {
