@@ -615,9 +615,11 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
     };
 
-    std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
     auto m = std::make_shared<pattern::RecurrentMatcher>(
-        lstm_node_label, rpattern_ct_1, empty_correlated_matches, callback);
+        lstm_node_label,
+        rpattern_ct_1,
+        std::set<std::shared_ptr<pattern::op::Label>>{weights_i2h, weights_h2h, bias_i2h, bias_h2h},
+        callback);
     this->add_matcher(m);
 }
 
