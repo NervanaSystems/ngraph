@@ -56,6 +56,16 @@ namespace ngraph
             }
             return m_dimension;
         }
+        /// \brief Convert this dimension to `ptrdiff_t`. This dimension must be static.
+        /// \throws std::invalid_argument If this dimension is dynamic.
+        explicit operator ptrdiff_t() const
+        {
+            if (is_dynamic())
+            {
+                throw std::invalid_argument("Cannot convert dynamic dimension to ptrdiff_t");
+            }
+            return static_cast<ptrdiff_t>(m_dimension);
+        }
 
         /// \brief Check whether this dimension represents the same scheme as the argument (both
         ///        dynamic, or equal).
@@ -89,12 +99,60 @@ namespace ngraph
         /// Two dimensions are considered compatible if it is possible to merge them. (See
         /// Dimension::merge.)
         bool compatible(const Dimension& d) const;
+
+        /// \brief Check whether this dimension is a relaxation of the argument.
+        /// \param d The dimension to compare this dimension with.
+        /// \return `true` if this dimension relaxes `d`, else `false`.
+        ///
+        /// A dimension `d1` _relaxes_ (or _is a relaxation of_) `d2` if `d1` and `d2` are static
+        /// and equal, or `d1` is dynamic.
+        ///
+        /// `d1.relaxes(d2)` is equivalent to `d2.refines(d1)`.
+        bool relaxes(const Dimension& d) const;
+
+        /// \brief Check whether this dimension is a refinement of the argument.
+        /// \param d The dimension to compare this dimension with.
+        /// \return `true` if this dimension relaxes `d`, else `false`.
+        ///
+        /// A dimension `d2` _refines_ (or _is a refinement of_) `d1` if `d1` and `d2` are static
+        /// and equal, or `d2` is dynamic.
+        ///
+        /// `d1.refines(d2)` is equivalent to `d2.relaxes(d1)`.
+        bool refines(const Dimension& d) const;
+
         /// \brief Create a dynamic dimension.
         /// \return A dynamic dimension.
         static Dimension dynamic() { return Dimension(); }
         /// \brief Constant for the value used internally to represent a dynamic dimension.
         static const size_t s_dynamic_val{std::numeric_limits<size_t>::max()};
 
+        /// \brief Addition operator for Dimension.
+        /// \param dim Right operand for addition.
+        /// \return Dimension::dynamic() if either of `*this` or `dim` is dynamic; else, a static
+        ///         dimension with value `size_t(*this)+size_t(dim)`.
+        Dimension operator+(const Dimension& dim) const;
+
+        /// \brief Subtraction operator for Dimension.
+        /// \param dim Right operand for subtraction.
+        /// \return Dimension::dynamic() if either of `*this` or `dim` is dynamic; else, a static
+        ///         dimension with value `size_t(*this)-size_t(dim)`.
+        Dimension operator-(const Dimension& dim) const;
+
+        /// \brief Multiplication operator for Dimension.
+        /// \param dim Right operand for multiplicaiton.
+        /// \return 0 if either of `*this` or `dim` is static and 0; else, Dimension::dynamic() if
+        ///         either of `*this` or `dim` is dynamic; else, a static dimension with value
+        ///         `size_t(*this)*size_t(dim)`.
+        Dimension operator*(const Dimension& dim) const;
+
+        /// \brief Add-into operator for Dimension.
+        /// \param dim Right operand for addition.
+        /// \return A reference to `*this`, after updating `*this` to the value `*this + dim`.
+        Dimension& operator+=(const Dimension& dim) { return (*this = *this + dim); }
+        /// \brief Multiply-into operator for Dimension.
+        /// \param dim Right operand for multiplication.
+        /// \return A reference to `*this`, after updating `*this` to the value `*this * dim`.
+        Dimension& operator*=(const Dimension& dim) { return (*this = *this * dim); }
     private:
         // The actual numerical value of the dimension. s_dynamic_val is a special case,
         // representing a dynamic dimension.
@@ -108,11 +166,4 @@ namespace ngraph
     ///
     /// Inserts the string `?` if `dimension` is dynamic; else inserts `size_t(dimension)`.
     std::ostream& operator<<(std::ostream& str, const Dimension& dimension);
-
-    /// \brief Addition operator for dimensions.
-    /// \param d1 Left operand for addition.
-    /// \param d2 Right operand for addition.
-    /// \return Dimension::dynamic() if either of `d1` or `d2` is dynamic; else, a static
-    ///         dimension with value `size_t(d1)+size_t(d2)`.
-    Dimension operator+(const Dimension& d1, const Dimension& d2);
 }

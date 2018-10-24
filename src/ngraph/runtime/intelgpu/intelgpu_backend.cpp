@@ -14,6 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <iomanip>
+#include <sys/resource.h>
+#include <sys/time.h>
+
 #include <CPP/activation.hpp>
 #include <CPP/activation_grad.hpp>
 #include <CPP/arg_max_min.hpp>
@@ -276,9 +280,56 @@ extern "C" void delete_backend(runtime::Backend* backend)
     delete backend;
 }
 
+static size_t get_max_memory_rss()
+{
+    size_t result = 0;
+    struct rusage usage;
+
+    if (getrusage(RUSAGE_SELF, &usage) == 0)
+    {
+        result = usage.ru_maxrss; // the value is in kilobytes
+
+        // aligne result to return bytes
+        result *= 1000;
+    }
+
+    return result;
+}
+
 runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
 {
-    ocl_engine = make_shared<cldnn::engine>();
+    bool profiling = false;
+
+    // This should be used to allow nbench work with "--timing_detail" option
+    if (getenv("NGRAPH_INTELGPU_STAT") != nullptr)
+    {
+        profiling = true;
+    }
+
+    // Print out default profile and statistic to the output
+    if (getenv("NGRAPH_INTELGPU_PROFILE") != nullptr)
+    {
+        profiling = true;
+        m_profile_enable = true;
+    }
+
+    // Control the number of lines in ::call profile
+    const char* profile_lines_count = getenv("NGRAPH_INTELGPU_PROFILE_LINES");
+    if (profile_lines_count != nullptr)
+    {
+        profiling = true;
+        m_profile_enable = true;
+        m_profile_lines_limit_count = strtol(profile_lines_count, nullptr, 10);
+    }
+
+    // Disables the backend Function (graph) level optimizations
+    if (getenv("NGRAPH_INTELGPU_DISABLE_OPTIMIZATIONS") != nullptr)
+    {
+        m_disable_backend_optimizations = true;
+    }
+
+    cldnn::engine_configuration cldnn_configuration(profiling);
+    ocl_engine = make_shared<cldnn::engine>(cldnn_configuration);
 }
 
 shared_ptr<runtime::Tensor>
@@ -304,17 +355,21 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     }
 
     cldnn::topology topology;
-    ngraph::pass::Manager pass_manager;
 
-    pass_manager.register_pass<ngraph::pass::NopElimination>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
+    if (!m_disable_backend_optimizations)
+    {
+        ngraph::pass::Manager pass_manager;
 
-    // GetOutputElementElimination must be after CommonSubexpressionElimination
-    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+        pass_manager.register_pass<ngraph::pass::NopElimination>();
+        pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+        pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+        pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
 
-    pass_manager.run_passes(func);
+        // GetOutputElementElimination must be after CommonSubexpressionElimination
+        pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+
+        pass_manager.run_passes(func);
+    }
 
     for (shared_ptr<Node> op : func->get_ops())
     {
@@ -1050,12 +1105,12 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                              pad_interior);
             break;
         }
-        case OP_TYPEID::BatchNormBackprop:
+        case OP_TYPEID::BatchNormTrainingBackprop:
         {
             arguments_check(op, 6, 3);
 
-            const shared_ptr<op::BatchNormBackprop> batch_norm =
-                static_pointer_cast<op::BatchNormBackprop>(op);
+            const shared_ptr<op::BatchNormTrainingBackprop> batch_norm =
+                static_pointer_cast<op::BatchNormTrainingBackprop>(op);
             const double eps = batch_norm->get_eps_value();
 
             do_create_mean(topology,
@@ -1090,9 +1145,32 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                              get_output_name(op, 2));
             break;
         }
-        case OP_TYPEID::BatchNorm:
+        case OP_TYPEID::BatchNormInference:
         {
-            const shared_ptr<op::BatchNorm> batch_norm = static_pointer_cast<op::BatchNorm>(op);
+            const shared_ptr<op::BatchNormInference> batch_norm =
+                static_pointer_cast<op::BatchNormInference>(op);
+            const double eps = batch_norm->get_eps_value();
+            string mean_name;
+            string variance_name;
+
+            arguments_check(op, 5, 1);
+
+            do_batch_norm_operation(topology,
+                                    get_output_name(op),
+                                    get_output_type(op),
+                                    eps,
+                                    get_input_name(op, 2),
+                                    get_input_shape(op, 2),
+                                    get_input_name(op, 0),
+                                    get_input_name(op, 1),
+                                    get_input_name(op, 3),
+                                    get_input_name(op, 4));
+            break;
+        }
+        case OP_TYPEID::BatchNormTraining:
+        {
+            const shared_ptr<op::BatchNormTraining> batch_norm =
+                static_pointer_cast<op::BatchNormTraining>(op);
             const double eps = batch_norm->get_eps_value();
             string mean_name;
             string variance_name;
@@ -1418,6 +1496,17 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
                                               const vector<shared_ptr<runtime::Tensor>>& outputs,
                                               const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    double mem_before_call = 0.0f;
+    double mem_after_compilation = 0.0f;
+    double mem_after_call = 0.0f;
+    stopwatch timer_call;
+    stopwatch timer_compile;
+
+    if (m_profile_enable)
+    {
+        mem_before_call = get_max_memory_rss();
+        timer_compile.start();
+    }
     validate_call(func, outputs, inputs);
 
     FunctionInstance& instance = ocl_networks[func];
@@ -1427,6 +1516,13 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
         {
             return false;
         }
+    }
+
+    if (m_profile_enable)
+    {
+        timer_compile.stop();
+        mem_after_compilation = get_max_memory_rss();
+        timer_call.start();
     }
 
     shared_ptr<cldnn::network> network = instance.ocl_network;
@@ -1459,5 +1555,208 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
         ngraph_res->write(result_memory.data(), 0, result_memory.size());
     }
 
+    if (m_profile_enable)
+    {
+        timer_call.stop();
+        mem_after_call = get_max_memory_rss();
+
+        print_call_performance(network,
+                               func,
+                               timer_compile.get_milliseconds(),
+                               timer_call.get_milliseconds(),
+                               mem_before_call,
+                               mem_after_compilation,
+                               mem_after_call);
+    }
+
     return true;
+}
+
+void runtime::intelgpu::IntelGPUBackend::remove_compiled_function(shared_ptr<Function> func)
+{
+    ocl_networks.erase(func);
+}
+
+void runtime::intelgpu::IntelGPUBackend::enable_performance_data(shared_ptr<Function> func,
+                                                                 bool enable)
+{
+    FunctionInstance& instance = ocl_networks[func];
+    if (instance.ocl_network != nullptr)
+    {
+        throw runtime_error("Performance data collection must be enabled prior to compiling.");
+    }
+
+    instance.m_performance_counters_enabled = enable;
+}
+
+// The cldnn::network contains something like "generic_layer_0_Parameter_254_0" names
+// This function should return "Parameter_254" from the example above
+static string convert_cldnn_names(shared_ptr<Function> func, const string& cldnn_name)
+{
+    const string key("_");
+    string result;
+
+    const size_t last_key = cldnn_name.rfind(key);
+    const size_t pre_last_key = cldnn_name.rfind(key, last_key - 1);
+    const size_t pre_pre_last_key = cldnn_name.rfind(key, pre_last_key - 1);
+
+    if (pre_pre_last_key == std::string::npos)
+    {
+        result = cldnn_name.substr(0, last_key);
+    }
+    else
+    {
+        result = cldnn_name.substr(pre_pre_last_key + 1, last_key - pre_pre_last_key - 1);
+    }
+
+    return result;
+}
+
+vector<runtime::PerformanceCounter>
+    runtime::intelgpu::IntelGPUBackend::get_performance_data(shared_ptr<Function> func) const
+{
+    vector<runtime::PerformanceCounter> rc;
+    auto it = ocl_networks.find(func);
+    if (it != ocl_networks.end())
+    {
+        const shared_ptr<cldnn::network> network = it->second.ocl_network;
+
+        if (network != nullptr && it->second.m_performance_counters_enabled)
+        {
+            const map<cldnn::primitive_id, cldnn::event>& primitives =
+                network->get_executed_primitives();
+            for (const auto& p : primitives)
+            {
+                // Let's generate the primitive name that matches to the name in Function
+                const string primitive_name = convert_cldnn_names(func, p.first);
+                size_t usec = 0;
+                for (const auto& q : p.second.get_profiling_info())
+                {
+                    usec += chrono::duration_cast<
+                                chrono::duration<int64_t, chrono::milliseconds::period>>(
+                                q.value->value())
+                                .count();
+                }
+                const runtime::PerformanceCounter perf_counter(primitive_name.c_str(), usec, 1);
+                rc.push_back(perf_counter);
+            }
+        }
+    }
+    return rc;
+}
+
+static Shape get_shape_by_name(const shared_ptr<Function> func, const string& name)
+{
+    for (shared_ptr<Node> node : func->get_ops())
+    {
+        if (node->get_name() == name)
+        {
+            return node->get_output_shape(0);
+        }
+    }
+
+    return Shape();
+}
+
+void runtime::intelgpu::IntelGPUBackend::print_call_performance(
+    const shared_ptr<cldnn::network> network,
+    const shared_ptr<Function> func,
+    size_t time_compile,
+    size_t time_call,
+    double mem_before_call,
+    double mem_after_compilation,
+    double mem_after_call) const
+{
+    struct data_item
+    {
+        string item_name;
+        map<string, double> item_times;
+    };
+    const string& func_name = func->get_name();
+    const map<cldnn::primitive_id, cldnn::event>& primitives = network->get_executed_primitives();
+    size_t limit_count = m_profile_lines_limit_count;
+    multimap<double, data_item> data;
+    map<string, double> total_interval_times;
+    double total_executing_time = 0;
+    size_t total_items_count = 0;
+    size_t max_item_name_size = 0;
+
+    ios_base::fmtflags saved_stream_flags(cout.flags()); // Save stream flags to restore them later
+
+    if (m_profile_lines_limit_count > 0)
+    {
+        // Extract profiling statistic, calculate summary and sort
+        for (auto& prim : primitives)
+        {
+            double executing_time = 0;
+            data_item item;
+            item.item_name = prim.first;
+            max_item_name_size = max(max_item_name_size, prim.first.size());
+
+            for (auto& prof_info : prim.second.get_profiling_info())
+            {
+                const string& interval_name = prof_info.name;
+                double interval =
+                    chrono::duration_cast<chrono::duration<double, chrono::milliseconds::period>>(
+                        prof_info.value->value())
+                        .count();
+
+                item.item_times[interval_name] = interval;
+
+                // Get the Key time to sort by
+                if (interval_name == "executing")
+                {
+                    executing_time += interval;
+                }
+
+                // Accumulate total time for each interval
+                if (total_interval_times.find(interval_name) == total_interval_times.end())
+                {
+                    total_interval_times[interval_name] = interval;
+                }
+                else
+                {
+                    total_interval_times[interval_name] += interval;
+                }
+            }
+            data.emplace(executing_time, item);
+            total_executing_time += executing_time;
+            ++total_items_count;
+        }
+
+        // Print statistic for each primitive in the cldnn::network
+        for (auto it = data.rbegin(); (it != data.rend()) && (limit_count > 0); ++it, --limit_count)
+        {
+            const string ngraph_node_name = convert_cldnn_names(func, it->second.item_name);
+            const Shape ngraph_node_shape = get_shape_by_name(func, ngraph_node_name);
+
+            cout << func_name << delim << setw(max_item_name_size) << it->second.item_name << delim
+                 << "time(ms)" << delim << scientific << setprecision(2) << it->first;
+            for (auto item : it->second.item_times)
+            {
+                cout << delim << item.first << "(ms)" << delim << item.second;
+            }
+            cout << delim << ngraph_node_name << delim << ngraph_node_shape << "\n";
+        }
+
+        // Print bottom line summary
+        const string total_items_count_string = "Total(cldnn " + to_string(total_items_count) +
+                                                ", ngraph " + to_string(func->get_ops().size()) +
+                                                ")";
+        cout << func_name << delim << setw(max_item_name_size) << total_items_count_string << delim
+             << "time(ms)" << delim << scientific << setprecision(2) << total_executing_time;
+        for (auto item_times : total_interval_times)
+        {
+            cout << delim << item_times.first << "(ms)" << delim << item_times.second;
+        }
+        cout << "\n";
+    }
+
+    // Print time and memory consumed in ::call function
+    cout << func_name << delim << " Backend compilation(ms)" << delim << time_compile << " call(ms)"
+         << delim << time_call << delim << "memory before call(B)" << delim << mem_before_call
+         << delim << "after compilation(B)" << delim << mem_after_compilation << delim
+         << "after call(B)" << delim << mem_after_call << endl;
+
+    cout.flags(saved_stream_flags); // Restore stream configuration to leave it in original state
 }
