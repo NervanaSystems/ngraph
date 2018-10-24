@@ -82,10 +82,10 @@ void ngraph::runtime::cpu::pass::ConcatInputs::concat_lstm_inputs()
             std::shared_ptr<Node> bias =
                 std::make_shared<op::Add>(pattern_map[bias1], pattern_map[bias2]);
 
-            auto lstm_node = pattern_map[lstm_node_label]->get_arguments()[0];
-            auto batch_size = std::dynamic_pointer_cast<op::Lstm>(lstm_node)->get_batch_size();
-            auto feature_size =
-                std::dynamic_pointer_cast<op::Lstm>(lstm_node)->get_src_iter_feature_size();
+            auto lstm_node = std::static_pointer_cast<op::Lstm>(
+                pattern_map[lstm_node_label]->get_arguments()[0]);
+            auto batch_size = lstm_node->get_batch_size();
+            auto feature_size = lstm_node->get_src_iter_feature_size();
             auto lstm_mkldnn_node = std::make_shared<op::Lstm>(
                 src_layer, src_iter, pattern_map[weights_i2h], pattern_map[weights_h2h], bias);
 
@@ -105,6 +105,7 @@ void ngraph::runtime::cpu::pass::ConcatInputs::concat_lstm_inputs()
             for (auto& goes : lstm_node->get_outputs().at(0).get_inputs())
             {
                 auto goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(goes->get_node());
+                NGRAPH_ASSERT(goe_node);
                 lstm_outputs.insert(goes->get_node());
                 // first output node of lstm
                 if (goe_node->get_n() == 0)
