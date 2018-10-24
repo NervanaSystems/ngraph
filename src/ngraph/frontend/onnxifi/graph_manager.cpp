@@ -105,6 +105,7 @@ namespace ngraph
             std::istream sin{&buffer};
             std::unique_ptr<Graph> graph{new Graph{backend, sin}};
             graph->set_weights(weights);
+            graph->compile();
             std::lock_guard<std::mutex> lock{m_mutex};
             auto it =
                 m_graphs.emplace(reinterpret_cast<::onnxGraph>(graph.get()), std::move(graph));
