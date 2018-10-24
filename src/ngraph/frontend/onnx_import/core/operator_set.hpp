@@ -22,13 +22,12 @@
 
 #include "ngraph/node_vector.hpp"
 
+#include "node.hpp"
+
 namespace ngraph
 {
     namespace onnx_import
     {
-        // Forward declaration
-        class Node;
-
         using Operator = std::function<NodeVector(const Node&)>;
         using OperatorSet = std::unordered_map<std::string, std::reference_wrapper<const Operator>>;
 

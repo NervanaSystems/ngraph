@@ -18,7 +18,10 @@ set(ONNX_OPSET_VERSION 9 CACHE INTERNAL "Supported version of ONNX operator set"
 
 add_library(onnx_import_interface OBJECT
         onnx.cpp
-        onnx.hpp)
+        onnx.hpp
+        core/operator_set.hpp
+        core/node.cpp
+        core/node.hpp)
 
 add_library(onnx_import STATIC
         core/attribute.cpp
@@ -27,14 +30,16 @@ add_library(onnx_import STATIC
         core/graph.hpp
         core/model.cpp
         core/model.hpp
-        core/node.cpp
         core/node.hpp
         core/operator_set.hpp
         core/tensor.hpp
         core/value_info.hpp
         exceptions.hpp
+        op/acos.hpp
         op/add.hpp
         op/and.hpp
+        op/asin.hpp
+        op/atan.hpp
         op/average_pool.cpp
         op/average_pool.hpp
         op/batch_norm.cpp
@@ -44,6 +49,7 @@ add_library(onnx_import STATIC
         op/ceil.hpp
         op/clip.cpp
         op/clip.hpp
+        op/cos.hpp
         op/concat.cpp
         op/concat.hpp
         op/constant.cpp
@@ -101,6 +107,7 @@ add_library(onnx_import STATIC
         op/shape.hpp
         op/shape.cpp
         op/sigmoid.hpp
+        op/sin.hpp
         op/slice.cpp
         op/slice.hpp
         op/softmax.cpp
@@ -116,6 +123,7 @@ add_library(onnx_import STATIC
         op/squeeze.hpp
         op/sub.hpp
         op/sum.hpp
+        op/tan.hpp
         op/tanh.hpp
         op/thresholded_relu.cpp
         op/thresholded_relu.hpp

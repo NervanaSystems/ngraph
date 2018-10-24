@@ -46,6 +46,7 @@
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
+#include "ngraph/runtime/performance_counter.hpp"
 
 namespace ngraph
 {
@@ -139,6 +140,8 @@ namespace ngraph
                                    const std::string& directory,
                                    const std::string& filename);
 
+                const std::vector<PerformanceCounter>& get_perf_counters();
+
 #if defined(NGRAPH_HALIDE)
                 std::unordered_map<std::string, Halide::Func>& get_halide_functions()
                 {
@@ -173,6 +176,11 @@ namespace ngraph
                 void register_common_passes(ngraph::pass::Manager& pass_manager);
 
                 // For non-destructive passthrough kernels, propagate function
+                // constant buffers to internal ops
+                void propagate_in_place_constant(ngraph::descriptor::Output* output,
+                                                 std::string input_name,
+                                                 bool dex);
+                // For non-destructive passthrough kernels, propagate function
                 // input buffers to internal ops
                 void propagate_in_place_input(ngraph::descriptor::Output* output,
                                               std::string input_name,
@@ -189,7 +197,7 @@ namespace ngraph
                 // For a chain of concat ops, propagate memory pool offsets
                 void propagate_in_place_concat(std::shared_ptr<ngraph::op::Concat> concat);
                 bool computes_result(Node* node);
-
+                void release_function() { m_function = nullptr; }
 #if !defined(NGRAPH_DEX_ONLY)
                 void emit_debug_function_entry(codegen::CodeWriter& writer,
                                                Node* node,
@@ -211,22 +219,8 @@ namespace ngraph
                 std::string emit_op_as_function(const Node&, const std::string& function_name);
                 std::string strip_comments(const std::string&);
 
-#endif
-                void release_function() { m_function = nullptr; }
-                std::shared_ptr<ngraph::Function> m_function;
-                bool m_release_function;
-
-                bool m_use_tbb;
-
-                EntryPoint m_compiled_function;
-                std::unordered_map<std::string, std::string> m_variable_name_map;
-
-#if !defined(NGRAPH_DEX_ONLY)
-
-                bool m_is_compiled;
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
-                bool m_emit_timing;
 
                 std::map<std::string, size_t> m_name_index_map;
 
@@ -234,8 +228,20 @@ namespace ngraph
                 // Constant ops we need to keep a list of shared_ptr to each Constant
                 // so they don't get freed before we are done with them
                 std::vector<std::shared_ptr<Node>> m_active_constants;
-
 #endif
+
+                std::shared_ptr<ngraph::Function> m_function;
+                bool m_release_function;
+                bool m_emit_timing;
+
+                bool m_use_tbb;
+#if !defined(NGRAPH_DEX_ONLY)
+                bool m_is_compiled;
+                bool m_direct_execution;
+#endif
+                EntryPoint m_compiled_function;
+                std::unordered_map<std::string, std::string> m_variable_name_map;
+
                 std::unordered_map<std::string, CPUTensorRole> m_tensor_roles;
 
                 LayoutDescriptorPtrs parameter_layout_descriptors;
@@ -263,7 +269,7 @@ namespace ngraph
                 std::list<std::pair<std::reference_wrapper<void*>, size_t>> function_output_index;
                 std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
-                bool m_direct_execution;
+                std::vector<runtime::PerformanceCounter> m_perf_counters;
 
 #if defined(NGRAPH_HALIDE)
                 std::unordered_map<std::string, Halide::Func> halide_functions;

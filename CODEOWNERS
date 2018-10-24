@@ -40,6 +40,7 @@
 /src/ngraph/runtime/                @rkimballn1 @Krovatkin
 /src/ngraph/runtime/cpu/            @jbobba
 /src/ngraph/runtime/gpu/            @rkimballn1
+/src/ngraph/runtime/hybrid/         @sasadep
 /src/ngraph/runtime/intelgpu/       @shssf
 /src/ngraph/runtime/interpreter/    @rkimballn1
 /src/ngraph/runtime/reference/      @aprocter

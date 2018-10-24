@@ -107,3 +107,10 @@ void runtime::Backend::validate_call(shared_ptr<const Function> function,
         }
     }
 }
+
+bool runtime::Backend::is_supported(const Node& node) const
+{
+    // The default behavior is that a backend fully supports all ops. If this is not the case
+    // then override this method and enhance.
+    return false;
+}
