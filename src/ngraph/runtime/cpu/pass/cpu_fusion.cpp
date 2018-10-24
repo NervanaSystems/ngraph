@@ -1459,7 +1459,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
             auto pattern_map = m.get_pattern_map();
 
             auto m_bn = std::static_pointer_cast<op::BatchNormInference>(m.get_match_root());
-            auto m_conv = std::staticc_pointer_cast<op::ConvolutionBias>(m_bn->get_argument(2));
+            auto m_conv = std::static_pointer_cast<op::ConvolutionBias>(m_bn->get_argument(2));
 
             if (m_conv->get_users().size() > 1)
             {
