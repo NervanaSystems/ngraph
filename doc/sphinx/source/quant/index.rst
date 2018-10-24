@@ -4,20 +4,60 @@
 Quantization with nGraph 
 ########################
 
-Both time and energy must be expended to train a :abbr:`Deep Learning (DL)` 
-model with a large dataset. Eventually, anyone working with a :term:`NN` will
-be faced with a decision to either expend further time and energy training for a 
-higher-precision accuracy, or to test and benchmark the model as it has been 
-trained "thus far". For either scenario, a basic understanding of how the nGraph 
-Abstraction Layer respects operations involving quantization can be 
-immensely helpful.  
+.. intro paragraph to be added later
 
-.. * :ref:`about_int8`
-.. * :ref:`about_fp32`
+
+Working with element types 
+==========================
+
+Graphs constructed with nGraph have a strong, static type system that applies 
+both to element types and to shapes. For example, you can't accidentally plug 
+something producing a ``float`` into something expecting an ``int``, or 
+something producing a matrix into something expecting a vector.  
+
+What this means is that models trained on one element type (FP32, for example, 
+is the most common model defintion) cannot be simply quantized to a different 
+element type after being trained. Rather, a "Quantization-Aware" training step 
+must be implemented during construction of. This quantization-aware training 
+step can take place outside of nGraph, or with the bridge; or, 
+to take another approach, a graph that has been modified for quantization can be 
+re-trained with different quantized weights to produce the desired or compatible 
+type of output. Quantizing from FP32 into INT8 will produce results that are 
+slightly different with respect to precision; this tradeoff is the gist of 
+quantization.
+
+
+.. +++++++++++++++++++++++++++++++++++ ..
+
+
+..:ref:`about_int8`
+
+
+.. :term:`qint8`
+
+
+.. :ref:`about_fp32`
+
+
+
+
+
+
+Methods of abstraction
+======================
+
+.. WIP
+
+
 .. * :ref:`quantized_models`
 .. * :ref:`quantized_weights`
 
-* :ref:`appendix`
+
+.. +++++++++++++++++++++++++++++++++++ ..
+
+Tutorial
+========
+
 
 
 
@@ -27,6 +67,9 @@ immensely helpful.
 Appendix 
 ========
 
+* :ref:`appendix`
+
+
 Further reading: 
 
 
@@ -35,6 +78,8 @@ Further reading:
 * Quantization and training of Neural Networks for efficient integer-arithmetic-only inference: https://arxiv.org/abs/1712.05877
 
 * Quantizing deep convolutional networks for efficient inference: https://arxiv.org/abs/1806.08342
+
+* https://software.intel.com/en-us/mkl-linux-developer-guide-language-specific-usage-options
 
 * Introduction to Low-Precision 8-bit Integer Computations: https://intel.github.io/mkl-dnn/ex_int8_simplenet.html
 
