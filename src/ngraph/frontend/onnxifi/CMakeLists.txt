@@ -42,9 +42,13 @@ set(ONNXIFI_VERSION ${NGRAPH_VERSION})
 set(ONNXIFI_ABI_VERSION 1)
 
 set_target_properties(onnxifi-ngraph PROPERTIES
-    LINK_FLAGS "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/libonnxifi-ngraph.version"
-    LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/libonnxifi-ngraph.version
     VERSION ${ONNXIFI_VERSION} SOVERSION ${ONNXIFI_ABI_VERSION})
+
+if (NOT APPLE)
+    set_target_properties(onnxifi-ngraph PROPERTIES
+        LINK_FLAGS "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/libonnxifi-ngraph.version"
+        LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/libonnxifi-ngraph.version)
+endif()
 
 target_compile_definitions(onnxifi-ngraph PRIVATE
     NGRAPH_VERSION="${NGRAPH_VERSION}" ONNX_VERSION="${ONNX_VERSION}"
