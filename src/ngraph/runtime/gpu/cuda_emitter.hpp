@@ -180,6 +180,13 @@ namespace ngraph
                                             NVShape reduce_shape,
                                             std::vector<size_t> axes_flag);
 
+                size_t build_topk(const std::vector<element::Type>& dtypes,
+                                  NVShape input_shape,
+                                  const size_t topk_axis,
+                                  size_t topk_k,
+                                  const element::Type index_elem_type,
+                                  bool compute_max);
+
                 void debug_sync();
                 void sync();
 

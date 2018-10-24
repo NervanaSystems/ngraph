@@ -118,6 +118,12 @@ namespace ngraph
                                                  const std::vector<std::string>& data_types,
                                                  const size_t rank);
 
+                static void get_topk(codegen::CodeWriter& writer,
+                                               const std::string& name,
+                                               runtime::gpu::GPUKernelArgs& args,
+                                               std::vector<std::string>& dtypes,
+                                               bool compute_max);
+
                 static void get_reverse_sequence_op(codegen::CodeWriter& writer,
                                                     const std::string& name,
                                                     const std::array<std::string, 3>& data_types,

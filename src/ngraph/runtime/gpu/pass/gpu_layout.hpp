@@ -58,7 +58,6 @@ namespace ngraph
                 NodeVector insert_new_reshape_after(NodeVector& parents,
                                                     const AxisVector& axis_vector,
                                                     const Shape& out_shape);
-
             }
         }
     }

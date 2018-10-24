@@ -27,7 +27,6 @@
 #include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/gpu/gpu_op_annotations.hpp"
 
-
 using namespace std;
 using namespace ngraph;
 
@@ -92,8 +91,9 @@ namespace ngraph
                     auto parent_node = topk->get_argument(0);
 
                     auto in_shape = topk->get_input_shape(0);
+                    size_t ndim = in_shape.size();
 
-                    if (in_shape.size() == 2 && topk_axis == 1)
+                    if (in_shape.size() <= 2 && topk_axis == ndim - 1)
                     {
                         return;
                     }
@@ -101,7 +101,6 @@ namespace ngraph
                     {
                         auto out_shape = in_shape;
                         out_shape[topk_axis] = topk_k;
-                        size_t ndim = in_shape.size();
 
                         AxisVector reshape_axis_order = ngraph::get_default_order(ndim);
                         reshape_axis_order.erase(reshape_axis_order.begin() + topk_axis);
@@ -115,8 +114,8 @@ namespace ngraph
 
                         Shape pre_2d_reshape_out(2);
                         pre_2d_reshape_out[1] = pre_reshape_out[ndim - 1];
-                        pre_2d_reshape_out[0] = static_cast<size_t>(
-                            ngraph::shape_size(pre_reshape_out) / pre_2d_reshape_out[1]);
+                        pre_2d_reshape_out[0] =
+                            ngraph::shape_size(pre_reshape_out) / pre_2d_reshape_out[1];
 
                         auto pre_reshape = make_shared<ngraph::op::Reshape>(
                             parent_node, reshape_axis_order, pre_reshape_out);
@@ -136,7 +135,7 @@ namespace ngraph
                                                           topk->get_index_element_type(),
                                                           topk->get_k(),
                                                           topk->get_compute_max());
-                        
+
                         ngraph::replace_node(topk, new_topk);
 
                         // Replace old goe with new goe based on new topk
@@ -192,7 +191,6 @@ namespace ngraph
 
                     return reshapes;
                 }
-
             }
         }
     }
@@ -218,6 +216,4 @@ bool runtime::gpu::pass::GPULayout::run_on_call_graph(const std::list<std::share
             handler->second(m_external_function, node);
         }
     }
-
-    return false;
 }

@@ -20,7 +20,6 @@
 #include <typeinfo>
 
 #include "ngraph/autodiff/adjoints.hpp"
-#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"

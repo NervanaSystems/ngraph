@@ -1743,6 +1743,125 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     return primitive_index;
 }
 
+size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& dtypes,
+                                             NVShape input_shape,
+                                             const size_t topk_axis,
+                                             size_t topk_k,
+                                             const element::Type index_elem_type,
+                                             bool compute_max)
+{
+    NGRAPH_ASSERT(dtypes[1] == index_elem_type);
+    uint32_t rank = static_cast<uint32_t>(input_shape.size());
+    NGRAPH_ASSERT(rank <= 2);
+    NGRAPH_ASSERT(topk_axis == rank - 1);
+
+    size_t num_cols = input_shape[rank - 1];
+    size_t num_rows = ((rank == 2) ? input_shape[0] : 1);
+
+    std::vector<std::string> dtypes_string;
+    for (auto& dtype : dtypes)
+    {
+        dtypes_string.push_back(dtype.c_type_string());
+    }
+    std::stringstream kernel_name;
+    kernel_name << "topk_" << join(dtypes_string, "_") << "_r_"
+                << "_axis_" << topk_axis << "_k_" << topk_k << "_cm_" << compute_max;
+
+    std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_");
+
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    uint32_t block_size_x = 32;
+    uint32_t aligned_grid_size_x = num_rows;
+
+    size_t shared_data_bytes = num_cols * (dtypes[0].size() + index_elem_type.size());
+
+    auto args = m_primitive_emitter->add_kernel_args();
+    args.add_placeholder(dtypes_string[0], "in")
+        .add_placeholder(dtypes_string[1], "out_id")
+        .add_placeholder(dtypes_string[2], "out_val")
+        .add("num_cols", num_cols)
+        .add("topk_k", topk_k);
+
+    // if the kernel has not been compiled, build it
+    auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        runtime::gpu::CudaKernelBuilder::get_topk(
+            writer, kernel_name.str(), args, dtypes_string, compute_max);
+        std::cout << writer.get_code() << std::endl;
+        compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
+    }
+
+    if (shared_data_bytes > (48 << 10))
+    {
+        GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+        size_t heap_workspace_id = allocator.reserve_workspace(num_rows * shared_data_bytes);
+        std::unique_ptr<gpu::primitive> kernel_launch(
+            new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+                void* buffer = runtime::gpu::invoke_memory_primitive(m_ctx, heap_workspace_id);
+                std::vector<void*> args_list(6, NULL);
+                args_list[0] = &inputs[0];
+                args_list[1] = &outputs[0];
+                args_list[2] = &outputs[1];
+                args_list[3] = &buffer;
+                args_list[4] = &num_cols;
+                args_list[5] = &topk_k;
+
+                CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                              aligned_grid_size_x,
+                                              1,
+                                              1, 
+                                              block_size_x,
+                                              1,
+                                              1, 
+                                              0,
+                                              NULL, // shared mem and stream
+                                              args_list.data(),
+                                              0)); // arguments
+                debug_sync();
+
+            }});
+        primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
+    }
+
+    else
+    {
+        std::unique_ptr<gpu::primitive> kernel_launch(
+            new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+                void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                       .resolve_placeholder(1, &outputs[0])
+                                       .resolve_placeholder(2, &outputs[1])
+                                       .get_argument_list();
+                                       
+                CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                              aligned_grid_size_x,
+                                              1,
+                                              1, 
+                                              block_size_x,
+                                              1,
+                                              1, 
+                                              shared_data_bytes,
+                                              NULL, //stream
+                                              args_list,
+                                              0)); // arguments
+                debug_sync();
+
+            }});
+
+        primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
+
+    }
+
+    return primitive_index;
+}
+
 size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Softmax* node)
 {
     auto& args = node->get_inputs();
@@ -2055,7 +2174,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window(const OpName op_name,
                                       args_list.data(),
                                       0)); // arguments
         debug_sync();
-
     }});
 
     return this->m_primitive_emitter->register_primitive(f, hash);
@@ -2546,7 +2664,6 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const std::array<std::string
 
     std::unique_ptr<gpu::primitive> conv(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-
             void** args_list = args.resolve_placeholder(0, &inputs[0])
                                    .resolve_placeholder(1, &inputs[1])
                                    .resolve_placeholder(2, &outputs[0])
