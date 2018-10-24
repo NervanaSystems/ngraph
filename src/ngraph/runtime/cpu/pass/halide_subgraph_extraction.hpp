@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,19 +14,26 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <iostream>
-#include "ngraph/runtime/gpu/nvcc/kernels.hpp"
-using namespace ngraph;
+#pragma once
 
-__global__ void example()
-{
-    size_t tid = blockDim.x * blockIdx.x + threadIdx.x;
-    printf("Hello from tid = %d\n", tid);
-    __syncthreads();
-}
+#include "ngraph/pass/pass.hpp"
+#include "ngraph/runtime/cpu/cpu_external_function.hpp"
 
-void runtime::gpu::example_kernel()
+namespace ngraph
 {
-    example<<<1, 32>>>();
-    return;
+    namespace runtime
+    {
+        namespace cpu
+        {
+            namespace pass
+            {
+                class HalideSubgraphExtraction : public ngraph::pass::FunctionPass
+                {
+                public:
+                    HalideSubgraphExtraction() {}
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                };
+            }
+        }
+    }
 }
