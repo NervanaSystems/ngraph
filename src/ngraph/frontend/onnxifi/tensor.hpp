@@ -44,7 +44,7 @@ namespace ngraph
             virtual ~Tensor() = default;
 
             explicit Tensor(const ::onnxTensorDescriptorV1& tensor)
-                : m_tensor{tensor}
+                : m_tensor{&tensor}
             {
                 if (tensor.tag != ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1)
                 {
@@ -113,13 +113,13 @@ namespace ngraph
 
             virtual std::shared_ptr<runtime::Tensor> to_ng(runtime::Backend& backend) const = 0;
 
-            const void* data() const { return reinterpret_cast<const void*>(m_tensor.buffer); }
+            const void* data() const { return reinterpret_cast<const void*>(m_tensor->buffer); }
             std::size_t size() const { return m_size; }
             const Shape& get_shape() const { return m_shape; }
-            const char* get_name() const { return m_tensor.name; }
+            const char* get_name() const { return m_tensor->name; }
 
         protected:
-            const ::onnxTensorDescriptorV1& m_tensor;
+            const ::onnxTensorDescriptorV1* m_tensor;
             Shape m_shape;
             std::size_t m_size{1};
         };

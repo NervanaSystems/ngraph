@@ -33,7 +33,7 @@ namespace ngraph
             {
                 throw status::runtime{status};
             }
-            bool result{m_backend.call(m_function, m_inputs, m_outputs)};
+            bool result{m_backend->call(m_function, m_inputs, m_outputs)};
             status = ::onnxSignalEvent(m_output_fence->event);
             if (status != ONNXIFI_STATUS_SUCCESS)
             {
@@ -68,7 +68,7 @@ namespace ngraph
             ::onnxStatus status{::onnxGetEventState(output_fence->event, &state)};
             if (status == ONNXIFI_STATUS_INVALID_EVENT)
             {
-                status = ::onnxInitEvent(m_backend.get_handle(), &output_fence->event);
+                status = ::onnxInitEvent(m_backend->get_handle(), &output_fence->event);
                 if (status != ONNXIFI_STATUS_SUCCESS)
                 {
                     throw status::runtime{status};
@@ -92,7 +92,7 @@ namespace ngraph
             m_output_fence = output_fence;
         }
 
-        bool Graph::compile() { return m_backend.compile(m_function); }
+        bool Graph::compile() { return m_backend->compile(m_function); }
 
         void Graph::load(std::istream& sin, const Span<::onnxTensorDescriptorV1>& weight_descriptors)
         {

@@ -49,7 +49,7 @@ namespace ngraph
             Graph& operator=(Graph&&) noexcept = delete;
 
             explicit Graph(const Backend& backend)
-                : m_backend{backend}
+                : m_backend{&backend}
             {
             }
 
@@ -72,7 +72,7 @@ namespace ngraph
             std::shared_ptr<Function> m_function{nullptr};
             std::vector<InputTensor> m_inputs{};
             std::vector<OutputTensor> m_outputs{};
-            const Backend& m_backend;
+            const Backend* m_backend;
             const ::onnxMemoryFenceV1* m_input_fence{nullptr};
             ::onnxMemoryFenceV1* m_output_fence{nullptr};
         };

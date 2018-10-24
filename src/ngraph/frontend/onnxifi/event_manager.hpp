@@ -46,7 +46,7 @@ namespace ngraph
                 {
                     throw status::null_pointer{};
                 }
-                auto& backend{BackendManager::get_backend(handle)};
+                auto& backend = BackendManager::get_backend(handle);
                 *event = instance().acquire(backend);
             }
 

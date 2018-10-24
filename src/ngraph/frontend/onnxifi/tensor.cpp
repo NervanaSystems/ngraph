@@ -23,7 +23,7 @@ namespace ngraph
         std::shared_ptr<runtime::Tensor> InputTensor::to_ng(runtime::Backend& backend) const
         {
             std::shared_ptr<runtime::Tensor> tensor;
-            switch (m_tensor.dataType)
+            switch (m_tensor->dataType)
             {
             case ONNXIFI_DATATYPE_FLOAT16:
             case ONNXIFI_DATATYPE_FLOAT32:
@@ -73,7 +73,7 @@ namespace ngraph
 
         std::shared_ptr<runtime::Tensor> OutputTensor::to_ng(runtime::Backend& backend) const
         {
-            switch (m_tensor.dataType)
+            switch (m_tensor->dataType)
             {
             case ONNXIFI_DATATYPE_FLOAT16:
             case ONNXIFI_DATATYPE_FLOAT32: return backend.create_tensor(element::f32, m_shape);
@@ -93,7 +93,7 @@ namespace ngraph
         void OutputTensor::from_ng(const runtime::Tensor& tensor)
         {
             std::size_t readSize{tensor.get_element_count()};
-            switch (m_tensor.dataType)
+            switch (m_tensor->dataType)
             {
             case ONNXIFI_DATATYPE_FLOAT16:
             case ONNXIFI_DATATYPE_FLOAT32: readSize *= sizeof(float); break;
@@ -108,7 +108,7 @@ namespace ngraph
             case ONNXIFI_DATATYPE_UINT64: readSize *= sizeof(uint64_t); break;
             default: break;
             }
-            tensor.read(reinterpret_cast<void*>(m_tensor.buffer), 0, readSize);
+            tensor.read(reinterpret_cast<void*>(m_tensor->buffer), 0, readSize);
         }
 
     } // namespace onnxifi
