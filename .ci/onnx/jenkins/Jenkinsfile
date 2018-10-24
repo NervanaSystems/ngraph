@@ -23,7 +23,7 @@ CI_ROOT = "ngraph/.ci/onnx/jenkins"
 DOCKER_CONTAINER_NAME = "jenkins_${PROJECT_NAME}_ci"
 NGRAPH_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph.git"
 ONNX_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph-onnx.git"
-JENKINS_GITHUB_CREDENTIAL_ID = "6887a177-8c4d-4fe9-9c3b-fcd71b22bfba"
+JENKINS_GITHUB_CREDENTIAL_ID = "7157091e-bc04-42f0-99fd-dc4da2922a55"
 ONNX_BRANCH = "$ghprbSourceBranch"
 
 def CloneRepository(String jenkins_github_credential_id, String ngraph_git_address, String onnx_git_address) {
