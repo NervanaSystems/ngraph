@@ -85,6 +85,12 @@ namespace ngraph
                                                 size_t out_rank,
                                                 size_t reduce_rank);
 
+                static void get_topk(codegen::CodeWriter& writer,
+                                     const std::string& name,
+                                     runtime::gpu::GPUKernelArgs& args,
+                                     std::vector<std::string>& dtypes,
+                                     bool compute_max);
+
                 //using one block with at most 512 threads to reduce to scalar.
                 static void get_reduce_to_scalar_op(codegen::CodeWriter& writer,
                                                     const std::string& name,
