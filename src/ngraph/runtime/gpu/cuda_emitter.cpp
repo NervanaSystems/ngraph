@@ -82,7 +82,7 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::string& dtype,
 {
     std::stringstream kernel_name;
     size_t input_num = input_shapes.size();
-    kernel_name << "concat_" << dtype.back() << "_r_" << input_num;
+    kernel_name << "concat_" << dtype << "_r_" << input_num;
 
     std::stringstream hash;
     hash << kernel_name.str() << "_o_" << join(output_shape, "_") << "_a_" << concat_axis;
