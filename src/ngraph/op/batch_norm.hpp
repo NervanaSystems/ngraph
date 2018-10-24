@@ -27,28 +27,7 @@ namespace ngraph
 {
     namespace op
     {
-        class BatchNormBase : public Op
-        {
-        public:
-            BatchNormBase(const std::string& node_type, double eps, const NodeVector& args);
-
-            void validate_and_infer_types() override;
-            double get_eps_value() const { return m_epsilon; }
-        protected:
-            enum
-            {
-                GAMMA,
-                BETA,
-                INPUT,
-                MEAN,
-                VARIANCE,
-                DELTA
-            };
-
-            double m_epsilon;
-        };
-
-        class BatchNormTraining : public BatchNormBase
+        class BatchNormTraining : public Op
         {
         public:
             // In this version of BatchNorm:
@@ -75,42 +54,28 @@ namespace ngraph
                               std::shared_ptr<Node> beta,
                               std::shared_ptr<Node> input);
 
-            // In this version of BatchNorm:
-            //
-            // MEAN AND VARIANCE: provided by the 'mean' and 'variance' parameters.
-            //
-            // OUTPUT VALUE: a single tensor with the normalized value of 'input'.
-            // mean and variance will also be updated inplace
-            //
-            // AUTODIFF SUPPORT:
-            //   'generate_adjoints(...)' works as expected.
-            //
-            // SHAPE DETAILS:
-            //   gamma:    must have rank 1, with the same span as input's channel axis.
-            //   beta:     must have rank 1, with the same span as input's channel axis.
-            //   input:    must have rank >= 2. The second dimension represents the channel axis and
-            //             must have a span of at least 1.
-            //   mean:     must have rank 1, with the same span as input's channel axis.
-            //   variance: must have rank 1, with the same span as input's channel axis.
-            //   output:   shall have the same shape as 'input'.
-            BatchNormTraining(double eps,
-                              std::shared_ptr<ngraph::Node> gamma,
-                              std::shared_ptr<ngraph::Node> beta,
-                              std::shared_ptr<ngraph::Node> input,
-                              std::shared_ptr<ngraph::Node> mean,
-                              std::shared_ptr<ngraph::Node> variance);
-
             void validate_and_infer_types() override;
 
+            double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
+
+        private:
+            enum
+            {
+                GAMMA,
+                BETA,
+                INPUT
+            };
+
+            double m_epsilon;
         };
 
-        class BatchNormInference : public BatchNormBase
+        class BatchNormInference : public Op
         {
         public:
             // In this version of BatchNorm:
@@ -139,6 +104,7 @@ namespace ngraph
 
             void validate_and_infer_types() override;
 
+            double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -148,6 +114,18 @@ namespace ngraph
             {
                 throw ngraph_error("Invalid operation");
             }
+
+        private:
+            enum
+            {
+                GAMMA,
+                BETA,
+                INPUT,
+                MEAN,
+                VARIANCE
+            };
+
+            double m_epsilon;
         };
 
         class BatchNormTrainingBackprop : public Op
@@ -163,7 +141,7 @@ namespace ngraph
 
             void validate_and_infer_types() override;
 
-            double get_eps_value() const { return epsilon; }
+            double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -178,7 +156,7 @@ namespace ngraph
                 DELTA
             };
 
-            double epsilon;
+            double m_epsilon;
         };
     }
 }
