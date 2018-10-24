@@ -197,23 +197,18 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
     uint32_t block_size_x = 32;
     uint32_t aligned_grid_size_x = num_rows;
     size_t shared_data_bytes = num_cols * (dtypes[0].size() + index_elem_type.size());
-    auto args = m_primitive_emitter->add_kernel_args();
-    args.add_placeholder(dtypes_string[0], "in")
-        .add_placeholder(dtypes_string[1], "out_id")
-        .add_placeholder(dtypes_string[2], "out_val")
-        .add("num_cols", num_cols)
-        .add("topk_k", topk_k);
     // if the kernel has not been compiled, build it
+    bool use_malloc = ((shared_data_bytes > (48 << 10)) ? true : false);
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         runtime::gpu::CudaKernelBuilder::get_topk(
-            writer, kernel_name.str(), args, dtypes_string, compute_max);
+            writer, kernel_name.str(), dtypes_string, compute_max, use_malloc);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
-    if (shared_data_bytes > (48 << 10))
+    if (use_malloc)
     {
         GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
         size_t heap_workspace_id = allocator.reserve_workspace(num_rows * shared_data_bytes);
@@ -246,10 +241,12 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
     {
         std::unique_ptr<gpu::primitive> kernel_launch(
             new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-                void** args_list = args.resolve_placeholder(0, &inputs[0])
-                                       .resolve_placeholder(1, &outputs[0])
-                                       .resolve_placeholder(2, &outputs[1])
-                                       .get_argument_list();
+                std::vector<void*> args_list(5, NULL);
+                args_list[0] = &inputs[0];
+                args_list[1] = &outputs[0];
+                args_list[2] = &outputs[1];
+                args_list[3] = &num_cols;
+                args_list[4] = &topk_k;
 
                 CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                               aligned_grid_size_x,
@@ -260,7 +257,7 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
                                               1,
                                               shared_data_bytes,
                                               NULL, //stream
-                                              args_list,
+                                              args_list.data(),
                                               0)); // arguments
                 debug_sync();
             }});

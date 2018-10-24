@@ -204,9 +204,9 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
 
 void runtime::gpu::CudaKernelBuilder::get_topk(codegen::CodeWriter& writer,
                                                const std::string& name,
-                                               runtime::gpu::GPUKernelArgs& args,
                                                std::vector<std::string>& dtypes,
-                                               bool compute_max)
+                                               bool compute_max,
+                                               bool use_malloc)
 {
     writer << "struct Entry\n";
     writer.block_begin();
@@ -272,27 +272,29 @@ void runtime::gpu::CudaKernelBuilder::get_topk(codegen::CodeWriter& writer,
     }
     writer.block_end();
 
-    if (args.get_size() == 5)
-    {
-        writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
-    }
-    else
+    if (use_malloc)
     {
         writer << "extern \"C\" __global__ void cuda_" << name << "(";
         writer << dtypes[0] << "* in, " << dtypes[1] << "* out_id, " << dtypes[2] << "* out_val, "
                << " Entry* entry,";
         writer << "size_t num_cols, size_t topk_k)\n";
     }
+    else
+    {
+        writer << "extern \"C\" __global__ void cuda_" << name << "(";
+        writer << dtypes[0] << "* in, " << dtypes[1] << "* out_id, " << dtypes[2] << "* out_val, ";
+        writer << "size_t num_cols, size_t topk_k)\n";
+    }
     writer.block_begin();
     {
         writer << "in = in + blockIdx.x * num_cols;\n";
-        if (args.get_size() != 5)
+        if (use_malloc)
         {
-            writer << "entry = entry + + blockIdx.x * num_cols;\n";
+            writer << "entry = entry + blockIdx.x * num_cols;\n";
         }
         writer << "out_id = out_id + blockIdx.x * topk_k;\n";
         writer << "out_val = out_val + blockIdx.x * topk_k;\n";
-        if (args.get_size() == 5)
+        if (!use_malloc)
         {
             writer << "extern __shared__ Entry entry[];\n";
         }
@@ -822,8 +824,9 @@ void runtime::gpu::CudaKernelBuilder::get_pad_op(codegen::CodeWriter& writer,
             for (size_t i = 0; i < rank; i++)
             {
                 writer << "output_idx += (input_idx / input_strides" << i << " * padding_interior"
-                       << i << "  + "
-                               "padding_below"
+                       << i
+                       << "  + "
+                          "padding_below"
                        << i << ") * output_strides" << i << ";\n";
                 writer << "input_idx %= input_strides" << i << ";\n";
             }
@@ -925,8 +928,9 @@ void runtime::gpu::CudaKernelBuilder::get_slice_op(codegen::CodeWriter& writer,
                                                    size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, uint32_t* input_strides, uint32_t* lower_bounds, uint32_t* "
-                               "slice_strides, uint32_t* output_strides, uint32_t n)\n";
+           << data_types[1]
+           << "* out, uint32_t* input_strides, uint32_t* lower_bounds, uint32_t* "
+              "slice_strides, uint32_t* output_strides, uint32_t n)\n";
     writer.block_begin();
     {
         writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
@@ -939,14 +943,16 @@ void runtime::gpu::CudaKernelBuilder::get_slice_op(codegen::CodeWriter& writer,
             for (; i < rank - 1; i++)
             {
                 writer << "input_idx += (((output_idx / output_strides[" << i
-                       << "]) * slice_strides[" << i << "]) + "
-                                                        "lower_bounds["
+                       << "]) * slice_strides[" << i
+                       << "]) + "
+                          "lower_bounds["
                        << i << "]) * input_strides[" << i << "];\n";
                 writer << "output_idx %= output_strides[" << i << "];\n";
             }
             writer << "input_idx += (((output_idx / output_strides[" << i << "]) * slice_strides["
-                   << i << "]) + "
-                           "lower_bounds["
+                   << i
+                   << "]) + "
+                      "lower_bounds["
                    << i << "]) * input_strides[" << i << "];\n";
             writer << "out[tid] = in[input_idx];\n";
         }
@@ -1000,8 +1006,9 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_window_op(
     const size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
-           << data_types[1] << "* out, int* input_strides, int* output_shape, int* "
-                               "reduce_window_shape, int* reduce_window_strides, size_t n)\n";
+           << data_types[1]
+           << "* out, int* input_strides, int* output_shape, int* "
+              "reduce_window_shape, int* reduce_window_strides, size_t n)\n";
     writer.block_begin();
     {
         writer << "const int tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
