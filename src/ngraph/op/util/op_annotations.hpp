@@ -35,6 +35,8 @@ namespace ngraph
             class OpAnnotations
             {
             public:
+                virtual ~OpAnnotations() = default;
+
                 void add_in_place_oi_pair(const struct oi_pair& oi)
                 {
                     for (auto e : m_in_place_oi_pairs)

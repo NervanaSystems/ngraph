@@ -78,9 +78,7 @@ bool runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
     if (instance.m_external_function == nullptr)
     {
         instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
-#if !defined(NGRAPH_DEX_ONLY)
         instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
-#endif
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
     }
@@ -109,8 +107,6 @@ void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Function> fu
     m_function_map.erase(func);
 }
 
-#if !defined(NGRAPH_DEX_ONLY)
-
 void runtime::cpu::CPU_Backend::enable_performance_data(shared_ptr<Function> func, bool enable)
 {
     FunctionInstance& instance = m_function_map[func];
@@ -131,28 +127,10 @@ vector<runtime::PerformanceCounter>
         const FunctionInstance& instance = it->second;
         if (instance.m_external_function != nullptr)
         {
-            auto* engine = instance.m_external_function->m_execution_engine.get();
-            if (engine)
-            {
-                auto get_count = engine->find_function<size_t()>("get_debug_timer_count");
-                auto get_name = engine->find_function<const char*(size_t)>("get_debug_timer_name");
-                auto get_microseconds =
-                    engine->find_function<size_t(size_t)>("get_debug_timer_microseconds");
-                auto get_call_count =
-                    engine->find_function<size_t(size_t)>("get_debug_timer_call_count");
-
-                if (get_count && get_name && get_microseconds && get_call_count)
-                {
-                    size_t count = get_count();
-                    for (size_t i = 0; i < count; i++)
-                    {
-                        rc.push_back({get_name(i), get_microseconds(i), get_call_count(i)});
-                    }
-                }
-            }
+            rc.insert(rc.end(),
+                      instance.m_external_function->get_perf_counters().begin(),
+                      instance.m_external_function->get_perf_counters().end());
         }
     }
     return rc;
 }
-
-#endif
