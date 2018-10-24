@@ -21,7 +21,8 @@ add_library(onnx_import_interface OBJECT
         onnx.hpp
         core/operator_set.hpp
         core/node.cpp
-        core/node.hpp)
+        core/node.hpp
+	weight.hpp)
 
 add_library(onnx_import STATIC
         core/attribute.cpp
