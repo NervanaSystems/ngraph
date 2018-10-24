@@ -63,6 +63,13 @@ namespace ngraph
 
             static void init_backend(::onnxBackendID backend_id, ::onnxBackend* backend);
 
+            static void init_graph(::onnxBackend backend,
+                                   const void* onnx_model,
+                                   std::size_t onnx_model_size,
+                                   const ::onnxTensorDescriptorV1* weights,
+                                   std::size_t weights_count,
+                                   ::onnxGraph* graph);
+
         private:
             mutable std::mutex m_mutex{};
             std::map<::onnxBackendID, Backend> m_registered_backends{};
@@ -87,6 +94,7 @@ namespace ngraph
                 std::lock_guard<std::mutex> lock{m_mutex};
                 return m_registered_backends.at(id);
             }
+            Backend& get_backend(::onnxBackend backend);
         };
 
     } // namespace onnxifi
