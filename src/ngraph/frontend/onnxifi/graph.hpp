@@ -100,7 +100,6 @@ namespace ngraph
             m_function = onnx_import::import_onnx_function(sin);
         }
 
-        inline Graph::operator ::onnxGraph() const { return (::onnxGraph)(this); }
         inline void Graph::set_inputs(const Span<::onnxTensorDescriptorV1>& inputs)
         {
             if ((inputs.data() != nullptr) && inputs.empty())

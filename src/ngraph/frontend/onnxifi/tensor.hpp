@@ -37,10 +37,11 @@ namespace ngraph
             Tensor(const Tensor&) = default;
             Tensor& operator=(const Tensor&) = default;
 
-            Tensor(Tensor&&) noexcept = default;
-            Tensor& operator=(Tensor&&) noexcept = default;
+            Tensor(Tensor&&) = default;
+            Tensor& operator=(Tensor&&) = default;
 
             Tensor() = delete;
+            virtual ~Tensor() = default;
 
             explicit Tensor(const ::onnxTensorDescriptorV1& tensor)
                 : m_tensor{tensor}

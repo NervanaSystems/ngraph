@@ -664,7 +664,7 @@ namespace
             {
                 // Read the status, but ignore it. For some tests the backends
                 // might be already released.
-                ::onnxStatus status{::onnxReleaseBackend(backend)};
+                ::onnxStatus(status) = ::onnxReleaseBackend(backend);
             }
         }
     };
@@ -909,7 +909,7 @@ TEST(onnxifi, init_graph_invalid_pointer_weights)
     auto model = load_model();
     for (const auto& backend : backends)
     {
-        ::onnxGraph graph{(::onnxGraph)100};
+        ::onnxGraph graph{reinterpret_cast<::onnxGraph>(100)};
         ::onnxStatus status{
             ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 100, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
@@ -920,7 +920,7 @@ TEST(onnxifi, init_graph_invalid_pointer_weights)
 TEST(onnxifi, init_graph_invalid_backend)
 {
     auto model = load_model();
-    ::onnxGraph graph{(::onnxGraph)100};
+    ::onnxGraph graph{reinterpret_cast<::onnxGraph>(100)};
     ::onnxStatus status{
         ::onnxInitGraph(nullptr, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
     EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_BACKEND);
@@ -933,7 +933,6 @@ TEST(onnxifi, init_graph_invalid_pointer_graph)
     auto model = load_model();
     for (const auto& backend : backends)
     {
-        ::onnxGraph graph{(::onnxGraph)100};
         ::onnxStatus status{
             ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, nullptr)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
@@ -946,7 +945,7 @@ TEST(onnxifi, init_graph_invalid_pointer_model)
     auto model = load_model();
     for (const auto& backend : backends)
     {
-        ::onnxGraph graph{(::onnxGraph)100};
+        ::onnxGraph graph{reinterpret_cast<::onnxGraph>(100)};
         ::onnxStatus status{
             ::onnxInitGraph(backend, nullptr, model.size(), nullptr, 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
@@ -960,7 +959,7 @@ TEST(onnxifi, init_graph_invalid_size_model)
     auto model = load_model();
     for (const auto& backend : backends)
     {
-        ::onnxGraph graph{(::onnxGraph)100};
+        ::onnxGraph graph{reinterpret_cast<::onnxGraph>(100)};
         ::onnxStatus status{::onnxInitGraph(backend, nullptr, 0, model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_SIZE);
         EXPECT_TRUE(graph == nullptr);
@@ -974,7 +973,7 @@ TEST(onnxifi, init_graph_invalid_size_weights)
     ::onnxTensorDescriptorV1 weights;
     for (const auto& backend : backends)
     {
-        ::onnxGraph graph{(::onnxGraph)100};
+        ::onnxGraph graph{reinterpret_cast<::onnxGraph>(100)};
         ::onnxStatus status{
             ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, &weights, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_SIZE);
@@ -989,7 +988,7 @@ TEST(onnxifi, init_graph_invalid_protobuf)
 
     for (const auto& backend : backends)
     {
-        ::onnxGraph graph{(::onnxGraph)100};
+        ::onnxGraph graph{reinterpret_cast<::onnxGraph>(100)};
         ::onnxStatus status{
             ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_PROTOBUF);
@@ -1049,7 +1048,7 @@ namespace
     using TensorDescriptor_InvalidDataType =
         TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, ONNXIFI_DATATYPE_COMPLEX128>;
     using TensorDescriptor_UnsupportedDataType =
-        TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, (::onnxEnum)-1>;
+        TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, static_cast<::onnxEnum>(-1)>;
     using TensorDescriptor_InvalidMemoryType =
         TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1,
                                   ONNXIFI_DATATYPE_FLOAT32,
@@ -1339,7 +1338,7 @@ namespace
         MemoryFence_Template& operator=(MemoryFence_Template&&) noexcept = default;
 
         MemoryFence_Template(::onnxBackend backend, int32_t tag, ::onnxEnum type)
-            : ::onnxMemoryFenceV1{tag, type, nullptr}
+            : ::onnxMemoryFenceV1{tag, type, {nullptr}}
         {
             if (InitializeEvent)
             {
@@ -1368,7 +1367,7 @@ namespace
         }
 
         MemoryFence_Template(::onnxBackend backend, ::onnxEvent event)
-            : ::onnxMemoryFenceV1{ONNXIFI_TAG_MEMORY_FENCE_V1, ONNXIFI_SYNCHRONIZATION_EVENT, event}
+            : ::onnxMemoryFenceV1{ONNXIFI_TAG_MEMORY_FENCE_V1, ONNXIFI_SYNCHRONIZATION_EVENT, {event}}
         {
         }
 
@@ -1376,7 +1375,7 @@ namespace
         {
             // Read the status code, but ignore it. Here we may get
             // invalid event handle status because the test might want to try some.
-            ::onnxStatus status{::onnxReleaseEvent(event)};
+            ::onnxStatus(status) = ::onnxReleaseEvent(event);
         }
     };
 
@@ -1485,7 +1484,7 @@ TEST(onnxifi, run_graph_invalid_tag)
             ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
-        MemoryFence invalid_tag{backend, (int32_t)0};
+        MemoryFence invalid_tag{backend, 0};
         MemoryFence input_fence{backend}, output_fence{backend};
 
         status = ::onnxRunGraph(graph, &invalid_tag, &output_fence);
@@ -1510,7 +1509,7 @@ TEST(onnxifi, run_graph_unsupported_fence_type)
             ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
-        MemoryFence unsupported_fence_type{backend, (::onnxEnum)ONNXIFI_SYNCHRONIZATION_IMPLICIT};
+        MemoryFence unsupported_fence_type{backend, static_cast<::onnxEnum>(ONNXIFI_SYNCHRONIZATION_IMPLICIT)};
         MemoryFence input_fence{backend}, output_fence{backend};
 
         status = ::onnxRunGraph(graph, &unsupported_fence_type, &output_fence);
@@ -1528,17 +1527,6 @@ TEST(onnxifi, run_graph_unsupported_fence_type)
 
 namespace
 {
-    ::onnxTensorDescriptorV1 get_tensor_descriptor(const char* name, const void* data)
-    {
-        return {ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1,
-                name,
-                ONNXIFI_DATATYPE_FLOAT32,
-                ONNXIFI_MEMORY_TYPE_CPU,
-                1,
-                nullptr,
-                reinterpret_cast<::onnxPointer>(data)};
-    }
-
     namespace detail
     {
         void run(::onnxBackend backend,
@@ -1555,9 +1543,9 @@ namespace
             }
 
             status = ::onnxSetGraphIO(graph,
-                                      (uint32_t)inputs.size(),
+                                      static_cast<uint32_t>(inputs.size()),
                                       inputs.data(),
-                                      (uint32_t)outputs.size(),
+                                      static_cast<uint32_t>(outputs.size()),
                                       outputs.data());
             if (status != ONNXIFI_STATUS_SUCCESS)
             {
@@ -1691,7 +1679,7 @@ TEST(onnxifi, model_add_abc)
         float output_placeholder{-1};
         TensorDescriptor output{"Result", &output_placeholder};
 
-        status = ::onnxSetGraphIO(graph, (uint32_t)inputs.size(), inputs.data(), 1, &output);
+        status = ::onnxSetGraphIO(graph, static_cast<uint32_t>(inputs.size()), inputs.data(), 1, &output);
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         MemoryFence input_fence{backend}, output_fence{backend};
@@ -1737,7 +1725,7 @@ TEST(onnxifi, model_add_abc_oneshot)
         float output_placeholder{-1};
         TensorDescriptor output{"Result", &output_placeholder};
 
-        status = ::onnxSetGraphIO(graph, (uint32_t)inputs.size(), inputs.data(), 1, &output);
+        status = ::onnxSetGraphIO(graph, static_cast<uint32_t>(inputs.size()), inputs.data(), 1, &output);
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         MemoryFence input_fence{backend};
