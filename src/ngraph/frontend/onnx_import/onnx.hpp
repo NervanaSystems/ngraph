@@ -47,7 +47,7 @@ namespace ngraph
                 u32,
                 u64
             };
-            
+
             Weight() = delete;
             Weight(Type type, std::size_t dimensions, const std::size_t* shape, const void* data);
 
@@ -77,19 +77,18 @@ namespace ngraph
 
         // Convert on ONNX model to a vector of nGraph Functions (input stream)
         std::vector<std::shared_ptr<Function>> load_onnx_model(std::istream&,
-                const Weights& weights = {});
+                                                               const Weights& weights = {});
 
         // Convert an ONNX model to a vector of nGraph Functions
         std::vector<std::shared_ptr<Function>> load_onnx_model(const std::string&,
-                const Weights& weights = {});
+                                                               const Weights& weights = {});
 
         // Convert the first output of an ONNX model to an nGraph Function (input stream)
-        std::shared_ptr<Function> import_onnx_function(std::istream&,
-                const Weights& weights = {});
+        std::shared_ptr<Function> import_onnx_function(std::istream&, const Weights& weights = {});
 
         // Convert the first output of an ONNX model to an nGraph Function
         std::shared_ptr<Function> import_onnx_function(const std::string&,
-                const Weights& weights = {});
+                                                       const Weights& weights = {});
 
     } // namespace onnx_import
 

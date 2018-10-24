@@ -136,8 +136,8 @@ namespace ngraph
         const element::Type& Weight::type() const { return m_pimpl->type(); }
         const void* Weight::data() const { return m_pimpl->data(); }
         const Shape& Weight::shape() const { return m_pimpl->shape(); }
-        std::vector<std::shared_ptr<Function>>
-            load_onnx_model(std::istream& sin, const Weights& weights)
+        std::vector<std::shared_ptr<Function>> load_onnx_model(std::istream& sin,
+                                                               const Weights& weights)
         {
             onnx::ModelProto model_proto;
             if (!model_proto.ParseFromIstream(&sin))
@@ -156,7 +156,7 @@ namespace ngraph
         }
 
         std::vector<std::shared_ptr<Function>> load_onnx_model(const std::string& path,
-                const Weights& weights)
+                                                               const Weights& weights)
         {
             std::ifstream ifs{path, std::ios::in | std::ios::binary};
             if (!ifs.is_open())
@@ -166,14 +166,13 @@ namespace ngraph
             return load_onnx_model(ifs, weights);
         }
 
-        std::shared_ptr<Function> import_onnx_function(std::istream& sin,
-                const Weights& weights)
+        std::shared_ptr<Function> import_onnx_function(std::istream& sin, const Weights& weights)
         {
             return load_onnx_model(sin, weights).front();
         }
 
         std::shared_ptr<Function> import_onnx_function(const std::string& path,
-                const Weights& weights)
+                                                       const Weights& weights)
         {
             return load_onnx_model(path, weights).front();
         }

@@ -21,7 +21,6 @@
 #include "backend.hpp"
 #include "graph.hpp"
 
-
 namespace ngraph
 {
     namespace onnxifi

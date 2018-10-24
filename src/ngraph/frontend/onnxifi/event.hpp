@@ -92,9 +92,8 @@ namespace ngraph
                 bool wait_for(const std::chrono::duration<Rep, Period>& duration) const
                 {
                     std::unique_lock<std::mutex> lock{m_mutex};
-                    auto result = m_condition_variable.wait_for(lock, duration, [&] {
-                        return m_signaled;
-                    });
+                    auto result =
+                        m_condition_variable.wait_for(lock, duration, [&] { return m_signaled; });
                     if (Autoreset)
                     {
                         m_signaled = false;
