@@ -440,9 +440,9 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_int64)
               read_vector<int64_t>(result));
 }
 
-//Add this test to cover paramter space overflow:
-//cuda kernel parameter space have limit, if there is large number of parameters,
-//there will be overflow for parameter space.
+// Add this test to cover paramter space overflow:
+// cuda kernel parameter space have limit, if there is large number of parameters,
+// there will be overflow for parameter space.
 NGRAPH_TEST(${BACKEND_NAME}, concat_vector_large)
 {
     Shape shape_a{1};
