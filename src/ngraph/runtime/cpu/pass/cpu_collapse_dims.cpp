@@ -98,7 +98,7 @@ static void collapse_dims(std::vector<size_t>& shape,
 static bool collapse_broadcast(std::shared_ptr<Node> n)
 {
     bool replaced = false;
-    auto node = std::dynamic_pointer_cast<op::Broadcast>(n).get();
+    auto node = std::static_pointer_cast<op::Broadcast>(n).get();
     auto input_shape = node->get_argument(0)->get_shape();
     auto output_shape = node->get_shape();
     auto operated_axes = node->get_broadcast_axes();
@@ -147,7 +147,7 @@ template <typename T>
 static bool collapse_reduction(std::shared_ptr<Node> n)
 {
     bool replaced = false;
-    auto node = std::dynamic_pointer_cast<T>(n).get();
+    auto node = std::static_pointer_cast<T>(n).get();
     auto input_shape = node->get_argument(0)->get_shape();
     auto output_shape = node->get_shape();
     auto operated_axes = node->get_reduction_axes();
