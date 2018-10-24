@@ -23,8 +23,8 @@
 #include <onnxifi.h>
 
 #include "backend_manager.hpp"
-#include "exceptions.hpp"
 #include "event.hpp"
+#include "exceptions.hpp"
 
 namespace ngraph
 {
@@ -50,21 +50,13 @@ namespace ngraph
                 *event = instance().acquire(backend);
             }
 
-            static void release_event(::onnxEvent event)
-            {
-                instance().release(event);
-            }
-
+            static void release_event(::onnxEvent event) { instance().release(event); }
             static void signal_event(::onnxEvent event)
             {
                 instance().get_by_handle(event).signal();
             }
 
-            static void wait_event(::onnxEvent event)
-            {
-                instance().get_by_handle(event).wait();
-            }
-
+            static void wait_event(::onnxEvent event) { instance().get_by_handle(event).wait(); }
             static void get_event_state(::onnxEvent event, ::onnxEventState* state)
             {
                 instance().get_by_handle(event).get_state(state);

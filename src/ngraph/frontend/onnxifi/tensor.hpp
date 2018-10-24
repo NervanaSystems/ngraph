@@ -42,7 +42,7 @@ namespace ngraph
 
             Tensor() = delete;
 
-            explicit Tensor(const::onnxTensorDescriptorV1& tensor)
+            explicit Tensor(const ::onnxTensorDescriptorV1& tensor)
                 : m_tensor{tensor}
             {
                 if (tensor.tag != ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1)
@@ -55,43 +55,35 @@ namespace ngraph
                 }
                 switch (tensor.dataType)
                 {
-                    case ONNXIFI_DATATYPE_FLOAT16:
-                    case ONNXIFI_DATATYPE_FLOAT32:
-                    case ONNXIFI_DATATYPE_FLOAT64:
-                    case ONNXIFI_DATATYPE_INT8:
-                    case ONNXIFI_DATATYPE_INT16:
-                    case ONNXIFI_DATATYPE_INT32:
-                    case ONNXIFI_DATATYPE_INT64:
-                    case ONNXIFI_DATATYPE_UINT8:
-                    case ONNXIFI_DATATYPE_UINT16:
-                    case ONNXIFI_DATATYPE_UINT32:
-                    case ONNXIFI_DATATYPE_UINT64:
-                        break;
-                    case ONNXIFI_DATATYPE_COMPLEX64:
-                    case ONNXIFI_DATATYPE_COMPLEX128:
-                        throw status::invalid_datatype{};
-                    default:
-                        throw status::unsupported_datatype{};
+                case ONNXIFI_DATATYPE_FLOAT16:
+                case ONNXIFI_DATATYPE_FLOAT32:
+                case ONNXIFI_DATATYPE_FLOAT64:
+                case ONNXIFI_DATATYPE_INT8:
+                case ONNXIFI_DATATYPE_INT16:
+                case ONNXIFI_DATATYPE_INT32:
+                case ONNXIFI_DATATYPE_INT64:
+                case ONNXIFI_DATATYPE_UINT8:
+                case ONNXIFI_DATATYPE_UINT16:
+                case ONNXIFI_DATATYPE_UINT32:
+                case ONNXIFI_DATATYPE_UINT64: break;
+                case ONNXIFI_DATATYPE_COMPLEX64:
+                case ONNXIFI_DATATYPE_COMPLEX128: throw status::invalid_datatype{};
+                default: throw status::unsupported_datatype{};
                 }
                 switch (tensor.memoryType)
                 {
-                    case ONNXIFI_MEMORY_TYPE_CPU:
-                        break;
-                    case ONNXIFI_MEMORY_TYPE_CUDA_BUFFER:
-                    case ONNXIFI_MEMORY_TYPE_OPENCL_BUFFER:
-                    case ONNXIFI_MEMORY_TYPE_OPENGLES_TEXTURE_2D:
-                    case ONNXIFI_MEMORY_TYPE_D3D_RESOURCE:
-                        throw status::invalid_memory_type{};
-                    default:
-                        throw status::unsupported_memory_type{};
+                case ONNXIFI_MEMORY_TYPE_CPU: break;
+                case ONNXIFI_MEMORY_TYPE_CUDA_BUFFER:
+                case ONNXIFI_MEMORY_TYPE_OPENCL_BUFFER:
+                case ONNXIFI_MEMORY_TYPE_OPENGLES_TEXTURE_2D:
+                case ONNXIFI_MEMORY_TYPE_D3D_RESOURCE: throw status::invalid_memory_type{};
+                default: throw status::unsupported_memory_type{};
                 }
-                if ((tensor.dimensions != 0) &&
-                    (tensor.shape == nullptr))
+                if ((tensor.dimensions != 0) && (tensor.shape == nullptr))
                 {
                     throw status::null_pointer{};
                 }
-                if ((tensor.shape != nullptr) &&
-                    (tensor.dimensions == 0))
+                if ((tensor.shape != nullptr) && (tensor.dimensions == 0))
                 {
                     throw status::invalid_size{};
                 }
@@ -120,21 +112,9 @@ namespace ngraph
 
             virtual std::shared_ptr<runtime::Tensor> to_ng(runtime::Backend& backend) const = 0;
 
-            const void* data() const
-            {
-                return reinterpret_cast<const void*>(m_tensor.buffer);
-            }
-
-            std::size_t size() const
-            {
-                return m_size;
-            }
-
-            const Shape& get_shape() const
-            {
-                return m_shape;
-            }
-
+            const void* data() const { return reinterpret_cast<const void*>(m_tensor.buffer); }
+            std::size_t size() const { return m_size; }
+            const Shape& get_shape() const { return m_shape; }
         protected:
             const ::onnxTensorDescriptorV1& m_tensor;
             Shape m_shape;

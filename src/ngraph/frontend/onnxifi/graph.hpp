@@ -53,12 +53,12 @@ namespace ngraph
             }
 
             Graph(const Backend& backend, std::istream& sin)
-                : m_function{onnx_import::import_onnx_function(sin)},
-                  m_backend{backend}
+                : m_function{onnx_import::import_onnx_function(sin)}
+                , m_backend{backend}
             {
             }
 
-            explicit operator ::onnxGraph () const;
+            explicit operator ::onnxGraph() const;
 
             void set_weights(const Span<::onnxTensorDescriptorV1>& weights);
             void set_inputs(const Span<::onnxTensorDescriptorV1>& inputs);
@@ -66,12 +66,13 @@ namespace ngraph
 
             bool compile();
 
-            void configure_memory_fences(const ::onnxMemoryFenceV1* input_fence, ::onnxMemoryFenceV1* output_fence);
+            void configure_memory_fences(const ::onnxMemoryFenceV1* input_fence,
+                                         ::onnxMemoryFenceV1* output_fence);
 
             void from_stream(std::istream& sin);
 
-            bool operator == (const Graph& other) const noexcept;
-            bool operator != (const Graph& other) const noexcept;
+            bool operator==(const Graph& other) const noexcept;
+            bool operator!=(const Graph& other) const noexcept;
 
             bool run_graph();
 
@@ -84,12 +85,12 @@ namespace ngraph
             ::onnxMemoryFenceV1* m_output_fence{nullptr};
         };
 
-        inline bool Graph::operator == (const Graph& other) const noexcept
+        inline bool Graph::operator==(const Graph& other) const noexcept
         {
             return (m_function == other.m_function);
         }
 
-        inline bool Graph::operator != (const Graph& other) const noexcept
+        inline bool Graph::operator!=(const Graph& other) const noexcept
         {
             return !(*this == other);
         }
@@ -99,11 +100,7 @@ namespace ngraph
             m_function = onnx_import::import_onnx_function(sin);
         }
 
-        inline Graph::operator ::onnxGraph () const
-        {
-            return (::onnxGraph)(this);
-        }
-
+        inline Graph::operator ::onnxGraph() const { return (::onnxGraph)(this); }
         inline void Graph::set_inputs(const Span<::onnxTensorDescriptorV1>& inputs)
         {
             if ((inputs.data() != nullptr) && inputs.empty())

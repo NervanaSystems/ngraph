@@ -17,16 +17,16 @@
 #include <cstring>
 #include <fstream>
 #include <map>
+#include <thread>
 #include <utility>
 #include <vector>
-#include <thread>
 
 #include <gtest/gtest.h>
 #include <onnxifi.h>
 
 #include "ngraph/runtime/backend_manager.hpp"
-#include "util/ndarray.hpp"
 #include "util/all_close_f.hpp"
+#include "util/ndarray.hpp"
 
 // ================================================[ onnxGetBackendIDs ]=======
 
@@ -119,7 +119,7 @@ namespace
                 ONNXIFI_STATUS_(NO_DEVICE_RESOURCES);
                 ONNXIFI_STATUS_(BACKEND_UNAVAILABLE);
                 ONNXIFI_STATUS_(INTERNAL_ERROR);
-                default: return "UNKNOWN (" + std::to_string(status) + ")";
+            default: return "UNKNOWN (" + std::to_string(status) + ")";
             }
         }
 
@@ -130,9 +130,9 @@ namespace
         struct status : std::runtime_error
         {
             explicit status(::onnxStatus status, ::onnxStatus expected = ONNXIFI_STATUS_SUCCESS)
-                    : std::runtime_error{::status::to_string(status) +
-                                         ": unexpected status; expected " +
-                                         ::status::to_string(expected)}
+                : std::runtime_error{::status::to_string(status) +
+                                     ": unexpected status; expected " +
+                                     ::status::to_string(expected)}
             {
             }
         };
@@ -685,13 +685,8 @@ namespace
             return model;
         }
 
-        std::vector<char> load_model()
-        {
-            return load_model("add_abc.onnx");
-        }
-
+        std::vector<char> load_model() { return load_model("add_abc.onnx"); }
     } // namespace <anonymous>
-
 }
 
 TEST(onnxifi, release_backend)
@@ -815,7 +810,7 @@ TEST(onnxifi, wait_event)
 
         std::size_t value{0};
 
-        std::thread thread{[&]{
+        std::thread thread{[&] {
             ::onnxStatus local_status{::onnxWaitEvent(input_event)};
             if (local_status != ONNXIFI_STATUS_SUCCESS)
             {
@@ -915,7 +910,8 @@ TEST(onnxifi, init_graph_invalid_pointer_weights)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph{(::onnxGraph)100};
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 100, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 100, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
         EXPECT_TRUE(graph == nullptr);
     }
@@ -925,7 +921,8 @@ TEST(onnxifi, init_graph_invalid_backend)
 {
     auto model = load_model();
     ::onnxGraph graph{(::onnxGraph)100};
-    ::onnxStatus status{::onnxInitGraph(nullptr, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+    ::onnxStatus status{
+        ::onnxInitGraph(nullptr, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
     EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_BACKEND);
     EXPECT_TRUE(graph == nullptr);
 }
@@ -937,7 +934,8 @@ TEST(onnxifi, init_graph_invalid_pointer_graph)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph{(::onnxGraph)100};
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, nullptr)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, nullptr)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
     }
 }
@@ -949,7 +947,8 @@ TEST(onnxifi, init_graph_invalid_pointer_model)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph{(::onnxGraph)100};
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), nullptr, 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), nullptr, 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_POINTER);
         EXPECT_TRUE(graph == nullptr);
     }
@@ -976,7 +975,8 @@ TEST(onnxifi, init_graph_invalid_size_weights)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph{(::onnxGraph)100};
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, &weights, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, &weights, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_SIZE);
         EXPECT_TRUE(graph == nullptr);
     }
@@ -990,14 +990,14 @@ TEST(onnxifi, init_graph_invalid_protobuf)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph{(::onnxGraph)100};
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_PROTOBUF);
         EXPECT_TRUE(graph == nullptr);
     }
 }
 
 // =================================================[ onnxReleaseGraph ]=======
-
 
 TEST(onnxifi, release_graph)
 {
@@ -1006,7 +1006,8 @@ TEST(onnxifi, release_graph)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
         status = ::onnxReleaseGraph(graph);
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
@@ -1019,7 +1020,6 @@ TEST(onnxifi, release_graph_invalid_graph)
     EXPECT_TRUE(status == ONNXIFI_STATUS_INVALID_GRAPH);
 }
 
-
 // ==================================================[ onnxSetGraphIO ]========
 
 namespace
@@ -1029,18 +1029,33 @@ namespace
               ::onnxEnum MemoryType = ONNXIFI_MEMORY_TYPE_CPU>
     struct TensorDescriptor_Template : ::onnxTensorDescriptorV1
     {
-        TensorDescriptor_Template(const char* name, const void* data, uint32_t dimensions = 0, const uint64_t* shape = nullptr)
-            : ::onnxTensorDescriptorV1{Tag, name, Type, MemoryType, dimensions, shape, reinterpret_cast<::onnxPointer>(data)}
+        TensorDescriptor_Template(const char* name,
+                                  const void* data,
+                                  uint32_t dimensions = 0,
+                                  const uint64_t* shape = nullptr)
+            : ::onnxTensorDescriptorV1{Tag,
+                                       name,
+                                       Type,
+                                       MemoryType,
+                                       dimensions,
+                                       shape,
+                                       reinterpret_cast<::onnxPointer>(data)}
         {
         }
     };
 
     using TensorDescriptor = TensorDescriptor_Template<>;
     using TensorDescriptor_InvalidTag = TensorDescriptor_Template<-1>;
-    using TensorDescriptor_InvalidDataType = TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, ONNXIFI_DATATYPE_COMPLEX128>;
-    using TensorDescriptor_UnsupportedDataType = TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, (::onnxEnum)-1>;
-    using TensorDescriptor_InvalidMemoryType = TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, ONNXIFI_DATATYPE_FLOAT32, ONNXIFI_MEMORY_TYPE_D3D_RESOURCE>;
-    using TensorDescriptor_UnsupportedMemoryType = TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, ONNXIFI_DATATYPE_FLOAT32, 128>;
+    using TensorDescriptor_InvalidDataType =
+        TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, ONNXIFI_DATATYPE_COMPLEX128>;
+    using TensorDescriptor_UnsupportedDataType =
+        TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, (::onnxEnum)-1>;
+    using TensorDescriptor_InvalidMemoryType =
+        TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1,
+                                  ONNXIFI_DATATYPE_FLOAT32,
+                                  ONNXIFI_MEMORY_TYPE_D3D_RESOURCE>;
+    using TensorDescriptor_UnsupportedMemoryType =
+        TensorDescriptor_Template<ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, ONNXIFI_DATATYPE_FLOAT32, 128>;
 
 } // namespace <anonymous>
 
@@ -1058,7 +1073,8 @@ TEST(onnxifi, set_graph_io_invalid_pointer)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         float data{0.f};
@@ -1085,7 +1101,6 @@ TEST(onnxifi, set_graph_io_invalid_name)
     //       same name appears in more than one tensor descriptor.
 }
 
-
 TEST(onnxifi, set_graph_io_invalid_shape)
 {
     InitializedBackends backends{};
@@ -1093,7 +1108,8 @@ TEST(onnxifi, set_graph_io_invalid_shape)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         float input_data{0.f}, output_data{0.f};
@@ -1119,7 +1135,8 @@ TEST(onnxifi, set_graph_io_invalid_datatype)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         float input_data{0.f}, output_data{0.f};
@@ -1144,7 +1161,8 @@ TEST(onnxifi, set_graph_io_invalid_memory_type)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         float input_data{0.f}, output_data{0.f};
@@ -1169,7 +1187,8 @@ TEST(onnxifi, set_graph_io_invalid_memory_location)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         float input_data{0.f}, output_data{0.f};
@@ -1194,7 +1213,8 @@ TEST(onnxifi, set_graph_io_unsupported_tag)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         float input_data{0.f}, output_data{0.f};
@@ -1231,7 +1251,8 @@ TEST(onnxifi, set_graph_io_unsupported_memory_type)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         float input_data{0.f}, output_data{0.f};
@@ -1247,7 +1268,6 @@ TEST(onnxifi, set_graph_io_unsupported_memory_type)
         status = ::onnxReleaseGraph(graph);
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
     }
-
 }
 
 TEST(onnxifi, set_graph_io_unsupported_datatype)
@@ -1257,7 +1277,8 @@ TEST(onnxifi, set_graph_io_unsupported_datatype)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         float input_data{0.f}, output_data{0.f};
@@ -1331,7 +1352,8 @@ namespace
         }
 
         explicit MemoryFence_Template(::onnxBackend backend)
-            : MemoryFence_Template{backend, ONNXIFI_TAG_MEMORY_FENCE_V1, ONNXIFI_SYNCHRONIZATION_EVENT}
+            : MemoryFence_Template{
+                  backend, ONNXIFI_TAG_MEMORY_FENCE_V1, ONNXIFI_SYNCHRONIZATION_EVENT}
         {
         }
 
@@ -1370,7 +1392,8 @@ TEST(onnxifi, run_graph_invalid_pointer)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         MemoryFence input_fence{backend}, output_fence{backend};
@@ -1405,7 +1428,8 @@ TEST(onnxifi, run_graph_invalid_fence_type)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         // According to specification type of memory synchronization primitive
@@ -1431,7 +1455,8 @@ TEST(onnxifi, run_graph_invalid_event)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         MemoryFence invalid_event{backend, nullptr};
@@ -1456,7 +1481,8 @@ TEST(onnxifi, run_graph_invalid_tag)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         MemoryFence invalid_tag{backend, (int32_t)0};
@@ -1480,7 +1506,8 @@ TEST(onnxifi, run_graph_unsupported_fence_type)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         MemoryFence unsupported_fence_type{backend, (::onnxEnum)ONNXIFI_SYNCHRONIZATION_IMPLICIT};
@@ -1501,25 +1528,37 @@ TEST(onnxifi, run_graph_unsupported_fence_type)
 
 namespace
 {
-    ::onnxTensorDescriptorV1 get_tensor_descriptor(const char *name, const void* data)
+    ::onnxTensorDescriptorV1 get_tensor_descriptor(const char* name, const void* data)
     {
-        return {ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1, name, ONNXIFI_DATATYPE_FLOAT32,
-                ONNXIFI_MEMORY_TYPE_CPU, 1, nullptr, reinterpret_cast<::onnxPointer>(data)};
+        return {ONNXIFI_TAG_TENSOR_DESCRIPTOR_V1,
+                name,
+                ONNXIFI_DATATYPE_FLOAT32,
+                ONNXIFI_MEMORY_TYPE_CPU,
+                1,
+                nullptr,
+                reinterpret_cast<::onnxPointer>(data)};
     }
 
     namespace detail
     {
-        void run(::onnxBackend backend, const std::vector<char>& model, const std::vector<TensorDescriptor>& inputs,
-                       std::vector<TensorDescriptor>& outputs)
+        void run(::onnxBackend backend,
+                 const std::vector<char>& model,
+                 const std::vector<TensorDescriptor>& inputs,
+                 std::vector<TensorDescriptor>& outputs)
         {
             ::onnxGraph graph;
-            ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+            ::onnxStatus status{
+                ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
             if (status != ONNXIFI_STATUS_SUCCESS)
             {
                 throw error::status{status};
             }
 
-            status = ::onnxSetGraphIO(graph, (uint32_t) inputs.size(), inputs.data(), (uint32_t) outputs.size(), outputs.data());
+            status = ::onnxSetGraphIO(graph,
+                                      (uint32_t)inputs.size(),
+                                      inputs.data(),
+                                      (uint32_t)outputs.size(),
+                                      outputs.data());
             if (status != ONNXIFI_STATUS_SUCCESS)
             {
                 throw error::status{status};
@@ -1553,7 +1592,9 @@ namespace
         }
     }
 
-    bool run_model(const std::string& name, const std::vector<float>& inputs, const std::vector<float>& expected_outputs)
+    bool run_model(const std::string& name,
+                   const std::vector<float>& inputs,
+                   const std::vector<float>& expected_outputs)
     {
         InitializedBackends backends{};
         auto model = load_model(name);
@@ -1583,8 +1624,11 @@ namespace
     using Tensors = std::vector<std::vector<float>>;
     using Shapes = std::vector<std::size_t>;
 
-    bool run_model(const std::string& name, const Tensors& inputs, const Shapes& input_shapes,
-                   const Tensors& expected_outputs, const Shapes& expected_shapes)
+    bool run_model(const std::string& name,
+                   const Tensors& inputs,
+                   const Shapes& input_shapes,
+                   const Tensors& expected_outputs,
+                   const Shapes& expected_shapes)
     {
         InitializedBackends backends{};
         auto model = load_model(name);
@@ -1593,14 +1637,16 @@ namespace
             std::vector<TensorDescriptor> input_descriptors;
             for (std::size_t i{0}; i < inputs.size(); ++i)
             {
-                input_descriptors.emplace_back("Input", inputs[i].data(), input_shapes.size(), input_shapes.data());
+                input_descriptors.emplace_back(
+                    "Input", inputs[i].data(), input_shapes.size(), input_shapes.data());
             }
             std::vector<TensorDescriptor> output_descriptors;
             std::vector<std::vector<float>> outputs(expected_outputs.size());
             for (std::size_t i{0}; i < outputs.size(); ++i)
             {
                 outputs[i].resize(expected_outputs[i].size(), -1.f);
-                output_descriptors.emplace_back("Output", outputs[i].data(), expected_shapes.size(), expected_shapes.data());
+                output_descriptors.emplace_back(
+                    "Output", outputs[i].data(), expected_shapes.size(), expected_shapes.data());
             }
 
             detail::run(backend, model, input_descriptors, output_descriptors);
@@ -1615,8 +1661,10 @@ namespace
         return true;
     }
 
-    bool run_model(const std::string& name, const Tensors& inputs,
-                   const Tensors& expected_outputs, const Shapes& shapes)
+    bool run_model(const std::string& name,
+                   const Tensors& inputs,
+                   const Tensors& expected_outputs,
+                   const Shapes& shapes)
     {
         return run_model(name, inputs, shapes, expected_outputs, shapes);
     }
@@ -1632,13 +1680,13 @@ TEST(onnxifi, model_add_abc)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         float values[] = {0.f, 0.f, 0.f};
         std::vector<TensorDescriptor> inputs{
-            {"A", &values[0]}, {"B", &values[1]}, {"C", &values[2]}
-        };
+            {"A", &values[0]}, {"B", &values[1]}, {"C", &values[2]}};
 
         float output_placeholder{-1};
         TensorDescriptor output{"Result", &output_placeholder};
@@ -1678,13 +1726,13 @@ TEST(onnxifi, model_add_abc_oneshot)
     for (const auto& backend : backends)
     {
         ::onnxGraph graph;
-        ::onnxStatus status{::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
+        ::onnxStatus status{
+            ::onnxInitGraph(backend, nullptr, model.size(), model.data(), 0, nullptr, &graph)};
         EXPECT_TRUE(status == ONNXIFI_STATUS_SUCCESS);
 
         float values[] = {0.f, 0.f, 0.f};
         std::vector<TensorDescriptor> inputs{
-            {"A", &values[0]}, {"B", &values[1]}, {"C", &values[2]}
-        };
+            {"A", &values[0]}, {"B", &values[1]}, {"C", &values[2]}};
 
         float output_placeholder{-1};
         TensorDescriptor output{"Result", &output_placeholder};
@@ -1719,60 +1767,47 @@ using namespace ngraph::test;
 
 TEST(onnxifi, model_add_abc_initializers)
 {
-    EXPECT_TRUE(run_model("add_abc_initializers.onnx",
-        {{1, 2, 3, 4}}, {{3, 6, 9, 12}}, {2, 2}));
+    EXPECT_TRUE(run_model("add_abc_initializers.onnx", {{1, 2, 3, 4}}, {{3, 6, 9, 12}}, {2, 2}));
 }
-
 
 TEST(onnxifi, model_addmul_abc)
 {
-    Tensors inputs{
-        NDArray<float,3>{{{{9, 10}}, {{11, 12}}}}.get_vector(),
-        NDArray<float,3>{{{{5, 6}}, {{7, 8}}}}.get_vector(),
-        NDArray<float,3>{{{{1, 2}}, {{3, 4}}}}.get_vector()};
+    Tensors inputs{NDArray<float, 3>{{{{9, 10}}, {{11, 12}}}}.get_vector(),
+                   NDArray<float, 3>{{{{5, 6}}, {{7, 8}}}}.get_vector(),
+                   NDArray<float, 3>{{{{1, 2}}, {{3, 4}}}}.get_vector()};
 
-    Tensors outputs{
-        NDArray<float,3>{{{{46, 62}}, {{80, 100}}}}.get_vector()};
+    Tensors outputs{NDArray<float, 3>{{{{46, 62}}, {{80, 100}}}}.get_vector()};
 
     EXPECT_TRUE(run_model("addmul_abc.onnx", inputs, outputs, {1, 2, 2}));
 }
 
 TEST(onnxifi, model_average_pool_2d)
 {
-    Tensors inputs{
-        NDArray<float, 4>{{{{{0.f, 1.f, 2.f, 3.f},
-                             {4.f, 5.f, 6.f, 7.f},
-                             {8.f, 9.f, 10.f, 11.f},
-                             {12.f, 13.f, 14.f, 15.f}}}}}.get_vector()
-    };
-    Tensors outputs{
-        NDArray<float, 4>({{{{2.5f, 4.5f}, {10.5f, 12.5f}}}}).get_vector()
-    };
+    Tensors inputs{NDArray<float, 4>{{{{{0.f, 1.f, 2.f, 3.f},
+                                        {4.f, 5.f, 6.f, 7.f},
+                                        {8.f, 9.f, 10.f, 11.f},
+                                        {12.f, 13.f, 14.f, 15.f}}}}}
+                       .get_vector()};
+    Tensors outputs{NDArray<float, 4>({{{{2.5f, 4.5f}, {10.5f, 12.5f}}}}).get_vector()};
     EXPECT_TRUE(run_model("average_pool_2d.onnx", inputs, {1, 1, 4, 4}, outputs, {1, 1, 2, 2}));
 }
 
 TEST(onnxifi, model_average_pool_2d_pads)
 {
-    Tensors inputs{
-        NDArray<float, 4>{{{{{0.f, 1.f, 2.f, 3.f},
-                             {4.f, 5.f, 6.f, 7.f},
-                             {8.f, 9.f, 10.f, 11.f},
-                             {12.f, 13.f, 14.f, 15.f}}}}}.get_vector()
-    };
-    Tensors outputs{
-        NDArray<float, 4>{{{{{0.f, 1.5f, 3.f}, {6.f, 7.5f, 9.f}, {12.f, 13.5f, 15.f}}}}}.get_vector()
-    };
-    EXPECT_TRUE(run_model("average_pool_2d_pads.onnx", inputs, {1, 1, 4, 4}, outputs, {1, 1, 3, 3}));
+    Tensors inputs{NDArray<float, 4>{{{{{0.f, 1.f, 2.f, 3.f},
+                                        {4.f, 5.f, 6.f, 7.f},
+                                        {8.f, 9.f, 10.f, 11.f},
+                                        {12.f, 13.f, 14.f, 15.f}}}}}
+                       .get_vector()};
+    Tensors outputs{NDArray<float, 4>{{{{{0.f, 1.5f, 3.f}, {6.f, 7.5f, 9.f}, {12.f, 13.5f, 15.f}}}}}
+                        .get_vector()};
+    EXPECT_TRUE(
+        run_model("average_pool_2d_pads.onnx", inputs, {1, 1, 4, 4}, outputs, {1, 1, 3, 3}));
 }
 
 TEST(onnxifi, model_concat)
 {
-    Tensors inputs{
-        NDArray<float, 1>{{1, 2}}.get_vector(),
-        NDArray<float, 1>{{3, 4}}.get_vector()
-    };
-    Tensors outputs{
-        NDArray<float, 1>{{1, 2, 3, 4}}.get_vector()
-    };
+    Tensors inputs{NDArray<float, 1>{{1, 2}}.get_vector(), NDArray<float, 1>{{3, 4}}.get_vector()};
+    Tensors outputs{NDArray<float, 1>{{1, 2, 3, 4}}.get_vector()};
     EXPECT_TRUE(run_model("concat.onnx", inputs, {2}, outputs, {4}));
 }

@@ -29,7 +29,8 @@ namespace ngraph
         {
             std::lock_guard<std::mutex> lock{m_mutex};
             std::unique_ptr<Event> event{new Event};
-            auto pair = m_registered_events.emplace(reinterpret_cast<::onnxEvent>(event.get()), std::move(event));
+            auto pair = m_registered_events.emplace(reinterpret_cast<::onnxEvent>(event.get()),
+                                                    std::move(event));
             if (!pair.second)
             {
                 throw status::no_system_resources{};
@@ -41,7 +42,6 @@ namespace ngraph
         {
             std::lock_guard<std::mutex> lock{m_mutex};
             m_registered_events.erase(event);
-
         }
 
         Event& EventManager::get_by_handle(::onnxEvent event) const

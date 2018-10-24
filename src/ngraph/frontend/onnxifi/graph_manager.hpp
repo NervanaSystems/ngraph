@@ -73,7 +73,7 @@ namespace ngraph
             Queue<std::reference_wrapper<Graph>> m_task_queue;
             std::atomic_bool m_quit{false};
             EventAuto m_event{};
-            std::thread m_thread{[&]{
+            std::thread m_thread{[&] {
                 while (true)
                 {
                     while (m_task_queue.empty())

@@ -25,7 +25,7 @@ namespace ngraph
 {
     namespace onnxifi
     {
-        template<typename T>
+        template <typename T>
         class Span
         {
         public:
@@ -51,53 +51,22 @@ namespace ngraph
 
             template <typename K>
             Span(const K* buffer, size_type count)
-                : m_begin{reinterpret_cast<pointer>(const_cast<K*>(buffer))},
-                  m_end{reinterpret_cast<pointer>(const_cast<K*>(buffer)) + count},
-                  m_count{count}
+                : m_begin{reinterpret_cast<pointer>(const_cast<K*>(buffer))}
+                , m_end{reinterpret_cast<pointer>(const_cast<K*>(buffer)) + count}
+                , m_count{count}
             {
             }
 
-            iterator begin()
-            {
-                return m_begin;
-            }
-            iterator end()
-            {
-                return m_end;
-            }
-            const_iterator begin() const
-            {
-                return m_begin;
-            }
-            const_iterator end() const
-            {
-                return m_end;
-            }
-            const_iterator cbegin() const
-            {
-                return m_begin;
-            }
-            const_iterator cend() const
-            {
-                return m_end;
-            }
-            reverse_iterator rbegin()
-            {
-                return reverse_iterator{m_end};
-            }
-            const_reverse_iterator crbegin() const
-            {
-                return const_reverse_iterator{m_end};
-            }
-            reverse_iterator rend()
-            {
-                return reverse_iterator{m_begin};
-            }
-            const_reverse_iterator crend() const
-            {
-                return const_reverse_iterator{m_begin};
-            }
-
+            iterator begin() { return m_begin; }
+            iterator end() { return m_end; }
+            const_iterator begin() const { return m_begin; }
+            const_iterator end() const { return m_end; }
+            const_iterator cbegin() const { return m_begin; }
+            const_iterator cend() const { return m_end; }
+            reverse_iterator rbegin() { return reverse_iterator{m_end}; }
+            const_reverse_iterator crbegin() const { return const_reverse_iterator{m_end}; }
+            reverse_iterator rend() { return reverse_iterator{m_begin}; }
+            const_reverse_iterator crend() const { return const_reverse_iterator{m_begin}; }
             const_reference at(std::size_t index) const
             {
                 auto it = std::next(m_begin, index);
@@ -118,53 +87,16 @@ namespace ngraph
                 return *it;
             }
 
-            reference front()
-            {
-                return *m_begin;
-            }
-            const_reference front() const
-            {
-                return *m_begin;
-            }
-
-            reference back()
-            {
-                return *std::prev(m_end);
-            }
-            const_reference back() const
-            {
-                return *std::prev(m_end);
-            }
-
-            const_pointer data() const
-            {
-                return m_begin;
-            }
-
-            reference operator [](std::size_t index)
-            {
-                return at(index);
-            }
-            const_reference operator [](std::size_t index) const
-            {
-                return at(index);
-            }
-
-            size_type size() const
-            {
-                return m_count;
-            }
-
-            bool is_valid() const
-            {
-                return (m_begin != nullptr) && (m_count > 0);
-            }
-
-            bool empty() const
-            {
-                return (m_count == 0);
-            }
-
+            reference front() { return *m_begin; }
+            const_reference front() const { return *m_begin; }
+            reference back() { return *std::prev(m_end); }
+            const_reference back() const { return *std::prev(m_end); }
+            const_pointer data() const { return m_begin; }
+            reference operator[](std::size_t index) { return at(index); }
+            const_reference operator[](std::size_t index) const { return at(index); }
+            size_type size() const { return m_count; }
+            bool is_valid() const { return (m_begin != nullptr) && (m_count > 0); }
+            bool empty() const { return (m_count == 0); }
         private:
             iterator m_begin{nullptr}, m_end{nullptr};
             size_type m_count{0};

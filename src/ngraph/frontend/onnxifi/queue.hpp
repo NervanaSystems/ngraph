@@ -79,7 +79,6 @@ namespace ngraph
                 return *this;
             }
 
-
             void push(const_reference element)
             {
                 std::lock_guard<std::mutex> lock{m_mutex};
@@ -119,10 +118,9 @@ namespace ngraph
 
             void pop()
             {
-                std::lock_guard <std::mutex> lock{m_mutex};
+                std::lock_guard<std::mutex> lock{m_mutex};
                 m_queue.pop();
             }
-
 
             bool empty() const
             {
@@ -134,8 +132,8 @@ namespace ngraph
             {
                 if (&other != this)
                 {
-                    std::unique_lock <std::mutex> lock{m_mutex, std::defer_lock};
-                    std::unique_lock <std::mutex> other_lock{other.m_mutex, std::defer_lock};
+                    std::unique_lock<std::mutex> lock{m_mutex, std::defer_lock};
+                    std::unique_lock<std::mutex> other_lock{other.m_mutex, std::defer_lock};
                     std::swap(m_queue, other.m_queue);
                 }
             }

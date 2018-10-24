@@ -21,8 +21,8 @@
 #include <onnxifi.h>
 
 #include "backend_manager.hpp"
-#include "exceptions.hpp"
 #include "event_manager.hpp"
+#include "exceptions.hpp"
 #include "graph_manager.hpp"
 
 using namespace ngraph::onnxifi;
@@ -153,8 +153,8 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseBackend(on
     }
 }
 
-ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-    onnxInitEvent(onnxBackend backend, onnxEvent* event)
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxInitEvent(onnxBackend backend,
+                                                                         onnxEvent* event)
 {
     try
     {
@@ -164,7 +164,6 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
         }
         EventManager::init_event(backend, event);
         return ONNXIFI_STATUS_SUCCESS;
-
     }
     catch (const status::runtime& e)
     {
@@ -201,8 +200,8 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxSignalEvent(onnxE
     }
 }
 
-ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
-onnxGetEventState(onnxEvent event, onnxEventState* state)
+ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxGetEventState(onnxEvent event,
+                                                                             onnxEventState* state)
 {
     try
     {
@@ -222,7 +221,6 @@ onnxGetEventState(onnxEvent event, onnxEventState* state)
         return ONNXIFI_STATUS_INTERNAL_ERROR;
     }
 }
-
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxWaitEvent(onnxEvent event)
 {
@@ -282,7 +280,10 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
             *graph = nullptr;
         }
         // The 'auxPropertiesList' is not used in this version of the nGraph ONNXIFI backend.
-        GraphManager::init_graph(BackendManager::get_backend(backend), {onnxModel, onnxModelSize}, {weightDescriptors, weightsCount}, graph);
+        GraphManager::init_graph(BackendManager::get_backend(backend),
+                                 {onnxModel, onnxModelSize},
+                                 {weightDescriptors, weightsCount},
+                                 graph);
         return ONNXIFI_STATUS_SUCCESS;
     }
     catch (const status::runtime& e)
@@ -312,7 +313,8 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
 {
     try
     {
-        GraphManager::set_graph_io(graph, {inputDescriptors, inputsCount}, {outputDescriptors, outputsCount});
+        GraphManager::set_graph_io(
+            graph, {inputDescriptors, inputsCount}, {outputDescriptors, outputsCount});
         return ONNXIFI_STATUS_SUCCESS;
     }
     catch (const status::runtime& e)

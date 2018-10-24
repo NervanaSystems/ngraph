@@ -16,8 +16,8 @@
 
 #include <onnxifi.h>
 
-#include "graph.hpp"
 #include "backend.hpp"
+#include "graph.hpp"
 
 namespace ngraph
 {
@@ -39,10 +39,10 @@ namespace ngraph
             return result;
         }
 
-        void Graph::configure_memory_fences(const ::onnxMemoryFenceV1* input_fence, ::onnxMemoryFenceV1* output_fence)
+        void Graph::configure_memory_fences(const ::onnxMemoryFenceV1* input_fence,
+                                            ::onnxMemoryFenceV1* output_fence)
         {
-            if ((input_fence == nullptr) ||
-                (output_fence == nullptr))
+            if ((input_fence == nullptr) || (output_fence == nullptr))
             {
                 throw status::null_pointer{};
             }
@@ -93,11 +93,7 @@ namespace ngraph
             m_output_fence = output_fence;
         }
 
-        bool Graph::compile()
-        {
-            return m_backend.compile(m_function);
-        }
-
+        bool Graph::compile() { return m_backend.compile(m_function); }
         void Graph::set_weights(const Span<onnxTensorDescriptorV1>& weights)
         {
             if (weights.data() != nullptr)
