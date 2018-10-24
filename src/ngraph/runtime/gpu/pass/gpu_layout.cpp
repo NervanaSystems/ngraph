@@ -216,4 +216,6 @@ bool runtime::gpu::pass::GPULayout::run_on_call_graph(const std::list<std::share
             handler->second(m_external_function, node);
         }
     }
+    
+    return false;
 }
