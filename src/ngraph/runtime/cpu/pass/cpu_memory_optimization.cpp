@@ -177,7 +177,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                             {
                                 if (auto op_annotations = op->get_op_annotations())
                                 {
-                                    for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
+                                    if (op_annotations->get_in_place_oi_pairs().size() > 0)
                                     {
                                         NGRAPH_DEBUG << "cpu_memory_optimization: "
                                                         "in place oi, no in place concat";
