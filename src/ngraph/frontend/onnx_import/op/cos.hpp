@@ -14,19 +14,31 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <iostream>
-#include "ngraph/runtime/gpu/nvcc/kernels.hpp"
-using namespace ngraph;
+#pragma once
 
-__global__ void example()
-{
-    size_t tid = blockDim.x * blockIdx.x + threadIdx.x;
-    printf("Hello from tid = %d\n", tid);
-    __syncthreads();
-}
+#include <memory>
 
-void runtime::gpu::example_kernel()
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/cos.hpp"
+
+#include "core/node.hpp"
+
+namespace ngraph
 {
-    example<<<1, 32>>>();
-    return;
-}
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                inline NodeVector cos(const Node& node)
+                {
+                    return {std::make_shared<ngraph::op::Cos>(node.get_ng_inputs().at(0))};
+                }
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

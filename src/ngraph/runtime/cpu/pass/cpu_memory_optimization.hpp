@@ -16,13 +16,22 @@
 
 #pragma once
 
+#include "ngraph/pass/pass.hpp"
+
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace cpu
         {
-            void example_kernel();
+            namespace pass
+            {
+                class CPUMemoryOptimization : public ngraph::pass::FunctionPass
+                {
+                public:
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                };
+            }
         }
     }
 }

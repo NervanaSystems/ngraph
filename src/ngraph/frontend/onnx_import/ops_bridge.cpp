@@ -22,9 +22,13 @@
 
 #include "core/attribute.hpp"
 #include "op/abs.hpp"
+#include "op/acos.hpp"
 #include "op/add.hpp"
 #include "op/and.hpp"
 #include "op/argmin.hpp"
+#include "op/argmax.hpp"
+#include "op/asin.hpp"
+#include "op/atan.hpp"
 #include "op/average_pool.hpp"
 #include "op/batch_norm.hpp"
 #include "op/cast.hpp"
@@ -33,6 +37,7 @@
 #include "op/concat.hpp"
 #include "op/constant.hpp"
 #include "op/conv.hpp"
+#include "op/cos.hpp"
 #include "op/div.hpp"
 #include "op/elu.hpp"
 #include "op/equal.hpp"
@@ -68,6 +73,7 @@
 #include "op/selu.hpp"
 #include "op/shape.hpp"
 #include "op/sigmoid.hpp"
+#include "op/sin.hpp"
 #include "op/slice.hpp"
 #include "op/softmax.hpp"
 #include "op/softplus.hpp"
@@ -77,6 +83,7 @@
 #include "op/squeeze.hpp"
 #include "op/sub.hpp"
 #include "op/sum.hpp"
+#include "op/tan.hpp"
 #include "op/tanh.hpp"
 #include "op/thresholded_relu.hpp"
 #include "op/transpose.hpp"
@@ -137,9 +144,12 @@ namespace ngraph
         OperatorsBridge::OperatorsBridge()
         {
             REGISTER_OPERATOR("Abs", 1, abs);
+            REGISTER_OPERATOR("Acos", 1, acos);
             REGISTER_OPERATOR("Add", 1, add);
             REGISTER_OPERATOR("And", 1, logical_and);
             REGISTER_OPERATOR("ArgMin", 1, argmin);
+            REGISTER_OPERATOR("Asin", 1, asin);
+            REGISTER_OPERATOR("Atan", 1, atan);
             REGISTER_OPERATOR("AveragePool", 1, average_pool);
             REGISTER_OPERATOR("BatchNormalization", 1, batch_norm);
             REGISTER_OPERATOR("Cast", 1, cast);
@@ -148,6 +158,7 @@ namespace ngraph
             REGISTER_OPERATOR("Concat", 1, concat);
             REGISTER_OPERATOR("Constant", 1, constant);
             REGISTER_OPERATOR("Conv", 1, conv);
+            REGISTER_OPERATOR("Cos", 1, cos);
             REGISTER_OPERATOR("Div", 1, div);
             REGISTER_OPERATOR("Dropout", 1, identity);
             REGISTER_OPERATOR("Elu", 1, elu);
@@ -193,6 +204,7 @@ namespace ngraph
             REGISTER_OPERATOR("Selu", 1, selu);
             REGISTER_OPERATOR("Shape", 1, shape);
             REGISTER_OPERATOR("Sigmoid", 1, sigmoid);
+            REGISTER_OPERATOR("Sin", 1, sin);
             REGISTER_OPERATOR("Slice", 1, slice);
             REGISTER_OPERATOR("Softmax", 1, softmax);
             REGISTER_OPERATOR("Softplus", 1, softplus);
@@ -202,6 +214,7 @@ namespace ngraph
             REGISTER_OPERATOR("Squeeze", 1, squeeze);
             REGISTER_OPERATOR("Sub", 1, sub);
             REGISTER_OPERATOR("Sum", 1, sum);
+            REGISTER_OPERATOR("Tan", 1, tan);
             REGISTER_OPERATOR("Tanh", 1, tanh);
             REGISTER_OPERATOR("ThresholdedRelu", 1, thresholded_relu);
             REGISTER_OPERATOR("Transpose", 1, transpose);

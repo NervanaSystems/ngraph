@@ -1034,6 +1034,30 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Concat)
             {
+                auto concat = static_cast<const ngraph::op::Concat*>(node);
+                if (auto op_annotations = concat->get_op_annotations())
+                {
+                    auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                    if (in_place_oi_pairs.size() > 0)
+                    {
+                        auto offset = 0;
+                        for (auto i = 0; i < args.size(); i++)
+                        {
+                            writer << "if (" << args[i].get_name() << " < " << out[0].get_name()
+                                   << " || " << args[i].get_name() << " >= " << out[0].get_name()
+                                   << " + " << out[0].get_size() * out[0].get_element_type().size()
+                                   << ")\n";
+                            writer.block_begin();
+                            writer << "memcpy(" << out[0].get_name() << " + " << offset << ", "
+                                   << args[i].get_name() << ", "
+                                   << args[i].get_size() * out[0].get_element_type().size()
+                                   << ");\n";
+                            writer.block_end();
+                            offset += args[i].get_size() * out[0].get_element_type().size();
+                        }
+                        return;
+                    }
+                }
                 auto result_shape = out[0].get_shape();
 
 #if USE_EIGEN_CORE_INLINE == 1
