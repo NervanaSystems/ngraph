@@ -27,6 +27,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/node_vector.hpp"
+#include "ngraph/op/convert.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/util/arithmetic_reduction.hpp"
 #include "ngraph/shape.hpp"
@@ -116,14 +117,21 @@ namespace ngraph
                     return op_node;
                 }
 
+                // WORKAROUND FOR PROBLEMS WITH RESHAPE ON i64 @TODO: remove
+                auto convert_node = std::make_shared<ngraph::op::Convert>(op_node, element::f32);
+
                 auto output_shape = input_node->get_shape();
                 output_shape.at(axis) = 1;
                 auto reshape_node = std::make_shared<ngraph::op::Reshape>(
-                    op_node,
+                    convert_node,
                     reshape::get_default_axis_vector(op_node->get_shape().size()),
                     Shape{output_shape});
 
-                return reshape_node;
+                // WORKAROUND FOR PROBLEMS WITH RESHAPE ON i64 @TODO: remove
+                auto reconvert_node =
+                    std::make_shared<ngraph::op::Convert>(reshape_node, element::i64);
+
+                return reconvert_node;
             }
 
         } // namespace  reduction
