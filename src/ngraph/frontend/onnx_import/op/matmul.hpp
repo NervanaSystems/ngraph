@@ -29,12 +29,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector matmul(const Node& node)
-                {
-                    NodeVector ng_inputs{node.get_ng_inputs()};
-                    return {std::make_shared<ngraph::op::Dot>(ng_inputs.at(0), ng_inputs.at(1))};
-                }
-
+                NodeVector matmul(const Node& node);
             } // namespace set_1
 
         } //namespace op
