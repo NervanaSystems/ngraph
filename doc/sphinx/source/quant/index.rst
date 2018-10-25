@@ -7,6 +7,7 @@ Quantization with nGraph
 .. intro paragraph to be added later
 
 
+
 Working with element types 
 ==========================
 
@@ -15,36 +16,25 @@ both to element types and to shapes. For example, you can't accidentally plug
 something producing a ``float`` into something expecting an ``int``, or 
 something producing a matrix into something expecting a vector.  
 
-What this means is that models trained on one element type (FP32, for example, 
-is the most common model defintion) cannot be simply quantized to a different 
-element type after being trained. Rather, a "Quantization-Aware" training step 
-must be implemented during construction of. This quantization-aware training 
-step can take place outside of nGraph, or with the bridge; or, 
-to take another approach, a graph that has been modified for quantization can be 
-re-trained with different quantized weights to produce the desired or compatible 
-type of output. Quantizing from FP32 into INT8 will produce results that are 
-slightly different with respect to precision; this tradeoff is the gist of 
-quantization.
-
+What this means is that models defined in one element type (FP32 is, for example, 
+the most common model defintion) cannot be converted to a different element type 
+after being trained. Rather, a "Quantization-Aware" step must be implemented 
+during training. This quantization-aware training step can take place outside of 
+nGraph, or with the bridge (using code from ``/src/ngraph/builder``); or, to take 
+another approach, a graph that has been modified for quantization can be trained 
+with different quantized weights to produce the desired or compatible type of 
+output. Quantizing a model defined in FP32 to one defined in INT8 produces a 
+slightly different with respect to precision, depending upon the quantization 
+strategy. 
 
 .. +++++++++++++++++++++++++++++++++++ ..
 
 
-..:ref:`about_int8`
-
-
-.. :term:`qint8`
-
-
-.. :ref:`about_fp32`
-
-
-
-
-
-
 Methods of abstraction
 ======================
+
+For a deeper dive into some of the strategies involved in model compression 
+techniques, see the `Distiller`_ documentation. 
 
 .. WIP
 
@@ -88,3 +78,9 @@ Further reading:
 * PaddlePaddle design doc for fixed-point quantization: https://github.com/PaddlePaddle/Paddle/blob/79d797fde97aa9272bb4b9fe29e21dbd73ee837f/doc/fluid/design/quantization/fixed_point_quantization.md
 
 * Pieces of Eight: 8-bit Neural Machine Translation: https://arxiv.org/pdf/1804.05038.pdf
+
+
+
+
+
+.. _Distiller: https://nervanasystems.github.io/distiller/quantization/index.html#integer-vs-fp32
