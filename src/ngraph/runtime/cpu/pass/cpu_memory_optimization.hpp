@@ -14,8 +14,24 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/op_tbl.hpp"
-#if CUDNN_VERSION >= 7200
-NGRAPH_OP(Rnn, ngraph::op::gpu)
-#endif
-NGRAPH_OP(BatchNormTrainingWithStats, ngraph::op::gpu)
+#pragma once
+
+#include "ngraph/pass/pass.hpp"
+
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace cpu
+        {
+            namespace pass
+            {
+                class CPUMemoryOptimization : public ngraph::pass::FunctionPass
+                {
+                public:
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                };
+            }
+        }
+    }
+}

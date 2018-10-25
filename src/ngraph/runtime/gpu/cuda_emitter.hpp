@@ -114,6 +114,10 @@ namespace ngraph
                         dtypes, tensor_shape, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
                 }
 
+                size_t build_cudnn_bn_inv_var(const std::vector<std::string>& dtypes,
+                                              NVShape tensor_shape,
+                                              const double& eps);
+
                 template <typename T>
                 size_t build_reduce(const std::vector<std::string>& dtypes,
                                     const size_t data_bytes,
