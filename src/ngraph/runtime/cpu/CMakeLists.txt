@@ -101,6 +101,7 @@ set(SRC
     pass/cpu_layout.cpp
     pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_mat_fusion.cpp
+    pass/cpu_memory_optimization.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp

@@ -106,8 +106,10 @@
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
+#include "ngraph/runtime/gpu/gpu_op_annotations.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/gpu/op/batch_norm.hpp"
 #include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/util.hpp"
@@ -325,22 +327,17 @@ void runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
     writer.block_end();
 }
 
-void runtime::gpu::GPU_Emitter::emit_BatchNorm(EMIT_ARGS)
+static void emit_BatchNorm(EMIT_ARGS, runtime::gpu::CUDNNEmitter::Prop direction, bool save_stats)
 {
-    const ngraph::op::BatchNorm* batchnorm = static_cast<const ngraph::op::BatchNorm*>(node);
+    const ngraph::op::BatchNormBase* batchnorm =
+        static_cast<const ngraph::op::BatchNormBase*>(node);
 
     auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
     bool global_stats = false;
-    CUDNNEmitter::Prop direction;
-    if (batchnorm->get_training_flag())
+    if (direction == runtime::gpu::CUDNNEmitter::Prop::Forward)
     {
-        direction = CUDNNEmitter::Prop::Forward;
         global_stats = (batchnorm->get_arguments().size() == 5);
-    }
-    else
-    {
-        direction = CUDNNEmitter::Prop::Inference;
     }
 
     auto index = cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
@@ -349,31 +346,62 @@ void runtime::gpu::GPU_Emitter::emit_BatchNorm(EMIT_ARGS)
                                                 args[2].get_shape(),
                                                 args[0].get_shape(),
                                                 batchnorm->get_eps_value(),
-                                                global_stats);
+                                                global_stats,
+                                                save_stats);
 
     writer.block_begin();
     {
-        writer << "void* input[] = {" << node_names(args) << "};\n";
-        writer << "void* output[] = {" << node_names(out) << "};\n";
+        writer << "void* input[] = {" << runtime::gpu::GPU_Emitter::node_names(args) << "};\n";
+        writer << "void* output[] = {" << runtime::gpu::GPU_Emitter::node_names(out) << "};\n";
         writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
     }
     writer.block_end();
 }
 
-void runtime::gpu::GPU_Emitter::emit_BatchNormBackprop(EMIT_ARGS)
+void runtime::gpu::GPU_Emitter::emit_BatchNormInference(EMIT_ARGS)
 {
-    const ngraph::op::BatchNormBackprop* batchnorm =
-        static_cast<const ngraph::op::BatchNormBackprop*>(node);
+    ::emit_BatchNorm(
+        external_function, writer, node, args, out, CUDNNEmitter::Prop::Inference, false);
+}
+
+void runtime::gpu::GPU_Emitter::emit_BatchNormTraining(EMIT_ARGS)
+{
+    ::emit_BatchNorm(
+        external_function, writer, node, args, out, CUDNNEmitter::Prop::Forward, false);
+}
+
+void runtime::gpu::GPU_Emitter::emit_BatchNormTrainingWithStats(EMIT_ARGS)
+{
+    ::emit_BatchNorm(external_function, writer, node, args, out, CUDNNEmitter::Prop::Forward, true);
+}
+
+void runtime::gpu::GPU_Emitter::emit_BatchNormTrainingBackprop(EMIT_ARGS)
+{
+    const ngraph::op::BatchNormTrainingBackprop* batchnorm =
+        static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
 
     auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
+    bool needs_variance_inversion = false;
+    auto annotation = batchnorm->get_op_annotations();
+    if (annotation)
+    {
+        auto bnbp_annotation =
+            std::dynamic_pointer_cast<runtime::gpu::BatchNormBackpropAnnotations>(annotation);
+        if (bnbp_annotation && bnbp_annotation->has_inverted_variance() == false)
+        {
+            needs_variance_inversion = true;
+        }
+    }
     auto index = cudnn_emitter->build_batchnorm(CUDNN_BATCHNORM_SPATIAL,
                                                 out[0].get_type(),
                                                 CUDNNEmitter::Prop::Backward,
                                                 args[2].get_shape(),
                                                 args[0].get_shape(),
-                                                batchnorm->get_eps_value());
-
+                                                batchnorm->get_eps_value(),
+                                                false,
+                                                false,
+                                                needs_variance_inversion);
     writer.block_begin();
     {
         writer << "void* input[] = {" << node_names(args) << "};\n";

@@ -56,6 +56,27 @@ void runtime::gpu::CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& wr
     return;
 }
 
+void runtime::gpu::CudaKernelBuilder::get_cudnn_bn_inv_var_op(codegen::CodeWriter& writer,
+                                                              const std::string& name,
+                                                              runtime::gpu::GPUKernelArgs& args)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
+    writer.block_begin();
+    {
+        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
+        writer << "uint32_t step = gridDim.x * blockDim.x; \n";
+        writer << "for (; tid < nthreads; tid += step)\n";
+        writer.block_begin();
+        {
+            writer << "out[tid] = 1.0f / sqrtf(in[tid] + epsilon);\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+
+    return;
+}
+
 void runtime::gpu::CudaKernelBuilder::get_softmax_divide_op(
     codegen::CodeWriter& writer,
     const std::string& name,

@@ -22,32 +22,39 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/min.hpp"
+#include "ngraph/op/product.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/sum.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
 
-struct CollapsedDims
+struct CollapsedShape
 {
-    std::vector<size_t> output_shape;
-    std::vector<bool> is_operated_axis;
-    std::vector<size_t> axis_set;
-    std::vector<size_t> input_shape;
+    Shape fshape;        // Collapsed shape with operated axes
+    Shape rshape;        // Collapsed shape without operated axes
+    AxisVector axis_set; // operated axis in fshape
 };
 
-// Fold and collapse axes of output_shape.
+// Fold and collapse axes of shape.
 // Contiguous axes that are not being operated on can be collapsed.
 // Contiguous axes that are being operated on are collapsed optionally.
 // Skip size 1 dimensions.
-static void collapse_dims(std::vector<size_t>& output_shape,
+// E.g.,
+// Shape{3, 3, 2}, AxisSet{0, 1} -> Shape{9, 2}, AxisSet{0}
+// Shape{2, 4, 6, 6}, AxisSet{2, 3} -> Shape{8, 36}, AxisSet{1}
+static void collapse_dims(std::vector<size_t>& shape,
                           std::set<size_t> operated_axes,
-                          struct CollapsedDims& cdims,
+                          struct CollapsedShape& cshape,
                           bool collapse_operated_axes)
 {
     size_t collapse_size = 1;
     bool operated_axes_run = false;
+    std::vector<bool> fshape_operated_axis;
     bool collapsing = false;
-    for (int output_idx = static_cast<int>(output_shape.size()) - 1; output_idx >= 0; output_idx--)
+    for (int output_idx = static_cast<int>(shape.size()) - 1; output_idx >= 0; output_idx--)
     {
         auto is_operated_axis = operated_axes.count(output_idx) == 1;
         auto end_run = (operated_axes_run != is_operated_axis) ||
@@ -56,36 +63,132 @@ static void collapse_dims(std::vector<size_t>& output_shape,
         {
             if (collapse_size != 1)
             {
-                cdims.output_shape.push_back(collapse_size);
-                cdims.is_operated_axis.push_back(operated_axes_run);
+                cshape.fshape.push_back(collapse_size);
+                fshape_operated_axis.push_back(operated_axes_run);
                 collapse_size = 1;
             }
         }
 
-        collapse_size *= output_shape[output_idx];
+        collapse_size *= shape[output_idx];
         operated_axes_run = is_operated_axis;
         collapsing = true;
     }
     // Last run
     if (collapse_size != 1)
     {
-        cdims.output_shape.push_back(collapse_size);
-        cdims.is_operated_axis.push_back(operated_axes_run);
+        cshape.fshape.push_back(collapse_size);
+        fshape_operated_axis.push_back(operated_axes_run);
     }
-    std::reverse(cdims.output_shape.begin(), cdims.output_shape.end());
-    std::reverse(cdims.is_operated_axis.begin(), cdims.is_operated_axis.end());
+    std::reverse(cshape.fshape.begin(), cshape.fshape.end());
+    std::reverse(fshape_operated_axis.begin(), fshape_operated_axis.end());
 
-    for (size_t i = 0; i < cdims.is_operated_axis.size(); i++)
+    for (size_t i = 0; i < fshape_operated_axis.size(); i++)
     {
-        if (cdims.is_operated_axis[i])
+        if (fshape_operated_axis[i])
         {
-            cdims.axis_set.push_back(i);
+            cshape.axis_set.push_back(i);
         }
         else
         {
-            cdims.input_shape.push_back(cdims.output_shape[i]);
+            cshape.rshape.push_back(cshape.fshape[i]);
         }
     }
+}
+
+static bool collapse_broadcast(std::shared_ptr<Node> n)
+{
+    bool replaced = false;
+    auto node = std::static_pointer_cast<op::Broadcast>(n).get();
+    auto input_shape = node->get_argument(0)->get_shape();
+    auto output_shape = node->get_shape();
+    auto operated_axes = node->get_broadcast_axes();
+
+    struct CollapsedShape cshape;
+
+    collapse_dims(output_shape, operated_axes, cshape, true);
+
+    if (cshape.axis_set.size() == 0)
+    {
+        // Null broadcast operation, replace with reshape
+        AxisVector axis_order = ngraph::get_default_order(input_shape);
+        auto reshape =
+            std::make_shared<op::Reshape>(node->get_argument(0), axis_order, n->get_shape());
+        ngraph::replace_node(n, reshape);
+        replaced = true;
+    }
+    else if (output_shape.size() != cshape.fshape.size())
+    {
+        // Reshape arg to collapsed input_shape
+        AxisVector input_axis_order = ngraph::get_default_order(input_shape);
+        auto reshape_input = std::make_shared<op::Reshape>(
+            node->get_argument(0), input_axis_order, Shape(cshape.rshape));
+
+        auto broadcast = std::make_shared<op::Broadcast>(
+            reshape_input, Shape(cshape.fshape), AxisSet(cshape.axis_set));
+
+        // Reshape collapsed output to original output_shape
+        AxisVector output_axis_order = ngraph::get_default_order(cshape.fshape);
+        auto reshape_output =
+            std::make_shared<op::Reshape>(broadcast, output_axis_order, output_shape);
+        ngraph::replace_node(n, reshape_output);
+        replaced = true;
+    }
+
+    if (replaced)
+    {
+        NGRAPH_DEBUG << "CollapseDims: Replaced broadcast " << input_shape << " " << operated_axes
+                     << " " << output_shape << " with " << Shape(cshape.rshape) << " "
+                     << AxisSet(cshape.axis_set) << " " << Shape(cshape.fshape);
+    }
+    return replaced;
+}
+
+template <typename T>
+static bool collapse_reduction(std::shared_ptr<Node> n)
+{
+    bool replaced = false;
+    auto node = std::static_pointer_cast<T>(n).get();
+    auto input_shape = node->get_argument(0)->get_shape();
+    auto output_shape = node->get_shape();
+    auto operated_axes = node->get_reduction_axes();
+
+    struct CollapsedShape cshape;
+
+    collapse_dims(input_shape, operated_axes, cshape, true);
+
+    if (cshape.axis_set.size() == 0)
+    {
+        // Null reduction operation
+        AxisVector axis_order = ngraph::get_default_order(input_shape);
+        auto reshape =
+            std::make_shared<op::Reshape>(node->get_argument(0), axis_order, n->get_shape());
+        ngraph::replace_node(n, reshape);
+        replaced = true;
+    }
+    else if (input_shape.size() != cshape.fshape.size())
+    {
+        // Reshape arg to collapsed input_shape
+        AxisVector input_axis_order = ngraph::get_default_order(input_shape);
+        auto reshape_input = std::make_shared<op::Reshape>(
+            node->get_argument(0), input_axis_order, Shape(cshape.fshape));
+
+        auto reduction = std::make_shared<T>(reshape_input, AxisSet(cshape.axis_set));
+
+        // Reshape collapsed output to original output_shape
+        AxisVector output_axis_order = ngraph::get_default_order(cshape.rshape);
+        auto reshape_output =
+            std::make_shared<op::Reshape>(reduction, output_axis_order, output_shape);
+        ngraph::replace_node(n, reshape_output);
+        replaced = true;
+    }
+
+    if (replaced)
+    {
+        NGRAPH_DEBUG << "CollapseDims: Replaced arithmetic reduction " << input_shape << " "
+                     << operated_axes << " " << output_shape << " with " << Shape(cshape.fshape)
+                     << " " << AxisSet(cshape.axis_set) << " " << Shape(cshape.rshape);
+    }
+    return replaced;
 }
 
 bool runtime::cpu::pass::CPUCollapseDims::run_on_function(std::shared_ptr<ngraph::Function> f)
@@ -95,49 +198,23 @@ bool runtime::cpu::pass::CPUCollapseDims::run_on_function(std::shared_ptr<ngraph
     {
         if (std::dynamic_pointer_cast<op::Broadcast>(n))
         {
-            auto node = std::dynamic_pointer_cast<op::Broadcast>(n).get();
-            auto input_shape = node->get_argument(0)->get_shape();
-            auto output_shape = node->get_shape();
-            auto operated_axes = node->get_broadcast_axes();
-
-            struct CollapsedDims cdims;
-
-            collapse_dims(output_shape, operated_axes, cdims, true);
-
-            if (cdims.axis_set.size() == 0)
-            {
-                // Null broadcast operation, replace with reshape
-                AxisVector axis_order = ngraph::get_default_order(input_shape);
-                auto reshape = std::make_shared<op::Reshape>(
-                    node->get_argument(0), axis_order, n->get_shape());
-                ngraph::replace_node(n, reshape);
-                replaced = true;
-            }
-            else if (output_shape.size() != cdims.output_shape.size())
-            {
-                // Reshape arg to collapsed input_shape
-                AxisVector input_axis_order = ngraph::get_default_order(input_shape);
-                auto reshape_input = std::make_shared<op::Reshape>(
-                    node->get_argument(0), input_axis_order, Shape(cdims.input_shape));
-
-                auto broadcast = std::make_shared<op::Broadcast>(
-                    reshape_input, Shape(cdims.output_shape), AxisSet(cdims.axis_set));
-
-                // Reshape collapsed output to original output_shape
-                AxisVector output_axis_order = ngraph::get_default_order(cdims.output_shape);
-                auto reshape_output =
-                    std::make_shared<op::Reshape>(broadcast, output_axis_order, output_shape);
-                ngraph::replace_node(n, reshape_output);
-                replaced = true;
-            }
-
-            if (replaced)
-            {
-                NGRAPH_DEBUG << "CollapseDims: Replaced broadcast " << input_shape << " "
-                             << operated_axes << " " << output_shape << " with "
-                             << Shape(cdims.input_shape) << " " << AxisSet(cdims.axis_set) << " "
-                             << Shape(cdims.output_shape);
-            }
+            replaced |= collapse_broadcast(n);
+        }
+        else if (std::dynamic_pointer_cast<op::Max>(n))
+        {
+            replaced |= collapse_reduction<op::Max>(n);
+        }
+        else if (std::dynamic_pointer_cast<op::Min>(n))
+        {
+            replaced |= collapse_reduction<op::Min>(n);
+        }
+        else if (std::dynamic_pointer_cast<op::Product>(n))
+        {
+            replaced |= collapse_reduction<op::Product>(n);
+        }
+        else if (std::dynamic_pointer_cast<op::Sum>(n))
+        {
+            replaced |= collapse_reduction<op::Sum>(n);
         }
     }
 

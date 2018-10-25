@@ -33,16 +33,27 @@ namespace ngraph
         {
             struct UnknownOperator : ngraph_error
             {
-                explicit UnknownOperator(const std::string& op_type)
-                    : ngraph_error{"unknown operator: \"" + op_type + "\""}
+                UnknownOperator(const std::string& name, const std::string& domain)
+                    : ngraph_error{(domain.empty() ? "" : domain + ".") + name}
+                {
+                }
+            };
+
+            struct UnknownDomain : ngraph_error
+            {
+                explicit UnknownDomain(const std::string& domain)
+                    : ngraph_error{domain}
                 {
                 }
             };
 
             struct UnsupportedVersion : ngraph_error
             {
-                explicit UnsupportedVersion(std::int64_t version)
-                    : ngraph_error{"unsupported operator set version: " + std::to_string(version)}
+                UnsupportedVersion(const std::string& name,
+                                   std::int64_t version,
+                                   const std::string& domain)
+                    : ngraph_error{(domain.empty() ? "" : domain + ".") + name + ":" +
+                                   std::to_string(version)}
                 {
                 }
             };
@@ -57,32 +68,37 @@ namespace ngraph
             OperatorsBridge(OperatorsBridge&&) = delete;
             OperatorsBridge& operator=(OperatorsBridge&&) = delete;
 
-            static const OperatorSet& get_operator_set(std::int64_t version)
+            static OperatorSet get_operator_set(std::int64_t version, const std::string& domain)
             {
-                return instance().get_operator_set_version(version);
+                return instance()._get_operator_set(version, domain);
+            }
+
+            static void register_operator(const std::string& name,
+                                          std::int64_t version,
+                                          const std::string& domain,
+                                          Operator fn)
+            {
+                instance()._register_operator(name, version, domain, std::move(fn));
             }
 
         private:
-            std::unordered_map<std::string, std::map<std::int64_t, Operator>> m_map;
+            std::unordered_map<std::string,
+                               std::unordered_map<std::string, std::map<std::int64_t, Operator>>>
+                m_map;
 
             OperatorsBridge();
 
-            static const OperatorsBridge& instance()
+            static OperatorsBridge& instance()
             {
                 static OperatorsBridge instance;
                 return instance;
             }
 
-            const OperatorSet& get_operator_set_version_1() const;
-            const OperatorSet& get_operator_set_version_2() const;
-            const OperatorSet& get_operator_set_version_3() const;
-            const OperatorSet& get_operator_set_version_4() const;
-            const OperatorSet& get_operator_set_version_5() const;
-            const OperatorSet& get_operator_set_version_6() const;
-            const OperatorSet& get_operator_set_version_7() const;
-            const OperatorSet& get_operator_set_version_8() const;
-            const OperatorSet& get_operator_set_version_9() const;
-            const OperatorSet& get_operator_set_version(std::int64_t version) const;
+            void _register_operator(const std::string& name,
+                                    std::int64_t version,
+                                    const std::string& domain,
+                                    Operator fn);
+            OperatorSet _get_operator_set(std::int64_t version, const std::string& domain);
         };
 
     } // namespace onnx_import
