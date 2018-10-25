@@ -518,6 +518,69 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_2d_tensor)
     EXPECT_EQ((vector<float>{1, 2, 3}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_2d_tensor)
+{
+    Shape shape{1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto add1 = make_shared<op::Add>(A, B);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto D = make_shared<op::Parameter>(element::f32, shape);
+    auto add2 = make_shared<op::Add>(C, D);
+    auto subtract = make_shared<op::Subtract>(C, A);
+    Shape shape_r{3, 1};
+    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{add1, add2, subtract}, 0),
+                                   op::ParameterVector{A, B, C, D});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{1});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{2});
+    auto c = backend->create_tensor(element::f32, shape);
+    copy_data(c, vector<float>{3});
+    auto d = backend->create_tensor(element::f32, shape);
+    copy_data(d, vector<float>{4});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call_with_validate(f, {result}, {a, b, c, d});
+    EXPECT_EQ((vector<float>{3, 7, 2}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_propagate_2d_tensor)
+{
+    Shape shape{1, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto add1 = make_shared<op::Add>(A, B);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto D = make_shared<op::Parameter>(element::f32, shape);
+    auto add2 = make_shared<op::Add>(C, D);
+    auto concat1 = make_shared<op::Concat>(NodeVector{add1, add2}, 0);
+    auto subtract = make_shared<op::Subtract>(C, A);
+    Shape shape_r{3, 1};
+    auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{concat1, subtract}, 0),
+                                   op::ParameterVector{A, B, C, D});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{1});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{2});
+    auto c = backend->create_tensor(element::f32, shape);
+    copy_data(c, vector<float>{3});
+    auto d = backend->create_tensor(element::f32, shape);
+    copy_data(d, vector<float>{4});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call_with_validate(f, {result}, {a, b, c, d});
+    EXPECT_EQ((vector<float>{3, 7, 2}), read_vector<float>(result));
+}
+
 // from numpy import *
 // a=linspace(1,2*3*4*3*2,2*3*4*3*2)
 // b=linspace(1000+1,1000+2*3*3*3*2,2*3*3*3*2)
@@ -4712,6 +4775,47 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_4D_axis_3)
                                        {2, 0, 3, 3, 1}}}) //
                    .get_vector()),
               read_vector<int>(result));
+}
+NGRAPH_TEST(${BACKEND_NAME}, argmin_4D_axis_3_i64)
+{
+    Shape shape{2, 2, 5, 5}; // NCHW ->(0,1,2,3)
+    Shape rshape{2, 2, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::ArgMin>(A, 3, element::i64), op::ParameterVector{A});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0.5f, 1.5f, 0.8f, 2.9f, 1.05f}, // img 0 ch 0
+                                         {0.5f, 3.5f, 2.0f, 1.0f, 0.2f},
+                                         {2.0f, 0.0f, 2.2f, 0.2f, 1.4f},
+                                         {2.9f, 0.0f, 1.52f, 1.2f, 2.22f},
+                                         {5.0f, 2.0f, 1.0f, 0.5f, 0.85f}},
+                                        {{0.25f, 0.02f, 0.02f, 2.2f, 0.001f}, // img 0 ch 1
+                                         {1.0f, 0.2f, 3.0f, 0.25f, 1.14f},
+                                         {2.25f, 10.1f, 1.0f, 0.02f, 2.22f},
+                                         {3.2f, 1.002f, 0.001f, 0.2f, 6.0f},
+                                         {2.0f, 0.0f, 0.0f, 0.0f, 0.0f}}},
+                                       {{{0.0f, 2.2f, 1.2f, 1.6f, 0.2f}, // img 1 ch 0
+                                         {0.01f, 0.0f, 0.22f, 0.02f, 1.1f},
+                                         {0.01f, 0.5f, 1.6f, 0.2f, 3.2f},
+                                         {2.4f, 0.5f, 0.0f, 3.0f, 0.1f},
+                                         {0.0f, 0.5f, 0.4f, 0.8f, 1.0f}},
+                                        {{2.0f, 1.0f, 0.0f, 0.0f, 1.0f}, // img 1 ch 1
+                                         {0.0f, 2.0f, 0.0f, 0.0f, 0.0f},
+                                         {1.0f, 1.0f, 2.0f, 0.0f, 2.0f},
+                                         {1.0f, 1.0f, 1.0f, 0.0f, 1.0f},
+                                         {1.0f, 0.0f, 0.0f, 0.0f, 2.0f}}}})
+                  .get_vector());
+    auto result = backend->create_tensor(element::i64, rshape);
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((test::NDArray<int64_t, 3>({{{0, 4, 1, 1, 3},   // ch0
+                                           {4, 1, 3, 2, 1}},  //
+                                          {{0, 1, 0, 2, 0},   // ch1
+                                           {2, 0, 3, 3, 1}}}) //
+                   .get_vector()),
+              read_vector<int64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, argmax_trivial)
