@@ -164,7 +164,7 @@ namespace ngraph
                     auto scale = scale_const_op->get_vector<float>();
 
                     std::vector<float> scales;
-                    scales.push_back(scale[0]);
+                    scales.push_back(1.0 / scale[0]);
                     size_t quantize_index =
                         mkldnn_emitter->build_quantize_reorder(input_desc, result_desc, scales);
                     auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);

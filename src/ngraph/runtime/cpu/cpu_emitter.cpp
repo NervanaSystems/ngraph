@@ -4688,10 +4688,10 @@ namespace ngraph
 
                     auto scale_const_op =
                         std::static_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));
-                    float scale = *(static_cast<float const*>(scale_const_op->get_data_ptr()));
+                    auto scale = scale_const_op->get_vector<float>();
 
                     std::vector<float> scales;
-                    scales.push_back(scale);
+                    scales.push_back(1.0 / scale[0]);
 
                     size_t quantize_index = 0;
                     quantize_index = mkldnn_emitter->build_quantize_reorder(

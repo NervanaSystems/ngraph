@@ -101,52 +101,39 @@ namespace ngraph
             }
 
             template <typename T>
-            static inline T get_quantize_scale(const std::shared_ptr<Node> min_input,
-                                               const std::shared_ptr<Node> max_input,
-                                               const ngraph::element::Type& type)
+            static inline T get_quantization_scale(const std::shared_ptr<Node> min_input,
+                                                   const std::shared_ptr<Node> max_input,
+                                                   const ngraph::element::Type& type,
+                                                   bool is_quantize = false)
             {
                 auto min_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(min_input);
                 auto max_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(max_input);
                 auto input_min_range = min_input_const_op->get_vector<T>();
                 auto input_max_range = max_input_const_op->get_vector<T>();
 
-                // begin code copied and pasted from
-                // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantize_op.cc
                 T min_range;
                 T max_range;
-                // If input_min_range and input_max_range are close,
-                // introduce a slightly larger delta between them.
-                min_range = std::min(static_cast<T>(0.0f), input_min_range[0]);
-                const T epsilon = std::max(static_cast<T>(1.0f),
-                                           static_cast<T>(std::max(fabs(input_min_range[0]),
-                                                                   fabs(input_max_range[0])))) /
-                                  static_cast<T>(100.0f);
-                max_range = std::max(input_max_range[0], min_range + epsilon);
-                max_range = std::max(static_cast<T>(0.0f), max_range);
-                // end code copied and pasted from
-                // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantize_op.cc
+                if (is_quantize)
+                {
+                    // If input_min_range and input_max_range are close,
+                    // introduce a slightly larger delta between them.
+                    min_range = std::min(static_cast<T>(0.0f), input_min_range[0]);
+                    const T epsilon = std::max(static_cast<T>(1.0f),
+                                               static_cast<T>(std::max(fabs(input_min_range[0]),
+                                                                       fabs(input_max_range[0])))) /
+                                      static_cast<T>(100.0f);
+                    max_range = std::max(input_max_range[0], min_range + epsilon);
+                    max_range = std::max(static_cast<T>(0.0f), max_range);
+                    // end code copied and pasted from
+                    // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantize_op.cc
+                }
+                else
+                {
+                    min_range = input_min_range[0];
+                    max_range = input_max_range[0];
+                }
+
                 const T max_abs = std::max(std::abs(min_range), std::abs(max_range));
-                const T bitwidth = type.bitwidth();
-                const T target_range = static_cast<T>(
-                    (type.is_signed() ? std::pow(2, (bitwidth - 1)) : std::pow(2, bitwidth)) - 1);
-                max_range = max_abs;
-                min_range = type.is_signed() ? -max_abs : 0;
-                const T scale = target_range / max_abs;
-                return scale;
-            }
-
-            template <typename T>
-            static inline T get_dequantize_scale(const std::shared_ptr<Node> min_input,
-                                                 const std::shared_ptr<Node> max_input,
-                                                 const ngraph::element::Type& type)
-            {
-                auto min_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(min_input);
-                auto max_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(max_input);
-                auto input_min_range = min_input_const_op->get_vector<T>();
-                auto input_max_range = max_input_const_op->get_vector<T>();
-
-                const T max_abs =
-                    std::max(std::abs(input_min_range[0]), std::abs(input_max_range[0]));
                 const T bitwidth = type.bitwidth();
                 const T target_range = static_cast<T>(
                     (type.is_signed() ? std::pow(2, (bitwidth - 1)) : std::pow(2, bitwidth)) - 1);

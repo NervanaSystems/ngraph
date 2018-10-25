@@ -5753,41 +5753,6 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_TOWARD_EVEN)
               read_vector<output_c_type>(y));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, quantize_cpu_ROUND_NEAREST_TOWARD_EVEN)
-{
-    Shape input_shape{4, 3};
-    Shape scale_offset_shape;
-    AxisSet quantization_axes;
-
-    auto input_type = element::f32;
-    auto output_type = element::i8;
-
-    typedef float input_c_type;
-    typedef int8_t output_c_type;
-
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
-
-    auto X = make_shared<op::Parameter>(input_type, input_shape);
-    auto scale = op::Constant::create(input_type, scale_offset_shape, {0.25});
-    auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
-    auto quantize =
-        make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-    auto x = backend->create_tensor(input_type, input_shape);
-    auto y = backend->create_tensor(output_type, input_shape);
-
-    copy_data(x, vector<input_c_type>{9, 10, 11, -9, -10, -11, 13, 14, 15, -13, -14, -15});
-    // We multiply because mkldnn does X * scale to quanztize, where X is the input tensor
-    // multiply scale                 /*------------------- 0.25 --------------------------*/
-    // equals (rounded)               2   2   3  -2   -2   -3   3   4   4   -3   -4   -4
-
-    backend->call_with_validate(f, {y}, {x});
-    EXPECT_EQ((vector<output_c_type>{2, 2, 3, -2, -2, -3, 3, 4, 4, -3, -4, -4}),
-              read_vector<output_c_type>(y));
-}
-
 NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_TOWARD_INFINITY)
 {
     Shape input_shape{4, 3};

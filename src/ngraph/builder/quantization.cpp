@@ -44,18 +44,19 @@ namespace ngraph
             auto offset = op::Constant::create(type, Shape{1}, {0});
             if (input->get_element_type() == element::f32)
             {
-                float scale = builder::quantization_util::get_quantize_scale<float>(min, max, type);
+                float scale =
+                    builder::quantization_util::get_quantization_scale<float>(min, max, type, true);
                 auto quantize_scale =
-                    op::Constant::create(input->get_element_type(), Shape{1}, {scale});
+                    op::Constant::create(input->get_element_type(), Shape{1}, {(1.0 / scale)});
                 return make_shared<op::Quantize>(
                     input, quantize_scale, offset, type, axes, round_mode);
             }
             else if (input->get_element_type() == element::f64)
             {
-                double scale =
-                    builder::quantization_util::get_quantize_scale<double>(min, max, type);
+                double scale = builder::quantization_util::get_quantization_scale<double>(
+                    min, max, type, true);
                 auto quantize_scale =
-                    op::Constant::create(input->get_element_type(), Shape{1}, {scale});
+                    op::Constant::create(input->get_element_type(), Shape{1}, {(1.0 / scale)});
                 return make_shared<op::Quantize>(
                     input, quantize_scale, offset, type, axes, round_mode);
             }
@@ -76,14 +77,14 @@ namespace ngraph
             if (type == element::f32)
             {
                 float scale =
-                    builder::quantization_util::get_dequantize_scale<float>(min, max, input_et);
+                    builder::quantization_util::get_quantization_scale<float>(min, max, input_et);
                 auto dequantize_scale = op::Constant::create(type, Shape{1}, {scale});
                 return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);
             }
             else if (type == element::f64)
             {
                 double scale =
-                    builder::quantization_util::get_dequantize_scale<double>(min, max, input_et);
+                    builder::quantization_util::get_quantization_scale<double>(min, max, input_et);
                 auto dequantize_scale = op::Constant::create(type, Shape{1}, {scale});
                 return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);
             }
