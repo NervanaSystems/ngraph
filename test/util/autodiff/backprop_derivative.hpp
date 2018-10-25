@@ -46,7 +46,7 @@ namespace ngraph
     {
         template <typename T>
         std::vector<std::shared_ptr<runtime::Tensor>>
-            get_autodiff(runtime::Backend& backend,
+            get_autodiff(runtime::Backend* backend,
                          std::shared_ptr<Function>& df,
                          const std::vector<std::shared_ptr<runtime::Tensor>>& df_input_args,
                          const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
@@ -69,13 +69,13 @@ namespace ngraph
             {
                 // add df/dx to df/dX* arguments
                 auto x_shape = x->get_shape();
-                df_output_args.push_back(backend.create_tensor<T>(x_shape));
+                df_output_args.push_back(backend->create_tensor<T>(x_shape));
 
                 // each element of y has a derivative with respect to each element of x
                 // hence, create a y by x sized tensor for this result
                 auto y_by_x_shape = y_shape;
                 y_by_x_shape.insert(y_by_x_shape.end(), x_shape.begin(), x_shape.end());
-                results.push_back(backend.create_tensor<T>(y_by_x_shape));
+                results.push_back(backend->create_tensor<T>(y_by_x_shape));
             }
 
             // create storage for results
@@ -100,7 +100,7 @@ namespace ngraph
                 write_vector(c_arg, c_vec);
 
                 // call modified df/dX* = f'(c, cached)
-                backend.call_with_validate(df, df_output_args, df_input_args);
+                backend->call_with_validate(df, df_output_args, df_input_args);
 
                 // reset the adjoint element
                 c_vec[i] = 0;
@@ -126,7 +126,7 @@ namespace ngraph
 
         template <typename T>
         std::vector<std::shared_ptr<runtime::Tensor>>
-            backprop_derivative(runtime::Backend& backend,
+            backprop_derivative(runtime::Backend* backend,
                                 const std::shared_ptr<Function>& f,
                                 const std::vector<std::shared_ptr<runtime::Tensor>>& f_input_args,
                                 const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
@@ -139,7 +139,7 @@ namespace ngraph
 
             // adjoint
             auto c_param = std::make_shared<op::Parameter>(element::from<T>(), y_shape);
-            auto c_arg = backend.create_tensor<T>(y_shape);
+            auto c_arg = backend->create_tensor<T>(y_shape);
 
             // df/dX*
             std::vector<std::shared_ptr<Node>> df_output_params;
@@ -178,7 +178,7 @@ namespace ngraph
 
             // (y, cached) arguments
             std::vector<std::shared_ptr<runtime::Tensor>> mod_f_output_args;
-            mod_f_output_args.push_back(backend.create_tensor<T>(y_shape));
+            mod_f_output_args.push_back(backend->create_tensor<T>(y_shape));
 
             // (c, cached) arguments
             std::vector<std::shared_ptr<runtime::Tensor>> mod_df_input_args = df_input_args;
@@ -186,7 +186,7 @@ namespace ngraph
             // add cached nodes to both modified f output and modified f' input arguments
             for (auto node : fprop_cache.fprop_output_nodes)
             {
-                auto tv = backend.create_tensor(node->get_element_type(), node->get_shape());
+                auto tv = backend->create_tensor(node->get_element_type(), node->get_shape());
                 mod_f_output_args.push_back(tv);
                 mod_df_input_args.push_back(tv);
             }
@@ -198,7 +198,7 @@ namespace ngraph
             }
             auto clone_fwd = s_clone_fwd_map[f];
 
-            backend.call_with_validate(clone_fwd, mod_f_output_args, f_input_args);
+            backend->call_with_validate(clone_fwd, mod_f_output_args, f_input_args);
 
             // call modfied f'(c, cached) to get df/dX*
             if (!s_clone_bwd_map[f])

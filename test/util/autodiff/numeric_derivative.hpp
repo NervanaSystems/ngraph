@@ -34,7 +34,7 @@ namespace ngraph
         /// \returns vector of dy/dvar, where each dy/dvar's shape is concat(y.shape(), var.shape())
         template <typename T>
         std::vector<std::shared_ptr<runtime::Tensor>>
-            numeric_derivative(runtime::Backend& backend,
+            numeric_derivative(runtime::Backend* backend,
                                const std::shared_ptr<Function>& f,
                                const std::vector<std::shared_ptr<runtime::Tensor>>& args,
                                T delta,
@@ -52,18 +52,18 @@ namespace ngraph
                 Shape s = y_shape;
                 auto param_shape = param->get_shape();
                 s.insert(s.end(), param_shape.begin(), param_shape.end());
-                results.push_back(backend.create_tensor<T>(s));
+                results.push_back(backend->create_tensor<T>(s));
             }
 
             // ref_y is the function evaluated at the args
-            auto ref_y = backend.create_tensor<T>(y_shape);
+            auto ref_y = backend->create_tensor<T>(y_shape);
 
-            backend.call_with_validate(
+            backend->call_with_validate(
                 f, std::vector<std::shared_ptr<ngraph::runtime::Tensor>>{ref_y}, args);
             auto ref_vec = read_vector<T>(ref_y);
 
             // inc_y will hold f(x+dx) values
-            auto inc_y = backend.create_tensor<T>(y_shape);
+            auto inc_y = backend->create_tensor<T>(y_shape);
 
             // Assuming vars, y, and results are row-major
 
@@ -84,7 +84,7 @@ namespace ngraph
                         auto old_val = vec[j];
                         vec[j] += delta;
                         write_vector(arg, vec);
-                        backend.call_with_validate(f, {inc_y}, args);
+                        backend->call_with_validate(f, {inc_y}, args);
                         auto inc_vec = read_vector<T>(inc_y);
                         vec[j] = old_val;
                         write_vector(arg, vec);
