@@ -78,15 +78,17 @@ static std::shared_ptr<ngraph::Node> broadcast(const std::shared_ptr<ngraph::Nod
     for (auto index = 0; index < output_shape.size(); ++index)
     {
         (source_shape.at(index) == 1) ? broadcast_axes.push_back(index)
-                                    : squeezed_shape.push_back(source_shape.at(index));
+                                      : squeezed_shape.push_back(source_shape.at(index));
     }
 
     // Remove axes which have length of 1 from source shape
-    auto broadcasted_node{std::make_shared<ngraph::op::Reshape>(node,
-            ngraph::onnx_import::reshape::get_default_axis_vector(node->get_shape().size()),
-                                                                    squeezed_shape)};
+    auto broadcasted_node{std::make_shared<ngraph::op::Reshape>(
+        node,
+        ngraph::onnx_import::reshape::get_default_axis_vector(node->get_shape().size()),
+        squeezed_shape)};
 
-    return {std::make_shared<ngraph::op::Broadcast>(broadcasted_node, output_shape, broadcast_axes)};
+    return {
+        std::make_shared<ngraph::op::Broadcast>(broadcasted_node, output_shape, broadcast_axes)};
 }
 
 namespace ngraph
