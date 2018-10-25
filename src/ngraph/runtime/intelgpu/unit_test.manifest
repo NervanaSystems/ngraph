@@ -77,6 +77,8 @@ topk_3d_max_partial
 topk_3d_min_all
 topk_3d_min_one
 topk_3d_min_partial
+topk_5d_max_partial
+topk_int64
 zero_sized_abs
 zero_sized_acos
 zero_sized_add
