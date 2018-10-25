@@ -82,6 +82,40 @@
 using namespace ngraph;
 using namespace std;
 
+TEST(cpu_fusion, broadcast_test)
+{
+    Shape shape_a{4};
+    Shape shape_r{4, 2, 3, 3};
+    AxisSet axis{1, 2, 3};
+
+    //broadcast_test_helper(shape_a, shape_r, axis);
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    vector<float> inp_data(shape_size<const Shape>(shape_a));
+    iota(inp_data.begin(), inp_data.end(), 1);
+    auto f =
+        make_shared<Function>(make_shared<op::Broadcast>(A, shape_r, axis), op::ParameterVector{A});
+    auto ref_backend = runtime::Backend::create("INTERPRETER");
+    auto wrk_backend = runtime::Backend::create("CPU");
+
+    auto wrk_a = wrk_backend->create_tensor(element::f32, shape_a);
+    copy_data(wrk_a, inp_data);
+    auto ref_a = ref_backend->create_tensor(element::f32, shape_a);
+    copy_data(ref_a, inp_data);
+
+    shared_ptr<runtime::Tensor> wrk_result = wrk_backend->create_tensor(element::f32, shape_r);
+    shared_ptr<runtime::Tensor> ref_result = ref_backend->create_tensor(element::f32, shape_r);
+    wrk_backend->call_with_validate(f, {wrk_result}, {wrk_a});
+    ref_backend->call_with_validate(f, {ref_result}, {ref_a});
+
+    vector<float> tmp = read_vector<float>(wrk_result);
+    for (size_t i = 0; i < wrk_result->get_element_count(); ++i)
+    {
+        std::cout << i << ": " << tmp[i] << "\n";
+    }
+    EXPECT_EQ(read_vector<float>(ref_result), read_vector<float>(wrk_result));
+}
+
+
 TEST(cpu_fusion, gemm_pattern)
 {
     Shape shape_w{2, 4};
@@ -1052,15 +1086,23 @@ TEST(cpu_fusion, conv_add)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
-shared_ptr<Function> gen_groupconv_batchnorm(bool add_goe, bool with_relu)
+shared_ptr<Function> gen_groupconv_batchnorm(const bool add_goe,
+                                             const bool with_relu,
+                                             const Shape shape_in,
+                                             const Shape shape_weights,
+                                             const Shape shape_out)
 {
     const int NUM = 2;
     const size_t GROUPS = NUM;
-    Shape shape_a{1, NUM, 5, 5};
-    auto input = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_b{NUM, 1, 3, 3};
-    auto weights = make_shared<op::Parameter>(element::f32, shape_b);
-    Shape shape_r{1, NUM, 3, 3};
+    //const int IC = 20, OC = 5, weights_IC=20;
+    //Shape shape_a{1, IC, 5, 5};
+    auto input = make_shared<op::Parameter>(element::f32, shape_in);
+    //Shape shape_b{OC, weights_IC, 3, 3};
+    auto weights = make_shared<op::Parameter>(element::f32, shape_weights);
+    //Shape shape_r{1, OC, 3, 3};
+
+    unsigned long OC = shape_out.at(1);
+    Shape shape_bn{OC};
     auto group_conv = make_shared<op::GroupConvolution>(input,
                                                         weights,
                                                         Strides{1, 1},
@@ -1069,18 +1111,18 @@ shared_ptr<Function> gen_groupconv_batchnorm(bool add_goe, bool with_relu)
                                                         CoordinateDiff{0, 0},
                                                         Strides{1, 1},
                                                         GROUPS,
-                                                        shape_r);
+                                                        shape_out);
 
     double eps = 0.001;
-    auto gamma = std::make_shared<op::Parameter>(element::f32, Shape{NUM});
-    auto beta = std::make_shared<op::Parameter>(element::f32, Shape{NUM});
-    auto mean = std::make_shared<op::Parameter>(element::f32, Shape{NUM});
-    auto var = std::make_shared<op::Parameter>(element::f32, Shape{NUM});
+    auto gamma = std::make_shared<op::Parameter>(element::f32, shape_bn);
+    auto beta = std::make_shared<op::Parameter>(element::f32, shape_bn);
+    auto mean = std::make_shared<op::Parameter>(element::f32, shape_bn);
+    auto var = std::make_shared<op::Parameter>(element::f32, shape_bn);
 
     auto goe_bn = std::make_shared<op::GetOutputElement>(group_conv, 0);
 
-    auto bn = add_goe ? std::make_shared<op::BatchNorm>(eps, gamma, beta, goe_bn, mean, var)
-                      : std::make_shared<op::BatchNorm>(eps, gamma, beta, group_conv, mean, var);
+    auto bn = add_goe ? std::make_shared<op::BatchNormInference>(eps, gamma, beta, goe_bn, mean, var)
+                      : std::make_shared<op::BatchNormInference>(eps, gamma, beta, group_conv, mean, var);
     if (with_relu)
     {
         auto prelu = std::make_shared<op::Relu>(bn);
@@ -1096,26 +1138,78 @@ shared_ptr<Function> gen_groupconv_batchnorm(bool add_goe, bool with_relu)
     }
 }
 
-TEST(cpu_fusion, fuse_groupconv_batchnorm)
+void fuse_groupconv_batchnorm_helper(Shape shape_in, Shape shape_weights,
+                                                     Shape shape_r)
 {
-    auto func_fuse = gen_groupconv_batchnorm(false, false);
-    auto func_fuse2 = gen_groupconv_batchnorm(false, true);
 
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.run_passes(func_fuse);
-    ASSERT_EQ(count_ops_of_type<op::GroupConvolutionBias>(func_fuse), 1);
 
-    // test groupconv + batchnorm + relu fusion
-    pass_manager.run_passes(func_fuse2);
-    ASSERT_EQ(count_ops_of_type<op::GroupConvolutionBias>(func_fuse2), 1);
-    ASSERT_EQ(count_ops_of_type<op::Relu>(func_fuse2), 0);
+    auto func_fuse = gen_groupconv_batchnorm(false, false, shape_in, shape_weights, shape_r);
+    auto func_fuse2 = gen_groupconv_batchnorm(false, true, shape_in, shape_weights, shape_r);
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("groupconv_batchnorm_before.pdf");
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.register_pass<pass::VisualizeTree>("groupconv_batchnorm_after.pdf");
+        pass_manager.run_passes(func_fuse);
+        ASSERT_EQ(count_ops_of_type<op::GroupConvolutionBias>(func_fuse), 1);
+    }
+
+    {
+        // test groupconv + batchnorm + relu fusion
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("groupconv_batchnorm_relu_before.pdf");
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.register_pass<pass::VisualizeTree>("groupconv_batchnorm_relu_after.pdf");
+        pass_manager.run_passes(func_fuse2);
+        ASSERT_EQ(count_ops_of_type<op::GroupConvolutionBias>(func_fuse2), 1);
+        ASSERT_EQ(count_ops_of_type<op::Relu>(func_fuse2), 0);
+    }
 }
 
-TEST(cpu_fusion, groupconv_batchnorm)
+TEST(cpu_fusion, fuse_groupconv_batchnorm1)
 {
-    shared_ptr<Function> fuse_func = gen_groupconv_batchnorm(false, false);
-    shared_ptr<Function> nofuse_func = gen_groupconv_batchnorm(true, false);
+    Shape shape_in{1, 20, 5, 5};
+    Shape shape_weights{20, 1, 3, 3};
+    Shape shape_r{1, 20, 3, 3};
+    fuse_groupconv_batchnorm_helper(shape_in, shape_weights, shape_r);
+}
+
+TEST(cpu_fusion, fuse_groupconv_batchnorm2)
+{
+    Shape shape_in{1, 20, 5, 5};
+    Shape shape_weights{5, 20, 3, 3};
+    Shape shape_r{1, 5, 3, 3};
+    fuse_groupconv_batchnorm_helper(shape_in, shape_weights, shape_r);
+}
+
+TEST(cpu_fusion, fuse_groupconv_batchnorm3)
+{
+    Shape shape_in{1, 20, 5, 5};
+    Shape shape_weights{5, 10, 3, 3};
+    Shape shape_r{1, 5, 3, 3};
+    fuse_groupconv_batchnorm_helper(shape_in, shape_weights, shape_r);
+}
+
+TEST(cpu_fusion, fuse_groupconv_batchnorm4)
+{
+    Shape shape_in{1, 20, 4, 4};
+    Shape shape_weights{5, 10, 1, 1};
+    Shape shape_r{1, 5, 3, 3};
+    fuse_groupconv_batchnorm_helper(shape_in, shape_weights, shape_r);
+}
+
+
+void groupconv_batchnorm_test_val_helper(const bool with_relu, Shape shape_in, Shape shape_weights,
+                                         Shape shape_r)
+{
+    //Shape shape_in{1, 20, 5, 5};
+    //Shape shape_weights{20, 1, 3, 3};
+    //Shape shape_r{1, 20, 3, 3};
+    shared_ptr<Function> fuse_func = gen_groupconv_batchnorm(false, with_relu, shape_in,
+                                                             shape_weights, shape_r);
+    shared_ptr<Function> nofuse_func = gen_groupconv_batchnorm(true, with_relu, shape_in,
+                                                               shape_weights, shape_r);
 
     test::Uniform<float> rng(1.0f, 100.0f);
     vector<vector<float>> args;
@@ -1131,7 +1225,62 @@ TEST(cpu_fusion, groupconv_batchnorm)
 
     EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
 }
-TEST(cpu_fusion, groupconv_batchnorm_relu)
+
+TEST(cpu_fusion, groupconv_batchnorm_test_val1)
+{
+    Shape shape_in{1, 20, 5, 5};
+    Shape shape_weights{20, 1, 3, 3};
+    Shape shape_r{1, 20, 3, 3};
+
+    //groupconv_batchnorm_test_val_helper(false, shape_in, shape_weights, shape_r);
+    shared_ptr<Function> fuse_func = gen_groupconv_batchnorm(false, false, shape_in,
+                                                             shape_weights, shape_r);
+    shared_ptr<Function> nofuse_func = gen_groupconv_batchnorm(true, false, shape_in,
+                                                               shape_weights, shape_r);
+
+    test::Uniform<float> rng(1.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : fuse_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto fuse_results = execute(fuse_func, args, "CPU");
+    auto nofuse_results = execute(nofuse_func, args, "CPU");
+
+    EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
+}
+
+TEST(cpu_fusion, groupconv_batchnorm_test_val2)
+{
+    Shape shape_in{1, 20, 5, 5};
+    Shape shape_weights{5, 20, 3, 3};
+    Shape shape_r{1, 5, 3, 3};
+
+    groupconv_batchnorm_test_val_helper(false, shape_in, shape_weights, shape_r);
+}
+
+TEST(cpu_fusion, groupconv_batchnorm_relu_test_val1)
+{
+    Shape shape_in{1, 20, 5, 5};
+    Shape shape_weights{20, 1, 3, 3};
+    Shape shape_r{1, 20, 3, 3};
+
+    groupconv_batchnorm_test_val_helper(true, shape_in, shape_weights, shape_r);
+}
+
+TEST(cpu_fusion, groupconv_batchnorm_relu_test_val2)
+{
+    Shape shape_in{1, 20, 5, 5};
+    Shape shape_weights{5, 20, 3, 3};
+    Shape shape_r{1, 5, 3, 3};
+
+    groupconv_batchnorm_test_val_helper(true, shape_in, shape_weights, shape_r);
+}
+
+/*TEST(cpu_fusion, groupconv_batchnorm_relu)
 {
     shared_ptr<Function> fuse_func = gen_groupconv_batchnorm(false, true);
     shared_ptr<Function> nofuse_func = gen_groupconv_batchnorm(true, true);
@@ -1150,7 +1299,7 @@ TEST(cpu_fusion, groupconv_batchnorm_relu)
     auto fuse_results = execute(fuse_func, args, "CPU");
     auto nofuse_results = execute(nofuse_func, args, "CPU");
     EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
-}
+}*/
 
 std::vector<shared_ptr<runtime::Tensor>> rnn_matrix_fusion_eval(const size_t time_steps,
                                                                 const Shape& data_shape,

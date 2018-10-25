@@ -30,6 +30,7 @@ namespace ngraph
             GroupConvolutionBias(const std::shared_ptr<op::GroupConvolution>& conv,
                                  const std::shared_ptr<Node>& bias,
                                  const size_t groups,
+                                 const Shape& output_shape,
                                  bool with_relu,
                                  float alpha = 1.0);
 
@@ -41,7 +42,8 @@ namespace ngraph
                                  const CoordinateDiff& padding_below,
                                  const CoordinateDiff& padding_above,
                                  const Strides& data_dilation_strides,
-                                 const size_t groups,
+                                 size_t groups,
+                                 const Shape& output_shape,
                                  bool with_relu,
                                  float alpha = 1.0);
 

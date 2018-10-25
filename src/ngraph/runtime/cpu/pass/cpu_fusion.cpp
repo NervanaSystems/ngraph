@@ -1645,7 +1645,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
     auto gamma = std::make_shared<pattern::op::Label>(element::f32, Shape{32});
     auto beta = std::make_shared<pattern::op::Label>(element::f32, Shape{32});
     double eps = 0.001;
-    auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, conv_label, mean, var);
+    auto bn = std::make_shared<op::BatchNormInference>(eps, gamma, beta, conv_label, mean, var);
 
     ngraph::pattern::graph_rewrite_callback callback =
         [input, filters, conv_label, mean, var, gamma, beta, eps](pattern::Matcher& m) {
@@ -1654,7 +1654,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
                          << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
 
-            auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(m.get_match_root());
+            auto m_bn = std::dynamic_pointer_cast<op::BatchNormInference>(m.get_match_root());
             auto conv_m = std::static_pointer_cast<op::GroupConvolution>(pattern_map[conv_label]);
 
             if (conv_m->get_users().size() > 1)
@@ -1691,6 +1691,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
                 std::make_shared<op::Multiply>(pattern_map[filters], weight_scaling_bcast);
             auto mean_gamma = std::make_shared<op::Multiply>(pattern_map[mean], weight_scaling);
             auto new_biases = std::make_shared<op::Subtract>(pattern_map[beta], mean_gamma);
+            std::cout << conv_m->get_instance_id() <<": cpu_fusion: conv_m->get_groups() = " << conv_m->get_groups() << "\n";
 
             auto g_conv_bias =
                 std::make_shared<op::GroupConvolutionBias>(pattern_map[input],
@@ -1702,6 +1703,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
                                                            conv_m->get_padding_above(),
                                                            conv_m->get_data_dilation_strides(),
                                                            conv_m->get_groups(),
+                                                           conv_m->get_output_shape(0),
                                                            false,
                                                            1.0);
             ngraph::replace_node(m.get_match_root(), g_conv_bias);
@@ -1722,6 +1724,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::
     Shape shape_bias{32};
     Shape shape_num{0};
 
+    std::cout << " GCBRelu: starts ----------------------\n";
     auto input = std::make_shared<pattern::op::Label>(element::f32, shape_a);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, shape_b);
     auto bias = std::make_shared<pattern::op::Label>(element::f32, shape_bias);
@@ -1736,6 +1739,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::
                                                            CoordinateDiff{0, 0},
                                                            Strides{1, 1},
                                                            input->get_shape().size(),
+                                                           shape_r,
                                                            false,
                                                            1.0);
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
@@ -1746,6 +1750,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::
     ngraph::pattern::graph_rewrite_callback callback =
         [input, filters, bias, num, conv_label, prelu](pattern::Matcher& m) {
 
+            std::cout << " GCBRelu: callback starts ----------------------\n";
             NGRAPH_DEBUG << "In callback for GroupConvBias + Relu folding against node = "
                          << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
@@ -1753,6 +1758,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::
             auto conv_m = std::static_pointer_cast<op::GroupConvolution>(pattern_map[conv_label]);
             auto relu_m = std::dynamic_pointer_cast<op::Relu>(m.get_match_root());
 
+            std::cout << "GCB Relu : " << conv_m->get_groups() << ", pmap groups" << pattern_map[num] << "\n";
             auto g_conv_bias_relu = std::make_shared<op::GroupConvolutionBias>(
                 pattern_map[input], //conv_m->get_argument(0) vs pattern_map[input] ??
                 conv_m->get_argument(1),
@@ -1763,12 +1769,14 @@ void ngraph::runtime::cpu::pass::CPUFusion::
                 conv_m->get_padding_above(),
                 conv_m->get_data_dilation_strides(),
                 conv_m->get_groups(),
+                conv_m->get_output_shape(0),
                 true);
             ngraph::replace_node(m.get_match_root(), g_conv_bias_relu);
-
+            std::cout << " GCBRelu: callback ends ----------------------\n";
             return true;
         };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(prelu, callback);
     this->add_matcher(m);
+    std::cout << " GCBRelu: ends ----------------------\n";
 }

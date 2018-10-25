@@ -42,14 +42,17 @@ void op::util::validate_groupconvbias_shapes(const Shape& data_shape,
             std::to_string(bias_shape[0]) + ", num_filters = " + std::to_string(filters_shape[0]));
     }
 
-    // Note: the subtle match difference here
+    // Note: the subtle match difference here. For GroupConv, filter_shape is typically [N,1,k,k],
+    //       and data_shape is typically [1,N,m,m]. This is different from regulare convolutions
+    //       where num_of_channels are same.
     if (data_shape[1] != filters_shape[0] && data_shape[1] != filters_shape[0] * filters_shape[1])
     {
         throw ngraph_error(
             "GroupConvolution+bias data and filter have different number of channels: "
-            "data_channel=" +
-            std::to_string(data_shape[1]) + ", filter_channel= " +
-            std::to_string(filters_shape[0]));
+            "data_channel=" + std::to_string(data_shape[1]) + ", filter_channel= " +
+            std::to_string(filters_shape[0]) +
+            ",\n data_shape=" + vector_to_string(data_shape) +
+            ", filter_shape=" + vector_to_string(filters_shape));
     }
 }
 
@@ -60,12 +63,14 @@ Shape op::GroupConvolutionBias::get_weights_dimensions()
     const size_t OC_IN_OUTPUT = 1;
     const size_t IC = 1;
 
+    cout << "GCB: get_output_shape: " << get_output_shape(0) << " \n";
     Shape weights_shape_groups{get_inputs().at(1).get_shape()};
 
     // when called from convertLayout, m_groups is 0, don't know why?!
     // hack for now
     if (get_groups() == 0 || get_groups() > get_inputs().at(0).get_shape().at(1))
     {
+        cout << "GCB : getgroups() = " << get_groups() << ", mgroups = " << m_groups << " will be fixed\n";
         m_groups = get_inputs().at(0).get_shape().at(1);
     }
     // adjust output and channel given a number of groups
@@ -80,7 +85,8 @@ Shape op::GroupConvolutionBias::get_weights_dimensions()
 
 op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolution>& conv,
                                                const shared_ptr<Node>& bias,
-                                               const size_t groups,
+                                               size_t groups,
+                                               const Shape& output_shape,
                                                bool with_relu,
                                                float alpha)
     : Op("GroupConvolutionBias",
@@ -101,10 +107,11 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolu
         throw ngraph_error("GroupConvolution's element type isn't equal to bias!");
     }
 
-    util::validate_groupconvbias_shapes(
-        conv->get_argument(0)->get_shape(), conv->get_argument(1)->get_shape(), bias->get_shape());
+    //util::validate_groupconvbias_shapes(
+    //    conv->get_argument(0)->get_shape(), conv->get_argument(1)->get_shape(), bias->get_shape());
 
-    set_output_type(0, conv->get_element_type(), conv->get_shape());
+    //set_output_type(0, conv->get_element_type(), conv->get_shape());
+    set_output_type(0, conv->get_element_type(), output_shape);
 }
 
 op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<Node>& data_batch,
@@ -115,7 +122,8 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<Node>& data_batc
                                                const CoordinateDiff& padding_below,
                                                const CoordinateDiff& padding_above,
                                                const Strides& data_dilation_strides,
-                                               const size_t groups,
+                                               size_t groups,
+                                               const Shape& output_shape,
                                                bool with_relu,
                                                float alpha)
     : Op("GroupConvolutionBias", check_single_output_args({data_batch, filters, bias}))
@@ -128,6 +136,7 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<Node>& data_batc
     , m_groups(groups)
     , m_alpha(alpha)
 {
+    std::cout << get_instance_id() << ": GCB constructor called: m_groups: " << m_groups << ", groups: " << groups  << "\n";
     constructor_validate_and_infer_types();
 
     auto& data_batch_shape = data_batch->get_shape();
@@ -142,11 +151,28 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<Node>& data_batc
     {
         throw ngraph_error("GroupConvolutionBias data batch and filter element types do not match");
     }
-    util::validate_groupconvbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
+    //util::validate_groupconvbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
 
-    set_output_type(0,
-                    data_batch_et,
-                    util::infer_convolution_output_shape(this,
+    //set_output_type(0,
+    //                data_batch_et,
+    //                util::infer_convolution_output_shape(this,
+    //                                                     data_batch_shape,
+    //                                                     filters_shape,
+    //                                                     window_movement_strides,
+    //                                                     window_dilation_strides,
+    //                                                     padding_below,
+    //                                                     padding_above,
+    //                                                     data_dilation_strides,
+    //                                                     0, /* batch_axis_data,              */
+    //                                                     1, /* input_channel_axis_data,      */
+    //                                                     1, /* input_channel_axis_filters,   */
+    //                                                     0, /* output_channel_axis_filters,  */
+    //                                                     0, /* batch_axis_result,            */
+    //                                                     1  /* output_channel_axis_result,   */
+    //                                                     ));
+    if (false)
+    {
+        Shape inferred_shape = util::infer_convolution_output_shape(this,
                                                          data_batch_shape,
                                                          filters_shape,
                                                          window_movement_strides,
@@ -160,7 +186,13 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<Node>& data_batc
                                                          0, /* output_channel_axis_filters,  */
                                                          0, /* batch_axis_result,            */
                                                          1  /* output_channel_axis_result,   */
-                                                         ));
+                                                         );
+        set_output_type(0, data_batch_et, inferred_shape);
+        std::cout << "GCB: ctor: inferred_Shape: " << inferred_shape <<
+                      ", param output_shape: " << output_shape << "\n";
+    }
+    else
+        set_output_type(0, data_batch_et, output_shape);
 }
 
 shared_ptr<Node> op::GroupConvolutionBias::copy_with_new_args(const NodeVector& new_args) const
@@ -179,6 +211,7 @@ shared_ptr<Node> op::GroupConvolutionBias::copy_with_new_args(const NodeVector& 
                                                      get_padding_above(),
                                                      get_data_dilation_strides(),
                                                      get_groups(),
+                                                     get_output_shape(0),
                                                      m_with_relu,
                                                      get_alpha()));
 }
@@ -186,5 +219,5 @@ shared_ptr<Node> op::GroupConvolutionBias::copy_with_new_args(const NodeVector& 
 void op::GroupConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
                                                  const NodeVector& deltas)
 {
-    throw ngraph_error("GroupConvBias generate_adjoints not supported implemented");
+    throw ngraph_error("GroupConvolutionBias generate_adjoints not supported implemented");
 }

@@ -52,6 +52,10 @@ namespace ngraph
                 else if (input_desc.data.format == mkldnn_nchw && input_desc.data.ndims == 4 &&
                          result_desc.data.ndims == 5 && node->get_users().size() == 1)
                 {
+                    auto typeop = (*(begin(node->get_users())))->description();
+                    cout << " Builder : ConvertLayout typeop: " << typeop << "\n";
+                    Shape weights_shape_groups;
+                    //mytempfunc<typeop>();
                     // find if the node is groupconv or groupconvbias to get right dimensions
                     auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
                         *(begin(node->get_users())));

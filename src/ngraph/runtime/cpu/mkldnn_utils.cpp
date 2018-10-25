@@ -42,7 +42,7 @@ using namespace std;
 
 #define TI(x) std::type_index(typeid(x))
 
-std::unordered_set<std::type_index>& runtime::cpu::mkldnn_utils::get_op_registry()
+/*std::unordered_set<std::type_index>& runtime::cpu::mkldnn_utils::get_op_registry()
 {
     static std::unordered_set<std::type_index> s_op_registry{
         TI(ngraph::op::Add),
@@ -65,7 +65,7 @@ std::unordered_set<std::type_index>& runtime::cpu::mkldnn_utils::get_op_registry
         TI(ngraph::op::Reshape),
     };
     return s_op_registry;
-}
+}*/
 
 std::map<element::Type, const mkldnn::memory::data_type>&
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type_map()
@@ -108,7 +108,6 @@ std::map<element::Type, const std::string>&
 std::map<memory::format, const std::string>&
     runtime::cpu::mkldnn_utils::get_mkldnn_format_string_map()
 {
-    // Added rest of memory formats to this map as well
     static std::map<memory::format, const std::string> s_mkldnn_format_string_map{
         {memory::format::format_undef, "memory::format::format_undef"},
         {memory::format::any, "memory::format::any"},
@@ -223,10 +222,10 @@ std::set<memory::format>& runtime::cpu::mkldnn_utils::get_filter_formats()
         memory::format::OhIw16o4i};
     return s_filter_formats;
 }
-bool runtime::cpu::mkldnn_utils::IsMKLDNNOp(ngraph::Node& op)
+/*bool runtime::cpu::mkldnn_utils::IsMKLDNNOp(ngraph::Node& op)
 {
     return (get_op_registry().find(TI(op)) != get_op_registry().end());
-}
+}*/
 
 mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
     const ngraph::runtime::cpu::LayoutDescriptor& layout)

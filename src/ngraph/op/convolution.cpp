@@ -14,18 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <algorithm>
-#include <iostream>
 #include <numeric>
-#include <string>
-#include <unordered_set>
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
-#include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
@@ -589,7 +584,7 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
         << "Output channel count for filters is zero (filters shape: " << filters_shape << ", "
         << "output channels on axis " << output_channel_axis_filters << ").";
 
-    if (node->get_friendly_name().find("GroupConvolution") != std::string::npos)
+    if (node->description() == "GroupConvolution" || node->description() == "GroupConvolutionBias")
     {
         NODE_VALIDATION_ASSERT(node, filters_shape.at(0) == input_channel_count)
             << "Input channel count for filters (" << filters_shape.at(0) << ") "
