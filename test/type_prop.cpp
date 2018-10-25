@@ -4529,7 +4529,7 @@ TEST(type_prop, conv_invalid_0d_input)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data batch must have rank of at least 3 "
+                             std::string("Data batch and filters must have rank of at least 3 "
                                          "(one batch axis, one input-channel axis, "
                                          "and at least one spatial dimension)"));
     }
@@ -4554,7 +4554,7 @@ TEST(type_prop, conv_invalid_1d_input)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data batch must have rank of at least 3 "
+                             std::string("Data batch and filters must have rank of at least 3 "
                                          "(one batch axis, one input-channel axis, "
                                          "and at least one spatial dimension)"));
     }
@@ -4579,7 +4579,7 @@ TEST(type_prop, conv_invalid_2d_input)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Data batch must have rank of at least 3 "
+                             std::string("Data batch and filters must have rank of at least 3 "
                                          "(one batch axis, one input-channel axis, "
                                          "and at least one spatial dimension)"));
     }
@@ -4625,7 +4625,9 @@ TEST(type_prop, conv_invalid_0_input_channels)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch channel count is zero"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Data batch channel count and/or filter input channel count is zero"));
     }
     catch (...)
     {
@@ -4647,12 +4649,7 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_many)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
-                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), "
-                        "window shape ({3,3,3}), window strides (Strides{1, 1}), and window "
-                        "dilation (Strides{1, 1}) do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch and filters rank do not match"));
     }
     catch (...)
     {
@@ -4674,12 +4671,7 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_few)
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
-                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), "
-                        "window shape ({3}), window strides (Strides{1, 1}), and window dilation "
-                        "(Strides{1, 1}) do not match"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Data batch and filters rank do not match"));
     }
     catch (...)
     {
@@ -4750,10 +4742,12 @@ TEST(type_prop, conv_invalid_movement_stride_rank)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
-                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), "
-                        "window shape ({3,3}), window strides (Strides{2, 3, 8}), and window "
-                        "dilation (Strides{1, 1}) do not match"));
+            std::string("Ranks for data item shape/filters shape (data batch has shape "
+                        "{6,2,10,10}, so data item rank is 2 and filters have shape {6,2,3,3}, so "
+                        "filters spatial rank is 2), data dilation (Strides{1, 1}), padding below "
+                        "(CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), filter "
+                        "strides (Strides{2, 3, 8}), and filter dilation (Strides{1, 1}) do not "
+                        "match"));
     }
     catch (...)
     {
@@ -4777,10 +4771,12 @@ TEST(type_prop, conv_invalid_window_dilation_stride_rank)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
-                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), "
-                        "window shape ({3,3}), window strides (Strides{2, 3}), and window dilation "
-                        "(Strides{2, 3, 8}) do not match"));
+            std::string("Ranks for data item shape/filters shape (data batch has shape "
+                        "{6,2,10,10}, so data item rank is 2 and filters have shape {6,2,3,3}, so "
+                        "filters spatial rank is 2), data dilation (Strides{1, 1}), padding below "
+                        "(CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), filter "
+                        "strides (Strides{2, 3}), and filter dilation (Strides{2, 3, 8}) do not "
+                        "match"));
     }
     catch (...)
     {
@@ -4810,10 +4806,12 @@ TEST(type_prop, conv_invalid_data_dilation_stride_rank)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Ranks for data shape ({10,10}), data dilation (Strides{2, 3, 8}), padding "
+            std::string("Ranks for data item shape/filters shape (data batch has shape "
+                        "{6,2,10,10}, so data item rank is 2 and filters have shape {6,2,3,3}, so "
+                        "filters spatial rank is 2), data dilation (Strides{2, 3, 8}), padding "
                         "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), "
-                        "window shape ({3,3}), window strides (Strides{2, 3}), and window dilation "
-                        "(Strides{2, 3}) do not match"));
+                        "filter strides (Strides{2, 3}), and filter dilation (Strides{2, 3}) do "
+                        "not match"));
     }
     catch (...)
     {
@@ -4842,10 +4840,12 @@ TEST(type_prop, conv_invalid_padding_below_rank)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
-                        "below (CoordinateDiff{0, 0, 0}), padding above (CoordinateDiff{0, 0}), "
-                        "window shape ({3,3}), window strides (Strides{2, 3}), and window dilation "
-                        "(Strides{1, 1}) do not match"));
+            std::string(
+                "Ranks for data item shape/filters shape (data batch has shape "
+                "{6,2,10,10}, so data item rank is 2 and filters have shape {6,2,3,3}, so "
+                "filters spatial rank is 2), data dilation (Strides{1, 1}), padding below "
+                "(CoordinateDiff{0, 0, 0}), padding above (CoordinateDiff{0, 0}), filter "
+                "strides (Strides{2, 3}), and filter dilation (Strides{1, 1}) do not match"));
     }
     catch (...)
     {
@@ -4874,10 +4874,12 @@ TEST(type_prop, conv_invalid_padding_above_rank)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Ranks for data shape ({10,10}), data dilation (Strides{1, 1}), padding "
-                        "below (CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0, 0}), "
-                        "window shape ({3,3}), window strides (Strides{2, 3}), and window dilation "
-                        "(Strides{2, 3}) do not match"));
+            std::string(
+                "Ranks for data item shape/filters shape (data batch has shape "
+                "{6,2,10,10}, so data item rank is 2 and filters have shape {6,2,3,3}, so "
+                "filters spatial rank is 2), data dilation (Strides{1, 1}), padding below "
+                "(CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0, 0}), filter "
+                "strides (Strides{2, 3}), and filter dilation (Strides{2, 3}) do not match"));
     }
     catch (...)
     {
@@ -5091,6 +5093,1181 @@ TEST(type_prop, conv_invalid_movement_stride_0)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_ok)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             window_movement_strides,
+                                             window_dilation_strides,
+                                             padding_below,
+                                             padding_above,
+                                             data_dilation_strides);
+
+    ASSERT_EQ(conv->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_window_strides_rank_wrong)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Window stride rank mismatch not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Ranks for data item shape/filters shape (data batch has shape ?, so data "
+                        "item rank is ? and filters have shape ?, so filters spatial rank is ?), "
+                        "data dilation (Strides{1, 1}), padding below (CoordinateDiff{0, 0}), "
+                        "padding above (CoordinateDiff{0, 0}), filter strides (Strides{1, 1, 1}), "
+                        "and filter dilation (Strides{1, 1}) do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_window_strides_dim_zero)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 0};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Window stride with dimension zero not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Window strides (Strides{1, 0}) has zero dimension at axis 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_window_dilation_rank_wrong)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Window dilation rank mismatch not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Ranks for data item shape/filters shape (data batch has shape ?, so data "
+                        "item rank is ? and filters have shape ?, so filters spatial rank is ?), "
+                        "data dilation (Strides{1, 1}), padding below (CoordinateDiff{0, 0}), "
+                        "padding above (CoordinateDiff{0, 0}), filter strides (Strides{1, 1}), and "
+                        "filter dilation (Strides{1, 1, 1}) do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_window_dilation_dim_zero)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 0};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Window dilation with dimension zero not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Window dilation (Strides{1, 0}) has zero dimension at axis 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_padding_below_rank_wrong)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Padding below rank mismatch not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Ranks for data item shape/filters shape (data batch has shape ?, so data "
+                        "item rank is ? and filters have shape ?, so filters spatial rank is ?), "
+                        "data dilation (Strides{1, 1}), padding below (CoordinateDiff{0, 0, 0}), "
+                        "padding above (CoordinateDiff{0, 0}), filter strides (Strides{1, 1}), and "
+                        "filter dilation (Strides{1, 1}) do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_padding_above_rank_wrong)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Padding above rank mismatch not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Ranks for data item shape/filters shape (data batch has shape ?, so data "
+                        "item rank is ? and filters have shape ?, so filters spatial rank is ?), "
+                        "data dilation (Strides{1, 1}), padding below (CoordinateDiff{0, 0}), "
+                        "padding above (CoordinateDiff{0, 0, 0}), filter strides (Strides{1, 1}), "
+                        "and filter dilation (Strides{1, 1}) do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_data_dilation_rank_wrong)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Data dilation rank mismatch not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Ranks for data item shape/filters shape (data batch has shape ?, so data "
+                        "item rank is ? and filters have shape ?, so filters spatial rank is ?), "
+                        "data dilation (Strides{1, 1, 1}), padding below (CoordinateDiff{0, 0}), "
+                        "padding above (CoordinateDiff{0, 0}), filter strides (Strides{1, 1}), and "
+                        "filter dilation (Strides{1, 1}) do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_data_dilation_dim_zero)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 0};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Data dilation with dimension zero not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Data dilation (Strides{1, 0}) has zero dimension at axis 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_rank_static_dynamic_rank_dynamic_ok)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic(4)};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             window_movement_strides,
+                                             window_dilation_strides,
+                                             padding_below,
+                                             padding_above,
+                                             data_dilation_strides);
+
+    ASSERT_EQ(conv->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, conv_partial_rank_static_dynamic_rank_dynamic_data_batch_rank_wrong)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic(5)};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Data batch rank mismatch not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Ranks for data item shape/filters shape (data batch has shape "
+                        "{?,?,?,?,?}, so data item rank is 3 and filters have shape ?, so filters "
+                        "spatial rank is ?), data dilation (Strides{1, 1}), padding below "
+                        "(CoordinateDiff{0, 0}), padding above (CoordinateDiff{0, 0}), filter "
+                        "strides (Strides{1, 1}), and filter dilation (Strides{1, 1}) do not "
+                        "match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_rank_static_dynamic_rank_dynamic_batch_size_known_ok)
+{
+    PartialShape data_batch_shape{
+        64, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             window_movement_strides,
+                                             window_dilation_strides,
+                                             padding_below,
+                                             padding_above,
+                                             data_dilation_strides);
+
+    ASSERT_EQ(conv->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
+        PartialShape{64, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(type_prop, conv_partial_rank_static_dynamic_rank_dynamic_batch_size_known_zero)
+{
+    PartialShape data_batch_shape{
+        0, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Zero batch size not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Batch size is zero"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_rank_static_dynamic_rank_dynamic_input_channel_count_known_ok)
+{
+    PartialShape data_batch_shape{
+        Dimension::dynamic(), 3, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             window_movement_strides,
+                                             window_dilation_strides,
+                                             padding_below,
+                                             padding_above,
+                                             data_dilation_strides);
+
+    ASSERT_EQ(conv->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, conv_partial_rank_static_dynamic_rank_dynamic_input_channel_count_known_zero)
+{
+    PartialShape data_batch_shape{
+        Dimension::dynamic(), 0, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape filters_shape{PartialShape::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Zero input channel count not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Data batch channel count and/or filter input channel count is zero"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_rank_dynamic_rank_static_dynamic_output_channel_count_known_ok)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic(4)};
+    PartialShape filters_shape{
+        32, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             window_movement_strides,
+                                             window_dilation_strides,
+                                             padding_below,
+                                             padding_above,
+                                             data_dilation_strides);
+
+    ASSERT_EQ(conv->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), 32, Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(type_prop, conv_partial_rank_dynamic_rank_static_dynamic_output_channel_count_known_zero)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic(4)};
+    PartialShape filters_shape{0, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Zero output channel count not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Filter output channel count is zero"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_rank_dynamic_rank_static_dynamic_input_channel_count_known_ok)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic(4)};
+    PartialShape filters_shape{Dimension::dynamic(), 4, Dimension::dynamic(), Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             window_movement_strides,
+                                             window_dilation_strides,
+                                             padding_below,
+                                             padding_above,
+                                             data_dilation_strides);
+
+    ASSERT_EQ(conv->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, conv_partial_rank_dynamic_rank_static_dynamic_input_channel_count_known_zero)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic(4)};
+    PartialShape filters_shape{Dimension::dynamic(), 0, Dimension::dynamic(), Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Zero input channel count not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Data batch channel count and/or filter input channel count is zero"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_rank_static_dynamic_rank_static_dynamic_ok)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic(4)};
+    PartialShape filters_shape{PartialShape::dynamic(4)};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             window_movement_strides,
+                                             window_dilation_strides,
+                                             padding_below,
+                                             padding_above,
+                                             data_dilation_strides);
+
+    ASSERT_EQ(conv->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, conv_partial_rank_static_dynamic_rank_static_dynamic_arg_ranks_mismatch)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic(5)};
+    PartialShape filters_shape{PartialShape::dynamic(4)};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Argument rank mismatch not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data batch and filters rank do not match (data batch "
+                                         "shape: {?,?,?,?,?}, filters shape: {?,?,?,?})"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_rank_static_dynamic_rank_static_dynamic_input_channel_counts_known_ok)
+{
+    PartialShape data_batch_shape{
+        Dimension::dynamic(), 3, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape filters_shape{Dimension::dynamic(), 3, Dimension::dynamic(), Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             window_movement_strides,
+                                             window_dilation_strides,
+                                             padding_below,
+                                             padding_above,
+                                             data_dilation_strides);
+
+    ASSERT_EQ(conv->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+}
+
+TEST(type_prop, conv_partial_rank_static_dynamic_rank_static_dynamic_input_channel_counts_mismatch)
+{
+    PartialShape data_batch_shape{
+        Dimension::dynamic(), 3, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape filters_shape{
+        Dimension::dynamic(), 22, Dimension::dynamic(), Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Input channel count mismatch not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Data batch channel count (3) does not match filter input channel count (22)"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_rank_static_dynamic_rank_static_dynamic_all_nonspatial_known_ok)
+{
+    PartialShape data_batch_shape{64, 3, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape filters_shape{100, 3, Dimension::dynamic(), Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             window_movement_strides,
+                                             window_dilation_strides,
+                                             padding_below,
+                                             padding_above,
+                                             data_dilation_strides);
+
+    ASSERT_EQ(conv->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
+        PartialShape{64, 100, Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(type_prop,
+     conv_partial_rank_static_dynamic_rank_static_dynamic_all_nonspatial_some_spatial_known_ok)
+{
+    PartialShape data_batch_shape{64, 3, 200, Dimension::dynamic()};
+    PartialShape filters_shape{100, 3, 5, Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             window_movement_strides,
+                                             window_dilation_strides,
+                                             padding_below,
+                                             padding_above,
+                                             data_dilation_strides);
+
+    ASSERT_EQ(conv->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
+        PartialShape{64, 100, 196, Dimension::dynamic()}));
+}
+
+TEST(
+    type_prop,
+    conv_partial_rank_static_dynamic_rank_static_dynamic_all_nonspatial_some_spatial_known_filters_too_big)
+{
+    PartialShape data_batch_shape{64, 3, 200, Dimension::dynamic()};
+    PartialShape filters_shape{100, 3, 201, Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Oversize filter not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Window after dilation has dimension (dim: 201) larger "
+                                         "than the data shape after padding (dim: 200) at axis 0"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    conv_partial_rank_static_dynamic_rank_static_dynamic_all_nonspatial_some_spatial_known_filters_not_too_big_after_padding)
+{
+    PartialShape data_batch_shape{64, 3, 200, Dimension::dynamic()};
+    PartialShape filters_shape{100, 3, 201, Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{2, 0};
+    CoordinateDiff padding_above{-1, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             window_movement_strides,
+                                             window_dilation_strides,
+                                             padding_below,
+                                             padding_above,
+                                             data_dilation_strides);
+
+    ASSERT_EQ(conv->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
+        PartialShape{64, 100, 1, Dimension::dynamic()}));
+}
+
+TEST(
+    type_prop,
+    conv_partial_rank_static_dynamic_rank_static_dynamic_all_nonspatial_some_spatial_known_filters_not_too_big_after_data_dilation)
+{
+    PartialShape data_batch_shape{64, 3, 200, Dimension::dynamic()};
+    PartialShape filters_shape{100, 3, 201, Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{2, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             window_movement_strides,
+                                             window_dilation_strides,
+                                             padding_below,
+                                             padding_above,
+                                             data_dilation_strides);
+
+    ASSERT_EQ(conv->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
+        PartialShape{64, 100, 199, Dimension::dynamic()}));
+}
+
+TEST(
+    type_prop,
+    conv_partial_rank_static_dynamic_rank_static_dynamic_all_nonspatial_some_spatial_known_filters_not_too_big_after_data_dilation_strided)
+{
+    PartialShape data_batch_shape{64, 3, 200, Dimension::dynamic()};
+    PartialShape filters_shape{100, 3, 201, Dimension::dynamic()};
+    Strides window_movement_strides{3, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{2, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             window_movement_strides,
+                                             window_dilation_strides,
+                                             padding_below,
+                                             padding_above,
+                                             data_dilation_strides);
+
+    ASSERT_EQ(conv->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
+        PartialShape{64, 100, 67, Dimension::dynamic()}));
+}
+
+TEST(
+    type_prop,
+    conv_partial_rank_static_dynamic_rank_static_dynamic_all_nonspatial_some_spatial_known_filters_too_big_after_filter_dilation)
+{
+    PartialShape data_batch_shape{64, 3, 200, Dimension::dynamic()};
+    PartialShape filters_shape{100, 3, 101, Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{2, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Oversize filter after window dilation not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Window after dilation has dimension (dim: 201) larger "
+                                         "than the data shape after padding (dim: 200) at axis 0"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    conv_partial_rank_static_dynamic_rank_static_dynamic_all_nonspatial_some_spatial_zero_data_batch_dim)
+{
+    PartialShape data_batch_shape{64, 3, 200, 0};
+    PartialShape filters_shape{100, 3, 5, Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Zero dimension in data batch not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data shape after padding and dilation has "
+                                         "dimension less than 1 (dim: 0) at axis 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    conv_partial_rank_static_dynamic_rank_static_dynamic_all_nonspatial_some_spatial_positive_data_batch_dim_after_padding)
+{
+    PartialShape data_batch_shape{64, 3, 200, 0};
+    PartialShape filters_shape{100, 3, 5, Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 2};
+    CoordinateDiff padding_above{0, -1};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             window_movement_strides,
+                                             window_dilation_strides,
+                                             padding_below,
+                                             padding_above,
+                                             data_dilation_strides);
+
+    ASSERT_EQ(conv->get_output_element_type(0), element::f32);
+    ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
+        PartialShape{64, 100, 196, Dimension::dynamic()}));
+}
+
+TEST(
+    type_prop,
+    conv_partial_rank_static_dynamic_rank_static_dynamic_all_nonspatial_some_spatial_zero_data_batch_dim_after_padding)
+{
+    PartialShape data_batch_shape{64, 3, 200, 20};
+    PartialShape filters_shape{100, 3, 5, Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, 0};
+    CoordinateDiff padding_above{0, -20};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Zero padded dimension in data batch not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data shape after padding and dilation has "
+                                         "dimension less than 1 (dim: 0) at axis 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    conv_partial_rank_static_dynamic_rank_static_dynamic_all_nonspatial_some_spatial_negative_data_batch_dim_after_padding)
+{
+    PartialShape data_batch_shape{64, 3, 200, 20};
+    PartialShape filters_shape{100, 3, 5, Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{0, -1};
+    CoordinateDiff padding_above{0, -20};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+
+    try
+    {
+        auto conv = make_shared<op::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
+
+        FAIL() << "Negative padded dimension in data batch not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data shape after padding and dilation has dimension less "
+                                         "than 1 (dim: -1) at axis 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_partial_dynamic_et)
+{
+    // For this test the exact shape parameters are kind of arbitrary---just copied and pasted
+    // from some known-"OK" test above. We're only concerned about the element types.
+    PartialShape data_batch_shape{64, 3, 200, Dimension::dynamic()};
+    PartialShape filters_shape{100, 3, 201, Dimension::dynamic()};
+    Strides window_movement_strides{1, 1};
+    Strides window_dilation_strides{1, 1};
+    CoordinateDiff padding_below{2, 0};
+    CoordinateDiff padding_above{-1, 0};
+    Strides data_dilation_strides{1, 1};
+
+    auto param0 = make_shared<op::Parameter>(element::dynamic, data_batch_shape);
+    auto param1 = make_shared<op::Parameter>(element::dynamic, filters_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             window_movement_strides,
+                                             window_dilation_strides,
+                                             padding_below,
+                                             padding_above,
+                                             data_dilation_strides);
+
+    ASSERT_TRUE(conv->get_output_element_type(0).is_dynamic());
+    ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
+        PartialShape{64, 100, 1, Dimension::dynamic()}));
 }
 
 TEST(type_prop, max_pool_1d_deduce)
