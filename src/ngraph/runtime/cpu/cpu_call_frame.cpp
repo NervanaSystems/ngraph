@@ -45,11 +45,6 @@ void runtime::cpu::CPU_CallFrame::inner_call(
     vector<void*> inputs;
     vector<void*> outputs;
 
-    if (ctx->pc == 0)
-    {
-        propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
-    }
-
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
         shared_ptr<runtime::cpu::CPUTensorView> tv =
@@ -82,85 +77,14 @@ void runtime::cpu::CPU_CallFrame::inner_call(
     }
 }
 
-/*
-bool runtime::cpu::CPU_CallFrame::step(
-    const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
-    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
-{
-    if (ctx->pc >= m_external_function->op_names.size())
-    {
-        return false;
-    }
-
-    bool is_set = ctx->breakpoints.count(ctx->pc + 1) != 0;
-    ctx->breakpoints.insert(ctx->pc + 1);
-    inner_call(output_tvs, input_tvs);
-    if (!is_set)
-    {
-        ctx->breakpoints.erase(ctx->pc);
-    }
-    return true;
-}
-
-void runtime::cpu::CPU_CallFrame::resume(
-    const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
-    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
-{
-    if (ctx->pc >= m_external_function->op_names.size())
-    {
-        return;
-    }
-
-    inner_call(output_tvs, input_tvs);
-    return;
-}
-*/
-
 void runtime::cpu::CPU_CallFrame::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
     ctx->pc = 0;
+    propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
     inner_call(output_tvs, input_tvs);
 }
-
-/*
-bool runtime::cpu::CPU_CallFrame::add_breakpoint(std::shared_ptr<Node> op)
-{
-    auto i_pos = std::find(
-        m_external_function->op_names.begin(), m_external_function->op_names.end(), op->get_name());
-    if (i_pos != m_external_function->op_names.end())
-    {
-        auto pc = static_cast<size_t>(std::distance(m_external_function->op_names.begin(), i_pos));
-        ctx->breakpoints.insert(pc);
-        return true;
-    }
-    return false;
-}
-
-bool runtime::cpu::CPU_CallFrame::delete_breakpoint(std::shared_ptr<Node> op)
-{
-    auto i_pos = std::find(
-        m_external_function->op_names.begin(), m_external_function->op_names.end(), op->get_name());
-    if (i_pos != m_external_function->op_names.end())
-    {
-        auto pc = static_cast<size_t>(std::distance(m_external_function->op_names.begin(), i_pos));
-        ctx->breakpoints.erase(pc);
-        return true;
-    }
-    return false;
-}
-
-void* runtime::cpu::CPU_CallFrame::inspect(const std::string& tensor_descriptor_name)
-{
-    return m_external_function->tensor_data.at(tensor_descriptor_name);
-}
-
-void* runtime::cpu::CPU_CallFrame::inspect(std::shared_ptr<Node> op, size_t output_index)
-{
-    return m_external_function->tensor_data.at(op->get_name() + "_" + to_string(output_index));
-}
-*/
 
 void runtime::cpu::CPU_CallFrame::propagate_layouts(
     const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
