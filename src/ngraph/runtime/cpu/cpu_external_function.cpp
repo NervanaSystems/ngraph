@@ -1646,7 +1646,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                     tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>*
                         flowgraph_node = new tbb::flow::continue_node<tbb::flow::continue_msg,
                                                                       tbb::flow::lightweight>(
-                            *(ctx->G), [&, index](const tbb::flow::continue_msg& msg) {
+                            *(ctx->G), [&, functor, index](const tbb::flow::continue_msg& msg) {
                                 if (p(ctx) || ctx->first_iteration)
                                 {
                                     if (runtime::cpu::IsTracingEnabled() || m_emit_timing)
@@ -1686,8 +1686,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                         m_perf_counters[index].m_call_count++;
                                     }
                                 }
-                                std::advance(functor, 1);
                             });
+                    std::advance(functor, 1);
                     nodename_tbbnode_map.insert({it->second, flowgraph_node});
                     it++;
                 }

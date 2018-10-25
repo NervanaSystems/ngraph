@@ -20,7 +20,7 @@
 
 if(NGRAPH_TBB_ENABLE)
     set(TBB_GIT_REPO_URL https://github.com/01org/tbb)
-    set(TBB_GIT_TAG "tbb_2018")
+    set(TBB_GIT_TAG "tbb_2019")
 
     configure_file(${CMAKE_SOURCE_DIR}/cmake/tbb_fetch.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/tbb/CMakeLists.txt)
     execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
