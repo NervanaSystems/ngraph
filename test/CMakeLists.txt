@@ -65,9 +65,16 @@ if (NGRAPH_INTERPRETER_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
+if (NGRAPH_HYBRID_ENABLE)
+    set(SRC ${SRC} hybrid_backend.cpp)
+endif()
+
 if (NGRAPH_CPU_ENABLE)
     list(APPEND SRC core_fusion.cpp quantize_cpu.cpp)
     list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp)
+    if (NGRAPH_HALIDE)
+        list(APPEND SRC halide.cpp)
+    endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
 endif()
 
@@ -78,6 +85,10 @@ endif()
 
 if (NGRAPH_INTELGPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
+endif()
+
+if (NGRAPH_HYBRID_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} HYBRID)
 endif()
 
 add_subdirectory(models)
@@ -92,7 +103,17 @@ add_subdirectory(util)
 # such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
 set(MULTI_TEST_SRC
     autodiff.in.cpp
+    backend_binary_elementwise.in.cpp
+    backend_broadcast.in.cpp
+    backend_comparison.in.cpp
+    backend_dot.in.cpp
+    backend_one_hot.in.cpp
+    backend_pool.in.cpp
+    backend_reduce.in.cpp
+    backend_reshape.in.cpp
+    backend_sum.in.cpp
     backend_test.in.cpp
+    backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
 )
 if(NGRAPH_DISTRIBUTED_ENABLE)
@@ -138,7 +159,7 @@ endif()
 if(NGRAPH_DISTRIBUTED_ENABLE)
     find_package(MPI REQUIRED)
     target_compile_definitions(unit-test PRIVATE NGRAPH_DISTRIBUTED)
-    target_include_directories(unit-test 
+    target_include_directories(unit-test
         SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
     target_link_libraries(unit-test PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 endif()
@@ -164,6 +185,10 @@ endif()
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
+endif()
+
+if (NGRAPH_HYBRID_ENABLE)
+    target_link_libraries(unit-test PRIVATE hybrid_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)
