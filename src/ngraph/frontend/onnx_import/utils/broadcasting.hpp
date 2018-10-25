@@ -47,6 +47,25 @@ namespace ngraph
             return numpy_style_broadcast_for_binary_operation(inputs.at(0), inputs.at(1));
         }
 
+        // Note that broadcasting happens only for _stack of matrices_ dimensions.
+        // The last two axes are not broadcasted!
+
+        /// \brief      Broadcast shape of two nodes to make them compatible for a matrix multiplication.
+        ///
+        /// \note       This function is reflecting broadcasting behaviour of NumPys' `matmul` operation
+        ///             \link https://docs.scipy.org/doc/numpy/reference/generated/numpy.matmul.html
+        ///             This mean that only \"stack of matrices\" axes are bidirectionally broadcasted.
+        ///             The last two dimension are left untouched.
+        ///
+        /// \param[in]  left   The Node providing data for the left-hand side of matrix multiplication.
+        /// \param[in]  right  The Node providing data for the right-hand side of matrix multiplication.
+        ///
+        /// \return     The vector containing both nodes broadcasted.
+        ///
+        NodeVector
+            numpy_style_broadcast_for_matmul_operation(const std::shared_ptr<ngraph::Node>& left,
+                                                       const std::shared_ptr<ngraph::Node>& right);
+
         /// \brief Generate a list of broadcast axes.
         ///
         /// \details Informally, a broadcast "adds" axes to the input tensor, replicating
@@ -103,5 +122,4 @@ namespace ngraph
                 calculate_broadcast_axes(new_shape, node->get_shape(), start_match_axis));
         }
     } // namespace  onnx_import
-
 } // namespace  ngraph
