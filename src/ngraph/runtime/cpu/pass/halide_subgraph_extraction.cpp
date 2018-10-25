@@ -116,11 +116,18 @@ bool runtime::cpu::pass::HalideSubgraphExtraction::run_on_function(
         }
     }
     ordered_ops.reverse();
-    auto subgraph = make_shared<cpu::op::HalideOp>(liveins,
-                                                   ordered_ops,
-                                                   function->get_result()->get_element_type(),
-                                                   function->get_result()->get_shape());
+    if (ordered_ops.size() > 1)
+    {
+        auto subgraph = make_shared<cpu::op::HalideOp>(liveins,
+                                                       ordered_ops,
+                                                       function->get_result()->get_element_type(),
+                                                       function->get_result()->get_shape());
 
-    replace_node(function->get_result()->get_argument(0), subgraph);
-    return true;
+        replace_node(function->get_result()->get_argument(0), subgraph);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
