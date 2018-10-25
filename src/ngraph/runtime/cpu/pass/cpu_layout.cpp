@@ -301,8 +301,6 @@ namespace ngraph
 
                     memory::data_type et_weights = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
                         node->get_input_element_type(1));
-                    memory::data_type et_bias =
-                        mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(2));
                     memory::data_type et_result = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(
                         node->get_output_element_type(0));
 
@@ -324,6 +322,8 @@ namespace ngraph
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     if (use_bias)
                     {
+                        memory::data_type et_bias =
+                            mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(2));
                         auto arg2_shape = node->get_input_shape(2);
                         ngraph::op::util::validate_convbias_shapes(
                             arg0_shape, arg1_shape, arg2_shape);

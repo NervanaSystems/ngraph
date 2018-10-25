@@ -104,7 +104,7 @@ namespace ngraph
             static inline T get_quantization_scale(const std::shared_ptr<Node> min_input,
                                                    const std::shared_ptr<Node> max_input,
                                                    const ngraph::element::Type& type,
-                                                   bool is_quantize = false)
+                                                   bool bump_by_eps = false)
             {
                 auto min_input_const_op =
                     std::dynamic_pointer_cast<ngraph::op::Constant>(min_input);
@@ -112,16 +112,16 @@ namespace ngraph
                     std::dynamic_pointer_cast<ngraph::op::Constant>(max_input);
 
                 if (min_input_const_op == nullptr)
-                    throw ngraph_error("min_input shouldn't be nullptr!");
+                    throw ngraph_error("min input must be constant");
                 else if (max_input_const_op == nullptr)
-                    throw ngraph_error("max_input shouldn't be nullptr!");
+                    throw ngraph_error("max input must be constant");
 
                 auto input_min_range = min_input_const_op->get_vector<T>();
                 auto input_max_range = max_input_const_op->get_vector<T>();
 
-                T min_range;
-                T max_range;
-                if (is_quantize)
+                T min_range = std::numeric_limits<T>::min();
+                T max_range = std::numeric_limits<T>::max();
+                if (bump_by_eps)
                 {
                     // If input_min_range and input_max_range are close,
                     // introduce a slightly larger delta between them.

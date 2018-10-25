@@ -52,6 +52,7 @@ quantize_axes
 quantize_int8
 quantize_clamp
 dequantize
+dequantize_cpu
 dequantize_axes
 dequantize_int8
 quantize_ROUND_NEAREST_TOWARD_ZERO
