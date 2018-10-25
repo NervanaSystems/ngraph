@@ -21,6 +21,7 @@
 
 #include "core/attribute.hpp"
 #include "core/node.hpp"
+#include "utils/reduction.hpp"
 #include "utils/reshape.hpp"
 
 namespace ngraph
@@ -33,25 +34,7 @@ namespace ngraph
             {
                 NodeVector argmin(const Node& node)
                 {
-                    auto axis = node.get_attribute_value<int64_t>("axis", 0);
-                    auto keepdims = node.get_attribute_value<int64_t>("keepdims", 1);
-                    auto input_node = node.get_ng_inputs().at(0);
-
-                    auto op_node =
-                        std::make_shared<ngraph::op::ArgMin>(input_node, axis, element::i64);
-
-                    if (keepdims == 0)
-                    {
-                        return {op_node};
-                    }
-
-                    auto output_shape = input_node->get_shape();
-                    output_shape.at(axis) = 1;
-
-                    return {std::make_shared<ngraph::op::Reshape>(
-                        op_node,
-                        reshape::get_default_axis_vector(op_node->get_shape().size()),
-                        Shape{output_shape})};
+                    return {reduction::make_ng_arg_reduction_op<ngraph::op::ArgMin>(node)};
                 }
 
             } // namespace set_1

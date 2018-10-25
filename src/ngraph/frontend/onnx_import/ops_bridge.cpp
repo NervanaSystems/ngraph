@@ -25,8 +25,8 @@
 #include "op/acos.hpp"
 #include "op/add.hpp"
 #include "op/and.hpp"
-#include "op/argmin.hpp"
 #include "op/argmax.hpp"
+#include "op/argmin.hpp"
 #include "op/asin.hpp"
 #include "op/atan.hpp"
 #include "op/average_pool.hpp"
@@ -148,6 +148,7 @@ namespace ngraph
             REGISTER_OPERATOR("Add", 1, add);
             REGISTER_OPERATOR("And", 1, logical_and);
             REGISTER_OPERATOR("ArgMin", 1, argmin);
+            REGISTER_OPERATOR("ArgMax", 1, argmax);
             REGISTER_OPERATOR("Asin", 1, asin);
             REGISTER_OPERATOR("Atan", 1, atan);
             REGISTER_OPERATOR("AveragePool", 1, average_pool);

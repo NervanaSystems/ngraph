@@ -101,6 +101,31 @@ namespace ngraph
                     reshape::get_default_axis_vector(op_node->get_shape().size()),
                     Shape{output_shape});
             }
+
+            template <class T>
+            std::shared_ptr<ngraph::Node> make_ng_arg_reduction_op(const Node& node)
+            {
+                auto axis = node.get_attribute_value<int64_t>("axis", 0);
+                auto keepdims = node.get_attribute_value<int64_t>("keepdims", 1);
+                auto input_node = node.get_ng_inputs().at(0);
+
+                auto op_node = std::make_shared<T>(input_node, axis, element::i64);
+
+                if (keepdims == 0)
+                {
+                    return op_node;
+                }
+
+                auto output_shape = input_node->get_shape();
+                output_shape.at(axis) = 1;
+                auto reshape_node = std::make_shared<ngraph::op::Reshape>(
+                    op_node,
+                    reshape::get_default_axis_vector(op_node->get_shape().size()),
+                    Shape{output_shape});
+
+                return reshape_node;
+            }
+
         } // namespace  reduction
     }     // namespace onnx_import
 } // namespace ngraph

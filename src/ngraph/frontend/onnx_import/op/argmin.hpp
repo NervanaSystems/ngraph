@@ -32,8 +32,8 @@ namespace ngraph
                 ///
                 /// \param node   The ONNX node object representing this operation.
                 ///
-                /// \return The vector containing Ngraph nodes producing output of ONNX ArgMin
-                ///        operation.
+                /// \return The vector containing an Ngraph node which produces the output
+                ///         of an ONNX ArgMin operation.
                 NodeVector argmin(const Node& node);
 
             } // namespace set_1
