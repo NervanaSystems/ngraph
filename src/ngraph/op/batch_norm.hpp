@@ -90,12 +90,9 @@ namespace ngraph
                                            const NodeVector& deltas) override;
 
         private:
-            enum
-            {
-                GAMMA,
-                BETA,
-                INPUT
-            };
+            static constexpr size_t INPUT_GAMMA = 0;
+            static constexpr size_t INPUT_BETA = 1;
+            static constexpr size_t INPUT_DATA = 2;
 
             double m_epsilon;
         };
@@ -141,14 +138,11 @@ namespace ngraph
             }
 
         private:
-            enum
-            {
-                GAMMA,
-                BETA,
-                INPUT,
-                MEAN,
-                VARIANCE
-            };
+            static constexpr size_t INPUT_GAMMA = 0;
+            static constexpr size_t INPUT_BETA = 1;
+            static constexpr size_t INPUT_DATA = 2;
+            static constexpr size_t INPUT_MEAN = 3;
+            static constexpr size_t INPUT_VARIANCE = 4;
 
             double m_epsilon;
         };
@@ -171,15 +165,12 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         private:
-            enum
-            {
-                GAMMA,
-                BETA,
-                INPUT,
-                MEAN,
-                VARIANCE,
-                DELTA
-            };
+            static constexpr size_t INPUT_GAMMA = 0;
+            static constexpr size_t INPUT_BETA = 1;
+            static constexpr size_t INPUT_DATA = 2;
+            static constexpr size_t INPUT_MEAN = 3;
+            static constexpr size_t INPUT_VARIANCE = 4;
+            static constexpr size_t INPUT_DELTA = 5;
 
             double m_epsilon;
         };

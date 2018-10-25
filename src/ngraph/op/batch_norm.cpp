@@ -64,16 +64,16 @@ void ngraph::op::BatchNormInference::validate_and_infer_types()
 
     std::tie(result_et, result_batch_shape, result_channel_shape) =
         infer_batch_norm_forward(this,
-                                 get_input_element_type(INPUT),
-                                 get_input_element_type(GAMMA),
-                                 get_input_element_type(BETA),
-                                 get_input_element_type(MEAN),
-                                 get_input_element_type(VARIANCE),
-                                 get_input_partial_shape(INPUT),
-                                 get_input_partial_shape(GAMMA),
-                                 get_input_partial_shape(BETA),
-                                 get_input_partial_shape(MEAN),
-                                 get_input_partial_shape(VARIANCE));
+                                 get_input_element_type(INPUT_DATA),
+                                 get_input_element_type(INPUT_GAMMA),
+                                 get_input_element_type(INPUT_BETA),
+                                 get_input_element_type(INPUT_MEAN),
+                                 get_input_element_type(INPUT_VARIANCE),
+                                 get_input_partial_shape(INPUT_DATA),
+                                 get_input_partial_shape(INPUT_GAMMA),
+                                 get_input_partial_shape(INPUT_BETA),
+                                 get_input_partial_shape(INPUT_MEAN),
+                                 get_input_partial_shape(INPUT_VARIANCE));
 
     set_output_size(1);
     set_output_type(0, result_et, result_batch_shape);
@@ -87,12 +87,12 @@ void ngraph::op::BatchNormTraining::validate_and_infer_types()
 
     std::tie(result_et, result_batch_shape, result_channel_shape) =
         infer_batch_norm_forward(this,
-                                 get_input_element_type(INPUT),
-                                 get_input_element_type(GAMMA),
-                                 get_input_element_type(BETA),
-                                 get_input_partial_shape(INPUT),
-                                 get_input_partial_shape(GAMMA),
-                                 get_input_partial_shape(BETA));
+                                 get_input_element_type(INPUT_DATA),
+                                 get_input_element_type(INPUT_GAMMA),
+                                 get_input_element_type(INPUT_BETA),
+                                 get_input_partial_shape(INPUT_DATA),
+                                 get_input_partial_shape(INPUT_GAMMA),
+                                 get_input_partial_shape(INPUT_BETA));
 
     set_output_size(3);
     set_output_type(0, result_et, result_batch_shape);
@@ -134,22 +134,23 @@ ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(
 
 void ngraph::op::BatchNormTrainingBackprop::validate_and_infer_types()
 {
-    PartialShape input_and_delta_shape{get_input_partial_shape(INPUT)};
+    PartialShape input_and_delta_shape{get_input_partial_shape(INPUT_DATA)};
 
     NODE_VALIDATION_ASSERT(
-        this, PartialShape::merge_into(input_and_delta_shape, get_input_partial_shape(DELTA)))
+        this, PartialShape::merge_into(input_and_delta_shape, get_input_partial_shape(INPUT_DELTA)))
         << "Shape of delta does not match the shape of the input data (input data shape: "
-        << get_input_partial_shape(INPUT) << ", delta shape: " << get_input_partial_shape(DELTA)
-        << ").";
+        << get_input_partial_shape(INPUT_DATA)
+        << ", delta shape: " << get_input_partial_shape(INPUT_DELTA) << ").";
 
     element::Type input_and_delta_et;
 
     NODE_VALIDATION_ASSERT(this,
                            element::Type::merge(input_and_delta_et,
-                                                get_input_element_type(INPUT),
-                                                get_input_element_type(DELTA)))
-        << "Element type for input (" << get_input_element_type(INPUT)
-        << ") does not match element type for delta (" << get_input_element_type(INPUT) << ").";
+                                                get_input_element_type(INPUT_DATA),
+                                                get_input_element_type(INPUT_DELTA)))
+        << "Element type for input (" << get_input_element_type(INPUT_DATA)
+        << ") does not match element type for delta (" << get_input_element_type(INPUT_DATA)
+        << ").";
 
     element::Type result_et;
     PartialShape result_batch_shape;
@@ -158,15 +159,15 @@ void ngraph::op::BatchNormTrainingBackprop::validate_and_infer_types()
     std::tie(result_et, result_batch_shape, result_channel_shape) =
         infer_batch_norm_forward(this,
                                  input_and_delta_et,
-                                 get_input_element_type(GAMMA),
-                                 get_input_element_type(BETA),
-                                 get_input_element_type(MEAN),
-                                 get_input_element_type(VARIANCE),
+                                 get_input_element_type(INPUT_GAMMA),
+                                 get_input_element_type(INPUT_BETA),
+                                 get_input_element_type(INPUT_MEAN),
+                                 get_input_element_type(INPUT_VARIANCE),
                                  input_and_delta_shape,
-                                 get_input_partial_shape(GAMMA),
-                                 get_input_partial_shape(BETA),
-                                 get_input_partial_shape(MEAN),
-                                 get_input_partial_shape(VARIANCE));
+                                 get_input_partial_shape(INPUT_GAMMA),
+                                 get_input_partial_shape(INPUT_BETA),
+                                 get_input_partial_shape(INPUT_MEAN),
+                                 get_input_partial_shape(INPUT_VARIANCE));
 
     set_output_size(3);
     set_output_type(0, result_et, result_batch_shape);
