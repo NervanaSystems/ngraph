@@ -16,21 +16,49 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <vector>
 
 #include "ngraph/assertion.hpp"
+#include "ngraph/coordinate.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
-#include "ngraph/op/slice.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/slice.hpp"
 
 #include "exceptions.hpp"
 #include "matmul.hpp"
 #include "utils/broadcasting.hpp"
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
+
+/// \brief      Slice the sub matrix from 3D input tensor.
+///
+/// \param[in]  node  The input tensor. Must be 3D.
+/// \param[in]  idx   The index on the first axis, at wihich to slice sub-matrix.
+///
+/// \return     The node representing sub matrix.
+///
+static std::shared_ptr<ngraph::Node> get_sub_matrix(const std::shared_ptr<ngraph::Node>& node,
+                                                    std::size_t idx)
+{
+    ngraph::Shape shape{node->get_shape()};
+    ngraph::Coordinate lower_bounds(shape.size());
+    ngraph::Coordinate upper_bounds = shape;
+
+    lower_bounds.at(0) = idx;
+    upper_bounds.at(0) = idx + 1;
+
+    auto sub_matrix{std::make_shared<ngraph::op::Slice>(node, lower_bounds, upper_bounds)};
+    // Remove first single entry dim.
+    ngraph::Shape output_shape{std::next(std::begin(shape)), std::end(shape)};
+    return {std::make_shared<ngraph::op::Reshape>(
+        sub_matrix,
+        ngraph::onnx_import::reshape::get_default_axis_vector(sub_matrix->get_shape().size()),
+        output_shape)};
+}
 
 namespace ngraph
 {
@@ -69,49 +97,78 @@ namespace ngraph
                     auto left_shape = left->get_shape();
                     auto right_shape = right->get_shape();
 
-                    // Reorder axes to prepare data for Ngraph Dot op.
-                    // Move second from end axis to the begining.
-                    std::vector<std::size_t> axes_order{right_shape.size() - 2};
-                    auto tmp_range = common::get_monotonic_range(right_shape.size() - 2);
-                    axes_order.insert(
-                        std::end(axes_order), std::begin(tmp_range), std::end(tmp_range));
-                    axes_order.push_back(right_shape.size() - 1);
-                    right = reshape::reorder_axes(right, axes_order);
-
-                    // TODO: remove, just check wheter shapes are equal
-                    bool equal_shapes = std::equal(std::begin(left_shape),
-                                                   std::next(std::begin(left_shape), left_shape.size() - 1),
-                                                   std::next(std::begin(right->get_shape())));
-                    NGRAPH_ASSERT(equal_shapes) << "Arguments have unequal not reduced axes dimensions";
-
-                    // Perform multiply operation.
-                    auto dot_node = std::make_shared<ngraph::op::Dot>(left, right);
-
-                    // Slice data to get expected result.
-                    // 3D case
-                    Shape dot_shape = dot_node->get_shape();
-                    Shape lower_bounds(dot_shape.size());
-                    Shape upper_bounds = dot_shape;
-
-                    NodeVector result_slices;
-                    for (auto i = 0; i < dot_shape.at(0); ++i)
+                    // Collapse both tensors _stack of matrices_ axes (all except the last two).
+                    // This will make easier further dot product calculations.
+                    if (left_shape.size() > 3)
                     {
-                        // Coupled axes
-                        lower_bounds.at(0) = i;
-                        upper_bounds.at(0) = i + 1;
-                        lower_bounds.at(left_shape.size() - 1) = i;
-                        upper_bounds.at(left_shape.size() - 1) = i + 1;
+                        std::size_t first_dim_size = std::accumulate(
+                            std::begin(left_shape),
+                            std::next(std::begin(left_shape), left_shape.size() - 2),
+                            1UL,
+                            std::multiplies<std::size_t>());
+                        Shape squeezed_shape{first_dim_size};
+                        squeezed_shape.insert(
+                            std::end(squeezed_shape),
+                            std::next(std::begin(left_shape), left_shape.size() - 2),
+                            std::end(left_shape));
+                        left = std::make_shared<ngraph::op::Reshape>(
+                            left,
+                            reshape::get_default_axis_vector(left->get_shape().size()),
+                            squeezed_shape);
 
-                        auto sliced_dot = std::make_shared<ngraph::op::Slice>(
-                            dot_node, lower_bounds, upper_bounds);
-                        Shape sliced_shape{1, left_shape.at(1), right_shape.back()};
-                        result_slices.push_back(std::make_shared<ngraph::op::Reshape>(
-                            sliced_dot,
-                            reshape::get_default_axis_vector(sliced_dot->get_shape().size()),
-                            sliced_shape));
+                        squeezed_shape = {first_dim_size};
+                        squeezed_shape.insert(
+                            std::end(squeezed_shape),
+                            std::next(std::begin(right_shape), right_shape.size() - 2),
+                            std::end(right_shape));
+                        right = std::make_shared<ngraph::op::Reshape>(
+                            right,
+                            reshape::get_default_axis_vector(right->get_shape().size()),
+                            squeezed_shape);
                     }
 
-                    return {std::make_shared<ngraph::op::Concat>(result_slices, 0)};
+                    // Perform multiple small dot products
+                    std::size_t groups = left->get_shape().at(0);
+                    NodeVector small_dots(groups);
+
+                    for (std::size_t g = 0; g < groups; ++g)
+                    {
+                        auto sliced_left = get_sub_matrix(left, g);
+                        auto sliced_right = get_sub_matrix(right, g);
+
+                        auto sub_dot = std::make_shared<ngraph::op::Dot>(sliced_left, sliced_right);
+
+                        std::vector<std::size_t> output_shape{1};
+                        output_shape.insert(std::end(output_shape),
+                                            std::begin(sub_dot->get_shape()),
+                                            std::end(sub_dot->get_shape()));
+                        small_dots.at(g) = std::make_shared<ngraph::op::Reshape>(
+                            sub_dot,
+                            reshape::get_default_axis_vector(sub_dot->get_shape().size()),
+                            output_shape);
+                    }
+
+                    // Concatenate sub_dots on groups axis.
+                    auto result = std::make_shared<ngraph::op::Concat>(small_dots, 0);
+
+                    if (left_shape.size() <= 3)
+                    {
+                        return {result};
+                    }
+                    // Expand result _stack of matrices_ axes to get expected result shape.
+                    else
+                    {
+                        Shape shape{result->get_shape()};
+                        Shape result_shape(std::next(std::begin(shape)), std::end(shape));
+                        result_shape.insert(
+                            std::begin(result_shape),
+                            std::begin(left_shape),
+                            std::next(std::begin(left_shape), left_shape.size() - 2));
+                        return {std::make_shared<ngraph::op::Reshape>(
+                            result,
+                            reshape::get_default_axis_vector(result->get_shape().size()),
+                            result_shape)};
+                    }
                 }
 
             } // namespace set_1
