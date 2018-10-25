@@ -106,8 +106,16 @@ namespace ngraph
                                                    const ngraph::element::Type& type,
                                                    bool is_quantize = false)
             {
-                auto min_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(min_input);
-                auto max_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(max_input);
+                auto min_input_const_op =
+                    std::dynamic_pointer_cast<ngraph::op::Constant>(min_input);
+                auto max_input_const_op =
+                    std::dynamic_pointer_cast<ngraph::op::Constant>(max_input);
+
+                if (min_input_const_op == nullptr)
+                    throw ngraph_error("min_input shouldn't be nullptr!");
+                else if (max_input_const_op == nullptr)
+                    throw ngraph_error("max_input shouldn't be nullptr!");
+
                 auto input_min_range = min_input_const_op->get_vector<T>();
                 auto input_max_range = max_input_const_op->get_vector<T>();
 

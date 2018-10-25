@@ -4687,7 +4687,9 @@ namespace ngraph
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     auto scale_const_op =
-                        std::static_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));
+                    if (scale_const_op == nullptr)
+                        throw ngraph_error("Quantize scale shouldn't be nullptr!");
                     auto scale = scale_const_op->get_vector<float>();
 
                     std::vector<float> scales;
