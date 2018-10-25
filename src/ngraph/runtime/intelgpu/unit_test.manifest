@@ -19,6 +19,7 @@ batch_norm_one_output
 batch_norm_three_outputs
 dequantize
 dequantize_axes
+dequantize_cpu
 dequantize_int8
 divide_by_zero_int32
 dot_3d_multi_axis
