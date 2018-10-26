@@ -4,8 +4,27 @@
 Quantization with nGraph 
 ########################
 
-.. intro paragraph to be added later
+Quantization is one form of low-precision computing, a technique used to reduce 
+the time and energy needed to perform a computation by reducing the size of the 
+data transfers and the number of steps needed to perform the computation. 
 
+Most models are defined using 32-bit floating point arithmetic. This greatly
+simplifies the model definition, but at a computational cost. A 32-bit floating
+number is a packaging of an 8-bit signed exponent and a 25-bit signed integer.
+A simple compression trick lets the 33 bits fit into 32 bits. Like manual
+decimal arithmetic, floating point arithmetic is implemented in terms of basic
+integer arithmetic and shifting on the components. Even though hardware performs
+these operations quickly, and has been designed to make sequences of
+floating-point operations able to skip some steps, each 32-bit floating-point
+number requires four bytes of storage and data transfer.</p>
+<p>Quantized arithmetic uses integers to represent floating-point values. For
+example, let’s say we have a variable that is always somewhere in the range of
+0.0 to 1.0. We could divide that range into 256 contiguous bins and use 0 for
+the first bin that starts at 0.0, 1 for the next bin, and 255 for the bin that
+ends as 1.0. 8-bit unsigned integer arithmetic is similar to bin arithmetic,
+with some scaling and shifting, so we can replace each floating-point operation
+with one or more small integer operations. Storage is only one byte instead of
+four.
 
 
 Working with element types 
@@ -16,16 +35,15 @@ both to element types and to shapes. For example, you can't accidentally plug
 something producing a ``float`` into something expecting an ``int``, or 
 something producing a matrix into something expecting a vector.  
 
-What this means is that models defined in one element type (FP32 is, for example, 
-the most common model defintion) cannot be converted to a different element type 
-after being trained. Rather, a "Quantization-Aware" step must be implemented 
-during training. This quantization-aware training step can take place outside of 
-nGraph, or with the bridge (using code from ``/src/ngraph/builder``); or, to take 
-another approach, a graph that has been modified for quantization can be trained 
-with different quantized weights to produce the desired or compatible type of 
-output. Quantizing a model defined in FP32 to one defined in INT8 produces a 
-slightly different with respect to precision, depending upon the quantization 
-strategy. 
+What this means is that models defined in one element type (FP32) cannot be 
+converted to a different element type after being trained. Rather, a 
+"Quantization-Aware" step must be implemented during training. This step can 
+take place outside of nGraph, or with the bridge (using code from 
+``/src/ngraph/builder``); or, to take another approach, a graph that has been 
+modified for quantization can be trained with different quantized weights to 
+produce the desired or compatible type of output. Quantizing a model defined in 
+FP32 to one defined in INT8 produces slightly different outputs with respect to 
+precision, depending upon the quantization strategy. 
 
 .. +++++++++++++++++++++++++++++++++++ ..
 
