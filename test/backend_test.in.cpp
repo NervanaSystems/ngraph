@@ -5518,7 +5518,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize)
               read_vector<output_c_type>(y));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, dequantize_cpu)
+NGRAPH_TEST(${BACKEND_NAME}, dequantize_zero_offset)
 {
     Shape input_shape{4, 3};
     Shape scale_offset_shape;
