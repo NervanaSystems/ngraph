@@ -37,6 +37,11 @@ namespace ngraph
             numpy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
                                                        const std::shared_ptr<ngraph::Node>& right);
 
+        NodeVector
+            legacy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
+                                                        const std::shared_ptr<ngraph::Node>& right,
+                                                        std::size_t start_match_axis);
+
         /// \brief Cast shape of two nodes to make them compatible for an element-wise binary operation.
         ///
         /// \param inputs Left and right node (inputs of the binary op).

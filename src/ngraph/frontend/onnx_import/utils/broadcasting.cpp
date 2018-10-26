@@ -103,6 +103,28 @@ namespace ngraph
             return {broadcasted_left, broadcasted_right};
         }
 
+        NodeVector
+            legacy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
+                                                        const std::shared_ptr<ngraph::Node>& right,
+                                                        std::size_t start_match_axis)
+        {
+            auto left_shape = left->get_shape();
+            auto right_shape = right->get_shape();
+
+            auto dimensions_identical = (left_shape == right_shape);
+            if (dimensions_identical)
+            {
+                return {left, right};
+            }
+
+            auto broadcast_right = std::make_shared<ngraph::op::Broadcast>(
+                right,
+                left_shape,
+                calculate_broadcast_axes(left_shape, right_shape, start_match_axis));
+
+            return {left, broadcast_right};
+        }
+
         AxisSet calculate_broadcast_axes(const Shape& output_shape,
                                          const Shape& input_shape,
                                          std::size_t start_match_axis)
