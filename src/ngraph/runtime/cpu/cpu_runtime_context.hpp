@@ -18,6 +18,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <set>
 
 #define TBB_PREVIEW_GLOBAL_CONTROL 1
 #define TBB_PREVIEW_FLOW_GRAPH_TRACE 1
@@ -60,6 +61,8 @@ namespace ngraph
                 tbb::flow::graph* G;
                 tbb::global_control* c;
                 tbb::task_scheduler_init* init;
+                std::set<size_t> breakpoints;
+                size_t pc;
             };
             }
         }

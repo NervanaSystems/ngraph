@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "ngraph/function.hpp"
+#include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/tensor.hpp"
@@ -32,23 +33,11 @@ namespace ngraph
     {
         namespace cpu
         {
-            class CPU_CallFrame;
-            class CPU_ExternalFunction;
-            class CPU_Debugger;
-
-            using EntryPoint_t = void(void** inputs, void** outputs, CPURuntimeContext* ctx);
-
-            using EntryPoint = std::function<EntryPoint_t>;
-
-            // Compile and execute graphs
-            class CPU_CallFrame
+            class CPU_Debugger
             {
             public:
-                friend class CPU_Debugger;
-
-                CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
-                              EntryPoint compiled_function);
-                ~CPU_CallFrame();
+                CPU_Debugger(CPU_CallFrame& callframe);
+                ~CPU_Debugger();
 
                 /// \brief Invoke the function with values matching the signature of the function.
                 ///
@@ -56,23 +45,27 @@ namespace ngraph
                 void call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
-                void propagate_layouts(const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
-                                       const LayoutDescriptorPtrs& layouts) const;
+                /// \brief Execute a single operation
+                bool step();
 
-                void setup_runtime_context();
-                void cleanup_runtime_context();
+                /// \brief Continue to execute from the current PC
+                void resume();
+
+                /// \brief Add a breakpoint to a node
+                bool add_breakpoint(std::shared_ptr<Node> op);
+                /// \brief Remove a breakpoint from a node
+                bool delete_breakpoint(std::shared_ptr<Node> op);
+
+                void* inspect(std::shared_ptr<Node> op, size_t output_index = 0);
 
             protected:
-                CPU_CallFrame(const CPU_CallFrame&) = delete;
-                CPU_CallFrame(CPU_CallFrame&&) = delete;
-                CPU_CallFrame& operator=(const CPU_CallFrame&) = delete;
+                CPU_Debugger(const CPU_Debugger&) = delete;
+                CPU_Debugger(CPU_Debugger&&) = delete;
+                CPU_Debugger& operator=(const CPU_Debugger&) = delete;
 
-                void inner_call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                                const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
-
-                std::shared_ptr<CPU_ExternalFunction> m_external_function;
-                EntryPoint m_compiled_function;
-                CPURuntimeContext* ctx;
+                CPU_CallFrame& m_callframe;
+                std::vector<std::shared_ptr<runtime::Tensor>> m_inputs;
+                std::vector<std::shared_ptr<runtime::Tensor>> m_outputs;
             };
         }
     }
