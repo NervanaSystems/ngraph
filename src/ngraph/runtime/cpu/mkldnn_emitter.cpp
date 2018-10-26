@@ -254,6 +254,7 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
               mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
               mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
               mkldnn::padding_kind::zero},
+
              conv_attr,
              mkldnn_utils::global_cpu_engine},
             *m_mkldnn_primitives[input_data_index],
@@ -312,21 +313,33 @@ size_t MKLDNNEmitter::build_quantized_convolution(const mkldnn::memory::desc& in
     return conv_index;
 }
 
-size_t MKLDNNEmitter::build_quantized_convolution(const mkldnn::memory::desc& input_data_desc,
-                                                  const mkldnn::memory::desc& weights_desc,
-                                                  const mkldnn::memory::desc& bias_desc,
-                                                  const mkldnn::memory::desc& result_desc,
-                                                  const ngraph::Strides& strides,
-                                                  const ngraph::Strides& dilation_strides,
-                                                  const ngraph::CoordinateDiff& padding_below,
-                                                  const ngraph::CoordinateDiff& padding_above,
-                                                  const float scale,
-                                                  const mkldnn::post_ops& pops)
+std::vector<size_t>
+    MKLDNNEmitter::build_quantized_convolution(const mkldnn::memory::desc& input_data_desc,
+                                               const mkldnn::memory::desc& weights_desc,
+                                               const mkldnn::memory::desc& bias_desc,
+                                               const mkldnn::memory::desc& reorder_bias_desc,
+                                               const mkldnn::memory::desc& result_desc,
+                                               const ngraph::Strides& strides,
+                                               const ngraph::Strides& dilation_strides,
+                                               const ngraph::CoordinateDiff& padding_below,
+                                               const ngraph::CoordinateDiff& padding_above,
+                                               const float scale,
+                                               const float bias_scale,
+                                               int size,
+                                               const mkldnn::post_ops& pops)
 {
     size_t input_data_index = build_memory_primitive(input_data_desc);
     size_t weights_index = build_memory_primitive(weights_desc);
-    size_t bias_index = build_memory_primitive(bias_desc);
     size_t result_index = build_memory_primitive(result_desc);
+
+    auto reordered_buf = std::unique_ptr<MKLDNNWorkspace>(new MKLDNNWorkspace(size));
+    auto reordered_buf_index = insert_workspace(reordered_buf);
+
+    std::vector<float> bias_scales;
+    bias_scales.push_back(bias_scale);
+    size_t quantize_bias_reorder =
+        this->build_quantize_reorder(bias_desc, reorder_bias_desc, bias_scales);
+    auto& quantize_deps = this->get_primitive_deps(quantize_bias_reorder);
 
     std::vector<float> output_scale;
     output_scale.push_back(scale);
@@ -346,7 +359,7 @@ size_t MKLDNNEmitter::build_quantized_convolution(const mkldnn::memory::desc& in
               mkldnn::algorithm::convolution_direct,
               input_data_desc,
               weights_desc,
-              bias_desc,
+              reorder_bias_desc,
               result_desc,
               mkldnn::memory::dims(strides.begin(), strides.end()),
               mkldnn::memory::dims(dilation_strides.begin(), dilation_strides.end()),
@@ -357,16 +370,18 @@ size_t MKLDNNEmitter::build_quantized_convolution(const mkldnn::memory::desc& in
              mkldnn_utils::global_cpu_engine},
             *m_mkldnn_primitives[input_data_index],
             *m_mkldnn_primitives[weights_index],
-            *m_mkldnn_primitives[bias_index],
+            *m_mkldnn_primitives[quantize_deps[1]],
             *m_mkldnn_primitives[result_index]));
 
-        m_primitive_deps[conv_index] = {input_data_index, weights_index, bias_index, result_index};
+        m_primitive_deps[quantize_bias_reorder] = {
+            quantize_deps[0], quantize_deps[1], reordered_buf_index};
+        m_primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
     }
     catch (const mkldnn::error& e)
     {
         throw ngraph_error("Could not create convolution " + e.message);
     }
-    return conv_index;
+    return std::vector<size_t>{conv_index, quantize_bias_reorder};
 }
 
 size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& input_data_desc,

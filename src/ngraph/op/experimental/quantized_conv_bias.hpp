@@ -40,6 +40,7 @@ namespace ngraph
                                      const CoordinateDiff& padding_above,
                                      const Strides& data_dilation_strides,
                                      const std::shared_ptr<Node> scale,
+                                     const std::shared_ptr<Node> bias_scale,
                                      const bool with_relu = false);
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
@@ -48,6 +49,7 @@ namespace ngraph
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
             float get_scale() const { return m_scale; }
+            float get_bias_scale() const { return m_bias_scale; }
             std::shared_ptr<Node> get_bias() { return get_argument(2); }
             std::shared_ptr<Node> get_filters() { return get_argument(1); }
             std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
@@ -63,6 +65,7 @@ namespace ngraph
             Strides m_data_dilation_strides;
             bool m_with_relu;
             float m_scale;
+            float m_bias_scale;
         };
     }
 }

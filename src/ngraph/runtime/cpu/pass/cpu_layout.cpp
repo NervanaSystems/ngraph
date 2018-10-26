@@ -477,8 +477,11 @@ namespace ngraph
 
                         auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
                             node.get(), 3, false, memory::format::x);
+                        auto bias_scale_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 4, false, memory::format::x);
 
                         i_mds.push_back(scale_input_md);
+                        i_mds.push_back(bias_scale_input_md);
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);

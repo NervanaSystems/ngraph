@@ -129,6 +129,11 @@ namespace ngraph
                                                                 max_freezed_output);
             auto requantization_scale = op::Constant::create(element::f32, Shape{1}, {scale});
 
+            float bias_scale = builder::quantization_util::get_bias_scale(
+                min_input, max_input, min_filter, max_filter);
+            auto requantization_bias_scale =
+                op::Constant::create(element::f32, Shape{1}, {bias_scale});
+
             return make_shared<op::QuantizedConvolutionBias>(data_batch,
                                                              filters,
                                                              bias,
@@ -138,6 +143,7 @@ namespace ngraph
                                                              padding_above,
                                                              data_dilation_strides,
                                                              requantization_scale,
+                                                             requantization_bias_scale,
                                                              with_relu);
         }
 

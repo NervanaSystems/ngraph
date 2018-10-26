@@ -100,6 +100,28 @@ namespace ngraph
                 return scale;
             }
 
+            float get_bias_scale(const std::shared_ptr<Node> min_input,
+                                 const std::shared_ptr<Node> max_input,
+                                 const std::shared_ptr<Node> min_filter,
+                                 const std::shared_ptr<Node> max_filter)
+            {
+                auto min_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(min_input);
+                auto max_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(max_input);
+                auto min_filter_const_op =
+                    std::static_pointer_cast<ngraph::op::Constant>(min_filter);
+                auto max_filter_const_op =
+                    std::static_pointer_cast<ngraph::op::Constant>(max_filter);
+                auto input_min = min_input_const_op->get_vector<float>();
+                auto input_max = max_input_const_op->get_vector<float>();
+                auto filter_min = min_filter_const_op->get_vector<float>();
+                auto filter_max = max_filter_const_op->get_vector<float>();
+
+                float bias_scale =
+                    255.0 * 127.0 / (std::max(std::abs(input_min[0]), std::abs(input_max[0])) *
+                                     std::max(std::abs(filter_min[0]), std::abs(filter_max[0])));
+                return bias_scale;
+            }
+
             template <typename T>
             static inline T get_quantization_scale(const std::shared_ptr<Node> min_input,
                                                    const std::shared_ptr<Node> max_input,
