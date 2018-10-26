@@ -162,7 +162,9 @@ namespace ngraph
                     auto scale_const_op =
                         std::dynamic_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));
                     if (scale_const_op == nullptr)
+                    {
                         throw ngraph_error("Quantize scale must be a constant");
+                    }
                     auto scale = scale_const_op->get_vector<float>();
 
                     std::vector<float> scales;

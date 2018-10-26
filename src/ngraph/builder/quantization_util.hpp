@@ -112,9 +112,13 @@ namespace ngraph
                     std::dynamic_pointer_cast<ngraph::op::Constant>(max_input);
 
                 if (min_input_const_op == nullptr)
+                {
                     throw ngraph_error("min input must be constant");
+                }
                 else if (max_input_const_op == nullptr)
+                {
                     throw ngraph_error("max input must be constant");
+                }
 
                 auto input_min_range = min_input_const_op->get_vector<T>();
                 auto input_max_range = max_input_const_op->get_vector<T>();

@@ -832,18 +832,24 @@ namespace ngraph
                         std::static_pointer_cast<ngraph::op::Constant>(quantize->get_argument(2));
                     op::Quantize::RoundMode round_mode = quantize->get_round_mode();
                     if (round_mode != op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN)
+                    {
                         return;
+                    }
                     if (node->get_output_element_type(0) == element::u8)
                     {
                         auto offset = offset_const_op->get_vector<uint8_t>();
                         if (offset[0] != 0)
+                        {
                             return;
+                        }
                     }
                     if (node->get_output_element_type(0) == element::i8)
                     {
                         auto offset = offset_const_op->get_vector<int8_t>();
                         if (offset[0] != 0)
+                        {
                             return;
+                        }
                     }
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
