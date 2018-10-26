@@ -4,20 +4,50 @@
 Quantization with nGraph 
 ########################
 
-Both time and energy must be expended to train a :abbr:`Deep Learning (DL)` 
-model with a large dataset. Eventually, anyone working with a :term:`NN` will
-be faced with a decision to either expend further time and energy training for a 
-higher-precision accuracy, or to test and benchmark the model as it has been 
-trained "thus far". For either scenario, a basic understanding of how the nGraph 
-Abstraction Layer respects operations involving quantization can be 
-immensely helpful.  
+.. intro paragraph to be added later
 
-.. * :ref:`about_int8`
-.. * :ref:`about_fp32`
+
+
+Working with element types 
+==========================
+
+Graphs constructed with nGraph have a strong, static type system that applies 
+both to element types and to shapes. For example, you can't accidentally plug 
+something producing a ``float`` into something expecting an ``int``, or 
+something producing a matrix into something expecting a vector.  
+
+What this means is that models defined in one element type (FP32 is, for example, 
+the most common model defintion) cannot be converted to a different element type 
+after being trained. Rather, a "Quantization-Aware" step must be implemented 
+during training. This quantization-aware training step can take place outside of 
+nGraph, or with the bridge (using code from ``/src/ngraph/builder``); or, to take 
+another approach, a graph that has been modified for quantization can be trained 
+with different quantized weights to produce the desired or compatible type of 
+output. Quantizing a model defined in FP32 to one defined in INT8 produces a 
+slightly different with respect to precision, depending upon the quantization 
+strategy. 
+
+.. +++++++++++++++++++++++++++++++++++ ..
+
+
+Methods of abstraction
+======================
+
+For a deeper dive into some of the strategies involved in model compression 
+techniques, see the `Distiller`_ documentation. 
+
+.. WIP
+
+
 .. * :ref:`quantized_models`
 .. * :ref:`quantized_weights`
 
-* :ref:`appendix`
+
+.. +++++++++++++++++++++++++++++++++++ ..
+
+Tutorial
+========
+
 
 
 
@@ -26,6 +56,9 @@ immensely helpful.
 
 Appendix 
 ========
+
+* :ref:`appendix`
+
 
 Further reading: 
 
@@ -36,6 +69,8 @@ Further reading:
 
 * Quantizing deep convolutional networks for efficient inference: https://arxiv.org/abs/1806.08342
 
+* https://software.intel.com/en-us/mkl-linux-developer-guide-language-specific-usage-options
+
 * Introduction to Low-Precision 8-bit Integer Computations: https://intel.github.io/mkl-dnn/ex_int8_simplenet.html
 
 * Model Quantization with Calibration in MXNet: https://github.com/apache/incubator-mxnet/tree/master/example/quantization
@@ -43,3 +78,9 @@ Further reading:
 * PaddlePaddle design doc for fixed-point quantization: https://github.com/PaddlePaddle/Paddle/blob/79d797fde97aa9272bb4b9fe29e21dbd73ee837f/doc/fluid/design/quantization/fixed_point_quantization.md
 
 * Pieces of Eight: 8-bit Neural Machine Translation: https://arxiv.org/pdf/1804.05038.pdf
+
+
+
+
+
+.. _Distiller: https://nervanasystems.github.io/distiller/quantization/index.html#integer-vs-fp32
