@@ -174,7 +174,7 @@ namespace ngraph
                                          NVShape input_dilation,
                                          NVDiff input_pad_below);
 
-                size_t build_concat(const std::string& dtypes,
+                size_t build_concat(const std::string& dtype,
                                     std::vector<NVShape> input_shapes,
                                     size_t concat_axis,
                                     NVShape output_shape);
