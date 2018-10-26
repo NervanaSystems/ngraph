@@ -32,7 +32,7 @@ namespace ngraph
             {
                 inline NodeVector div(const Node& node)
                 {
-                    auto axis = node.get_attribute_value<int64_t>("axis");
+                    auto axis = node.get_attribute_value<int64_t>("axis", 0);
                     NodeVector ng_inputs{legacy_style_broadcast_for_binary_operation(
                         node.get_ng_inputs().at(0), node.get_ng_inputs().at(1), axis)};
 

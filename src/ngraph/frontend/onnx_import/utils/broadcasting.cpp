@@ -111,7 +111,7 @@ namespace ngraph
             auto left_shape = left->get_shape();
             auto right_shape = right->get_shape();
 
-            auto dimensions_identical = (left_shape == right_shape);
+            bool dimensions_identical = (left_shape == right_shape);
             if (dimensions_identical)
             {
                 return {left, right};
