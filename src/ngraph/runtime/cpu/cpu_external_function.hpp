@@ -57,6 +57,7 @@ namespace ngraph
             class CPU_ExternalFunction;
             class CPU_Emitter;
             class CPU_CallFrame;
+            class CPU_Debugger;
 
 #if !defined(NGRAPH_DEX_ONLY)
 
@@ -87,6 +88,8 @@ namespace ngraph
             class CPU_ExternalFunction : public std::enable_shared_from_this<CPU_ExternalFunction>
             {
                 friend class CPU_Backend;
+                friend class CPU_CallFrame;
+                friend class CPU_Debugger;
 
             public:
                 enum class CPUTensorRole
@@ -119,7 +122,7 @@ namespace ngraph
                 // Temporary Memory Pool alignment
                 static constexpr size_t s_memory_pool_alignment = 4096;
 
-                std::list<std::function<void(CPURuntimeContext*)>>& get_functors()
+                std::vector<std::function<void(CPURuntimeContext*)>>& get_functors()
                 {
                     return functors;
                 }
@@ -253,8 +256,9 @@ namespace ngraph
 
                 std::string m_function_name;
 
-                std::list<std::function<void(CPURuntimeContext*)>> functors;
-                std::list<std::function<bool(CPURuntimeContext*)>> enables;
+                std::vector<std::function<void(CPURuntimeContext*)>> functors;
+                std::vector<std::string> op_names;
+                std::vector<std::function<bool(CPURuntimeContext*)>> enables;
                 std::list<std::pair<std::function<bool(CPURuntimeContext*)>, std::string>>
                     enable_nodename_list;
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>
