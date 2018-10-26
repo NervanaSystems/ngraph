@@ -174,10 +174,12 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
                                              const element::Type index_elem_type,
                                              bool compute_max)
 {
-    NGRAPH_ASSERT(dtypes[1] == index_elem_type);
+    NGRAPH_ASSERT(dtypes[1] == index_elem_type)
+        << " The index element type does not match out[0] type";
     uint32_t rank = static_cast<uint32_t>(input_shape.size());
-    NGRAPH_ASSERT(rank <= 2);
-    NGRAPH_ASSERT(topk_axis == rank - 1);
+    NGRAPH_ASSERT(rank <= 2) << " The input tensor should be of either rank 1 or rank 2";
+    NGRAPH_ASSERT(topk_axis == rank - 1)
+        << " The axis along which topk is computed should be the last axis";
     size_t num_cols = input_shape[rank - 1];
     size_t num_rows = ((rank == 2) ? input_shape[0] : 1);
     std::vector<std::string> dtypes_string;
@@ -185,8 +187,35 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
     {
         dtypes_string.push_back(dtype.c_type_string());
     }
+
+    /*  The struct 'Entry' used in the kernel looks like this:
+    struct Entry
+    {
+            size_t index;
+            float value;
+
+            __device__ size_t get_index(){return index;}
+            __device__ void set_index(size_t id) {index = id;}
+            __device__ float get_value(){return value;}
+            __device__ void set_value(float val){value = val;}
+
+    };
+    Based on the datatypes, the max size of the struct can be 16 bytes. Any arbitrary size of the struct can
+    therfore be given by 'shared_struct_bytes' as calculated below accounting for structure padding*/
+
+    size_t shared_struct_bytes = (((dtypes[0].size() + index_elem_type.size()) <= 8) ? 8 : 16);
+    size_t shared_data_bytes = num_cols * shared_struct_bytes;
+
+    // Use global memory when each row size exceeds shared mem allowed per block
+    int device_num = 0;
+    CUDA_RT_SAFE_CALL(cudaGetDevice(&device_num));
+    cudaDeviceProp prop;
+    CUDA_RT_SAFE_CALL(cudaGetDeviceProperties(&prop, device_num));
+    bool use_malloc = ((shared_data_bytes > prop.sharedMemPerBlock) ? true : false);
+
     std::stringstream kernel_name;
-    kernel_name << "topk_" << join(dtypes_string, "_") << "_cm_" << compute_max;
+    kernel_name << "topk_" << join(dtypes_string, "_") << "_cm_" << compute_max << "_use_malloc_"
+                << use_malloc;
     std::string hash = kernel_name.str() + "_i_" + join(input_shape, "_");
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
@@ -195,16 +224,24 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
     }
     uint32_t block_size_x = 32;
     uint32_t aligned_grid_size_x = num_rows;
-    size_t shared_data_bytes = num_cols * (dtypes[0].size() + index_elem_type.size());
-    // if the kernel has not been compiled, build it
-    bool use_malloc = ((shared_data_bytes > (48 << 10)) ? true : false);
+
+    auto args = m_primitive_emitter->add_kernel_args();
+    args.add_placeholder(dtypes_string[0], "in")
+        .add_placeholder(dtypes_string[1], "out_id")
+        .add_placeholder(dtypes_string[2], "out_val");
+    if (use_malloc)
+    {
+        args.add_placeholder("Entry", "entry");
+    }
+    args.add("num_cols", num_cols).add("topk_k", topk_k);
+
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name.str());
     if (compiled_kernel == nullptr)
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         runtime::gpu::CudaKernelBuilder::get_topk(
-            writer, kernel_name.str(), dtypes_string, compute_max, use_malloc);
+            writer, kernel_name.str(), dtypes_string, compute_max, args, use_malloc);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name.str(), writer.get_code());
     }
     if (use_malloc)
@@ -214,13 +251,12 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
         std::unique_ptr<gpu::primitive> kernel_launch(
             new gpu::primitive{[=](void** inputs, void** outputs) mutable {
                 void* buffer = runtime::gpu::invoke_memory_primitive(m_ctx, heap_workspace_id);
-                std::vector<void*> args_list(6, NULL);
-                args_list[0] = &inputs[0];
-                args_list[1] = &outputs[0];
-                args_list[2] = &outputs[1];
-                args_list[3] = &buffer;
-                args_list[4] = &num_cols;
-                args_list[5] = &topk_k;
+                void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                       .resolve_placeholder(1, &outputs[0])
+                                       .resolve_placeholder(2, &outputs[1])
+                                       .resolve_placeholder(3, &buffer)
+                                       .get_argument_list();
+
                 CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                               aligned_grid_size_x,
                                               1,
@@ -229,8 +265,8 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
                                               1,
                                               1,
                                               0,
-                                              NULL, // shared mem and stream
-                                              args_list.data(),
+                                              NULL, // stream
+                                              args_list,
                                               0)); // arguments
                 debug_sync();
             }});
@@ -240,12 +276,10 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
     {
         std::unique_ptr<gpu::primitive> kernel_launch(
             new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-                std::vector<void*> args_list(5, NULL);
-                args_list[0] = &inputs[0];
-                args_list[1] = &outputs[0];
-                args_list[2] = &outputs[1];
-                args_list[3] = &num_cols;
-                args_list[4] = &topk_k;
+                void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                       .resolve_placeholder(1, &outputs[0])
+                                       .resolve_placeholder(2, &outputs[1])
+                                       .get_argument_list();
 
                 CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                               aligned_grid_size_x,
@@ -254,9 +288,9 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
                                               block_size_x,
                                               1,
                                               1,
-                                              shared_data_bytes,
-                                              NULL, //stream
-                                              args_list.data(),
+                                              shared_data_bytes, // shared mem
+                                              NULL,              //stream
+                                              args_list,
                                               0)); // arguments
                 debug_sync();
             }});
@@ -2218,7 +2252,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window(const OpName op_name,
                                       args_list.data(),
                                       0)); // arguments
         debug_sync();
-
     }});
 
     return this->m_primitive_emitter->register_primitive(f, hash);
@@ -2709,7 +2742,6 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const std::array<std::string
 
     std::unique_ptr<gpu::primitive> conv(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-
             void** args_list = args.resolve_placeholder(0, &inputs[0])
                                    .resolve_placeholder(1, &inputs[1])
                                    .resolve_placeholder(2, &outputs[0])

@@ -206,6 +206,7 @@ void runtime::gpu::CudaKernelBuilder::get_topk(codegen::CodeWriter& writer,
                                                const std::string& name,
                                                const std::vector<std::string>& dtypes,
                                                bool compute_max,
+                                               runtime::gpu::GPUKernelArgs& args,
                                                bool use_malloc)
 {
     writer << "struct Entry\n";
@@ -272,19 +273,7 @@ void runtime::gpu::CudaKernelBuilder::get_topk(codegen::CodeWriter& writer,
     }
     writer.block_end();
 
-    if (use_malloc)
-    {
-        writer << "extern \"C\" __global__ void cuda_" << name << "(";
-        writer << dtypes[0] << "* in, " << dtypes[1] << "* out_id, " << dtypes[2] << "* out_val, "
-               << " Entry* entry,";
-        writer << "size_t num_cols, size_t topk_k)\n";
-    }
-    else
-    {
-        writer << "extern \"C\" __global__ void cuda_" << name << "(";
-        writer << dtypes[0] << "* in, " << dtypes[1] << "* out_id, " << dtypes[2] << "* out_val, ";
-        writer << " size_t num_cols, size_t topk_k)\n";
-    }
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
         writer << "in = in + blockIdx.x * num_cols;\n";

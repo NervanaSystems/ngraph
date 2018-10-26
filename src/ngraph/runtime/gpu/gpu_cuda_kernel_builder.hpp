@@ -89,6 +89,7 @@ namespace ngraph
                                      const std::string& name,
                                      const std::vector<std::string>& dtypes,
                                      bool compute_max,
+                                     runtime::gpu::GPUKernelArgs& args,
                                      bool use_malloc);
 
                 //using one block with at most 512 threads to reduce to scalar.
