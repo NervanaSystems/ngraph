@@ -42,10 +42,15 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/quantized_avg_pool.hpp"
+#include "ngraph/op/experimental/quantized_conv_bias.hpp"
+#include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -71,6 +76,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
@@ -102,20 +108,14 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
-#include "ngraph/runtime/cpu/op/dequantize.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
-#include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
-#include "ngraph/runtime/cpu/op/quantized_conv_bias.hpp"
-#include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
-#include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
-#include "ngraph/runtime/cpu/quantization_util.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -525,53 +525,27 @@ namespace ngraph
                 }
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto lstm_index = mkldnn_emitter->build_rnn<ngraph::op::Lstm>(node, args, out);
-                auto& deps = mkldnn_emitter->get_primitive_deps(lstm_index[2]);
-                auto& weights_layer_deps = mkldnn_emitter->get_primitive_deps(lstm_index[0]);
-                auto& weights_iter_deps = mkldnn_emitter->get_primitive_deps(lstm_index[1]);
-                // weights reorder for  weights_layer from ldgoi -> ldigo
-                {
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
-                           << to_string(weights_layer_deps[0]) << ", " << args[2].get_name()
-                           << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
-                           << to_string(weights_layer_deps[1]) << ", ctx->mkldnn_workspaces["
-                           << weights_layer_deps[2] << "]);\n";
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(lstm_index[0]) << ");\n";
-                }
-                // weights reorder for weights_iter from ldgoi -> ldigo
-                {
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
-                           << to_string(weights_iter_deps[0]) << ", " << args[3].get_name()
-                           << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
-                           << to_string(weights_iter_deps[1]) << ", ctx->mkldnn_workspaces["
-                           << weights_iter_deps[2] << "]);\n";
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(lstm_index[1]) << ");\n";
-                }
-                // rnn primitive executionn
-                {
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", ctx->mkldnn_workspaces[" << weights_layer_deps[2] << "]);\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
-                           << ", ctx->mkldnn_workspaces[" << weights_iter_deps[2] << "]);\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4])
-                           << ", " << args[4].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[5])
-                           << ", " << out[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6])
-                           << ", " << out[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[7])
-                           << ", ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
+                auto& deps = mkldnn_emitter->get_primitive_deps(lstm_index);
 
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(lstm_index[2]) << ");\n";
-                }
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                       << args[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                       << args[1].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
+                       << args[2].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3]) << ", "
+                       << args[3].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4]) << ", "
+                       << args[4].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[5]) << ", "
+                       << out[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6]) << ", "
+                       << out[1].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[7])
+                       << ", ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
+
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                       << to_string(lstm_index) << ");\n";
             }
 
             template <>
@@ -579,65 +553,38 @@ namespace ngraph
             {
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto rnn_index = mkldnn_emitter->build_rnn<ngraph::op::Rnn>(node, args, out);
-                auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index[2]);
-                auto& weights_layer_deps = mkldnn_emitter->get_primitive_deps(rnn_index[0]);
-                auto& weights_iter_deps = mkldnn_emitter->get_primitive_deps(rnn_index[1]);
+                auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index);
 
-                // weights reorder for weights_layer from ldgoi -> ldigo
-                {
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
-                           << to_string(weights_layer_deps[0]) << ", " << args[2].get_name()
-                           << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
-                           << to_string(weights_layer_deps[1]) << ", ctx->mkldnn_workspaces["
-                           << weights_layer_deps[2] << "]);\n";
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(rnn_index[0]) << ");\n";
-                }
-                // weights reorder for weights_iter from ldgoi -> ldigo
-                {
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
-                           << to_string(weights_iter_deps[0]) << ", " << args[3].get_name()
-                           << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, "
-                           << to_string(weights_iter_deps[1]) << ", ctx->mkldnn_workspaces["
-                           << weights_iter_deps[2] << "]);\n";
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(rnn_index[1]) << ");\n";
-                }
-                // rnn primitive execution
-                {
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << args[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
-                           << ", ctx->mkldnn_workspaces[" << weights_layer_deps[2] << "]);\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
-                           << ", ctx->mkldnn_workspaces[" << weights_iter_deps[2] << "]);\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4])
-                           << ", " << args[4].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[5])
-                           << ", " << out[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6])
-                           << ", " << out[1].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[7])
-                           << ", ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
-
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(rnn_index[2]) << ");\n";
-                }
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0]) << ", "
+                       << args[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1]) << ", "
+                       << args[1].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2]) << ", "
+                       << args[2].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3]) << ", "
+                       << args[3].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[4]) << ", "
+                       << args[4].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[5]) << ", "
+                       << out[0].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[6]) << ", "
+                       << out[1].get_name() << ");\n";
+                writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[7])
+                       << ", ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
+                writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, " << to_string(rnn_index)
+                       << ");\n";
             }
 
+            template <typename T>
             void CPU_Emitter::emitBatchNorm(CPU_ExternalFunction* external_function,
                                             codegen::CodeWriter& writer,
                                             const ngraph::Node* node,
                                             const std::vector<TensorViewWrapper>& args,
                                             const std::vector<TensorViewWrapper>& out,
-                                            bool append_relu)
+                                            bool append_relu,
+                                            bool training)
             {
-                const ngraph::op::BatchNorm* batchnorm =
-                    static_cast<const ngraph::op::BatchNorm*>(node);
+                const T* batchnorm = static_cast<const T*>(node);
 
                 writer.block_begin();
                 // define weights
@@ -660,7 +607,7 @@ namespace ngraph
                         ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
                 }
 
-                if (batchnorm->get_training_flag() && args.size() == 3)
+                if (training && args.size() == 3)
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto weights_shape = Shape{2, args[0].get_size()};
@@ -679,7 +626,7 @@ namespace ngraph
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
                                                                 false,
-                                                                batchnorm->get_training_flag(),
+                                                                training,
                                                                 ops);
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
@@ -716,7 +663,7 @@ namespace ngraph
                                                                 variance_desc,
                                                                 batchnorm->get_eps_value(),
                                                                 true,
-                                                                batchnorm->get_training_flag(),
+                                                                training,
                                                                 ops);
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
@@ -738,14 +685,14 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNorm)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormTraining)
             {
                 if (!mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    const ngraph::op::BatchNorm* batchnorm =
-                        static_cast<const ngraph::op::BatchNorm*>(node);
+                    const ngraph::op::BatchNormTraining* batchnorm =
+                        static_cast<const ngraph::op::BatchNormTraining*>(node);
 
-                    if (batchnorm->get_training_flag() && args.size() == 3)
+                    if (args.size() == 3)
                     {
                         writer << "reference::batch_norm_three_outputs("
                                << batchnorm->get_eps_value() << ",\n";
@@ -772,25 +719,63 @@ namespace ngraph
                 }
                 else
                 {
-                    emitBatchNorm(external_function, writer, node, args, out, false);
+                    emitBatchNorm<ngraph::op::BatchNormTraining>(
+                        external_function, writer, node, args, out, false, true);
                 }
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormRelu)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormInference)
+            {
+                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    const ngraph::op::BatchNormInference* batchnorm =
+                        static_cast<const ngraph::op::BatchNormInference*>(node);
+
+                    writer << "reference::batch_norm_one_output(" << batchnorm->get_eps_value()
+                           << ",\n";
+                    writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            " << args[1].get_name() << ",\n";
+                    writer << "            " << args[2].get_name() << ",\n";
+                    writer << "            " << args[3].get_name() << ",\n";
+                    writer << "            " << args[4].get_name() << ",\n";
+                    writer << "            " << out[0].get_name() << ",\n";
+                    writer << "            {" << join(args[2].get_shape()) << "});\n";
+                }
+                else
+                {
+                    emitBatchNorm<ngraph::op::BatchNormInference>(
+                        external_function, writer, node, args, out, false, false);
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormTrainingRelu)
             {
                 if (!mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     throw ngraph_error("BatchNormRelu is only supported with 4-D MKLDNN kernel.");
                 }
-                emitBatchNorm(external_function, writer, node, args, out, true);
+                emitBatchNorm<ngraph::op::BatchNormTrainingRelu>(
+                    external_function, writer, node, args, out, true, true);
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormBackprop)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormInferenceRelu)
             {
-                const ngraph::op::BatchNormBackprop* batchnorm =
-                    static_cast<const ngraph::op::BatchNormBackprop*>(node);
+                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    throw ngraph_error("BatchNormRelu is only supported with 4-D MKLDNN kernel.");
+                }
+                emitBatchNorm<ngraph::op::BatchNormTrainingRelu>(
+                    external_function, writer, node, args, out, true, false);
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BatchNormTrainingBackprop)
+            {
+                const ngraph::op::BatchNormTrainingBackprop* batchnorm =
+                    static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
 
                 writer.block_begin();
                 // define weights
@@ -1049,6 +1034,30 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Concat)
             {
+                auto concat = static_cast<const ngraph::op::Concat*>(node);
+                if (auto op_annotations = concat->get_op_annotations())
+                {
+                    auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                    if (in_place_oi_pairs.size() > 0)
+                    {
+                        auto offset = 0;
+                        for (auto i = 0; i < args.size(); i++)
+                        {
+                            writer << "if (" << args[i].get_name() << " < " << out[0].get_name()
+                                   << " || " << args[i].get_name() << " >= " << out[0].get_name()
+                                   << " + " << out[0].get_size() * out[0].get_element_type().size()
+                                   << ")\n";
+                            writer.block_begin();
+                            writer << "memcpy(" << out[0].get_name() << " + " << offset << ", "
+                                   << args[i].get_name() << ", "
+                                   << args[i].get_size() * out[0].get_element_type().size()
+                                   << ");\n";
+                            writer.block_end();
+                            offset += args[i].get_size() * out[0].get_element_type().size();
+                        }
+                        return;
+                    }
+                }
                 auto result_shape = out[0].get_shape();
 
 #if USE_EIGEN_CORE_INLINE == 1
@@ -2716,8 +2725,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConvolutionRelu)
             {
-                auto qconvolution_relu =
-                    static_cast<const ngraph::op::QuantizedConvolutionRelu*>(node);
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
@@ -2732,10 +2739,6 @@ namespace ngraph
                            << ", " << args[1].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
                            << ", " << out[0].get_name() << ");\n";
-                    writer << "*(" << out[1].get_name()
-                           << ") = " << qconvolution_relu->get_freezed_output_min() << ";\n";
-                    writer << "*(" << out[2].get_name()
-                           << ") = " << qconvolution_relu->get_freezed_output_max() << ";\n";
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(conv_index) << ");\n";
                 }
@@ -2748,7 +2751,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConvolution)
             {
-                auto qconvolution = static_cast<const ngraph::op::QuantizedConvolution*>(node);
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
@@ -2763,10 +2765,6 @@ namespace ngraph
                            << ", " << args[1].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
                            << ", " << out[0].get_name() << ");\n";
-                    writer << "*(" << out[1].get_name()
-                           << ") = " << qconvolution->get_freezed_output_min() << ";\n";
-                    writer << "*(" << out[2].get_name()
-                           << ") = " << qconvolution->get_freezed_output_max() << ";\n";
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(conv_index) << ");\n";
                 }
@@ -2880,69 +2878,6 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizeCPU)
-            {
-                auto quantize = static_cast<const ngraph::op::QuantizeCPU*>(node);
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
-                {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                    std::vector<float> quant_util; // min_range, max_range & scale.
-                    quantization_util::get_min_max_range(quantize->get_input_min(),
-                                                         quantize->get_input_max(),
-                                                         (quantize->get_quantize_et()).is_signed(),
-                                                         quant_util);
-                    std::vector<float> scales;
-                    scales.push_back(quant_util[2]);
-
-                    size_t quantize_index = 0;
-                    quantize_index = mkldnn_emitter->build_quantize_reorder(
-                        input_data_desc, result_desc, scales);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << out[0].get_name() << ");\n";
-                    writer << "*(" << out[1].get_name() << ") = " << quant_util[0] << ";\n";
-                    writer << "*(" << out[2].get_name() << ") = " << quant_util[1] << ";\n";
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(quantize_index) << ");\n";
-                }
-                else
-                {
-                    throw ngraph_error("Unsupported parameters for QuantizeCPUOp");
-                }
-            }
-
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::DequantizeCPU)
-            {
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
-                {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                    size_t dequantize_index =
-                        mkldnn_emitter->build_dequantization(node, input_data_desc, result_desc);
-
-                    auto& deps = mkldnn_emitter->get_primitive_deps(dequantize_index);
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << out[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(dequantize_index) << ");\n";
-                }
-                else
-                {
-                    throw ngraph_error("unsupported parameters for DequantizeCPUOp");
-                }
-            }
-
-            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBackpropFilters)
             {
                 auto convolution = static_cast<const ngraph::op::ConvolutionBackpropFilters*>(node);
@@ -3048,8 +2983,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConvolutionBias)
             {
-                auto qconvolution_bias =
-                    static_cast<const ngraph::op::QuantizedConvolutionBias*>(node);
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
@@ -3066,10 +2999,6 @@ namespace ngraph
                            << ", " << args[2].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
                            << ", " << out[0].get_name() << ");\n";
-                    writer << "*(" << out[1].get_name()
-                           << ") = " << qconvolution_bias->get_freezed_output_min() << ";\n";
-                    writer << "*(" << out[2].get_name()
-                           << ") = " << qconvolution_bias->get_freezed_output_max() << ";\n";
 
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
                            << to_string(qconv_index) << ");\n";
@@ -3255,18 +3184,15 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    vector<float> quant_util;
-                    mkldnn_emitter->build_quantized_max_pool(node, quant_util);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(quant_util[2]);
+                    size_t qmax_pool_index = mkldnn_emitter->build_quantized_max_pool(node);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(qmax_pool_index);
 
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
                            << ", " << out[0].get_name() << ");\n";
-                    writer << "*(" << out[1].get_name() << ") = " << quant_util[0] << ";\n";
-                    writer << "*(" << out[2].get_name() << ") = " << quant_util[1] << ";\n";
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(quant_util[2]) << ");\n";
+                           << to_string(qmax_pool_index) << ");\n";
                 }
                 else
                 {
@@ -3279,17 +3205,14 @@ namespace ngraph
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    vector<float> quant_util;
-                    mkldnn_emitter->build_quantized_avg_pool(node, quant_util);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(quant_util[2]);
+                    size_t qavg_pool_index = mkldnn_emitter->build_quantized_avg_pool(node);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(qavg_pool_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
                            << ", " << out[0].get_name() << ");\n";
-                    writer << "*(" << out[1].get_name() << ") = " << quant_util[0] << ";\n";
-                    writer << "*(" << out[2].get_name() << ") = " << quant_util[1] << ";\n";
                     writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(quant_util[2]) << ");\n";
+                           << to_string(qavg_pool_index) << ");\n";
                 }
                 else
                 {
@@ -4742,6 +4665,36 @@ namespace ngraph
                 }
 
                 writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Dequantize)
+            {
+                auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
+                writer << "reference::dequantize(";
+                writer << "            " << args[0].get_name() << ",\n";
+                writer << "            " << args[1].get_name() << ",\n";
+                writer << "            " << args[2].get_name() << ",\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            {" << join(args[0].get_shape()) << "},\n";
+                writer << "            {" << join(args[1].get_shape()) << "},\n";
+                writer << "            {" << join(dequantize->get_axes()) << "});\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Quantize)
+            {
+                auto quantize = static_cast<const ngraph::op::Quantize*>(node);
+                writer << "reference::quantize(";
+                writer << "            " << args[0].get_name() << ",\n";
+                writer << "            " << args[1].get_name() << ",\n";
+                writer << "            " << args[2].get_name() << ",\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            {" << join(args[0].get_shape()) << "},\n";
+                writer << "            {" << join(args[1].get_shape()) << "},\n";
+                writer << "            {" << join(quantize->get_axes()) << "},\n";
+                writer << "            static_cast<op::Quantize::RoundMode>("
+                       << static_cast<int>(quantize->get_round_mode()) << "));\n";
             }
 
 #undef TI

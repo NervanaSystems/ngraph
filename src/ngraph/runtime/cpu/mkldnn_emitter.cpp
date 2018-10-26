@@ -20,13 +20,12 @@
 #include "mkldnn_emitter.hpp"
 
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/experimental/quantized_avg_pool.hpp"
+#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-#include "ngraph/runtime/cpu/op/dequantize.hpp"
-#include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
-#include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph::runtime::cpu;
@@ -123,31 +122,7 @@ size_t MKLDNNEmitter::build_memory_primitive(const mkldnn::memory::desc& desc)
     return index;
 }
 
-size_t MKLDNNEmitter::build_dequantization(const ngraph::Node* node,
-                                           const mkldnn::memory::desc& input_desc,
-                                           const mkldnn::memory::desc& result_desc)
-{
-    auto dequantize = static_cast<const ngraph::op::DequantizeCPU*>(node);
-    auto min_const_op = std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(1));
-    auto max_const_op = std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(2));
-    float min_range = *(static_cast<float const*>(min_const_op->get_data_ptr()));
-    float max_range = *(static_cast<float const*>(max_const_op->get_data_ptr()));
-
-    const float max_abs = std::max(std::abs(min_range), std::abs(max_range));
-    bool is_signed = (dequantize->get_dequantize_et()).is_signed();
-    const float target_range =
-        static_cast<float>((is_signed ? std::pow(2, 7) : std::pow(2, 8)) - 1);
-    const float scale_factor = max_abs / target_range;
-    std::vector<float> scales;
-    scales.push_back(scale_factor);
-
-    size_t dequantize_index = 0;
-    dequantize_index = this->build_quantize_reorder(input_desc, result_desc, scales);
-    return dequantize_index;
-}
-
-void MKLDNNEmitter::build_quantized_max_pool(const ngraph::Node* node,
-                                             std::vector<float>& quant_util)
+size_t MKLDNNEmitter::build_quantized_max_pool(const ngraph::Node* node)
 {
     auto qmax_pool = static_cast<const ngraph::op::QuantizedMaxPool*>(node);
     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
@@ -159,17 +134,10 @@ void MKLDNNEmitter::build_quantized_max_pool(const ngraph::Node* node,
                                                          qmax_pool->get_window_shape(),
                                                          qmax_pool->get_padding_below(),
                                                          qmax_pool->get_padding_above());
-    auto min_const_op = std::static_pointer_cast<ngraph::op::Constant>(qmax_pool->get_argument(1));
-    auto max_const_op = std::static_pointer_cast<ngraph::op::Constant>(qmax_pool->get_argument(2));
-    float min = *(static_cast<float const*>(min_const_op->get_data_ptr()));
-    float max = *(static_cast<float const*>(max_const_op->get_data_ptr()));
-    quant_util.push_back(min);
-    quant_util.push_back(max);
-    quant_util.push_back(qmax_pool_index);
+    return qmax_pool_index;
 }
 
-void MKLDNNEmitter::build_quantized_avg_pool(const ngraph::Node* node,
-                                             std::vector<float>& quant_util)
+size_t MKLDNNEmitter::build_quantized_avg_pool(const ngraph::Node* node)
 {
     auto qavg_pool = static_cast<const ngraph::op::QuantizedAvgPool*>(node);
     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
@@ -184,13 +152,7 @@ void MKLDNNEmitter::build_quantized_avg_pool(const ngraph::Node* node,
                                     qavg_pool->get_window_shape(),
                                     qavg_pool->get_padding_below(),
                                     qavg_pool->get_padding_above());
-    auto min_const_op = std::static_pointer_cast<ngraph::op::Constant>(qavg_pool->get_argument(1));
-    auto max_const_op = std::static_pointer_cast<ngraph::op::Constant>(qavg_pool->get_argument(2));
-    float min = *(static_cast<float const*>(min_const_op->get_data_ptr()));
-    float max = *(static_cast<float const*>(max_const_op->get_data_ptr()));
-    quant_util.push_back(min);
-    quant_util.push_back(max);
-    quant_util.push_back(qavg_pool_index);
+    return qavg_pool_index;
 }
 
 mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(
@@ -787,28 +749,6 @@ size_t MKLDNNEmitter::build_reorder(const mkldnn::memory::desc& input_desc,
     return primitive_index;
 }
 
-size_t MKLDNNEmitter::build_quantize_reorder(const mkldnn::memory::desc& input_desc,
-                                             const mkldnn::memory::desc& result_desc,
-                                             const std::vector<float>& scales)
-{
-    size_t input_index = build_memory_primitive(input_desc);
-    size_t result_index = build_memory_primitive(result_desc);
-
-    mkldnn::primitive_attr attr;
-    attr.set_output_scales(0, scales);
-    attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
-
-    auto reorder_desc =
-        mkldnn::reorder::primitive_desc({input_desc, mkldnn_utils::global_cpu_engine},
-                                        {result_desc, mkldnn_utils::global_cpu_engine},
-                                        attr);
-
-    size_t primitive_index = insert_primitive(new mkldnn::reorder(
-        reorder_desc, *m_mkldnn_primitives[input_index], *m_mkldnn_primitives[result_index]));
-    m_primitive_deps[primitive_index] = {input_index, result_index};
-    return primitive_index;
-}
-
 size_t MKLDNNEmitter::build_lrn_forward(const mkldnn::memory::desc& input_desc,
                                         const mkldnn::memory::desc& result_desc,
                                         float alpha,
@@ -1054,69 +994,40 @@ size_t MKLDNNEmitter::build_batchnorm_backward(const mkldnn::memory::desc& weigh
     return batchnorm_index;
 }
 
-std::vector<size_t>
-    MKLDNNEmitter::build_rnn_forward(const mkldnn::memory::desc& rnn_src_layer_desc,
-                                     const mkldnn::memory::desc& rnn_src_iter_desc,
-                                     const mkldnn::memory::desc& user_weights_layer_desc,
-                                     const mkldnn::memory::desc& user_weights_iter_desc,
-                                     const mkldnn::memory::desc& rnn_bias_desc,
-                                     const mkldnn::memory::desc& rnn_dst_layer_desc,
-                                     const mkldnn::memory::desc& rnn_dst_iter_desc,
-                                     const mkldnn::memory::desc& rnn_wei_layer_desc,
-                                     const mkldnn::memory::desc& rnn_wei_iter_desc)
+size_t MKLDNNEmitter::build_rnn_forward(const mkldnn::memory::desc& src_layer_desc,
+                                        const mkldnn::memory::desc& src_iter_desc,
+                                        const mkldnn::memory::desc& weights_layer_desc,
+                                        const mkldnn::memory::desc& weights_iter_desc,
+                                        const mkldnn::memory::desc& bias_desc,
+                                        const mkldnn::memory::desc& dst_layer_desc,
+                                        const mkldnn::memory::desc& dst_iter_desc)
 {
-    size_t src_layer_index = build_memory_primitive(rnn_src_layer_desc);
-    size_t src_iter_index = build_memory_primitive(rnn_src_iter_desc);
-    size_t bias_index = build_memory_primitive(rnn_bias_desc);
-    size_t dst_layer_index = build_memory_primitive(rnn_dst_layer_desc);
-    size_t dst_iter_index = build_memory_primitive(rnn_dst_iter_desc);
-
-    std::vector<size_t> primitive_index;
+    size_t src_layer_index = build_memory_primitive(src_layer_desc);
+    size_t src_iter_index = build_memory_primitive(src_iter_desc);
+    size_t weights_layer_index = build_memory_primitive(weights_layer_desc);
+    size_t weights_iter_index = build_memory_primitive(weights_iter_desc);
+    size_t bias_index = build_memory_primitive(bias_desc);
+    size_t dst_layer_index = build_memory_primitive(dst_layer_desc);
+    size_t dst_iter_index = build_memory_primitive(dst_iter_desc);
 
     mkldnn::rnn_cell::desc rnn_cell(mkldnn::algorithm::vanilla_lstm);
     mkldnn::rnn_forward::desc rnn_layer_desc(mkldnn::prop_kind::forward_training,
                                              rnn_cell,
                                              mkldnn::rnn_direction::unidirectional_left2right,
-                                             rnn_src_layer_desc,
-                                             rnn_src_iter_desc,
-                                             rnn_wei_layer_desc,
-                                             rnn_wei_iter_desc,
-                                             rnn_bias_desc,
-                                             rnn_dst_layer_desc,
-                                             rnn_dst_iter_desc);
+                                             src_layer_desc,
+                                             src_iter_desc,
+                                             weights_layer_desc,
+                                             weights_iter_desc,
+                                             bias_desc,
+                                             dst_layer_desc,
+                                             dst_iter_desc);
     auto rnn_layer_prim_desc =
         mkldnn::rnn_forward::primitive_desc(rnn_layer_desc, mkldnn_utils::global_cpu_engine);
-
-    auto wei_layer_reorder_desc = rnn_layer_prim_desc.weights_layer_primitive_desc().desc();
-    auto wei_iter_reorder_desc = rnn_layer_prim_desc.weights_iter_primitive_desc().desc();
-
-    // reorder weights_layer from ldgoi to the mkldnn preferred format
-    size_t weight_layer_reorder_index =
-        this->build_reorder(user_weights_layer_desc, wei_layer_reorder_desc);
-    auto workspace_wei_layer = std::unique_ptr<MKLDNNWorkspace>(
-        new MKLDNNWorkspace(rnn_layer_prim_desc.weights_layer_primitive_desc().get_size()));
-    auto workspace_wei_layer_buf_index = insert_workspace(workspace_wei_layer);
-    size_t weights_layer_index = this->get_primitive_deps(weight_layer_reorder_index)[1];
-    m_primitive_deps[weight_layer_reorder_index].push_back(workspace_wei_layer_buf_index);
-    primitive_index.push_back(weight_layer_reorder_index);
-
-    // reorder weights_iter from ldgoi to the mkldnn preferred format
-    size_t weight_iter_reorder_index =
-        this->build_reorder(user_weights_iter_desc, wei_iter_reorder_desc);
-    auto workspace_wei_iter = std::unique_ptr<MKLDNNWorkspace>(
-        new MKLDNNWorkspace(rnn_layer_prim_desc.weights_iter_primitive_desc().get_size()));
-    auto workspace_wei_iter_buf_index = insert_workspace(workspace_wei_iter);
-    size_t weights_iter_index = this->get_primitive_deps(weight_iter_reorder_index)[1];
-    m_primitive_deps[weight_iter_reorder_index].push_back(workspace_wei_iter_buf_index);
-    primitive_index.push_back(weight_iter_reorder_index);
-
-    // define workspace for rnn and weights reordering
     auto workspace_index =
         build_memory_primitive(rnn_layer_prim_desc.workspace_primitive_desc().desc());
     auto workspace = std::unique_ptr<MKLDNNWorkspace>(
         new MKLDNNWorkspace(rnn_layer_prim_desc.workspace_primitive_desc().get_size()));
     auto workspace_buf_index = insert_workspace(workspace);
-
     size_t rnn_index = insert_primitive(new mkldnn::rnn_forward(
         rnn_layer_prim_desc,
         mkldnn::primitive::at(*m_mkldnn_primitives[src_layer_index]),
@@ -1127,7 +1038,6 @@ std::vector<size_t>
         static_cast<mkldnn::memory>(*m_mkldnn_primitives[dst_layer_index]),
         static_cast<mkldnn::memory>(*m_mkldnn_primitives[dst_iter_index]),
         static_cast<mkldnn::memory>(*m_mkldnn_primitives[workspace_index])));
-
     m_primitive_deps[rnn_index] = {src_layer_index,
                                    src_iter_index,
                                    weights_layer_index,
@@ -1138,8 +1048,7 @@ std::vector<size_t>
                                    workspace_index,
                                    workspace_buf_index};
 
-    primitive_index.push_back(rnn_index);
-    return primitive_index;
+    return rnn_index;
 }
 
 size_t MKLDNNEmitter::build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,

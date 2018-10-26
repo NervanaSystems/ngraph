@@ -26,16 +26,15 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/experimental/quantized_conv.hpp"
+#include "ngraph/op/experimental/quantized_conv_bias.hpp"
+#include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
-#include "ngraph/runtime/cpu/op/quantized_conv.hpp"
-#include "ngraph/runtime/cpu/op/quantized_conv_bias.hpp"
-#include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
-#include "ngraph/runtime/cpu/quantization_util.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -227,8 +226,6 @@ namespace ngraph
                     }
                     else if (std::is_same<OP, ngraph::op::QuantizedConvolution>())
                     {
-                        const float scale =
-                            quantization_util::get_scale<ngraph::op::QuantizedConvolution>(node);
                         return build_quantized_convolution(
                             data_desc,
                             weights_desc,
@@ -237,14 +234,12 @@ namespace ngraph
                             window_dilation_strides_adjusted,
                             convolution->get_padding_below(),
                             convolution->get_padding_above(),
-                            scale,
+                            (dynamic_cast<const ngraph::op::QuantizedConvolution*>(node))
+                                ->get_scale(),
                             ops);
                     }
                     else if (std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
                     {
-                        const float scale =
-                            quantization_util::get_scale<ngraph::op::QuantizedConvolutionRelu>(
-                                node);
                         return build_quantized_convolution(
                             data_desc,
                             weights_desc,
@@ -253,15 +248,13 @@ namespace ngraph
                             window_dilation_strides_adjusted,
                             convolution->get_padding_below(),
                             convolution->get_padding_above(),
-                            scale,
+                            (dynamic_cast<const ngraph::op::QuantizedConvolutionRelu*>(node))
+                                ->get_scale(),
                             ops);
                     }
                     else if (std::is_same<OP, ngraph::op::QuantizedConvolutionBias>())
                     {
                         // conv+bias = cvt_to_int8(scale*(dst + bias))
-                        const float scale =
-                            quantization_util::get_scale<ngraph::op::QuantizedConvolutionBias>(
-                                node);
                         auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                         return build_quantized_convolution(
                             data_desc,
@@ -272,7 +265,8 @@ namespace ngraph
                             window_dilation_strides_adjusted,
                             convolution->get_padding_below(),
                             convolution->get_padding_above(),
-                            scale,
+                            (dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node))
+                                ->get_scale(),
                             ops);
                     }
                     else
@@ -480,9 +474,9 @@ namespace ngraph
                                                 const double eps);
 
                 template <typename OP>
-                std::vector<size_t> build_rnn(const ngraph::Node* node,
-                                              const std::vector<TensorViewWrapper>& args,
-                                              const std::vector<TensorViewWrapper>& out)
+                size_t build_rnn(const ngraph::Node* node,
+                                 const std::vector<TensorViewWrapper>& args,
+                                 const std::vector<TensorViewWrapper>& out)
                 {
                     auto rnn_node = static_cast<const OP*>(node);
                     auto src_sequence_length_max =
@@ -514,71 +508,57 @@ namespace ngraph
                             "feature size ");
                     }
 
-                    Shape src_layer_dims{
+                    Shape src_layer_tz{
                         src_sequence_length_max,
                         batch,
                         static_cast<unsigned long>(rnn_node->get_src_layer_feature_size())};
-                    Shape src_iter_dims{
+                    Shape src_iter_tz{
                         num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
-                    Shape wei_layer_dims{
+                    Shape wei_layer_tz{
                         num_fused_layers,
                         direction,
                         static_cast<unsigned long>(rnn_node->get_src_layer_feature_size()),
                         rnn_cell_n_gates,
                         feature_size};
-                    Shape wei_iter_dims{
+                    Shape wei_iter_tz{
                         num_fused_layers, direction, feature_size, rnn_cell_n_gates, feature_size};
-                    Shape bias_dims{num_fused_layers, direction, rnn_cell_n_gates, feature_size};
-                    Shape dst_layer_dims{src_sequence_length_max, batch, feature_size};
-                    Shape dst_iter_dims{
+                    Shape bias_tz{num_fused_layers, direction, rnn_cell_n_gates, feature_size};
+                    Shape dst_layer_tz{src_sequence_length_max, batch, feature_size};
+                    Shape dst_iter_tz{
                         num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
 
                     // We create the memory descriptors used by the user
-                    auto rnn_src_layer_md = build_memory_descriptor(
-                        src_layer_dims, args[0].get_element_type(), mkldnn::memory::format::tnc);
-                    auto rnn_src_iter_md = build_memory_descriptor(
-                        src_iter_dims, args[1].get_element_type(), mkldnn::memory::format::ldsnc);
-                    auto user_wei_layer_md = build_memory_descriptor(
-                        wei_layer_dims, args[2].get_element_type(), mkldnn::memory::format::ldgoi);
-                    auto user_wei_iter_md = build_memory_descriptor(
-                        wei_iter_dims, args[3].get_element_type(), mkldnn::memory::format::ldgoi);
-                    auto rnn_bias_md = build_memory_descriptor(
-                        bias_dims, args[4].get_element_type(), mkldnn::memory::format::ldgo);
+                    auto src_layer_md = build_memory_descriptor(
+                        src_layer_tz, args[0].get_element_type(), mkldnn::memory::format::tnc);
+                    auto src_iter_md = build_memory_descriptor(
+                        src_iter_tz, args[1].get_element_type(), mkldnn::memory::format::ldsnc);
+                    auto wei_layer_md = build_memory_descriptor(
+                        wei_layer_tz, args[2].get_element_type(), mkldnn::memory::format::ldigo);
+                    auto wei_iter_md = build_memory_descriptor(
+                        wei_iter_tz, args[3].get_element_type(), mkldnn::memory::format::ldigo);
+                    auto bias_md = build_memory_descriptor(
+                        bias_tz, args[4].get_element_type(), mkldnn::memory::format::ldgo);
+                    auto dst_layer_md = build_memory_descriptor(
+                        dst_layer_tz, out[0].get_element_type(), mkldnn::memory::format::tnc);
+                    auto dst_iter_md = build_memory_descriptor(
+                        dst_iter_tz, out[1].get_element_type(), mkldnn::memory::format::ldsnc);
 
-                    // MKLDNN for now, just support TNC format for dst_layer
-                    auto rnn_dst_layer_md = build_memory_descriptor(
-                        dst_layer_dims, out[0].get_element_type(), mkldnn::memory::format::tnc);
-                    auto rnn_dst_iter_md = build_memory_descriptor(
-                        dst_iter_dims, out[1].get_element_type(), mkldnn::memory::format::ldsnc);
-
-                    // define the weights in the generic layout and query rnn primitive for the
-                    // preferred weights format
-                    auto rnn_wei_layer_md = build_memory_descriptor(
-                        wei_layer_dims, args[2].get_element_type(), mkldnn::memory::format::any);
-                    auto rnn_wei_iter_md = build_memory_descriptor(
-                        wei_iter_dims, args[3].get_element_type(), mkldnn::memory::format::any);
-
-                    return build_rnn_forward(rnn_src_layer_md,
-                                             rnn_src_iter_md,
-                                             user_wei_layer_md,
-                                             user_wei_iter_md,
-                                             rnn_bias_md,
-                                             rnn_dst_layer_md,
-                                             rnn_dst_iter_md,
-                                             rnn_wei_layer_md,
-                                             rnn_wei_iter_md);
+                    return build_rnn_forward(src_layer_md,
+                                             src_iter_md,
+                                             wei_layer_md,
+                                             wei_iter_md,
+                                             bias_md,
+                                             dst_layer_md,
+                                             dst_iter_md);
                 }
 
-                std::vector<size_t>
-                    build_rnn_forward(const mkldnn::memory::desc& rnn_src_layer_desc,
-                                      const mkldnn::memory::desc& rnn_src_iter_desc,
-                                      const mkldnn::memory::desc& user_weights_layer_desc,
-                                      const mkldnn::memory::desc& user_weights_iter_desc,
-                                      const mkldnn::memory::desc& rnn_bias_desc,
-                                      const mkldnn::memory::desc& rnn_dst_layer_desc,
-                                      const mkldnn::memory::desc& rnn_dst_iter_desc,
-                                      const mkldnn::memory::desc& rnn_wei_layer_desc,
-                                      const mkldnn::memory::desc& rnn_wei_iter_desc);
+                size_t build_rnn_forward(const mkldnn::memory::desc& src_layer_desc,
+                                         const mkldnn::memory::desc& src_iter_desc,
+                                         const mkldnn::memory::desc& weights_layer_desc,
+                                         const mkldnn::memory::desc& weights_iter_desc,
+                                         const mkldnn::memory::desc& bias_desc,
+                                         const mkldnn::memory::desc& dst_layer_desc,
+                                         const mkldnn::memory::desc& dst_iter_desc);
 
                 size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                     const mkldnn::memory::desc& result_desc,
@@ -609,19 +589,9 @@ namespace ngraph
                                           const mkldnn::memory::desc& result_desc,
                                           float alpha);
 
-                size_t build_quantize_reorder(const mkldnn::memory::desc& input_desc,
-                                              const mkldnn::memory::desc& result_desc,
-                                              const std::vector<float>& scales);
+                size_t build_quantized_max_pool(const ngraph::Node* node);
 
-                size_t build_dequantization(const ngraph::Node* node,
-                                            const mkldnn::memory::desc& input_desc,
-                                            const mkldnn::memory::desc& result_desc);
-
-                void build_quantized_max_pool(const ngraph::Node* node,
-                                              std::vector<float>& quant_util);
-
-                void build_quantized_avg_pool(const ngraph::Node* node,
-                                              std::vector<float>& quant_util);
+                size_t build_quantized_avg_pool(const ngraph::Node* node);
 
             private:
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;

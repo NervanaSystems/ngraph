@@ -162,7 +162,6 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
                          << " type is not float!";
             return false;
         }
-
         auto input_xt_rank = input_xt->get_shape().size();
         auto hidden_ht_rank = hidden_ht->get_shape().size();
         auto weights_i2h_rank = weights_i2h->get_shape().size();
@@ -177,6 +176,13 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         {
             throw ngraph_error("Bias should have rank of 1 for MKLDNN Rnn op");
         }
+        // if dst_layer feature size != dts_iter feature size dont fuse
+        if (pattern_map[ct_label]->get_shape()[1] != m.get_match_root()->get_shape()[1])
+        {
+            NGRAPH_DEBUG << "Not fusing, since MKLDNN Lstm kernel requires dst_layer feature size "
+                            "equals to dts_iter feature size";
+            return false;
+        }
 
         // Determine which is ht_1 and xt. but if both xt and ht_1 have the same shape we need to capture this
         // reliably in the RNN fusion.
@@ -188,6 +194,23 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             intermediate_lstm = true;
         }
 
+        // we will insert the reshape on the weights to convert to mkldnn preferred layout
+        size_t lstm_n_gates = 4;
+        auto slc = pattern_map[weights_i2h]->get_shape()[1];
+        auto dlc = pattern_map[weights_i2h]->get_shape()[0] / lstm_n_gates;
+        auto sic = pattern_map[weights_h2h]->get_shape()[1];
+        auto dic = pattern_map[weights_h2h]->get_shape()[0] / lstm_n_gates;
+
+        if (dlc != dic)
+        {
+            return false;
+        }
+        auto weights_layer = std::make_shared<op::Reshape>(
+            pattern_map[weights_i2h], AxisVector{1, 0}, Shape{slc, lstm_n_gates * dlc});
+
+        auto weights_iter = std::make_shared<op::Reshape>(
+            pattern_map[weights_h2h], AxisVector{1, 0}, Shape{sic, lstm_n_gates * dic});
+
         // this checks if its a first LSTM cell and uses constant initialization of hidden states to
         // differentiate between hidden state ht and input symbols xt.
         if (!intermediate_lstm &&
@@ -195,9 +218,9 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
              std::dynamic_pointer_cast<op::Constant>(pattern_map[hidden_ht]->get_argument(0))))
         {
             lstm = std::make_shared<op::Lstm>(pattern_map[input_xt],
-                                              pattern_map[weights_i2h],
+                                              weights_layer,
                                               pattern_map[hidden_ht],
-                                              pattern_map[weights_h2h],
+                                              weights_iter,
                                               pattern_map[bias_i2h],
                                               pattern_map[bias_h2h],
                                               pattern_map[ct_1]);
@@ -207,9 +230,9 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
                   std::dynamic_pointer_cast<op::Constant>(pattern_map[input_xt]->get_argument(0))))
         {
             lstm = std::make_shared<op::Lstm>(pattern_map[hidden_ht],
-                                              pattern_map[weights_h2h],
+                                              weights_iter,
                                               pattern_map[input_xt],
-                                              pattern_map[weights_i2h],
+                                              weights_layer,
                                               pattern_map[bias_h2h],
                                               pattern_map[bias_i2h],
                                               pattern_map[ct_1]);
@@ -219,9 +242,9 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             NGRAPH_DEBUG << "ct_shape : " << join(pattern_map[ct_1]->get_shape())
                          << " hidden state shape: " << join(pattern_map[hidden_ht]->get_shape());
             lstm = std::make_shared<op::Lstm>(pattern_map[input_xt],
-                                              pattern_map[weights_i2h],
+                                              weights_layer,
                                               pattern_map[hidden_ht],
-                                              pattern_map[weights_h2h],
+                                              weights_iter,
                                               pattern_map[bias_i2h],
                                               pattern_map[bias_h2h],
                                               pattern_map[ct_1]);
@@ -231,9 +254,9 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             NGRAPH_DEBUG << "ct_shape: " << join(pattern_map[ct_1]->get_shape())
                          << " hidden state shape: " << join(pattern_map[input_xt]->get_shape());
             lstm = std::make_shared<op::Lstm>(pattern_map[hidden_ht],
-                                              pattern_map[weights_h2h],
+                                              weights_iter,
                                               pattern_map[input_xt],
-                                              pattern_map[weights_i2h],
+                                              weights_layer,
                                               pattern_map[bias_h2h],
                                               pattern_map[bias_i2h],
                                               pattern_map[ct_1]);
@@ -466,7 +489,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             weights_iter_rank != 2)
         {
             throw ngraph_error(
-                "Pattern matcher error src_layer, weights_layer, src_iter, weights_iter should "
+                "Pattern matcher error src_layer, src_iter, weights_layer, weighst_iter should "
                 "have rank 2 for MKLDNN RNN op");
         }
 
@@ -608,7 +631,6 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                 }
             }
         }
-
         NGRAPH_DEBUG << "End of recurrent fusion call back "
                      << "matched_node: " << m.get_match_root()->get_name();
         return true;
@@ -635,10 +657,6 @@ static std::shared_ptr<Node>
 void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_fusion_fprop()
 {
     auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
-
-    auto src_slice =
-        std::make_shared<pattern::op::Skip>(src_layer_label, pattern::has_class<op::Slice>());
-
     auto src_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});
     auto weights_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
     auto weights_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
@@ -653,7 +671,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
     size_t ref_rnn_direction = 1;
     size_t ref_num_of_rnn_fused_layer = 1;
 
-    auto ref_rnn_node = std::make_shared<op::Rnn>(src_slice,
+    auto ref_rnn_node = std::make_shared<op::Rnn>(src_layer_label,
                                                   src_iter_label,
                                                   weights_layer_label,
                                                   weights_iter_label,
@@ -680,7 +698,6 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                           bias_label,
                                                           rnn_ht_label](
         pattern::RecurrentMatcher& m) {
-
         if (m.get_number_of_recurrent_matches() <= 1)
         {
             return false;
