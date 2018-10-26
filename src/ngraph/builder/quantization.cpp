@@ -18,13 +18,6 @@
 
 #include "ngraph/builder/quantization.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
-#include "ngraph/op/experimental/quantized_conv.hpp"
-#include "ngraph/op/experimental/quantized_conv_bias.hpp"
-#include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
-#include "ngraph/op/quantize.hpp"
 #include "quantization_util.hpp"
 
 using namespace std;
@@ -41,13 +34,13 @@ namespace ngraph
                                              const ngraph::AxisSet& axes,
                                              op::Quantize::RoundMode round_mode)
         {
-            auto offset = op::Constant::create(type, Shape{1}, {0});
+            auto offset = op::Constant::create(type, Shape{}, {0});
             if (input->get_element_type() == element::f32)
             {
                 float scale =
                     builder::quantization_util::get_quantization_scale<float>(min, max, type, true);
                 auto quantize_scale =
-                    op::Constant::create(input->get_element_type(), Shape{1}, {scale});
+                    op::Constant::create(input->get_element_type(), Shape{}, {scale});
                 return make_shared<op::Quantize>(
                     input, quantize_scale, offset, type, axes, round_mode);
             }
@@ -56,7 +49,7 @@ namespace ngraph
                 double scale = builder::quantization_util::get_quantization_scale<double>(
                     min, max, type, true);
                 auto quantize_scale =
-                    op::Constant::create(input->get_element_type(), Shape{1}, {scale});
+                    op::Constant::create(input->get_element_type(), Shape{}, {scale});
                 return make_shared<op::Quantize>(
                     input, quantize_scale, offset, type, axes, round_mode);
             }
@@ -73,19 +66,19 @@ namespace ngraph
                                                const ngraph::AxisSet& axes)
         {
             auto input_et = input->get_element_type();
-            auto offset = op::Constant::create(input_et, Shape{1}, {0});
+            auto offset = op::Constant::create(input_et, Shape{}, {0});
             if (type == element::f32)
             {
                 float scale =
                     builder::quantization_util::get_quantization_scale<float>(min, max, input_et);
-                auto dequantize_scale = op::Constant::create(type, Shape{1}, {scale});
+                auto dequantize_scale = op::Constant::create(type, Shape{}, {scale});
                 return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);
             }
             else if (type == element::f64)
             {
                 double scale =
                     builder::quantization_util::get_quantization_scale<double>(min, max, input_et);
-                auto dequantize_scale = op::Constant::create(type, Shape{1}, {scale});
+                auto dequantize_scale = op::Constant::create(type, Shape{}, {scale});
                 return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);
             }
             else
