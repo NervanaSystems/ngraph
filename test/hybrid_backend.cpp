@@ -13,9 +13,3 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-
-#include "ngraph/op/op_tbl.hpp"
-#if CUDNN_VERSION >= 7200
-NGRAPH_OP(Rnn, ngraph::op::gpu)
-#endif
-NGRAPH_OP(BatchNormTrainingWithStats, ngraph::op::gpu)

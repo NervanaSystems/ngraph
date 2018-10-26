@@ -42,77 +42,19 @@ set(SRC
     pass/tensor_memory_reservation.cpp
     gpu_kernel_args.cpp
     pass/gpu_rnn_fusion.cpp
+    pass/gpu_batch_norm_cache.cpp
+    op/batch_norm.cpp
     op/rnn.cpp
-    )
-set(CUDA_SRC
-    nvcc/example.cu.cpp
     )
 
 if (NGRAPH_GPU_ENABLE)
-    find_package(CUDA 9 QUIET)
-        if (CUDA_FOUND)
-            set(CUDA9_FOUND TRUE)
-        else()
-            find_package(CUDA 8 REQUIRED)
-        endif()
-
-	set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};
-	    --compiler-options -fPIC;
-	    -arch=sm_30;
-	    -gencode=arch=compute_35,code=sm_35;
-	    -gencode=arch=compute_50,code=sm_50;
-	    -gencode=arch=compute_52,code=sm_52;
-	    -gencode=arch=compute_60,code=sm_60;
-	    -gencode=arch=compute_61,code=sm_61;
-	    -gencode=arch=compute_61,code=compute_61)
-    if (CUDA9_FOUND)
-        set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};
-            -gencode=arch=compute_62,code=sm_62;
-	    -gencode=arch=compute_70,code=sm_70;
-	    -gencode=arch=compute_70,code=compute_70)
-    endif()
-
-    set (DO_CUDA_COMPILE FALSE)
-    if (CUDA9_FOUND)
-        if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
-            # CUDA 9 supports up to gcc 6.x
-            if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
-                set (DO_CUDA_COMPILE TRUE)
-            endif()
-        elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-            # CUDA 9 supports up to clang 3.9
-            if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.0)
-                set (DO_CUDA_COMPILE TRUE)
-            endif()
-        endif()
-    else()
-        # CUDA 8 (minimum version of CUDA we support)
-        if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
-            # Current release of CUDA 8 supports up to gcc 5.4
-            if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.5)
-                set (DO_CUDA_COMPILE TRUE)
-            endif()
-        elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-            # CUDA 8 supports up to clang 3.8
-            if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.9)
-                set (DO_CUDA_COMPILE TRUE)
-            endif()
-        endif()
-    endif()
-
-    if (DO_CUDA_COMPILE)
-        set_source_files_properties( ${CUDA_SRC} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
-        cuda_compile(CUDA_OBJ ${CUDA_SRC} STATIC)
-    endif()
-
-    add_library(gpu_backend SHARED ${SRC} ${CUDA_OBJ})
+    find_package(CUDA 8 REQUIRED)
+    find_package(CUDNN 7 REQUIRED)
+    add_library(gpu_backend SHARED ${SRC})
     set_target_properties(gpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
     target_link_libraries(gpu_backend PUBLIC ngraph codegen)
     find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
     find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
-    find_library(CUDA_cudart_LIBRARY libcudart_static.a /usr/local/cuda/lib64)
-
-    find_package(CUDNN 7 REQUIRED)
     target_include_directories(gpu_backend SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
     target_link_libraries(gpu_backend PUBLIC
         ${CUDA_cuda_LIBRARY}
