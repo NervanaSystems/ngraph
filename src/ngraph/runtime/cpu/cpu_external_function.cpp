@@ -1480,7 +1480,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
 
         m_op_attrs.emplace_back(node->description(), out_names, in_names);
-
+        op_names.push_back(node->get_name());
         handler->second(this, node.get(), in, out);
 
         bool disable_caching = computes_result(node.get()) || possibly_overwritten(node.get());
@@ -1735,10 +1735,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
         else
         {
-            for (const auto& p : enables)
+            for (; ctx->pc < functors.size(); ctx->pc++)
             {
                 auto index = profiler_count++;
-                if (p(ctx) || ctx->first_iteration)
+                if ((enables.at(ctx->pc))(ctx) || ctx->first_iteration)
                 {
                     // Each Op will have exactly one functor, start the clock before the exceution of functor
                     // and collect the profiler_count once the execution complets
@@ -1746,7 +1746,15 @@ void runtime::cpu::CPU_ExternalFunction::build()
                     {
                         start_ts = cpu::Clock::now();
                     }
-                    (*functor)(ctx);
+
+                    (functors.at(ctx->pc))(ctx);
+
+                    if (ctx->breakpoints.count(ctx->pc + 1))
+                    {
+                        ctx->pc++;
+                        break;
+                    }
+
                     if (runtime::cpu::IsTracingEnabled() || m_emit_timing)
                     {
                         end_ts = cpu::Clock::now();
@@ -1778,11 +1786,9 @@ void runtime::cpu::CPU_ExternalFunction::build()
                         m_perf_counters[index].m_call_count++;
                     }
                 }
-                std::advance(functor, 1);
             }
         }
         ctx->first_iteration = false;
-
         if (runtime::cpu::IsTracingEnabled())
         {
             assert(m_op_attrs.size() == profiler_count);
