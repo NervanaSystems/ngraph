@@ -40,6 +40,7 @@
 #endif
 
 #include "ngraph/function.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
@@ -189,6 +190,12 @@ namespace ngraph
                 void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
                                                std::string output_name,
                                                bool dex);
+
+                // Find in-place concat ops and set appropriate memory pool offset for its arguments
+                void process_in_place_concat(std::list<std::shared_ptr<Node>> nodes);
+
+                // For a chain of concat ops, propagate memory pool offsets
+                void propagate_in_place_concat(std::shared_ptr<ngraph::op::Concat> concat);
                 bool computes_result(Node* node);
                 void release_function() { m_function = nullptr; }
 #if !defined(NGRAPH_DEX_ONLY)
@@ -230,8 +237,8 @@ namespace ngraph
                 bool m_use_tbb;
 #if !defined(NGRAPH_DEX_ONLY)
                 bool m_is_compiled;
-                bool m_direct_execution;
 #endif
+                bool m_direct_execution;
                 EntryPoint m_compiled_function;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
 
