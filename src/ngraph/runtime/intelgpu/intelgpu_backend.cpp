@@ -54,6 +54,7 @@
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
+#include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
@@ -328,6 +329,12 @@ runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
         m_disable_backend_optimizations = true;
     }
 
+    // Dumps the input Function into Graphviz format
+    if (getenv("NGRAPH_INTELGPU_DUMP_FUNCTION") != nullptr)
+    {
+        m_dump_graph_enable = true;
+    }
+
     cldnn::engine_configuration cldnn_configuration(profiling);
     ocl_engine = make_shared<cldnn::engine>(cldnn_configuration);
 }
@@ -356,6 +363,11 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
     cldnn::topology topology;
 
+    if (m_dump_graph_enable)
+    {
+        visualize_tree(func, "intelgpu_", "_orig");
+    }
+
     if (!m_disable_backend_optimizations)
     {
         ngraph::pass::Manager pass_manager;
@@ -369,6 +381,11 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
 
         pass_manager.run_passes(func);
+
+        if (m_dump_graph_enable)
+        {
+            visualize_tree(func, "intelgpu_", "_opt");
+        }
     }
 
     for (shared_ptr<Node> op : func->get_ops())
