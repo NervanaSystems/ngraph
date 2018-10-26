@@ -890,7 +890,6 @@ TEST(cpu_fusion, conv_bias_relu_n2c1h2w2_2)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
-#if 0
 TEST(cpu_fusion, conv_horizontal_fusion)
 {
     Shape shape_a{2, 1, 6, 6};
@@ -941,7 +940,57 @@ TEST(cpu_fusion, conv_horizontal_fusion)
     size_t cpu_cb = count_ops_of_type<op::ConvolutionBias>(cpu_f);
     ASSERT_EQ(cpu_cb, 1);
 }
-#endif
+
+TEST(cpu_fusion, conv_horizontal_fusion_no_fusion_due_to_predecessor)
+{
+    Shape shape_a{2, 1, 6, 6};
+    Shape shape_weights{1, 1, 2, 2};
+    Shape shape_bias{1};
+
+    auto make_function = [shape_a, shape_weights, shape_bias]() {
+        auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+        auto weights1 = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto conv1 = std::make_shared<op::Convolution>(A, weights1, Strides{2, 2}, Strides{1, 1});
+        auto bias1 = std::make_shared<op::Parameter>(element::f32, shape_bias);
+        auto conv_bias1 =
+            conv1 + std::make_shared<op::Broadcast>(bias1, conv1->get_shape(), AxisSet{0, 2, 3});
+        auto relu1 = std::make_shared<op::Relu>(conv_bias1);
+
+        auto weights2 = std::make_shared<op::Parameter>(element::f32, shape_weights);
+        auto conv2 = std::make_shared<op::Convolution>(A, weights2, Strides{2, 2}, Strides{1, 1});
+        auto bias2 = std::make_shared<op::Min>(relu1, AxisSet{0, 2, 3});
+        //auto bias2 = std::make_shared<op::Parameter>(element::f32, shape_bias);
+        auto conv_bias2 =
+            conv2 + std::make_shared<op::Broadcast>(bias2, conv2->get_shape(), AxisSet{0, 2, 3});
+        auto relu2 = std::make_shared<op::Relu>(conv_bias2);
+
+        auto concat = std::make_shared<op::Concat>(NodeVector{relu1, relu2}, 1);
+        auto f = make_shared<Function>(NodeVector{concat},
+                                       op::ParameterVector{A, weights1, bias1, weights2});
+        return f;
+    };
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+
+    vector<vector<float>> args{
+        {1.25f,  2.25f, 5.25f, 6.25f,  -1.25f, -1.25f, 3.25f, -4.25f, 7.25f,  8.25f,  -1.25f,
+         -1.25f, 1.25f, 2.25f, -3.25f, 2.25f,  4.25f,  4.25f, 1.25f,  2.25f,  -4.25f, 2.25f,
+         4.25f,  4.25f, 0.f,   0.f,    -1.f,   0.f,    2.f,   2.f,    0.f,    0.f,    0.f,
+         0.f,    2.f,   2.f,   1.25f,  2.25f,  5.25f,  6.25f, 1.25f,  1.25f,  3.25f,  4.25f,
+         -7.25f, 8.25f, 1.25f, -1.25f, -1.25f, 2.25f,  3.25f, 2.25f,  -4.25f, -4.25f, -1.25f,
+         -2.25f, 4.25f, 2.25f, 4.25f,  4.25f,  0.f,    0.f,   1.f,    0.f,    -2.f,   2.f,
+         0.f,    0.f,   0.f,   0.f,    -2.f,   -2.f},
+        {2., 2., 2., 2.},
+        {0.1f},
+        {3., 3., 3., 3.}};
+
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+
+    size_t cpu_cb = count_ops_of_type<op::ConvolutionBias>(cpu_f);
+    ASSERT_EQ(cpu_cb, 2);
+}
 
 // ConvolutionBiasAdd relies on an in-place fused MKLDNN kernel.
 // Need to ensure that it is fused only when in-place buffer allocation is feasible

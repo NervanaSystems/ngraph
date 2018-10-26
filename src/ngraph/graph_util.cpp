@@ -196,6 +196,40 @@ bool ngraph::is_post_dominated(Node* X, Node* Y)
     return true;
 }
 
+// Check if X to a predecessor of Y
+bool ngraph::is_predecessor(Node* X, Node* Y)
+{
+    std::unordered_set<Node*> visited;
+    std::deque<Node*> stack;
+    stack.push_front(X);
+
+    while (stack.size() > 0)
+    {
+        ngraph::Node* curr = stack.front();
+        visited.insert(curr);
+        stack.pop_front();
+        if (curr->is_output())
+        {
+            continue;
+        }
+        if (curr != Y)
+        {
+            for (auto next : curr->get_users())
+            {
+                if (visited.count(next.get()) == 0)
+                {
+                    stack.push_front(next.get());
+                }
+            }
+        }
+        else
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 void ngraph::NodeMap::update(std::shared_ptr<ngraph::Node> orig, std::shared_ptr<ngraph::Node> val)
 {
     if (!exists(orig))
