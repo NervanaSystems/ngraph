@@ -17,7 +17,6 @@
 #pragma once
 
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/dot.hpp"
 
 #include "core/node.hpp"
 
