@@ -441,21 +441,26 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_int64)
               read_vector<int64_t>(result));
 }
 
-// Add this test to cover paramter space overflow:
-// cuda kernel parameter space have limit, if there is large number of parameters,
-// there will be overflow for parameter space.
-NGRAPH_TEST(${BACKEND_NAME}, concat_vector_large)
+// Params to drive concat_vector_large testing variations
+class concat_vector_params : public ::testing::TestWithParam<int>
+{
+protected:
+    concat_vector_params() { num_inputs = GetParam(); }
+    uint32_t num_inputs;
+};
+
+NGRAPH_TEST_P(${BACKEND_NAME}, concat_vector_params, concat_vector_large)
 {
     Shape shape_a{1};
     NodeVector inputs;
     op::ParameterVector inputs_param;
-    for (uint32_t i = 0; i < 999; i++)
+    for (uint32_t i = 0; i < num_inputs; i++)
     {
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
         inputs_param.push_back(A);
         inputs.push_back(A);
     }
-    Shape shape_r{999};
+    Shape shape_r{num_inputs};
     auto f = make_shared<Function>(make_shared<op::Concat>(inputs, 0), inputs_param);
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -463,7 +468,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_vector_large)
     // Create some tensors for input/output
     std::vector<std::shared_ptr<runtime::Tensor>> inputs_value;
     std::vector<float> ref_result;
-    for (uint32_t i = 0; i < 999; i++)
+    for (uint32_t i = 0; i < num_inputs; i++)
     {
         auto a = backend->create_tensor(element::f32, shape_a);
         copy_data(a, vector<float>{static_cast<float>(i)});
@@ -475,6 +480,15 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_vector_large)
     backend->call_with_validate(f, {result}, inputs_value);
     EXPECT_EQ(ref_result, read_vector<float>(result));
 }
+
+// concat_vector_large case generation
+// Add thhosw tests to cover paramter space overflow:
+// cuda kernel parameter space have limit, if there is large number of parameters,
+// there will be overflow for parameter space.
+NGRAPH_INSTANTIATE_TEST_CASE_P(${BACKEND_NAME},
+                               input_sizes,
+                               concat_vector_params,
+                               testing::Values(100, 128, 999));
 
 NGRAPH_TEST(${BACKEND_NAME}, concat_vector)
 {
