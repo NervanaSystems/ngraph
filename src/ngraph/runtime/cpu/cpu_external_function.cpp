@@ -23,7 +23,6 @@
 #include <typeinfo>
 #include <unordered_map>
 
-#define TBB_USE_THREADING_TOOLS 1
 #define TBB_PREVIEW_FLOW_GRAPH_TRACE 1
 
 #include <tbb/flow_graph.h>
@@ -1672,6 +1671,9 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                     }
                                 }
                             });
+#ifdef TBB_PREVIEW_FLOW_GRAPH_TRACE
+                    flowgraph_node->set_name(it->second.c_str());
+#endif
                     std::advance(functor, 1);
                     nodename_tbbnode_map.insert({it->second, flowgraph_node});
                     it++;
