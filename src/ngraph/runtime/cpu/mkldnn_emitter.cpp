@@ -337,9 +337,9 @@ std::vector<size_t>
 
     std::vector<float> bias_scales;
     bias_scales.push_back(bias_scale);
-    size_t quantize_bias_reorder =
+    size_t quantize_bias_reorder_index =
         this->build_quantize_reorder(bias_desc, reorder_bias_desc, bias_scales);
-    auto& quantize_deps = this->get_primitive_deps(quantize_bias_reorder);
+    auto& quantize_deps = this->get_primitive_deps(quantize_bias_reorder_index);
 
     std::vector<float> output_scale;
     output_scale.push_back(scale);
@@ -373,7 +373,7 @@ std::vector<size_t>
             *m_mkldnn_primitives[quantize_deps[1]],
             *m_mkldnn_primitives[result_index]));
 
-        m_primitive_deps[quantize_bias_reorder] = {
+        m_primitive_deps[quantize_bias_reorder_index] = {
             quantize_deps[0], quantize_deps[1], reordered_buf_index};
         m_primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
     }
@@ -381,7 +381,7 @@ std::vector<size_t>
     {
         throw ngraph_error("Could not create convolution " + e.message);
     }
-    return std::vector<size_t>{conv_index, quantize_bias_reorder};
+    return std::vector<size_t>{conv_index, quantize_bias_reorder_index};
 }
 
 size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& input_data_desc,

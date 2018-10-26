@@ -56,7 +56,7 @@ op::QuantizedConvolutionBias::QuantizedConvolutionBias(const shared_ptr<Node>& d
     this->m_scale = scale_val[0];
 
     auto bias_scale_const_op = std::static_pointer_cast<ngraph::op::Constant>(bias_scale);
-    auto bias_scale_val = scale_const_op->get_vector<float>();
+    auto bias_scale_val = bias_scale_const_op->get_vector<float>();
     this->m_bias_scale = bias_scale_val[0];
 
     // TODO: call ngraph util
