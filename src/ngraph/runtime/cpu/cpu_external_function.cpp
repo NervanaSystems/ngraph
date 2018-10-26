@@ -1843,10 +1843,6 @@ const runtime::cpu::LayoutDescriptorPtrs&
 
 const vector<runtime::PerformanceCounter>& runtime::cpu::CPU_ExternalFunction::get_perf_counters()
 {
-    if (m_direct_execution)
-    {
-        return m_perf_counters;
-    }
 #if !defined(NGRAPH_DEX_ONLY)
     // Codegen. Retrieve perf counters from compiled module
     if (m_execution_engine)
@@ -1880,8 +1876,8 @@ const vector<runtime::PerformanceCounter>& runtime::cpu::CPU_ExternalFunction::g
             }
         }
     }
-    return m_perf_counters;
 #endif
+    return m_perf_counters;
 }
 
 void runtime::cpu::CPU_ExternalFunction::write_to_file(const std::string& code,
