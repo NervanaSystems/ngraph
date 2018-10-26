@@ -105,7 +105,7 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::string& dtype,
     // a launch primitive for it based on the input tensor shape
     // but do not recompile the kernel. otherwise, do it all:
     // recompile the kernel and then create the primutive
-    size_t split_input_size = 128;
+    size_t split_input_size = 256; //max num of inputs fit 4KB parameter space: 256 * 8 + 7 * ?
     size_t residue = input_num % split_input_size;
     std::stringstream kernel_name_1;
     std::stringstream kernel_name_2;
