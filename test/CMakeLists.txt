@@ -54,7 +54,7 @@ set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    list(APPEND SRC onnx_import.cpp onnx_import_models.cpp)
+    list(APPEND SRC onnx_import.cpp)
     if (NGRAPH_ONNXIFI_ENABLE)
         list(APPEND SRC onnxifi.cpp)
     endif()
