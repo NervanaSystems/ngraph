@@ -102,12 +102,12 @@ op::Lstm::Lstm(std::shared_ptr<Node> input_xt_1,
         throw ngraph_error("input_xt_1 size is not equal t*n*c");
     }
 
-    if (i2h_bias->get_shape()[0] != i2h_weights->get_shape()[0] ||
-        h2h_bias->get_shape()[0] != h2h_weights->get_shape()[0])
+    /*    if (i2h_bias->get_shape()[0] != i2h_weights->get_shape()[1] ||
+        h2h_bias->get_shape()[0] != h2h_weights->get_shape()[1])
     {
         throw ngraph_error("bias and weights_shape are not compatible");
     }
-
+*/
     auto et = input_xt_1->get_element_type();
     for (auto& lstm_input : get_arguments())
     {
@@ -166,12 +166,12 @@ op::Lstm::Lstm(std::shared_ptr<Node> src_layer,
         throw ngraph_error("src_layer size is not equal t*n*c");
     }
 
-    if (bias->get_shape()[0] != weights_layer->get_shape()[0] ||
-        bias->get_shape()[0] != weights_iter->get_shape()[0])
+    /*   if (bias->get_shape()[0] != weights_layer->get_shape()[1] ||
+        bias->get_shape()[0] != weights_iter->get_shape()[1])
     {
         throw ngraph_error("bias and weights_shape are not compatible");
     }
-
+*/
     auto et = src_layer->get_element_type();
     for (auto& rnn_input : get_arguments())
     {
