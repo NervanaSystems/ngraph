@@ -28,24 +28,15 @@ shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) con
 }
 
 op::Sigmoid::Sigmoid(shared_ptr<Node> arg)
-    : UnaryElementwiseArithmetic("Sigmoid", {arg})
+    : UnaryElementwiseArithmetic("Sigmoid", arg)
 {
-    set_output_type(0, arg->get_element_type(), arg->get_shape());
     constructor_validate_and_infer_types();
 }
 
 op::SigmoidBackprop::SigmoidBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
-    : Op("SigmoidBackprop", check_single_output_args({arg, delta}))
+    : BinaryElementwiseArithmetic("SigmoidBackprop", arg, delta)
 {
-    NODE_VALIDATION_ASSERT(this, arg->get_element_type() == delta->get_element_type())
-        << "Argument and delta element types do not match (argument element type: "
-        << arg->get_element_type() << ", delta element type: " << delta->get_element_type() << ").";
-
-    NODE_VALIDATION_ASSERT(this, arg->get_shape() == delta->get_shape())
-        << "Argument and delta shapes do not match (argument shape: " << arg->get_shape()
-        << ", delta shape: " << delta->get_shape() << ").";
-
-    set_output_type(0, delta->get_element_type(), delta->get_shape());
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node> op::SigmoidBackprop::copy_with_new_args(const NodeVector& new_args) const
