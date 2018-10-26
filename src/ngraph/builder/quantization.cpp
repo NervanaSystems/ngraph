@@ -121,12 +121,14 @@ namespace ngraph
                                            const std::shared_ptr<Node> max_freezed_output,
                                            const bool with_relu)
         {
+            bool output_is_signed = with_relu ? false : true;
             float scale = builder::quantization_util::get_scale(min_input,
                                                                 max_input,
                                                                 min_filter,
                                                                 max_filter,
                                                                 min_freezed_output,
-                                                                max_freezed_output);
+                                                                max_freezed_output,
+                                                                output_is_signed);
             auto requantization_scale = op::Constant::create(element::f32, Shape{1}, {scale});
 
             float bias_scale = builder::quantization_util::get_bias_scale(
@@ -167,7 +169,8 @@ namespace ngraph
                                                                 min_filter,
                                                                 max_filter,
                                                                 min_freezed_output,
-                                                                max_freezed_output);
+                                                                max_freezed_output,
+                                                                false);
             auto requantization_scale = op::Constant::create(element::f32, Shape{1}, {scale});
             return make_shared<op::QuantizedConvolutionRelu>(data_batch,
                                                              filters,
@@ -199,7 +202,8 @@ namespace ngraph
                                                                 min_filter,
                                                                 max_filter,
                                                                 min_freezed_output,
-                                                                max_freezed_output);
+                                                                max_freezed_output,
+                                                                true);
             auto requantization_scale = op::Constant::create(element::f32, Shape{1}, {scale});
             return make_shared<op::QuantizedConvolution>(data_batch,
                                                          filters,

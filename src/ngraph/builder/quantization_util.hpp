@@ -62,7 +62,8 @@ namespace ngraph
                             const std::shared_ptr<Node> min_filter,
                             const std::shared_ptr<Node> max_filter,
                             const std::shared_ptr<Node> min_freezed_output,
-                            const std::shared_ptr<Node> max_freezed_output)
+                            const std::shared_ptr<Node> max_freezed_output,
+                            bool output_is_signed)
             {
                 auto min_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(min_input);
                 auto max_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(max_input);
@@ -95,8 +96,17 @@ namespace ngraph
                 // s32 = f32 * std::pow(2, 31)/ max_abs32;
                 // s8 = f32 * std::pow(2, 7)/ max_abs8;
                 // s8 = s32 * std::pow(2, -24) * max_abs32 / max_abs8;
-                const float scale = static_cast<float>(
-                    (std::pow(2, -24) * static_cast<double>(max_abs32 / max_abs8)));
+                float scale;
+                if (output_is_signed)
+                {
+                    scale = static_cast<float>(
+                        (std::pow(2, -24) * static_cast<double>(max_abs32 / max_abs8)));
+                }
+                else
+                {
+                    scale = static_cast<float>(
+                        (std::pow(2, -23) * static_cast<double>(max_abs32 / max_abs8)));
+                }
                 return scale;
             }
 
