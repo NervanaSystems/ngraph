@@ -21,7 +21,9 @@
 #include "core/graph.hpp"
 #include "core/model.hpp"
 #include "core/node.hpp"
+
 #include "onnx.hpp"
+#include "ops_bridge.hpp"
 
 namespace ngraph
 {
@@ -59,7 +61,7 @@ namespace ngraph
             }
             std::vector<std::shared_ptr<Function>> output_functions;
             Model model{model_proto};
-            Graph graph{model_proto.graph()};
+            Graph graph{model_proto.graph(), model};
             for (const auto& output : graph.get_outputs())
             {
                 output_functions.emplace_back(std::make_shared<Function>(
@@ -86,6 +88,14 @@ namespace ngraph
         std::shared_ptr<Function> import_onnx_function(const std::string& path)
         {
             return load_onnx_model(path).front();
+        }
+
+        void register_operator(const std::string& name,
+                               std::int64_t version,
+                               const std::string& domain,
+                               Operator fn)
+        {
+            OperatorsBridge::register_operator(name, version, domain, std::move(fn));
         }
 
     } // namespace onnx_import

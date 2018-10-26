@@ -478,3 +478,37 @@ TEST(cpu_test, reshape_layout_optimizations7)
     }
     EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 0);
 }
+
+TEST(cpu_test, collapse_dims1)
+{
+    // Expand multiple dimensions. Ensure no extra conversions downstream
+    auto make_function = []() -> std::shared_ptr<Function> {
+        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
+        auto sum1 = make_shared<op::Sum>(A, AxisVector{1});    // Shape{1, 10, 6, 10}
+        auto sum2 = make_shared<op::Sum>(sum1, AxisVector{0}); // Shape{10, 6, 10}
+        return make_shared<Function>(NodeVector{sum2}, op::ParameterVector{A});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_function();
+    auto int_f = make_function();
+
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+    // sum1 will have two reshapes added around it. sum2 will be replaced
+    // with a reshape
+    EXPECT_EQ(count_ops_of_type<op::Reshape>(cpu_f), 3);
+}

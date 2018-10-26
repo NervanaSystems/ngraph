@@ -21,6 +21,7 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/type/bfloat16.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -209,6 +210,10 @@ namespace ngraph
                 if (target_type == element::boolean)
                 {
                     write_buffer<char, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::bf16)
+                {
+                    write_buffer<bfloat16, T>(target, source, target_element_count);
                 }
                 else if (target_type == element::f32)
                 {

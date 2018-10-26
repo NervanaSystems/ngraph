@@ -14,6 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <set>
+
 #include "graph.hpp"
 #include "node.hpp"
 
@@ -21,8 +23,28 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        Graph::Graph(const onnx::GraphProto& graph_proto)
+        namespace detail
+        {
+            std::string to_string(const std::set<std::string>& set)
+            {
+                std::string result;
+                for (auto it = std::begin(set); it != std::end(set); ++it)
+                {
+                    result += (it != std::begin(set) ? ", " : "") + *it;
+                }
+                return result;
+            }
+
+            inline std::string to_string(const onnx::NodeProto& node_proto)
+            {
+                return (node_proto.domain().empty() ? "" : node_proto.domain() + ".") +
+                       node_proto.op_type();
+            }
+        }
+
+        Graph::Graph(const onnx::GraphProto& graph_proto, const Model& model)
             : m_graph_proto{&graph_proto}
+            , m_model{&model}
         {
             for (const auto& tensor : m_graph_proto->initializer())
             {
@@ -45,10 +67,23 @@ namespace ngraph
                 m_outputs.emplace_back(output);
             }
 
+            // Verify that ONNX graph contains only nodes of available operator types
+            std::set<std::string> unknown_operator_types;
+            for (const auto& node_proto : m_graph_proto->node())
+            {
+                if (!m_model->is_operator_available(node_proto))
+                {
+                    unknown_operator_types.emplace(detail::to_string(node_proto));
+                }
+            }
+
+            NGRAPH_ASSERT(unknown_operator_types.empty())
+                << "unknown operations: " << detail::to_string(unknown_operator_types);
+
             // Process ONNX graph nodes, convert to nGraph nodes
             for (const auto& node_proto : m_graph_proto->node())
             {
-                m_nodes.emplace_back(node_proto, this);
+                m_nodes.emplace_back(node_proto, *this);
                 const Node& node{m_nodes.back()};
                 NodeVector ng_nodes{node.get_ng_nodes()};
                 for (int i = 0; i < ng_nodes.size(); i++)

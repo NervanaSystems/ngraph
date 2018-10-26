@@ -24,15 +24,65 @@ namespace ngraph
 {
     namespace op
     {
+        /// \brief Quantize operation
+        ///        Maps real input (r) to quantized output (q) using scale (s), offset (o) and round mode:
+        ///        q = ROUND(r / s) + o
         class Quantize : public ngraph::op::Op
         {
         public:
             enum class RoundMode
             {
-                HALF_AWAY_FROM_ZERO,
-                HALF_TO_EVEN
+                // round to nearest integer
+                // in case of two equidistant integers round away from zero e.g.
+                // 2.5 -> 3
+                // -3.5 -> -4
+                ROUND_NEAREST_TOWARD_INFINITY,
+                HALF_AWAY_FROM_ZERO, // TF mode for backward compatability
+
+                // round to nearest integer
+                // in case of two equidistant integers round toward zero e.g.
+                // 2.5 -> 2
+                // -3.5 -> -3
+                ROUND_NEAREST_TOWARD_ZERO,
+
+                // round to nearest integer
+                // in case of two equidistant integers round up e.g.
+                // 2.5 -> 3
+                // -3.5 -> -3
+                ROUND_NEAREST_UPWARD,
+
+                // round to nearest integer
+                // in case of two equidistant integers round down e.g.
+                // 2.5 -> 2
+                // -3.5 -> -4
+                ROUND_NEAREST_DOWNWARD,
+
+                // round to nearest integer
+                // in case of two equidistant integers round to even e.g.
+                // 2.5 -> 2
+                // -3.5 -> -4
+                ROUND_NEAREST_TOWARD_EVEN,
+
+                // round to nearest integer away from zero
+                ROUND_TOWARD_INFINITY,
+
+                // round to nearest integer toward zero
+                ROUND_TOWARD_ZERO,
+
+                // round to nearest integer toward infinity (ceiling)
+                ROUND_UP,
+
+                // round to nearest integer toward negative infinity (floor)
+                ROUND_DOWN,
             };
 
+            /// \brief Constructs a Quantize operation
+            /// \param input real input
+            /// \param scale scale used for mapping
+            /// \param offset offset used for mapping
+            /// \param type output element type
+            /// \param axes axis positions on which `scale` and `offset` are specified
+            /// \param round_mode describes how to perform ROUND function (see above)
             Quantize(std::shared_ptr<Node> input,
                      std::shared_ptr<Node> scale,
                      std::shared_ptr<Node> offset,

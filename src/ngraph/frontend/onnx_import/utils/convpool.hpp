@@ -16,7 +16,10 @@
 
 #pragma once
 
+#include <string>
+
 #include "ngraph/coordinate_diff.hpp"
+#include "ngraph/op/avg_pool.hpp"
 #include "ngraph/shape.hpp"
 
 #include "core/attribute.hpp"
@@ -84,13 +87,11 @@ namespace ngraph
                 return get_pads(node, get_kernel_shape(node));
             }
 
-            /**
-             * @brief Create an nGraph pooling operation based on an ONNX pooling op.
-             *
-             * @tparam T Class of an nGraph pooling operation (e.g. AveragePool, MaxPool)
-             * @param node incoming ONNX opearation
-             * @return nGraph node equivalent of the ONNX operation
-             */
+            /// \brief Create an nGraph pooling operation based on an ONNX pooling op.
+            ///
+            /// \tparam T Class of an nGraph pooling operation (e.g. AveragePool, MaxPool)
+            /// \param node incoming ONNX opearation
+            /// \return nGraph node equivalent of the ONNX operation
             template <class T>
             inline NodeVector make_ng_pool(const Node& node)
             {
@@ -98,10 +99,23 @@ namespace ngraph
                 auto data = node.get_ng_inputs().at(0);
 
                 // Parse ONNX op attributes
-                Shape kernel_shape = convpool::get_kernel_shape(node);
+                Shape kernel_shape;
+                if (node.op_type().find("Global") != std::string::npos)
+                {
+                    kernel_shape = node.get_ng_inputs()[0]->get_shape();
+                    // Remove N and C dimensions and leave only spatial dims.
+                    kernel_shape.erase(std::begin(kernel_shape),
+                                       std::next(std::begin(kernel_shape), 2));
+                }
+                else
+                {
+                    kernel_shape = convpool::get_kernel_shape(node);
+                }
                 auto strides = convpool::get_strides(node);
                 auto dilations = convpool::get_dilations(node);
                 auto paddings = convpool::get_pads(node);
+
+                bool count_include_pad = node.get_attribute_value<int64_t>("count_include_pad", 0);
 
                 // Convert padding from CoordinateDiff to Shape objects
                 const CoordinateDiff& padding_above{paddings.first};
@@ -109,8 +123,20 @@ namespace ngraph
                 Shape padding_below_shape{std::begin(padding_below), std::end(padding_below)};
                 Shape padding_above_shape{std::begin(padding_above), std::end(padding_above)};
 
-                return {std::make_shared<T>(
-                    data, kernel_shape, strides, padding_below_shape, padding_above_shape)};
+                if (count_include_pad)
+                {
+                    return {std::make_shared<ngraph::op::AvgPool>(data,
+                                                                  kernel_shape,
+                                                                  strides,
+                                                                  padding_below_shape,
+                                                                  padding_above_shape,
+                                                                  count_include_pad)};
+                }
+                else
+                {
+                    return {std::make_shared<T>(
+                        data, kernel_shape, strides, padding_below_shape, padding_above_shape)};
+                }
             }
 
         } // namespace convpool

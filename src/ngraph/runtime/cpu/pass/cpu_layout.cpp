@@ -32,6 +32,11 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/experimental/quantized_avg_pool.hpp"
+#include "ngraph/op/experimental/quantized_conv.hpp"
+#include "ngraph/op/experimental/quantized_conv_bias.hpp"
+#include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -51,16 +56,9 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
-#include "ngraph/runtime/cpu/op/dequantize.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
-#include "ngraph/runtime/cpu/op/quantize.hpp"
-#include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
-#include "ngraph/runtime/cpu/op/quantized_conv.hpp"
-#include "ngraph/runtime/cpu/op/quantized_conv_bias.hpp"
-#include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
-#include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 
 using namespace std;
@@ -394,30 +392,11 @@ namespace ngraph
                         vector<memory::desc> o_mds;
                         ConvolutionLayout<ngraph::op::QuantizedConvolution, false, false>(
                             node, i_mds, o_mds);
-                        auto min_input_md = mkldnn_utils::create_default_mkldnn_md(
+
+                        auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
                             node.get(), 2, false, memory::format::x);
-                        auto max_input_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 3, false, memory::format::x);
-                        auto min_filter_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 4, false, memory::format::x);
-                        auto max_filter_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 5, false, memory::format::x);
-                        auto min_freezed_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 6, false, memory::format::x);
-                        auto max_freezed_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 7, false, memory::format::x);
-                        auto min_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 1, true, memory::format::x);
-                        auto max_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 2, true, memory::format::x);
-                        i_mds.push_back(min_input_md);
-                        i_mds.push_back(max_input_md);
-                        i_mds.push_back(min_filter_md);
-                        i_mds.push_back(max_filter_md);
-                        i_mds.push_back(min_freezed_output_md);
-                        i_mds.push_back(max_freezed_output_md);
-                        o_mds.push_back(min_output_md);
-                        o_mds.push_back(max_output_md);
+
+                        i_mds.push_back(scale_input_md);
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -493,31 +472,10 @@ namespace ngraph
                         ConvolutionLayout<ngraph::op::QuantizedConvolutionBias, true, false>(
                             node, i_mds, o_mds);
 
-                        auto min_input_md = mkldnn_utils::create_default_mkldnn_md(
+                        auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
                             node.get(), 3, false, memory::format::x);
-                        auto max_input_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 4, false, memory::format::x);
-                        auto min_filter_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 5, false, memory::format::x);
-                        auto max_filter_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 6, false, memory::format::x);
-                        auto min_freezed_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 7, false, memory::format::x);
-                        auto max_freezed_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 8, false, memory::format::x);
-                        auto min_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 1, true, memory::format::x);
-                        auto max_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 2, true, memory::format::x);
 
-                        i_mds.push_back(min_input_md);
-                        i_mds.push_back(max_input_md);
-                        i_mds.push_back(min_filter_md);
-                        i_mds.push_back(max_filter_md);
-                        i_mds.push_back(min_freezed_output_md);
-                        i_mds.push_back(max_freezed_output_md);
-                        o_mds.push_back(min_output_md);
-                        o_mds.push_back(max_output_md);
+                        i_mds.push_back(scale_input_md);
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
@@ -556,31 +514,10 @@ namespace ngraph
                         ConvolutionLayout<ngraph::op::QuantizedConvolutionRelu, false, false>(
                             node, i_mds, o_mds);
 
-                        auto min_input_md = mkldnn_utils::create_default_mkldnn_md(
+                        auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
                             node.get(), 2, false, memory::format::x);
-                        auto max_input_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 3, false, memory::format::x);
-                        auto min_filter_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 4, false, memory::format::x);
-                        auto max_filter_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 5, false, memory::format::x);
-                        auto min_freezed_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 6, false, memory::format::x);
-                        auto max_freezed_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 7, false, memory::format::x);
-                        auto min_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 1, true, memory::format::x);
-                        auto max_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 2, true, memory::format::x);
 
-                        i_mds.push_back(min_input_md);
-                        i_mds.push_back(max_input_md);
-                        i_mds.push_back(min_filter_md);
-                        i_mds.push_back(max_filter_md);
-                        i_mds.push_back(min_freezed_output_md);
-                        i_mds.push_back(max_freezed_output_md);
-                        o_mds.push_back(min_output_md);
-                        o_mds.push_back(max_output_md);
+                        i_mds.push_back(scale_input_md);
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
@@ -1087,20 +1024,6 @@ namespace ngraph
                         MaxPoolLayout<ngraph::op::QuantizedMaxPool, prop_kind::forward_inference>(
                             node, i_mds, o_mds);
 
-                        auto min_input_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 1, false, memory::format::x);
-                        auto max_input_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 2, false, memory::format::x);
-                        auto min_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 1, true, memory::format::x);
-                        auto max_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 2, true, memory::format::x);
-
-                        i_mds.push_back(min_input_md);
-                        i_mds.push_back(max_input_md);
-                        o_mds.push_back(min_output_md);
-                        o_mds.push_back(max_output_md);
-
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -1119,20 +1042,6 @@ namespace ngraph
                         vector<memory::desc> o_mds;
 
                         AvgPoolLayout<ngraph::op::QuantizedAvgPool>(node, i_mds, o_mds);
-
-                        auto min_input_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 1, false, memory::format::x);
-                        auto max_input_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 2, false, memory::format::x);
-                        auto min_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 1, true, memory::format::x);
-                        auto max_output_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 2, true, memory::format::x);
-
-                        i_mds.push_back(min_input_md);
-                        i_mds.push_back(max_input_md);
-                        o_mds.push_back(min_output_md);
-                        o_mds.push_back(max_output_md);
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
@@ -1633,15 +1542,13 @@ namespace ngraph
                                      vector<memory::desc>& i_mds,
                                      vector<memory::desc>& o_mds)
                 {
-                    auto bn = static_cast<const ngraph::op::BatchNorm*>(node.get());
-
                     auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 2);
                     auto arg0_md = mkldnn_utils::create_default_mkldnn_md(
                         node.get(), 0, false, memory::format::x);
                     auto arg1_md = mkldnn_utils::create_default_mkldnn_md(
                         node.get(), 1, false, memory::format::x);
 
-                    if (bn->get_training_flag() && node->get_input_size() == 3)
+                    if (node->get_input_size() == 3)
                     {
                         auto out1_md = mkldnn_utils::create_default_mkldnn_md(
                             node.get(), 1, true, memory::format::x);
@@ -1672,13 +1579,13 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNorm)
+                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormTraining)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        BatchNormLayout<ngraph::op::BatchNorm>(node, i_mds, o_mds);
+                        BatchNormLayout<ngraph::op::BatchNormTraining>(node, i_mds, o_mds);
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -1689,13 +1596,30 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormRelu)
+                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormInference)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        BatchNormLayout<ngraph::op::BatchNormRelu>(node, i_mds, o_mds);
+                        BatchNormLayout<ngraph::op::BatchNormInference>(node, i_mds, o_mds);
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormTrainingRelu)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        BatchNormLayout<ngraph::op::BatchNormTrainingRelu>(node, i_mds, o_mds);
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -1706,7 +1630,24 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormBackprop)
+                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormInferenceRelu)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        BatchNormLayout<ngraph::op::BatchNormInferenceRelu>(node, i_mds, o_mds);
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        throw ngraph_error("BatchnormRelu only supported in MKLDNN for now");
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormTrainingBackprop)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
@@ -1932,34 +1873,6 @@ namespace ngraph
                         set_native_layouts(external_function, node);
                     }
                 }
-
-                template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::DequantizeCPU)
-                {
-                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
-                    {
-                        //TODO : Propogate Layout
-                        set_native_layouts(external_function, node);
-                    }
-                    else
-                    {
-                        throw ngraph_error("DequantizeCPU op is only supported in MKLDNN for now.");
-                    }
-                }
-
-                template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizeCPU)
-                {
-                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
-                    {
-                        //TODO : Propogate Layout
-                        set_native_layouts(external_function, node);
-                    }
-                    else
-                    {
-                        throw ngraph_error("QuantizeCPU op is only supported in MKLDNN for now.");
-                    }
-                }
             }
         }
     }
@@ -2001,11 +1914,16 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasAdd>},
     {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
-    {TI(ngraph::op::BatchNorm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNorm>},
-    {TI(ngraph::op::BatchNormRelu),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormRelu>},
-    {TI(ngraph::op::BatchNormBackprop),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormBackprop>},
+    {TI(ngraph::op::BatchNormTraining),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormTraining>},
+    {TI(ngraph::op::BatchNormInference),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormInference>},
+    {TI(ngraph::op::BatchNormInferenceRelu),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormInferenceRelu>},
+    {TI(ngraph::op::BatchNormTrainingRelu),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormTrainingRelu>},
+    {TI(ngraph::op::BatchNormTrainingBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormTrainingBackprop>},
     {TI(ngraph::op::GetOutputElement),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GetOutputElement>},
     {TI(ngraph::op::LRN), &runtime::cpu::pass::CPULayout::layout<ngraph::op::LRN>},
@@ -2023,10 +1941,7 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::BoundedRelu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BoundedRelu>},
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
-    {TI(ngraph::op::DequantizeCPU),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::DequantizeCPU>},
     {TI(ngraph::op::Slice), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Slice>},
-    {TI(ngraph::op::QuantizeCPU), &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizeCPU>},
     {TI(ngraph::op::QuantizedConvolutionRelu),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolutionBias),

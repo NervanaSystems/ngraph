@@ -20,6 +20,7 @@ set (SRC
     autodiff/adjoints.cpp
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
+    builder/quantization.cpp
     builder/reduce_ops.cpp
     coordinate.cpp
     coordinate_diff.cpp
@@ -84,6 +85,11 @@ set (SRC
     op/power.cpp
     op/product.cpp
     op/quantize.cpp
+    op/experimental/quantized_avg_pool.cpp
+    op/experimental/quantized_conv_bias.cpp
+    op/experimental/quantized_conv_relu.cpp
+    op/experimental/quantized_conv.cpp
+    op/experimental/quantized_max_pool.cpp
     op/reduce.cpp
     op/reduce_window.cpp
     op/relu.cpp
@@ -146,28 +152,34 @@ set (SRC
     runtime/tensor.cpp
     serializer.cpp
     shape.cpp
+    shape_util.cpp
     strides.cpp
+    type/bfloat16.cpp
     type/element_type.cpp
     util.cpp
+    validation_util.cpp
     graph_util.cpp
     placement.cpp
     cpio.cpp
     )
+if(NGRAPH_DISTRIBUTED_ENABLE)
+    list(APPEND SRC distributed.cpp)
+endif()
+
+add_library(ngraph SHARED ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     find_package(MPI REQUIRED)
-    add_definitions(-DNGRAPH_DISTRIBUTED)
-    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    link_libraries(${MPI_CXX_LIBRARIES})
-    set (SRC distributed.cpp ${SRC})
+    target_compile_definitions(ngraph PRIVATE NGRAPH_DISTRIBUTED)
+    target_include_directories(ngraph SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    target_link_libraries(ngraph PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 endif()
 
 add_subdirectory(frontend)
 
 find_package(Graphviz QUIET)
 if (GRAPHVIZ_FOUND)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGRAPHVIZ_FOUND")
+    set_property(SOURCE pass/visualize_tree.cpp APPEND PROPERTY COMPILE_DEFINITIONS GRAPHVIZ_FOUND)
 endif()
 
 if(NGRAPH_ADDRESS_SANITIZER)
@@ -175,20 +187,13 @@ if(NGRAPH_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
 
-include_directories("${NGRAPH_INCLUDE_PATH}")
-
 add_subdirectory(codegen)
 add_subdirectory(runtime)
 
-add_library(ngraph SHARED ${SRC})
 target_compile_definitions(ngraph PRIVATE SHARED_LIB_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}")
 set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
-target_link_libraries(ngraph PUBLIC libjson)
+target_link_libraries(ngraph PRIVATE libjson)
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
-
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    add_dependencies(ngraph onnx_import)
-endif()
 
 if (NOT APPLE)
     set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")

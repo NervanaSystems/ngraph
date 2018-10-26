@@ -39,31 +39,48 @@ op::TopK::TopK(const shared_ptr<Node>& arg,
 
 void op::TopK::validate_and_infer_types()
 {
-    auto& input = get_inputs().at(0);
-    auto rank = input.get_shape().size();
+    const PartialShape& input_shape = get_input_partial_shape(0);
+    Rank input_rank = input_shape.rank();
+    element::Type input_element_type = get_input_element_type(0);
 
-    NODE_VALIDATION_ASSERT(this, rank > 0) << "Input Tensor's rank must be greater than 0";
-    NODE_VALIDATION_ASSERT(this, m_top_k_axis < rank) << "TopK axis must be less than rank";
+    NODE_VALIDATION_ASSERT(this, !m_index_element_type.is_dynamic())
+        << "Argument element type must not be dynamic.";
+
     NODE_VALIDATION_ASSERT(
         this, m_index_element_type == element::i32 || m_index_element_type == element::i64)
-        << "Index element type must be i64 or i32";
-    NODE_VALIDATION_ASSERT(this, m_k <= input.get_shape()[m_top_k_axis])
-        << "K should not exceed TopK axis length";
+        << "Argument element type must be i64 or i32 (got " << m_index_element_type << ").";
 
-    Shape input_shape = input.get_shape();
-    Shape output_shape(input_shape);
-    if (m_k != 0)
+    NODE_VALIDATION_ASSERT(this, input_rank.is_dynamic() || static_cast<size_t>(input_rank) > 0)
+        << "Argument rank must be greater than 0.";
+
+    NODE_VALIDATION_ASSERT(
+        this, input_rank.is_dynamic() || m_top_k_axis < static_cast<size_t>(input_rank))
+        << "TopK axis (" << m_top_k_axis << ") is out of bounds.";
+
+    NODE_VALIDATION_ASSERT(this,
+                           input_rank.is_dynamic() || input_shape[m_top_k_axis].is_dynamic() ||
+                               m_k <= static_cast<size_t>(input_shape[m_top_k_axis]))
+        << "K (" << m_k << ") exceeds the dimension ("
+        << (input_rank.is_static() ? input_shape[m_top_k_axis] : 0) << ") of the TopK axis (axis "
+        << m_top_k_axis << ").";
+
+    PartialShape output_shape{input_shape};
+
+    if (input_rank.is_static())
     {
-        output_shape[m_top_k_axis] = m_k;
-    }
-    else
-    {
-        m_k = input_shape[m_top_k_axis];
+        if (m_k != 0)
+        {
+            output_shape[m_top_k_axis] = m_k;
+        }
+        else if (input_shape[m_top_k_axis].is_static())
+        {
+            m_k = static_cast<size_t>(input_shape[m_top_k_axis]);
+        }
     }
 
     set_output_size(2);
     set_output_type(0, m_index_element_type, output_shape);
-    set_output_type(1, input.get_element_type(), output_shape);
+    set_output_type(1, input_element_type, output_shape);
 }
 
 shared_ptr<Node> op::TopK::copy_with_new_args(const NodeVector& new_args) const

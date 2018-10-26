@@ -21,24 +21,21 @@ try{ if(LABEL.trim() == "") {throw new Exception();} }catch(Exception e){LABEL="
 PROJECT_NAME = "ngraph-onnx"            
 CI_ROOT = "ngraph/.ci/onnx/jenkins"
 DOCKER_CONTAINER_NAME = "jenkins_${PROJECT_NAME}_ci"
-NGRAPH_GIT_ADDRESS = "https://www.github.com/NervanaSystems/ngraph.git"
-ONNX_GIT_ADDRESS = "https://www.github.com/NervanaSystems/ngraph-onnx.git"
-JENKINS_GITHUB_CREDENTIAL_ID = "6887a177-8c4d-4fe9-9c3b-fcd71b22bfba"
+NGRAPH_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph.git"
+ONNX_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph-onnx.git"
+JENKINS_GITHUB_CREDENTIAL_ID = "7157091e-bc04-42f0-99fd-dc4da2922a55"
 ONNX_BRANCH = "$ghprbSourceBranch"
 
 def CloneRepository(String jenkins_github_credential_id, String ngraph_git_address, String onnx_git_address) {
     stage('Clone Repos') {
         try {
-            checkout([$class: 'GitSCM',
-                branches: [[name: "$ghprbSourceBranch"]],
-                doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', timeout: 30]], submoduleCfg: [],
-                userRemoteConfigs: [[credentialsId: "${jenkins_github_credential_id}",
-                url: "${onnx_git_address}"]]])
+            sh "git clone $onnx_git_address -b $ghprbSourceBranch ."
         }
         catch (Exception e) {
             ONNX_BRANCH = "master"
             sh """
                 echo "WARNING! Failed to clone ngraph-onnx branch $ghprbSourceBranch ! Falling back to master."
+                echo "EXCEPTION: $e"
             """
             checkout([$class: 'GitSCM',
                 branches: [[name: "master"]],
@@ -128,6 +125,7 @@ def Notify() {
     String notifyPeople = "$ghprbPullAuthorEmail, $ghprbActualCommitAuthorEmail"
     Closure notifyMethod = { configMap ->
         if(currentBuild.result == "FAILURE") {
+            blue_ocean = "https://crackerjack.intel.com/blue/organizations/jenkins/onnx%2Fngraph_onnx_integration_ci/detail/ngraph_onnx_integration_ci/${BUILD_NUMBER}/pipeline"
             emailext (
                 subject: "NGraph-Onnx CI: NGraph PR $ghprbPullId $currentBuild.result!",
                 body: """
@@ -135,11 +133,9 @@ def Notify() {
                         <tr><td>Status:</td> <td>${currentBuild.result}</td></tr>
                         <tr><td>Repository</td> <td>$ghprbGhRepository</td></tr>
                         <tr><td>Branch:</td> <td>$ghprbSourceBranch</td></tr>
-                        <tr><td>Jenkins Job No:</td> <td>$BUILD_NUMBER</td></tr>
-                        <tr><td>Jenkins Job Link:</td> <td>$BUILD_URL</td></tr>
-                        <tr><td>Pull Request:</td> <td>$ghprbPullId</td></tr>
+                        <tr><td>Jenkins Build:</td> <td> <a href=$blue_ocean> ${BUILD_NUMBER} </a> </td></tr>
+                        <tr><td>Pull Request:</td> <td><a href=$ghprbPullLink>$ghprbPullId</a> </td></tr>
                         <tr><td>Commit SHA:</td> <td>$ghprbActualCommit</td></tr>
-                        <tr><td>Link:</td> <td>$ghprbPullLink</td></tr>
                         <tr><td>nGraph-ONNX Branch:</td> <td>${ONNX_BRANCH}</td></tr>
                     </table>
                 """,
