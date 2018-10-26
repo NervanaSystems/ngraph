@@ -15,9 +15,8 @@
 //*****************************************************************************
 
 #include "ngraph/op/argmin.hpp"
-#include "ngraph/node_vector.hpp"
-
 #include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
 #include "utils/reduction.hpp"
 
 namespace ngraph
