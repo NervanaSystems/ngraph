@@ -70,7 +70,7 @@ if (NGRAPH_HYBRID_ENABLE)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    list(APPEND SRC core_fusion.cpp quantize_cpu.cpp)
+    list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
     list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp cpu_debugger.cpp)
     if (NGRAPH_HALIDE)
         list(APPEND SRC halide.cpp)
