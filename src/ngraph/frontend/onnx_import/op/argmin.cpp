@@ -15,14 +15,10 @@
 //*****************************************************************************
 
 #include "ngraph/op/argmin.hpp"
-#include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
-#include "ngraph/op/reshape.hpp"
 
-#include "core/attribute.hpp"
 #include "core/node.hpp"
 #include "utils/reduction.hpp"
-#include "utils/reshape.hpp"
 
 namespace ngraph
 {
@@ -34,7 +30,7 @@ namespace ngraph
             {
                 NodeVector argmin(const Node& node)
                 {
-                    return {reduction::make_ng_arg_reduction_op<ngraph::op::ArgMin>(node)};
+                    return {reduction::make_ng_index_reduction_op<ngraph::op::ArgMin>(node)};
                 }
 
             } // namespace set_1

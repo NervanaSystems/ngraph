@@ -77,20 +77,14 @@ TEST(onnx, model_addmul_abc)
 
 TEST(onnx, model_argmin_no_keepdims)
 {
-    Shape input_shape{2, 2};
-    Shape result_shape{2};
-
     auto function = onnx_import::import_onnx_function(
         file_util::path_join(SERIALIZED_ZOO, "onnx/argmin_no_keepdims.onnx"));
 
-    auto backend = runtime::Backend::create("INTERPRETER");
-
-    auto input_tensor = backend->create_tensor(element::f32, input_shape);
-    copy_data(input_tensor, std::vector<float>{2, 1, 3, 10});
-    auto result_tensor = backend->create_tensor(element::i64, result_shape);
-
-    backend->call_with_validate(function, {result_tensor}, {input_tensor});
-    EXPECT_EQ((std::vector<int64_t>{1, 0}), read_vector<int64_t>(result_tensor));
+    Inputs inputs{test::NDArray<float, 2>{{2, 1}, {3, 10}}.get_vector()};
+    std::vector<std::vector<int64_t>> expected_output{{1, 0}};
+    std::vector<std::vector<int64_t>> result{
+        execute<float, int64_t>(function, inputs, "INTERPRETER")};
+    EXPECT_EQ(expected_output, result);
 }
 
 TEST(onnx, model_split_equal_parts_default)

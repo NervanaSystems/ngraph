@@ -103,14 +103,14 @@ namespace ngraph
                     Shape{output_shape});
             }
 
-            template <class T>
-            std::shared_ptr<ngraph::Node> make_ng_arg_reduction_op(const Node& node)
+            template <class IndexReduction>
+            std::shared_ptr<ngraph::Node> make_ng_index_reduction_op(const Node& node)
             {
                 auto axis = node.get_attribute_value<int64_t>("axis", 0);
                 auto keepdims = node.get_attribute_value<int64_t>("keepdims", 1);
                 auto input_node = node.get_ng_inputs().at(0);
 
-                auto op_node = std::make_shared<T>(input_node, axis, element::i64);
+                auto op_node = std::make_shared<IndexReduction>(input_node, axis, element::i64);
 
                 if (keepdims == 0)
                 {
