@@ -190,18 +190,9 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             return false;
         }
 
-        // Determine which is ht_1 and xt. but if both xt and ht_1 have the same shape we need to capture this
-        // reliably in the RNN fusion.
-        std::shared_ptr<op::Lstm> lstm = nullptr;
-        bool intermediate_lstm = false;
-
-        if (std::dynamic_pointer_cast<op::GetOutputElement>(pattern_map[ct_1]))
-        {
-            intermediate_lstm = true;
-        }
-
         // we will insert the reshape on the weights to convert to mkldnn preferred layout
         size_t lstm_n_gates = 4;
+        size_t batch_size = pattern_map[input_xt]->get_shape()[0];
         auto slc = pattern_map[weights_i2h]->get_shape()[1];
         auto dlc = pattern_map[weights_i2h]->get_shape()[0] / lstm_n_gates;
         auto sic = pattern_map[weights_h2h]->get_shape()[1];
@@ -227,74 +218,35 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             }
         };
 
-        auto weights_layer = pattern_map[weights_i2h];
-        auto weights_iter = pattern_map[weights_h2h];
+        std::shared_ptr<Node> src_layer = pattern_map[input_xt];
+        std::shared_ptr<Node> src_iter =
+            std::make_shared<op::Concat>(NodeVector{pattern_map[hidden_ht], pattern_map[ct_1]}, 0);
+        std::shared_ptr<Node> bias =
+            std::make_shared<op::Add>(pattern_map[bias_i2h], pattern_map[bias_h2h]);
 
-        // this checks if its a first LSTM cell and uses constant initialization of hidden states to
-        // differentiate between hidden state ht and input symbols xt.
-        if (!intermediate_lstm &&
-            (std::dynamic_pointer_cast<op::Broadcast>(pattern_map[hidden_ht]) &&
-             std::dynamic_pointer_cast<op::Constant>(pattern_map[hidden_ht]->get_argument(0))))
-        {
-            lstm = std::make_shared<op::Lstm>(pattern_map[input_xt],
-                                              weights_layer,
-                                              pattern_map[hidden_ht],
-                                              weights_iter,
-                                              pattern_map[bias_i2h],
-                                              pattern_map[bias_h2h],
-                                              pattern_map[ct_1]);
-        }
-        else if (!intermediate_lstm &&
-                 (std::dynamic_pointer_cast<op::Broadcast>(pattern_map[input_xt]) &&
-                  std::dynamic_pointer_cast<op::Constant>(pattern_map[input_xt]->get_argument(0))))
-        {
-            lstm = std::make_shared<op::Lstm>(pattern_map[hidden_ht],
-                                              weights_iter,
-                                              pattern_map[input_xt],
-                                              weights_layer,
-                                              pattern_map[bias_h2h],
-                                              pattern_map[bias_i2h],
-                                              pattern_map[ct_1]);
-        }
-        else if (pattern_map[ct_1]->get_shape() == pattern_map[hidden_ht]->get_shape())
-        {
-            NGRAPH_DEBUG << "ct_shape : " << join(pattern_map[ct_1]->get_shape())
-                         << " hidden state shape: " << join(pattern_map[hidden_ht]->get_shape());
-            lstm = std::make_shared<op::Lstm>(pattern_map[input_xt],
-                                              weights_layer,
-                                              pattern_map[hidden_ht],
-                                              weights_iter,
-                                              pattern_map[bias_i2h],
-                                              pattern_map[bias_h2h],
-                                              pattern_map[ct_1]);
-        }
-        else
-        {
-            NGRAPH_DEBUG << "ct_shape: " << join(pattern_map[ct_1]->get_shape())
-                         << " hidden state shape: " << join(pattern_map[input_xt]->get_shape());
-            lstm = std::make_shared<op::Lstm>(pattern_map[hidden_ht],
-                                              weights_iter,
-                                              pattern_map[input_xt],
-                                              weights_layer,
-                                              pattern_map[bias_h2h],
-                                              pattern_map[bias_i2h],
-                                              pattern_map[ct_1]);
-        }
+        auto lstm_node = std::make_shared<op::Lstm>(
+            src_layer, src_iter, pattern_map[weights_i2h], pattern_map[weights_h2h], bias);
 
-        auto ht_output = std::make_shared<op::GetOutputElement>(lstm, 0);
-        auto ct_output = std::make_shared<op::GetOutputElement>(lstm, 1);
+        auto lstm_ht_output = std::make_shared<op::GetOutputElement>(lstm_node, 0);
+        auto lstm_ht_ct_output = std::make_shared<op::GetOutputElement>(lstm_node, 1);
+        // dst_iter of lstm mkldnn output holds the results of both recurrent state
+        // tensor outputs. we need to slice the ct.
+        auto ht_slice = std::make_shared<op::Slice>(
+            lstm_ht_ct_output, Coordinate{0, 0}, Coordinate{batch_size, dlc});
+        auto ct_slice = std::make_shared<op::Slice>(
+            lstm_ht_ct_output, Coordinate{batch_size, 0}, Coordinate{(2 * batch_size), dic});
 
-        if (lstm->get_outputs().at(0).get_inputs().size() != 2)
+        if (lstm_node->get_outputs().at(0).get_inputs().size() != 2)
         {
             throw ngraph_error("Lstm node doesnt have two outputs");
         }
         // Now identify the nodes which consumes the output of LSTM nodes
         // and replace them accordingly
         // find the user's for {ht|ct} and replace them with lstm_goe_1
-        replace_collapse_node_user(pattern_map[ct_label], ct_output->get_outputs().at(0));
+        replace_collapse_node_user(pattern_map[ct_label], ct_slice->get_outputs().at(0));
 
         // find the user's for {ht} and replace them with lstm_goe_0
-        ngraph::replace_node(m.get_match_root(), ht_output);
+        ngraph::replace_node(m.get_match_root(), ht_slice);
         return true;
     };
     auto m = std::make_shared<pattern::Matcher>(ht, callback);

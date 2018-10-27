@@ -1031,10 +1031,10 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
     // failing mxnet unit tests.
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    //pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
     pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
+    //pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();

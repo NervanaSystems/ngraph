@@ -94,7 +94,6 @@ set(SRC
     op/conv_add.cpp
     pass/cpu_assignment.cpp
     pass/cpu_collapse_dims.cpp
-    pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp
     pass/cpu_horizontal_fusion.cpp
     pass/cpu_layout.cpp
