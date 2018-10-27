@@ -1649,10 +1649,13 @@ vector<runtime::PerformanceCounter>
                 size_t usec = 0;
                 for (const auto& q : p.second.get_profiling_info())
                 {
-                    usec += chrono::duration_cast<
-                                chrono::duration<int64_t, chrono::milliseconds::period>>(
-                                q.value->value())
-                                .count();
+                    if (q.name == string("executing"))
+                    {
+                        usec += chrono::duration_cast<
+                                    chrono::duration<size_t, chrono::milliseconds::period>>(
+                                    q.value->value())
+                                    .count();
+                    }
                 }
                 const runtime::PerformanceCounter perf_counter(primitive_name.c_str(), usec, 1);
                 rc.push_back(perf_counter);
