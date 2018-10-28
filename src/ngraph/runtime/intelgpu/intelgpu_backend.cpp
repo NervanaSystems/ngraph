@@ -1662,13 +1662,13 @@ vector<runtime::PerformanceCounter>
     return rc;
 }
 
-static shared_ptr<Node> get_shape_by_name(const shared_ptr<Function> func, const string& name)
+static Node* get_node_by_name(const shared_ptr<Function> func, const string& name)
 {
     for (shared_ptr<Node> node : func->get_ops())
     {
         if (node->get_name() == name)
         {
-            return node;
+            return node.get();
         }
     }
 
@@ -1745,7 +1745,7 @@ void runtime::intelgpu::IntelGPUBackend::print_call_performance(
         for (auto it = data.rbegin(); (it != data.rend()) && (limit_count > 0); ++it, --limit_count)
         {
             const string ngraph_node_name = convert_cldnn_names(func, it->second.item_name);
-            const shared_ptr<Node> ngraph_node = get_shape_by_name(func, ngraph_node_name);
+            const Node* ngraph_node = get_node_by_name(func, ngraph_node_name);
 
             cout << func_name << delim << setw(max_item_name_size) << it->second.item_name << delim
                  << "time(ms)" << delim << scientific << setprecision(2) << it->first;
