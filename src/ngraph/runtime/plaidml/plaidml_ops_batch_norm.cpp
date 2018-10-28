@@ -18,24 +18,14 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 
-// BatchNorm implements batch normalization.
+// BatchNormInference implements batch normalization for inference, in
+// which the mean and variance to use are supplied.
 template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::BatchNorm>::operator()()
+void ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormInference>::operator()()
 {
-    // There are two variations of BatchNorm: we produce mean and variance iff they're not supplied.
     auto& input_shape = op().get_input_shape(2);
-    bool given_mean_and_variance = op().get_input_size() == 5;
-
-    if (given_mean_and_variance)
-    {
-        check_inputs(5);
-        check_outputs(1);
-    }
-    else
-    {
-        check_inputs(3);
-        check_outputs(3);
-    }
+    check_inputs(5);
+    check_outputs(1);
 
     auto f = start_tile_function();
     f.add(builder::Input{op_input(0), "Gamma"}.add_dims({"C"}))
@@ -43,17 +33,9 @@ void ngraph::runtime::plaidml::Impl<ngraph::op::BatchNorm>::operator()()
         .add(builder::Input{op_input(2), "Input"}
                  .add_dims({"B", "C"})
                  .add_dims("DI", 3, input_shape.size() + 1))
-        .add(builder::Output{"Normalized"});
-
-    if (given_mean_and_variance)
-    {
-        f.add(builder::Input{op_input(3), "Mean"}.add_dims({"C"}))
-            .add(builder::Input{op_input(4), "Variance"}.add_dims({"C"}));
-    }
-    else
-    {
-        f.add(builder::Output{"Mean"}).add(builder::Output{"Variance"});
-    }
+        .add(builder::Output{"Normalized"})
+        .add(builder::Input{op_input(3), "Mean"}.add_dims({"C"}))
+        .add(builder::Input{op_input(4), "Variance"}.add_dims({"C"}));
 
     std::string ones;
     for (auto idx = 2; idx < input_shape.size(); ++idx)
@@ -71,30 +53,6 @@ void ngraph::runtime::plaidml::Impl<ngraph::op::BatchNorm>::operator()()
             .add(builder::Elementwise{"BetaP", std::string{"reshape(Beta, C"} + ones + ")"});
     }
 
-    if (!given_mean_and_variance)
-    {
-        if (input_shape.size() <= 2)
-        {
-            f.add(builder::Elementwise{"EltCount", "B"});
-        }
-        else
-        {
-            std::string elts{"B"};
-            for (auto idx = 2; idx < input_shape.size(); ++idx)
-            {
-                elts += " * DI" + std::to_string(idx + 1);
-            }
-            f.add(builder::Elementwise{"EltCount", std::move(elts)});
-        }
-
-        f.add(builder::UnaryContraction{"+"}
-                  .set(builder::ContractionOutput{"SumInput"}.add_indices({"c"}).add_dims({"C"}))
-                  .set(builder::ContractionInput{"Input"}
-                           .add_indices({"b", "c"})
-                           .add_indices("di", 3, input_shape.size() + 1)));
-        f.add(builder::Elementwise{"Mean", "SumInput / EltCount"});
-    }
-
     if (input_shape.size() <= 2)
     {
         f.add(builder::Elementwise{"MeanP", "Mean"});
@@ -102,19 +60,6 @@ void ngraph::runtime::plaidml::Impl<ngraph::op::BatchNorm>::operator()()
     else
     {
         f.add(builder::Elementwise{"MeanP", std::string{"reshape(Mean, C"} + ones + ")"});
-    }
-
-    if (!given_mean_and_variance)
-    {
-        f.add(builder::Elementwise{"DiffV", "(Input - MeanP)"})
-            .add(builder::Elementwise{"SqDiffV", "DiffV*DiffV"})
-            .add(builder::UnaryContraction{"+"}
-                     .set(builder::ContractionOutput{"SumSqDiffV"}.add_indices({"c"}).add_dims(
-                         {"C"}))
-                     .set(builder::ContractionInput{"SqDiffV"}
-                              .add_indices({"b", "c"})
-                              .add_indices("di", 3, input_shape.size() + 1)))
-            .add(builder::Elementwise{"Variance", "SumSqDiffV / EltCount"});
     }
 
     if (input_shape.size() <= 2)
@@ -132,20 +77,108 @@ void ngraph::runtime::plaidml::Impl<ngraph::op::BatchNorm>::operator()()
 
     auto app = f.finalize();
 
-    if (given_mean_and_variance)
+    set_output(app);
+}
+
+// BatchNormTraining implements batch normalization for training, in
+// which the mean and variance are to be computed from the supplied
+// input.
+template <>
+void ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormTraining>::operator()()
+{
+    auto& input_shape = op().get_input_shape(2);
+    check_inputs(3);
+    check_outputs(3);
+
+    auto f = start_tile_function();
+    f.add(builder::Input{op_input(0), "Gamma"}.add_dims({"C"}))
+        .add(builder::Input{op_input(1), "Beta"}.add_dims({"C"}))
+        .add(builder::Input{op_input(2), "Input"}
+                 .add_dims({"B", "C"})
+                 .add_dims("DI", 3, input_shape.size() + 1))
+        .add(builder::Output{"Normalized"})
+        .add(builder::Output{"Mean"})
+        .add(builder::Output{"Variance"});
+
+    std::string ones;
+    for (auto idx = 2; idx < input_shape.size(); ++idx)
     {
-        set_output(app);
+        ones += ", 1";
+    }
+
+    if (input_shape.size() <= 2)
+    {
+        f.add(builder::Elementwise{"GammaP", "Gamma"}).add(builder::Elementwise{"BetaP", "Beta"});
     }
     else
     {
-        set_output(0, app.get_output(0));
-        set_output(1, app.get_output(1));
-        set_output(2, app.get_output(2));
+        f.add(builder::Elementwise{"GammaP", std::string{"reshape(Gamma, C"} + ones + ")"})
+         .add(builder::Elementwise{"BetaP", std::string{"reshape(Beta, C"} + ones + ")"});
     }
+
+    if (input_shape.size() <= 2)
+      {
+        f.add(builder::Elementwise{"EltCount", "B"});
+      }
+    else
+      {
+        std::string elts{"B"};
+        for (auto idx = 2; idx < input_shape.size(); ++idx)
+          {
+            elts += " * DI" + std::to_string(idx + 1);
+          }
+        f.add(builder::Elementwise{"EltCount", std::move(elts)});
+      }
+
+    f.add(builder::UnaryContraction{"+"}
+                  .set(builder::ContractionOutput{"SumInput"}.add_indices({"c"}).add_dims({"C"}))
+                  .set(builder::ContractionInput{"Input"}
+                           .add_indices({"b", "c"})
+                           .add_indices("di", 3, input_shape.size() + 1)));
+    f.add(builder::Elementwise{"Mean", "SumInput / EltCount"});
+
+
+    if (input_shape.size() <= 2)
+    {
+        f.add(builder::Elementwise{"MeanP", "Mean"});
+    }
+    else
+    {
+        f.add(builder::Elementwise{"MeanP", std::string{"reshape(Mean, C"} + ones + ")"});
+    }
+
+    f.add(builder::Elementwise{"DiffV", "(Input - MeanP)"})
+      .add(builder::Elementwise{"SqDiffV", "DiffV*DiffV"})
+      .add(builder::UnaryContraction{"+"}
+                     .set(builder::ContractionOutput{"SumSqDiffV"}.add_indices({"c"}).add_dims(
+                         {"C"}))
+                     .set(builder::ContractionInput{"SqDiffV"}
+                              .add_indices({"b", "c"})
+                              .add_indices("di", 3, input_shape.size() + 1)))
+            .add(builder::Elementwise{"Variance", "SumSqDiffV / EltCount"});
+
+    if (input_shape.size() <= 2)
+    {
+        f.add(builder::Elementwise{"VarianceP", "Variance"});
+    }
+    else
+    {
+        f.add(builder::Elementwise{"VarianceP", std::string{"reshape(Variance, C"} + ones + ")"});
+    }
+
+    f.add(builder::Elementwise{"Normalized",
+                               "(((Input-MeanP) / sqrt(VarianceP + " +
+                                   std::to_string(op().get_eps_value()) + ")) * GammaP) + BetaP"});
+
+    auto app = f.finalize();
+
+    set_output(0, app.get_output(0));
+    set_output(1, app.get_output(1));
+    set_output(2, app.get_output(2));
 }
 
 template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormBackprop>::operator()()
+void ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormTrainingBackprop>::operator()()
 {
     // WARNING: I'm unconvinced that we have sufficient test converage for BatchNorm
     // backprop and in particular I'm concerned that Gamma/Beta and Mean/Var could be
@@ -268,7 +301,8 @@ void ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormBackprop>::operator()()
 
 namespace
 {
-    ngraph::runtime::plaidml::Impl<ngraph::op::BatchNorm>::Registration register_batch_norm;
-    ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormBackprop>::Registration
-        register_batch_norm_backprop;
+    ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormInference>::Registration register_batch_norm_inference;
+    ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormTraining>::Registration register_batch_norm_training;
+    ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormTrainingBackprop>::Registration
+        register_batch_norm_training_backprop;
 }

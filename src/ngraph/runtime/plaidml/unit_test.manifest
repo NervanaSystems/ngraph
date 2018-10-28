@@ -42,6 +42,8 @@ topk_2d_min_one                         # No plans to implement TopK
 # Tests that PlaidML might be able to run at some point.
 backwards_maxpool_n2_c1_hw5_3x3_str2_max_pad1x2_2x3
 backwards_slice
+batchnorm_fprop_bprop  # To debug
+batchnorm_fprop_bprop_2step  # To debug
 reduce_matrix_rows_zero  # To debug: possible broadcasting error?
 reduce_matrix_cols_zero  # To debug: possible broadcasting error?
 reduce_3d_to_vector  # To debug: possible broadcasting error?
@@ -58,6 +60,15 @@ select_and_scatter_without_overlap
 select_and_scatter_3d_without_overlap
 avg_pool_3d
 avg_pool_3d_uneven_strided_padded_include_in_computation
+dequantize_zero_offset              # Quantization/Dequantization is unimplemented
+quantize_ROUND_NEAREST_TOWARD_ZERO  # Quantization/Dequantization is unimplemented
+quantize_ROUND_NEAREST_UPWARD       # Quantization/Dequantization is unimplemented
+quantize_ROUND_NEAREST_DOWNWARD     # Quantization/Dequantization is unimplemented
+quantize_ROUND_NEAREST_TOWARD_EVEN  # Quantization/Dequantization is unimplemented
+quantize_ROUND_TOWARD_INFINITY      # Quantization/Dequantization is unimplemented
+quantize_ROUND_TOWARD_ZERO          # Quantization/Dequantization is unimplemented
+quantize_ROUND_UP                   # Quantization/Dequantization is unimplemented
+quantize_ROUND_DOWN                 # Quantization/Dequantization is unimplemented
 quantize                            # Quantization/Dequantization is unimplemented
 quantize_axes                       # Quantization/Dequantization is unimplemented
 quantize_int8                       # Quantization/Dequantization is unimplemented
