@@ -208,7 +208,7 @@ TEST(builder, scaled_QC_with_relu)
     copy_data(b, b_data);
     auto result = backend->create_tensor(element::u8, shape_r);
     backend->call_with_validate(f, {result}, {a, b});
-    EXPECT_EQ((vector<uint8_t>{0, 0, 0, 0, 0, 0, 69, 106, 90}), read_vector<uint8_t>(result));
+    EXPECT_EQ((vector<uint8_t>{0, 0, 0, 0, 0, 0, 138, 212, 181}), read_vector<uint8_t>(result));
 }
 
 TEST(builder, scaled_QC_with_bias)
@@ -300,7 +300,7 @@ TEST(builder, scaled_QC_with_bias_and_relu)
     copy_data(c, c_data);
     auto result = backend->create_tensor(element::u8, shape_r);
     backend->call_with_validate(f, {result}, {a, b, c});
-    EXPECT_EQ((vector<uint8_t>{0, 0, 0, 0, 0, 0, 96, 133, 117}), read_vector<uint8_t>(result));
+    EXPECT_EQ((vector<uint8_t>{0, 0, 0, 0, 0, 0, 191, 255, 234}), read_vector<uint8_t>(result));
 }
 
 TEST(builder, scaled_Q_unsigned)

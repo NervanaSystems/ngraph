@@ -106,40 +106,61 @@ namespace ngraph
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    bool is_bias_i32 = (args[2].get_element_type() == element::i32);
+                    if (!is_bias_i32)
+                    {
+                        auto reorder_bias_desc = mkldnn_emitter->build_memory_descriptor(
+                            args[2].get_shape(), ngraph::element::i32, mkldnn::memory::format::x);
+                        auto conv_index =
+                            mkldnn_emitter->build_bias_reorder(node, args, out, reorder_bias_desc);
+                        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index[0]);
+                        auto& reorder_bias_deps = mkldnn_emitter->get_primitive_deps(conv_index[1]);
 
-                    auto conv_index =
-                        mkldnn_emitter
-                            ->build_quantization_convolution<ngraph::op::QuantizedConvolutionBias>(
+                        auto functor_reorder_bias = [&, conv_index](CPURuntimeContext* ctx) {
+                            cpu::mkldnn_utils::set_memory_ptr(
+                                ctx, reorder_bias_deps[0], arg2_tensor);
+                            cpu::mkldnn_utils::set_memory_ptr(
+                                ctx,
+                                reorder_bias_deps[1],
+                                ctx->mkldnn_workspaces[reorder_bias_deps[2]]);
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index[1]);
+                        };
+
+                        auto functor_conv = [&, conv_index](CPURuntimeContext* ctx) {
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
+                            cpu::mkldnn_utils::set_memory_ptr(
+                                ctx,
+                                reorder_bias_deps[1],
+                                ctx->mkldnn_workspaces[reorder_bias_deps[2]]);
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index[0]);
+                        };
+
+                        auto functor =
+                            [&, functor_conv, functor_reorder_bias](CPURuntimeContext* ctx) {
+                                functor_reorder_bias(ctx);
+                                functor_conv(ctx);
+                            };
+
+                        functors.emplace_back(functor);
+                    }
+                    else
+                    {
+                        auto conv_index =
+                            mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolutionBias>(
                                 node, args, out);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index[0]);
-                    auto& reorder_bias_deps = mkldnn_emitter->get_primitive_deps(conv_index[1]);
+                        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor_reorder_bias = [&, conv_index](CPURuntimeContext* ctx) {
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, reorder_bias_deps[0], arg2_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(
-                            ctx,
-                            reorder_bias_deps[1],
-                            ctx->mkldnn_workspaces[reorder_bias_deps[2]]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index[1]);
-                    };
-
-                    auto functor_conv = [&, conv_index](CPURuntimeContext* ctx) {
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(
-                            ctx,
-                            reorder_bias_deps[1],
-                            ctx->mkldnn_workspaces[reorder_bias_deps[2]]);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index[0]);
-                    };
-
-                    auto functor = [&, functor_conv, functor_reorder_bias](CPURuntimeContext* ctx) {
-                        functor_reorder_bias(ctx);
-                        functor_conv(ctx);
-                    };
-
-                    functors.emplace_back(functor);
+                        auto functor = [&, conv_index](CPURuntimeContext* ctx) {
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        };
+                        functors.emplace_back(functor);
+                    }
                 }
                 else
                 {

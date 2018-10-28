@@ -272,15 +272,16 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
     return conv_index;
 }
 
-size_t MKLDNNEmitter::build_quantized_convolution(const mkldnn::memory::desc& input_data_desc,
-                                                  const mkldnn::memory::desc& weights_desc,
-                                                  const mkldnn::memory::desc& result_desc,
-                                                  const ngraph::Strides& strides,
-                                                  const ngraph::Strides& dilation_strides,
-                                                  const ngraph::CoordinateDiff& padding_below,
-                                                  const ngraph::CoordinateDiff& padding_above,
-                                                  const float scale,
-                                                  const mkldnn::post_ops& pops)
+size_t
+    MKLDNNEmitter::build_quantized_convolution_forward(const mkldnn::memory::desc& input_data_desc,
+                                                       const mkldnn::memory::desc& weights_desc,
+                                                       const mkldnn::memory::desc& result_desc,
+                                                       const ngraph::Strides& strides,
+                                                       const ngraph::Strides& dilation_strides,
+                                                       const ngraph::CoordinateDiff& padding_below,
+                                                       const ngraph::CoordinateDiff& padding_above,
+                                                       const float scale,
+                                                       const mkldnn::post_ops& pops)
 {
     size_t input_data_index = build_memory_primitive(input_data_desc);
     size_t weights_index = build_memory_primitive(weights_desc);
@@ -313,20 +314,66 @@ size_t MKLDNNEmitter::build_quantized_convolution(const mkldnn::memory::desc& in
     return conv_index;
 }
 
-std::vector<size_t>
-    MKLDNNEmitter::build_quantized_convolution(const mkldnn::memory::desc& input_data_desc,
-                                               const mkldnn::memory::desc& weights_desc,
-                                               const mkldnn::memory::desc& bias_desc,
-                                               const mkldnn::memory::desc& reorder_bias_desc,
-                                               const mkldnn::memory::desc& result_desc,
-                                               const ngraph::Strides& strides,
-                                               const ngraph::Strides& dilation_strides,
-                                               const ngraph::CoordinateDiff& padding_below,
-                                               const ngraph::CoordinateDiff& padding_above,
-                                               const float scale,
-                                               const float bias_scale,
-                                               int size,
-                                               const mkldnn::post_ops& pops)
+size_t
+    MKLDNNEmitter::build_quantized_convolution_forward(const mkldnn::memory::desc& input_data_desc,
+                                                       const mkldnn::memory::desc& weights_desc,
+                                                       const mkldnn::memory::desc& bias_desc,
+                                                       const mkldnn::memory::desc& result_desc,
+                                                       const ngraph::Strides& strides,
+                                                       const ngraph::Strides& dilation_strides,
+                                                       const ngraph::CoordinateDiff& padding_below,
+                                                       const ngraph::CoordinateDiff& padding_above,
+                                                       const float scale,
+                                                       const mkldnn::post_ops& pops)
+{
+    size_t input_data_index = build_memory_primitive(input_data_desc);
+    size_t weights_index = build_memory_primitive(weights_desc);
+    size_t bias_index = build_memory_primitive(bias_desc);
+    size_t result_index = build_memory_primitive(result_desc);
+    std::vector<float> output_scale;
+    output_scale.push_back(scale);
+    mkldnn::primitive_attr conv_attr;
+    conv_attr.set_post_ops(pops);
+    /* Specify the rounding mode */
+    conv_attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
+    /* Specify the scales array and corresponding mask */
+    conv_attr.set_output_scales(0, output_scale);
+    size_t conv_index = insert_primitive(new mkldnn::convolution_forward(
+        {{mkldnn::prop_kind::forward,
+          mkldnn::algorithm::convolution_direct,
+          input_data_desc,
+          weights_desc,
+          bias_desc,
+          result_desc,
+          mkldnn::memory::dims(strides.begin(), strides.end()),
+          mkldnn::memory::dims(dilation_strides.begin(), dilation_strides.end()),
+          mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+          mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+          mkldnn::padding_kind::zero},
+         conv_attr,
+         mkldnn_utils::global_cpu_engine},
+        *m_mkldnn_primitives[input_data_index],
+        *m_mkldnn_primitives[weights_index],
+        *m_mkldnn_primitives[bias_index],
+        *m_mkldnn_primitives[result_index]));
+    m_primitive_deps[conv_index] = {input_data_index, weights_index, bias_index, result_index};
+    return conv_index;
+}
+
+std::vector<size_t> MKLDNNEmitter::build_quantized_convolution_bias_reorder(
+    const mkldnn::memory::desc& input_data_desc,
+    const mkldnn::memory::desc& weights_desc,
+    const mkldnn::memory::desc& bias_desc,
+    const mkldnn::memory::desc& reorder_bias_desc,
+    const mkldnn::memory::desc& result_desc,
+    const ngraph::Strides& strides,
+    const ngraph::Strides& dilation_strides,
+    const ngraph::CoordinateDiff& padding_below,
+    const ngraph::CoordinateDiff& padding_above,
+    const float scale,
+    const float bias_scale,
+    int size,
+    const mkldnn::post_ops& pops)
 {
     size_t input_data_index = build_memory_primitive(input_data_desc);
     size_t weights_index = build_memory_primitive(weights_desc);
@@ -382,6 +429,62 @@ std::vector<size_t>
         throw ngraph_error("Could not create convolution " + e.message);
     }
     return std::vector<size_t>{conv_index, quantize_bias_reorder_index};
+}
+
+std::vector<size_t> MKLDNNEmitter::build_bias_reorder(const ngraph::Node* node,
+                                                      const std::vector<TensorViewWrapper>& args,
+                                                      const std::vector<TensorViewWrapper>& out,
+                                                      const mkldnn::memory::desc& reorder_bias_desc)
+{
+    auto convolution = static_cast<const ngraph::op::QuantizedConvolutionBias*>(node);
+
+    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
+    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+    ngraph::Strides window_dilation_strides_adjusted;
+
+    for (size_t s : convolution->get_window_dilation_strides())
+    {
+        window_dilation_strides_adjusted.push_back(s - 1);
+    }
+
+    auto data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+
+    // MKLDNN relies on named formats for kernel selection
+    if (weights_desc.data.format == mkldnn_nchw)
+        weights_desc.data.format = mkldnn_oihw;
+    if (weights_desc.data.format == mkldnn_ncdhw)
+        weights_desc.data.format = mkldnn_oidhw;
+
+    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+    mkldnn::post_ops ops;
+
+    if ((dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node))->with_relu())
+    {
+        const float ops_scale = 1.f;
+        const float ops_alpha = -0.f; // relu negative slope
+        const float ops_beta = 0.f;
+        ops.append_eltwise(ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+    }
+
+    // conv+bias = cvt_to_int8(scale*(dst + bias))
+    auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+    int size = shape_size(args[2].get_shape()) * args[2].get_element_type().size();
+    return build_quantized_convolution_bias_reorder(
+        data_desc,
+        weights_desc,
+        bias_desc,
+        reorder_bias_desc,
+        result_desc,
+        convolution->get_window_movement_strides(),
+        window_dilation_strides_adjusted,
+        convolution->get_padding_below(),
+        convolution->get_padding_above(),
+        (dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node))->get_scale(),
+        (dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node))->get_bias_scale(),
+        size,
+        ops);
 }
 
 size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& input_data_desc,

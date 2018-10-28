@@ -121,20 +121,20 @@ namespace ngraph
                                            const std::shared_ptr<Node> max_freezed_output,
                                            const bool with_relu)
         {
-            bool output_is_signed = with_relu ? false : true;
+            bool is_output_signed = !with_relu;
             float scale = builder::quantization_util::get_scale(min_input,
                                                                 max_input,
                                                                 min_filter,
                                                                 max_filter,
                                                                 min_freezed_output,
                                                                 max_freezed_output,
-                                                                output_is_signed);
+                                                                is_output_signed);
             auto requantization_scale = op::Constant::create(element::f32, Shape{1}, {scale});
-
-            float bias_scale = builder::quantization_util::get_bias_scale(
-                min_input, max_input, min_filter, max_filter);
-            auto requantization_bias_scale =
-                op::Constant::create(element::f32, Shape{1}, {bias_scale});
+            float scale_bias = (bias->get_element_type() == element::i32)
+                                   ? 1.0
+                                   : builder::quantization_util::get_bias_scale(
+                                         min_input, max_input, min_filter, max_filter);
+            auto bias_scale = op::Constant::create(element::f32, Shape{1}, {scale_bias});
 
             return make_shared<op::QuantizedConvolutionBias>(data_batch,
                                                              filters,
@@ -145,7 +145,7 @@ namespace ngraph
                                                              padding_above,
                                                              data_dilation_strides,
                                                              requantization_scale,
-                                                             requantization_bias_scale,
+                                                             bias_scale,
                                                              with_relu);
         }
 
