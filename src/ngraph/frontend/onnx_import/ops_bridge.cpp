@@ -53,6 +53,7 @@
 #include "op/log.hpp"
 #include "op/log_softmax.hpp"
 #include "op/lrn.hpp"
+#include "op/lstm.hpp"
 #include "op/matmul.hpp"
 #include "op/max.hpp"
 #include "op/max_pool.hpp"
@@ -174,6 +175,7 @@ namespace ngraph
             REGISTER_OPERATOR("Log", 1, log);
             REGISTER_OPERATOR("LogSoftmax", 1, log_softmax);
             REGISTER_OPERATOR("LRN", 1, lrn);
+            REGISTER_OPERATOR("LSTM", 1, lstm);
             REGISTER_OPERATOR("MatMul", 1, matmul);
             REGISTER_OPERATOR("MaxPool", 1, max_pool);
             REGISTER_OPERATOR("Max", 1, max);
