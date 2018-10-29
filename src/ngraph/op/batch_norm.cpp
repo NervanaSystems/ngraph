@@ -38,8 +38,10 @@ ngraph::op::BatchNormInference::BatchNormInference(double eps,
                                                    std::shared_ptr<ngraph::Node> input,
                                                    std::shared_ptr<ngraph::Node> mean,
                                                    std::shared_ptr<ngraph::Node> variance)
-    : BatchNormBase(
-          "BatchNormInference", eps, check_single_output_args({gamma, beta, input, mean, variance}), 1)
+    : BatchNormBase("BatchNormInference",
+                    eps,
+                    check_single_output_args({gamma, beta, input, mean, variance}),
+                    1)
 {
     constructor_validate_and_infer_types();
 }
@@ -59,8 +61,10 @@ ngraph::op::BatchNormTraining::BatchNormTraining(double eps,
                                                  std::shared_ptr<ngraph::Node> input,
                                                  std::shared_ptr<ngraph::Node> mean,
                                                  std::shared_ptr<ngraph::Node> variance)
-    : BatchNormBase(
-          "BatchNormTraining", eps, check_single_output_args({gamma, beta, input, mean, variance}), 3)
+    : BatchNormBase("BatchNormTraining",
+                    eps,
+                    check_single_output_args({gamma, beta, input, mean, variance}),
+                    3)
 {
     constructor_validate_and_infer_types();
 }
