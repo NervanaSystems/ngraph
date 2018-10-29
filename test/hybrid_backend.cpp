@@ -14,16 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <memory>
+
 #include "gtest/gtest.h"
 
 #include "hybrid_utils.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
-#include "util/random.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
@@ -32,7 +34,19 @@ using namespace ngraph;
 
 static runtime::Backend* hybrid1_creator(const char* config)
 {
-    return nullptr;
+    vector<shared_ptr<runtime::Backend>> backend_list;
+    set<string> s0 = {"Add"};
+    auto b0 = make_shared<BackendWrapper>("INTERPRETER", s0, "AddOnly");
+    backend_list.push_back(b0);
+
+#define NGRAPH_OP(a, b) #a,
+    set<string> s1 = {
+#include "ngraph/op/op_tbl.hpp"
+    };
+    auto b1 = make_shared<BackendWrapper>("INTERPRETER", s1, "AllOps");
+    backend_list.push_back(b1);
+
+    return new TestBackend(backend_list);
 }
 
 TEST(HYBRID, abc)

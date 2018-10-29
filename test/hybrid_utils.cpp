@@ -19,54 +19,90 @@
 using namespace std;
 using namespace ngraph;
 
+TestBackend::TestBackend(const vector<shared_ptr<runtime::Backend>>& backend_list)
+    : m_backend_list{backend_list}
+{
+    if (m_backend_list.size() == 0)
+    {
+        throw runtime_error("TestBackend backend list empty");
+    }
+}
+
 shared_ptr<runtime::Tensor> TestBackend::create_tensor(const element::Type& element_type,
                                                        const Shape& shape)
 {
+    return m_backend_list[0]->create_tensor(element_type, shape);
 }
 
 shared_ptr<runtime::Tensor> TestBackend::create_tensor(const element::Type& element_type,
                                                        const Shape& shape,
                                                        void* memory_pointer)
 {
+    return m_backend_list[0]->create_tensor(element_type, shape, memory_pointer);
 }
 
 bool TestBackend::compile(shared_ptr<Function> func)
 {
+    return m_backend_list[0]->compile(func);
 }
 
 bool TestBackend::call(shared_ptr<Function> func,
                        const vector<shared_ptr<runtime::Tensor>>& outputs,
                        const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    throw runtime_error("TestBackend call not supported");
+    // return true;
 }
 
 bool TestBackend::is_supported(const Node& node) const
 {
+    bool rc = false;
+    for (auto backend : m_backend_list)
+    {
+        if (backend->is_supported(node))
+        {
+            rc = true;
+            break;
+        }
+    }
+    return rc;
 }
 
-BackendWrapper::BackendWrapper(shared_ptr<runtime::Backend> be, set<string> supported_ops);
+BackendWrapper::BackendWrapper(const string& backend_name,
+                               const set<string>& supported_ops,
+                               const string& name)
+    : m_backend{runtime::Backend::create(backend_name)}
+    , m_supported_ops{supported_ops}
+    , m_name{name}
+{
+}
 
 shared_ptr<runtime::Tensor> BackendWrapper::create_tensor(const element::Type& element_type,
                                                           const Shape& shape)
 {
+    return m_backend->create_tensor(element_type, shape);
 }
 
 shared_ptr<runtime::Tensor> BackendWrapper::create_tensor(const element::Type& element_type,
                                                           const Shape& shape,
                                                           void* memory_pointer)
 {
+    return m_backend->create_tensor(element_type, shape, memory_pointer);
 }
 
 bool BackendWrapper::compile(shared_ptr<Function> func)
 {
+    return m_backend->compile(func);
 }
 
 bool BackendWrapper::call(shared_ptr<Function> func,
                           const vector<shared_ptr<runtime::Tensor>>& outputs,
                           const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    return m_backend->call(func, outputs, inputs);
 }
 
 bool BackendWrapper::is_supported(const Node& node) const
 {
+    return m_supported_ops.find(node.description()) != m_supported_ops.end();
 }
