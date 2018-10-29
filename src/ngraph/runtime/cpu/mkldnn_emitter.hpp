@@ -593,6 +593,14 @@ namespace ngraph
 
                 size_t build_quantized_avg_pool(const ngraph::Node* node);
 
+                size_t build_dequantization(const ngraph::Node* node,
+                                            const mkldnn::memory::desc& input_desc,
+                                            const mkldnn::memory::desc& result_desc);
+
+                size_t build_quantize_reorder(const mkldnn::memory::desc& input_desc,
+                                              const mkldnn::memory::desc& result_desc,
+                                              const std::vector<float>& scales);
+
             private:
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;
                 std::vector<mkldnn::stream> m_mkldnn_streams;
