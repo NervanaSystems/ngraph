@@ -40,8 +40,6 @@ using namespace mkldnn;
 using namespace ngraph;
 using namespace std;
 
-#define TI(x) std::type_index(typeid(x))
-
 std::map<element::Type, const mkldnn::memory::data_type>&
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type_map()
 {

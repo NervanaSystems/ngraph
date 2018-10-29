@@ -1082,6 +1082,7 @@ shared_ptr<Function> gen_groupconv_batchnorm(const bool add_goe,
 
     auto goe_bn = std::make_shared<op::GetOutputElement>(group_conv, 0);
 
+    // Adding a goe will stop fusion since the patterns wont expect to see this op
     auto bn =
         add_goe ? std::make_shared<op::BatchNormInference>(eps, gamma, beta, goe_bn, mean, var)
                 : std::make_shared<op::BatchNormInference>(eps, gamma, beta, group_conv, mean, var);

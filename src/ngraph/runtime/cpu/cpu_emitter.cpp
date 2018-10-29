@@ -3998,11 +3998,11 @@ namespace ngraph
                     {
                         weights_shape_groups = gconv->get_weights_dimensions();
                     }
-                    else if (auto gconv =
+                    else if (auto gconvb =
                                  std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(
                                      node->get_users()[0]))
                     {
-                        weights_shape_groups = gconv->get_weights_dimensions();
+                        weights_shape_groups = gconvb->get_weights_dimensions();
                     }
                     else
                     {
