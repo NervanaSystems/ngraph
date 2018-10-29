@@ -25,7 +25,6 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
-#include "ngraph/op/activate.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
@@ -43,7 +42,6 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
-#include "ngraph/op/deactivate.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
@@ -4477,12 +4475,10 @@ namespace ngraph
             {
                 auto gm = static_cast<const ngraph::op::GenerateMask*>(node);
                 writer.block_begin();
-
-                auto index = external_function->m_states.size();
-                external_function->m_states.push_back(
+                auto index = external_function->add_state(
                     ngraph::RNGState::create_rng_state(gm->get_seed(), gm->get_probability()));
-
-                writer << "ngraph::State* state = ctx->states[" << index << "];\n";
+                writer << "auto state = static_cast<ngraph::RNGState*>(ctx->states[" << index
+                       << "]);\n";
                 writer << "bool training = static_cast<bool>(" << args[0].get_name() << "[0]);\n";
                 writer << "reference::generate_mask(";
                 writer << "            " << out[0].get_name() << ",\n";
@@ -4491,6 +4487,7 @@ namespace ngraph
                 writer.block_end();
             }
 
+/*
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ActivateState)
             {
@@ -4512,6 +4509,7 @@ namespace ngraph
                 writer << "state->deactivate();\n";
                 writer.block_end();
             }
+            */
 
 #undef TI
         }

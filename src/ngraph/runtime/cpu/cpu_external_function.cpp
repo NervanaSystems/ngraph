@@ -48,7 +48,6 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
-#include "ngraph/op/activate.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
@@ -66,7 +65,6 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
-#include "ngraph/op/deactivate.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
@@ -193,6 +191,10 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
 
 runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
 {
+    for (auto state : m_states)
+    {
+        delete state;
+    }
 }
 
 #if !defined(NGRAPH_DEX_ONLY)
@@ -346,9 +348,9 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::runtime::cpu::op::LoopKernel),
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::LoopKernel>},
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
-    {TI(ngraph::op::ActivateState), &runtime::cpu::CPU_Emitter::emit<ngraph::op::ActivateState>},
-    {TI(ngraph::op::DeactivateState),
-     &runtime::cpu::CPU_Emitter::emit<ngraph::op::DeactivateState>},
+    //{TI(ngraph::op::ActivateState), &runtime::cpu::CPU_Emitter::emit<ngraph::op::ActivateState>},
+    //{TI(ngraph::op::DeactivateState),
+    // &runtime::cpu::CPU_Emitter::emit<ngraph::op::DeactivateState>},
     {TI(ngraph::op::GenerateMask), &runtime::cpu::CPU_Emitter::emit<ngraph::op::GenerateMask>},
 };
 

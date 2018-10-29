@@ -81,6 +81,7 @@ namespace ngraph
             class CPU_ExternalFunction : public std::enable_shared_from_this<CPU_ExternalFunction>
             {
                 friend class CPU_Backend;
+                friend class CPU_CallFrame;
 
             public:
                 enum class CPUTensorRole
@@ -106,6 +107,12 @@ namespace ngraph
                 const std::unique_ptr<MKLDNNEmitter>& get_mkldnn_emitter() const
                 {
                     return m_mkldnn_emitter;
+                }
+
+                size_t add_state(ngraph::State* state)
+                {
+                    m_states.push_back(state);
+                    return m_states.size() - 1;
                 }
 
                 const std::string& get_function_name() const { return m_function_name; }
@@ -139,7 +146,7 @@ namespace ngraph
 
 #endif
 
-                std::vector<std::unique_ptr<ngraph::State>> m_states;
+                std::vector<ngraph::State*> m_states;
 
             private:
                 // For non-destructive passthrough kernels, propagate function

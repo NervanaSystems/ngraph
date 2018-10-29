@@ -25,8 +25,6 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/op/activate.hpp"
-#include "ngraph/op/deactivate.hpp"
 #include "ngraph/op/generate_mask.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/state/rng_state.hpp"
@@ -9510,24 +9508,26 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_one)
     EXPECT_EQ((vector<float>{3, 1, 4}), read_vector<float>(result1));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, stateful)
+NGRAPH_TEST(${BACKEND_NAME}, generate_mask)
 {
     Shape scalar{};
     Shape result_shape{1, 20};
-    auto training = op::Constant::create(element::i8, Shape{}, {1});
-    auto rng_state = make_shared<RNGState>();
-    auto activate = make_shared<op::ActivateState>(rng_state);
-    auto gen_mask = make_shared<op::GenerateMask>(
-        training, activate, result_shape, element::i32, 0.5, rng_state);
-    auto f = make_shared<Function>(gen_mask, op::ParameterVector{});
+    auto training = op::Constant::create(element::f32, Shape{}, {1});
+    auto gen_mask = make_shared<op::GenerateMask>(training, result_shape, element::f32, 777, 0.5);
+    auto gen_mask2 = make_shared<op::GenerateMask>(training, result_shape, element::f32, 777, 0.5);
+    auto f = make_shared<Function>(NodeVector{gen_mask, gen_mask2}, op::ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    shared_ptr<runtime::TensorView> result_tv = backend->create_tensor<int>(result_shape);
-    backend->call_with_validate(f, {result_tv}, {});
-    auto result1 = read_vector<int>(result_tv);
-    //check that the rng state is reproducible
-    backend->call_with_validate(f, {result_tv}, {});
-    auto result2 = read_vector<int>(result_tv);
+    shared_ptr<runtime::TensorView> result_tv1 = backend->create_tensor<float>(result_shape);
+    shared_ptr<runtime::TensorView> result_tv2 = backend->create_tensor<float>(result_shape);
+    backend->call_with_validate(f, {result_tv1, result_tv2}, {});
+    auto result1 = read_vector<float>(result_tv1);
+    auto result2 = read_vector<float>(result_tv2);
     ASSERT_EQ(result1, result2);
+    backend->call_with_validate(f, {result_tv1, result_tv2}, {});
+    auto result1_2 = read_vector<float>(result_tv1);
+    auto result2_2 = read_vector<float>(result_tv2);
+    ASSERT_NE(result1, result1_2);
+    ASSERT_NE(result2, result2_2);
 }

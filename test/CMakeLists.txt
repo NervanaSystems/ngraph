@@ -38,7 +38,6 @@ set(SRC
     serialize.cpp
     pattern.cpp
     shape.cpp
-	state.cpp
     reshape_elimination.cpp
     tensor.cpp
     type_prop.cpp

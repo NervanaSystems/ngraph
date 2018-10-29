@@ -17,6 +17,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 #include <random>
 
 #include "state.hpp"
@@ -27,10 +28,10 @@ namespace ngraph
     class RNGState : public State
     {
     public:
-        static std::unique_ptr<RNGState> create_rng_state(unsigned int seed, double probability)
+        static RNGState* create_rng_state(unsigned int seed, double probability)
         {
             auto rng = new RNGState(seed, probability);
-            return std::unique_ptr<RNGState>{rng};
+            return rng;
         }
 
         RNGState(unsigned int seed, double probability)

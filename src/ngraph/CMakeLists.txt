@@ -34,7 +34,6 @@ set (SRC
     log.cpp
     node.cpp
     op/abs.cpp
-    op/activate.cpp
     op/acos.cpp
     op/add.cpp
     op/allreduce.cpp
@@ -53,7 +52,6 @@ set (SRC
     op/convolution.cpp
     op/cos.cpp
     op/cosh.cpp
-    op/deactivate.cpp
     op/divide.cpp
     op/dot.cpp
     op/equal.cpp

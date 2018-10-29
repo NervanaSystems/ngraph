@@ -34,7 +34,7 @@ namespace ngraph
                          const element::Type& element_type,
                          unsigned int seed,
                          double prob)
-                : Op("GenerateMask", {check_single_output_args({training, activate})})
+                : Op("GenerateMask", {check_single_output_args({training})})
                 , m_shape(shape)
                 , m_element_type(element_type)
                 , m_seed(seed)
