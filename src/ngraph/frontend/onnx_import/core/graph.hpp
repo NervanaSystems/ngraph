@@ -16,12 +16,15 @@
 
 #pragma once
 
-#include <onnx.pb.h>
 #include <string>
 #include <vector>
 
+#include <onnx-ml.pb.h>
+
 #include "ngraph/op/parameter_vector.hpp"
 
+#include "model.hpp"
+#include "operator_set.hpp"
 #include "value_info.hpp"
 
 namespace ngraph
@@ -31,7 +34,7 @@ namespace ngraph
         class Graph
         {
         public:
-            explicit Graph(const onnx::GraphProto& proto);
+            Graph(const onnx::GraphProto& proto, const Model& model);
 
             const std::vector<Node>& get_nodes() const { return m_nodes; }
             const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }
@@ -43,6 +46,11 @@ namespace ngraph
             }
 
             const std::string& get_name() const { return m_graph_proto->name(); }
+            NodeVector make_ng_nodes(const Node& node) const
+            {
+                return m_model->get_operator(node.op_type(), node.domain())(node);
+            }
+
         private:
             const onnx::GraphProto* m_graph_proto;
             std::vector<Node> m_nodes;
@@ -51,6 +59,7 @@ namespace ngraph
             op::ParameterVector m_parameters;
             std::map<std::string, std::shared_ptr<ngraph::Node>> m_ng_node_cache;
             std::map<std::string, Tensor> m_initializers;
+            const Model* m_model;
         };
 
         inline std::ostream& operator<<(std::ostream& outs, const Graph& graph)

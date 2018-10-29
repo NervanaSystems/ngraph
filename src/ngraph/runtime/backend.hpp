@@ -28,7 +28,7 @@ namespace ngraph
     namespace runtime
     {
         class ExternalFunction;
-        class TensorView;
+        class Tensor;
         class Backend;
     }
 }
@@ -54,8 +54,8 @@ public:
     /// \brief Create a tensor specific to this backend
     /// \param element_type The type of the tensor element
     /// \param shape The shape of the tensor
-    /// \returns shared_ptr to a new backend specific tensor
-    virtual std::shared_ptr<ngraph::runtime::TensorView>
+    /// \returns shared_ptr to a new backend-specific tensor
+    virtual std::shared_ptr<ngraph::runtime::Tensor>
         create_tensor(const ngraph::element::Type& element_type, const Shape& shape) = 0;
 
     /// \brief Create a tensor specific to this backend
@@ -64,15 +64,15 @@ public:
     /// \param memory_pointer A pointer to a buffer used for this tensor. The size of the buffer
     ///     must be sufficient to contain the tensor. The lifetime of the buffer is the
     ///     responsibility of the caller.
-    /// \returns shared_ptr to a new backend specific tensor
-    virtual std::shared_ptr<ngraph::runtime::TensorView> create_tensor(
+    /// \returns shared_ptr to a new backend-specific tensor
+    virtual std::shared_ptr<ngraph::runtime::Tensor> create_tensor(
         const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer) = 0;
 
     /// \brief Create a tensor of C type T specific to this backend
     /// \param shape The shape of the tensor
     /// \returns shared_ptr to a new backend specific tensor
     template <typename T>
-    std::shared_ptr<ngraph::runtime::TensorView> create_tensor(const Shape& shape)
+    std::shared_ptr<ngraph::runtime::Tensor> create_tensor(const Shape& shape)
     {
         return create_tensor(element::from<T>(), shape);
     }
@@ -87,16 +87,16 @@ public:
     /// \param func The function to execute
     /// \returns true if iteration is successful, false otherwise
     virtual bool call(std::shared_ptr<Function> func,
-                      const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-                      const std::vector<std::shared_ptr<runtime::TensorView>>& inputs) = 0;
+                      const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) = 0;
 
     /// \brief Executes a single iteration of a Function. If func is not compiled the call will
     ///     compile it. Optionally validates the inputs and outputs against the function graph.
     /// \param func The function to execute
     /// \returns true if iteration is successful, false otherwise
     bool call_with_validate(std::shared_ptr<Function> func,
-                            const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-                            const std::vector<std::shared_ptr<runtime::TensorView>>& inputs)
+                            const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                            const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
     {
         validate_call(func, outputs, inputs);
         return call(func, outputs, inputs);
@@ -107,8 +107,8 @@ public:
     /// \param func The function to execute
     virtual void remove_compiled_function(std::shared_ptr<Function> func);
 
-    /// \brief Enable the collection of per op performance information on a specified Function.
-    ///     Data is collection via the `get_performance_data` method.
+    /// \brief Enable the collection of per-op performance information on a specified Function.
+    ///     Data collection is via the `get_performance_data` method.
     /// \param func The function to collect perfomance data on.
     /// \param enable Set to true to enable or false to disable data collection
     virtual void enable_performance_data(std::shared_ptr<Function> func, bool enable) {}
@@ -118,8 +118,13 @@ public:
     virtual std::vector<PerformanceCounter>
         get_performance_data(std::shared_ptr<Function> func) const;
 
+    /// \brief Test if a backend is capable of supporting an op
+    /// \param node is the op to test.
+    /// \returns true if the op is supported, false otherwise.
+    virtual bool is_supported(const Node& node) const;
+
 protected:
     void validate_call(std::shared_ptr<const Function> func,
-                       const std::vector<std::shared_ptr<runtime::TensorView>>& outputs,
-                       const std::vector<std::shared_ptr<runtime::TensorView>>& inputs);
+                       const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                       const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 };

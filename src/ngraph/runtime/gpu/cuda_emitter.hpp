@@ -50,19 +50,17 @@ namespace ngraph
                 size_t build_primitive(const op::ReplaceSlice* node, bool in_place_op);
 
             public:
-                size_t build_pad(const std::array<std::string, 2>& dtypes,
+                size_t build_pad(const std::vector<std::string>& dtypes,
                                  NVShape input_shape,
                                  NVShape output_shape,
-                                 NVShape pad_below,
-                                 NVShape pad_above,
-                                 NVShape pad_interior,
-                                 const std::string& pad_value = "");
+                                 NVShape padding_below,
+                                 NVShape padding_interior);
 
-                size_t build_pad_dynamic(const std::array<std::string, 2>& dtypes,
-                                         NVShape input_shape,
-                                         NVShape output_shape,
-                                         NVShape padding_below,
-                                         NVShape padding_interior);
+                size_t build_pad_fill(const std::vector<std::string>& dtypes,
+                                      NVShape input_shape,
+                                      NVShape output_shape,
+                                      NVShape padding_below,
+                                      NVShape padding_interior);
 
                 size_t build_1d_max_pool(const std::array<std::string, 2>& dtypes,
                                          NVShape input_shape,
@@ -101,7 +99,8 @@ namespace ngraph
                 size_t build_onehot(const std::array<std::string, 2>& dtypes,
                                     NVShape input_shape,
                                     NVShape output_shape,
-                                    size_t one_hot_axis);
+                                    size_t one_hot_axis,
+                                    size_t output_datatype_size);
 
                 size_t build_reverse(const std::array<std::string, 2>& dtypes,
                                      NVShape input_shape,
@@ -114,6 +113,10 @@ namespace ngraph
                     return build_elementwise_n_to_1(
                         dtypes, tensor_shape, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
                 }
+
+                size_t build_cudnn_bn_inv_var(const std::vector<std::string>& dtypes,
+                                              NVShape tensor_shape,
+                                              const double& eps);
 
                 template <typename T>
                 size_t build_reduce(const std::vector<std::string>& dtypes,
@@ -154,6 +157,14 @@ namespace ngraph
                                      NVShape input_shape,
                                      NVShape input_order);
 
+                size_t build_reshape_2d(const std::array<std::string, 2>& dtypes,
+                                        NVShape input_shape,
+                                        NVShape input_order);
+
+                size_t build_reshape_3d(const std::array<std::string, 2>& dtypes,
+                                        NVShape input_shape,
+                                        NVShape input_order);
+
                 size_t build_convolution(const std::array<std::string, 3>& dtypes,
                                          NVShape input_shape,
                                          NVShape filter_shape,
@@ -163,7 +174,7 @@ namespace ngraph
                                          NVShape input_dilation,
                                          NVDiff input_pad_below);
 
-                size_t build_concat(const std::vector<std::string>& dtypes,
+                size_t build_concat(const std::string& dtype,
                                     std::vector<NVShape> input_shapes,
                                     size_t concat_axis,
                                     NVShape output_shape);

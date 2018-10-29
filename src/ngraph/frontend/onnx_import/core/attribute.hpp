@@ -16,19 +16,19 @@
 
 #pragma once
 
-#include <onnx.pb.h>
-#include "ngraph/except.hpp"
-#include "tensor.hpp"
+#include <onnx-ml.pb.h>
 
-#define likely(__x) __builtin_expect(!!(__x), 1)
-#define unlikely(__x) __builtin_expect(!!(__x), 0)
+#include "ngraph/except.hpp"
+
+#include "tensor.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        // forward declaration
+        // forward declarations
         class Graph;
+        class Model;
 
         namespace error
         {
@@ -136,7 +136,7 @@ namespace ngraph
                 template <>
                 inline std::size_t get_value(const onnx::AttributeProto& attribute)
                 {
-                    if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_INT))
+                    if (attribute.type() != onnx::AttributeProto_AttributeType_INT)
                     {
                         throw error::attribute::InvalidData{attribute.type()};
                     }
@@ -159,7 +159,7 @@ namespace ngraph
                 template <>
                 inline int64_t get_value(const onnx::AttributeProto& attribute)
                 {
-                    if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_INT))
+                    if (attribute.type() != onnx::AttributeProto_AttributeType_INT)
                     {
                         throw error::attribute::InvalidData{attribute.type()};
                     }
@@ -179,9 +179,9 @@ namespace ngraph
                 }
 
                 template <>
-                inline const std::string& get_value(const onnx::AttributeProto& attribute)
+                inline std::string get_value(const onnx::AttributeProto& attribute)
                 {
-                    if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_STRING))
+                    if (attribute.type() != onnx::AttributeProto_AttributeType_STRING)
                     {
                         throw error::attribute::InvalidData{attribute.type()};
                     }
@@ -203,7 +203,7 @@ namespace ngraph
                 template <>
                 inline Tensor get_value(const onnx::AttributeProto& attribute)
                 {
-                    if (unlikely(attribute.type() != onnx::AttributeProto_AttributeType_TENSOR))
+                    if (attribute.type() != onnx::AttributeProto_AttributeType_TENSOR)
                     {
                         throw error::attribute::InvalidData{attribute.type()};
                     }
@@ -272,7 +272,7 @@ namespace ngraph
             float get_float() const { return m_attribute_proto->f(); }
             int64_t get_integer() const { return m_attribute_proto->i(); }
             const std::string& get_string() const { return m_attribute_proto->s(); }
-            Graph get_graph() const;
+            Graph get_graph(const Model&) const;
 
             std::vector<Tensor> get_tensor_array() const
             {
@@ -297,7 +297,7 @@ namespace ngraph
                         std::end(m_attribute_proto->strings())};
             }
 
-            std::vector<Graph> get_graph_array() const;
+            std::vector<Graph> get_graph_array(const Model&) const;
 
             /* explicit */ operator onnx::AttributeProto_AttributeType() const
             {

@@ -50,8 +50,8 @@ vector<ngraph::runtime::PerformanceCounter>
 }
 
 void runtime::Backend::validate_call(shared_ptr<const Function> function,
-                                     const vector<shared_ptr<runtime::TensorView>>& outputs,
-                                     const vector<shared_ptr<runtime::TensorView>>& inputs)
+                                     const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                     const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     const op::ParameterVector& input_parameters = function->get_parameters();
     if (input_parameters.size() != inputs.size())
@@ -71,10 +71,10 @@ void runtime::Backend::validate_call(shared_ptr<const Function> function,
 
     for (size_t i = 0; i < input_parameters.size(); i++)
     {
-        if (input_parameters[i]->get_element_type() != inputs[i]->get_tensor().get_element_type())
+        if (input_parameters[i]->get_element_type() != inputs[i]->get_element_type())
         {
             stringstream ss;
-            ss << "Input " << i << " type '" << inputs[i]->get_tensor().get_element_type()
+            ss << "Input " << i << " type '" << inputs[i]->get_element_type()
                << "' does not match Parameter type '" << input_parameters[i]->get_element_type()
                << "'";
             throw runtime_error(ss.str());
@@ -91,10 +91,10 @@ void runtime::Backend::validate_call(shared_ptr<const Function> function,
 
     for (size_t i = 0; i < function->get_output_size(); i++)
     {
-        if (function->get_output_element_type(i) != outputs[i]->get_tensor().get_element_type())
+        if (function->get_output_element_type(i) != outputs[i]->get_element_type())
         {
             stringstream ss;
-            ss << "Output " << i << " type '" << outputs[i]->get_tensor().get_element_type()
+            ss << "Output " << i << " type '" << outputs[i]->get_element_type()
                << "' does not match Result type '" << function->get_output_element_type(i) << "'";
             throw runtime_error(ss.str());
         }
@@ -106,4 +106,11 @@ void runtime::Backend::validate_call(shared_ptr<const Function> function,
             throw runtime_error(ss.str());
         }
     }
+}
+
+bool runtime::Backend::is_supported(const Node& node) const
+{
+    // The default behavior is that a backend fully supports all ops. If this is not the case
+    // then override this method and enhance.
+    return false;
 }

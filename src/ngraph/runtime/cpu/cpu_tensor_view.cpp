@@ -18,7 +18,7 @@
 #include <memory>
 
 #include "cpu_tensor_view.hpp"
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -35,15 +35,14 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
                                            const Shape& shape,
                                            void* memory_pointer,
                                            const string& name)
-    : runtime::TensorView(
-          std::make_shared<ngraph::descriptor::TensorView>(element_type, shape, name))
+    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name))
     , buffer(nullptr)
     , aligned_buffer(nullptr)
 {
     // TODO(jmenon): A fallback layout should not be needed but is required
     // because of how some unit test functionality is written (ex. 'backprop_derivative')
     // This needs to be removed
-    m_descriptor->set_tensor_view_layout(
+    m_descriptor->set_tensor_layout(
         std::make_shared<runtime::cpu::LayoutDescriptor>(*m_descriptor));
 
     buffer_size = shape_size(shape) * element_type.size();
@@ -114,7 +113,7 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
         throw out_of_range("read access past end of tensor");
     }
 
-    auto tvl = this->get_tensor_view_layout();
+    auto tvl = this->get_tensor_layout();
     auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
 
     auto needs_conversion = [&]() {
@@ -131,7 +130,7 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
             return false;
         }
         auto native_md = mkldnn_utils::create_blocked_mkldnn_md(
-            this->get_shape(), cpu_tvl->get_strides(), this->get_descriptor()->get_element_type());
+            this->get_shape(), cpu_tvl->get_strides(), this->get_element_type());
         if (mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md))
         {
             return false;
@@ -144,7 +143,7 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
         auto tensor_shape = this->get_shape();
         auto input_desc = cpu_tvl->get_mkldnn_md();
         auto output_desc = mkldnn_utils::create_blocked_mkldnn_md(
-            this->get_shape(), cpu_tvl->get_strides(), this->get_descriptor()->get_element_type());
+            this->get_shape(), cpu_tvl->get_strides(), this->get_element_type());
 
         memory input{{input_desc, mkldnn_utils::global_cpu_engine}, aligned_buffer};
         memory output{{output_desc, mkldnn_utils::global_cpu_engine}, target};
@@ -157,9 +156,4 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
         const char* source = get_data_ptr();
         memcpy(target, &source[tensor_offset], n);
     }
-}
-
-size_t runtime::cpu::CPUTensorView::get_size() const
-{
-    return get_element_count();
 }

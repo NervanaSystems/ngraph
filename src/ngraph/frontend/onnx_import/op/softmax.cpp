@@ -27,33 +27,35 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector softmax(const Node& node)
+            namespace set_1
             {
-                NodeVector inputs{node.get_ng_inputs()};
-                auto data = inputs.at(0);
-                auto data_shape = data->get_shape();
-
-                int axis = node.get_attribute_value<int64_t>("axis", 1);
-
-                if (axis < 0)
+                NodeVector softmax(const Node& node)
                 {
-                    axis = data_shape.size() + axis;
+                    NodeVector inputs{node.get_ng_inputs()};
+                    auto data = inputs.at(0);
+                    auto data_shape = data->get_shape();
+
+                    int axis = node.get_attribute_value<int64_t>("axis", 1);
+
+                    if (axis < 0)
+                    {
+                        axis = data_shape.size() + axis;
+                    }
+
+                    ASSERT_VALID_ARGUMENT(node, axis < data_shape.size())
+                        << "provided 'axis' value:" << axis
+                        << " is out of input tensor dimensions range.";
+
+                    // create vector of capacity data_dimensions - axis_divider position
+                    std::vector<size_t> axes(data_shape.size() - axis);
+                    std::iota(std::begin(axes), std::end(axes), axis);
+                    return {std::make_shared<ngraph::op::Softmax>(data, axes)};
                 }
-                else if (axis >= data_shape.size())
-                {
-                    throw error::parameter::Value(
-                        "Softmax node (",
-                        node.get_name(),
-                        "): provided axis attribute is out of input tensor dimensions range.");
-                }
-                // create vector of capacity data_dimensions - axis_divider position
-                std::vector<size_t> axes(data_shape.size() - axis);
-                std::iota(std::begin(axes), std::end(axes), axis);
-                return {std::make_shared<ngraph::op::Softmax>(data, axes)};
-            }
 
-        } // namespace  op
+            } // namespace set_1
 
-    } // namespace  onnx_import
+        } //namespace op
 
-} // namespace  ngraph
+    } // namespace onnx_import
+
+} // namespace ngraph

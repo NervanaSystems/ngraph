@@ -160,7 +160,7 @@ void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<shared_
     for (const descriptor::Tensor* tensor : tensor_set)
     {
         int generator_weight = compute_op_weight(generator_op[tensor]);
-        if (contains(largest_live_list, tensor))
+        if (largest_live_list.find(tensor) != largest_live_list.end())
         {
             file << "    <tr style=\"background-color: #f0c0f0\">";
         }

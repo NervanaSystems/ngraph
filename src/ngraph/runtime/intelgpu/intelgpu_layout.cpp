@@ -22,9 +22,9 @@
 using namespace std;
 using namespace ngraph;
 
-runtime::intelgpu::IntelGPULayout::IntelGPULayout(const descriptor::TensorView& tv,
+runtime::intelgpu::IntelGPULayout::IntelGPULayout(const descriptor::Tensor& tv,
                                                   const cldnn::layout& layout)
-    : TensorViewLayout(tv)
+    : TensorLayout(tv)
     , cldnn_layout(layout)
 {
 }
@@ -35,16 +35,12 @@ size_t runtime::intelgpu::IntelGPULayout::get_index_offset(const vector<size_t>&
     {
         throw ngraph_error("Indices have incorrect rank");
     }
-    size_t result = 0;
-    for (int i = 0; i < indices.size(); i++)
-    {
-        result += strides[i] + indices[i];
-    }
-    return result;
+
+    return inner_product(indices.cbegin(), indices.cend(), strides.cbegin(), 0);
 }
 
 bool runtime::intelgpu::IntelGPULayout::
-    operator==(const descriptor::layout::TensorViewLayout& other) const
+    operator==(const descriptor::layout::TensorLayout& other) const
 {
     const IntelGPULayout* p_other = dynamic_cast<const IntelGPULayout*>(&other);
     if (!p_other)
@@ -65,6 +61,14 @@ cldnn::data_types
     else if (element_type == ngraph::element::u8)
     {
         return cldnn::data_types::u8;
+    }
+    else if (element_type == ngraph::element::i32)
+    {
+        return cldnn::data_types::i32;
+    }
+    else if (element_type == ngraph::element::i64)
+    {
+        return cldnn::data_types::i64;
     }
     else if (element_type == ngraph::element::f32)
     {
@@ -124,21 +128,16 @@ cldnn::layout runtime::intelgpu::IntelGPULayout::create_cldnn_layout(
     const ngraph::element::Type& element_type, const Shape& element_shape)
 {
     const cldnn::format::type format = cldnn::format::bfyx;
+    const cldnn::tensor tensor = create_cldnn_tensor(element_shape);
     cldnn::data_types data_type;
-    cldnn::tensor tensor;
 
-    // This is workaround for data types that are not supported by clDNN
-    // If the type is not supported, it treated as char*
-    // Example, "int64_t input[2, 3, 4]" will be "char input[192]"
-    if ((element_type == ngraph::element::i64) || (element_type == ngraph::element::i32))
+    if ((element_type == ngraph::element::i16) || (element_type == ngraph::element::u16))
     {
-        data_type = cldnn::data_types::i8;
-        tensor = create_cldnn_tensor({shape_size(element_shape) * element_type.size()});
+        data_type = cldnn::data_types::f16;
     }
     else
     {
         data_type = get_cldnn_type(element_type);
-        tensor = create_cldnn_tensor(element_shape);
     }
 
     return cldnn::layout(data_type, format, tensor);

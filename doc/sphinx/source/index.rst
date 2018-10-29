@@ -30,8 +30,8 @@ software engineers, and others with the means to make their work :ref:`portable`
 :abbr:`Machine Learning (ML)` hardware available today: optimized Deep Learning
 computation devices.
 
-.. figure:: graphics/ngraph-ecosystem.png
-   :width: 650px   
+.. figure:: graphics/599px-Intel-ngraph-ecosystem.png
+   :width: 599px   
   
 
 .. _portable:
@@ -66,16 +66,15 @@ Python-based API. See the `ngraph onnx companion tool`_ to get started.
 
 
 .. csv-table::
-   :header: "Framework", "Bridge Code Available?", "ONNX Support?"
+   :header: "Framework", "Bridge Available?", "ONNX Support?"
    :widths: 27, 10, 10
 
    TensorFlow, Yes, Yes
    MXNet, Yes, Yes
    PaddlePaddle, Coming Soon, Yes
-   neon, none needed, Yes
-   PyTorch, Coming Soon, Yes
-   CNTK, Not yet, Yes
-   Other, Not yet, Doable
+   PyTorch, No, Yes
+   CNTK, No, Yes
+   Other, Custom, Custom
 
 
 .. _deployable:
@@ -104,29 +103,30 @@ model to run on a variety of backends:
 
 
 .. csv-table::
-   :header: "Backend", "Current nGraph support", "Future nGraph support"
+   :header: "Backend", "Current support", "Future nGraph support"
    :widths: 35, 10, 10
 
    Intel® Architecture Processors (CPUs), Yes, Yes
-   Intel® Nervana™ Neural Network Processor™ (NNPs), Yes, Yes
-   NVIDIA\* CUDA (GPUs), Yes, Some 
+   Intel® Nervana™ Neural Network Processor (NNPs), Yes, Yes
+   AMD\* GPUs, via PlaidML, Yes
+   NVIDIA\* GPUs, via PlaidML, Some 
+   Intel® Architecture GPUs, Yes, Yes 
    :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs), Coming soon, Yes
-   `Movidius`_, Not yet, Yes
+   Intel Movidius™ Myriad™ 2 (VPU), Coming soon, Yes
    Other, Not yet, Ask
 
 The value we're offering to the developer community is empowerment: we are
 confident that Intel® Architecture already provides the best computational 
-resources available for the breadth of ML/DL tasks.  We welcome ideas and 
-`contributions`_ from the community.  
-
+resources available for the breadth of ML/DL tasks. We welcome ideas and 
+`contributions`_ from the community. 
 
 Further project details can be found on our :doc:`project/about` page, or see 
-our :doc:`buildlb` guide for how to get started.   
+our :doc:`buildlb` guide for how to get started.
 
 
-.. note:: The library code is under active development as we're continually 
+.. note:: The Library code is under active development as we're continually 
    adding support for more kinds of DL models and ops, framework compiler 
-   optimizations, and backends. 
+   optimizations, and backends.
 
 
 =======
@@ -152,7 +152,6 @@ Contents
    project/index.rst
 
 
-
 Indices and tables
 ==================
 
@@ -160,8 +159,7 @@ Indices and tables
    * :ref:`genindex`
 
      
-.. _ONNX:  http://onnx.ai
+.. _ONNX: http://onnx.ai
 .. _ngraph onnx companion tool: https://github.com/NervanaSystems/ngraph-onnx
 .. _Movidius: https://www.movidius.com/
 .. _contributions: https://github.com/NervanaSystems/ngraph#how-to-contribute
-  

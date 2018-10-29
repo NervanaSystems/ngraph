@@ -21,6 +21,9 @@
 #include <string>
 #include <vector>
 
+// The CPIO file format can be found at
+// https://www.mkssoftware.com/docs/man4/cpio.4.asp
+
 namespace ngraph
 {
     namespace cpio
@@ -85,7 +88,6 @@ public:
 
     void open(std::ostream& out);
     void open(const std::string& filename);
-    void close();
     void write(const std::string& file_name, const void* data, uint32_t size_in_bytes);
 
 private:

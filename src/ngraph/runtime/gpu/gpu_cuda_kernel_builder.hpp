@@ -40,6 +40,10 @@ namespace ngraph
                                                const std::string& op,
                                                const std::vector<std::string>& data_types);
 
+                static void get_cudnn_bn_inv_var_op(codegen::CodeWriter& writer,
+                                                    const std::string& name,
+                                                    runtime::gpu::GPUKernelArgs& args);
+
                 static void get_broadcast_op(codegen::CodeWriter& writer,
                                              const std::string& name,
                                              GPUKernelArgs& args,
@@ -47,7 +51,7 @@ namespace ngraph
 
                 static void get_concat_op(codegen::CodeWriter& writer,
                                           const std::string& name,
-                                          const std::vector<std::string>& data_types,
+                                          const std::string& data_type,
                                           size_t num_inputs);
 
                 static void get_onehot_op(codegen::CodeWriter& writer,
@@ -56,8 +60,22 @@ namespace ngraph
 
                 static void get_reshape_op(codegen::CodeWriter& writer,
                                            const std::string& name,
+                                           runtime::gpu::GPUKernelArgs& args,
                                            const std::array<std::string, 2>& data_types,
                                            size_t rank);
+
+                static void get_reshape_op_3d(codegen::CodeWriter& writer,
+                                              const std::string& name,
+                                              runtime::gpu::GPUKernelArgs& args,
+                                              const std::string& data_type,
+                                              const std::vector<uint32_t>& order,
+                                              const std::vector<uint32_t>& block_size);
+
+                static void get_reshape_op_2d(codegen::CodeWriter& writer,
+                                              const std::string& name,
+                                              runtime::gpu::GPUKernelArgs& args,
+                                              const std::string& data_type,
+                                              uint32_t block_size);
 
                 static void get_reduce_to_nd_op(codegen::CodeWriter& writer,
                                                 const std::string& name,
@@ -116,11 +134,15 @@ namespace ngraph
                                               const std::string& math_kernel,
                                               const std::vector<std::string>& data_types);
 
-                static void get_pad_dynamic_op(codegen::CodeWriter& writer,
-                                               const std::string& name,
-                                               GPUKernelArgs& args,
-                                               const std::array<std::string, 2>& data_types,
-                                               size_t rank);
+                static void get_pad_op(codegen::CodeWriter& writer,
+                                       const std::string& name,
+                                       GPUKernelArgs& args,
+                                       size_t rank);
+
+                static void get_pad_fill_op(codegen::CodeWriter& writer,
+                                            const std::string& name,
+                                            GPUKernelArgs& args,
+                                            size_t rank);
 
                 static void get_ew_collective_op(codegen::CodeWriter& writer,
                                                  const std::string& name,

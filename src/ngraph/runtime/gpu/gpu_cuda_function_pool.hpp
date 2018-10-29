@@ -16,10 +16,9 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include <unordered_map>
-
-#include "ngraph/runtime/gpu/gpu_util.hpp"
 
 namespace ngraph
 {

@@ -18,7 +18,7 @@
 
 #include <CPP/data.hpp>
 
-#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 
@@ -29,11 +29,11 @@ runtime::intelgpu::IntelGPUTensorView::IntelGPUTensorView(const element::Type& e
                                                           const Shape& shape,
                                                           const cldnn::engine& backend_engine,
                                                           void* memory_pointer)
-    : runtime::TensorView(make_shared<descriptor::TensorView>(element_type, shape, "external"))
+    : runtime::Tensor(make_shared<descriptor::Tensor>(element_type, shape, "external"))
 {
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(element_type, shape);
 
-    m_descriptor->set_tensor_view_layout(
+    m_descriptor->set_tensor_layout(
         std::make_shared<runtime::intelgpu::IntelGPULayout>(*m_descriptor, layout));
 
     if (nullptr != memory_pointer)

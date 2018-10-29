@@ -310,11 +310,6 @@ TEST(copy, reduce)
     EXPECT_TRUE(axes == node_cast->get_reduction_axes());
 }
 
-TEST(copy, remainder)
-{
-    ASSERT_TRUE(check_binary<op::Remainder>());
-}
-
 TEST(copy, reshape)
 {
     Shape shape_in{2, 3, 4};

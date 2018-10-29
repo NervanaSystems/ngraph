@@ -15,28 +15,47 @@
 //*****************************************************************************
 
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/node.hpp"
 
 using namespace ngraph;
 using namespace std;
 
 descriptor::Tensor::Tensor(const element::Type& element_type,
-                           const Shape& shape,
+                           const PartialShape& pshape,
                            const std::string& name)
     : m_element_type(element_type)
-    , m_shape(shape)
+    , m_shape(pshape.is_static() ? pshape.to_shape() : Shape{})
+    , m_partial_shape(pshape)
     , m_name(name)
 {
 }
 
-void descriptor::Tensor::set_tensor_view_type(const element::Type& element_type, const Shape& shape)
+void descriptor::Tensor::set_tensor_type(const element::Type& element_type,
+                                         const PartialShape& pshape)
 {
-    m_shape = shape;
-    m_element_type = element_type;
-    if (nullptr != m_tensor_view_layout)
+    if (pshape.is_static())
     {
-        m_tensor_view_layout->set_tensor_view_type(element_type, shape);
+        m_shape = pshape.to_shape();
+    }
+    else
+    {
+        m_shape = Shape{};
+    }
+    m_partial_shape = pshape;
+    m_element_type = element_type;
+}
+
+const Shape& descriptor::Tensor::get_shape() const
+{
+    if (m_partial_shape.is_static())
+    {
+        return m_shape;
+    }
+    else
+    {
+        throw std::invalid_argument(
+            "get_shape was called on a descriptor::Tensor with dynamic shape");
     }
 }
 
@@ -52,7 +71,7 @@ size_t descriptor::Tensor::get_pool_offset() const
 
 size_t descriptor::Tensor::size() const
 {
-    if (auto tvl = get_tensor_view_layout())
+    if (auto tvl = get_tensor_layout())
     {
         return tvl->get_allocated_size();
     }
@@ -60,6 +79,20 @@ size_t descriptor::Tensor::size() const
     {
         return shape_size(get_shape()) * m_element_type.size();
     }
+}
+
+void descriptor::Tensor::set_tensor_layout(
+    const std::shared_ptr<layout::TensorLayout>& tensor_layout)
+{
+    if (tensor_layout->get_shape() != get_shape())
+    {
+        throw ngraph_error("Setting tensor's layout to a layout with a different shape.");
+    }
+    if (tensor_layout->get_element_type() != get_element_type())
+    {
+        throw ngraph_error("Setting tensor's layout to a layout with a different element type.");
+    }
+    m_tensor_layout = tensor_layout;
 }
 
 ostream& operator<<(ostream& out, const descriptor::Tensor& tensor)

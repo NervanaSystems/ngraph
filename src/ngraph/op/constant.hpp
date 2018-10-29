@@ -21,6 +21,7 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/type/bfloat16.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -108,7 +109,6 @@ namespace ngraph
 
             void validate_and_infer_types() override
             {
-                Node::validate_and_infer_types();
                 infer_element_type();
                 set_output_type(0, m_element_type, m_shape);
             }
@@ -210,6 +210,10 @@ namespace ngraph
                 if (target_type == element::boolean)
                 {
                     write_buffer<char, T>(target, source, target_element_count);
+                }
+                else if (target_type == element::bf16)
+                {
+                    write_buffer<bfloat16, T>(target, source, target_element_count);
                 }
                 else if (target_type == element::f32)
                 {

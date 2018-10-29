@@ -23,7 +23,7 @@
 
 #include <mkldnn.hpp>
 
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -32,26 +32,26 @@ namespace ngraph
     {
         namespace cpu
         {
-            class LayoutDescriptor : public ngraph::descriptor::layout::TensorViewLayout
+            class LayoutDescriptor : public ngraph::descriptor::layout::TensorLayout
             {
             public:
-                LayoutDescriptor(const ngraph::descriptor::TensorView& tv);
+                LayoutDescriptor(const ngraph::descriptor::Tensor& tv);
                 ~LayoutDescriptor() override {}
-                size_t get_size() override { return m_size; }
-                virtual size_t get_allocated_size() override { return m_mkldnn_memory_size; }
+                virtual size_t get_allocated_size() override { return m_buffer_size; }
                 size_t get_offset() const { return m_offset; }
                 size_t get_index_offset(const std::vector<size_t>& indices) override;
 
-                const Strides& get_strides() const override { return m_strides; }
+                Strides get_strides() const override { return m_strides; }
                 void set_strides(Strides& strides) { m_strides = strides; }
-                bool operator==(const TensorViewLayout& other) const override;
+                bool operator==(const TensorLayout& other) const override;
 
                 const mkldnn::memory::desc& get_mkldnn_md() const { return m_mkldnn_md; }
-                void set_mkldnn_md(const mkldnn::memory::desc md);
+                void set_mkldnn_md(const mkldnn::memory::desc& md);
                 bool is_mkldnn_layout() const
                 {
                     return m_mkldnn_md.data.format != mkldnn::memory::format::format_undef;
                 }
+                bool is_row_major_layout();
 
                 static const mkldnn::memory::desc DummyDesc;
 
@@ -59,14 +59,13 @@ namespace ngraph
                 // Native row-major layout for now
                 Strides m_strides;
                 size_t m_offset;
-                size_t m_size;
 
                 // For tensor views that can be tracked with MKLDNN memory
                 // descriptors, this holds the physical layout information
                 // Otherwise, physical layout is assumed to be in row-major
                 // format represented by m_strides
                 mkldnn::memory::desc m_mkldnn_md;
-                size_t m_mkldnn_memory_size;
+                size_t m_buffer_size;
             };
 
             typedef std::vector<std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>>

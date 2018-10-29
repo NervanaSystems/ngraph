@@ -37,6 +37,8 @@ namespace ngraph
             protected:
                 size_t m_axis;
                 element::Type m_index_element_type;
+
+                void validate_and_infer_types() override;
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override;
             };

@@ -31,7 +31,9 @@ namespace ngraph
         {
             Shape get_kernel_shape(const Node& node)
             {
-                return node.get_attribute_value<std::vector<std::size_t>>("kernel_shape", {1, 1});
+                std::size_t input_spacial_dims = node.get_ng_inputs()[0]->get_shape().size() - 2;
+                return node.get_attribute_value<std::vector<std::size_t>>(
+                    "kernel_shape", std::vector<std::size_t>(input_spacial_dims, 1UL));
             }
 
             namespace detail
@@ -121,7 +123,7 @@ namespace ngraph
                     pads = CoordinateDiff(static_cast<std::ptrdiff_t>(kernel_shape.size()), 0UL);
                 }
 
-                if (pads.size() <= 3)
+                if (pads.size() != kernel_shape.size() * 2)
                 {
                     // Paddings specified in (H, W, C) format.
                     return {pads, pads};

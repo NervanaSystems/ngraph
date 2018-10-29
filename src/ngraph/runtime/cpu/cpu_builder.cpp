@@ -98,6 +98,7 @@
 #include "ngraph/runtime/cpu/kernel/tan.hpp"
 #include "ngraph/runtime/cpu/kernel/tanh.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/halide_op.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -362,10 +363,17 @@ namespace ngraph
 
 #define TI(x) type_index(typeid(x))
 
-            BuildOpMap build_dispatcher{
-                {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
-                {TI(ngraph::runtime::cpu::op::ConvertLayout),
-                 &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::ConvertLayout>}};
+            BuildOpMap& GetGlobalBuildDispatcher()
+            {
+                static BuildOpMap build_dispatcher{
+                    {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
+                    {TI(ngraph::runtime::cpu::op::ConvertLayout),
+                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::ConvertLayout>},
+                    {TI(ngraph::runtime::cpu::op::HalideOp),
+                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::HalideOp>}};
+
+                return build_dispatcher;
+            }
 
             REGISTER_OP_BUILDER(Constant);
             REGISTER_OP_BUILDER(Result);

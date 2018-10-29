@@ -286,6 +286,7 @@ void runtime::intelgpu::do_create_variance_back(cldnn::topology& topology,
     const cldnn::layout layout = IntelGPULayout::create_cldnn_layout(output_type, channel_shape);
     const string entry_point_name = "create_variance_back_" + output_name;
     codegen::CodeWriter writer;
+    vector<size_t> gws;
 
     writer << "__kernel void " << entry_point_name << "(const __global float input"
            << array_dims(input_shape) << ", const __global float delta" << array_dims(input_shape)
@@ -296,49 +297,36 @@ void runtime::intelgpu::do_create_variance_back(cldnn::topology& topology,
     writer.block_begin();
     { // Main function body
 
-        // Loop for Channel axis 1
-        writer << "for (uint i" << channel_axis << " = 0; i" << channel_axis << " < "
-               << input_shape.at(channel_axis) << "; ++i" << channel_axis << ")\n";
+        gws.push_back(1); //input_shape.at(0));
+        // Channel axis loop
+        writer << "\nconst uint i" << channel_axis << " = get_global_id(" << channel_axis
+               << "); /* channel_axis trip count " << input_shape.at(channel_axis) << "*/\n";
+        gws.push_back(input_shape.at(channel_axis));
+        writer << "const float     mean_loc = mean[i" << channel_axis << "];\n"
+               << "const float variance_loc = variance[i" << channel_axis << "];\n"
+               << "const float var_sqrt = 1.0f / sqrt(variance_loc + " << eps << ");\n";
+        writer << "float sum = 0.0f;\n";
+
+        // Main loops
+        writer << "for (uint i0 = 0; i0 < " << input_shape.at(0) << "; ++i0)\n";
         writer.block_begin();
         {
-            writer << "float sum = 0.0f;\n";
-
-            size_t var_idx = 0;
-            // Main loops
-            for (auto const& i : input_shape)
+            writer << "for (uint i2 = 0; i2 < " << input_shape.at(2) << "; ++i2)\n";
+            writer.block_begin();
             {
-                if (var_idx != channel_axis)
+                writer << "for (uint i3 = 0; i3 < " << input_shape.at(3) << "; ++i3)\n";
+                writer.block_begin();
                 {
-                    writer << "for (uint i" << var_idx << " = 0; i" << var_idx << " < " << i
-                           << "; ++i" << var_idx << ")\n";
-                    writer.block_begin();
+                    writer << "const float input_loc = input" << access_dims(input_shape) << ";\n";
+                    writer << "const float delta_loc = delta" << access_dims(input_shape) << ";\n";
+                    writer << "sum += (input_loc - mean_loc) * var_sqrt * delta_loc;\n";
                 }
-                ++var_idx;
-            }
-
-            writer << "float normalized = (input" << access_dims(input_shape) << " - mean[i"
-                   << channel_axis << "]) / ("
-                   << "sqrt(variance[i" << channel_axis << "] + " << eps << ")"
-                   << ");\n";
-
-            writer << "sum += normalized * delta" << access_dims(input_shape) << ";\n";
-
-            var_idx = 0;
-            // Closing brackets for main loops
-            for (auto const& i : input_shape)
-            {
-                if (var_idx != channel_axis)
-                {
-                    writer.block_end();
-                }
-                ++var_idx;
-            }
-
-            writer << "output[i" << channel_axis << "]  = sum;\n";
-
-        } // Closing brackets for Channel axis loop
+                writer.block_end();
+            } // Closing brackets for Channel axis loop
+            writer.block_end();
+        }
         writer.block_end();
-
+        writer << "output[i" << channel_axis << "]  = sum;\n";
     } // Main function body
     writer.block_end();
 
@@ -350,7 +338,7 @@ void runtime::intelgpu::do_create_variance_back(cldnn::topology& topology,
                                                               get_kernel_args(4, 1),
                                                               "",
                                                               layout,
-                                                              {1});
+                                                              gws);
     topology.add(op_create_variance_back);
 }
 

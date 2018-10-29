@@ -60,13 +60,13 @@ shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_fra
     return external_function->make_call_frame();
 }
 
-shared_ptr<runtime::TensorView>
+shared_ptr<runtime::Tensor>
     runtime::cpu::CPU_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
     return make_shared<runtime::cpu::CPUTensorView>(element_type, shape);
 }
 
-shared_ptr<runtime::TensorView> runtime::cpu::CPU_Backend::create_tensor(
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     return make_shared<runtime::cpu::CPUTensorView>(element_type, shape, memory_pointer);
@@ -78,18 +78,34 @@ bool runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
     if (instance.m_external_function == nullptr)
     {
         instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
-#if !defined(NGRAPH_DEX_ONLY)
         instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
-#endif
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
     }
     return true;
 }
 
+std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
+    runtime::cpu::CPU_Backend::get_call_frame(std::shared_ptr<Function> func)
+{
+    bool rc = true;
+    FunctionInstance& instance = m_function_map[func];
+    if (instance.m_external_function == nullptr)
+    {
+        rc = compile(func);
+    }
+
+    if (!rc)
+    {
+        throw ngraph_error("couldn't compile a function");
+    }
+
+    return instance.m_call_frame;
+}
+
 bool runtime::cpu::CPU_Backend::call(shared_ptr<Function> func,
-                                     const vector<shared_ptr<runtime::TensorView>>& outputs,
-                                     const vector<shared_ptr<runtime::TensorView>>& inputs)
+                                     const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                     const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     bool rc = true;
 
@@ -108,8 +124,6 @@ void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Function> fu
 {
     m_function_map.erase(func);
 }
-
-#if !defined(NGRAPH_DEX_ONLY)
 
 void runtime::cpu::CPU_Backend::enable_performance_data(shared_ptr<Function> func, bool enable)
 {
@@ -131,28 +145,10 @@ vector<runtime::PerformanceCounter>
         const FunctionInstance& instance = it->second;
         if (instance.m_external_function != nullptr)
         {
-            auto* engine = instance.m_external_function->m_execution_engine.get();
-            if (engine)
-            {
-                auto get_count = engine->find_function<size_t()>("get_debug_timer_count");
-                auto get_name = engine->find_function<const char*(size_t)>("get_debug_timer_name");
-                auto get_microseconds =
-                    engine->find_function<size_t(size_t)>("get_debug_timer_microseconds");
-                auto get_call_count =
-                    engine->find_function<size_t(size_t)>("get_debug_timer_call_count");
-
-                if (get_count && get_name && get_microseconds && get_call_count)
-                {
-                    size_t count = get_count();
-                    for (size_t i = 0; i < count; i++)
-                    {
-                        rc.push_back({get_name(i), get_microseconds(i), get_call_count(i)});
-                    }
-                }
-            }
+            rc.insert(rc.end(),
+                      instance.m_external_function->get_perf_counters().begin(),
+                      instance.m_external_function->get_perf_counters().end());
         }
     }
     return rc;
 }
-
-#endif

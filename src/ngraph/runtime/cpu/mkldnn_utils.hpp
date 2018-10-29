@@ -43,6 +43,7 @@ namespace ngraph
 
                 const mkldnn::memory::desc& get_input_mkldnn_md(const Node* node, size_t index);
                 const mkldnn::memory::desc& get_output_mkldnn_md(const Node* node, size_t index);
+
                 mkldnn::memory::desc create_default_mkldnn_md(const Node* node,
                                                               size_t index,
                                                               bool is_output,
@@ -54,14 +55,30 @@ namespace ngraph
                 mkldnn::memory::desc create_blocked_mkldnn_md(const Shape& dims,
                                                               const Strides& strides,
                                                               const ngraph::element::Type type);
+                mkldnn::memory::desc try_get_named_md(mkldnn_memory_desc_t md);
                 mkldnn::memory::desc rotate_blocked_md(const mkldnn::memory::desc& in,
-                                                       AxisVector& axis_order);
-                bool use_mkldnn_kernel(const ngraph::Node* node);
+                                                       const AxisVector& axis_order);
+                mkldnn::memory::desc squeeze_blocked_md(const mkldnn::memory::desc& in,
+                                                        AxisVector& axis_list);
+                mkldnn::memory::desc expand_blocked_md(const mkldnn::memory::desc& in,
+                                                       AxisVector& axis_list);
+
                 bool compare_mkldnn_formats(mkldnn::memory::format lhs, mkldnn::memory::format rhs);
                 bool compare_mkldnn_mds(const mkldnn::memory::desc& lhs,
                                         const mkldnn::memory::desc& rhs);
+                bool is_mkldnn_padded_layout(const mkldnn::memory::desc& in,
+                                             const AxisVector& axis_list);
                 bool is_mkldnn_filter_format(mkldnn::memory::format fmt);
                 bool is_mkldnn_blocked_data_format(mkldnn::memory::format fmt);
+
+                bool use_mkldnn_kernel(const ngraph::Node* node);
+
+                std::unordered_set<std::type_index>& get_op_registry();
+                std::map<element::Type, const mkldnn::memory::data_type>&
+                    get_mkldnn_data_type_map();
+                std::map<element::Type, const std::string>& get_mkldnn_data_type_string_map();
+                std::map<mkldnn::memory::format, const std::string>& get_mkldnn_format_string_map();
+                std::set<mkldnn::memory::format>& get_filter_formats();
             }
         }
     }

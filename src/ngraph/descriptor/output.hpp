@@ -44,8 +44,8 @@ namespace ngraph
 
             std::shared_ptr<Node> get_node() const;
             size_t get_index() const { return m_index; }
-            std::shared_ptr<Tensor> get_tensor_view() const { return m_tensor; }
-            void set_tensor_view(const std::shared_ptr<Tensor>& tensor) { m_tensor = tensor; }
+            std::shared_ptr<Tensor> get_tensor_ptr() const { return m_tensor; }
+            void set_tensor_ptr(const std::shared_ptr<Tensor>& tensor) { m_tensor = tensor; }
             void add_input(Input* input);
             void remove_input(Input* input);
             const std::set<Input*>& get_inputs() const { return m_inputs; }
@@ -53,6 +53,10 @@ namespace ngraph
 
             /// \return the shape of the output
             const Shape& get_shape() const;
+
+            /// \return the partial shape of the output
+            const PartialShape& get_partial_shape() const;
+
             /// \return the element type of the output
             const element::Type& get_element_type() const;
 

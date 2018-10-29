@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "ngraph/except.hpp"
+#include "ngraph/type/bfloat16.hpp"
 
 namespace ngraph
 {
@@ -33,8 +34,9 @@ namespace ngraph
     {
         class Type;
 
-        extern const Type unspecified;
+        extern const Type dynamic;
         extern const Type boolean;
+        extern const Type bf16;
         extern const Type f32;
         extern const Type f64;
         extern const Type i8;
@@ -51,14 +53,21 @@ namespace ngraph
         public:
             Type() {}
             Type(const Type&) = default;
-            Type(size_t bitwidth, bool is_real, bool is_signed, const std::string& cname);
+            Type(size_t bitwidth,
+                 bool is_real,
+                 bool is_signed,
+                 bool is_quantized,
+                 const std::string& cname);
             Type& operator=(const Type&);
             virtual ~Type() {}
             const std::string& c_type_string() const;
             size_t size() const;
             size_t hash() const;
+            bool is_static() const { return (*this != dynamic); }
+            bool is_dynamic() const { return !is_static(); }
             bool is_real() const { return m_is_real; }
             bool is_signed() const { return m_is_signed; }
+            bool is_quantized() const { return m_is_quantized; }
             size_t bitwidth() const { return m_bitwidth; }
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
@@ -68,11 +77,32 @@ namespace ngraph
 
             /// Returns true if the type is floating point, else false.
             bool get_is_real() const { return m_is_real; }
+            /// \brief Merges two element types t1 and t2, writing the result into dst and
+            ///        returning true if successful, else returning false.
+            ///
+            ///        To "merge" two element types t1 and t2 is to find the least restrictive
+            ///        element type t that is no more restrictive than t1 and t2, if t exists.
+            ///        More simply:
+            ///
+            ///           merge(dst,element::Type::dynamic,t)
+            ///              writes t to dst and returns true
+            ///
+            ///           merge(dst,t,element::Type::dynamic)
+            ///              writes t to dst and returns true
+            ///
+            ///           merge(dst,t1,t2) where t1, t2 both static and equal
+            ///              writes t1 to dst and returns true
+            ///
+            ///           merge(dst,t1,t2) where t1, t2 both static and unequal
+            ///              does nothing to dst, and returns false
+            static bool merge(element::Type& dst, const element::Type& t1, const element::Type& t2);
+
         private:
             size_t m_bitwidth{0};
             bool m_is_real{false};
             bool m_is_signed{false};
-            std::string m_cname{"unspecified"};
+            bool m_is_quantized{false};
+            std::string m_cname{"dynamic"};
         };
 
         template <typename T>
@@ -104,6 +134,8 @@ namespace ngraph
         const Type& from<uint32_t>();
         template <>
         const Type& from<uint64_t>();
+        template <>
+        const Type& from<ngraph::bfloat16>();
 
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
     }

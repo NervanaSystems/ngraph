@@ -27,12 +27,12 @@ using namespace ngraph;
 
 static unordered_map<string, unordered_set<string>> s_blacklists;
 
-string ngraph::prepend_disabled(const string& test_case_name,
+string ngraph::prepend_disabled(const string& backend_name,
                                 const string& test_name,
                                 const string& manifest)
 {
     string rc = test_name;
-    unordered_set<string>& blacklist = s_blacklists[test_case_name];
+    unordered_set<string>& blacklist = s_blacklists[backend_name];
     if (blacklist.empty() && !manifest.empty())
     {
         ifstream f(manifest);
@@ -48,9 +48,22 @@ string ngraph::prepend_disabled(const string& test_case_name,
             }
         }
     }
-    if (contains(blacklist, test_name))
+    if (blacklist.find(test_name) != blacklist.end())
     {
         rc = "DISABLED_" + test_name;
     }
     return rc;
+}
+
+string ngraph::combine_test_backend_and_case(const string& backend_name,
+                                             const string& test_casename)
+{
+    if (backend_name == test_casename)
+    {
+        return backend_name;
+    }
+    else
+    {
+        return backend_name + "_" + test_casename;
+    }
 }

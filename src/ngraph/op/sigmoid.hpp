@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
 #include "ngraph/util.hpp"
 
@@ -36,7 +37,7 @@ namespace ngraph
 
         /// \brief Elementwise SigmoidBackprop operation.
         ///
-        class SigmoidBackprop : public Op
+        class SigmoidBackprop : public util::BinaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a SigmoidBackprop operation.

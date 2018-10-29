@@ -48,39 +48,78 @@ TEST(element_type, mapable)
 TEST(element_type, size)
 {
     {
-        element::Type t1{1, false, false, ""};
+        element::Type t1{1, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{2, false, false, ""};
+        element::Type t1{2, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{3, false, false, ""};
+        element::Type t1{3, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{4, false, false, ""};
+        element::Type t1{4, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{5, false, false, ""};
+        element::Type t1{5, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{6, false, false, ""};
+        element::Type t1{6, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{7, false, false, ""};
+        element::Type t1{7, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{8, false, false, ""};
+        element::Type t1{8, false, false, false, ""};
         EXPECT_EQ(1, t1.size());
     }
     {
-        element::Type t1{9, false, false, ""};
+        element::Type t1{9, false, false, false, ""};
         EXPECT_EQ(2, t1.size());
     }
+}
+
+TEST(element_type, merge_both_dynamic)
+{
+    element::Type t;
+    ASSERT_TRUE(element::Type::merge(t, element::dynamic, element::dynamic));
+    ASSERT_TRUE(t.is_dynamic());
+}
+
+TEST(element_type, merge_left_dynamic)
+{
+    element::Type t;
+    ASSERT_TRUE(element::Type::merge(t, element::dynamic, element::u64));
+    ASSERT_TRUE(t.is_static());
+    ASSERT_EQ(t, element::u64);
+}
+
+TEST(element_type, merge_right_dynamic)
+{
+    element::Type t;
+    ASSERT_TRUE(element::Type::merge(t, element::i16, element::dynamic));
+    ASSERT_TRUE(t.is_static());
+    ASSERT_EQ(t, element::i16);
+}
+
+TEST(element_type, merge_both_static_equal)
+{
+    element::Type t;
+    ASSERT_TRUE(element::Type::merge(t, element::f64, element::f64));
+    ASSERT_TRUE(t.is_static());
+    ASSERT_EQ(t, element::f64);
+}
+
+TEST(element_type, merge_both_static_unequal)
+{
+    element::Type t = element::f32;
+    ASSERT_FALSE(element::Type::merge(t, element::i8, element::i16));
+    ASSERT_TRUE(t.is_static());
+    ASSERT_EQ(t, element::f32);
 }

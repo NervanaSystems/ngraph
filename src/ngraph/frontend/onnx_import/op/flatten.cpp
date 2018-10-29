@@ -25,23 +25,23 @@ namespace ngraph
     {
         namespace op
         {
-            NodeVector flatten(const Node& node)
+            namespace set_1
             {
-                NodeVector inputs{node.get_ng_inputs()};
-                auto data = inputs.at(0);
-                auto axis = node.get_attribute_value<int64_t>("axis", 1);
-
-                if (axis < 0 || axis > data->get_shape().size())
+                NodeVector flatten(const Node& node)
                 {
-                    throw error::parameter::Value("Flatten node (",
-                                                  node.get_name(),
-                                                  "): provided axis attribute is not valid.");
+                    NodeVector inputs{node.get_ng_inputs()};
+                    auto data = inputs.at(0);
+                    auto axis = node.get_attribute_value<int64_t>("axis", 1);
+
+                    ASSERT_VALID_ARGUMENT(node, (axis >= 0) && (axis <= data->get_shape().size()))
+                        << "provided 'axis' attribute is not valid.";
+
+                    return {reshape::flatten(data, axis)};
                 }
 
-                return {reshape::flatten(data, axis)};
-            }
+            } // namespace set_1
 
-        } // namespace  op
+        } //namespace op
 
     } // namespace  onnx_import
 

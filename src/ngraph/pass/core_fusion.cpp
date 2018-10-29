@@ -202,7 +202,7 @@ void pass::CoreFusion::construct_folded_batch_norm()
     auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{1, 2, 2, 2};
-    auto bn = std::make_shared<op::BatchNorm>(eps, gamma, beta, pconv, mean, var);
+    auto bn = std::make_shared<op::BatchNormInference>(eps, gamma, beta, pconv, mean, var);
 
     ngraph::pattern::graph_rewrite_callback callback = [input, filters, mean, var, gamma, beta](
         pattern::Matcher& m) {
@@ -210,8 +210,8 @@ void pass::CoreFusion::construct_folded_batch_norm()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto m_bn = std::dynamic_pointer_cast<op::BatchNorm>(m.get_match_root());
-        auto m_conv = std::dynamic_pointer_cast<op::Convolution>(m_bn->get_argument(2));
+        auto m_bn = std::static_pointer_cast<op::BatchNormInference>(m.get_match_root());
+        auto m_conv = std::static_pointer_cast<op::Convolution>(m_bn->get_argument(2));
 
         if (m_conv->get_users().size() > 1)
         {
@@ -397,7 +397,7 @@ static std::shared_ptr<Node> reduce_broadcast(std::shared_ptr<Node> broadcast)
 {
     const size_t H = 2;
     const size_t W = 3;
-    auto matched_broadcast_w1 = std::dynamic_pointer_cast<op::Broadcast>(broadcast);
+    auto matched_broadcast_w1 = std::static_pointer_cast<op::Broadcast>(broadcast);
     Shape shape_w1{matched_broadcast_w1->get_shape()};
     shape_w1[H] /= 2;
     shape_w1[W] /= 2;
@@ -531,7 +531,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
                 NGRAPH_DEBUG << "element-wise isn't data";
                 return false;
             }
-            auto sconv = std::dynamic_pointer_cast<op::Convolution>(sc);
+            auto sconv = std::static_pointer_cast<op::Convolution>(sc);
             sparse_shape_index = shape_to_index(sconv->get_shape());
             if (sparse_shape_index == 0)
             {
@@ -553,7 +553,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         const size_t full_shape_index = sparse_shape_index - 1;
 
         auto m_conv_stride1 =
-            std::dynamic_pointer_cast<op::Convolution>(pattern_map[conv_stride1_label]);
+            std::static_pointer_cast<op::Convolution>(pattern_map[conv_stride1_label]);
 
         if (!are_img_dims_equal(m_conv_stride1->get_shape(), supported_shapes[full_shape_index]) ||
             !are_img_dims_equal(m_conv_stride1->get_argument(1)->get_shape(), win_size_1) ||
@@ -568,7 +568,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         }
 
         auto m_conv_stride3 =
-            std::dynamic_pointer_cast<op::Convolution>(pattern_map[conv_stride3_label]);
+            std::static_pointer_cast<op::Convolution>(pattern_map[conv_stride3_label]);
 
         if (!are_img_dims_equal(m_conv_stride3->get_shape(), supported_shapes[full_shape_index]) ||
             !are_img_dims_equal(m_conv_stride3->get_argument(1)->get_shape(), shape_3) ||

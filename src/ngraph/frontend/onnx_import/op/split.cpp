@@ -80,79 +80,84 @@ namespace ngraph
 
         namespace op
         {
-            namespace detail
+            namespace set_1
             {
-                template <typename T>
-                inline T get_valid_array_index(T left, T right)
+                namespace detail
                 {
-                    return (left >= 0) ? std::min(left, right)
-                                       : std::max(static_cast<T>(0), right + left);
-                }
-
-                inline std::shared_ptr<ngraph::op::Slice>
-                    make_ng_slice(const std::shared_ptr<ngraph::Node>& node,
-                                  std::vector<std::size_t> axes,
-                                  std::vector<std::size_t> starts,
-                                  std::vector<std::size_t> ends)
-                {
-                    std::vector<std::size_t> upper_bounds{node->get_shape()};
-                    std::vector<std::size_t> lower_bounds(upper_bounds.size());
-                    for (std::size_t index{0}; index < axes.size(); ++index)
+                    template <typename T>
+                    inline T get_valid_array_index(T left, T right)
                     {
-                        std::size_t axis{axes.at(index)};
-                        lower_bounds.at(axis) =
-                            get_valid_array_index(starts.at(index), node->get_shape().at(axis));
-                        upper_bounds.at(axis) =
-                            get_valid_array_index(ends.at(index), node->get_shape().at(axis));
+                        return (left >= 0) ? std::min(left, right)
+                                           : std::max(static_cast<T>(0), right + left);
                     }
-                    return std::make_shared<ngraph::op::Slice>(node, lower_bounds, upper_bounds);
-                }
 
-            } // namespace detail
-
-            NodeVector split(const Node& node)
-            {
-                std::shared_ptr<ngraph::Node> input = node.get_ng_inputs().at(0);
-                std::size_t count_outputs{node.get_output_names().size()};
-                int64_t axis{node.get_attribute_value<int64_t>("axis", 0)};
-                std::size_t axis_to_split{static_cast<std::size_t>(axis)};
-                if (axis < 0)
-                {
-                    axis_to_split = input->get_shape().size() + axis;
-                }
-                else if (axis_to_split >= input->get_shape().size())
-                {
-                    throw error::op::split::OutOfRange{node.get_name()};
-                }
-                std::size_t length_axis_to_split{input->get_shape().at(axis_to_split)};
-                std::vector<std::size_t> length_parts;
-                try
-                {
-                    length_parts = node.get_attribute_value<std::vector<std::size_t>>("split");
-                }
-                catch (const std::exception&)
-                {
-                    if (length_axis_to_split % count_outputs)
+                    inline std::shared_ptr<ngraph::op::Slice>
+                        make_ng_slice(const std::shared_ptr<ngraph::Node>& node,
+                                      std::vector<std::size_t> axes,
+                                      std::vector<std::size_t> starts,
+                                      std::vector<std::size_t> ends)
                     {
-                        throw error::op::split::Parts{
-                            node.get_name(), count_outputs, length_axis_to_split};
+                        std::vector<std::size_t> upper_bounds{node->get_shape()};
+                        std::vector<std::size_t> lower_bounds(upper_bounds.size());
+                        for (std::size_t index{0}; index < axes.size(); ++index)
+                        {
+                            std::size_t axis{axes.at(index)};
+                            lower_bounds.at(axis) =
+                                get_valid_array_index(starts.at(index), node->get_shape().at(axis));
+                            upper_bounds.at(axis) =
+                                get_valid_array_index(ends.at(index), node->get_shape().at(axis));
+                        }
+                        return std::make_shared<ngraph::op::Slice>(
+                            node, lower_bounds, upper_bounds);
                     }
-                    length_parts.assign(count_outputs, length_axis_to_split / count_outputs);
-                }
 
-                std::size_t start_index{0};
-                NodeVector outputs;
-                for (const auto& length_part : length_parts)
+                } // namespace detail
+
+                NodeVector split(const Node& node)
                 {
-                    std::size_t end_index{start_index + length_part};
-                    outputs.push_back(
-                        detail::make_ng_slice(input, {axis_to_split}, {start_index}, {end_index}));
-                    start_index = end_index;
-                }
-                return outputs;
-            }
+                    std::shared_ptr<ngraph::Node> input = node.get_ng_inputs().at(0);
+                    std::size_t count_outputs{node.get_output_names().size()};
+                    int64_t axis{node.get_attribute_value<int64_t>("axis", 0)};
+                    std::size_t axis_to_split{static_cast<std::size_t>(axis)};
+                    if (axis < 0)
+                    {
+                        axis_to_split = input->get_shape().size() + axis;
+                    }
+                    else if (axis_to_split >= input->get_shape().size())
+                    {
+                        throw error::op::split::OutOfRange{node.get_name()};
+                    }
+                    std::size_t length_axis_to_split{input->get_shape().at(axis_to_split)};
+                    std::vector<std::size_t> length_parts;
+                    try
+                    {
+                        length_parts = node.get_attribute_value<std::vector<std::size_t>>("split");
+                    }
+                    catch (const std::exception&)
+                    {
+                        if (length_axis_to_split % count_outputs)
+                        {
+                            throw error::op::split::Parts{
+                                node.get_name(), count_outputs, length_axis_to_split};
+                        }
+                        length_parts.assign(count_outputs, length_axis_to_split / count_outputs);
+                    }
 
-        } // namespace op
+                    std::size_t start_index{0};
+                    NodeVector outputs;
+                    for (const auto& length_part : length_parts)
+                    {
+                        std::size_t end_index{start_index + length_part};
+                        outputs.push_back(detail::make_ng_slice(
+                            input, {axis_to_split}, {start_index}, {end_index}));
+                        start_index = end_index;
+                    }
+                    return outputs;
+                }
+
+            } // namespace set_1
+
+        } //namespace op
 
     } // namespace onnx_import
 

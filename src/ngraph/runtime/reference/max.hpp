@@ -20,6 +20,7 @@
 #include <limits>
 
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/shape_util.hpp"
 
 namespace ngraph
 {
@@ -49,7 +50,7 @@ namespace ngraph
 
                 for (const Coordinate& input_coord : input_transform)
                 {
-                    Coordinate output_coord = project(input_coord, reduction_axes);
+                    Coordinate output_coord = reduce(input_coord, reduction_axes);
 
                     T x = arg[input_transform.index(input_coord)];
                     T max = out[output_transform.index(output_coord)];
