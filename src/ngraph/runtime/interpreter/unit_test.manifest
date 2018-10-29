@@ -7,3 +7,4 @@ batchnorm_fprop_inference_b2c2h2w1
 batchnorm_fprop_bprop
 batchnorm_fprop_bprop_2step
 computation_reuse
+topk_int64

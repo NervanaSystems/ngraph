@@ -202,6 +202,130 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
     return;
 }
 
+void runtime::gpu::CudaKernelBuilder::get_topk(codegen::CodeWriter& writer,
+                                               const std::string& name,
+                                               const std::vector<std::string>& dtypes,
+                                               bool compute_max,
+                                               runtime::gpu::GPUKernelArgs& args,
+                                               bool use_malloc)
+{
+    writer << "struct Entry\n";
+    writer.block_begin();
+    {
+        writer << dtypes[0] << " value;\n";
+        writer << dtypes[1] << " index;\n";
+        writer << "__device__ " << dtypes[1] << " get_index() {return index;}\n";
+        writer << "__device__ "
+               << "void set_index(" << dtypes[1] << " id) {index = id;}\n";
+        writer << "__device__ " << dtypes[0] << " get_value() {return value;}\n";
+        writer << "__device__ "
+               << "void set_value(" << dtypes[0] << " val) {value = val;}\n";
+    }
+    writer.block_end();
+    writer << ";\n";
+    writer << "__device__ void swap(Entry& a, Entry& b)\n";
+    writer.block_begin();
+    {
+        writer << "Entry t = a;\n";
+        writer << "a = b;\n";
+        writer << "b = t;\n";
+    }
+    writer.block_end();
+    writer << "__device__ void heapify(Entry *heap, size_t heap_size, size_t idx)\n";
+    writer.block_begin();
+    {
+        writer << "size_t largest = idx;\n";
+        writer << "size_t left = (idx << 1) + 1;\n";
+        writer << "size_t right = (idx + 1) << 1;\n";
+        std::string g_op = ((compute_max) ? ">" : "<");
+        writer << "if (left < heap_size && heap[left].get_value() " << g_op
+               << " heap[largest].get_value())\n";
+        writer.block_begin();
+        {
+            writer << "largest = left;\n";
+        }
+        writer.block_end();
+        writer << "if (right < heap_size && heap[right].get_value() " << g_op
+               << " heap[largest].get_value())\n";
+        writer.block_begin();
+        {
+            writer << "largest = right;\n";
+        }
+        writer.block_end();
+        writer << "if (largest != idx)\n";
+        writer.block_begin();
+        {
+            writer << "swap(heap[largest], heap[idx]);\n";
+            writer << "heapify(heap, heap_size, largest);\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+    writer << "__device__ void create_and_build(Entry *entry, size_t size)\n";
+    writer.block_begin();
+    {
+        writer << "for (int i = (size-2) / 2; i >= 0; --i)\n";
+        writer.block_begin();
+        {
+            writer << "heapify(entry, size, i);\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
+    writer.block_begin();
+    {
+        writer << "in = in + blockIdx.x * num_cols;\n";
+        if (use_malloc)
+        {
+            writer << "entry = entry + blockIdx.x * num_cols;\n";
+        }
+        writer << "out_id = out_id + blockIdx.x * topk_k;\n";
+        writer << "out_val = out_val + blockIdx.x * topk_k;\n";
+        if (!use_malloc)
+        {
+            writer << "extern __shared__ Entry entry[];\n";
+        }
+
+        writer << "for (size_t i = threadIdx.x; i < num_cols; i += blockDim.x)\n";
+        writer.block_begin();
+        {
+            writer << "entry[i].set_value(in[i]);\n";
+            writer << "entry[i].set_index(i);\n";
+        }
+        writer.block_end();
+
+        writer << "__syncthreads();\n";
+
+        writer << "if (threadIdx.x == 0)\n";
+        writer.block_begin();
+        {
+            writer << "create_and_build(entry, num_cols);\n";
+
+            writer << "size_t changed_size_of_heap = num_cols;\n";
+            writer << "size_t k = 0;\n";
+            writer << "while (k++ < topk_k)\n";
+            writer.block_begin();
+            {
+                writer << "swap(*entry, entry[changed_size_of_heap - 1]);\n";
+                writer << "heapify(entry, --changed_size_of_heap, 0);\n";
+            }
+            writer.block_end();
+
+            writer << "for (size_t i = threadIdx.x; i < topk_k; i++)\n";
+            writer.block_begin();
+            {
+                writer << "out_val[i] = entry[num_cols - 1 - i].get_value();\n";
+                writer << "out_id[i] = entry[num_cols - 1 - i].get_index();\n";
+            }
+            writer.block_end();
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
 //each thread calculate the whole reduction of one output
 void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
     codegen::CodeWriter& writer,
