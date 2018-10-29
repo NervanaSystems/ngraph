@@ -112,7 +112,6 @@ option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" FALSE)
 
 if (LINUX)
     include(GNUInstallDirs)
-    include(cmake/platform.cmake)
 else()
     set(CMAKE_INSTALL_BINDIR "bin")
     set(CMAKE_INSTALL_INCLUDEDIR "include")
