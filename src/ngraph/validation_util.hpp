@@ -33,15 +33,15 @@ namespace ngraph
                                                        const Strides& window_dilation,
                                                        bool is_window_all_in_padding_allowed);
 
-    std::tuple<element::Type, Shape>
+    std::tuple<element::Type, PartialShape>
         infer_convolution_forward(const Node* node,
                                   element::Type et_batch,
                                   element::Type et_filters,
-                                  const Shape& data_batch_shape,
+                                  const PartialShape& data_batch_shape,
                                   const Strides& data_dilation,
                                   const CoordinateDiff& data_padding_below,
                                   const CoordinateDiff& data_padding_above,
-                                  const Shape& filters_shape,
+                                  const PartialShape& filters_shape,
                                   const Strides& filter_strides,
                                   const Strides& filter_dilation);
 
