@@ -17,38 +17,37 @@
 #pragma once
 
 #include <memory>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
 
-#include "ngraph/log.hpp"
+#include <plaidml/plaidml++.h>
+
+#include "ngraph/function.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/plaidml/plaidml_compiled_function.hpp"
+#include "ngraph/runtime/plaidml/plaidml_config.hpp"
 
 namespace ngraph
 {
-    class Function;
-    class Node;
-
-    namespace op
+    namespace runtime
     {
-        class Parameter;
-        class Result;
+        namespace plaidml
+        {
+            struct Build;
+            class Compiler;
+        }
     }
-
-    enum class Placement
-    {
-        DEFAULT,
-        INTERPRETER,
-        CPU,
-        GPU,
-        NNP,
-        PLAIDML,
-    };
-
-    std::string placement_to_string(Placement placement);
-
-    // Split function to function(s) with unique placement
-    std::pair<std::vector<std::shared_ptr<Function>>,
-              std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Result>>>
-        split_function_by_placement(const std::shared_ptr<Function>& f);
 }
+
+// Compiles nGraph operation graphs (functions).
+class ngraph::runtime::plaidml::Compiler final
+{
+public:
+    Compiler(Config* config);
+
+    std::shared_ptr<CompiledFunction> compile(std::shared_ptr<Function> func);
+
+    void build(std::shared_ptr<Function> func, Build* build);
+
+private:
+    Config* m_config;
+    ngraph::pass::Manager m_pass_manager;
+};

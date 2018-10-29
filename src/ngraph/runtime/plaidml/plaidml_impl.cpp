@@ -14,41 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
-
-#include "ngraph/log.hpp"
+#include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 
 namespace ngraph
 {
-    class Function;
-    class Node;
-
-    namespace op
+    namespace runtime
     {
-        class Parameter;
-        class Result;
+        namespace plaidml
+        {
+            std::unordered_map<std::type_index, std::function<void(Build*, const ngraph::Node&)>>*
+                OpImplMap()
+            {
+                static std::unordered_map<std::type_index,
+                                          std::function<void(Build*, const ngraph::Node&)>>
+                    op_impl_map;
+                return &op_impl_map;
+            }
+        }
     }
-
-    enum class Placement
-    {
-        DEFAULT,
-        INTERPRETER,
-        CPU,
-        GPU,
-        NNP,
-        PLAIDML,
-    };
-
-    std::string placement_to_string(Placement placement);
-
-    // Split function to function(s) with unique placement
-    std::pair<std::vector<std::shared_ptr<Function>>,
-              std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Result>>>
-        split_function_by_placement(const std::shared_ptr<Function>& f);
 }
