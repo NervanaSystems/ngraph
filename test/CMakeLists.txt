@@ -91,6 +91,10 @@ if (NGRAPH_HYBRID_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} HYBRID)
 endif()
 
+if (NGRAPH_PLAIDML_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
+endif()
+
 add_subdirectory(models)
 add_subdirectory(files)
 add_subdirectory(util)
@@ -112,6 +116,8 @@ set(MULTI_TEST_SRC
     backend_reduce.in.cpp
     backend_reshape.in.cpp
     backend_sum.in.cpp
+    backend_topk.in.cpp
+    backend_arg_reduce.in.cpp
     backend_test.in.cpp
     backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
@@ -176,6 +182,10 @@ if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
     target_link_libraries(unit-test PRIVATE libmkldnn)
+endif()
+
+if (NGRAPH_PLAIDML_ENABLE)
+    target_link_libraries(unit-test PRIVATE plaidml_backend)
 endif()
 
 if (NGRAPH_TBB_ENABLE)
