@@ -281,7 +281,7 @@ namespace ngraph
                     auto arg1_shape = node->get_input_shape(1);
 
                     // Convert filters to MKLDNN shape
-                    // o,i,h,w -> g,o,i,h,w (e.g., {6, 2, 1, 1}, groups = 2 -> {2, 3, 2, 1, 1})
+                    // o,i,h,w -> g,o,i,h,w (e.g., {6, 2, 1, 1}, groups = 2 -> {2, 3, 1, 1, 1})
                     if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node))
                     {
                         arg1_shape = gconv->get_weights_dimensions();
