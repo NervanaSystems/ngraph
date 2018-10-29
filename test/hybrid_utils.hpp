@@ -46,8 +46,6 @@ public:
               const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& outputs,
               const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& inputs) override;
 
-    bool is_supported(const ngraph::Node& node) const override;
-
 private:
     // This list of backends is in order of priority with the first backend higher priority
     // than the second.

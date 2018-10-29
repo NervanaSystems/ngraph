@@ -51,21 +51,14 @@ bool TestBackend::call(shared_ptr<Function> func,
                        const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     throw runtime_error("TestBackend call not supported");
+    // for (auto backend : m_backend_list)
+    // {
+    //     if (backend->is_supported(node))
+    //     {
+    //         // backend supports the op
+    //     }
+    // }
     // return true;
-}
-
-bool TestBackend::is_supported(const Node& node) const
-{
-    bool rc = false;
-    for (auto backend : m_backend_list)
-    {
-        if (backend->is_supported(node))
-        {
-            rc = true;
-            break;
-        }
-    }
-    return rc;
 }
 
 BackendWrapper::BackendWrapper(const string& backend_name,
