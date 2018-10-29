@@ -753,38 +753,39 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op_3d(codegen::CodeWriter& wri
 
 void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
                                                     const std::string& name,
-                                                    const std::vector<std::string>& data_types,
+                                                    const std::string& data_type,
                                                     size_t num_inputs)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(";
     for (size_t i = 0; i < num_inputs; i++)
     {
-        writer << data_types[i] << "* in" << i << ", ";
+        writer << data_type << "* in" << i << ", ";
     }
-    writer << data_types[num_inputs]
-           << "* out, uint32_t* block_strides, uint32_t block_size, uint32_t n)\n";
+    writer << data_type << "* out, uint32_t* inputs_strides, uint32_t output_stride, uint32_t "
+                           "split_output_stride, uint32_t split_input_stride_offset, uint32_t "
+                           "input_offset, uint32_t n)\n";
     writer.block_begin();
     {
         writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
         writer << "if(tid < n)\n";
         writer.block_begin();
         {
-            writer << "out[tid] = 1;\n";
-            writer << "uint32_t output_idx = tid;\n";
-            writer << "uint32_t block_id = tid / block_size;\n";
-            writer << "uint32_t block_idx = tid % block_size;\n";
-            writer << "bool processed = false;\n";
+            writer << "uint32_t block_id = tid / split_output_stride;\n";
+            writer << "uint32_t block_idx = tid % split_output_stride;\n";
+            writer << "uint32_t output_idx = block_id * output_stride + block_idx + "
+                      "split_input_stride_offset;\n";
+            writer << "out[output_idx] = 1;\n";
             for (size_t i = 0; i < num_inputs; i++)
             {
-                writer << "if(!processed && (block_idx < block_strides[" << i << "]))\n";
+                writer << "if(block_idx < inputs_strides[" << i << " + input_offset])\n";
                 writer.block_begin();
                 {
-                    writer << "out[output_idx] = in" << i << "[block_id * block_strides[" << i
-                           << "] + block_idx];";
-                    writer << "processed = true;\n";
+                    writer << "out[output_idx] = in" << i << "[block_id * inputs_strides[" << i
+                           << " + input_offset] + block_idx];\n";
+                    writer << "return;\n";
                 }
                 writer.block_end();
-                writer << "block_idx -= block_strides[" << i << "];\n";
+                writer << "block_idx -= inputs_strides[" << i << " + input_offset];\n";
             }
         }
         writer.block_end();

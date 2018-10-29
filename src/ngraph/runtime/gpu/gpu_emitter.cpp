@@ -458,17 +458,15 @@ void runtime::gpu::GPU_Emitter::emit_Concat(EMIT_ARGS)
     auto concat = static_cast<const ngraph::op::Concat*>(node);
     auto axis = concat->get_concatenation_axis();
 
-    vector<string> dtypes;
     vector<NVShape> input_shapes;
     for (auto arg : args)
     {
-        dtypes.push_back(arg.get_type());
         input_shapes.push_back(arg.get_shape());
     }
-    dtypes.push_back(out[0].get_type());
 
     auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
-    auto index = cuda_emitter->build_concat(dtypes, input_shapes, axis, out[0].get_shape());
+    auto index =
+        cuda_emitter->build_concat(out[0].get_type(), input_shapes, axis, out[0].get_shape());
 
     writer.block_begin();
     {
