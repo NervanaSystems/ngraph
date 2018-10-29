@@ -44,7 +44,7 @@ runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type,
     }
     else if (m_buffer_size > 0)
     {
-        CUDA_RT_SAFE_CALL(cudaMalloc(static_cast<void**>(&m_allocated_buffer_pool), m_buffer_size));
+        m_allocated_buffer_pool = runtime::gpu::create_gpu_buffer(m_buffer_size);
     }
 }
 
@@ -57,7 +57,7 @@ runtime::gpu::GPUTensor::~GPUTensor()
 {
     if (!m_custom_memory && (m_allocated_buffer_pool != nullptr))
     {
-        CUDA_RT_SAFE_CALL_NO_THROW(cudaFree(m_allocated_buffer_pool));
+        runtime::gpu::free_gpu_buffer(m_allocated_buffer_pool);
     }
 }
 

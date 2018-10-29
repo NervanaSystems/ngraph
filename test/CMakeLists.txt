@@ -70,8 +70,8 @@ if (NGRAPH_HYBRID_ENABLE)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    list(APPEND SRC core_fusion.cpp quantize_cpu.cpp)
-    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp)
+    list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
+    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp cpu_debugger.cpp)
     if (NGRAPH_HALIDE)
         list(APPEND SRC halide.cpp)
     endif()
@@ -112,6 +112,8 @@ set(MULTI_TEST_SRC
     backend_reduce.in.cpp
     backend_reshape.in.cpp
     backend_sum.in.cpp
+    backend_topk.in.cpp
+    backend_arg_reduce.in.cpp
     backend_test.in.cpp
     backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
