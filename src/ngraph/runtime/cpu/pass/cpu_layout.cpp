@@ -329,9 +329,12 @@ namespace ngraph
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     if (use_bias)
                     {
+                        memory::data_type et_bias =
+                            mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(2));
                         auto arg2_shape = node->get_input_shape(2);
                         memory::dims mkldnn_arg2_shape(arg2_shape.begin(), arg2_shape.end());
-                        const memory::desc bias_desc(mkldnn_arg2_shape, et, memory::format::any);
+                        const memory::desc bias_desc(
+                            mkldnn_arg2_shape, et_bias, memory::format::any);
                         try
                         {
                             fwd_desc.reset(
