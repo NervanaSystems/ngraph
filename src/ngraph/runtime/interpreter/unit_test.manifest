@@ -8,3 +8,4 @@ batchnorm_fprop_bprop
 batchnorm_fprop_bprop_2step
 computation_reuse
 generate_mask
+topk_int64
