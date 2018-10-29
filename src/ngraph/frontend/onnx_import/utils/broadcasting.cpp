@@ -117,8 +117,8 @@ namespace ngraph
                 return {left, right};
             }
 
-            // prepare right shape to broadcast
-            // remove single dimensions from back
+            // Prepare new shape of right operand for broadcasting
+            // Remove dimensions with length=1 from back
             auto new_right_shape = right_shape;
             for (int dimension = new_right_shape.size() - 1; dimension >= 0; --dimension)
             {
@@ -132,7 +132,7 @@ namespace ngraph
                 }
             }
 
-            // find single dimensions at front
+            // Find first dimensions at front with length different from 1
             size_t num_ones = 0;
             for (size_t dimension : new_right_shape)
             {
@@ -146,21 +146,22 @@ namespace ngraph
                 }
             }
 
-            // move axis parameter to right
-            start_match_axis += num_ones;
-            //remove single dimensions at front
+            // Remove dimensions with length=1 from front
             new_right_shape.erase(std::begin(new_right_shape),
                                   std::next(std::begin(new_right_shape), num_ones));
 
-            std::shared_ptr<ngraph::Node> broadcasted_right = std::make_shared<ngraph::op::Reshape>(
+            auto reshape_right = std::make_shared<ngraph::op::Reshape>(
                 right, reshape::get_default_axis_vector(right_shape.size()), new_right_shape);
 
-            broadcasted_right = std::make_shared<ngraph::op::Broadcast>(
-                broadcasted_right,
+            // Move broadcast start axis parameter to right
+            start_match_axis += num_ones;
+
+            auto broadcast_right = std::make_shared<ngraph::op::Broadcast>(
+                reshape_right,
                 left_shape,
                 calculate_broadcast_axes(left_shape, new_right_shape, start_match_axis));
 
-            return {left, broadcasted_right};
+            return {left, broadcast_right};
         }
 
         AxisSet calculate_broadcast_axes(const Shape& output_shape,

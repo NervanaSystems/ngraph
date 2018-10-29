@@ -37,11 +37,6 @@ namespace ngraph
             numpy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
                                                        const std::shared_ptr<ngraph::Node>& right);
 
-        NodeVector
-            legacy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
-                                                        const std::shared_ptr<ngraph::Node>& right,
-                                                        std::size_t start_match_axis);
-
         /// \brief Cast shape of two nodes to make them compatible for an element-wise binary operation.
         ///
         /// \param inputs Left and right node (inputs of the binary op).
@@ -51,6 +46,26 @@ namespace ngraph
         {
             return numpy_style_broadcast_for_binary_operation(inputs.at(0), inputs.at(1));
         }
+
+        /// \brief Cast shape of two nodes to make them compatible for an element-wise binary operation.
+        ///
+        /// If necessary the right-hand-side argument will be broadcast to match the shape
+        /// of left-hand-side argument. The starting of the mutually equal shape is
+        /// specified by the argument "start_match_axis", and if it is not set,
+        /// suffix matching is assumed.
+        ///
+        /// This style of broadcast was used in ONNX Op sets prior to version 7, where it was
+        /// replaced by numpy-style broadcasting.
+        ///
+        /// \param left Node which contain input of binary op.
+        /// \param right Node which contain input of binary op.
+        /// \param start_match_axis position in shape denoting start of the mutually equal shape
+        ///
+        /// \return Left and right node after broadcasting.
+        NodeVector
+            legacy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
+                                                        const std::shared_ptr<ngraph::Node>& right,
+                                                        std::size_t start_match_axis);
 
         /// \brief Generate a list of broadcast axes.
         ///
