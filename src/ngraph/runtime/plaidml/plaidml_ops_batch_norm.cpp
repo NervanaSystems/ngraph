@@ -113,30 +113,29 @@ void ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormTraining>::operator()()
     else
     {
         f.add(builder::Elementwise{"GammaP", std::string{"reshape(Gamma, C"} + ones + ")"})
-         .add(builder::Elementwise{"BetaP", std::string{"reshape(Beta, C"} + ones + ")"});
+            .add(builder::Elementwise{"BetaP", std::string{"reshape(Beta, C"} + ones + ")"});
     }
 
     if (input_shape.size() <= 2)
-      {
+    {
         f.add(builder::Elementwise{"EltCount", "B"});
-      }
+    }
     else
-      {
+    {
         std::string elts{"B"};
         for (auto idx = 2; idx < input_shape.size(); ++idx)
-          {
+        {
             elts += " * DI" + std::to_string(idx + 1);
-          }
+        }
         f.add(builder::Elementwise{"EltCount", std::move(elts)});
-      }
+    }
 
     f.add(builder::UnaryContraction{"+"}
-                  .set(builder::ContractionOutput{"SumInput"}.add_indices({"c"}).add_dims({"C"}))
-                  .set(builder::ContractionInput{"Input"}
-                           .add_indices({"b", "c"})
-                           .add_indices("di", 3, input_shape.size() + 1)));
+              .set(builder::ContractionOutput{"SumInput"}.add_indices({"c"}).add_dims({"C"}))
+              .set(builder::ContractionInput{"Input"}
+                       .add_indices({"b", "c"})
+                       .add_indices("di", 3, input_shape.size() + 1)));
     f.add(builder::Elementwise{"Mean", "SumInput / EltCount"});
-
 
     if (input_shape.size() <= 2)
     {
@@ -148,14 +147,13 @@ void ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormTraining>::operator()()
     }
 
     f.add(builder::Elementwise{"DiffV", "(Input - MeanP)"})
-      .add(builder::Elementwise{"SqDiffV", "DiffV*DiffV"})
-      .add(builder::UnaryContraction{"+"}
-                     .set(builder::ContractionOutput{"SumSqDiffV"}.add_indices({"c"}).add_dims(
-                         {"C"}))
-                     .set(builder::ContractionInput{"SqDiffV"}
-                              .add_indices({"b", "c"})
-                              .add_indices("di", 3, input_shape.size() + 1)))
-            .add(builder::Elementwise{"Variance", "SumSqDiffV / EltCount"});
+        .add(builder::Elementwise{"SqDiffV", "DiffV*DiffV"})
+        .add(builder::UnaryContraction{"+"}
+                 .set(builder::ContractionOutput{"SumSqDiffV"}.add_indices({"c"}).add_dims({"C"}))
+                 .set(builder::ContractionInput{"SqDiffV"}
+                          .add_indices({"b", "c"})
+                          .add_indices("di", 3, input_shape.size() + 1)))
+        .add(builder::Elementwise{"Variance", "SumSqDiffV / EltCount"});
 
     if (input_shape.size() <= 2)
     {
@@ -301,8 +299,10 @@ void ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormTrainingBackprop>::oper
 
 namespace
 {
-    ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormInference>::Registration register_batch_norm_inference;
-    ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormTraining>::Registration register_batch_norm_training;
+    ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormInference>::Registration
+        register_batch_norm_inference;
+    ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormTraining>::Registration
+        register_batch_norm_training;
     ngraph::runtime::plaidml::Impl<ngraph::op::BatchNormTrainingBackprop>::Registration
         register_batch_norm_training_backprop;
 }
