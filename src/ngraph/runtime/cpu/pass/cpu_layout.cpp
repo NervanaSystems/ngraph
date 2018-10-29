@@ -282,7 +282,6 @@ namespace ngraph
 
                     if (default_weights_format && use_bias)
                     {
-                        cout << node->get_instance_id() <<": casting node to GCB, and calling get_weights_dimensions\n";
                         arg1_shape =
                             std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node)
                                 ->get_weights_dimensions();
@@ -331,17 +330,6 @@ namespace ngraph
                     if (use_bias)
                     {
                         auto arg2_shape = node->get_input_shape(2);
-                        if (default_weights_format)
-                        {
-                            std::cout << "GDB: cpu_layout: ConvolutionLayout validate shapes\n";
-                            //ngraph::op::util::validate_groupconvbias_shapes(
-                            //    arg0_shape, arg1_shape, arg2_shape);
-                        }
-                        else
-                        {
-                            ngraph::op::util::validate_convbias_shapes(
-                                arg0_shape, arg1_shape, arg2_shape);
-                        }
                         memory::dims mkldnn_arg2_shape(arg2_shape.begin(), arg2_shape.end());
                         const memory::desc bias_desc(mkldnn_arg2_shape, et, memory::format::any);
                         try

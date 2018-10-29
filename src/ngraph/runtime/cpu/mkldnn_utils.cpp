@@ -42,31 +42,6 @@ using namespace std;
 
 #define TI(x) std::type_index(typeid(x))
 
-/*std::unordered_set<std::type_index>& runtime::cpu::mkldnn_utils::get_op_registry()
-{
-    static std::unordered_set<std::type_index> s_op_registry{
-        TI(ngraph::op::Add),
-        TI(ngraph::op::AvgPool),
-        TI(ngraph::op::AvgPoolBackprop),
-        TI(ngraph::op::BatchNormTraining),
-        TI(ngraph::op::BatchNormInference),
-        TI(ngraph::op::BatchNormTrainingBackprop),
-        TI(ngraph::op::Concat),
-        TI(ngraph::op::Convolution),
-        TI(ngraph::op::ConvolutionBackpropData),
-        TI(ngraph::op::ConvolutionBackpropFilters),
-        TI(ngraph::op::ConvolutionBias),
-        TI(ngraph::op::ConvolutionRelu),
-        TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
-        TI(ngraph::op::MaxPool),
-        TI(ngraph::op::MaxPoolBackprop),
-        TI(ngraph::op::Relu),
-        TI(ngraph::op::ReluBackprop),
-        TI(ngraph::op::Reshape),
-    };
-    return s_op_registry;
-}*/
-
 std::map<element::Type, const mkldnn::memory::data_type>&
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type_map()
 {
@@ -222,10 +197,6 @@ std::set<memory::format>& runtime::cpu::mkldnn_utils::get_filter_formats()
         memory::format::OhIw16o4i};
     return s_filter_formats;
 }
-/*bool runtime::cpu::mkldnn_utils::IsMKLDNNOp(ngraph::Node& op)
-{
-    return (get_op_registry().find(TI(op)) != get_op_registry().end());
-}*/
 
 mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
     const ngraph::runtime::cpu::LayoutDescriptor& layout)

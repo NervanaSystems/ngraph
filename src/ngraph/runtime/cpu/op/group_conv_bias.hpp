@@ -74,12 +74,5 @@ namespace ngraph
             size_t m_groups = 1;
             float m_alpha = 1.0;
         };
-
-        namespace util
-        {
-            void validate_groupconvbias_shapes(const Shape& data_shape,
-                                               const Shape& filters_shape,
-                                               const Shape& bias_shape);
-        }
     }
 }

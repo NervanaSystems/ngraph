@@ -1777,7 +1777,6 @@ const vector<runtime::PerformanceCounter>& runtime::cpu::CPU_ExternalFunction::g
     }
     return m_perf_counters;
 #endif
-    return m_perf_counters;
 }
 
 void runtime::cpu::CPU_ExternalFunction::write_to_file(const std::string& code,

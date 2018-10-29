@@ -3968,17 +3968,27 @@ namespace ngraph
                          result_desc.data.ndims == 5 /*Goihw16g/Goihw8g/etc*/ &&
                          node->get_users().size() == 1)
                 {
-                    auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
-                        *(begin(node->get_users())));
-                    if (gconv)
+                    Shape weights_shape_groups;
+                    if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
+                            node->get_users()[0]))
                     {
-                        Shape weights_shape_groups = gconv->get_weights_dimensions();
-                        input_desc = mkldnn::memory::desc(
-                            mkldnn::memory::dims(weights_shape_groups.begin(),
-                                                 weights_shape_groups.end()),
-                            mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
-                            mkldnn::memory::format::goihw);
+                        weights_shape_groups = gconv->get_weights_dimensions();
                     }
+                    else if (auto gconv =
+                                 std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(
+                                     node->get_users()[0]))
+                    {
+                        weights_shape_groups = gconv->get_weights_dimensions();
+                    }
+                    else
+                    {
+                        throw ngraph_error("Incompatible input/output shape in ConvertLayout op");
+                    }
+                    input_desc = mkldnn::memory::desc(
+                        mkldnn::memory::dims(weights_shape_groups.begin(),
+                                             weights_shape_groups.end()),
+                        mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                        mkldnn::memory::format::goihw);
                 }
 
                 size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);
