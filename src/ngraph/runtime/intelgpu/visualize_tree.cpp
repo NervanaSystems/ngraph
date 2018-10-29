@@ -41,6 +41,7 @@
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/util.hpp"
 
@@ -294,6 +295,16 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                << print_table_row_dims("pad_interior", pad->get_padding_interior());
         break;
     }
+    case OP_TYPEID::Slice:
+    {
+        const shared_ptr<op::Slice> elem = static_pointer_cast<op::Slice>(node);
+
+        writer << print_table_row_dims("upper_bounds", elem->get_upper_bounds())
+               << print_table_row_dims("lower_bounds", elem->get_lower_bounds())
+               << print_table_row_dims("strides", elem->get_strides());
+
+        break;
+    }
     case OP_TYPEID::Convolution:
     {
         const shared_ptr<op::Convolution> conv_op = static_pointer_cast<op::Convolution>(node);
@@ -302,8 +313,7 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
                << print_table_row_dims("win_dilation", conv_op->get_window_dilation_strides())
                << print_table_row_dims("data_dilation", conv_op->get_data_dilation_strides())
                << print_table_row_dims("pad_above", conv_op->get_padding_above())
-               << print_table_row_dims("pad_below", conv_op->get_padding_below())
-               << print_table_row_dims("def_val", conv_op->get_default_value()->get_shape());
+               << print_table_row_dims("pad_below", conv_op->get_padding_below());
         break;
     }
     case OP_TYPEID::ConvolutionBackpropFilters:
