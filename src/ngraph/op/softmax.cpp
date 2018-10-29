@@ -34,18 +34,26 @@ op::Softmax::Softmax(const shared_ptr<Node>& arg, const AxisSet& axes)
     , m_axes(axes)
 {
     constructor_validate_and_infer_types();
+}
+
+void op::Softmax::validate_and_infer_types()
+{
+    UnaryElementwiseArithmetic::validate_and_infer_types();
+
+    Rank output_rank{get_output_partial_shape(0).rank()};
 
     for (auto axis : m_axes)
     {
-        NODE_VALIDATION_ASSERT(this, axis < get_shape().size())
-            << "Reduction axis (" << axis << ") is out of bounds (argument shape: " << get_shape()
-            << ").";
+        NODE_VALIDATION_ASSERT(this,
+                               output_rank.is_dynamic() || axis < static_cast<size_t>(output_rank))
+            << "Reduction axis (" << axis
+            << ") is out of bounds (argument shape: " << get_output_partial_shape(0) << ").";
     }
 
     // empty axes == all axes
-    if (m_axes.size() == 0)
+    if (output_rank.is_static() && m_axes.size() == 0)
     {
-        for (size_t i = 0; i < get_shape().size(); ++i)
+        for (size_t i = 0; i < static_cast<size_t>(output_rank); ++i)
         {
             m_axes.insert(i);
         }
