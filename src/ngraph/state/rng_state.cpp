@@ -24,22 +24,8 @@ using namespace ngraph;
 
 void ngraph::RNGState::activate()
 {
-    //must be reentrant
-    //the subsequent times it's a nop
-    // if (!is_active())
-    // {
-    //     std::random_device rd;
-    //     m_seed = rd();
-    //     set_active(true);
-    // }
 }
 
 void ngraph::RNGState::deactivate()
 {
-    // if (!is_active())
-    // {
-    //     throw ngraph_error("State wasn't activated");
-    // }
-
-    // set_active(false);
 }

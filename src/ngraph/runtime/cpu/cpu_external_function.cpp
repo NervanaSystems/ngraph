@@ -348,9 +348,6 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::runtime::cpu::op::LoopKernel),
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::LoopKernel>},
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
-    //{TI(ngraph::op::ActivateState), &runtime::cpu::CPU_Emitter::emit<ngraph::op::ActivateState>},
-    //{TI(ngraph::op::DeactivateState),
-    // &runtime::cpu::CPU_Emitter::emit<ngraph::op::DeactivateState>},
     {TI(ngraph::op::GenerateMask), &runtime::cpu::CPU_Emitter::emit<ngraph::op::GenerateMask>},
 };
 

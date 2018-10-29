@@ -4487,30 +4487,6 @@ namespace ngraph
                 writer.block_end();
             }
 
-/*
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::ActivateState)
-            {
-                auto act = static_cast<const ngraph::op::ActivateState*>(node);
-                writer.block_begin();
-                writer << "ngraph::State* state = reinterpret_cast<ngraph::State*>("
-                       << act->get_state() << ");\n";
-                writer << "state->activate();\n";
-                writer.block_end();
-            }
-
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::DeactivateState)
-            {
-                auto dact = static_cast<const ngraph::op::DeactivateState*>(node);
-                writer.block_begin();
-                writer << "ngraph::State* state = reinterpret_cast<ngraph::State*>("
-                       << dact->get_state() << ");\n";
-                writer << "state->deactivate();\n";
-                writer.block_end();
-            }
-            */
-
 #undef TI
         }
     }
