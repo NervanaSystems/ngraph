@@ -270,7 +270,7 @@ namespace ngraph
         {
             namespace pass
             {
-                template <typename T, bool use_bias, bool default_weights_format>
+                template <typename T, bool use_bias>
                 void ConvolutionLayout(std::shared_ptr<ngraph::Node> node,
                                        vector<memory::desc>& i_mds,
                                        vector<memory::desc>& o_mds)
@@ -280,16 +280,16 @@ namespace ngraph
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg1_shape = node->get_input_shape(1);
 
-                    if (default_weights_format && use_bias)
+                    // Convert filters to MKLDNN shape
+                    // o,i,h,w -> g,o,i,h,w (e.g., {6, 2, 1, 1}, groups = 2 -> {2, 3, 2, 1, 1})
+                    if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node))
                     {
-                        arg1_shape =
-                            std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node)
-                                ->get_weights_dimensions();
+                        arg1_shape = gconv->get_weights_dimensions();
                     }
-                    else if (default_weights_format)
+                    if (auto gconv =
+                            std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node))
                     {
-                        arg1_shape = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node)
-                                         ->get_weights_dimensions();
+                        arg1_shape = gconv->get_weights_dimensions();
                     }
                     auto result_shape = node->get_output_shape(0);
                     auto filter_strides = convolution->get_window_movement_strides();
@@ -398,7 +398,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::QuantizedConvolution, false, false>(
+                        ConvolutionLayout<ngraph::op::QuantizedConvolution, false>(
                             node, i_mds, o_mds);
 
                         auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
@@ -421,8 +421,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::Convolution, false, false>(
-                            node, i_mds, o_mds);
+                        ConvolutionLayout<ngraph::op::Convolution, false>(node, i_mds, o_mds);
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
@@ -440,8 +439,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::GroupConvolution, false, true>(
-                            node, i_mds, o_mds);
+                        ConvolutionLayout<ngraph::op::GroupConvolution, false>(node, i_mds, o_mds);
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
@@ -459,7 +457,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::GroupConvolutionBias, true, true>(
+                        ConvolutionLayout<ngraph::op::GroupConvolutionBias, true>(
                             node, i_mds, o_mds);
 
                         node = insert_input_conversions(external_function, node, i_mds);
@@ -478,8 +476,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::ConvolutionBias, true, false>(
-                            node, i_mds, o_mds);
+                        ConvolutionLayout<ngraph::op::ConvolutionBias, true>(node, i_mds, o_mds);
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -496,7 +493,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::QuantizedConvolutionBias, true, false>(
+                        ConvolutionLayout<ngraph::op::QuantizedConvolutionBias, true>(
                             node, i_mds, o_mds);
 
                         auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
@@ -520,8 +517,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::ConvolutionRelu, false, false>(
-                            node, i_mds, o_mds);
+                        ConvolutionLayout<ngraph::op::ConvolutionRelu, false>(node, i_mds, o_mds);
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -538,7 +534,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::QuantizedConvolutionRelu, false, false>(
+                        ConvolutionLayout<ngraph::op::QuantizedConvolutionRelu, false>(
                             node, i_mds, o_mds);
 
                         auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
@@ -562,8 +558,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::ConvolutionBiasAdd, true, false>(
-                            node, i_mds, o_mds);
+                        ConvolutionLayout<ngraph::op::ConvolutionBiasAdd, true>(node, i_mds, o_mds);
                         // Force second input to sum to use the same layout as convolution output
                         i_mds.push_back(o_mds[0]);
                         node = insert_input_conversions(external_function, node, i_mds);
@@ -582,8 +577,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::ConvolutionAdd, false, false>(
-                            node, i_mds, o_mds);
+                        ConvolutionLayout<ngraph::op::ConvolutionAdd, false>(node, i_mds, o_mds);
                         // Force second input to sum to use the same layout as convolution output
                         i_mds.push_back(o_mds[0]);
                         node = insert_input_conversions(external_function, node, i_mds);
