@@ -30,7 +30,7 @@ namespace ngraph
         class BatchNormBase : public Op
         {
         public:
-            BatchNormBase(const std::string& node_type, double eps, const NodeVector& args);
+            BatchNormBase(const std::string& node_type, double eps, const NodeVector& args, size_t output_size);
 
             void validate_and_infer_types() override;
             double get_eps_value() const { return m_epsilon; }

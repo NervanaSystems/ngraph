@@ -23,10 +23,12 @@
 
 ngraph::op::BatchNormBase::BatchNormBase(const std::string& node_type,
                                          double eps,
-                                         const NodeVector& args)
+                                         const NodeVector& args,
+                                         size_t output_size)
     : Op(node_type, check_single_output_args(args))
     , m_epsilon(eps)
 {
+    set_output_size(output_size);
     constructor_validate_and_infer_types();
 }
 
@@ -37,7 +39,7 @@ ngraph::op::BatchNormInference::BatchNormInference(double eps,
                                                    std::shared_ptr<ngraph::Node> mean,
                                                    std::shared_ptr<ngraph::Node> variance)
     : BatchNormBase(
-          "BatchNormInference", eps, check_single_output_args({gamma, beta, input, mean, variance}))
+          "BatchNormInference", eps, check_single_output_args({gamma, beta, input, mean, variance}), 1)
 {
     constructor_validate_and_infer_types();
 }
@@ -46,7 +48,7 @@ ngraph::op::BatchNormTraining::BatchNormTraining(double eps,
                                                  std::shared_ptr<ngraph::Node> gamma,
                                                  std::shared_ptr<ngraph::Node> beta,
                                                  std::shared_ptr<ngraph::Node> input)
-    : BatchNormBase("BatchNormTraining", eps, check_single_output_args({gamma, beta, input}))
+    : BatchNormBase("BatchNormTraining", eps, check_single_output_args({gamma, beta, input}), 3)
 {
     constructor_validate_and_infer_types();
 }
@@ -58,7 +60,7 @@ ngraph::op::BatchNormTraining::BatchNormTraining(double eps,
                                                  std::shared_ptr<ngraph::Node> mean,
                                                  std::shared_ptr<ngraph::Node> variance)
     : BatchNormBase(
-          "BatchNormTraining", eps, check_single_output_args({gamma, beta, input, mean, variance}))
+          "BatchNormTraining", eps, check_single_output_args({gamma, beta, input, mean, variance}), 3)
 {
     constructor_validate_and_infer_types();
 }
@@ -73,7 +75,6 @@ void ngraph::op::BatchNormInference::validate_and_infer_types()
     auto bn_input_shape = get_input_shape(INPUT);
     BatchNormBase::validate_and_infer_types();
     auto& et = get_input_element_type(INPUT);
-    set_output_size(1);
     set_output_type(0, et, bn_input_shape);
 }
 
@@ -88,7 +89,6 @@ void ngraph::op::BatchNormTraining::validate_and_infer_types()
     BatchNormBase::validate_and_infer_types();
     auto& et = get_input_element_type(INPUT);
     Shape channel_shape{bn_input_shape[1]};
-    set_output_size(3);
     set_output_type(0, et, bn_input_shape);
     set_output_type(1, et, channel_shape);
     set_output_type(2, et, channel_shape);
@@ -159,6 +159,7 @@ ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(
     , epsilon(eps)
 
 {
+    set_output_size(3);
     constructor_validate_and_infer_types();
 }
 
@@ -168,8 +169,6 @@ void ngraph::op::BatchNormTrainingBackprop::validate_and_infer_types()
     {
         return;
     }
-
-    set_output_size(3);
 
     NODE_VALIDATION_ASSERT(this, get_input_shape(INPUT).size() == 4)
         << "Input data shape is not a 4D tensor (input data shape: " << get_input_shape(INPUT)
