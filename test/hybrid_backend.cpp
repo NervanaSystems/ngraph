@@ -16,8 +16,10 @@
 
 #include "gtest/gtest.h"
 
+#include "hybrid_utils.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
@@ -28,21 +30,23 @@
 using namespace std;
 using namespace ngraph;
 
-class TestBackend : public runtime::Backend
+static runtime::Backend* hybrid1_creator(const char* config)
 {
-public:
-private:
-};
+    return nullptr;
+}
 
 TEST(HYBRID, abc)
 {
+    const string backend_name = "HYBRID1";
+    runtime::BackendManager::register_backend(backend_name, hybrid1_creator);
+
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
 
-    auto backend = runtime::Backend::create("HYBRID1");
+    auto backend = runtime::Backend::create(backend_name);
 
     // Create some tensors for input/output
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
