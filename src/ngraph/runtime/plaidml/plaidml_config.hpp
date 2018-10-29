@@ -16,39 +16,27 @@
 
 #pragma once
 
+#include <plaidml/plaidml++.h>
+
 #include <memory>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
-
-#include "ngraph/log.hpp"
 
 namespace ngraph
 {
-    class Function;
-    class Node;
-
-    namespace op
+    namespace runtime
     {
-        class Parameter;
-        class Result;
+        namespace plaidml
+        {
+            struct Config;
+
+            Config parse_config_string(const char* configuration_string);
+        }
     }
-
-    enum class Placement
-    {
-        DEFAULT,
-        INTERPRETER,
-        CPU,
-        GPU,
-        NNP,
-        PLAIDML,
-    };
-
-    std::string placement_to_string(Placement placement);
-
-    // Split function to function(s) with unique placement
-    std::pair<std::vector<std::shared_ptr<Function>>,
-              std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Result>>>
-        split_function_by_placement(const std::shared_ptr<Function>& f);
 }
+
+struct ngraph::runtime::plaidml::Config
+{
+    std::shared_ptr<vertexai::ctx> ctx;
+    std::shared_ptr<vertexai::plaidml::device> dev;
+    bool debug;
+};

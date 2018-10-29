@@ -104,6 +104,8 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
 endif()
 
+option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" FALSE)
+
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
@@ -204,6 +206,10 @@ endif()
 
 if (NGRAPH_CPU_ENABLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")	
+endif()
+
+if (NGRAPH_PLAIDML_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_PlaidML_ENABLE")
 endif()
 
 if (NOT DEFINED NGRAPH_TBB_ENABLE)

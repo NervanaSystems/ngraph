@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,23 +14,14 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(interpreter)
+set (SRC
+    ngraph-to-plaidml.cpp
+)
 
-if (NGRAPH_HYBRID_ENABLE)
-    add_subdirectory(hybrid)
+if (NGRAPH_PLAIDML_ENABLE)
+    add_executable(ngraph-to-plaidml ${SRC})
+    target_link_libraries(ngraph-to-plaidml ngraph plaidml_backend)
+    install(TARGETS ngraph-to-plaidml RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})
+else()
+    message(STATUS "PlaidML not enabled; not compiling ngraph-to-plaidml")
 endif()
-
-
-if (NGRAPH_CPU_ENABLE)
-    add_subdirectory(cpu)
-endif()
-
-if (NGRAPH_INTELGPU_ENABLE)
-    add_subdirectory(intelgpu)
-endif()
-
-if (NGRAPH_GPU_ENABLE)
-    add_subdirectory(gpu)
-endif()
-
-add_subdirectory(plaidml)

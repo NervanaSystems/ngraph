@@ -14,41 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/op/convert.hpp"
+#include "ngraph/runtime/plaidml/plaidml_impl.hpp"
+#include "ngraph/runtime/plaidml/plaidml_translate.hpp"
 
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
-
-#include "ngraph/log.hpp"
-
-namespace ngraph
+// Convert views a tensor as a new type.
+template <>
+void ngraph::runtime::plaidml::Impl<ngraph::op::Convert>::operator()()
 {
-    class Function;
-    class Node;
+    check_inputs(1);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(), "I"})
+                   .add(builder::Output{"O"})
+                   .add(builder::Elementwise{
+                       "O", tile_converter("I", to_plaidml(op().get_convert_element_type()))})
+                   .finalize());
+}
 
-    namespace op
-    {
-        class Parameter;
-        class Result;
-    }
-
-    enum class Placement
-    {
-        DEFAULT,
-        INTERPRETER,
-        CPU,
-        GPU,
-        NNP,
-        PLAIDML,
-    };
-
-    std::string placement_to_string(Placement placement);
-
-    // Split function to function(s) with unique placement
-    std::pair<std::vector<std::shared_ptr<Function>>,
-              std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Result>>>
-        split_function_by_placement(const std::shared_ptr<Function>& f);
+namespace
+{
+    ngraph::runtime::plaidml::Impl<ngraph::op::Convert>::Registration register_convert;
 }
