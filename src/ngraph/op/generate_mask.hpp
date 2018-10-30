@@ -29,6 +29,8 @@ namespace ngraph
         class GenerateMask : public op::Op
         {
         public:
+            /// \brief Constructs a GenerateMask node with a given shape, sed,
+            /// probability and training/inference mode
             GenerateMask(const std::shared_ptr<Node>& training,
                          const Shape& shape,
                          const element::Type& element_type,
@@ -46,8 +48,11 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            /// \brief Returns the argument specifying if this mask is used in training or inference
             std::shared_ptr<Node> get_training_node() const { return get_argument(0); }
+            /// \brief Returns the probability of a trial generating 1 (i.e. an element being kept)
             double get_probability() const { return m_probability; }
+            /// \brief Returns the seed value supplied to by a random generator
             unsigned int get_seed() const { return m_seed; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,

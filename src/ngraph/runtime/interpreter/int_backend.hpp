@@ -314,6 +314,11 @@ private:
                                    avg_pool->get_include_padding_in_avg_computation());
             break;
         }
+        case OP_TYPEID::GenerateMask:
+        {
+            throw ngraph_error(
+                "GenerateMask is an experimental op that's only supported on CPU backend");
+        }
         case OP_TYPEID::GetOutputElement:
         {
             const op::GetOutputElement* get_output_element =
