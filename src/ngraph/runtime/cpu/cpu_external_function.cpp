@@ -133,6 +133,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/propagate_cacheability.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
@@ -405,6 +406,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, node_function_map, common_function_string);
     pass_manager.register_pass<ngraph::pass::Liveness>();
+    pass_manager.register_pass<ngraph::pass::PropagateCacheability>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function);
 
@@ -1334,6 +1336,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     ngraph::pass::Manager pass_manager;
     register_common_passes(pass_manager);
     pass_manager.register_pass<ngraph::pass::Liveness>();
+    pass_manager.register_pass<ngraph::pass::PropagateCacheability>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function, false);
 
