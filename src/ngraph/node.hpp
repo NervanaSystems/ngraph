@@ -238,7 +238,6 @@ namespace ngraph
         /// Set device placement
         void set_placement(size_t placement);
 
-
         /// Get input descriptor that is connected to src
         descriptor::Input* get_input_from(const std::shared_ptr<Node>& src);
 
@@ -265,7 +264,6 @@ namespace ngraph
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
         size_t m_placement_size = 0;
-
     };
 
     class NodeValidationError : public AssertionFailure
