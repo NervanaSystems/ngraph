@@ -222,9 +222,6 @@ namespace ngraph
     // Check if all paths from X to a result go through Y
     bool is_post_dominated(Node* X, Node* Y);
 
-    // Check if X to a predecessor of Y
-    bool is_predecessor(Node* X, Node* Y);
-
     bool is_equal_to_const_value(std::string const_value, std::shared_ptr<Node> reduce_constant);
 
     // maps original to replacement nodes e.g. for clone utilities
