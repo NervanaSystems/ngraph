@@ -437,6 +437,8 @@ size_t ngraph::get_colocated_function_placement_size(shared_ptr<Function> func)
         size_t node_placement = node->get_placement_size();
         if (node_placement == 0)
         {
+            NGRAPH_INFO << node->description() << "get_colocated_function_placement_size with zero "; 
+
             throw ngraph_error("Node should have a device placement, not Placement::DEFAULT");
         }
         if (function_placement == 0)
