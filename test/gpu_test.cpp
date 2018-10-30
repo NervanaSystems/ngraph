@@ -1,3 +1,4 @@
+
 //*****************************************************************************
 // Copyright 2017-2018 Intel Corporation
 //
@@ -22,7 +23,10 @@
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/runtime/gpu/nvshape.hpp"
+#include "util/all_close.hpp"
+#include "util/random.hpp"
 
+using namespace std;
 using namespace ngraph;
 
 TEST(gpu_test, gpu_shape_from_64bit_shape)
@@ -159,4 +163,106 @@ TEST(gpu_test, memory_manager_seperate_workspaces_allocsize)
     }
     emitter.allocate_primitive_memory();
     EXPECT_EQ(emitter.sizeof_device_allocation(), total_size);
+}
+
+TEST(gpu_test, topk_3d_global_mem)
+{
+    Shape shape{4, 3073, 5};
+    auto A_cpu = make_shared<op::Parameter>(element::f32, shape);
+    auto A_gpu = make_shared<op::Parameter>(element::f32, shape);
+
+    auto B_cpu = make_shared<op::TopK>(A_cpu, 1, element::i64, 10, true);
+    auto B_gpu = make_shared<op::TopK>(A_gpu, 1, element::i64, 10, true);
+
+    auto cpu_f_0 = make_shared<Function>(make_shared<op::GetOutputElement>(B_cpu, 0),
+                                         op::ParameterVector{A_cpu});
+    auto cpu_f_1 = make_shared<Function>(make_shared<op::GetOutputElement>(B_cpu, 1),
+                                         op::ParameterVector{A_cpu});
+
+    auto gpu_f_0 = make_shared<Function>(make_shared<op::GetOutputElement>(B_gpu, 0),
+                                         op::ParameterVector{A_gpu});
+    auto gpu_f_1 = make_shared<Function>(make_shared<op::GetOutputElement>(B_gpu, 1),
+                                         op::ParameterVector{A_gpu});
+
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args_index;
+
+    for (shared_ptr<op::Parameter> param : cpu_f_0->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args_index.push_back(tensor_val);
+    }
+
+    auto cpu_results_0 = execute<float, int64_t>(cpu_f_0, args_index, "CPU");
+    auto gpu_results_0 = execute<float, int64_t>(gpu_f_0, args_index, "GPU");
+
+    for (size_t i = 0; i < gpu_results_0.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(gpu_results_0.at(i), cpu_results_0.at(i)));
+    }
+
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f_1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto cpu_results_1 = execute(cpu_f_1, args, "CPU");
+    auto gpu_results_1 = execute(gpu_f_1, args, "GPU");
+
+    for (size_t i = 0; i < gpu_results_1.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(gpu_results_1.at(i), cpu_results_1.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
+TEST(gpu_test, topk_fanout_graph_transform)
+{
+    Shape shape{2, 3, 2};
+    Shape out_shape{2, 2, 2};
+    auto A_gpu = make_shared<op::Parameter>(element::f32, shape);
+    auto A_int32_gpu_1 = make_shared<op::Parameter>(element::i32, out_shape);
+    auto A_int32_gpu_2 = make_shared<op::Parameter>(element::i32, out_shape);
+    auto A_f32_gpu_1 = make_shared<op::Parameter>(element::f32, out_shape);
+    auto A_f32_gpu_2 = make_shared<op::Parameter>(element::f32, out_shape);
+    auto B_gpu = make_shared<op::TopK>(A_gpu, 1, element::i32, 2, true);
+    auto C_gpu_0 = make_shared<op::GetOutputElement>(B_gpu, 0);
+    auto C_gpu_1 = make_shared<op::GetOutputElement>(B_gpu, 1);
+
+    auto gpu_R_0 = make_shared<op::Add>(A_int32_gpu_1, C_gpu_0);
+    auto gpu_R_1 = make_shared<op::Add>(A_int32_gpu_2, C_gpu_0);
+    auto gpu_R_2 = make_shared<op::Add>(A_f32_gpu_1, C_gpu_1);
+    auto gpu_R_3 = make_shared<op::Add>(A_f32_gpu_2, C_gpu_1);
+
+    auto gpu_f = make_shared<Function>(
+        NodeVector{gpu_R_0, gpu_R_1, gpu_R_2, gpu_R_3},
+        op::ParameterVector{A_gpu, A_int32_gpu_1, A_int32_gpu_2, A_f32_gpu_1, A_f32_gpu_2});
+
+    auto backend = runtime::Backend::create("GPU");
+
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(
+        a, vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 4.0f, 3.0f, 2.0f, 1.0f, 3.0f, 3.0f, 1.0f, 4.0f});
+    auto b = backend->create_tensor(element::i32, out_shape);
+    copy_data(b, vector<int32_t>{0, 0, 0, 0, 0, 0, 0, 0});
+    auto c = backend->create_tensor(element::i32, out_shape);
+    copy_data(c, vector<int32_t>{0, 0, 0, 0, 0, 0, 0, 0});
+    auto d = backend->create_tensor(element::f32, out_shape);
+    copy_data(d, vector<float>{0, 0, 0, 0, 0, 0, 0, 0});
+    auto e = backend->create_tensor(element::f32, out_shape);
+    copy_data(e, vector<float>{0, 0, 0, 0, 0, 0, 0, 0});
+
+    auto r0 = backend->create_tensor(element::i32, out_shape);
+    auto r1 = backend->create_tensor(element::i32, out_shape);
+    auto r2 = backend->create_tensor(element::f32, out_shape);
+    auto r3 = backend->create_tensor(element::f32, out_shape);
+
+    backend->call_with_validate(gpu_f, {r0, r1, r2, r3}, {a, b, c, d, e});
+
+    EXPECT_EQ((vector<int32_t>{2, 1, 1, 2, 1, 2, 0, 1}), read_vector<int32_t>(r0));
+    EXPECT_EQ((vector<int32_t>{2, 1, 1, 2, 1, 2, 0, 1}), read_vector<int32_t>(r1));
+    EXPECT_EQ((vector<float>{4, 4, 3, 3, 3, 4, 2, 3}), read_vector<float>(r2));
+    EXPECT_EQ((vector<float>{4, 4, 3, 3, 3, 4, 2, 3}), read_vector<float>(r3));
 }
