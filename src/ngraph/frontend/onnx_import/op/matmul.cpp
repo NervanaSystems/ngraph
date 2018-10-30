@@ -14,25 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <algorithm>
 #include <cstddef>
-#include <functional>
 #include <iterator>
 #include <memory>
-#include <numeric>
 #include <vector>
 
-#include "ngraph/assertion.hpp"
 #include "ngraph/coordinate.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/shape.hpp"
 
-#include "exceptions.hpp"
 #include "matmul.hpp"
 #include "utils/broadcasting.hpp"
-#include "utils/common.hpp"
 #include "utils/reshape.hpp"
 
 /// \brief      Slice the sub matrix from 3D input tensor.
@@ -54,11 +49,7 @@ static std::shared_ptr<ngraph::Node> get_sub_matrix(const std::shared_ptr<ngraph
 
     auto sub_matrix{std::make_shared<ngraph::op::Slice>(node, lower_bounds, upper_bounds)};
     // Remove first single entry dim.
-    ngraph::Shape output_shape{std::next(std::begin(shape)), std::end(shape)};
-    return {std::make_shared<ngraph::op::Reshape>(
-        sub_matrix,
-        ngraph::onnx_import::reshape::get_default_axis_vector(sub_matrix->get_shape().size()),
-        output_shape)};
+    return ngraph::onnx_import::reshape::squeeze(sub_matrix);
 }
 
 namespace ngraph
@@ -102,30 +93,8 @@ namespace ngraph
                     // This will make easier further dot product calculations.
                     if (left_shape.size() > 3)
                     {
-                        std::size_t first_dim_size = std::accumulate(
-                            std::begin(left_shape),
-                            std::next(std::begin(left_shape), left_shape.size() - 2),
-                            1UL,
-                            std::multiplies<std::size_t>());
-                        Shape squeezed_shape{first_dim_size};
-                        squeezed_shape.insert(
-                            std::end(squeezed_shape),
-                            std::next(std::begin(left_shape), left_shape.size() - 2),
-                            std::end(left_shape));
-                        left = std::make_shared<ngraph::op::Reshape>(
-                            left,
-                            reshape::get_default_axis_vector(left->get_shape().size()),
-                            squeezed_shape);
-
-                        squeezed_shape = {first_dim_size};
-                        squeezed_shape.insert(
-                            std::end(squeezed_shape),
-                            std::next(std::begin(right_shape), right_shape.size() - 2),
-                            std::end(right_shape));
-                        right = std::make_shared<ngraph::op::Reshape>(
-                            right,
-                            reshape::get_default_axis_vector(right->get_shape().size()),
-                            squeezed_shape);
+                        left = reshape::collapse(left, 0, left_shape.size() - 3);
+                        right = reshape::collapse(right, 0, right_shape.size() - 3);
                     }
 
                     // Perform multiple small dot products
@@ -166,9 +135,7 @@ namespace ngraph
                             std::begin(left_shape),
                             std::next(std::begin(left_shape), left_shape.size() - 2));
                         return {std::make_shared<ngraph::op::Reshape>(
-                            result,
-                            reshape::get_default_axis_vector(result->get_shape().size()),
-                            result_shape)};
+                            result, reshape::get_default_axis_vector(shape.size()), result_shape)};
                     }
                 }
 
