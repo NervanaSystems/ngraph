@@ -155,6 +155,7 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
 
     string library_name = "lib" + to_lower(type) + "_backend" + string(SHARED_LIB_EXT);
     string my_directory = file_util::get_directory(find_my_file());
+    my_directory += "/../backend/";
     string library_path = file_util::path_join(my_directory, library_name);
 #ifdef WIN32
     handle = LoadLibrary(library_path.c_str());
