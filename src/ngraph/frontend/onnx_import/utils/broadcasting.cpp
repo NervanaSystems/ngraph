@@ -93,7 +93,7 @@ static std::shared_ptr<ngraph::Node> broadcast(const std::shared_ptr<ngraph::Nod
 }
 
 static inline std::shared_ptr<ngraph::Node> broadcast(const std::shared_ptr<ngraph::Node>& node,
-                                               const ngraph::Shape& output_shape)
+                                                      const ngraph::Shape& output_shape)
 {
     return broadcast(node, output_shape, node->get_shape());
 }

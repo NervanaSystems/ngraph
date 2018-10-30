@@ -18,8 +18,8 @@
 
 #include <cstddef>
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
