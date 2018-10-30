@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <functional>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -147,9 +148,9 @@ namespace ngraph
                 {
                     using iterator = std::map<std::string, NgraphNodePtr>::iterator;
 
-                    LSTMNgInputMap(const Node& node)
+                    explicit LSTMNgInputMap(const Node& node)
                     {
-                        auto ng_inputs = node.get_ng_inputs();
+                        const auto& ng_inputs = node.get_ng_inputs();
                         const std::size_t gates_count{4};
                         const std::size_t peepholes_count{3};
 
@@ -244,9 +245,9 @@ namespace ngraph
                 using ActivationFunc = std::function<NgraphNodePtr(const NgraphNodePtr&)>;
                 using ActivationFuncsMap = std::unordered_map<std::string, ActivationFunc>;
 
-                struct LSTMNgAttributes
+                struct LSTMAttributes
                 {
-                    LSTMNgAttributes(const Node& node)
+                    explicit LSTMAttributes(const Node& node)
                     {
                         // ---- Required -----
                         m_hidden_size = node.get_attribute_value<std::int64_t>("hidden_size");
@@ -264,9 +265,11 @@ namespace ngraph
                         // If absent - no clipping.
                         m_clip = node.get_attribute_value<float>("clip",
                                                                  {std::numeric_limits<float>::max()});
-                        // TODO - initialize m_direction;
                         std::string direction =
                             node.get_attribute_value<std::string>("direction", "forward");
+                        ASSERT_IS_SUPPORTED(node, (direction == "forward"))
+                            << "Currently only forward mode is supported";
+
                         m_input_forget = static_cast<bool>(
                                             node.get_attribute_value<std::int64_t>("input_forget", 0));
 
@@ -290,53 +293,52 @@ namespace ngraph
                 class LSTMNode
                 {
                 public:
-                    LSTMNode(LSTMNgInputMap& input_map,
-                             LSTMNgAttributes& attributes)
-                      : m_f{attributes.m_atcivation_funcs["Sigmoid"]},
-                        m_g{attributes.m_atcivation_funcs["Tanh"]},
-                        m_h{attributes.m_atcivation_funcs["Tanh"]}
+                    explicit LSTMNode(const Node& node)
+                      : m_input_map{node},
+                        m_attributes{node},
+                        m_f{m_attributes.m_atcivation_funcs["Sigmoid"]},
+                        m_g{m_attributes.m_atcivation_funcs["Tanh"]},
+                        m_h{m_attributes.m_atcivation_funcs["Tanh"]}
                     {
-                        if (input_map["W"]->get_shape().at(0) == 1)
+                        if (m_attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
                         {
-                            m_direction = LSTMDirection::LSTM_DIRECTION_FORWARD;
+
                             // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
-                            for (auto& ng_in : input_map)
+                            for (auto& ng_in : m_input_map)
                             {
                                 if (ng_in.first != "X" && ng_in.first != "seq_lengths")
                                 {
+                                    ASSERT_VALID_ARGUMENT(node, ng_in.second->get_shape().at(0) == 1)
+                                        << "Input: { " << ng_in.first << " } first axis has size different "
+                                           "from 1, while direction attribute set to 'forward'.";
                                     ng_in.second = squeeze_first_dim(ng_in.second);
                                 }
                             }
                         }
-
-                        m_X = input_map["X"];
-                        m_W = input_map["W"];
-                        m_R = input_map["R"];
-                        m_B = input_map["B"];
-                        m_P = input_map["P"];
-                        m_H_0 = input_map["init_H"];
-                        m_C_0 = input_map["init_C"];
                     }
                     ~LSTMNode() {};
 
                     NodeVector run()
                     {
-                        NodeVector p_iof = split(m_P, 3);
+                        NodeVector p_iof = split(m_input_map["P"], 3);
                         NgraphNodePtr p_i = p_iof.at(0);
                         NgraphNodePtr p_o = p_iof.at(1);
                         NgraphNodePtr p_f = p_iof.at(2);
+                        NgraphNodePtr H_t = m_input_map["init_H"];;
+                        NgraphNodePtr C_t = m_input_map["init_C"];;
                         NodeVector h_list;
-                        NgraphNodePtr H_t = m_H_0;
-                        NgraphNodePtr C_t = m_C_0;
 
-                        NodeVector b_W_R = split(m_B, 2);
+                        NodeVector b_W_R = split(m_input_map["B"], 2);
                         NgraphNodePtr bias = b_W_R.at(0) + b_W_R.at(1);
-                        NodeVector in_seqs = split(m_X, m_X->get_shape().at(0), 0, true);
+                        NodeVector in_seqs = split(m_input_map["X"], m_input_map["X"]->get_shape().at(0),
+                                                   0, true);
 
                         for (const auto& in_x : in_seqs)
                         {
-                            auto Xt_W = std::make_shared<ngraph::op::Dot>(in_x, reshape::transpose(m_W));
-                            auto Ht_W = std::make_shared<ngraph::op::Dot>(H_t, reshape::transpose(m_R));
+                            auto Xt_W = std::make_shared<ngraph::op::Dot>(in_x,
+                                reshape::transpose(m_input_map["W"]));
+                            auto Ht_W = std::make_shared<ngraph::op::Dot>(H_t,
+                                reshape::transpose(m_input_map["R"]));
                             auto gates = add(Xt_W, add(Ht_W, bias));
 
                             NodeVector split_gates = split(gates, 4, -1);
@@ -370,7 +372,7 @@ namespace ngraph
 
                         // Expand Y so that it has expected shape:
                         // [seq_length, num_directions, batch_size, hidden_size]
-                        if (m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
+                        if (m_attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
                         {
                             shape = Y->get_shape();
                             shape.insert(std::next(std::begin(shape)), 1);
@@ -382,20 +384,16 @@ namespace ngraph
                     }
 
                 private:
-                    NgraphNodePtr m_X;
-                    NgraphNodePtr m_W;
-                    NgraphNodePtr m_R;
-                    NgraphNodePtr m_B;
-                    NgraphNodePtr m_P;
-                    NgraphNodePtr m_H_0;
-                    NgraphNodePtr m_C_0;
+                    LSTMNgInputMap m_input_map;
+                    LSTMAttributes m_attributes;
 
                     const ActivationFunc& m_f;
                     const ActivationFunc& m_g;
                     const ActivationFunc& m_h;
 
-                    LSTMDirection m_direction;
+                    // input, output, cell, forget
                     const std::size_t m_gates_count{4};
+                    // input, output, forget
                     const std::size_t m_peepholes_count{3};
                 };
 
@@ -405,10 +403,7 @@ namespace ngraph
             {
                 NodeVector lstm(const Node& node)
                 {
-                    LSTMNgInputMap inputs{node};
-                    LSTMNgAttributes attributes{node};
-
-                    LSTMNode lstm{inputs, attributes};
+                    LSTMNode lstm{node};
                     return lstm.run();
                 }
             } // namespace set_1
