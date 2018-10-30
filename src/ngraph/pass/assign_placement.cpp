@@ -26,6 +26,11 @@ pass::AssignPlacement::AssignPlacement(function<Placement(shared_ptr<Node>)> pla
 {
 }
 
+pass::AssignPlacement::AssignPlacement(vector<shared_ptr<runtime::Backend>> placement_backends)
+    : m_placement_backends(placement_backends)
+{
+}
+
 bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
 {
     node->set_placement(m_placement_policy(node));
