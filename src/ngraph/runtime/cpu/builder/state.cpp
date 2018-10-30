@@ -66,7 +66,9 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("Unsupported type for GenerateMask");
+                    throw ngraph_error(std::string("Unsupported type") +
+                                       args[0].get_element_type().c_type_string() +
+                                       "for GenerateMask");
                 }
                 functors.emplace_back(functor);
             }
