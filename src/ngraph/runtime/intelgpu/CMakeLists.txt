@@ -25,6 +25,7 @@ set(SRC
     intelgpu_op_softmax.cpp
     intelgpu_op_custom_func_call.cpp
     code_writer.cpp
+    visualize_tree.cpp
 )
 
 if (NGRAPH_INTELGPU_ENABLE)
