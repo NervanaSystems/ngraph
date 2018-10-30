@@ -28,8 +28,17 @@ op::LRN::LRN(const std::shared_ptr<Node>& arg, double alpha, double beta, double
     , m_size(nsize)
 {
     constructor_validate_and_infer_types();
-    NODE_VALIDATION_ASSERT(this, arg->get_shape().size() >= 3)
-        << "Argument must have rank >= 3 (argument shape: " << arg->get_shape() << ").";
+}
+
+void op::LRN::validate_and_infer_types()
+{
+    UnaryElementwiseArithmetic::validate_and_infer_types();
+
+    const PartialShape& input_shape = get_input_partial_shape(0);
+
+    NODE_VALIDATION_ASSERT(
+        this, input_shape.rank().is_dynamic() || static_cast<size_t>(input_shape.rank()) >= 3)
+        << "Argument must have rank >= 3 (argument shape: " << input_shape << ").";
 }
 
 shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const
