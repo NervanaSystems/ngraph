@@ -211,7 +211,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
                 }
             }
 
-            // we will insert the reshape on the weights to convert to mkldnn preferred layout
+            // get LSTM cell attributes
             size_t lstm_n_gates = 4;
             size_t batch_size = pattern_map[input_xt]->get_shape()[0];
             auto slc = weights_layer->get_shape()[1];
@@ -532,6 +532,13 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             for (auto& goes : lstm_nodes[index]->get_outputs().at(0).get_inputs())
             {
                 auto goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(goes->get_node());
+
+                // if their is no GOE followed by the Lstm, their might be pattern match error
+                // we will return safely
+                if (!goe_node)
+                {
+                    return false;
+                }
                 // first output node of lstm
                 if (goe_node && (goe_node->get_n() == 0))
                 {
@@ -543,23 +550,19 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                             ngraph::is_used(goe0_user.get()))
                         {
                             lstm_goe0_user.insert(goe0_user);
-                            map_goe_to_lstm_slices[goe_0] = ht_slice_per_timestep[index];
+                            map_goe_to_lstm_slices.insert(
+                                make_pair(goe0_user, ht_slice_per_timestep[index]));
+
                             NGRAPH_DEBUG << "ht_slice: " << ht_slice_per_timestep[index]->get_name()
                                          << " goe0_user " << goe0_user->get_name() << " ";
                         }
                     }
                 }
                 // we need to only check the last LSTM cell Ct user and replace if needed.
-                if ((index == 0) && (goe_node->get_n() == 1))
+                if (goe_node && (index == 0) && (goe_node->get_n() == 1))
                 {
                     // dst_iter of lstm mkldnn output holds the results of both recurrent state
                     // tensor outputs. we need to slice the ct.
-                    auto ht_slice = std::make_shared<op::Slice>(
-                        rnn_ht_ct_out,
-                        Coordinate{0, 0},
-                        Coordinate{static_cast<unsigned long>(batch_size * direction *
-                                                              num_fused_rnn_layers),
-                                   static_cast<unsigned long>(src_iter_feature_size)});
                     auto ct_slice = std::make_shared<op::Slice>(
                         rnn_ht_ct_out,
                         Coordinate{static_cast<unsigned long>(batch_size * direction *
@@ -579,15 +582,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         // now go through the lstm goe_0 consumers and replace them with the slice
         for (auto& node : lstm_goe0_user)
         {
-            for (size_t i = 0; i < node->get_input_size(); i++)
-            {
-                if (map_goe_to_lstm_slices.find(node->get_argument(i)) !=
-                    map_goe_to_lstm_slices.end())
-                {
-                    node->get_inputs().at(i).replace_output(
-                        map_goe_to_lstm_slices[node->get_argument(i)]->get_outputs().at(0));
-                }
-            }
+            ngraph::replace_node(node, map_goe_to_lstm_slices[node]);
         }
         NGRAPH_DEBUG << "End of recurrent fusion call back "
                      << "matched_node: " << m.get_match_root()->get_name();
