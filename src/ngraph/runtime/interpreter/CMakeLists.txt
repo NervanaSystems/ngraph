@@ -28,17 +28,10 @@ if (NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(interpreter_backend PUBLIC ngraph)
     set_target_properties(interpreter_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
-    if(DEFINED NGRAPH_INSTALL_BACKEND_DIR)
     install(TARGETS interpreter_backend
-        LIBRARY DESTINATION "${NGRAPH_INSTALL_BACKEND_DIR}"
-        ARCHIVE DESTINATION "${NGRAPH_INSTALL_BACKEND_DIR}"
+        LIBRARY DESTINATION "${NGRAPH_INSTALL_BACKEND}"
+        ARCHIVE DESTINATION "${NGRAPH_INSTALL_BACKEND}"
     )
-    else()
-    install(TARGETS interpreter_backend
-        LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
-        ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
-    )
-    endif()
     
     if(NGRAPH_DISTRIBUTED_ENABLE)
         find_package(MPI REQUIRED)
