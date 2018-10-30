@@ -51,7 +51,7 @@ namespace ngraph
 
                 static void get_concat_op(codegen::CodeWriter& writer,
                                           const std::string& name,
-                                          const std::vector<std::string>& data_types,
+                                          const std::string& data_type,
                                           size_t num_inputs);
 
                 static void get_onehot_op(codegen::CodeWriter& writer,
@@ -84,6 +84,13 @@ namespace ngraph
                                                 const std::string& reduce_op,
                                                 size_t out_rank,
                                                 size_t reduce_rank);
+
+                static void get_topk(codegen::CodeWriter& writer,
+                                     const std::string& name,
+                                     const std::vector<std::string>& dtypes,
+                                     bool compute_max,
+                                     runtime::gpu::GPUKernelArgs& args,
+                                     bool use_malloc);
 
                 //using one block with at most 512 threads to reduce to scalar.
                 static void get_reduce_to_scalar_op(codegen::CodeWriter& writer,
