@@ -27,6 +27,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/node_vector.hpp"
+#include "ngraph/op/convert.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/util/arithmetic_reduction.hpp"
 #include "ngraph/shape.hpp"
@@ -101,6 +102,38 @@ namespace ngraph
                     reshape::get_default_axis_vector(op_node->get_shape().size()),
                     Shape{output_shape});
             }
+
+            template <class IndexReduction>
+            std::shared_ptr<ngraph::Node> make_ng_index_reduction_op(const Node& node)
+            {
+                auto axis = node.get_attribute_value<int64_t>("axis", 0);
+                auto keepdims = node.get_attribute_value<int64_t>("keepdims", 1);
+                auto input_node = node.get_ng_inputs().at(0);
+
+                auto op_node = std::make_shared<IndexReduction>(input_node, axis, element::i64);
+
+                if (keepdims == 0)
+                {
+                    return op_node;
+                }
+
+                // WORKAROUND FOR PROBLEMS WITH RESHAPE ON i64 @TODO: remove
+                auto convert_node = std::make_shared<ngraph::op::Convert>(op_node, element::f32);
+
+                auto output_shape = input_node->get_shape();
+                output_shape.at(axis) = 1;
+                auto reshape_node = std::make_shared<ngraph::op::Reshape>(
+                    convert_node,
+                    reshape::get_default_axis_vector(op_node->get_shape().size()),
+                    Shape{output_shape});
+
+                // WORKAROUND FOR PROBLEMS WITH RESHAPE ON i64 @TODO: remove
+                auto reconvert_node =
+                    std::make_shared<ngraph::op::Convert>(reshape_node, element::i64);
+
+                return reconvert_node;
+            }
+
         } // namespace  reduction
     }     // namespace onnx_import
 } // namespace ngraph
