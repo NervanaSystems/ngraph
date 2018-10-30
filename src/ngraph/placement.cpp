@@ -226,7 +226,7 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
 }
 
 static Node* take_independent_node_with_placement_priority_size(
-    map<Placement, deque<Node*>>& independent_nodes_by_placement, Placement placement)
+    map<size_t, deque<Node*>>& independent_nodes_by_placement, size_t placement)
 {
     Node* selected_node = nullptr;
     if (independent_nodes_by_placement.find(placement) != independent_nodes_by_placement.end() &&
@@ -255,7 +255,7 @@ static vector<unordered_set<shared_ptr<Node>>>
 {
     // Topologically sort nodes by picking independent node with the same placement as the
     // previously picked node greedily
-    map<Placement, deque<Node*>> independent_nodes_by_placement;
+    map<size_t, deque<Node*>> independent_nodes_by_placement;
     unordered_map<Node*, size_t> node_dependency_count;
     unordered_map<ngraph::Node*, shared_ptr<ngraph::Node>> node_map;
 
@@ -266,16 +266,16 @@ static vector<unordered_set<shared_ptr<Node>>>
         node_dependency_count[node.get()] = dependency_count;
         if (dependency_count == 0)
         {
-            independent_nodes_by_placement[node->get_placement()].push_back(node.get());
+            independent_nodes_by_placement[node->get_placement_size()].push_back(node.get());
         }
     }
 
     list<shared_ptr<Node>> sorted_nodes;
-    Placement previous_placement = Placement::DEFAULT;
+    size_t previous_placement = 0; // Placement::DEFAULT
     while (Node* independent_node = take_independent_node_with_placement_priority_size(
                independent_nodes_by_placement, previous_placement))
     {
-        previous_placement = independent_node->get_placement();
+        previous_placement = independent_node->get_placement_size();
         sorted_nodes.push_back(node_map.at(independent_node));
 
         for (auto user : independent_node->get_users())
@@ -284,7 +284,8 @@ static vector<unordered_set<shared_ptr<Node>>>
             node_dependency_count.at(user_node) -= 1;
             if (node_dependency_count.at(user_node) == 0)
             {
-                independent_nodes_by_placement[user_node->get_placement()].push_back(user_node);
+                independent_nodes_by_placement[user_node->get_placement_size()].push_back(
+                    user_node);
             }
         }
     }
@@ -297,11 +298,11 @@ static vector<unordered_set<shared_ptr<Node>>>
     }
 
     // Build clusters from the sorted_nodes
-    previous_placement = Placement::DEFAULT;
+    previous_placement = 0; // Placement::DEFAULT;
     vector<unordered_set<shared_ptr<Node>>> clusters;
     for (shared_ptr<Node> node : sorted_nodes)
     {
-        Placement node_placement = node->get_placement();
+        size_t node_placement = node->get_placement_size();
         if (node_placement != previous_placement)
         {
             unordered_set<shared_ptr<Node>> new_cluster;
