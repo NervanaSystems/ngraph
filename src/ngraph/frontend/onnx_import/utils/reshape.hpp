@@ -127,6 +127,20 @@ namespace ngraph
                 return reshape(node, get_default_axis_vector(node->get_shape().size()), shape);
             }
 
+            /// \brief      Expands node tensor shape with empty axes.
+            ///
+            /// \param[in]  node                  The node to be expanded.
+            /// \param[in]  outermost_axes_count  The number of added outermost axes.
+            ///                                   At the front of the shape.
+            /// \param[in]  innermost_axes_count  The number of added innermost axes.
+            ///                                   At the end of the shape.
+            ///
+            /// \return     The node with added empty axes.
+            ///
+            std::shared_ptr<ngraph::Node> add_empty_axes(const std::shared_ptr<ngraph::Node>& node,
+                                                         std::size_t outermost_axes_count = 1,
+                                                         std::size_t innermost_axes_count = 0);
+
         } // namespace  reshape
     }     // namespace onnx_import
 } // namespace ngraph
