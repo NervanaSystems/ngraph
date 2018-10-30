@@ -15,8 +15,10 @@
 //*****************************************************************************
 
 #include "ngraph/pass/assign_placement.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/placement.hpp"
+#include "ngraph/runtime/backend.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -33,6 +35,24 @@ pass::AssignPlacement::AssignPlacement(vector<shared_ptr<runtime::Backend>> plac
 
 bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
 {
-    node->set_placement(m_placement_policy(node));
+    if (!m_placement_backends.empty())
+    {
+        NGRAPH_INFO << "placement based on backend";
+        size_t backend_indx = 0;
+        for (auto backend : m_placement_backends)
+        {
+            backend_indx++;
+            if (backend->is_supported(node))
+            {
+                NGRAPH_INFO << node->description() << " placement based on backend" << backend_indx;
+                node->set_placement(backend_indx);
+            }
+        }
+    }
+    else
+    {
+        node->set_placement(m_placement_policy(node));
+    }
+
     return false;
 }

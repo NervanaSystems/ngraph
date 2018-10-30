@@ -15,6 +15,9 @@
 //*****************************************************************************
 
 #include "hybrid_utils.hpp"
+#include "ngraph/ngraph.hpp"
+#include "ngraph/pass/assign_placement.hpp"
+#include "ngraph/pass/manager.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -50,7 +53,13 @@ bool TestBackend::call(shared_ptr<Function> func,
                        const vector<shared_ptr<runtime::Tensor>>& outputs,
                        const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    // Run placement pass
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AssignPlacement>(m_backend_list);
+    pass_manager.run_passes(func);
+
     throw runtime_error("TestBackend call not supported");
+
     // for (auto backend : m_backend_list)
     // {
     //     if (backend->is_supported(node))
@@ -95,7 +104,7 @@ bool BackendWrapper::call(shared_ptr<Function> func,
     return m_backend->call(func, outputs, inputs);
 }
 
-bool BackendWrapper::is_supported(const Node& node) const
+bool BackendWrapper::is_supported(std::shared_ptr<Node> node) const
 {
-    return m_supported_ops.find(node.description()) != m_supported_ops.end();
+    return m_supported_ops.find(node->description()) != m_supported_ops.end();
 }
