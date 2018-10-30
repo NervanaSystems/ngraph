@@ -98,12 +98,6 @@ static std::shared_ptr<ngraph::Node> broadcast(const std::shared_ptr<ngraph::Nod
         std::make_shared<ngraph::op::Broadcast>(broadcasted_node, output_shape, broadcast_axes)};
 }
 
-static inline std::shared_ptr<ngraph::Node> broadcast(const std::shared_ptr<ngraph::Node>& node,
-                                                      const ngraph::Shape& output_shape)
-{
-    return broadcast(node, output_shape, node->get_shape());
-}
-
 namespace ngraph
 {
     namespace onnx_import
