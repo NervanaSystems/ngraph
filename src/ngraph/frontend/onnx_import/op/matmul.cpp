@@ -112,14 +112,7 @@ namespace ngraph
 
                         // Expand sub_dot result with single empty outermost axis, in order to
                         // later concatenate sub_dots at this axis.
-                        std::vector<std::size_t> output_shape{1};
-                        output_shape.insert(std::end(output_shape),
-                                            std::begin(sub_dot->get_shape()),
-                                            std::end(sub_dot->get_shape()));
-                        small_dots.at(g) = std::make_shared<ngraph::op::Reshape>(
-                            sub_dot,
-                            reshape::get_default_axis_vector(sub_dot->get_shape().size()),
-                            output_shape);
+                        small_dots.at(g) = reshape::add_empty_axes(sub_dot);
                     }
 
                     // Concatenate sub_dots on groups axis.
