@@ -109,6 +109,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
@@ -2829,6 +2830,77 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GroupConvolutionBias)
+            {
+                auto convolution = static_cast<const ngraph::op::GroupConvolutionBias*>(node);
+
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto arg2_shape = args[2].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    Strides window_dilation_strides_adjusted;
+                    for (size_t s : convolution->get_window_dilation_strides())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+
+                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    auto padding_below = convolution->get_padding_below();
+                    auto padding_above = convolution->get_padding_above();
+                    auto filter_strides = convolution->get_window_movement_strides();
+
+                    const float ops_scale = 1.f;
+                    const float ops_alpha = -0.f; // relu negative slope
+                    const float ops_beta = 0.f;
+
+                    mkldnn::post_ops ops;
+                    if (convolution->with_relu())
+                    {
+                        ops.append_eltwise(
+                            ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+                    }
+
+                    size_t conv_index =
+                        mkldnn_emitter->build_convolution_forward(input_data_desc,
+                                                                  weights_desc,
+                                                                  bias_desc,
+                                                                  result_desc,
+                                                                  filter_strides,
+                                                                  window_dilation_strides_adjusted,
+                                                                  padding_below,
+                                                                  padding_above,
+                                                                  ops);
+
+                    // invoke group convolution bias
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("Unsupported parameters for GroupConvolutionBias");
+                }
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Convolution)
             {
                 auto convolution = static_cast<const ngraph::op::Convolution*>(node);
@@ -3920,17 +3992,27 @@ namespace ngraph
                          result_desc.data.ndims == 5 /*Goihw16g/Goihw8g/etc*/ &&
                          node->get_users().size() == 1)
                 {
-                    auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
-                        *(begin(node->get_users())));
-                    if (gconv)
+                    Shape weights_shape_groups;
+                    if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
+                            node->get_users()[0]))
                     {
-                        Shape weights_shape_groups = gconv->get_weights_dimensions();
-                        input_desc = mkldnn::memory::desc(
-                            mkldnn::memory::dims(weights_shape_groups.begin(),
-                                                 weights_shape_groups.end()),
-                            mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
-                            mkldnn::memory::format::goihw);
+                        weights_shape_groups = gconv->get_weights_dimensions();
                     }
+                    else if (auto gconvb =
+                                 std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(
+                                     node->get_users()[0]))
+                    {
+                        weights_shape_groups = gconvb->get_weights_dimensions();
+                    }
+                    else
+                    {
+                        throw ngraph_error("Incompatible input/output shape in ConvertLayout op");
+                    }
+                    input_desc = mkldnn::memory::desc(
+                        mkldnn::memory::dims(weights_shape_groups.begin(),
+                                             weights_shape_groups.end()),
+                        mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                        mkldnn::memory::format::goihw);
                 }
 
                 size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);
