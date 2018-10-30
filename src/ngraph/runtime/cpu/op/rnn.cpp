@@ -92,12 +92,12 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
         throw ngraph_error("src_layer size is not equal t*n*c");
     }
 
-    /*    if (bias->get_shape()[0] != weights_layer->get_shape()[1] ||
+    if (bias->get_shape()[0] != weights_layer->get_shape()[1] ||
         bias->get_shape()[0] != weights_iter->get_shape()[1])
     {
         throw ngraph_error("bias and weights_shape are not compatible");
     }
-*/
+
     auto et = src_layer->get_element_type();
     for (auto& rnn_input : get_arguments())
     {

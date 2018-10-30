@@ -1932,14 +1932,12 @@ TEST(cpu_fusion, group_convolution)
     ASSERT_EQ(rv, erv);
 }
 
-//TODO(Pruthvi) enable this test after MKLDNN RNN bug is fixed
-//#if 0
 TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
 {
     auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
     auto src_iter = make_shared<op::Parameter>(element::f32, Shape{20, 100});
-    auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{400, 100});
-    auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{400, 100});
+    auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{100, 400});
+    auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{100, 400});
     auto biases = make_shared<op::Parameter>(element::f32, Shape{400});
     const int number_of_timesteps = 1;
     const int number_of_gates_per_cell = 4;
@@ -2010,7 +2008,6 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
     EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
 }
-//#endif
 
 TEST(cpu_fusion, fuse_lstm_cells)
 {
