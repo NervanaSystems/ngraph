@@ -57,8 +57,9 @@ std::vector<ngraph::Shape> get_numpy_broadcast_shape(ngraph::Shape left_shape,
 
 /// \brief      Broadcast input node.
 ///
-/// \note       The source shape do not have to be the actual shape of input node. This implies we
-///             may expand input node.
+/// \note       The source shape does not have to be the actual shape of input node. However
+///             it should be a superset of it (containing it as a continuous subset). This implies
+///             we may expand the number of axes of input node.
 ///
 /// \param[in]  node          The input Node to be broadcasted.
 /// \param[in]  output_shape  The output shape.
@@ -91,6 +92,12 @@ static std::shared_ptr<ngraph::Node> broadcast(const std::shared_ptr<ngraph::Nod
         std::make_shared<ngraph::op::Broadcast>(broadcasted_node, output_shape, broadcast_axes)};
 }
 
+static inline std::shared_ptr<ngraph::Node> broadcast(const std::shared_ptr<ngraph::Node>& node,
+                                               const ngraph::Shape& output_shape)
+{
+    return broadcast(node, output_shape, node->get_shape());
+}
+
 namespace ngraph
 {
     namespace onnx_import
@@ -114,8 +121,8 @@ namespace ngraph
             numpy_style_broadcast_for_matmul_operation(const std::shared_ptr<ngraph::Node>& left,
                                                        const std::shared_ptr<ngraph::Node>& right)
         {
-            auto left_shape = left->get_shape();
-            auto right_shape = right->get_shape();
+            const auto& left_shape = left->get_shape();
+            const auto& right_shape = right->get_shape();
             // Broadcast only _stack of matrices_ axes.
             auto numpy_shapes = get_numpy_broadcast_shape(
                 Shape{std::begin(left_shape), std::next(std::end(left_shape), -2)},

@@ -142,7 +142,7 @@ namespace ngraph
             }
 
             std::shared_ptr<ngraph::Node> squeeze(const std::shared_ptr<ngraph::Node>& node,
-                                                  std::vector<std::size_t> axes = {0})
+                                                  std::vector<std::size_t> axes)
             {
                 if (axes.empty())
                 {

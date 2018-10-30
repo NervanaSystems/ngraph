@@ -33,17 +33,19 @@
 /// \brief      Slice the sub matrix from 3D input tensor.
 ///
 /// \param[in]  node  The input tensor. Must be 3D.
-/// \param[in]  idx   The index on the first axis, at wihich to slice sub-matrix.
+/// \param[in]  idx   The index on the first axis, at which to slice sub-matrix.
 ///
 /// \return     The node representing sub matrix.
 ///
 static std::shared_ptr<ngraph::Node> get_sub_matrix(const std::shared_ptr<ngraph::Node>& node,
                                                     std::size_t idx)
 {
-    ngraph::Shape shape{node->get_shape()};
+    const ngraph::Shape& shape{node->get_shape()};
+    // Below bounds defines the sub_matrix through ranges for each input node axis.
     ngraph::Coordinate lower_bounds(shape.size());
     ngraph::Coordinate upper_bounds = shape;
-
+    // We assume `node` tensor is of rank equal 3, thus we slice the sub-matrix lying in the last
+    // two dimensions at index `idx` of first axis.
     lower_bounds.at(0) = idx;
     upper_bounds.at(0) = idx + 1;
 
@@ -62,7 +64,7 @@ namespace ngraph
             {
                 NodeVector matmul(const Node& node)
                 {
-                    NodeVector ng_inputs{node.get_ng_inputs()};
+                    const NodeVector& ng_inputs{node.get_ng_inputs()};
                     auto left{ng_inputs.at(0)};
                     auto right{ng_inputs.at(1)};
                     std::size_t left_rank{left->get_shape().size()};
@@ -81,13 +83,13 @@ namespace ngraph
                     // Multiply two tensors where each of them is rank greater equal 3.
 
                     // Broadcast input arguments.
-                    NodeVector broadcasted_nodes =
+                    const NodeVector& broadcasted_nodes =
                         numpy_style_broadcast_for_matmul_operation(left, right);
 
                     left = broadcasted_nodes.at(0);
                     right = broadcasted_nodes.at(1);
-                    auto left_shape = left->get_shape();
-                    auto right_shape = right->get_shape();
+                    const auto& left_shape = left->get_shape();
+                    const auto& right_shape = right->get_shape();
 
                     // Collapse both tensors _stack of matrices_ axes (all except the last two).
                     // This will make easier further dot product calculations.
@@ -103,11 +105,13 @@ namespace ngraph
 
                     for (std::size_t g = 0; g < groups; ++g)
                     {
-                        auto sliced_left = get_sub_matrix(left, g);
-                        auto sliced_right = get_sub_matrix(right, g);
+                        const auto& sliced_left = get_sub_matrix(left, g);
+                        const auto& sliced_right = get_sub_matrix(right, g);
 
                         auto sub_dot = std::make_shared<ngraph::op::Dot>(sliced_left, sliced_right);
 
+                        // Expand sub_dot result with single empty outermost axis, in order to
+                        // later concatenate sub_dots at this axis.
                         std::vector<std::size_t> output_shape{1};
                         output_shape.insert(std::end(output_shape),
                                             std::begin(sub_dot->get_shape()),
@@ -128,7 +132,7 @@ namespace ngraph
                     // Expand result _stack of matrices_ axes to get expected result shape.
                     else
                     {
-                        Shape shape{result->get_shape()};
+                        const Shape& shape{result->get_shape()};
                         Shape result_shape(std::next(std::begin(shape)), std::end(shape));
                         result_shape.insert(
                             std::begin(result_shape),

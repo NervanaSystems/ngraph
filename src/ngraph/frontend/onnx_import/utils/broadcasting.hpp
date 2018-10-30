@@ -47,9 +47,6 @@ namespace ngraph
             return numpy_style_broadcast_for_binary_operation(inputs.at(0), inputs.at(1));
         }
 
-        // Note that broadcasting happens only for _stack of matrices_ dimensions.
-        // The last two axes are not broadcasted!
-
         /// \brief      Broadcast shape of two nodes to make them compatible for a matrix multiplication.
         ///
         /// \note       This function is reflecting broadcasting behaviour of NumPys' `matmul` operation
