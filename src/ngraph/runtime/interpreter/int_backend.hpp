@@ -179,12 +179,14 @@ private:
     void generate_calls(const element::Type& type,
                         const NodeWrapper& op,
                         const std::vector<std::shared_ptr<HostTensor>>& outputs,
-                        const std::vector<std::shared_ptr<HostTensor>>& inputs);
+                        const std::vector<std::shared_ptr<HostTensor>>& inputs,
+                        FunctionInstance& instance);
 
     template <typename T>
     void op_engine(const NodeWrapper& node_wrapper,
                    const std::vector<std::shared_ptr<HostTensor>>& out,
-                   const std::vector<std::shared_ptr<HostTensor>>& args)
+                   const std::vector<std::shared_ptr<HostTensor>>& args,
+                   FunctionInstance& instance)
     {
         const Node& node = node_wrapper.get_node();
         std::string node_op = node.description();
