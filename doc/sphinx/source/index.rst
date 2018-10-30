@@ -18,45 +18,39 @@
 .. https://ngraph.nervanasys.com/docs/latest
 
 
-########
-nGraph™ 
-########
-
 Welcome
 =======
 
-nGraph is an open-source C++ library and compiler suite for frameworks 
-and developers in the :abbr:`Deep Learning (DL)` ecosystem. nGraph is 
-framework-neutral and can be targeted to program and deploy solutions 
-to the most modern compute and edge devices available today. For a more
-detailed explanation on the many **features** and compatible companion 
-tools available, read the project :doc:`project/about`. 
+nGraph is an open-source C++ library, compiler, and runtime accelerator for 
+software engineering in the :abbr:`Deep Learning (DL)` ecosystem. nGraph 
+simplifies the path from code to makes it possible to design, write, compile, and deploy 
+:abbr:`Deep Neural Network (DNN)`-based solutions that can be easily scaled.
+A more detailed explanation on the feature set of nGraph Compiler and runtime, 
+as well as a high-level overview can be found on our project :doc:`project/about`. 
 
-The value we're offering to the developer community is empowerment: we 
-are confident that Intel® Architecture already provides the best 
-computational resources available for the breadth of ML/DL tasks. 
+.. figure:: graphics/599px-Intel-ngraph-ecosystem.png
+   :width: 599px
 
 
 Quick Start
 ===========
 
-Depending on your level of programming familiarity, we have various 
-documents to help you get started.  
+We have various documents to help you get started.  
 
 * **Framework users** of TensorFlow and MXNet can get started with 
-  * :doc:`framework-integration-guides` (Requires: Python3 and Command-line only)
+  * :doc:`framework-integration-guides`.
 
 * **Data scientists** interested in the `ONNX`_ format will find the 
-  `nGraph ONNX compantion tool`_ of interest. (Requires Python3 and command-line)
+  `nGraph ONNX companion tool`_ of interest and want to make use of the 
+  :doc:`python_api/index`. 
 
 * **Framework authors and architects** will likely want to :doc:`buildlb` 
-  and read up on :doc:`howto/execute` for an example of how to integrate 
-  your framework with nGraph via bridge code. (Requires knowledge of C++)
+  and read up on :doc:`howto/execute`. For examples of generic optimizations 
+  available when designing your framework directly with nGraph, see 
+  :doc:`frameworks/generic`.  
 
-* **Optimization pass writers** will find :doc:`fusion/index` useful. 
-  (Requires )
-
-* **:doc:`howto/index` to learn how to write bridge code.
+* **Optimization pass writers** will find :doc:`fusion/index` useful, as well
+  as our :doc:`ops/index`. 
 
 
 Currently-supported backends and future 
@@ -88,10 +82,6 @@ Supported frameworks
    PyTorch, No, Yes
    CNTK, No, Yes
    Other, Write your own, Custom
-
-
-.. figure:: ../graphics/599px-Intel-ngraph-ecosystem.png
-   :width: 599px
 
 
 .. note:: The Library code is under active development as we're continually 
@@ -129,7 +119,8 @@ Indices and tables
    * :ref:`genindex`
 
 
-.. _nGraph ONNX companion tool: https://github.com/NervanaSystems/ngraph-onnx
-.. _Movidius: https://www.movidius.com/
 
-     .. _contributions: https://github.com/NervanaSystems/ngraph#how-to-contribute
+.. _nGraph ONNX companion tool: https://github.com/NervanaSystems/ngraph-onnx
+.. _ONNX: http://onnx.ai
+.. _Movidius: https://www.movidius.com/
+.. _contributions: https://github.com/NervanaSystems/ngraph#how-to-contribute
