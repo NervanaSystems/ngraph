@@ -19,6 +19,7 @@
 #include <functional>
 #include <iterator>
 #include <memory>
+#include <numeric>
 #include <vector>
 
 #include "ngraph/assertion.hpp"
