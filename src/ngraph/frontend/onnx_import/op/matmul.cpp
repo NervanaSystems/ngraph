@@ -65,8 +65,8 @@ namespace ngraph
                 NodeVector matmul(const Node& node)
                 {
                     const NodeVector& ng_inputs{node.get_ng_inputs()};
-                    auto left{ng_inputs.at(0)};
-                    auto right{ng_inputs.at(1)};
+                    auto left = std::shared_ptr<ngraph::Node>{ng_inputs.at(0)};
+                    auto right = std::shared_ptr<ngraph::Node>{ng_inputs.at(1)};
                     std::size_t left_rank{left->get_shape().size()};
                     std::size_t right_rank{right->get_shape().size()};
 
