@@ -429,6 +429,29 @@ Placement ngraph::get_colocated_function_placement(shared_ptr<Function> func)
     return function_placement;
 }
 
+// Assert that nodes in the function is colocated and return that placement
+size_t ngraph::get_colocated_function_placement_size(shared_ptr<Function> func)
+{
+    size_t function_placement = 0;
+    traverse_nodes(func, [&](shared_ptr<Node> node) {
+        size_t node_placement = node->get_placement_size();
+        if (node_placement == 0)
+        {
+            throw ngraph_error("Node should have a device placement, not Placement::DEFAULT");
+        }
+        if (function_placement == 0)
+        {
+            // First time seeing a node
+            function_placement = node->get_placement_size();
+        }
+        else if (function_placement != node_placement)
+        {
+            throw ngraph_error("Function contains nodes of two different placements");
+        }
+    });
+    return function_placement;
+}
+
 std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const Shape& shape)
 {
     std::shared_ptr<Node> zero = op::Constant::create(element_type, Shape{}, {0.0});

@@ -46,17 +46,47 @@ shared_ptr<runtime::Tensor> TestBackend::create_tensor(const element::Type& elem
 
 bool TestBackend::compile(shared_ptr<Function> func)
 {
-    return m_backend_list[0]->compile(func);
+    if (m_function_map.find(func) == m_function_map.end())
+    {
+        // Clone function
+        FunctionInstance instance;
+        instance.m_function = clone_function(*func);
+
+        // Run placement pass
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::AssignPlacement>(m_backend_list);
+        pass_manager.run_passes(instance.m_function);
+
+        // Split function to sub_functions
+        tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
+            split_function_by_placement_size(instance.m_function);
+        m_function_map.insert({func, instance});
+
+        // Compile subfunctions in corresponding backends
+        for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
+        {
+            size_t placement = get_colocated_function_placement_size(sub_function);
+            auto backend =
+                m_backend_list[(placement - 1)]; // (placement-1) as 0 is default placement
+            backend->compile(sub_function);
+        }
+    }
+
+    return true;
 }
 
 bool TestBackend::call(shared_ptr<Function> func,
                        const vector<shared_ptr<runtime::Tensor>>& outputs,
                        const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    // Run placement pass
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::AssignPlacement>(m_backend_list);
-    pass_manager.run_passes(func);
+    // Get FunctionInstance
+    bool rc = true;
+    auto it = m_function_map.find(func);
+    if (it == m_function_map.end())
+    {
+        compile(func);
+        it = m_function_map.find(func);
+    }
 
     throw runtime_error("TestBackend call not supported");
 
