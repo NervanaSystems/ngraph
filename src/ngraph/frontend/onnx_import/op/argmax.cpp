@@ -14,14 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/multiply.hpp"
-
+#include "ngraph/op/argmax.hpp"
 #include "core/node.hpp"
-#include "utils/broadcasting.hpp"
+#include "ngraph/node_vector.hpp"
+#include "utils/reduction.hpp"
 
 namespace ngraph
 {
@@ -31,29 +27,12 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector mul(const Node& node)
+                NodeVector argmax(const Node& node)
                 {
-                    auto axis = node.get_attribute_value<int64_t>("axis", 0);
-                    NodeVector ng_inputs{legacy_style_broadcast_for_binary_operation(
-                        node.get_ng_inputs().at(0), node.get_ng_inputs().at(1), axis)};
-
-                    return {
-                        std::make_shared<ngraph::op::Multiply>(ng_inputs.at(0), ng_inputs.at(1))};
+                    return {reduction::make_ng_index_reduction_op<ngraph::op::ArgMax>(node)};
                 }
 
             } // namespace set_1
-
-            namespace set_7
-            {
-                inline NodeVector mul(const Node& node)
-                {
-                    NodeVector ng_inputs{
-                        numpy_style_broadcast_for_binary_operation(node.get_ng_inputs())};
-                    return {
-                        std::make_shared<ngraph::op::Multiply>(ng_inputs.at(0), ng_inputs.at(1))};
-                }
-
-            } // namespace set_7
 
         } //namespace op
 
