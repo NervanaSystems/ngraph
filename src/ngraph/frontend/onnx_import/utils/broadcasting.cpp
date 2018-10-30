@@ -78,8 +78,14 @@ static std::shared_ptr<ngraph::Node> broadcast(const std::shared_ptr<ngraph::Nod
     // to avoid broadcasting axis conflict.
     for (auto index = 0; index < output_shape.size(); ++index)
     {
-        (source_shape.at(index) == 1) ? broadcast_axes.push_back(index)
-                                      : squeezed_shape.push_back(source_shape.at(index));
+        if (source_shape.at(index) == 1)
+        {
+            broadcast_axes.push_back(index);
+        }
+        else
+        {
+            squeezed_shape.push_back(source_shape.at(index));
+        }
     }
 
     // Remove axes which have length of 1 from source shape
