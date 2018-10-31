@@ -4779,7 +4779,7 @@ NGRAPH_TEST(${BACKEND_NAME}, generate_mask)
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    auto is_not_zero_or_one = [](float f) { return f != 0.f && f != 1.f; };
+    auto is_not_zero_or_one = [](float num) { return num != 0.f && num != 1.f; };
 
     auto result_tv1 = backend->create_tensor<float>(result_shape);
     auto result_tv2 = backend->create_tensor<float>(result_shape);
