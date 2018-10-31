@@ -19,6 +19,7 @@
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_debugger.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 
@@ -73,16 +74,28 @@ void runtime::cpu::CPU_Debugger::call(const std::vector<std::shared_ptr<runtime:
     m_callframe.inner_call(m_outputs, m_inputs);
 }
 
-bool runtime::cpu::CPU_Debugger::add_breakpoint(std::shared_ptr<Node> op)
+std::tuple<bool, size_t> runtime::cpu::CPU_Debugger::find_pc_for_node(std::shared_ptr<Node> op)
 {
     auto external_function = m_callframe.m_external_function;
-    auto ctx = m_callframe.ctx;
     auto i_pos = std::find(
         external_function->op_names.begin(), external_function->op_names.end(), op->get_name());
+
     if (i_pos != external_function->op_names.end())
     {
         auto pc = static_cast<size_t>(std::distance(external_function->op_names.begin(), i_pos));
-        ctx->breakpoints.insert(pc);
+        return std::tuple<bool, size_t>{true, pc};
+    }
+    return std::tuple<bool, size_t>{false, 0};
+}
+
+bool runtime::cpu::CPU_Debugger::add_breakpoint(std::shared_ptr<Node> op)
+{
+    bool found;
+    size_t pc;
+    std::tie(found, pc) = find_pc_for_node(op);
+    if (found)
+    {
+        m_callframe.ctx->breakpoints.insert(pc);
         return true;
     }
     return false;
@@ -90,14 +103,12 @@ bool runtime::cpu::CPU_Debugger::add_breakpoint(std::shared_ptr<Node> op)
 
 bool runtime::cpu::CPU_Debugger::delete_breakpoint(std::shared_ptr<Node> op)
 {
-    auto external_function = m_callframe.m_external_function;
-    auto ctx = m_callframe.ctx;
-    auto i_pos = std::find(
-        external_function->op_names.begin(), external_function->op_names.end(), op->get_name());
-    if (i_pos != external_function->op_names.end())
+    bool found;
+    size_t pc;
+    std::tie(found, pc) = find_pc_for_node(op);
+    if (found)
     {
-        auto pc = static_cast<size_t>(std::distance(external_function->op_names.begin(), i_pos));
-        ctx->breakpoints.erase(pc);
+        m_callframe.ctx->breakpoints.erase(pc);
         return true;
     }
     return false;
@@ -107,4 +118,61 @@ void* runtime::cpu::CPU_Debugger::inspect(std::shared_ptr<Node> op, size_t outpu
 {
     return m_callframe.m_external_function->tensor_data.at(op->get_name() + "_" +
                                                            to_string(output_index));
+}
+
+bool runtime::cpu::CPU_Debugger::add_tracepoint(
+    std::shared_ptr<Node> op, const std::function<void(void**, const std::string&)>& callback)
+{
+    auto external_function = m_callframe.m_external_function;
+    bool found;
+    size_t pc;
+    std::tie(found, pc) = find_pc_for_node(op);
+    if (found)
+    {
+        if (replaced_functors.count(pc) != 0)
+        {
+            return false;
+        }
+
+        auto op_name = op->get_name();
+        std::vector<void**> poutputs;
+        for (size_t i = 0; i < op->get_outputs().size(); i++)
+        {
+            poutputs.push_back(&external_function->tensor_data.at(op_name + "_" + to_string(i)));
+        }
+
+        auto original_functor = external_function->functors.at(pc);
+
+        auto trace_functor =
+            [poutputs, callback, original_functor, op_name](CPURuntimeContext* ctx) {
+                original_functor(ctx);
+
+                std::vector<void*> outputs;
+                for (auto pout : poutputs)
+                {
+                    outputs.push_back(*pout);
+                }
+
+                callback(outputs.data(), op_name);
+            };
+        replaced_functors[pc] = original_functor;
+        external_function->functors.at(pc) = trace_functor;
+        return true;
+    }
+
+    return false;
+}
+
+bool runtime::cpu::CPU_Debugger::delete_tracepoint(std::shared_ptr<Node> op)
+{
+    bool found;
+    size_t pc;
+    std::tie(found, pc) = find_pc_for_node(op);
+    if (found)
+    {
+        m_callframe.m_external_function->functors.at(pc) = replaced_functors.at(pc);
+        return true;
+    }
+
+    return false;
 }

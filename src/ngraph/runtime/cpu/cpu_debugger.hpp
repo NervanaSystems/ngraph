@@ -17,8 +17,11 @@
 #pragma once
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
+#include <string>
+#include <tuple>
 #include <vector>
 
 #include "ngraph/function.hpp"
@@ -56,13 +59,21 @@ namespace ngraph
                 /// \brief Remove a breakpoint from a node
                 bool delete_breakpoint(std::shared_ptr<Node> op);
 
+                /// \brief Add a tracepoint to a node
+                bool
+                    add_tracepoint(std::shared_ptr<Node> op,
+                                   const std::function<void(void**, const std::string&)>& callback);
+                /// \brief Remove a tracepoint from a node
+                bool delete_tracepoint(std::shared_ptr<Node> op);
+
                 void* inspect(std::shared_ptr<Node> op, size_t output_index = 0);
 
             protected:
+                std::tuple<bool, size_t> find_pc_for_node(std::shared_ptr<Node> op);
                 CPU_Debugger(const CPU_Debugger&) = delete;
                 CPU_Debugger(CPU_Debugger&&) = delete;
                 CPU_Debugger& operator=(const CPU_Debugger&) = delete;
-
+                std::map<size_t, std::function<void(CPURuntimeContext*)>> replaced_functors;
                 CPU_CallFrame& m_callframe;
                 std::vector<std::shared_ptr<runtime::Tensor>> m_inputs;
                 std::vector<std::shared_ptr<runtime::Tensor>> m_outputs;
