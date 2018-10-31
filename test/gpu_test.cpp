@@ -24,6 +24,7 @@
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 #include "ngraph/runtime/gpu/nvshape.hpp"
 #include "util/all_close.hpp"
+#include "util/all_close_f.hpp"
 #include "util/random.hpp"
 
 using namespace std;
@@ -214,7 +215,7 @@ TEST(gpu_test, topk_3d_global_mem)
 
     for (size_t i = 0; i < gpu_results_1.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(gpu_results_1.at(i), cpu_results_1.at(i), 1.0e-4f, 1.0e-4f));
+        EXPECT_TRUE(test::all_close_f(gpu_results_1.at(i), cpu_results_1.at(i), 0.0f, 0.0f));
     }
 }
 
