@@ -144,7 +144,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_row)
 
     auto f = make_shared<Function>(cg, op::ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shapeA);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shapeB);
@@ -175,7 +175,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_column)
 
     auto f = make_shared<Function>(cg, op::ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shapeA);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shapeB);
@@ -210,7 +210,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_matrix)
 
     auto f = make_shared<Function>(cg, op::ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shapeA);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shapeB);
@@ -242,7 +242,7 @@ TEST(cpu_fusion, gemm_cpu_no_bias)
 
     auto f = make_shared<Function>(cg, op::ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shapeA);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shapeB);
@@ -403,7 +403,7 @@ TEST(cpu_fusion, zero_padded_reshaped_conv)
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
     backend->compile(func);
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
@@ -431,7 +431,7 @@ TEST(cpu_fusion, zero_padded_conv)
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
     backend->compile(func);
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
@@ -459,7 +459,7 @@ TEST(cpu_fusion, non_zero_padded_conv)
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
     backend->compile(func);
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
@@ -488,7 +488,7 @@ TEST(cpu_fusion, zero_padded_conv_backprop_filters)
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
     backend->compile(func);
 
     ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
@@ -539,7 +539,7 @@ struct ConvolutionBiasTestData
     shared_ptr<op::Parameter> bias;
     shared_ptr<op::Parameter> delta;
 
-    void n1c1h3w3(shared_ptr<runtime::Backend> backend)
+    void n1c1h3w3(runtime::Backend* backend)
     {
         n = 1;
         c = 1;
@@ -622,10 +622,10 @@ struct ConvolutionBiasTestData
 
 TEST(cpu_fusion, conv_bias_fprop_n1c1h3w3)
 {
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
 
     ConvolutionBiasTestData conv_test;
-    conv_test.n1c1h3w3(backend);
+    conv_test.n1c1h3w3(backend.get());
 
     auto convolution = make_shared<op::Convolution>(conv_test.data, conv_test.weights);
     auto convolution_bias = make_shared<op::ConvolutionBias>(convolution, conv_test.bias);
@@ -643,10 +643,10 @@ TEST(cpu_fusion, conv_bias_fprop_n1c1h3w3)
 
 TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
 {
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
 
     ConvolutionBiasTestData conv_test;
-    conv_test.n1c1h3w3(backend);
+    conv_test.n1c1h3w3(backend.get());
 
     auto convolution = make_shared<op::Convolution>(conv_test.data, conv_test.weights);
     auto convolution_bias = make_shared<op::ConvolutionBias>(convolution, conv_test.bias);
@@ -740,7 +740,7 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
     auto f = make_shared<Function>(
         NodeVector{output_relu, mean_rt, variance_rt, output_rt_bnr, mean_rt_bnr, variance_rt_bnr},
         op::ParameterVector{input, gamma, beta});
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
 
     // Create some tensors for input/output
     auto input_t = backend->create_tensor(element::f32, Shape{1, 2, 2, 2});
@@ -1232,7 +1232,7 @@ std::vector<shared_ptr<runtime::Tensor>> rnn_matrix_fusion_eval(const size_t tim
         EXPECT_EQ(count, 1);
     }
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
 
     shared_ptr<runtime::Tensor> data_tensor =
         backend->create_tensor(element::f32, data->get_shape());
@@ -1408,7 +1408,7 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     auto maxpool = std::make_shared<op::MaxPool>(A, window_shape, window_movement_strides);
     auto f = std::make_shared<Function>(maxpool, op::ParameterVector{A});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
     shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::f32, maxpool_shape);
     vector<float> dataEp(shape_size(maxpool_shape), 4);
 
@@ -1458,7 +1458,7 @@ TEST(cpu_fusion, loop_kernel_one_input_one_output)
         NodeVector{neg_a}, NodeVector{neg_a}, NodeVector{A});
     auto f = make_shared<Function>(NodeVector{lk}, op::ParameterVector{A});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shapeA);
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shapeA);
 
@@ -1483,7 +1483,7 @@ TEST(cpu_fusion, loop_kernel_embedded_graph)
         NodeVector{add}, NodeVector{add}, NodeVector{neg_a, neg_b});
     auto f = make_shared<Function>(NodeVector{lk}, op::ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shapeA);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shapeA);
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shapeA);
@@ -1507,7 +1507,7 @@ TEST(cpu_fusion, loop_kernel_two_inputs_one_output)
         NodeVector{add}, NodeVector{add}, NodeVector{A, B});
     auto f = make_shared<Function>(NodeVector{lk}, op::ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shapeA);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shapeA);
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shapeA);
@@ -1551,7 +1551,7 @@ TEST(cpu_fusion, loop_kernel_multiple_outputs)
     auto f = make_shared<Function>(NodeVector{add_aab_goe, add_cdd_goe, neg_b_goe},
                                    op::ParameterVector{A, B, C, D});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shapeA);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shapeA);
@@ -1610,7 +1610,7 @@ TEST(cpu_fusion, loop_kernel_copy_with_new_args)
 
     auto copy_f = clone_function(*f);
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shapeA);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shapeA);
@@ -1999,7 +1999,7 @@ TEST(cpu_fusion, group_convolution_fusion)
 
 TEST(cpu_fusion, group_convolution)
 {
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
     test::Uniform<float> rng(2.0f, 10.0f);
 
     const size_t GROUPS = 2;
@@ -2108,7 +2108,7 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     auto func = make_shared<Function>(
         NodeVector{rnn_ht_output, rnn_ct_output},
         op::ParameterVector{src_layer, src_iter, weights_layer, weights_iter, biases});
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
 
     shared_ptr<runtime::Tensor> src_layer_t =
         backend->create_tensor(element::f32, src_layer->get_shape());
@@ -2496,7 +2496,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion)
     ASSERT_EQ(ccg, 18);
 }
 
-void sigmoid_multiply_fusion_forward_compute(shared_ptr<runtime::Backend>& backend,
+void sigmoid_multiply_fusion_forward_compute(runtime::Backend* backend,
                                              const op::ParameterVector& input_params,
                                              const vector<vector<float>>& input_data,
                                              const vector<Shape>& input_shapes,
@@ -2522,7 +2522,7 @@ void sigmoid_multiply_fusion_forward_compute(shared_ptr<runtime::Backend>& backe
 
 TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
 {
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
 
     Shape data_shape{1, 1, 2, 2};
     Shape const_shape{1};
@@ -2540,7 +2540,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
         op::ParameterVector input_params{input_0_param, input_1_param, input_2_param};
         vector<vector<float>> input_data{input_0_data, input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape, data_shape};
-        sigmoid_multiply_fusion_forward_compute(backend,
+        sigmoid_multiply_fusion_forward_compute(backend.get(),
                                                 input_params,
                                                 input_data,
                                                 input_shapes,
@@ -2558,7 +2558,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, const_data};
         vector<Shape> input_shapes{data_shape, const_shape};
-        sigmoid_multiply_fusion_forward_compute(backend,
+        sigmoid_multiply_fusion_forward_compute(backend.get(),
                                                 input_params,
                                                 input_data,
                                                 input_shapes,
@@ -2576,7 +2576,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, const_data};
         vector<Shape> input_shapes{data_shape, const_shape};
-        sigmoid_multiply_fusion_forward_compute(backend,
+        sigmoid_multiply_fusion_forward_compute(backend.get(),
                                                 input_params,
                                                 input_data,
                                                 input_shapes,
@@ -2594,7 +2594,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_forward_compute(backend,
+        sigmoid_multiply_fusion_forward_compute(backend.get(),
                                                 input_params,
                                                 input_data,
                                                 input_shapes,
@@ -2612,7 +2612,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_forward_compute(backend,
+        sigmoid_multiply_fusion_forward_compute(backend.get(),
                                                 input_params,
                                                 input_data,
                                                 input_shapes,
@@ -2630,7 +2630,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_forward_compute(backend,
+        sigmoid_multiply_fusion_forward_compute(backend.get(),
                                                 input_params,
                                                 input_data,
                                                 input_shapes,
@@ -2648,7 +2648,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_forward_compute(backend,
+        sigmoid_multiply_fusion_forward_compute(backend.get(),
                                                 input_params,
                                                 input_data,
                                                 input_shapes,
@@ -2659,7 +2659,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
     }
 }
 
-void sigmoid_multiply_fusion_backward_compute(shared_ptr<runtime::Backend>& backend,
+void sigmoid_multiply_fusion_backward_compute(runtime::Backend* backend,
                                               const op::ParameterVector& input_params,
                                               const vector<vector<float>>& input_data,
                                               const vector<Shape>& input_shapes,
@@ -2717,7 +2717,7 @@ void sigmoid_multiply_fusion_backward_compute(shared_ptr<runtime::Backend>& back
 
 TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
 {
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("CPU");
 
     Shape data_shape{1, 1, 2, 2};
     Shape const_shape{1};
@@ -2738,7 +2738,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
         op::ParameterVector input_params{input_0_param, input_1_param, input_2_param};
         vector<vector<float>> input_data{input_0_data, input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape, data_shape};
-        sigmoid_multiply_fusion_backward_compute(backend,
+        sigmoid_multiply_fusion_backward_compute(backend.get(),
                                                  input_params,
                                                  input_data,
                                                  input_shapes,
@@ -2763,7 +2763,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, const_data};
         vector<Shape> input_shapes{data_shape, const_shape};
-        sigmoid_multiply_fusion_backward_compute(backend,
+        sigmoid_multiply_fusion_backward_compute(backend.get(),
                                                  input_params,
                                                  input_data,
                                                  input_shapes,
@@ -2788,7 +2788,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, const_data};
         vector<Shape> input_shapes{data_shape, const_shape};
-        sigmoid_multiply_fusion_backward_compute(backend,
+        sigmoid_multiply_fusion_backward_compute(backend.get(),
                                                  input_params,
                                                  input_data,
                                                  input_shapes,
@@ -2813,7 +2813,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_backward_compute(backend,
+        sigmoid_multiply_fusion_backward_compute(backend.get(),
                                                  input_params,
                                                  input_data,
                                                  input_shapes,
@@ -2838,7 +2838,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_backward_compute(backend,
+        sigmoid_multiply_fusion_backward_compute(backend.get(),
                                                  input_params,
                                                  input_data,
                                                  input_shapes,
@@ -2863,7 +2863,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_backward_compute(backend,
+        sigmoid_multiply_fusion_backward_compute(backend.get(),
                                                  input_params,
                                                  input_data,
                                                  input_shapes,
@@ -2888,7 +2888,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_backward_compute(backend,
+        sigmoid_multiply_fusion_backward_compute(backend.get(),
                                                  input_params,
                                                  input_data,
                                                  input_shapes,
