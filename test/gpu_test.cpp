@@ -24,7 +24,6 @@
 #include "ngraph/runtime/gpu/nvshape.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
-#include "util/random.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -175,22 +174,20 @@ TEST(gpu_test, topk_3d_global_mem)
     auto B_gpu = make_shared<op::TopK>(A_gpu, 1, element::i32, 10, true);
 
     auto interp_f_0 = make_shared<Function>(make_shared<op::GetOutputElement>(B_interp, 0),
-                                         op::ParameterVector{A_interp});
+                                            op::ParameterVector{A_interp});
     auto interp_f_1 = make_shared<Function>(make_shared<op::GetOutputElement>(B_interp, 1),
-                                         op::ParameterVector{A_interp});
+                                            op::ParameterVector{A_interp});
 
     auto gpu_f_0 = make_shared<Function>(make_shared<op::GetOutputElement>(B_gpu, 0),
                                          op::ParameterVector{A_gpu});
     auto gpu_f_1 = make_shared<Function>(make_shared<op::GetOutputElement>(B_gpu, 1),
                                          op::ParameterVector{A_gpu});
 
-    test::Uniform<float> rng(0.0f, 1.0f);
     vector<vector<float>> args_index;
-
     for (shared_ptr<op::Parameter> param : interp_f_0->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_shape()));
-        rng.initialize(tensor_val);
+        iota(tensor_val.begin(), tensor_val.end(), 0.0f);
         args_index.push_back(tensor_val);
     }
 
@@ -206,7 +203,7 @@ TEST(gpu_test, topk_3d_global_mem)
     for (shared_ptr<op::Parameter> param : interp_f_1->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_shape()));
-        rng.initialize(tensor_val);
+        iota(tensor_val.begin(), tensor_val.end(), 0.0f);
         args.push_back(tensor_val);
     }
     auto interp_results_1 = execute(interp_f_1, args, "INTERPRETER");
@@ -261,8 +258,10 @@ TEST(gpu_test, topk_fanout_graph_transform)
 
     backend->call_with_validate(gpu_f, {r0, r1, r2, r3}, {a, b, c, d, e});
 
-    EXPECT_EQ((vector<int32_t>{2, 1, 1, 2, 1, 2, 0, 1}), read_vector<int32_t>(r0));
-    EXPECT_EQ((vector<int32_t>{2, 1, 1, 2, 1, 2, 0, 1}), read_vector<int32_t>(r1));
-    EXPECT_EQ((vector<float>{4, 4, 3, 3, 3, 4, 2, 3}), read_vector<float>(r2));
-    EXPECT_EQ((vector<float>{4, 4, 3, 3, 3, 4, 2, 3}), read_vector<float>(r3));
+    EXPECT_TRUE(test::all_close(vector<int32_t>{2, 1, 1, 2, 1, 2, 0, 1}, read_vector<int32_t>(r0)));
+    EXPECT_TRUE(test::all_close(vector<int32_t>{2, 1, 1, 2, 1, 2, 0, 1}, read_vector<int32_t>(r1)));
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{4, 4, 3, 3, 3, 4, 2, 3}, read_vector<float>(r2), 0.0f, 0.0f));
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{4, 4, 3, 3, 3, 4, 2, 3}, read_vector<float>(r3), 0.0f, 0.0f));
 }
