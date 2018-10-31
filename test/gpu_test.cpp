@@ -1,4 +1,3 @@
-
 //*****************************************************************************
 // Copyright 2017-2018 Intel Corporation
 //
@@ -168,17 +167,17 @@ TEST(gpu_test, memory_manager_seperate_workspaces_allocsize)
 
 TEST(gpu_test, topk_3d_global_mem)
 {
-    Shape shape{4, 3073, 5};
-    auto A_cpu = make_shared<op::Parameter>(element::f32, shape);
+    Shape shape{4, 8192, 5};
+    auto A_interp = make_shared<op::Parameter>(element::f32, shape);
     auto A_gpu = make_shared<op::Parameter>(element::f32, shape);
 
-    auto B_cpu = make_shared<op::TopK>(A_cpu, 1, element::i64, 10, true);
-    auto B_gpu = make_shared<op::TopK>(A_gpu, 1, element::i64, 10, true);
+    auto B_interp = make_shared<op::TopK>(A_interp, 1, element::i32, 10, true);
+    auto B_gpu = make_shared<op::TopK>(A_gpu, 1, element::i32, 10, true);
 
-    auto cpu_f_0 = make_shared<Function>(make_shared<op::GetOutputElement>(B_cpu, 0),
-                                         op::ParameterVector{A_cpu});
-    auto cpu_f_1 = make_shared<Function>(make_shared<op::GetOutputElement>(B_cpu, 1),
-                                         op::ParameterVector{A_cpu});
+    auto interp_f_0 = make_shared<Function>(make_shared<op::GetOutputElement>(B_interp, 0),
+                                         op::ParameterVector{A_interp});
+    auto interp_f_1 = make_shared<Function>(make_shared<op::GetOutputElement>(B_interp, 1),
+                                         op::ParameterVector{A_interp});
 
     auto gpu_f_0 = make_shared<Function>(make_shared<op::GetOutputElement>(B_gpu, 0),
                                          op::ParameterVector{A_gpu});
@@ -188,34 +187,34 @@ TEST(gpu_test, topk_3d_global_mem)
     test::Uniform<float> rng(0.0f, 1.0f);
     vector<vector<float>> args_index;
 
-    for (shared_ptr<op::Parameter> param : cpu_f_0->get_parameters())
+    for (shared_ptr<op::Parameter> param : interp_f_0->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_shape()));
         rng.initialize(tensor_val);
         args_index.push_back(tensor_val);
     }
 
-    auto cpu_results_0 = execute<float, int64_t>(cpu_f_0, args_index, "CPU");
-    auto gpu_results_0 = execute<float, int64_t>(gpu_f_0, args_index, "GPU");
+    auto interp_results_0 = execute<float, int32_t>(interp_f_0, args_index, "INTERPRETER");
+    auto gpu_results_0 = execute<float, int32_t>(gpu_f_0, args_index, "GPU");
 
     for (size_t i = 0; i < gpu_results_0.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(gpu_results_0.at(i), cpu_results_0.at(i)));
+        EXPECT_TRUE(test::all_close(gpu_results_0.at(i), interp_results_0.at(i)));
     }
 
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_f_1->get_parameters())
+    for (shared_ptr<op::Parameter> param : interp_f_1->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_shape()));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
-    auto cpu_results_1 = execute(cpu_f_1, args, "CPU");
+    auto interp_results_1 = execute(interp_f_1, args, "INTERPRETER");
     auto gpu_results_1 = execute(gpu_f_1, args, "GPU");
 
     for (size_t i = 0; i < gpu_results_1.size(); i++)
     {
-        EXPECT_TRUE(test::all_close_f(gpu_results_1.at(i), cpu_results_1.at(i), 0.0f, 0.0f));
+        EXPECT_TRUE(test::all_close_f(gpu_results_1.at(i), interp_results_1.at(i), 0.0f, 0.0f));
     }
 }
 
