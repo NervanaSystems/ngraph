@@ -27,6 +27,7 @@ set(SRC
     cpu_tensor_view.cpp
     cpu_tracing.cpp
     cpu_visualize_tree.cpp
+    cpu_debugger.cpp
     builder/add.cpp
     builder/allreduce.cpp
     builder/avg_pool.cpp
@@ -81,6 +82,7 @@ set(SRC
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/group_conv.cpp
+    op/group_conv_bias.cpp
     op/halide_op.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
@@ -100,6 +102,7 @@ set(SRC
     pass/cpu_layout.cpp
     pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_mat_fusion.cpp
+    pass/cpu_memory_optimization.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp

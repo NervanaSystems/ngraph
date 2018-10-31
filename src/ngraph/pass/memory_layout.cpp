@@ -19,6 +19,7 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
@@ -43,20 +44,27 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
 
         if (auto op = std::dynamic_pointer_cast<op::Op>(node))
         {
-            if (auto op_annotations = op->get_op_annotations())
+            // concat in_place_oi should be treated differently
+            if (!std::dynamic_pointer_cast<op::Concat>(node))
             {
-                for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
+                if (auto op_annotations = op->get_op_annotations())
                 {
-                    auto output = &node->get_outputs().at(oi_pair.output).get_tensor();
-                    auto input = &node->get_inputs().at(oi_pair.input).get_tensor();
-                    auto input_node = node->get_inputs().at(oi_pair.input).get_output().get_node();
-
-                    // an input tensor can be reused if this is the last use
-                    if (node->liveness_free_list.count(input) != 0 &&
-                        node->liveness_new_list.count(output) != 0)
+                    for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                     {
-                        in_place_outputs.insert({output, input});
-                        reused_inputs.insert(input);
+                        auto output = &node->get_outputs().at(oi_pair.output).get_tensor();
+                        auto input = &node->get_inputs().at(oi_pair.input).get_tensor();
+                        auto input_node =
+                            node->get_inputs().at(oi_pair.input).get_output().get_node();
+
+                        // For destructive kernel, this should be the last use
+                        // Non-destructive kernels can pass through if memory sharing is disabled
+                        if ((node->liveness_free_list.count(input) != 0 ||
+                             (m_disable_memory_sharing && !oi_pair.destructive)) &&
+                            node->liveness_new_list.count(output) != 0)
+                        {
+                            in_place_outputs.insert({output, input});
+                            reused_inputs.insert(input);
+                        }
                     }
                 }
             }

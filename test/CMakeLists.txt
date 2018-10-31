@@ -61,13 +61,22 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
 endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
-    list(APPEND SRC backend_debug_api.cpp builder.cpp backend_api.cpp)
+    list(APPEND SRC
+        backend_debug_api.cpp
+        builder.cpp
+        backend_api.cpp
+        hybrid_backend.cpp
+        hybrid_utils.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
+if (NGRAPH_HYBRID_ENABLE)
+    set(SRC ${SRC} hybrid_backend.cpp)
+endif()
+
 if (NGRAPH_CPU_ENABLE)
-    list(APPEND SRC core_fusion.cpp quantize_cpu.cpp)
-    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp)
+    list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
+    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp cpu_debugger.cpp)
     if (NGRAPH_HALIDE)
         list(APPEND SRC halide.cpp)
     endif()
@@ -81,6 +90,14 @@ endif()
 
 if (NGRAPH_INTELGPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
+endif()
+
+if (NGRAPH_HYBRID_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} HYBRID)
+endif()
+
+if (NGRAPH_PLAIDML_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
 endif()
 
 add_subdirectory(models)
@@ -104,6 +121,8 @@ set(MULTI_TEST_SRC
     backend_reduce.in.cpp
     backend_reshape.in.cpp
     backend_sum.in.cpp
+    backend_topk.in.cpp
+    backend_arg_reduce.in.cpp
     backend_test.in.cpp
     backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
@@ -170,6 +189,10 @@ if (NGRAPH_CPU_ENABLE)
     target_link_libraries(unit-test PRIVATE libmkldnn)
 endif()
 
+if (NGRAPH_PLAIDML_ENABLE)
+    target_link_libraries(unit-test PRIVATE plaidml_backend)
+endif()
+
 if (NGRAPH_TBB_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_TBB_ENABLE)
 endif()
@@ -177,6 +200,10 @@ endif()
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
+endif()
+
+if (NGRAPH_HYBRID_ENABLE)
+    target_link_libraries(unit-test PRIVATE hybrid_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)

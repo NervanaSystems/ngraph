@@ -42,7 +42,12 @@ set(SRC
     pass/tensor_memory_reservation.cpp
     gpu_kernel_args.cpp
     pass/gpu_rnn_fusion.cpp
+    pass/gpu_batch_norm_cache.cpp
+    op/batch_norm.cpp
     op/rnn.cpp
+    )
+set(CUDA_INC
+    ${PROJECT_SOURCE_DIR}/src/
     )
 set(CUDA_SRC
     nvcc/example.cu.cpp
@@ -50,26 +55,27 @@ set(CUDA_SRC
 
 if (NGRAPH_GPU_ENABLE)
     find_package(CUDA 9 QUIET)
-        if (CUDA_FOUND)
-            set(CUDA9_FOUND TRUE)
-        else()
-            find_package(CUDA 8 REQUIRED)
-        endif()
+    if (CUDA_FOUND)
+        set(CUDA9_FOUND TRUE)
+        message(STATUS "Found CUDA 9")
+    else()
+        find_package(CUDA 8 REQUIRED)
+    endif()
 
-	set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};
-	    --compiler-options -fPIC;
-	    -arch=sm_30;
-	    -gencode=arch=compute_35,code=sm_35;
-	    -gencode=arch=compute_50,code=sm_50;
-	    -gencode=arch=compute_52,code=sm_52;
-	    -gencode=arch=compute_60,code=sm_60;
-	    -gencode=arch=compute_61,code=sm_61;
-	    -gencode=arch=compute_61,code=compute_61)
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};
+        --compiler-options -fPIC;
+        -arch=sm_30;
+        -gencode=arch=compute_35,code=sm_35;
+        -gencode=arch=compute_50,code=sm_50;
+        -gencode=arch=compute_52,code=sm_52;
+        -gencode=arch=compute_60,code=sm_60;
+        -gencode=arch=compute_61,code=sm_61;
+        -gencode=arch=compute_61,code=compute_61)
     if (CUDA9_FOUND)
         set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};
             -gencode=arch=compute_62,code=sm_62;
-	    -gencode=arch=compute_70,code=sm_70;
-	    -gencode=arch=compute_70,code=compute_70)
+            -gencode=arch=compute_70,code=sm_70;
+            -gencode=arch=compute_70,code=compute_70)
     endif()
 
     set (DO_CUDA_COMPILE FALSE)
@@ -78,11 +84,15 @@ if (NGRAPH_GPU_ENABLE)
             # CUDA 9 supports up to gcc 6.x
             if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
                 set (DO_CUDA_COMPILE TRUE)
+            else()
+                message(STATUS "NVCC will not be used because CUDA 9 only supports up to gcc 6.x")
             endif()
         elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
             # CUDA 9 supports up to clang 3.9
             if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.0)
                 set (DO_CUDA_COMPILE TRUE)
+            else()
+                message(STATUS "NVCC will not be used because CUDA 9 only supports up to clang 3.9")
             endif()
         endif()
     else()
@@ -91,18 +101,38 @@ if (NGRAPH_GPU_ENABLE)
             # Current release of CUDA 8 supports up to gcc 5.4
             if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.5)
                 set (DO_CUDA_COMPILE TRUE)
+            else()
+                message(STATUS "NVCC will not be used because CUDA 8 only supports up to gcc 5.4")
             endif()
         elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
             # CUDA 8 supports up to clang 3.8
             if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.9)
                 set (DO_CUDA_COMPILE TRUE)
+            else()
+                message(STATUS "NVCC will not be used because CUDA 8 only supports up to clang 3.8")
             endif()
         endif()
     endif()
 
     if (DO_CUDA_COMPILE)
+        if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+            # CUDA_PROPAGATE_HOST_FLAGS is true by default, so disable
+            # clang warnings that are known to flag CUDA code
+            set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};
+                --compiler-options -Wno-reserved-id-macro;
+                --compiler-options -Wno-undef;
+                --compiler-options -Wno-old-style-cast;
+                --compiler-options -Wno-deprecated;
+                --compiler-options -Wno-unused-macros;
+                --compiler-options -Wno-used-but-marked-unused)
+        endif()
+
+        message(STATUS "Precompiling static CUDA kernels via NVCC")
         set_source_files_properties( ${CUDA_SRC} PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
+        cuda_include_directories(${CUDA_INC})
         cuda_compile(CUDA_OBJ ${CUDA_SRC} STATIC)
+    else()
+        message(STATUS "Not precompiling static CUDA kernels via NVCC; runtime compilation via NVRTC will be used.")
     endif()
 
     add_library(gpu_backend SHARED ${SRC} ${CUDA_OBJ})

@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
@@ -72,6 +73,18 @@ TEST(onnx, model_addmul_abc)
 
     auto result_vectors = execute(function, inputs, "INTERPRETER");
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+}
+
+TEST(onnx, model_argmin_no_keepdims)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/argmin_no_keepdims.onnx"));
+
+    Inputs inputs{test::NDArray<float, 2>{{2, 1}, {3, 10}}.get_vector()};
+    std::vector<std::vector<int64_t>> expected_output{{1, 0}};
+    std::vector<std::vector<int64_t>> result{
+        execute<float, int64_t>(function, inputs, "INTERPRETER")};
+    EXPECT_EQ(expected_output, result);
 }
 
 TEST(onnx, model_split_equal_parts_default)
@@ -1296,4 +1309,40 @@ TEST(onnx, model_unsupported_op)
     {
         FAIL() << "Expected ngraph::ngraph_error";
     }
+}
+
+TEST(onnx, model_custom_op)
+{
+    onnx_import::register_operator(
+        "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
+
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/custom_operator.onnx"));
+
+    Inputs inputs{{1, 2, 3, 4}};
+    Outputs expected_outputs{{3, 6, 9, 12}};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+TEST(onnx, model_custom_op_default_domain)
+{
+    onnx_import::register_operator(
+        "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
+
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/custom_operator_default_domain.onnx"));
+
+    Inputs inputs{{1, 2, 3, 4}};
+    Outputs expected_outputs{{3, 6, 9, 12}};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }

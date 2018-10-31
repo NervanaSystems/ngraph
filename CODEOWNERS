@@ -40,8 +40,10 @@
 /src/ngraph/runtime/                @rkimballn1 @Krovatkin
 /src/ngraph/runtime/cpu/            @jbobba
 /src/ngraph/runtime/gpu/            @rkimballn1
+/src/ngraph/runtime/hybrid/         @sasadep
 /src/ngraph/runtime/intelgpu/       @shssf
 /src/ngraph/runtime/interpreter/    @rkimballn1
+/src/ngraph/runtime/plaidml/        @earhart
 /src/ngraph/runtime/reference/      @aprocter
 /src/ngraph/type/                   @diyessi
 /src/ngraph/serializer.*pp          @rkimballn1

@@ -29,7 +29,9 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
@@ -37,6 +39,7 @@
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/slice.hpp"
@@ -49,6 +52,7 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -185,6 +189,20 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::GroupConvolutionBias)
+                {
+                    auto convolution = static_cast<op::GroupConvolutionBias*>(node);
+
+                    if (can_use_mkldnn_conv<ngraph::op::GroupConvolutionBias>(node))
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        convolution->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionRelu)
                 {
                     auto convolution = static_cast<op::ConvolutionRelu*>(node);
@@ -232,17 +250,28 @@ namespace ngraph
                     }
                 }
 
-                template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormRelu)
+                static void assign_batchnorm_relu(Node* node)
                 {
                     if (node->get_argument(2 /*input data*/)->get_shape().size() == 4)
                     {
-                        auto bn_relu = static_cast<op::BatchNormRelu*>(node);
+                        auto bn_relu = static_cast<op::Op*>(node);
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
                         bn_relu->set_op_annotations(op_annotations);
                     }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormInferenceRelu)
+                {
+                    assign_batchnorm_relu(node);
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormTrainingRelu)
+                {
+                    assign_batchnorm_relu(node);
                 }
 
                 template <>
@@ -574,14 +603,13 @@ namespace ngraph
                     }
                 }
 
-                template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNorm)
+                static void assign_batchnorm(Node* node)
                 {
                     auto input_shape = node->get_input_shape(2);
                     auto input_rank = input_shape.size();
                     if ((input_rank == 4 && node->get_input_element_type(2) == element::f32))
                     {
-                        auto batchnorm = static_cast<op::BatchNorm*>(node);
+                        auto batchnorm = static_cast<op::BatchNormBase*>(node);
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
@@ -590,7 +618,19 @@ namespace ngraph
                 }
 
                 template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormBackprop)
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormTraining)
+                {
+                    assign_batchnorm(node);
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormInference)
+                {
+                    assign_batchnorm(node);
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormTrainingBackprop)
                 {
                     auto input_shape = node->get_input_shape(2);
                     auto input_rank = input_shape.size();
@@ -600,7 +640,7 @@ namespace ngraph
                          node->get_input_element_type(5) == element::f32 &&
                          node->get_input_element_type(2) == element::f32))
                     {
-                        auto batchnorm = static_cast<op::BatchNormBackprop*>(node);
+                        auto batchnorm = static_cast<op::BatchNormTrainingBackprop*>(node);
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
@@ -765,7 +805,6 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolutionBias)
                 {
                     auto quantized_conv_bias = static_cast<op::QuantizedConvolutionBias*>(node);
-
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::i8)
                     {
@@ -774,6 +813,63 @@ namespace ngraph
                         op_annotations->set_mkldnn_op(true);
                         quantized_conv_bias->set_op_annotations(op_annotations);
                     }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Dequantize)
+                {
+                    auto dequantize = static_cast<op::Dequantize*>(node);
+                    auto offset_const_op =
+                        std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(2));
+                    if (node->get_input_element_type(0) == element::u8)
+                    {
+                        auto offset = offset_const_op->get_vector<uint8_t>();
+                        if (offset[0] != 0)
+                            return;
+                    }
+                    if (node->get_input_element_type(0) == element::i8)
+                    {
+                        auto offset = offset_const_op->get_vector<int8_t>();
+                        if (offset[0] != 0)
+                            return;
+                    }
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    op_annotations->set_mkldnn_op(true);
+                    dequantize->set_op_annotations(op_annotations);
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::Quantize)
+                {
+                    auto quantize = static_cast<op::Quantize*>(node);
+                    auto offset_const_op =
+                        std::static_pointer_cast<ngraph::op::Constant>(quantize->get_argument(2));
+                    op::Quantize::RoundMode round_mode = quantize->get_round_mode();
+                    if (round_mode != op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN)
+                    {
+                        return;
+                    }
+                    if (node->get_output_element_type(0) == element::u8)
+                    {
+                        auto offset = offset_const_op->get_vector<uint8_t>();
+                        if (offset[0] != 0)
+                        {
+                            return;
+                        }
+                    }
+                    if (node->get_output_element_type(0) == element::i8)
+                    {
+                        auto offset = offset_const_op->get_vector<int8_t>();
+                        if (offset[0] != 0)
+                        {
+                            return;
+                        }
+                    }
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    op_annotations->set_mkldnn_op(true);
+                    quantize->set_op_annotations(op_annotations);
                 }
             }
         }
@@ -788,11 +884,14 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPoolBackprop>},
-    {TI(ngraph::op::BatchNorm), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNorm>},
+    {TI(ngraph::op::BatchNormTraining),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNormTraining>},
+    {TI(ngraph::op::BatchNormInference),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNormInference>},
     {TI(ngraph::op::BoundedRelu),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BoundedRelu>},
-    {TI(ngraph::op::BatchNormBackprop),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNormBackprop>},
+    {TI(ngraph::op::BatchNormTrainingBackprop),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNormTrainingBackprop>},
     {TI(ngraph::op::Convolution),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Convolution>},
     {TI(ngraph::op::GroupConvolution),
@@ -801,8 +900,10 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionRelu>},
     {TI(ngraph::op::ConvolutionBiasAdd),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBiasAdd>},
-    {TI(ngraph::op::BatchNormRelu),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNormRelu>},
+    {TI(ngraph::op::BatchNormTrainingRelu),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNormTrainingRelu>},
+    {TI(ngraph::op::BatchNormInferenceRelu),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::BatchNormInferenceRelu>},
     {TI(ngraph::op::ConvolutionBackpropData),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionBackpropData>},
     {TI(ngraph::op::ConvolutionBackpropFilters),
@@ -843,6 +944,11 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolutionBias),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConvolutionBias>},
+    {TI(ngraph::op::GroupConvolutionBias),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::GroupConvolutionBias>},
+    {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Quantize>},
+    {TI(ngraph::op::Dequantize),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Dequantize>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

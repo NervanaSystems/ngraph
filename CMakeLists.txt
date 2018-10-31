@@ -68,7 +68,7 @@ else()
 endif()
 
 # Prevent Eigen from using any LGPL3 code
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY -DTBB_USE_THREADING_TOOLS")
 
 if($ENV{NGRAPH_USE_PREBUILT_LLVM})
     set(NGRAPH_USE_PREBUILT_LLVM TRUE)
@@ -92,6 +92,7 @@ option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
 option(NGRAPH_INTELGPU_ENABLE "Control the building of the Intel GPU backend with clDNN" FALSE)
 option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
+option(NGRAPH_HYBRID_ENABLE "Control the building of the HYBRID backend" FALSE)
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
@@ -103,13 +104,14 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
 endif()
 
+option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" FALSE)
+
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
 
 if (LINUX)
     include(GNUInstallDirs)
-    include(cmake/platform.cmake)
 else()
     set(CMAKE_INSTALL_BINDIR "bin")
     set(CMAKE_INSTALL_INCLUDEDIR "include")
@@ -203,6 +205,10 @@ endif()
 
 if (NGRAPH_CPU_ENABLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")	
+endif()
+
+if (NGRAPH_PLAIDML_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_PlaidML_ENABLE")
 endif()
 
 if (NOT DEFINED NGRAPH_TBB_ENABLE)

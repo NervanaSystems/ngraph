@@ -179,12 +179,14 @@ private:
     void generate_calls(const element::Type& type,
                         const NodeWrapper& op,
                         const std::vector<std::shared_ptr<HostTensor>>& outputs,
-                        const std::vector<std::shared_ptr<HostTensor>>& inputs);
+                        const std::vector<std::shared_ptr<HostTensor>>& inputs,
+                        FunctionInstance& instance);
 
     template <typename T>
     void op_engine(const NodeWrapper& node_wrapper,
                    const std::vector<std::shared_ptr<HostTensor>>& out,
-                   const std::vector<std::shared_ptr<HostTensor>>& args)
+                   const std::vector<std::shared_ptr<HostTensor>>& args,
+                   FunctionInstance& instance)
     {
         const Node& node = node_wrapper.get_node();
         std::string node_op = node.description();
@@ -321,9 +323,10 @@ private:
             std::memcpy(out[0]->get_data_ptr(), args[n]->get_data_ptr(), num_bytes);
             break;
         }
-        case OP_TYPEID::BatchNorm:
+        case OP_TYPEID::BatchNormTraining:
         {
-            const ngraph::op::BatchNorm* bn = static_cast<const ngraph::op::BatchNorm*>(&node);
+            const ngraph::op::BatchNormTraining* bn =
+                static_cast<const ngraph::op::BatchNormTraining*>(&node);
             if (bn->get_output_size() == 3)
             {
                 reference::batch_norm_three_outputs<T>(
@@ -349,10 +352,24 @@ private:
             }
             break;
         }
-        case OP_TYPEID::BatchNormBackprop:
+        case OP_TYPEID::BatchNormInference:
         {
-            const ngraph::op::BatchNormBackprop* bn_bprop =
-                static_cast<const ngraph::op::BatchNormBackprop*>(&node);
+            const ngraph::op::BatchNormInference* bn =
+                static_cast<const ngraph::op::BatchNormInference*>(&node);
+            reference::batch_norm_one_output<T>(bn->get_eps_value(),
+                                                reinterpret_cast<T*>(args[0]->get_data_ptr()),
+                                                reinterpret_cast<T*>(args[1]->get_data_ptr()),
+                                                reinterpret_cast<T*>(args[2]->get_data_ptr()),
+                                                reinterpret_cast<T*>(args[3]->get_data_ptr()),
+                                                reinterpret_cast<T*>(args[4]->get_data_ptr()),
+                                                reinterpret_cast<T*>(out[0]->get_data_ptr()),
+                                                args[2]->get_shape());
+            break;
+        }
+        case OP_TYPEID::BatchNormTrainingBackprop:
+        {
+            const ngraph::op::BatchNormTrainingBackprop* bn_bprop =
+                static_cast<const ngraph::op::BatchNormTrainingBackprop*>(&node);
             reference::batch_norm_backprop(bn_bprop->get_eps_value(),
                                            reinterpret_cast<T*>(args[0]->get_data_ptr()),
                                            reinterpret_cast<T*>(args[1]->get_data_ptr()),
@@ -887,7 +904,8 @@ private:
                                        out[0]->get_data_ptr<uint8_t>(),
                                        args[0]->get_shape(),
                                        args[1]->get_shape(),
-                                       quantize->get_axes());
+                                       quantize->get_axes(),
+                                       quantize->get_round_mode());
             }
             else if (type == element::i8)
             {
@@ -897,7 +915,8 @@ private:
                                        out[0]->get_data_ptr<int8_t>(),
                                        args[0]->get_shape(),
                                        args[1]->get_shape(),
-                                       quantize->get_axes());
+                                       quantize->get_axes(),
+                                       quantize->get_round_mode());
             }
             else
             {

@@ -118,6 +118,11 @@ public:
     virtual std::vector<PerformanceCounter>
         get_performance_data(std::shared_ptr<Function> func) const;
 
+    /// \brief Test if a backend is capable of supporting an op
+    /// \param node is the op to test.
+    /// \returns true if the op is supported, false otherwise.
+    virtual bool is_supported(const Node& node) const;
+
 protected:
     void validate_call(std::shared_ptr<const Function> func,
                        const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
