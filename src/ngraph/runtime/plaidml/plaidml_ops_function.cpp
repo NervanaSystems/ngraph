@@ -19,29 +19,39 @@
 #include "ngraph/runtime/plaidml/plaidml_compiler.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 
-// FunctionCall invokes a sub-function.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::FunctionCall>::operator()()
+namespace ngraph
 {
-    Build b;
-    build()->compiler->build(op().get_functions()[0], &b);
-    vertexai::plaidml::function f{b.composer};
-    vertexai::plaidml::function::parameters_t inputs;
-    for (std::size_t idx = 0; idx < op().get_input_size(); ++idx)
+    namespace runtime
     {
-        auto* oitv = op().get_inputs()[idx].get_output().get_tensor_ptr().get();
-        auto* iitv = b.func->get_parameters()[idx]->get_outputs()[0].get_tensor_ptr().get();
-        inputs.emplace_back(b.input_names.at(iitv), build()->bindings.at(oitv).var);
-    }
-    vertexai::plaidml::application app{f.apply(inputs)};
-    for (std::size_t idx = 0; idx < op().get_output_size(); ++idx)
-    {
-        auto* iotv = b.func->get_results()[idx]->get_output_tensor_ptr().get();
-        set_output(idx, app.get_output(b.output_names[iotv]));
-    }
-}
+        namespace plaidml
+        {
+            // FunctionCall invokes a sub-function.
+            template <>
+            void Impl<op::FunctionCall>::operator()()
+            {
+                Build b;
+                build()->compiler->build(op().get_functions()[0], &b);
+                vertexai::plaidml::function f{b.composer};
+                vertexai::plaidml::function::parameters_t inputs;
+                for (std::size_t idx = 0; idx < op().get_input_size(); ++idx)
+                {
+                    auto* oitv = op().get_inputs()[idx].get_output().get_tensor_ptr().get();
+                    auto* iitv =
+                        b.func->get_parameters()[idx]->get_outputs()[0].get_tensor_ptr().get();
+                    inputs.emplace_back(b.input_names.at(iitv), build()->bindings.at(oitv).var);
+                }
+                vertexai::plaidml::application app{f.apply(inputs)};
+                for (std::size_t idx = 0; idx < op().get_output_size(); ++idx)
+                {
+                    auto* iotv = b.func->get_results()[idx]->get_output_tensor_ptr().get();
+                    set_output(idx, app.get_output(b.output_names[iotv]));
+                }
+            }
 
-namespace
-{
-    ngraph::runtime::plaidml::Impl<ngraph::op::FunctionCall>::Registration register_function_call;
+            namespace
+            {
+                Impl<op::FunctionCall>::Registration register_function_call;
+            }
+        }
+    }
 }
