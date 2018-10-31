@@ -102,10 +102,15 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         std::make_shared<op::Reshape>(weights_i2h, AxisVector{1, 0}, Shape{100, 400});
     auto dot_1 = std::make_shared<op::Dot>(input_xt, weights_i2h_reshape);
 
+    auto broadcast_pred = [](std::shared_ptr<Node> n) {
+        return ((std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr) ||
+                (std::dynamic_pointer_cast<op::Reshape>(n) != nullptr));
+    };
+
     auto bias_i2h = std::make_shared<pattern::op::Label>(
-        element::f32, Shape{400}, pattern::has_class<op::Parameter>());
-    auto broadcast_bias_i2h = std::make_shared<op::Broadcast>(bias_i2h, Shape{10, 400}, AxisSet{0});
-    auto add_1 = std::make_shared<op::Add>(dot_1, broadcast_bias_i2h);
+        element::f32, Shape{10, 400}, pattern::has_class<op::Parameter>());
+    auto skip_broadcast_i2h = std::make_shared<pattern::op::Skip>(bias_i2h, broadcast_pred);
+    auto add_1 = std::make_shared<op::Add>(dot_1, skip_broadcast_i2h);
 
     auto hidden_ht = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50});
     auto weights_h2h = std::make_shared<pattern::op::Label>(
@@ -114,9 +119,9 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         std::make_shared<op::Reshape>(weights_h2h, AxisVector{1, 0}, Shape{50, 400});
     auto dot_2 = std::make_shared<op::Dot>(hidden_ht, param2_2_reshape);
     auto bias_h2h = std::make_shared<pattern::op::Label>(
-        element::f32, Shape{400}, pattern::has_class<op::Parameter>());
-    auto broadcast_bias_h2h = std::make_shared<op::Broadcast>(bias_h2h, Shape{10, 400}, AxisSet{0});
-    auto add_2 = std::make_shared<op::Add>(dot_2, broadcast_bias_h2h);
+        element::f32, Shape{10, 400}, pattern::has_class<op::Parameter>());
+    auto skip_broadcast_h2h = std::make_shared<pattern::op::Skip>(bias_h2h, broadcast_pred);
+    auto add_2 = std::make_shared<op::Add>(dot_2, skip_broadcast_h2h);
 
     auto X = std::make_shared<op::Add>(add_2, add_1);
     // construct forget gate
@@ -150,6 +155,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     pattern::graph_rewrite_callback callback =
         [ct_label, input_xt, weights_i2h, hidden_ht, weights_h2h, bias_i2h, bias_h2h, ct_1](
             pattern::Matcher& m) {
+            static int count = 0;
             NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
                          << m.get_match_root()->get_name();
 
@@ -172,7 +178,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
                 return false;
             }
 
-            if (bias_i2h->get_shape().size() != 1 || bias_h2h->get_shape().size() != 1)
+            if (pattern_map[bias_i2h]->get_shape().size() != 1 ||
+                pattern_map[bias_h2h]->get_shape().size() != 1)
             {
                 throw ngraph_error("Bias should have rank of 1 for MKLDNN Rnn op");
             }
@@ -338,7 +345,6 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         pattern::RecurrentMatcher& m) {
 
         NGRAPH_DEBUG << " In recurrent RNN fusion callback";
-
         // this checks if all the matched lstm_nodes share the same weights and bias
         auto validate_rnn_inputs =
             [&](std::vector<std::shared_ptr<pattern::op::Label>> rnn_labels) -> bool {
@@ -397,10 +403,10 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         // TODO: assert for batch_size, sequence length and num_of_lstm's fused
         size_t batch_size = src_layer->get_shape()[0] / num_of_lstm_matched;
         size_t sequence_len = num_of_lstm_matched;
-        size_t src_layer_feature_size = src_layer->get_shape()[1];
-        size_t dlc = weights_layer->get_shape()[0] / lstm_n_gates;
-        size_t dic = weights_iter->get_shape()[0] / lstm_n_gates;
-        size_t src_iter_feature_size = src_iter->get_shape()[1];
+        size_t src_layer_feature_size = weights_layer->get_shape()[0];
+        size_t dlc = weights_layer->get_shape()[1] / lstm_n_gates;
+        size_t dic = weights_iter->get_shape()[1] / lstm_n_gates;
+        size_t src_iter_feature_size = weights_iter->get_shape()[0];
         // number of states for LSTM is 2
         size_t num_cell_states = 2;
         size_t direction = 1;
@@ -415,7 +421,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         NGRAPH_DEBUG << "batch_size: " << batch_size;
         NGRAPH_DEBUG << "src_iter_feature_size: " << src_iter_feature_size;
 
-        if ((src_layer->get_arguments().size()) != sequence_len &&
+        if ((src_layer->get_shape()[0] / batch_size) != sequence_len &&
             !std::dynamic_pointer_cast<op::Parameter>(src_layer))
         {
             throw ngraph_error(
@@ -523,7 +529,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         // collect all the consumers of LSTM goe's (ht)
         std::set<std::shared_ptr<ngraph::Node>> lstm_goe0_user;
-        std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> map_goe_to_lstm_slices;
+        std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>>
+            map_goe0_user_to_lstm_slices;
         std::shared_ptr<Node> goe_0;
 
         for (size_t index = 0; index < lstm_nodes.size(); index++)
@@ -545,12 +552,10 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                     goe_0 = goes->get_node();
                     for (auto goe0_user : goe_0->get_users())
                     {
-                        if (std::find(lstm_nodes.begin(), lstm_nodes.end(), goe0_user) ==
-                                lstm_nodes.end() &&
-                            ngraph::is_used(goe0_user.get()))
+                        if (ngraph::is_used(goe0_user.get()))
                         {
                             lstm_goe0_user.insert(goe0_user);
-                            map_goe_to_lstm_slices.insert(
+                            map_goe0_user_to_lstm_slices.insert(
                                 make_pair(goe0_user, ht_slice_per_timestep[index]));
 
                             NGRAPH_DEBUG << "ht_slice: " << ht_slice_per_timestep[index]->get_name()
@@ -559,7 +564,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                     }
                 }
                 // we need to only check the last LSTM cell Ct user and replace if needed.
-                if (goe_node && (index == 0) && (goe_node->get_n() == 1))
+                if ((index == 0) && (goe_node->get_n() == 1))
                 {
                     // dst_iter of lstm mkldnn output holds the results of both recurrent state
                     // tensor outputs. we need to slice the ct.
@@ -573,8 +578,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                    static_cast<unsigned long>(src_iter_feature_size)});
 
                     // check if the last LSTM cell has any consumers
-                    auto n_time_step_lstm_ct_goe = goes->get_node();
-                    ngraph::replace_node(n_time_step_lstm_ct_goe, ct_slice);
+                    auto last_lstmcell_goe1_user = goes->get_node()->get_users()[0];
+                    ngraph::replace_node(last_lstmcell_goe1_user, ct_slice);
                 }
             }
         }
@@ -582,7 +587,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         // now go through the lstm goe_0 consumers and replace them with the slice
         for (auto& node : lstm_goe0_user)
         {
-            ngraph::replace_node(node, map_goe_to_lstm_slices[node]);
+            ngraph::replace_node(node, map_goe0_user_to_lstm_slices[node]);
         }
         NGRAPH_DEBUG << "End of recurrent fusion call back "
                      << "matched_node: " << m.get_match_root()->get_name();
