@@ -718,7 +718,7 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{1, 2, 2, 2};
-    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
+    auto bn = make_shared<op::BatchNormTraining>(input, gamma, beta, eps);
 
     auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
     // Note, op::Splice is used to break Relu(BatchNorm) fusion
@@ -1082,8 +1082,8 @@ shared_ptr<Function> gen_groupconv_batchnorm(const bool add_goe,
 
     // Adding a goe will stop fusion since the patterns wont expect to see this op
     auto bn =
-        add_goe ? std::make_shared<op::BatchNormInference>(eps, gamma, beta, goe_bn, mean, var)
-                : std::make_shared<op::BatchNormInference>(eps, gamma, beta, group_conv, mean, var);
+        add_goe ? std::make_shared<op::BatchNormInference>(goe_bn, gamma, beta, mean, var, eps)
+                : std::make_shared<op::BatchNormInference>(group_conv, gamma, beta, mean, var, eps);
     if (with_relu)
     {
         auto prelu = std::make_shared<op::Relu>(bn);
@@ -1767,7 +1767,7 @@ TEST(cpu_fusion, conv_batch_norm_folding)
         auto mean = std::make_shared<op::Parameter>(element::f32, shape_norm);
         auto var = std::make_shared<op::Parameter>(element::f32, shape_norm);
         auto conv = std::make_shared<op::Convolution>(input, weights, Strides{1, 1}, Strides{1, 1});
-        auto bn = std::make_shared<op::BatchNormInference>(eps, gamma, beta, conv, mean, var);
+        auto bn = std::make_shared<op::BatchNormInference>(conv, gamma, beta, mean, var, eps);
         auto f = make_shared<Function>(NodeVector{bn},
                                        ParameterVector{input, weights, gamma, beta, mean, var});
         return f;
@@ -1829,7 +1829,7 @@ TEST(cpu_fusion, convbias_batch_norm_folding)
         auto conv = std::make_shared<op::Convolution>(input, weights, Strides{1, 1}, Strides{1, 1});
         auto convbias =
             conv + std::make_shared<op::Broadcast>(bias, conv->get_shape(), AxisSet{0, 2, 3});
-        auto bn = std::make_shared<op::BatchNormInference>(eps, gamma, beta, convbias, mean, var);
+        auto bn = std::make_shared<op::BatchNormInference>(convbias, gamma, beta, mean, var, eps);
         auto f = make_shared<Function>(
             NodeVector{bn}, ParameterVector{input, weights, bias, gamma, beta, mean, var});
         return f;

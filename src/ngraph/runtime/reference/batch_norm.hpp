@@ -36,28 +36,30 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void batch_norm_three_outputs_with_intermediates(double eps,
-                                                             const T* arg0,
-                                                             const T* arg1,
-                                                             const T* arg2,
-                                                             T* out0,
-                                                             T* out1,
-                                                             T* out2,
-                                                             T* out3,
-                                                             T* out4,
-                                                             const Shape& arg2_shape)
+            void batch_norm_training_with_intermediates(double eps,
+                                                        const T* gamma,
+                                                        const T* beta,
+                                                        const T* input,
+                                                        T* normed_input,
+                                                        T* mean,
+                                                        T* variance,
+                                                        T* centered_input,
+                                                        T* scaled_input,
+                                                        const Shape& input_shape)
             {
+                std::cerr << "REFERENCE!!" << std::endl;
+
                 auto eps_casted = static_cast<T>(eps);
-                auto channels = arg2_shape[1];
+                auto channels = input_shape[1];
 
                 // We use these objects to iterate over the indices in a channel.
                 // The start and end points for the channel axis are modified in the loop.
                 Coordinate start_corner;
                 Coordinate end_corner;
-                for (size_t i = 0; i < arg2_shape.size(); i++)
+                for (size_t i = 0; i < input_shape.size(); i++)
                 {
                     start_corner.push_back(0);
-                    end_corner.push_back(arg2_shape[i]);
+                    end_corner.push_back(input_shape[i]);
                 }
 
                 for (size_t c = 0; c < channels; c++)
@@ -68,174 +70,196 @@ namespace ngraph
                     end_corner[1] = c + 1;
 
                     // Compute the mean
-                    CoordinateTransform arg2_transform(arg2_shape, start_corner, end_corner);
-                    for (Coordinate arg2_coord : arg2_transform)
+                    CoordinateTransform input_transform(input_shape, start_corner, end_corner);
+                    for (Coordinate input_coord : input_transform)
                     {
-                        channel_sum += arg2[arg2_transform.index(arg2_coord)];
+                        channel_sum += input[input_transform.index(input_coord)];
                     }
-                    T channel_mean = channel_sum / (shape_size(arg2_shape) / channels);
-                    out1[c] = channel_mean;
-
-                    // Compute the variance
+                    T channel_mean = channel_sum / (shape_size(input_shape) / channels);
+                    mean[c] = channel_mean;
                     T channel_diff_square_sum = 0;
-                    for (Coordinate arg2_coord : arg2_transform)
+                    for (Coordinate input_coord : input_transform)
                     {
-                        auto mean_diff = arg2[arg2_transform.index(arg2_coord)] - channel_mean;
-                        channel_diff_square_sum += mean_diff * mean_diff;
+                        auto centered = input[input_transform.index(input_coord)] - channel_mean;
+                        centered_input[input_transform.index(input_coord)] = centered;
+                        channel_diff_square_sum += centered * centered;
                     }
-                    T channel_var = channel_diff_square_sum / (shape_size(arg2_shape) / channels);
-                    out2[c] = channel_var;
+                    T channel_var = channel_diff_square_sum / (shape_size(input_shape) / channels);
+                    variance[c] = channel_var;
+
+                    auto channel_gamma = gamma[c];
+                    auto channel_beta = beta[c];
+                    T scale = channel_gamma / std::sqrt(channel_var + eps_casted);
 
                     // Compute the normalized output
-                    for (Coordinate arg2_coord : arg2_transform)
+                    for (Coordinate input_coord : input_transform)
                     {
-                        auto channel_gamma = arg0[c];
-                        auto channel_beta = arg1[c];
-
-                        auto input_index = arg2_transform.index(arg2_coord);
-                        out3[input_index] = arg2[input_index] - channel_mean;
-                        out4[input_index] =
-                            out3[input_index] / (std::sqrt(channel_var + eps_casted));
-                        out0[input_index] = out4[input_index] * channel_gamma + channel_beta;
+                        auto input_index = input_transform.index(input_coord);
+                        scaled_input[input_index] = centered_input[input_index] * scale;
+                        normed_input[input_index] = scaled_input[input_index] + channel_beta;
                     }
                 }
             }
 
             template <typename T>
-            void batch_norm_three_outputs(double eps,
-                                          const T* arg0,
-                                          const T* arg1,
-                                          const T* arg2,
-                                          T* out0,
-                                          T* out1,
-                                          T* out2,
-                                          const Shape& arg2_shape)
+            void batch_norm_training(double eps,
+                                     const T* gamma,
+                                     const T* beta,
+                                     const T* input,
+                                     T* normed_input,
+                                     T* mean,
+                                     T* variance,
+                                     const Shape& input_shape)
             {
-                std::vector<T> centered(shape_size(arg2_shape));
-                std::vector<T> normalized(shape_size(arg2_shape));
-                batch_norm_three_outputs_with_intermediates(eps,
-                                                            arg0,
-                                                            arg1,
-                                                            arg2,
-                                                            out0,
-                                                            out1,
-                                                            out2,
-                                                            centered.data(),
-                                                            normalized.data(),
-                                                            arg2_shape);
+                std::vector<T> centered(shape_size(input_shape));
+                std::vector<T> normalized(shape_size(input_shape));
+                batch_norm_training_with_intermediates(eps,
+                                                       gamma,
+                                                       beta,
+                                                       input,
+                                                       normed_input,
+                                                       mean,
+                                                       variance,
+                                                       centered.data(),
+                                                       normalized.data(),
+                                                       input_shape);
             }
 
             template <typename T>
-            void batch_norm_one_output(double eps,
-                                       const T* arg0,
-                                       const T* arg1,
-                                       const T* arg2,
-                                       const T* arg3,
-                                       const T* arg4,
-                                       T* out0,
-                                       const Shape& arg2_shape)
+            void batch_norm_inference(double eps,
+                                      const T* gamma,
+                                      const T* beta,
+                                      const T* input,
+                                      const T* mean,
+                                      const T* variance,
+                                      T* normed_input,
+                                      const Shape& input_shape)
             {
                 auto eps_casted = static_cast<T>(eps);
-                CoordinateTransform arg2_transform(arg2_shape);
+                CoordinateTransform input_transform(input_shape);
 
-                for (Coordinate arg2_coord : arg2_transform)
+                for (Coordinate input_coord : input_transform)
                 {
-                    auto channel_num = arg2_coord[1];
-                    auto channel_gamma = arg0[channel_num];
-                    auto channel_beta = arg1[channel_num];
-                    auto channel_mean = arg3[channel_num];
-                    auto channel_var = arg4[channel_num];
+                    auto channel_num = input_coord[1];
+                    auto channel_gamma = gamma[channel_num];
+                    auto channel_beta = beta[channel_num];
+                    auto channel_mean = mean[channel_num];
+                    auto channel_var = variance[channel_num];
 
-                    auto input_index = arg2_transform.index(arg2_coord);
+                    auto input_index = input_transform.index(input_coord);
                     auto normalized =
-                        (arg2[input_index] - channel_mean) / (std::sqrt(channel_var + eps_casted));
-                    out0[input_index] = normalized * channel_gamma + channel_beta;
+                        (input[input_index] - channel_mean) / (std::sqrt(channel_var + eps_casted));
+                    normed_input[input_index] = normalized * channel_gamma + channel_beta;
                 }
             }
 
             template <typename T>
             void batch_norm_backprop(double eps,
-                                     const T* arg0,
-                                     const T* arg1,
-                                     const T* arg2,
-                                     const T* arg3,
-                                     const T* arg4,
-                                     const T* arg5,
-                                     T* out0,
-                                     T* out1,
-                                     T* out2,
-                                     const Shape& arg2_shape)
+                                     const T* gamma,
+                                     const T* beta,
+                                     const T* input,
+                                     const T* mean,
+                                     const T* variance,
+                                     const T* delta_normed,
+                                     T* delta_input,
+                                     T* delta_gamma,
+                                     T* delta_beta,
+                                     const Shape& input_shape)
             {
+                size_t channel_axis = 1;
                 auto eps_casted = static_cast<T>(eps);
+                auto num_channels = input_shape[channel_axis];
+                Shape moment_shape = Shape{num_channels};
+                auto input_num_elements = shape_size(input_shape);
+                auto elements_per_channel = input_num_elements / num_channels;
 
-                Shape mean_shape{arg2_shape[1]};
-                AxisSet reduction_axes;
-                for (size_t idx = 0; idx < arg2_shape.size(); idx++)
+                Coordinate start_corner;
+                Coordinate end_corner;
+                for (size_t i = 0; i < input_shape.size(); i++)
                 {
-                    if (idx != 1)
+                    start_corner.push_back(0);
+                    end_corner.push_back(input_shape[i]);
+                }
+                // The forward computation in gory detail
+                // input[., C, ...]
+                // gamma[C]
+                // beta[C]
+                // mu[c:C] = sum(input[., c, ...])/elements_per_channel
+                // centered[., c:C, ...] = input[., c, ...] - mu[c]
+                // square[., c:C, ...] = centered[., c, ...]^2
+                // var[c:C] = sum(centered[., c, ...]^2)/elements_per_channel
+                // inv_sqrt[c:C] = 1/sqrt(var[c]+epsilon)
+                // gammad[c:C] = gamma[c]*inv_sqrt[c]
+                // normed[., c:C, ...] = centered[., c, ...]*gammad[c]+beta[c]
+
+                for (auto c = 0; c < num_channels; ++c)
+                {
+                    start_corner[channel_axis] = c;
+                    end_corner[channel_axis] = c + 1;
+
+                    CoordinateTransform input_transform(input_shape, start_corner, end_corner);
+                    std::cerr << "Elts per channel: " << elements_per_channel << std::endl;
+                    T delta_beta_sum = 0;
+                    T var = variance[c];
+                    T mu = mean[c];
+                    std::cerr << "mu: " << mu << " var: " << var << std::endl;
+                    T var_eps = var+eps;
+                    T sqrt_var_eps = std::sqrt(var_eps);
+                    T inv_sqrt_var_eps = 1 / sqrt_var_eps;
+                    T gammad = gamma[c]*inv_sqrt_var_eps;
+                    T delta_gammad = 0;
+                    T delta_mu = 0;
+                    for (Coordinate input_coord : input_transform)
                     {
-                        reduction_axes.insert(idx);
+                        auto idx = input_transform.index(input_coord);
+                        std::cerr << "idx: " << idx << std::endl;
+                        auto delta_idx = delta_normed[idx];
+                        std::cerr << "delta_idx: " << delta_idx << std::endl;
+                        auto input_idx = input[idx];
+                        std::cerr << "input: " << input_idx << std::endl;
+                        auto centered = input_idx - mu;
+                        std::cerr << "centered: " << centered << std::endl;
+                        delta_beta_sum += delta_idx;
+                        delta_gammad += centered * delta_idx;
+                        T delta_centered = gammad*delta_idx;
+                        delta_input[idx] = delta_centered;
+                        delta_mu -= delta_centered;
                     }
-                }
-                auto arg2_num_elements = shape_size(arg2_shape);
-                auto mean_num_elements = shape_size(mean_shape);
-                auto reduction_axes_size = arg2_num_elements / mean_num_elements;
+                    delta_beta[c] = delta_beta_sum;
+                    delta_gamma[c] = delta_gammad * inv_sqrt_var_eps;
+                    std::cerr << "delta_gammad: " << delta_gammad << std::endl;
 
-                // Compute the mean, variance, and normalized values
+                    std::cerr << "di: " << delta_input[0] << " " << delta_input[1] << std::endl;
+                    std::cerr << "dm: " << delta_mu << std::endl;
 
-                std::vector<T> bn_output(arg2_num_elements);
-                std::vector<T> centered(arg2_num_elements);
-                std::vector<T> normalized(arg2_num_elements);
+                    
+                    T delta_inv_sqrt = gamma[c] * delta_gammad;
+                    std::cerr << "delta_inv_sqrt: " << delta_inv_sqrt << std::endl;
+                    T delta_var = -delta_inv_sqrt*inv_sqrt_var_eps/(2*var_eps);
+                    std::cerr << "delta_var: " << delta_var << std::endl;
+                    T delta_two_var_sum = 2*delta_var/elements_per_channel;
+                    std::cerr << "delta_two_var_sum: " << delta_two_var_sum << std::endl;
 
-                std::vector<T> mean(mean_num_elements);
-                std::vector<T> variance(mean_num_elements);
-                std::vector<T> stddev(mean_num_elements);
-                batch_norm_three_outputs_with_intermediates(eps,
-                                                            arg0,
-                                                            arg1,
-                                                            arg2,
-                                                            bn_output.data(),
-                                                            mean.data(),
-                                                            variance.data(),
-                                                            centered.data(),
-                                                            normalized.data(),
-                                                            arg2_shape);
+                    for (Coordinate input_coord : input_transform)
+                    {
+                      auto idx = input_transform.index(input_coord);
+                      auto two_centered = (input[idx]-mu)*delta_two_var_sum;
+                      delta_input[idx] += two_centered;
+                      delta_mu -= two_centered;
+                    }
+                    std::cerr << "di: " << delta_input[0] << " " << delta_input[1] << std::endl;
+                    std::cerr << "dm: " << delta_mu << std::endl;
 
-                for (size_t i = 0; i < mean_num_elements; i++)
-                {
-                    stddev[i] = std::sqrt(variance[i] + eps_casted);
-                }
 
-                // Broadcast gamma and the standard deviation
-                std::vector<T> gamma_bcast(arg2_num_elements);
-                std::vector<T> stddev_bcast(arg2_num_elements);
-                broadcast(arg0, gamma_bcast.data(), mean_shape, arg2_shape, reduction_axes);
-                broadcast(
-                    stddev.data(), stddev_bcast.data(), mean_shape, arg2_shape, reduction_axes);
+                    T delta_mu_over_n = delta_mu/elements_per_channel;
+                    for (Coordinate input_coord : input_transform)
+                    {
+                      auto idx = input_transform.index(input_coord);
+                      delta_input[idx] += delta_mu_over_n;
+                    }
+                    std::cerr << "di: " << delta_input[0] << " " << delta_input[1] << std::endl;
+                    std::cerr << "dm: " << delta_mu << std::endl;
 
-                // Bprop into gamma
-                std::vector<T> delta_times_normalized(arg2_num_elements);
-                multiply(normalized.data(), arg5, delta_times_normalized.data(), arg2_num_elements);
-                sum(delta_times_normalized.data(), out1, arg2_shape, mean_shape, reduction_axes);
-
-                // Bprop into beta
-                sum(arg5, out2, arg2_shape, mean_shape, reduction_axes);
-
-                // // Broadcast the gamma and beta grads
-                std::vector<T> delta_gamma_bcast(arg2_num_elements);
-                broadcast(out1, delta_gamma_bcast.data(), mean_shape, arg2_shape, reduction_axes);
-                std::vector<T> delta_beta_bcast(arg2_num_elements);
-                broadcast(out2, delta_beta_bcast.data(), mean_shape, arg2_shape, reduction_axes);
-
-                // Bprop into the input
-                for (size_t i = 0; i < arg2_num_elements; i++)
-                {
-                    auto scale_normalized = gamma_bcast[i] / stddev_bcast[i];
-                    out0[i] = static_cast<T>(
-                        scale_normalized *
-                        (arg5[i] -
-                         (normalized[i] * delta_gamma_bcast[i] + delta_beta_bcast[i]) /
-                             reduction_axes_size));
                 }
             }
         }

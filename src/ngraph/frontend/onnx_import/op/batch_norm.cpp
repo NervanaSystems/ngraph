@@ -54,11 +54,11 @@ namespace ngraph
                         mean = inputs.at(3);
                         var = inputs.at(4);
                         return {std::make_shared<ngraph::op::BatchNormInference>(
-                            epsilon, scale, bias, x, mean, var)};
+                            x, scale, bias, mean, var, epsilon)};
                     }
 
                     return {
-                        std::make_shared<ngraph::op::BatchNormTraining>(epsilon, scale, bias, x)};
+                        std::make_shared<ngraph::op::BatchNormTraining>(x, scale, bias, epsilon)};
                 }
 
             } // namespace set_1
