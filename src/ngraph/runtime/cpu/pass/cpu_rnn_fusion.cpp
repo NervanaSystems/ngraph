@@ -280,8 +280,10 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             // Now identify the nodes which consumes the output of LSTM nodes
             // and replace them accordingly
             // find the user's for {ht|ct} and replace them with lstm_goe_1
-            replace_collapse_node_user(pattern_map[ct_label], ct_slice->get_outputs().at(0));
-
+            if (ngraph::is_used(pattern_map[ct_label].get()))
+            {
+                replace_collapse_node_user(pattern_map[ct_label], ct_slice->get_outputs().at(0));
+            }
             // find the user's for {ht} and replace them with lstm_goe_0
             ngraph::replace_node(m.get_match_root(), ht_slice);
             return true;
@@ -421,6 +423,14 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         NGRAPH_DEBUG << "batch_size: " << batch_size;
         NGRAPH_DEBUG << "src_iter_feature_size: " << src_iter_feature_size;
 
+        // if we have have not found all the LSTM cells belonging to a layer
+        // will return safely
+        /*std::shared_ptr<Node> src_iter_arg = src_iter->get_arguments()[0];
+        if (!(std::dynamic_pointer_cast<op::Broadcast>(src_iter_arg) &&
+              std::dynamic_pointer_cast<op::Constant>(src_iter_arg->get_argument(0))))
+        {
+            return false;
+        }*/
         if ((src_layer->get_shape()[0] / batch_size) != sequence_len &&
             !std::dynamic_pointer_cast<op::Parameter>(src_layer))
         {
@@ -579,7 +589,10 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
                     // check if the last LSTM cell has any consumers
                     auto last_lstmcell_goe1_user = goes->get_node()->get_users()[0];
-                    ngraph::replace_node(last_lstmcell_goe1_user, ct_slice);
+                    if (ngraph::is_used(last_lstmcell_goe1_user.get()))
+                    {
+                        ngraph::replace_node(last_lstmcell_goe1_user, ct_slice);
+                    }
                 }
             }
         }
@@ -587,10 +600,14 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         // now go through the lstm goe_0 consumers and replace them with the slice
         for (auto& node : lstm_goe0_user)
         {
-            ngraph::replace_node(node, map_goe0_user_to_lstm_slices[node]);
+            if (ngraph::is_used(node.get()))
+            {
+                ngraph::replace_node(node, map_goe0_user_to_lstm_slices[node]);
+            }
         }
         NGRAPH_DEBUG << "End of recurrent fusion call back "
                      << "matched_node: " << m.get_match_root()->get_name();
+        std::cout << "Seq length " << sequence_len << std::endl;
         return true;
 
     };
