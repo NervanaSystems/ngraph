@@ -732,7 +732,7 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
     auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
     auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
 
-    auto bn_relu = make_shared<op::BatchNormTrainingRelu>(eps, gamma, beta, input);
+    auto bn_relu = make_shared<op::BatchNormTrainingRelu>(input, gamma, beta, eps);
     auto output_rt_bnr = std::make_shared<op::GetOutputElement>(bn_relu, 0);
     auto mean_rt_bnr = std::make_shared<op::GetOutputElement>(bn_relu, 1);
     auto variance_rt_bnr = std::make_shared<op::GetOutputElement>(bn_relu, 2);
