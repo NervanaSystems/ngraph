@@ -22,7 +22,7 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 SET(JSON_GIT_REPO_URL https://github.com/nlohmann/json)
-SET(JSON_GIT_LABEL v3.1.1)
+SET(JSON_GIT_LABEL v3.4.0)
 
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
@@ -35,9 +35,6 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
-        # cmake does not allow calling cmake functions so we call a cmake script in the Module
-        # directory.
-        PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/Modules/patch_json.cmake
         EXCLUDE_FROM_ALL TRUE
         )
 else()
@@ -50,9 +47,6 @@ else()
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
         UPDATE_COMMAND ""
-        # cmake does not allow calling cmake functions so we call a cmake script in the Module
-        # directory.
-        PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/Modules/patch_json.cmake
         EXCLUDE_FROM_ALL TRUE
     )
 endif()
