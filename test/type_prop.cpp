@@ -1846,6 +1846,7 @@ TEST(type_prop, reduce_axis_oob)
     }
 }
 
+// TODO(amprocte): Many more tests needed for FunctionCall.
 TEST(type_prop, function_call_deduce)
 {
     // First create "f(A,B,C) = (A+B)*C".
@@ -1860,7 +1861,7 @@ TEST(type_prop, function_call_deduce)
     auto Y = make_validated_node<op::Parameter>(element::f32, shape);
     auto Z = make_validated_node<op::Parameter>(element::f32, shape);
     auto r = make_validated_node<op::FunctionCall>(f, NodeVector{X, Y, Z});
-    auto r_p_r = r + r;
+    auto r_p_r = make_validated_node<op::Add>(r, r);
 
     ASSERT_EQ(r_p_r->get_element_type(), element::f32);
     ASSERT_EQ(r_p_r->get_shape(), shape);
@@ -7872,7 +7873,8 @@ TEST(type_prop, reduce_window_reduction_function_return_element_type_mismatch)
     auto f_param_0 = make_validated_node<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_validated_node<op::Parameter>(element::f32, Shape{});
     auto f =
-        make_shared<Function>(make_validated_node<op::Convert>(f_param_0 + f_param_1, element::i32),
+        make_shared<Function>(make_validated_node<op::Convert>(
+                                  make_validated_node<op::Add>(f_param_0, f_param_1), element::i32),
                               op::ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};

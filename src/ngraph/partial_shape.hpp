@@ -117,10 +117,10 @@ namespace ngraph
         /// \return `true` if this shape relaxes `s`, else `false`.
         ///
         /// Intuitively, a PartialShape `s1` is said to _relax_ `s2` (or _is a
-        /// relaxation_ of `s2`) if it is "more permissive" than `s2`. In other
-        /// words, `s1` is a relaxation of `s2` if anything you can form by
-        /// plugging things into the dynamic dimensions of `s2` is also
-        /// something you can form by plugging things into the dynamic
+        /// relaxation_ of `s2`) if it is "non-strictly more permissive" than
+        /// `s2`. In other words, `s1` is a relaxation of `s2` if anything you
+        /// can form by plugging things into the dynamic dimensions of `s2` is
+        /// also something you can form by plugging things into the dynamic
         /// dimensions of `s1`, but not necessarily the other way around.
         ///
         /// `s1.relaxes(s2)` is equivalent to `s2.refines(s1)`.
@@ -137,10 +137,10 @@ namespace ngraph
         /// \return `true` if this shape refines `s`, else `false`.
         ///
         /// Intuitively, a PartialShape `s1` is said to _relax_ `s2` (or _is a
-        /// relaxation_ of `s2`) if it is "less permissive" than `s2`. In other
-        /// words, `s1` is a relaxation of `s2` if anything you can form by
-        /// plugging things into the dynamic dimensions of `s1` is also
-        /// something you can form by plugging things into the dynamic
+        /// relaxation_ of `s2`) if it is "non-strictly less permissive" than
+        /// `s2`. In other words, `s1` is a relaxation of `s2` if anything you
+        /// can form by plugging things into the dynamic dimensions of `s1` is
+        /// also something you can form by plugging things into the dynamic
         /// dimensions of `s2`, but not necessarily the other way around.
         ///
         /// `s1.refines(s2)` is equivalent to `s2.relaxes(s1)`.

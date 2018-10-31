@@ -219,3 +219,13 @@ bool element::Type::merge(element::Type& dst, const element::Type& t1, const ele
         return false;
     }
 }
+
+bool element::Type::relaxes(const element::Type& t) const
+{
+    return (is_dynamic() || *this == t);
+}
+
+bool element::Type::refines(const element::Type& t) const
+{
+    return (t.is_dynamic() || *this == t);
+}

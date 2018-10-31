@@ -102,6 +102,32 @@ namespace ngraph
             ///              does nothing to dst, and returns false
             static bool merge(element::Type& dst, const element::Type& t1, const element::Type& t2);
 
+            /// \brief Check whether this element type is a relaxation of the argument.
+            /// \param t The element which is being compared against this element type.
+            /// \return `true` if this element type relaxes `t`, else `false`.
+            ///
+            /// Intuitively, an element::Type `t1` is said to _relax_ `t2` (or _is a
+            /// relaxation_ of `t2`) if it is "non-strictly more permissive" than `t2`.
+            ///
+            /// `t1.relaxes(t2)` is equivalent to `t2.refines(t1)`.
+            ///
+            /// Formally, element::Type `t1` is said to _relax_ element::Type `t2`
+            /// if `t1` is dynamic, or `t1 == t2`.
+            bool relaxes(const element::Type& t) const;
+
+            /// \brief Check whether this element type is a refinement of the argument.
+            /// \param t The element which is being compared against this element type.
+            /// \return `true` if this element type refines `t`, else `false`.
+            ///
+            /// Intuitively, an element::Type `t1` is said to _refine_ `t2` (or _is a
+            /// refinement_ of `t2`) if it is "non-strictly more permissive" than `t2`.
+            ///
+            /// `t1.refines(t2)` is equivalent to `t2.relaxes(t1)`.
+            ///
+            /// Formally, element::Type `t1` is said to _refine_ element::Type `t2`
+            /// if `t2` is dynamic, or `t1 == t2`.
+            bool refines(const element::Type& t) const;
+
         private:
             size_t m_bitwidth{0};
             bool m_is_real{false};

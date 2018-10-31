@@ -25,11 +25,16 @@ op::FunctionCall::FunctionCall(shared_ptr<Function> function, const NodeVector& 
     : Node("FunctionCall", args)
     , m_function(function)
 {
+    set_output_size(m_function->get_output_size());
+    constructor_validate_and_infer_types();
+}
+
+void op::FunctionCall::validate_and_infer_types()
+{
+    m_function->validate_nodes_and_infer_types();
+
     auto& function_params = m_function->get_parameters();
 
-    // TODO : [nikolayk] this needs to be rewritten as follows
-    // for each i : FunctionCall->get_inputs.at(i).get_tensor_view_type ==
-    // flatten(function_parms).at(i)
     NODE_VALIDATION_ASSERT(this, get_input_size() == function_params.size())
         << "Number of arguments (" << get_input_size() << ") does not match "
         << "number of function parameters (" << function_params.size() << ").";
@@ -37,21 +42,24 @@ op::FunctionCall::FunctionCall(shared_ptr<Function> function, const NodeVector& 
     for (size_t i = 0; i < get_input_size(); i++)
     {
         NODE_VALIDATION_ASSERT(
-            this, get_input_element_type(i) == function->get_parameters()[i]->get_element_type())
+            this,
+            m_function->get_parameters()[i]->get_element_type().relaxes(get_input_element_type(i)))
             << "Element type mismatch for argument " << i << " (argument has type "
             << get_input_element_type(i) << ", function expects type "
-            << function->get_parameters()[i]->get_element_type();
+            << m_function->get_parameters()[i]->get_element_type();
 
         NODE_VALIDATION_ASSERT(this,
-                               get_input_shape(i) == function->get_parameters()[i]->get_shape())
-            << "Shape mismatch for argument " << i << " (argument has shape " << get_input_shape(i)
-            << ", function expects shape " << function->get_parameters()[i]->get_shape();
+                               m_function->get_parameters()[i]->get_output_partial_shape(0).relaxes(
+                                   get_input_partial_shape(i)))
+            << "Shape mismatch for argument " << i << " (argument has shape "
+            << get_input_partial_shape(i) << ", function expects shape "
+            << m_function->get_parameters()[i]->get_output_partial_shape(0);
     }
 
-    set_output_size(m_function->get_output_size());
     for (size_t i = 0; i < m_function->get_output_size(); ++i)
     {
-        set_output_type(i, function->get_output_element_type(i), function->get_output_shape(i));
+        set_output_type(
+            i, m_function->get_output_element_type(i), m_function->get_output_partial_shape(i));
     }
 }
 
