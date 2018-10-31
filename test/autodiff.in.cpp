@@ -558,7 +558,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_concat_vector)
         return make_shared<Function>(make_shared<op::Concat>(NodeVector{X0, X1, X2}, 0),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1, x2}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_concat_axis_0)
@@ -580,7 +581,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_concat_axis_0)
         return make_shared<Function>(make_shared<op::Concat>(NodeVector{X0, X1, X2}, 0),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1, x2}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_concat_axis_1)
@@ -602,7 +604,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_concat_axis_1)
         return make_shared<Function>(make_shared<op::Concat>(NodeVector{X0, X1, X2}, 1),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
-    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1, x2}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_ceiling)
@@ -1533,7 +1536,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_abc)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
 
-    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1, x2}, .01f, .01f));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1, x2}, .01f, .01f));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_3d_02)
@@ -1656,7 +1660,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_three_outputs)
     auto x1 = rng.initialize(backend->create_tensor<double>(shape_mean));
     auto x2 = rng.initialize(backend->create_tensor<double>(shape_mean));
 
-    EXPECT_TRUE(autodiff_numeric_compare<double>(backend.get(), make_graph, {x0, x1, x2}, .01, .01));
+    EXPECT_TRUE(
+        autodiff_numeric_compare<double>(backend.get(), make_graph, {x0, x1, x2}, .01, .01));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n3_c2_h3)
