@@ -75,9 +75,9 @@ bool ngraph::pass::GraphRewrite::run_on_function(std::shared_ptr<ngraph::Functio
                 {
                     NGRAPH_DEBUG << "Matcher " << matcher << matcher->get_name() << " matched "
                                  << node->get_name();
-                    rewritten = true;
                     if (matcher->process_match())
                     {
+                        rewritten = true;
                         break;
                     }
                 }
