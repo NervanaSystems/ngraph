@@ -20,35 +20,44 @@
 
 namespace vp = vertexai::plaidml;
 
-// Parameter binds a descriptor::Tensor to a PlaidML Placeholder.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Parameter>::operator()()
+namespace ngraph
 {
-    check_inputs(0);
-    check_outputs(1);
-    vp::placeholder ph{build()->io_dim_override ? build()->io_dim_override_count
-                                                : op().get_output_shape(0).size()};
-    std::string name = std::string{"I"} + std::to_string(build()->input_names.size());
-    descriptor::Tensor* tv = op().get_output_tensor_ptr().get();
-    build()->bindings.emplace(tv, TensorInfo{ph, TensorContents::DATA});
-    build()->composer.input(name, ph);
-    build()->input_names.emplace(tv, std::move(name));
-}
+    namespace runtime
+    {
+        namespace plaidml
+        {
+            // Parameter binds a descriptor::Tensor to a PlaidML Placeholder.
+            template <>
+            void Impl<op::Parameter>::operator()()
+            {
+                check_inputs(0);
+                check_outputs(1);
+                vp::placeholder ph{build()->io_dim_override ? build()->io_dim_override_count
+                                                            : op().get_output_shape(0).size()};
+                std::string name = std::string{"I"} + std::to_string(build()->input_names.size());
+                descriptor::Tensor* tv = op().get_output_tensor_ptr().get();
+                build()->bindings.emplace(tv, TensorInfo{ph, TensorContents::DATA});
+                build()->composer.input(name, ph);
+                build()->input_names.emplace(tv, std::move(name));
+            }
 
-// Result binds a PlaidML variable to a composed function output.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Result>::operator()()
-{
-    check_inputs(1);
-    check_outputs(1);
-    std::string name = std::string{"O"} + std::to_string(build()->output_names.size());
-    descriptor::Tensor* tv = op().get_output_tensor_ptr().get();
-    build()->composer.output(name, op_input());
-    build()->output_names.emplace(tv, std::move(name));
-}
+            // Result binds a PlaidML variable to a composed function output.
+            template <>
+            void Impl<op::Result>::operator()()
+            {
+                check_inputs(1);
+                check_outputs(1);
+                std::string name = std::string{"O"} + std::to_string(build()->output_names.size());
+                descriptor::Tensor* tv = op().get_output_tensor_ptr().get();
+                build()->composer.output(name, op_input());
+                build()->output_names.emplace(tv, std::move(name));
+            }
 
-namespace
-{
-    ngraph::runtime::plaidml::Impl<ngraph::op::Parameter>::Registration register_parameter;
-    ngraph::runtime::plaidml::Impl<ngraph::op::Result>::Registration register_result;
+            namespace
+            {
+                Impl<op::Parameter>::Registration register_parameter;
+                Impl<op::Result>::Registration register_result;
+            }
+        }
+    }
 }
