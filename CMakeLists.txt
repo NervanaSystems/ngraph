@@ -109,12 +109,12 @@ endif()
 
 if (LINUX)
     include(GNUInstallDirs)
+    set(CMAKE_INSTALL_BACKEND_DIR "backend")
 else()
     set(CMAKE_INSTALL_BINDIR "bin")
     set(CMAKE_INSTALL_INCLUDEDIR "include")
     set(CMAKE_INSTALL_DOCDIR "doc")
     set(CMAKE_INSTALL_LIBDIR "lib")
-    set(CMAKE_INSTALL_BACKENDDIR "backend")
 endif()
 
 if (DEFINED NGRAPH_INSTALL_PREFIX)
@@ -127,9 +127,10 @@ set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
 set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}")
 set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
-set(NGRAPH_INSTALL_BACKEND "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BACKENDDIR}")
+set(NGRAPH_INSTALL_BACKEND "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BACKEND_DIR}")
 set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../backend:$ORIGIN/../lib")
 
+message(STATUS "Backend  directory: ${NGRAPH_INSTALL_BACKEND}")
 #-----------------------------------------------------------------------------------------------
 # Compiler-specific logic...
 #-----------------------------------------------------------------------------------------------
