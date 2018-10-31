@@ -103,6 +103,67 @@ namespace ngraph
             return {broadcasted_left, broadcasted_right};
         }
 
+        NodeVector
+            legacy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
+                                                        const std::shared_ptr<ngraph::Node>& right,
+                                                        std::size_t start_match_axis)
+        {
+            auto left_shape = left->get_shape();
+            auto right_shape = right->get_shape();
+
+            bool dimensions_identical = (left_shape == right_shape);
+            if (dimensions_identical)
+            {
+                return {left, right};
+            }
+
+            // Prepare new shape of right operand for broadcasting
+            // Remove dimensions with length=1 from back
+            auto new_right_shape = right_shape;
+            for (int dimension = new_right_shape.size() - 1; dimension >= 0; --dimension)
+            {
+                if (new_right_shape[dimension] == 1)
+                {
+                    new_right_shape.pop_back();
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            // Find first dimensions at front with length different from 1
+            size_t num_ones = 0;
+            for (size_t dimension : new_right_shape)
+            {
+                if (dimension == 1)
+                {
+                    ++num_ones;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            // Remove dimensions with length=1 from front
+            new_right_shape.erase(std::begin(new_right_shape),
+                                  std::next(std::begin(new_right_shape), num_ones));
+
+            auto reshape_right = std::make_shared<ngraph::op::Reshape>(
+                right, reshape::get_default_axis_vector(right_shape.size()), new_right_shape);
+
+            // Move broadcast start axis parameter to right
+            start_match_axis += num_ones;
+
+            auto broadcast_right = std::make_shared<ngraph::op::Broadcast>(
+                reshape_right,
+                left_shape,
+                calculate_broadcast_axes(left_shape, new_right_shape, start_match_axis));
+
+            return {left, broadcast_right};
+        }
+
         AxisSet calculate_broadcast_axes(const Shape& output_shape,
                                          const Shape& input_shape,
                                          std::size_t start_match_axis)

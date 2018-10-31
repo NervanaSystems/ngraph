@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/generate_mask.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/reference/generate_mask.hpp"
 #include "ngraph/state/rng_state.hpp"

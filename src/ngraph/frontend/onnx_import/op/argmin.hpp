@@ -14,21 +14,31 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/generate_mask.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
 
-shared_ptr<Node> op::GenerateMask::copy_with_new_args(const NodeVector& new_args) const
+namespace ngraph
 {
-    check_new_args_count(this, new_args);
-    return make_shared<GenerateMask>(
-        new_args.at(0), m_shape, m_element_type, m_seed, m_probability);
-}
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                /// \brief Convert ONNX ArgMin operation to an nGraph node.
+                ///
+                /// \param node   The ONNX node object representing this operation.
+                ///
+                /// \return The vector containing an Ngraph node which produces the output
+                ///         of an ONNX ArgMin operation.
+                NodeVector argmin(const Node& node);
 
-void ngraph::op::GenerateMask::validate_and_infer_types()
-{
-    NGRAPH_ASSERT(shape_size(get_training_node()->get_shape()) == 1)
-        << "Training node should be a scalar flag indicating a mode";
-    set_output_type(0, m_element_type, m_shape);
-}
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

@@ -38,6 +38,10 @@ add_library(onnx_import STATIC
         op/acos.hpp
         op/add.hpp
         op/and.hpp
+        op/argmax.cpp
+        op/argmax.hpp
+        op/argmin.cpp
+        op/argmin.hpp
         op/asin.hpp
         op/atan.hpp
         op/average_pool.cpp

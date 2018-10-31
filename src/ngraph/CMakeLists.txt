@@ -61,7 +61,7 @@ set (SRC
     op/exp.cpp
     op/floor.cpp
     op/function_call.cpp
-    op/generate_mask.cpp
+    op/experimental/generate_mask.cpp
     op/get_output_element.cpp
     op/greater.cpp
     op/greater_eq.cpp

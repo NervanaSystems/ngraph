@@ -35,24 +35,14 @@ namespace ngraph
                          const Shape& shape,
                          const element::Type& element_type,
                          unsigned int seed,
-                         double prob)
-                : Op("GenerateMask", {check_single_output_args({training})})
-                , m_shape(shape)
-                , m_element_type(element_type)
-                , m_seed(seed)
-                , m_probability(prob)
-            {
-                constructor_validate_and_infer_types();
-            }
+                         double prob);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            /// \brief Returns the argument specifying if this mask is used in training or inference
-            std::shared_ptr<Node> get_training_node() const { return get_argument(0); }
             /// \brief Returns the probability of a trial generating 1 (i.e. an element being kept)
             double get_probability() const { return m_probability; }
-            /// \brief Returns the seed value supplied to by a random generator
+            /// \brief Returns the seed value supplied to a random generator
             unsigned int get_seed() const { return m_seed; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -63,8 +53,8 @@ namespace ngraph
             void validate_and_infer_types() override;
             Shape m_shape;
             element::Type m_element_type;
-            unsigned int m_seed = 0;
-            double m_probability = 1.;
+            unsigned int m_seed;
+            double m_probability;
         };
     }
 }
