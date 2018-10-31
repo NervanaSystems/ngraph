@@ -15,7 +15,7 @@ mode, which is primarily intended for testing, to analyze a program, or for a
 framework developer to develop a custom UI or API. 
 
 
-.. figure:: ../graphics/runtime.png
+.. figure:: ../graphics/backend-dgm.png
    :width: 650px
 
 
