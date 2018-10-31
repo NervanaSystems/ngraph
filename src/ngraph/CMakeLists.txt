@@ -149,7 +149,6 @@ set (SRC
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
     runtime/backend_manager.cpp
-    state/state.cpp
     state/rng_state.cpp
     runtime/host_tensor.cpp
     runtime/tensor.cpp
