@@ -49,7 +49,8 @@ static std::shared_ptr<ngraph::Node> get_sub_matrix(const std::shared_ptr<ngraph
     lower_bounds.at(0) = idx;
     upper_bounds.at(0) = idx + 1;
 
-    auto sub_matrix{std::make_shared<ngraph::op::Slice>(node, lower_bounds, upper_bounds)};
+    auto sub_matrix = std::shared_ptr<ngraph::Node>{
+        std::make_shared<ngraph::op::Slice>(node, lower_bounds, upper_bounds)};
     // Remove first single entry dim.
     return ngraph::onnx_import::reshape::squeeze(sub_matrix);
 }

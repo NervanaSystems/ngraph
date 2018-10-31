@@ -76,7 +76,7 @@ static std::shared_ptr<ngraph::Node> broadcast(const std::shared_ptr<ngraph::Nod
     // Positions of axes which have length of 1 are needed to calculate broadcast_axes
     // for nGraph broadcast operation. We need to remove all ones from source shape
     // to avoid broadcasting axis conflict.
-    for (auto index = 0; index < output_shape.size(); ++index)
+    for (std::size_t index = 0; index < output_shape.size(); ++index)
     {
         if (source_shape.at(index) == 1)
         {
@@ -89,13 +89,12 @@ static std::shared_ptr<ngraph::Node> broadcast(const std::shared_ptr<ngraph::Nod
     }
 
     // Remove axes which have length of 1 from source shape
-    auto broadcasted_node{std::make_shared<ngraph::op::Reshape>(
+    auto broadcasted_node = std::make_shared<ngraph::op::Reshape>(
         node,
         ngraph::onnx_import::reshape::get_default_axis_vector(node->get_shape().size()),
-        squeezed_shape)};
+        squeezed_shape);
 
-    return {
-        std::make_shared<ngraph::op::Broadcast>(broadcasted_node, output_shape, broadcast_axes)};
+    return std::make_shared<ngraph::op::Broadcast>(broadcasted_node, output_shape, broadcast_axes);
 }
 
 namespace ngraph
@@ -106,9 +105,9 @@ namespace ngraph
             numpy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
                                                        const std::shared_ptr<ngraph::Node>& right)
         {
-            auto left_shape = left->get_shape();
-            auto right_shape = right->get_shape();
-            auto numpy_shapes = get_numpy_broadcast_shape(left_shape, right_shape);
+            const auto& left_shape = left->get_shape();
+            const auto& right_shape = right->get_shape();
+            const auto& numpy_shapes = get_numpy_broadcast_shape(left_shape, right_shape);
             auto output_shape = numpy_shapes.at(0);
             auto left_full_shape = numpy_shapes.at(1);
             auto right_full_shape = numpy_shapes.at(2);
@@ -124,7 +123,7 @@ namespace ngraph
             const auto& left_shape = left->get_shape();
             const auto& right_shape = right->get_shape();
             // Broadcast only _stack of matrices_ axes.
-            auto numpy_shapes = get_numpy_broadcast_shape(
+            const auto& numpy_shapes = get_numpy_broadcast_shape(
                 Shape{std::begin(left_shape), std::next(std::end(left_shape), -2)},
                 Shape{std::begin(right_shape), std::next(std::end(right_shape), -2)});
 
@@ -158,8 +157,8 @@ namespace ngraph
                                                         const std::shared_ptr<ngraph::Node>& right,
                                                         std::size_t start_match_axis)
         {
-            auto left_shape = left->get_shape();
-            auto right_shape = right->get_shape();
+            const auto& left_shape = left->get_shape();
+            const auto& right_shape = right->get_shape();
 
             bool dimensions_identical = (left_shape == right_shape);
             if (dimensions_identical)
