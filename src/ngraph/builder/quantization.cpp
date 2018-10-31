@@ -37,19 +37,17 @@ namespace ngraph
             auto offset = op::Constant::create(type, Shape{}, {0});
             if (input->get_element_type() == element::f32)
             {
-                float scale =
-                    builder::quantization_util::get_quantization_scale<float>(min, max, type, true);
-                auto quantize_scale =
-                    op::Constant::create(input->get_element_type(), Shape{}, {scale});
+                auto quantize_scale = builder::quantization_util::get_quantization_scale(
+                    min, max, type, input->get_element_type(), true);
+
                 return make_shared<op::Quantize>(
                     input, quantize_scale, offset, type, axes, round_mode);
             }
             else if (input->get_element_type() == element::f64)
             {
-                double scale = builder::quantization_util::get_quantization_scale<double>(
-                    min, max, type, true);
-                auto quantize_scale =
-                    op::Constant::create(input->get_element_type(), Shape{}, {scale});
+                auto quantize_scale = builder::quantization_util::get_quantization_scale(
+                    min, max, type, input->get_element_type(), true);
+
                 return make_shared<op::Quantize>(
                     input, quantize_scale, offset, type, axes, round_mode);
             }
@@ -69,16 +67,16 @@ namespace ngraph
             auto offset = op::Constant::create(input_et, Shape{}, {0});
             if (type == element::f32)
             {
-                float scale =
-                    builder::quantization_util::get_quantization_scale<float>(min, max, input_et);
-                auto dequantize_scale = op::Constant::create(type, Shape{}, {scale});
+                auto dequantize_scale =
+                    builder::quantization_util::get_quantization_scale(min, max, input_et, type);
+
                 return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);
             }
             else if (type == element::f64)
             {
-                double scale =
-                    builder::quantization_util::get_quantization_scale<double>(min, max, input_et);
-                auto dequantize_scale = op::Constant::create(type, Shape{}, {scale});
+                auto dequantize_scale =
+                    builder::quantization_util::get_quantization_scale(min, max, input_et, type);
+
                 return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);
             }
             else
@@ -121,13 +119,12 @@ namespace ngraph
                                            const std::shared_ptr<Node> max_freezed_output,
                                            const bool with_relu)
         {
-            float scale = builder::quantization_util::get_scale(min_input,
-                                                                max_input,
-                                                                min_filter,
-                                                                max_filter,
-                                                                min_freezed_output,
-                                                                max_freezed_output);
-            auto requantization_scale = op::Constant::create(element::f32, Shape{1}, {scale});
+            auto requantization_scale = builder::quantization_util::get_scale(min_input,
+                                                                              max_input,
+                                                                              min_filter,
+                                                                              max_filter,
+                                                                              min_freezed_output,
+                                                                              max_freezed_output);
 
             return make_shared<op::QuantizedConvolutionBias>(data_batch,
                                                              filters,
@@ -156,13 +153,13 @@ namespace ngraph
                                            const std::shared_ptr<Node> min_freezed_output,
                                            const std::shared_ptr<Node> max_freezed_output)
         {
-            float scale = builder::quantization_util::get_scale(min_input,
-                                                                max_input,
-                                                                min_filter,
-                                                                max_filter,
-                                                                min_freezed_output,
-                                                                max_freezed_output);
-            auto requantization_scale = op::Constant::create(element::f32, Shape{1}, {scale});
+            auto requantization_scale = builder::quantization_util::get_scale(min_input,
+                                                                              max_input,
+                                                                              min_filter,
+                                                                              max_filter,
+                                                                              min_freezed_output,
+                                                                              max_freezed_output);
+
             return make_shared<op::QuantizedConvolutionRelu>(data_batch,
                                                              filters,
                                                              window_movement_strides,
@@ -188,13 +185,13 @@ namespace ngraph
                                        const std::shared_ptr<Node> min_freezed_output,
                                        const std::shared_ptr<Node> max_freezed_output)
         {
-            float scale = builder::quantization_util::get_scale(min_input,
-                                                                max_input,
-                                                                min_filter,
-                                                                max_filter,
-                                                                min_freezed_output,
-                                                                max_freezed_output);
-            auto requantization_scale = op::Constant::create(element::f32, Shape{1}, {scale});
+            auto requantization_scale = builder::quantization_util::get_scale(min_input,
+                                                                              max_input,
+                                                                              min_filter,
+                                                                              max_filter,
+                                                                              min_freezed_output,
+                                                                              max_freezed_output);
+
             return make_shared<op::QuantizedConvolution>(data_batch,
                                                          filters,
                                                          window_movement_strides,

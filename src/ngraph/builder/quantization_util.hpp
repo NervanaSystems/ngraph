@@ -31,7 +31,11 @@
 #include <limits>
 #include <vector>
 #include "ngraph/node.hpp"
+#include "ngraph/op/abs.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/multiply.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -57,12 +61,12 @@ namespace ngraph
                 // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantization_utils.h
             }
 
-            float get_scale(const std::shared_ptr<Node> min_input,
-                            const std::shared_ptr<Node> max_input,
-                            const std::shared_ptr<Node> min_filter,
-                            const std::shared_ptr<Node> max_filter,
-                            const std::shared_ptr<Node> min_freezed_output,
-                            const std::shared_ptr<Node> max_freezed_output)
+            std::shared_ptr<Node> get_scale(const std::shared_ptr<Node> min_input,
+                                            const std::shared_ptr<Node> max_input,
+                                            const std::shared_ptr<Node> min_filter,
+                                            const std::shared_ptr<Node> max_filter,
+                                            const std::shared_ptr<Node> min_freezed_output,
+                                            const std::shared_ptr<Node> max_freezed_output)
             {
                 auto min_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(min_input);
                 auto max_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(max_input);
@@ -97,14 +101,16 @@ namespace ngraph
                 // s8 = s32 * std::pow(2, -24) * max_abs32 / max_abs8;
                 const float scale = static_cast<float>(
                     (std::pow(2, -24) * static_cast<double>(max_abs32 / max_abs8)));
-                return scale;
+                return op::Constant::create(element::f32, Shape{1}, {scale});
             }
 
             template <typename T>
-            static inline T get_quantization_scale(const std::shared_ptr<Node> min_input,
-                                                   const std::shared_ptr<Node> max_input,
-                                                   const ngraph::element::Type& type,
-                                                   bool bump_by_eps = false)
+            std::shared_ptr<Node>
+                get_quantization_scale_const(const std::shared_ptr<Node> min_input,
+                                             const std::shared_ptr<Node> max_input,
+                                             const ngraph::element::Type& quantized_type,
+                                             const ngraph::element::Type& scale_type,
+                                             bool bump_by_eps = false)
             {
                 auto min_input_const_op =
                     std::dynamic_pointer_cast<ngraph::op::Constant>(min_input);
@@ -146,11 +152,38 @@ namespace ngraph
                 }
 
                 const T max_abs = std::max(std::abs(min_range), std::abs(max_range));
-                const T bitwidth = type.bitwidth();
-                const T target_range = static_cast<T>(
-                    (type.is_signed() ? std::pow(2, (bitwidth - 1)) : std::pow(2, bitwidth)) - 1);
+                const T bitwidth = quantized_type.bitwidth();
+                const T target_range =
+                    static_cast<T>((quantized_type.is_signed() ? std::pow(2, (bitwidth - 1))
+                                                               : std::pow(2, bitwidth)) -
+                                   1);
                 const T scale_factor = max_abs / target_range;
-                return scale_factor;
+                return op::Constant::create(scale_type, Shape{}, {scale_factor});
+            }
+
+            std::shared_ptr<Node>
+                get_quantization_scale(const std::shared_ptr<Node> min_input,
+                                       const std::shared_ptr<Node> max_input,
+                                       const ngraph::element::Type& quantized_type,
+                                       const ngraph::element::Type& scale_type,
+                                       bool bump_by_eps = false)
+            {
+                auto abs_min_input = std::make_shared<op::Abs>(min_input);
+                auto abs_max_input = std::make_shared<op::Abs>(max_input);
+                auto max_abs = std::make_shared<op::Maximum>(abs_min_input, abs_max_input);
+                // TODO: convert to scale_type?
+                // TODO: handle epsilon bump out
+                // TODO: need to calculated quantize_type.max() - quantized_type.min()
+
+                size_t bitwidth = quantized_type.bitwidth();
+                float range =
+                    static_cast<float>((quantized_type.is_signed() ? std::pow(2, (bitwidth - 1))
+                                                                   : std::pow(2, bitwidth)) -
+                                       1);
+
+                auto target_range = op::Constant::create(scale_type, Shape{}, {range});
+
+                return max_abs / target_range;
             }
         }
     }
