@@ -36,7 +36,7 @@ namespace ngraph
                 auto select_function = select_and_scatter->get_functions()[0];
                 auto scatter_function = select_and_scatter->get_functions()[1];
 
-                auto backend = runtime::Backend::create("CPU");
+                shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
                 auto& functors = external_function->get_functors();
                 auto& callees = external_function->get_callees();
