@@ -355,6 +355,8 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     return make_pair(res_node, par_node);
 }
 
+// Suffix *_size  as a part of function name is temporary, this suffix
+//  will be removed when the backends move to the latest Hybrid backend
 pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     ngraph::insert_result_parameter_split_size(const shared_ptr<Node>& src_node,
                                                const shared_ptr<Node>& dst_node)
@@ -456,6 +458,8 @@ Placement ngraph::get_colocated_function_placement(shared_ptr<Function> func)
     return function_placement;
 }
 
+// Suffix *_size  as a part of function name is temporary, this suffix
+//  will be removed when the backends move to the latest Hybrid backend
 // Assert that nodes in the function is colocated and return that placement
 size_t ngraph::get_colocated_function_placement_size(shared_ptr<Function> func)
 {

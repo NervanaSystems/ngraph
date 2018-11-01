@@ -88,7 +88,7 @@ public:
               const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& outputs,
               const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& inputs) override;
 
-    bool is_supported(std::shared_ptr<ngraph::Node> node) const override;
+    bool is_supported(const ngraph::Node& node) const override;
 
 private:
     std::shared_ptr<ngraph::runtime::Backend> m_backend;

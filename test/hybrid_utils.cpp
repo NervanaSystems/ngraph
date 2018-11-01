@@ -189,7 +189,7 @@ bool BackendWrapper::call(shared_ptr<Function> func,
     return m_backend->call(func, outputs, inputs);
 }
 
-bool BackendWrapper::is_supported(std::shared_ptr<Node> node) const
+bool BackendWrapper::is_supported(const Node& node) const
 {
-    return m_supported_ops.find(node->description()) != m_supported_ops.end();
+    return m_supported_ops.find(node.description()) != m_supported_ops.end();
 }

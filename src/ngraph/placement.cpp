@@ -340,6 +340,8 @@ static vector<unordered_set<shared_ptr<Node>>>
     return clusters;
 }
 
+// Suffix *_size  as a part of function name is temporary, this suffix
+//  will be removed when the backends move to the latest Hybrid backend
 pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>>>
     ngraph::split_function_by_placement_size(const shared_ptr<Function>& f)
 {

@@ -41,7 +41,7 @@ bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
         for (auto backend : m_placement_backends)
         {
             backend_indx += 1;
-            if (backend->is_supported(node))
+            if (backend->is_supported(*node))
             {
                 node->set_placement(backend_indx);
 
@@ -54,5 +54,4 @@ bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
         node->set_placement(m_placement_policy(node));
         return false;
     }
-    return false;
 }
