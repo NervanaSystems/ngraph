@@ -539,7 +539,7 @@ struct ConvolutionBiasTestData
     shared_ptr<op::Parameter> bias;
     shared_ptr<op::Parameter> delta;
 
-    void n1c1h3w3(shared_ptr<runtime::Backend> backend)
+    void n1c1h3w3(runtime::Backend* backend)
     {
         n = 1;
         c = 1;
@@ -625,7 +625,7 @@ TEST(cpu_fusion, conv_bias_fprop_n1c1h3w3)
     auto backend = runtime::Backend::create("CPU");
 
     ConvolutionBiasTestData conv_test;
-    conv_test.n1c1h3w3(backend);
+    conv_test.n1c1h3w3(backend.get());
 
     auto convolution = make_shared<op::Convolution>(conv_test.data, conv_test.weights);
     auto convolution_bias = make_shared<op::ConvolutionBias>(convolution, conv_test.bias);
@@ -646,7 +646,7 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
     auto backend = runtime::Backend::create("CPU");
 
     ConvolutionBiasTestData conv_test;
-    conv_test.n1c1h3w3(backend);
+    conv_test.n1c1h3w3(backend.get());
 
     auto convolution = make_shared<op::Convolution>(conv_test.data, conv_test.weights);
     auto convolution_bias = make_shared<op::ConvolutionBias>(convolution, conv_test.bias);
@@ -2496,7 +2496,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion)
     ASSERT_EQ(ccg, 18);
 }
 
-void sigmoid_multiply_fusion_forward_compute(shared_ptr<runtime::Backend>& backend,
+void sigmoid_multiply_fusion_forward_compute(runtime::Backend* backend,
                                              const op::ParameterVector& input_params,
                                              const vector<vector<float>>& input_data,
                                              const vector<Shape>& input_shapes,
@@ -2540,7 +2540,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
         op::ParameterVector input_params{input_0_param, input_1_param, input_2_param};
         vector<vector<float>> input_data{input_0_data, input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape, data_shape};
-        sigmoid_multiply_fusion_forward_compute(backend,
+        sigmoid_multiply_fusion_forward_compute(backend.get(),
                                                 input_params,
                                                 input_data,
                                                 input_shapes,
@@ -2558,7 +2558,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, const_data};
         vector<Shape> input_shapes{data_shape, const_shape};
-        sigmoid_multiply_fusion_forward_compute(backend,
+        sigmoid_multiply_fusion_forward_compute(backend.get(),
                                                 input_params,
                                                 input_data,
                                                 input_shapes,
@@ -2576,7 +2576,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, const_data};
         vector<Shape> input_shapes{data_shape, const_shape};
-        sigmoid_multiply_fusion_forward_compute(backend,
+        sigmoid_multiply_fusion_forward_compute(backend.get(),
                                                 input_params,
                                                 input_data,
                                                 input_shapes,
@@ -2594,7 +2594,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_forward_compute(backend,
+        sigmoid_multiply_fusion_forward_compute(backend.get(),
                                                 input_params,
                                                 input_data,
                                                 input_shapes,
@@ -2612,7 +2612,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_forward_compute(backend,
+        sigmoid_multiply_fusion_forward_compute(backend.get(),
                                                 input_params,
                                                 input_data,
                                                 input_shapes,
@@ -2630,7 +2630,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_forward_compute(backend,
+        sigmoid_multiply_fusion_forward_compute(backend.get(),
                                                 input_params,
                                                 input_data,
                                                 input_shapes,
@@ -2648,7 +2648,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_forward_compute(backend,
+        sigmoid_multiply_fusion_forward_compute(backend.get(),
                                                 input_params,
                                                 input_data,
                                                 input_shapes,
@@ -2659,7 +2659,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_forward)
     }
 }
 
-void sigmoid_multiply_fusion_backward_compute(shared_ptr<runtime::Backend>& backend,
+void sigmoid_multiply_fusion_backward_compute(runtime::Backend* backend,
                                               const op::ParameterVector& input_params,
                                               const vector<vector<float>>& input_data,
                                               const vector<Shape>& input_shapes,
@@ -2738,7 +2738,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
         op::ParameterVector input_params{input_0_param, input_1_param, input_2_param};
         vector<vector<float>> input_data{input_0_data, input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape, data_shape};
-        sigmoid_multiply_fusion_backward_compute(backend,
+        sigmoid_multiply_fusion_backward_compute(backend.get(),
                                                  input_params,
                                                  input_data,
                                                  input_shapes,
@@ -2763,7 +2763,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, const_data};
         vector<Shape> input_shapes{data_shape, const_shape};
-        sigmoid_multiply_fusion_backward_compute(backend,
+        sigmoid_multiply_fusion_backward_compute(backend.get(),
                                                  input_params,
                                                  input_data,
                                                  input_shapes,
@@ -2788,7 +2788,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, const_data};
         vector<Shape> input_shapes{data_shape, const_shape};
-        sigmoid_multiply_fusion_backward_compute(backend,
+        sigmoid_multiply_fusion_backward_compute(backend.get(),
                                                  input_params,
                                                  input_data,
                                                  input_shapes,
@@ -2813,7 +2813,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_backward_compute(backend,
+        sigmoid_multiply_fusion_backward_compute(backend.get(),
                                                  input_params,
                                                  input_data,
                                                  input_shapes,
@@ -2838,7 +2838,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_backward_compute(backend,
+        sigmoid_multiply_fusion_backward_compute(backend.get(),
                                                  input_params,
                                                  input_data,
                                                  input_shapes,
@@ -2863,7 +2863,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_backward_compute(backend,
+        sigmoid_multiply_fusion_backward_compute(backend.get(),
                                                  input_params,
                                                  input_data,
                                                  input_shapes,
@@ -2888,7 +2888,7 @@ TEST(cpu_fusion, sigmoid_multiply_fusion_backward)
         op::ParameterVector input_params{input_0_param, input_1_param};
         vector<vector<float>> input_data{input_0_data, input_1_data};
         vector<Shape> input_shapes{data_shape, data_shape};
-        sigmoid_multiply_fusion_backward_compute(backend,
+        sigmoid_multiply_fusion_backward_compute(backend.get(),
                                                  input_params,
                                                  input_data,
                                                  input_shapes,
