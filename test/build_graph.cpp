@@ -25,6 +25,16 @@
 using namespace std;
 using namespace ngraph;
 
+TEST(build_graph, broadcast_to_non_existent_axis)
+{
+    Shape shape_a{};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_r{4};
+    ASSERT_THROW(auto f = make_shared<Function>(
+                     make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1}), op::ParameterVector{A}),
+                 ngraph_error);
+}
+
 TEST(build_graph, build_simple)
 {
     // Function with 4 parameters

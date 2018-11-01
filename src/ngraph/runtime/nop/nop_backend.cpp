@@ -1,0 +1,270 @@
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
+
+#include "ngraph/runtime/nop/nop_backend.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
+#include "ngraph/except.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/op/select.hpp"
+#include "ngraph/op/util/binary_elementwise_comparison.hpp"
+#include "ngraph/pass/assign_layout.hpp"
+#include "ngraph/pass/like_replacement.hpp"
+#include "ngraph/pass/liveness.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/util.hpp"
+
+using namespace std;
+using namespace ngraph;
+
+using descriptor::layout::DenseTensorLayout;
+
+extern "C" const char* get_ngraph_version_string()
+{
+    return NGRAPH_VERSION;
+}
+
+extern "C" runtime::Backend* new_backend(const char* configuration_string)
+{
+    return new runtime::nop::NOPBackend();
+}
+
+shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const element::Type& type,
+                                                                    const Shape& shape)
+{
+    return make_shared<runtime::HostTensor>(type, shape, "external");
+}
+
+shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const element::Type& type,
+                                                                    const Shape& shape,
+                                                                    void* memory_pointer)
+{
+    return make_shared<runtime::HostTensor>(type, shape, memory_pointer, "external");
+}
+
+bool runtime::nop::NOPBackend::compile(shared_ptr<Function> function)
+{
+    FunctionInstance& instance = m_function_map[function];
+    if (!instance.m_is_compiled)
+    {
+        instance.m_is_compiled = true;
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::LikeReplacement>();
+        pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
+        pass_manager.register_pass<pass::Liveness>();
+        pass_manager.run_passes(function);
+
+        for (const shared_ptr<Node>& node : function->get_ordered_ops())
+        {
+            instance.m_wrapped_nodes.emplace_back(node);
+        }
+    }
+
+    return true;
+}
+
+bool runtime::nop::NOPBackend::call(shared_ptr<Function> function,
+                                    const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                    const vector<shared_ptr<runtime::Tensor>>& inputs)
+{
+    validate_call(function, outputs, inputs);
+
+    compile(function);
+    FunctionInstance& instance = m_function_map[function];
+
+    // convert inputs to HostTensor
+    vector<shared_ptr<runtime::HostTensor>> func_inputs;
+    for (auto tv : inputs)
+    {
+        func_inputs.push_back(static_pointer_cast<runtime::HostTensor>(tv));
+    }
+    if (instance.m_nan_check_enabled)
+    {
+        perform_nan_check(func_inputs);
+    }
+
+    // convert outputs to HostTensor
+    vector<shared_ptr<runtime::HostTensor>> func_outputs;
+    for (auto tv : outputs)
+    {
+        func_outputs.push_back(static_pointer_cast<runtime::HostTensor>(tv));
+    }
+
+    // map function params -> HostTensor
+    unordered_map<descriptor::Tensor*, shared_ptr<runtime::HostTensor>> tensor_map;
+    size_t input_count = 0;
+    for (auto param : function->get_parameters())
+    {
+        for (size_t i = 0; i < param->get_output_size(); ++i)
+        {
+            descriptor::Tensor* tv = param->get_output_tensor_ptr(i).get();
+            tensor_map.insert({tv, func_inputs[input_count++]});
+        }
+    }
+
+    // map function outputs -> HostTensor
+    for (size_t output_count = 0; output_count < function->get_output_size(); ++output_count)
+    {
+        auto output = function->get_output_op(output_count);
+        if (!dynamic_pointer_cast<op::Result>(output))
+        {
+            throw ngraph_error("One of function's outputs isn't op::Result");
+        }
+        descriptor::Tensor* tv = output->get_output_tensor_ptr(0).get();
+        tensor_map.insert({tv, func_outputs[output_count]});
+    }
+
+    // for each ordered op in the graph
+    for (const NodeWrapper& wrapped : instance.m_wrapped_nodes)
+    {
+        const Node* op = &wrapped.get_node();
+        auto type_id = wrapped.get_typeid();
+        if (type_id == OP_TYPEID::Parameter)
+        {
+            continue;
+        }
+        // get op inputs from map
+        vector<shared_ptr<runtime::HostTensor>> op_inputs;
+        for (const descriptor::Input& input : op->get_inputs())
+        {
+            descriptor::Tensor* tv = input.get_output().get_tensor_ptr().get();
+            op_inputs.push_back(tensor_map.at(tv));
+        }
+
+        // get op outputs from map or create
+        vector<shared_ptr<runtime::HostTensor>> op_outputs;
+        for (size_t i = 0; i < op->get_output_size(); ++i)
+        {
+            descriptor::Tensor* tv = op->get_output_tensor_ptr(i).get();
+            shared_ptr<runtime::HostTensor> htv;
+            auto it = tensor_map.find(tv);
+            if (it == tensor_map.end())
+            {
+                // the output tensor is not in the tensor map so create a new tensor
+                const Shape& shape = op->get_output_shape(i);
+                const element::Type& type = op->get_output_element_type(i);
+                string name = op->get_output_tensor(i).get_name();
+                htv = make_shared<runtime::HostTensor>(type, shape, name);
+                tensor_map.insert({tv, htv});
+            }
+            else
+            {
+                htv = it->second;
+            }
+            op_outputs.push_back(htv);
+        }
+
+        // get op type
+        element::Type type;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+        switch (type_id)
+        {
+        case OP_TYPEID::Convert:
+        case OP_TYPEID::Quantize:
+        case OP_TYPEID::Dequantize:
+        case OP_TYPEID::ArgMin:
+        case OP_TYPEID::ArgMax: type = op->get_input_element_type(0); break;
+        case OP_TYPEID::Equal:
+        case OP_TYPEID::Greater:
+        case OP_TYPEID::GreaterEq:
+        case OP_TYPEID::Less:
+        case OP_TYPEID::LessEq:
+        case OP_TYPEID::NotEqual:
+            // Get the type of the second input, not the first
+            // All BinaryElementwiseComparision ops have the same type for inputs
+            // Select has bool for first input and the type we are interested in for the second
+            type = op->get_input_element_type(1);
+            break;
+        default: type = op->get_outputs().at(0).get_element_type(); break;
+        }
+#pragma GCC diagnostic pop
+
+        generate_calls(type, wrapped, op_outputs, op_inputs, instance);
+
+        // delete any obsolete tensors
+        for (const descriptor::Tensor* t : op->liveness_free_list)
+        {
+            for (auto it = tensor_map.begin(); it != tensor_map.end(); ++it)
+            {
+                if (it->second->get_name() == t->get_name())
+                {
+                    tensor_map.erase(it);
+                    break;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+void runtime::nop::NOPBackend::generate_calls(const element::Type& type,
+                                              const NodeWrapper& op,
+                                              const vector<shared_ptr<HostTensor>>& outputs,
+                                              const vector<shared_ptr<HostTensor>>& inputs,
+                                              FunctionInstance& instance)
+{
+    if (type == element::boolean)
+    {
+        op_engine<char>(op, outputs, inputs, instance);
+    }
+    else if (type == element::f32)
+    {
+        op_engine<float>(op, outputs, inputs, instance);
+    }
+    else if (type == element::f64)
+    {
+        op_engine<double>(op, outputs, inputs, instance);
+    }
+    else if (type == element::i8)
+    {
+        op_engine<int8_t>(op, outputs, inputs, instance);
+    }
+    else if (type == element::i16)
+    {
+        op_engine<int16_t>(op, outputs, inputs, instance);
+    }
+    else if (type == element::i32)
+    {
+        op_engine<int32_t>(op, outputs, inputs, instance);
+    }
+    else if (type == element::i64)
+    {
+        op_engine<int64_t>(op, outputs, inputs, instance);
+    }
+    else if (type == element::u8)
+    {
+        op_engine<uint8_t>(op, outputs, inputs, instance);
+    }
+    else if (type == element::u16)
+    {
+        op_engine<uint16_t>(op, outputs, inputs, instance);
+    }
+    else if (type == element::u32)
+    {
+        op_engine<uint32_t>(op, outputs, inputs, instance);
+    }
+    else if (type == element::u64)
+    {
+        op_engine<uint64_t>(op, outputs, inputs, instance);
+    }
+    else
+    {
+        stringstream ss;
+        ss << "unsupported element type " << type << " op " << op.get_node().get_name();
+        throw ngraph_error(ss.str());
+    }
+}

@@ -14,26 +14,14 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(interpreter)
-
-if (NGRAPH_HYBRID_ENABLE)
-    add_subdirectory(hybrid)
-endif()
-
-if (NGRAPH_CPU_ENABLE)
-    add_subdirectory(cpu)
-endif()
-
-if (NGRAPH_INTELGPU_ENABLE)
-    add_subdirectory(intelgpu)
-endif()
-
-if (NGRAPH_GPU_ENABLE)
-    add_subdirectory(gpu)
-endif()
-
 if (NGRAPH_NOP_BACKEND_ENABLE)
-    add_subdirectory(nop)
-endif()
+    add_library(nop_backend SHARED nop_backend.cpp)
+    set_target_properties(nop_backend PROPERTIES VERSION ${NGRAPH_VERSION})
+    target_link_libraries(nop_backend PUBLIC ngraph)
+    set_target_properties(nop_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
-add_subdirectory(plaidml)
+    install(TARGETS nop_backend
+        LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
+        ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
+    )
+endif()

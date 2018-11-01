@@ -14,26 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(interpreter)
-
-if (NGRAPH_HYBRID_ENABLE)
-    add_subdirectory(hybrid)
-endif()
-
-if (NGRAPH_CPU_ENABLE)
-    add_subdirectory(cpu)
-endif()
-
-if (NGRAPH_INTELGPU_ENABLE)
-    add_subdirectory(intelgpu)
-endif()
-
-if (NGRAPH_GPU_ENABLE)
-    add_subdirectory(gpu)
-endif()
-
-if (NGRAPH_NOP_BACKEND_ENABLE)
-    add_subdirectory(nop)
-endif()
-
-add_subdirectory(plaidml)
+function(PRINT_OPTION arg)
+    message(STATUS "arg = ${ARG}")
+endfunction()
