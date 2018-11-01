@@ -1021,12 +1021,22 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
             }
             else
             {
-                // in current implementation:
-                // 1. reduction function should only have one op
-                // 2. the op should be in the op_map
-                // otherwise, throw an error message
-                cudnnReduceTensorOp_t reduce_tensor_op;
+                auto axes_set = reduce_op->get_reduction_axes();
+                ngraph::AxisVector axes_vec;
+                for (auto a : axes_set)
+                {
+                    axes_vec.push_back(a);
+                }
+                vector<string> dtypes;
+                dtypes.push_back(args[0].get_type());
+                dtypes.push_back(out[0].get_type());
+                auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
                 auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
+                
+                size_t emitter_index;
+                // Reduction function should only have one op
+                size_t op_index;
+                std::string op_name;
                 int op_count = 0;
                 for (auto op : reduction_function_ops)
                 {
@@ -1038,35 +1048,47 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                     // Work around a compiler warning (*node inside typeid may have effects
                     // with shared pointers, which is fine here but clang doesn't like it.)
                     auto& fn = *op;
-                    auto f_ptr = reduce_map.find(type_index(typeid(fn)));
-                    if (f_ptr == reduce_map.end())
-                    {
-                        throw runtime_error("reduce with function " + fn.get_name() +
-                                            " is not implement yet.");
-                    }
-                    else if (op_count != 1)
+                    op_name = fn.get_name();
+                    op_index = type_index(typeid(fn)).hash_code();
+                    if (op_count != 1)
                     {
                         throw runtime_error("reduce with more than one op is not implement yet.");
                     }
-                    else
-                    {
-                        reduce_tensor_op = f_ptr->second;
-                    }
                 }
-                std::vector<element::Type> dtypes{args[0].get_element_type(),
-                                                  out[0].get_element_type()};
-                auto& cudnn_emitter =
-                    external_function->get_primitive_emitter()->get_cudnn_emitter();
-                auto reduce_index =
-                    cudnn_emitter->build_reduce_forward(reduce_tensor_op,
-                                                        dtypes,
-                                                        args[0].get_shape(),
-                                                        reduce_op->get_reduction_axes(),
-                                                        CUDNNEmitter::ReductionMode::Reduce);
 
+                switch(op_index)
+                {
+                    case TI(ngraph::op::Add).hash_code():
+                        emitter_index = cuda_emitter->build_reduce<ngraph::op::Add>(
+                        dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
+                        break;
+                    case TI(ngraph::op::Add).hash_code():
+                        emitter_index = cuda_emitter->build_reduce<ngraph::op::Multiply>(
+                        dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
+                        break;
+                    case TI(ngraph::op::Add).hash_code():
+                        emitter_index = cuda_emitter->build_reduce<ngraph::op::Maximum>(
+                        dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
+                        break;
+                    case TI(ngraph::op::Add).hash_code():
+                        emitter_index = cuda_emitter->build_reduce<ngraph::op::Minimum>(
+                        dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
+                        break;
+                    case TI(ngraph::op::Add).hash_code():
+                        emitter_index = cuda_emitter->build_reduce<ngraph::op::And>(
+                        dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
+                        break;
+                    case TI(ngraph::op::Add).hash_code():
+                        emitter_index = cuda_emitter->build_reduce<ngraph::op::Or>(
+                        dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
+                        break;
+                    default:
+                        throw runtime_error("reduce with function " + op_name +
+                                            " is not implement yet.");
+                }
                 writer << "void* input[] = {" << node_names(args) << "};\n";
                 writer << "void* output[] = {" << node_names(out) << "};\n";
-                writer << "gpu::invoke_primitive(ctx, " << reduce_index << ", input, output);\n";
+                writer << "gpu::invoke_primitive(ctx, " << emitter_index << ", input, output);\n";
             }
         }
     }
