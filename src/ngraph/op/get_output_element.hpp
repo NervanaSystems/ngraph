@@ -45,7 +45,6 @@ namespace ngraph
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            std::shared_ptr<Node> m_arg;
             size_t m_n;
         };
     }
