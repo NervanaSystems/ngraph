@@ -21,40 +21,46 @@
 Welcome
 =======
 
-nGraph is an open-source C++ library, compiler, and runtime accelerator for 
-software engineering in the :abbr:`Deep Learning (DL)` ecosystem. nGraph 
-simplifies the path from code to makes it possible to design, write, compile, and deploy 
-:abbr:`Deep Neural Network (DNN)`-based solutions that can be easily scaled.
-A more detailed explanation on the feature set of nGraph Compiler and runtime, 
-as well as a high-level overview can be found on our project :doc:`project/about`. 
-
 .. figure:: graphics/599px-Intel-ngraph-ecosystem.png
    :width: 599px
+
+
+nGraph is an open-source C++ library, compiler, and runtime accelerator for 
+software engineering in the :abbr:`Deep Learning (DL)` ecosystem. nGraph 
+simplifies development and makes it possible to design, write, compile, and
+deploy :abbr:`Deep Neural Network (DNN)`-based solutions. A more detailed 
+explanation on the feature set of nGraph Compiler, as well as a high-level 
+overview can be found on our project :doc:`project/about`. 
 
 
 Quick Start
 ===========
 
-We have various documents to help you get started.  
+We have documentation to help you get started.  
 
-* **Framework users** of TensorFlow and MXNet can get started with 
+* **Framework users of TensorFlow or MXNet** can get started with 
   * :doc:`framework-integration-guides`.
 
 * **Data scientists** interested in the `ONNX`_ format will find the 
-  `nGraph ONNX companion tool`_ of interest and want to make use of the 
-  :doc:`python_api/index`. 
+  `nGraph ONNX companion tool`_ of interest. 
 
 * **Framework authors and architects** will likely want to :doc:`buildlb` 
-  and read up on :doc:`howto/execute`. For examples of generic optimizations 
-  available when designing your framework directly with nGraph, see 
-  :doc:`frameworks/generic`.  
+  and learn how nGraph can be used to :doc:`howto/execute`. For examples 
+  of generic configurations or optimizations available when designing or 
+  bridging a framework directly with nGraph, see :doc:`frameworks/generic`.
 
-* **Optimization pass writers** will find :doc:`fusion/index` useful, as well
-  as our :doc:`ops/index`. 
+* To start learning about nGraph's set of **Core ops** and how they can 
+  be used with Ops from other frameworks, go to :doc:`ops/index`.
+
+* **Optimization pass writers** will find :doc:`fusion/index` useful, Also 
+  look for our upcoming documentation on :term:`quantization`.
+
+* For details about **PlaidML integration** and other nGraph runtime APIs, 
+  see the section :doc:`programmable/index`.
 
 
-Currently-supported backends and future 
----------------------------------------
+Platforms 
+----------
 
 .. csv-table::
    :header: "Backend", "Current support", "Future nGraph support"
@@ -85,8 +91,8 @@ Supported frameworks
 
 
 .. note:: The Library code is under active development as we're continually 
-   adding support for more kinds of DL models and ops, framework compiler 
-   optimizations, and backends.
+   adding support for more kinds of DL models and ops, compiler optimizations, 
+   and backend optimizations.
 
 
 =======

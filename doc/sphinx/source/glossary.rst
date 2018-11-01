@@ -53,6 +53,13 @@ Glossary
       In the context of a function graph, a "parameter" refers to what
       "stands in" for an argument in an ``op`` definition.
 
+   quantization
+
+      Quantization is one form of low-precision computing, a technique 
+      used to reduce the time and energy needed to perform a computation 
+      by reducing the size of the data transfers and the number of steps 
+      needed to perform the computation. 
+
    result
 
       In the context of a function graph, the term "result" refers to
@@ -103,6 +110,9 @@ Glossary
 
       Tensors are maps from *coordinates* to scalar values, all of the
       same type, called the *element type* of the tensor.
+
+      .. figure:: graphics/descriptor-of-tensor.png
+         :width: 559px
 
    
    Tensorview 

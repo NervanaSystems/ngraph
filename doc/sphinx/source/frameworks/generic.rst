@@ -40,9 +40,10 @@ backends.
    Other, Not yet, Ask
 
 
-Regardless of the framework, after the :doc:`../buildlb`, a good place to start 
-usually involves making the libraries available to the framework. On Linux\* 
-systems, that command tends to looks something like: 
+Regardless of the framework, after the :doc:`../buildlb` step, a good place 
+to start usually involves making the libraries available to the framework. On 
+Linux\* systems built on Intel® Architecture, that command tends to looks 
+something like: 
 
 .. code-block:: console
 
