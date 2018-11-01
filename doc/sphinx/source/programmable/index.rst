@@ -32,7 +32,8 @@ Tensor
    :members:
 
 
- PlaidML
+
+PlaidML
 ========
 
 The nGraph ecosystem has recently added initial (experimental) support for `PlaidML`_,
@@ -44,6 +45,7 @@ training with large data sets.
 .. doxygenclass:: ngraph::runtime::plaidml::PlaidML_Backend
    :project: ngraph
    :members:
+
 
 
 .. _PlaidML: https://github.com/plaidml
