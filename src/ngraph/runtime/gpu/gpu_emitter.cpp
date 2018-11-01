@@ -54,6 +54,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -655,6 +656,11 @@ void runtime::gpu::GPU_Emitter::emit_FunctionCall(EMIT_ARGS)
         writer << function->get_name() << "(input, output, ctx);\n";
     }
     writer.block_end();
+}
+
+void runtime::gpu::GPU_Emitter::emit_GenerateMask(EMIT_ARGS)
+{
+    throw ngraph_error("GenerateMask is not supported yet on NVIDIA GPU");
 }
 
 void runtime::gpu::GPU_Emitter::emit_GetOutputElement(EMIT_ARGS)

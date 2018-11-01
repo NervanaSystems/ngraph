@@ -61,6 +61,7 @@ set (SRC
     op/exp.cpp
     op/floor.cpp
     op/function_call.cpp
+    op/experimental/generate_mask.cpp
     op/get_output_element.cpp
     op/greater.cpp
     op/greater_eq.cpp
@@ -148,6 +149,7 @@ set (SRC
     runtime/aligned_buffer.cpp
     runtime/backend.cpp
     runtime/backend_manager.cpp
+    state/rng_state.cpp
     runtime/host_tensor.cpp
     runtime/tensor.cpp
     serializer.cpp

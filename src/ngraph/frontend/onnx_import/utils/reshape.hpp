@@ -16,8 +16,15 @@
 
 #pragma once
 
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -78,6 +85,61 @@ namespace ngraph
             ///
             /// \return: New node with reversed dimensions.
             std::shared_ptr<ngraph::Node> transpose(const std::shared_ptr<ngraph::Node>& node);
+
+            /// \brief      Remove empty axes from input tensor.
+            ///
+            /// \param[in]  node  The node to be squeezed.
+            /// \param[in]  axes  The vector defining indexes of axes to be removed.
+            ///
+            /// \return     The squeezed node.
+            ///
+            std::shared_ptr<ngraph::Node> squeeze(const std::shared_ptr<ngraph::Node>& node,
+                                                  std::vector<std::size_t> axes = {0});
+
+            /// \brief      Collapse specified axes into single one.
+            ///
+            /// \note       Collapsed axes create a continuous range starting from outermost axis.
+            ///
+            /// \param[in]  node        The node to be reshaped.
+            /// \param[in]  start_axis  The start axis index.
+            /// \param[in]  end_axis    The end axis (inclusive) index.
+            ///
+            /// \return     The node with collapsed specified axes.
+            ///
+            std::shared_ptr<ngraph::Node> collapse(const std::shared_ptr<ngraph::Node>& node,
+                                                   const std::size_t start_axis,
+                                                   const std::size_t end_axis);
+
+            /// \brief      Change shape of input tensor.
+            ///
+            /// \param[in]  node   The node which shape will be changed.
+            /// \param[in]  shape  The new shape for input tensor.
+            ///
+            /// \return     The node representing reshaped input tensor.
+            ///
+            std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
+                                                  const AxisVector& axis_order,
+                                                  const Shape& shape);
+
+            inline std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
+                                                         const Shape& shape)
+            {
+                return reshape(node, get_default_axis_vector(node->get_shape().size()), shape);
+            }
+
+            /// \brief      Expands node tensor shape with empty axes.
+            ///
+            /// \param[in]  node                  The node to be expanded.
+            /// \param[in]  outermost_axes_count  The number of added outermost axes.
+            ///                                   At the front of the shape.
+            /// \param[in]  innermost_axes_count  The number of added innermost axes.
+            ///                                   At the end of the shape.
+            ///
+            /// \return     The node with added empty axes.
+            ///
+            std::shared_ptr<ngraph::Node> add_empty_axes(const std::shared_ptr<ngraph::Node>& node,
+                                                         std::size_t outermost_axes_count = 1,
+                                                         std::size_t innermost_axes_count = 0);
 
         } // namespace  reshape
     }     // namespace onnx_import
