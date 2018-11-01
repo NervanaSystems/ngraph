@@ -47,6 +47,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
@@ -4746,6 +4747,23 @@ namespace ngraph
                     writer << tmp << " = " << emitter(sargs) << ";\n";
                 }
 
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GenerateMask)
+            {
+                auto gm = static_cast<const ngraph::op::GenerateMask*>(node);
+                writer.block_begin();
+                auto index = external_function->add_state(
+                    ngraph::RNGState::create_rng_state(gm->get_seed(), gm->get_probability()));
+                writer << "auto state = static_cast<ngraph::RNGState*>(ctx->states[" << index
+                       << "]);\n";
+                writer << "bool training = static_cast<bool>(" << args[0].get_name() << "[0]);\n";
+                writer << "reference::generate_mask(";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            " << out[0].get_size() << ",\n";
+                writer << "            state, training);\n";
                 writer.block_end();
             }
 

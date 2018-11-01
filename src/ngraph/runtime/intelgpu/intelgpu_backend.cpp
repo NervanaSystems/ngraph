@@ -1504,6 +1504,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         case OP_TYPEID::Quantize:
         case OP_TYPEID::ReduceWindow:
         case OP_TYPEID::ReplaceSlice:
+        case OP_TYPEID::GenerateMask:
         case OP_TYPEID::ReverseSequence:
         case OP_TYPEID::SelectAndScatter:
         case OP_TYPEID::StopGradient:
