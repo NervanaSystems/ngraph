@@ -12,7 +12,7 @@ FAQs, Features, and Overview
 * :ref:`faq`
 * :ref:`features`
 * :ref:`comparison` 
-
+* :ref:`whats_next`
 
 .. _faq:
 
@@ -205,6 +205,7 @@ example, many high-performance kernels built with Intel MKL-DNN can be
     add comparison detail here
 
 
+.. _whats_next:
 
 What's next?
 -------------
