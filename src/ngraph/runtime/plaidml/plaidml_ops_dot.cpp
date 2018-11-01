@@ -20,50 +20,60 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 
-// Dot is a generalized dot product operation -- scalar-tensor,
-// matrix-vector, and matrix multiplication.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Dot>::operator()()
+namespace ngraph
 {
-    check_inputs(2);
-    check_outputs(1);
+    namespace runtime
+    {
+        namespace plaidml
+        {
+            // Dot is a generalized dot product operation -- scalar-tensor,
+            // matrix-vector, and matrix multiplication.
+            template <>
+            void Impl<op::Dot>::operator()()
+            {
+                check_inputs(2);
+                check_outputs(1);
 
-    auto l_dim_limit = op().get_inputs()[0].get_shape().size();
-    auto r_dim_limit = op().get_inputs()[1].get_shape().size();
-    auto reduce_limit = op().get_reduction_axes_count();
-    auto l_dim_mac = l_dim_limit - reduce_limit;
-    auto r_dim_mic = reduce_limit;
+                auto l_dim_limit = op().get_inputs()[0].get_shape().size();
+                auto r_dim_limit = op().get_inputs()[1].get_shape().size();
+                auto reduce_limit = op().get_reduction_axes_count();
+                auto l_dim_mac = l_dim_limit - reduce_limit;
+                auto r_dim_mic = reduce_limit;
 
-    NGRAPH_DEBUG << "l_dim_limit=" << l_dim_limit;
-    NGRAPH_DEBUG << "r_dim_limit=" << r_dim_limit;
-    NGRAPH_DEBUG << "reduce_limit=" << reduce_limit;
-    NGRAPH_DEBUG << "l_dim_mac=" << l_dim_mac;
-    NGRAPH_DEBUG << "r_dim_mic=" << r_dim_mic;
+                NGRAPH_DEBUG << "l_dim_limit=" << l_dim_limit;
+                NGRAPH_DEBUG << "r_dim_limit=" << r_dim_limit;
+                NGRAPH_DEBUG << "reduce_limit=" << reduce_limit;
+                NGRAPH_DEBUG << "l_dim_mac=" << l_dim_mac;
+                NGRAPH_DEBUG << "r_dim_mic=" << r_dim_mic;
 
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "L"}
-                            .add_dims("DL", 1, l_dim_mac + 1)
-                            .add_dims("DC", 1, reduce_limit + 1))
-                   .add(builder::Input{op_input(1), "R"}
-                            .add_dims("DC", 1, reduce_limit + 1)
-                            .add_dims("DR", r_dim_mic + 1, r_dim_limit + 1))
-                   .add(builder::Output{"O"})
-                   .add(builder::BinaryContraction{"+", "*"}
-                            .set(builder::ContractionOutput{"O"}
-                                     .add_indices("dl", 1, l_dim_mac + 1)
-                                     .add_indices("dr", r_dim_mic + 1, r_dim_limit + 1)
-                                     .add_dims("DL", 1, l_dim_mac + 1)
-                                     .add_dims("DR", r_dim_mic + 1, r_dim_limit + 1))
-                            .set_lhs(builder::ContractionInput{"L"}
-                                         .add_indices("dl", 1, l_dim_mac + 1)
-                                         .add_indices("dc", 1, reduce_limit + 1))
-                            .set_rhs(builder::ContractionInput{"R"}
-                                         .add_indices("dc", 1, reduce_limit + 1)
-                                         .add_indices("dr", r_dim_mic + 1, r_dim_limit + 1)))
-                   .finalize());
-}
+                set_output(
+                    start_tile_function()
+                        .add(builder::Input{op_input(0), "L"}
+                                 .add_dims("DL", 1, l_dim_mac + 1)
+                                 .add_dims("DC", 1, reduce_limit + 1))
+                        .add(builder::Input{op_input(1), "R"}
+                                 .add_dims("DC", 1, reduce_limit + 1)
+                                 .add_dims("DR", r_dim_mic + 1, r_dim_limit + 1))
+                        .add(builder::Output{"O"})
+                        .add(builder::BinaryContraction{"+", "*"}
+                                 .set(builder::ContractionOutput{"O"}
+                                          .add_indices("dl", 1, l_dim_mac + 1)
+                                          .add_indices("dr", r_dim_mic + 1, r_dim_limit + 1)
+                                          .add_dims("DL", 1, l_dim_mac + 1)
+                                          .add_dims("DR", r_dim_mic + 1, r_dim_limit + 1))
+                                 .set_lhs(builder::ContractionInput{"L"}
+                                              .add_indices("dl", 1, l_dim_mac + 1)
+                                              .add_indices("dc", 1, reduce_limit + 1))
+                                 .set_rhs(builder::ContractionInput{"R"}
+                                              .add_indices("dc", 1, reduce_limit + 1)
+                                              .add_indices("dr", r_dim_mic + 1, r_dim_limit + 1)))
+                        .finalize());
+            }
 
-namespace
-{
-    ngraph::runtime::plaidml::Impl<ngraph::op::Dot>::Registration register_dot;
+            namespace
+            {
+                Impl<op::Dot>::Registration register_dot;
+            }
+        }
+    }
 }

@@ -43,9 +43,9 @@ public:
     /// \brief Create a new Backend object
     /// \param type The name of a registered backend, such as "CPU" or "GPU".
     ///   To select a subdevice use "GPU:N" where s`N` is the subdevice number.
-    /// \returns shared_ptr to a new Backend or nullptr if the named backend
+    /// \returns unique_ptr to a new Backend or nullptr if the named backend
     ///   does not exist.
-    static std::shared_ptr<Backend> create(const std::string& type);
+    static std::unique_ptr<Backend> create(const std::string& type);
 
     /// \brief Query the list of registered devices
     /// \returns A vector of all registered devices.
