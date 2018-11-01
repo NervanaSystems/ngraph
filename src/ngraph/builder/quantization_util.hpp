@@ -109,13 +109,20 @@ namespace ngraph
             std::shared_ptr<Node>
                 get_quantization_scale(const std::shared_ptr<Node> input_min_range,
                                        const std::shared_ptr<Node> input_max_range,
-                                       const ngraph::element::Type& quantized_type,
+                                       const ngraph::element::Type& quant_type,
                                        bool bump_by_eps = false)
             {
-                // TODO: assert that input_min_range type == input_max_range type
-                // TODO: assert that input_min_range shape == input_max_range shape
                 auto type = input_min_range->get_element_type();
+                if (type != input_max_range->get_element_type())
+                {
+                    throw ngraph_error("get_quantization_scale: min and max must have same type");
+                }
+
                 auto shape = input_min_range->get_shape();
+                if (shape != input_max_range->get_shape())
+                {
+                    throw ngraph_error("get_quantization_scale: min and max must have same shape");
+                }
 
                 auto min_range = input_min_range;
                 auto max_range = input_max_range;
@@ -139,12 +146,10 @@ namespace ngraph
                     max_range = std::make_shared<op::Maximum>(zero, max_range);
                 }
 
-                // TODO: need to calculated quantize_type.max() - quantized_type.min()
-                size_t bitwidth = quantized_type.bitwidth();
-                float range =
-                    static_cast<float>((quantized_type.is_signed() ? std::pow(2, (bitwidth - 1))
-                                                                   : std::pow(2, bitwidth)) -
-                                       1);
+                // TODO: need to calculated quantize_type.max() - quant_type.min()
+                size_t bw = quant_type.bitwidth();
+                float range = static_cast<float>(
+                    (quant_type.is_signed() ? std::pow(2, (bw - 1)) : std::pow(2, bw)) - 1);
 
                 auto target_range = op::Constant::create(type, shape, {range});
 

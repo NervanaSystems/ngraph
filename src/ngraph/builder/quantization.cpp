@@ -18,6 +18,7 @@
 
 #include "ngraph/builder/quantization.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
 #include "quantization_util.hpp"
 
 using namespace std;
@@ -30,59 +31,60 @@ namespace ngraph
         std::shared_ptr<Node> ScaledQuantize(std::shared_ptr<Node> input,
                                              std::shared_ptr<Node> min,
                                              std::shared_ptr<Node> max,
-                                             const ngraph::element::Type& type,
+                                             const ngraph::element::Type& quant_type,
                                              const ngraph::AxisSet& axes,
                                              op::Quantize::RoundMode round_mode)
         {
-            auto offset = op::Constant::create(type, Shape{}, {0});
-            if (input->get_element_type() == element::f32)
-            {
-                auto quantize_scale =
-                    builder::quantization_util::get_quantization_scale(min, max, type, true);
+            auto real_type = input->get_element_type();
 
-                return make_shared<op::Quantize>(
-                    input, quantize_scale, offset, type, axes, round_mode);
-            }
-            else if (input->get_element_type() == element::f64)
+            if (min->get_element_type() != real_type)
             {
-                auto quantize_scale =
-                    builder::quantization_util::get_quantization_scale(min, max, type, true);
+                min = make_shared<op::Convert>(min, real_type);
+            }
 
-                return make_shared<op::Quantize>(
-                    input, quantize_scale, offset, type, axes, round_mode);
-            }
-            else
+            if (max->get_element_type() != real_type)
             {
-                throw ngraph_error("Unsupported quantization element type");
+                max = make_shared<op::Convert>(max, real_type);
             }
+
+            auto shape = min->get_shape();
+            if (shape != max->get_shape())
+            {
+                throw ngraph_error("ScaledQuantize: min and max must have same shape");
+            }
+
+            auto zero = op::Constant::create(quant_type, shape, {0});
+            auto scale =
+                builder::quantization_util::get_quantization_scale(min, max, quant_type, true);
+            return make_shared<op::Quantize>(input, scale, zero, quant_type, axes, round_mode);
         }
 
         std::shared_ptr<Node> ScaledDequantize(std::shared_ptr<Node> input,
                                                std::shared_ptr<Node> min,
                                                std::shared_ptr<Node> max,
-                                               const ngraph::element::Type& type,
+                                               const ngraph::element::Type& real_type,
                                                const ngraph::AxisSet& axes)
         {
-            auto input_et = input->get_element_type();
-            auto offset = op::Constant::create(input_et, Shape{}, {0});
-            if (type == element::f32)
+            if (min->get_element_type() != real_type)
             {
-                auto dequantize_scale =
-                    builder::quantization_util::get_quantization_scale(min, max, input_et);
+                min = make_shared<op::Convert>(min, real_type);
+            }
 
-                return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);
-            }
-            else if (type == element::f64)
+            if (max->get_element_type() != real_type)
             {
-                auto dequantize_scale =
-                    builder::quantization_util::get_quantization_scale(min, max, input_et);
+                max = make_shared<op::Convert>(max, real_type);
+            }
 
-                return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);
-            }
-            else
+            auto shape = min->get_shape();
+            if (shape != max->get_shape())
             {
-                throw ngraph_error("Unsupported dequantization element type");
+                throw ngraph_error("ScaledDequantize: min and max must have same shape");
             }
+
+            auto quant_type = input->get_element_type();
+            auto zero = op::Constant::create(quant_type, shape, {0});
+            auto scale = builder::quantization_util::get_quantization_scale(min, max, quant_type);
+            return make_shared<op::Dequantize>(input, scale, zero, real_type, axes);
         }
 
         std::shared_ptr<Node> ScaledQuantizedAvgPool(const std::shared_ptr<Node>& arg,
