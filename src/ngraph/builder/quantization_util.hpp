@@ -32,9 +32,11 @@
 #include <vector>
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/maximum.hpp"
+#include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/util.hpp"
 
@@ -104,86 +106,53 @@ namespace ngraph
                 return op::Constant::create(element::f32, Shape{1}, {scale});
             }
 
-            template <typename T>
             std::shared_ptr<Node>
-                get_quantization_scale_const(const std::shared_ptr<Node> min_input,
-                                             const std::shared_ptr<Node> max_input,
-                                             const ngraph::element::Type& quantized_type,
-                                             const ngraph::element::Type& scale_type,
-                                             bool bump_by_eps = false)
-            {
-                auto min_input_const_op =
-                    std::dynamic_pointer_cast<ngraph::op::Constant>(min_input);
-                auto max_input_const_op =
-                    std::dynamic_pointer_cast<ngraph::op::Constant>(max_input);
-
-                if (min_input_const_op == nullptr)
-                {
-                    throw ngraph_error("min input must be constant");
-                }
-                else if (max_input_const_op == nullptr)
-                {
-                    throw ngraph_error("max input must be constant");
-                }
-
-                auto input_min_range = min_input_const_op->get_vector<T>();
-                auto input_max_range = max_input_const_op->get_vector<T>();
-
-                T min_range = std::numeric_limits<T>::min();
-                T max_range = std::numeric_limits<T>::max();
-                if (bump_by_eps)
-                {
-                    // If input_min_range and input_max_range are close,
-                    // introduce a slightly larger delta between them.
-                    min_range = std::min(static_cast<T>(0.0f), input_min_range[0]);
-                    const T epsilon = std::max(static_cast<T>(1.0f),
-                                               static_cast<T>(std::max(fabs(input_min_range[0]),
-                                                                       fabs(input_max_range[0])))) /
-                                      static_cast<T>(100.0f);
-                    max_range = std::max(input_max_range[0], min_range + epsilon);
-                    max_range = std::max(static_cast<T>(0.0f), max_range);
-                    // end code copied and pasted from
-                    // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantize_op.cc
-                }
-                else
-                {
-                    min_range = input_min_range[0];
-                    max_range = input_max_range[0];
-                }
-
-                const T max_abs = std::max(std::abs(min_range), std::abs(max_range));
-                const T bitwidth = quantized_type.bitwidth();
-                const T target_range =
-                    static_cast<T>((quantized_type.is_signed() ? std::pow(2, (bitwidth - 1))
-                                                               : std::pow(2, bitwidth)) -
-                                   1);
-                const T scale_factor = max_abs / target_range;
-                return op::Constant::create(scale_type, Shape{}, {scale_factor});
-            }
-
-            std::shared_ptr<Node>
-                get_quantization_scale(const std::shared_ptr<Node> min_input,
-                                       const std::shared_ptr<Node> max_input,
+                get_quantization_scale(const std::shared_ptr<Node> input_min_range,
+                                       const std::shared_ptr<Node> input_max_range,
                                        const ngraph::element::Type& quantized_type,
-                                       const ngraph::element::Type& scale_type,
                                        bool bump_by_eps = false)
             {
-                auto abs_min_input = std::make_shared<op::Abs>(min_input);
-                auto abs_max_input = std::make_shared<op::Abs>(max_input);
-                auto max_abs = std::make_shared<op::Maximum>(abs_min_input, abs_max_input);
-                // TODO: convert to scale_type?
-                // TODO: handle epsilon bump out
-                // TODO: need to calculated quantize_type.max() - quantized_type.min()
+                // TODO: assert that input_min_range type == input_max_range type
+                // TODO: assert that input_min_range shape == input_max_range shape
+                auto type = input_min_range->get_element_type();
+                auto shape = input_min_range->get_shape();
 
+                auto min_range = input_min_range;
+                auto max_range = input_max_range;
+
+                if (bump_by_eps) // TODO: always true?
+                {
+                    auto zero = op::Constant::create(type, shape, {0});
+                    min_range = std::make_shared<op::Minimum>(zero, input_min_range);
+
+                    auto abs_input_min_range = std::make_shared<op::Abs>(input_min_range);
+                    auto abs_input_max_range = std::make_shared<op::Abs>(input_max_range);
+                    auto max_abs_input_range =
+                        std::make_shared<op::Maximum>(abs_input_min_range, abs_input_max_range);
+
+                    auto one = op::Constant::create(type, shape, {1});
+                    auto hundred = op::Constant::create(type, shape, {100});
+                    auto epsilon =
+                        std::make_shared<op::Maximum>(one, max_abs_input_range) / hundred;
+
+                    max_range = std::make_shared<op::Maximum>(input_max_range, min_range + epsilon);
+                    max_range = std::make_shared<op::Maximum>(zero, max_range);
+                }
+
+                // TODO: need to calculated quantize_type.max() - quantized_type.min()
                 size_t bitwidth = quantized_type.bitwidth();
                 float range =
                     static_cast<float>((quantized_type.is_signed() ? std::pow(2, (bitwidth - 1))
                                                                    : std::pow(2, bitwidth)) -
                                        1);
 
-                auto target_range = op::Constant::create(scale_type, Shape{}, {range});
+                auto target_range = op::Constant::create(type, shape, {range});
 
-                return max_abs / target_range;
+                auto abs_min_range = std::make_shared<op::Abs>(min_range);
+                auto abs_max_range = std::make_shared<op::Abs>(max_range);
+                auto max_abs_range = std::make_shared<op::Maximum>(abs_min_range, abs_max_range);
+
+                return max_abs_range / target_range;
             }
         }
     }

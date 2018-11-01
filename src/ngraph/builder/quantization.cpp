@@ -37,16 +37,16 @@ namespace ngraph
             auto offset = op::Constant::create(type, Shape{}, {0});
             if (input->get_element_type() == element::f32)
             {
-                auto quantize_scale = builder::quantization_util::get_quantization_scale(
-                    min, max, type, input->get_element_type(), true);
+                auto quantize_scale =
+                    builder::quantization_util::get_quantization_scale(min, max, type, true);
 
                 return make_shared<op::Quantize>(
                     input, quantize_scale, offset, type, axes, round_mode);
             }
             else if (input->get_element_type() == element::f64)
             {
-                auto quantize_scale = builder::quantization_util::get_quantization_scale(
-                    min, max, type, input->get_element_type(), true);
+                auto quantize_scale =
+                    builder::quantization_util::get_quantization_scale(min, max, type, true);
 
                 return make_shared<op::Quantize>(
                     input, quantize_scale, offset, type, axes, round_mode);
@@ -68,14 +68,14 @@ namespace ngraph
             if (type == element::f32)
             {
                 auto dequantize_scale =
-                    builder::quantization_util::get_quantization_scale(min, max, input_et, type);
+                    builder::quantization_util::get_quantization_scale(min, max, input_et);
 
                 return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);
             }
             else if (type == element::f64)
             {
                 auto dequantize_scale =
-                    builder::quantization_util::get_quantization_scale(min, max, input_et, type);
+                    builder::quantization_util::get_quantization_scale(min, max, input_et);
 
                 return make_shared<op::Dequantize>(input, dequantize_scale, offset, type, axes);
             }
