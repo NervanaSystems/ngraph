@@ -49,35 +49,4 @@ public:
     bool call(std::shared_ptr<Function> function,
               const std::vector<std::shared_ptr<Tensor>>& outputs,
               const std::vector<std::shared_ptr<Tensor>>& intputs) override;
-
-    void set_nan_check(std::shared_ptr<Function> func, bool);
-
-    void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
-    std::vector<PerformanceCounter>
-        get_performance_data(std::shared_ptr<Function> func) const override;
-
-private:
-    class FunctionInstance
-    {
-    public:
-        bool m_is_compiled = false;
-    };
-    std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
-
-    static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
-                                  const Node* op = nullptr);
-
-    void generate_calls(const element::Type& type,
-                        const Node& op,
-                        const std::vector<std::shared_ptr<HostTensor>>& outputs,
-                        const std::vector<std::shared_ptr<HostTensor>>& inputs,
-                        FunctionInstance& instance);
-
-    template <typename T>
-    void op_engine(const Node& node_wrapper,
-                   const std::vector<std::shared_ptr<HostTensor>>& out,
-                   const std::vector<std::shared_ptr<HostTensor>>& args,
-                   FunctionInstance& instance)
-    {
-    }
 };

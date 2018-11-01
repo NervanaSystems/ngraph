@@ -100,10 +100,6 @@ if (NGRAPH_PLAIDML_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
 endif()
 
-if (NGRAPH_NULL_BACKEND_ENABLE)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} NOP)
-endif()
-
 add_subdirectory(models)
 add_subdirectory(files)
 add_subdirectory(util)
