@@ -608,7 +608,6 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         }
         NGRAPH_DEBUG << "End of recurrent fusion call back "
                      << "matched_node: " << m.get_match_root()->get_name();
-        std::cout << "Seq length " << sequence_len << std::endl;
         return true;
 
     };
