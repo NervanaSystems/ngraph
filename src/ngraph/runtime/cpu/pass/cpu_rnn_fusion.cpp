@@ -425,12 +425,13 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         // if we have have not found all the LSTM cells belonging to a layer
         // will return safely
-        /*std::shared_ptr<Node> src_iter_arg = src_iter->get_arguments()[0];
+        std::shared_ptr<Node> src_iter_arg = src_iter->get_arguments()[0];
         if (!(std::dynamic_pointer_cast<op::Broadcast>(src_iter_arg) &&
               std::dynamic_pointer_cast<op::Constant>(src_iter_arg->get_argument(0))))
         {
             return false;
-        }*/
+        }
+
         if ((src_layer->get_shape()[0] / batch_size) != sequence_len &&
             !std::dynamic_pointer_cast<op::Parameter>(src_layer))
         {
