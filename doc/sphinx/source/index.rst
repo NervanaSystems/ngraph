@@ -33,6 +33,8 @@ explanation on the feature set of nGraph Compiler, as well as a high-level
 overview can be found on our project :doc:`project/about`. 
 
 
+.. _quickstart:
+
 Quick Start
 ===========
 

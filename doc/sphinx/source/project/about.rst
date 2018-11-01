@@ -1,30 +1,113 @@
 .. about: 
 
 
-#########
-Overview
-#########
+############################
+FAQs, Features, and Overview
+############################
 
 .. figure:: ../graphics/599px-Intel-ngraph-ecosystem.png
    :width: 599px
    :alt: nGraph ecosystem overview
 
-
-* :ref:`features`
 * :ref:`faq`
+* :ref:`features`
 * :ref:`comparison` 
+
+
+.. _faq:
+
+FAQs
+=====
+
+How does it work?
+------------------
+
+The :doc:`nGraph Core <../ops/index>` uses a **strongly-typed** and 
+**platform-neutral** :abbr:`Intermediary Representation (IR)` to construct a 
+"stateless" graph. Each node, or *op*, in the graph corresponds to one 
+:term:`step` in a computation, where each step produces zero or more tensor 
+outputs from zero or more tensor inputs. 
+
+
+How do I connect a framework? 
+-----------------------------
+
+The nGraph Library manages framework bridges for some of the more widely-known 
+frameworks. A bridge acts as an intermediary between the nGraph core and the 
+framework, and the result is a function that can be compiled from a framework. 
+A fully-compiled function that makes use of bridge code thus becomes a "function
+graph", or what we sometimes call an **nGraph graph**.  
+
+.. note:: Low-level nGraph APIs are not accessible *dynamically* via bridge code;
+   this is the nature of stateless graphs. However, do note that a graph with a 
+   "saved" checkpoint can be "continued" to run from a previously-applied 
+   checkpoint, or it can loaded as static graph for further inspection.
+
+For a more detailed dive into how custom bridge code can be implemented, see our 
+documentation on how to :doc:`../howto/execute`. To learn how TensorFlow and 
+MXNet currently make use of custom bridge code, see the section on 
+:doc:`../framework-integration-guides`.
+
+.. figure:: ../graphics/bridge-to-graph-compiler.png
+    :width: 733px
+    :alt: Compiling a computation
+
+    JiT Compiling for computation
+
+Given that we have no way to predict how many other frameworks designed around 
+model, workload, or framework-specific purposes there may be, it would be  
+impossible for us to create bridges for every framework that currently exists 
+(or that will exist in the future). Thus, we provide documentation to help 
+developers and engineers work with a lower-level API that can be used to load 
+the function graph, to run Interpreter mode to help in writing "bridge code" for 
+new or novel frameworks or algorithms. 
+
+.. csv-table::
+   :header: "Framework", "Bridge Available?", "ONNX Support?"
+   :widths: 27, 10, 10
+
+   TensorFlow, Yes, Yes
+   MXNet, Yes, Yes
+   PaddlePaddle, Coming Soon, Yes
+   PyTorch, No, Yes
+   CNTK, No, Yes
+   Other, Write your own, Custom
+
+
+How do I run an inference model?
+--------------------------------
+
+Framework bridge code is *not* the only way to connect a model (function graph) 
+to nGraph's :doc:`../ops/index`. We've also built an importer for models that 
+have been exported from a framework and saved as serialized file, such as ONNX. 
+To learn how to convert such serialized files to an nGraph model, please see 
+the :doc:`../howto/import` documentation.  
+
+.. _no-lockin:
+
+Develop without lock-in
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Being able to increase training performance or reduce inference latency by 
+simply adding another device of *any* form factor -- more compute (CPU), GPU or 
+VPU processing power, custom ASIC or FPGA, or a yet-to-be invented generation of 
+NNP or accelerator -- is a key benefit for framework developers building with 
+nGraph. Our commitment to bake flexibility into our ecosystem ensures developers' 
+freedom to design user-facing APIs for various hardware deployments directly 
+into their frameworks. 
+
+.. figure:: ../graphics/develop-without-lockin.png
+
+
+The value we're offering to the developer community is empowerment: we are 
+confident that Intel® Architecture already provides the best computational 
+resources available for the breadth of ML/DL tasks. 
 
 
 .. _features:
 
 Features
 ========
-
-nGraph empowers algorithm designers, data scientists, framework 
-architects, software engineers, and others with the means to make work 
-:ref:`portable`, :ref:`adaptable`, and :ref:`deployable` across the 
-most modern :abbr:`Machine Learning (ML)` hardware available today: 
-optimized Deep Learning computation devices.
 
 The nGraph IR contains a combination of device-specific and non device-specific 
 optimization and compilation paths, enabling such things as:
@@ -50,11 +133,7 @@ optimization and compilation paths, enabling such things as:
 Portable
 --------
 
-One of nGraph's key features is **framework neutrality**. Once a framework's 
-
-
-
-While we currently 
+One of nGraph's key features is **framework neutrality**. While we currently 
 support :doc:`three popular <../framework-integration-guides>` frameworks with 
 pre-optimized deployment runtimes for training :abbr:`Deep Neural Network (DNN)`, 
 models, you are not limited to these when choosing among frontends. Architects 
@@ -66,6 +145,7 @@ necessary to bring large datasets to the model for training; you can take your
 model -- in whole, or in part -- to where the data lives and save potentially 
 significant or quantifiable machine resources.  
 
+
 .. _adaptable: 
 
 Adaptable
@@ -76,6 +156,7 @@ a "trained" :abbr:`DNN (Deep Neural Network)` model can use nGraph to bypass
 significant framework-based complexity and :doc:`import it <../howto/import>` 
 to test or run on targeted and efficient backends with our user-friendly 
 Python-based API. See the `ngraph onnx companion tool`_ to get started. 
+
 
 .. _deployable:
 
@@ -101,121 +182,27 @@ With nGraph, any modern CPU can be used to design, write, test, and deploy
 a training or inference model. You can then adapt and update that same core 
 model to run on a variety of backends  
 
-
-.. _faq:
-
-FAQs
-=====
-
-How does it work?
-------------------
-
-The :doc:`nGraph Core <../ops/index>` uses a **strongly-typed** and 
-**platform-neutral** intermediary representation to construct a "stateless" 
-graph. Each node, or *op*, in the graph corresponds to one :term:`step` in a 
-computation, where each step produces zero or more tensor outputs from zero or 
-more tensor inputs. 
-
-Additionally, nGraph IR enables adaptability across platforms and opens up 
-opportunities to design or work with 
-
-
-How do I connect a framework? 
------------------------------
-
-Currently, we offer *framework bridges* for some of the more widely-known 
-frameworks. The bridge acts as an intermediary between the *nGraph core* and the 
-framework. The result is a function that can be compiled from a framework.  
-
-.. note:: Low-level nGraph APIs are not accessible dynamically via bridge code;
-   this is the nature of stateless graphs.  However, a graph that has been 
-   "saved" checkpoint can be "continued" to run from a previously-applied 
-   checkpoint, or it can loaded as static graph for further inspection.  
-
-For a more detailed dive into how custom bridge code may be used, read our 
-documentation on how to :doc:`../howto/execute`.  To learn how TensorFlow and 
-MXNet currently make use of custom bridge code, see the section on 
-:doc:`../framework-integration-guides`.
-
-.. figure:: ../graphics/bridge-to-graph-compiler.png
-    :width: 733px
-    :alt: Compiling a computation
-
-    Compiling for computation
-
-Given that we have no way to predict how many other frameworks designed around 
-model, workload, or framework-specific purposes there may be, it would be nearly 
-impossible for us to create bridges for every framework that currently exists 
-(or that will exist in the future). Thus, the Library provides documentation
-to help developers work with a lower-level API that can be  used to load a graph 
-or to run Interpreter mode to help in writing "bridge code" for new or novel 
-frameworks or algorithms, or to work with . 
-
-.. csv-table::
-   :header: "Framework", "Bridge Available?", "ONNX Support?"
-   :widths: 27, 10, 10
-
-   TensorFlow, Yes, Yes
-   MXNet, Yes, Yes
-   PaddlePaddle, Coming Soon, Yes
-   PyTorch, No, Yes
-   CNTK, No, Yes
-   Other, Write your own, Custom
-
-
-How do I connect a DL training or inference model to nGraph?
--------------------------------------------------------------
-
-Framework bridge code is *not* the only way to connect a model (function graph) 
-to nGraph's :doc:`../ops/index`. We've also built an importer for models that 
-have been exported from a framework and saved as serialized file, such as ONNX. 
-To learn how to convert such serialized files to an nGraph model, please see 
-the :doc:`../howto/import` documentation.  
-
-
-
-
-
-
-
-
-
-.. _no-lockin:
-
-Develop without lock-in
-~~~~~~~~~~~~~~~~~~~~~~~
-
-Being able to increase training performance or reduce inference latency by simply 
-adding another device of *any* specialized form factor -- whether it be more compute 
-(CPU), GPU or VPU processing power, custom ASIC or FPGA, or a yet-to-be invented 
-generation of NNP or accelerator -- is a key benefit for framework developers 
-working with nGraph. Our commitment to bake flexibility into our ecosystem ensures 
-developers' freedom to design user-facing APIs for various hardware deployments 
-directly into their frameworks. 
-
-
-.. note:: The library code is under active development as we're continually 
-   adding support for more kinds of DL models and ops, framework compiler 
-   optimizations, and backends. 
-
-
-The value we're offering to the developer community is empowerment: we 
-are confident that Intel® Architecture already provides the best 
-computational resources available for the breadth of ML/DL tasks. 
-
-
 .. _comparison: 
 
-Other Integration Paths  
-=======================
+Comparisons  
+===========
 
 Additional and specialized work is being done cross-industry. With nGraph, 
-work done with other similar efforts can be ported fairly easily 
+work done with other similar efforts can be ported and tested natively. For 
+example, many high-performance kernels built with Intel MKL-DNN can be 
 
-* PlaidML, 
-* TVM, 
-* Glow/Tensor Comprehensions, 
-* XLA  
+* The latest **PlaidML Backend** adds an extra layer of utility to an 
+  existing GPU-specific model by enabling many features available only 
+  with a connected CPU backend; nGraph brings 
+
+..  TVM 
+    add comparison detail here
+
+.. Glow/Tensor Comprehensions 
+    add comparison detail here
+   
+.. XLA  
+   add comparison detail here
 
 
 
