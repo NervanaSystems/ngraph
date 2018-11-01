@@ -44,6 +44,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -731,6 +732,17 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::FunctionCall>(f_ptr, args);
                 break;
             }
+            case OP_TYPEID::GenerateMask:
+            {
+                auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
+                auto type = read_element_type(node_js.at("type"));
+                auto seed = node_js.at("seed").get<unsigned int>();
+                auto probability = node_js.at("probability").get<double>();
+
+                node =
+                    make_shared<op::GenerateMask>(args[0], output_shape, type, seed, probability);
+                break;
+            }
             case OP_TYPEID::GetOutputElement:
             {
                 node = make_shared<op::GetOutputElement>(args[0], node_js.at("n").get<size_t>());
@@ -1363,6 +1375,15 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::GetOutputElement*>(&n);
         node["n"] = tmp->get_n();
+        break;
+    }
+    case OP_TYPEID::GenerateMask:
+    {
+        auto tmp = dynamic_cast<const op::GenerateMask*>(&n);
+        node["output_shape"] = tmp->get_shape();
+        node["type"] = write_element_type(tmp->get_element_type());
+        node["seed"] = tmp->get_seed();
+        node["probability"] = tmp->get_probability();
         break;
     }
     case OP_TYPEID::Greater: { break;
