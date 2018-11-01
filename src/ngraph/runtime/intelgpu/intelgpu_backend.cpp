@@ -441,10 +441,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             function_output_names.push_back(get_input_name(op));
             break;
         }
-        case OP_TYPEID::GenerateMask:
-        {
-            throw ngraph_error("GenerateMask isn't yet supported on integrated GPU");
-        }
         case OP_TYPEID::GetOutputElement:
         {
             if (op->get_inputs().empty() || op->get_outputs().size() != 1)
@@ -1517,6 +1513,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         case OP_TYPEID::Quantize:
         case OP_TYPEID::ReduceWindow:
         case OP_TYPEID::ReplaceSlice:
+        case OP_TYPEID::GenerateMask:
         case OP_TYPEID::ReverseSequence:
         case OP_TYPEID::SelectAndScatter:
         case OP_TYPEID::StopGradient:
