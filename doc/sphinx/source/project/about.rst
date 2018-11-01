@@ -5,14 +5,49 @@
 FAQs, Features, and Overview
 ############################
 
-.. figure:: ../graphics/599px-Intel-ngraph-ecosystem.png
-   :width: 599px
-   :alt: nGraph ecosystem overview
-
+* :ref:`comparisons`
 * :ref:`faq`
 * :ref:`features`
-* :ref:`comparison` 
 * :ref:`whats_next`
+
+
+.. _comparisons: 
+
+Comparisons  
+===========
+
+How does nGraph compare to similar efforts in the industry?
+------------------------------------------------------------
+
+Additional and specialized work is being done cross-industry. With nGraph, 
+work done for other similar efforts can be ported and tested natively. For 
+example, many high-performance kernels built with Intel MKL-DNN can be 
+run with nGraph providing another layer for creating specialized sub-graphs
+that themselves can be further optimized when specialized hardware is 
+available.  
+
+.. TODO:  Add link to subgraph_snippets docs when PR  
+
+.. important:: Our design philosophy is that the graph is not a script for 
+   running kernels; rather, our compilation will match ``ops`` to appropriate 
+   kernels for available backends. Thus, we expect that adding of new Core 
+   ops should be infrequent and that most functionality instead gets added 
+   with new functions that build sub-graphs from existing core ops.
+
+
+* The latest **PlaidML Backend** adds an extra layer of utility to an 
+  existing GPU-specific model by enabling many features available only 
+  when the model has access to a connected CPU backend.  
+
+.. TVM 
+    add comparison detail here
+
+.. Glow/Tensor Comprehensions 
+    add comparison detail here
+   
+.. XLA  
+    add comparison detail here
+
 
 .. _faq:
 
@@ -181,28 +216,6 @@ mobile you want that model to be within the rapidly-changing ecosystem.
 With nGraph, any modern CPU can be used to design, write, test, and deploy 
 a training or inference model. You can then adapt and update that same core 
 model to run on a variety of backends  
-
-.. _comparison: 
-
-Comparisons  
-===========
-
-Additional and specialized work is being done cross-industry. With nGraph, 
-work done with other similar efforts can be ported and tested natively. For 
-example, many high-performance kernels built with Intel MKL-DNN can be 
-
-* The latest **PlaidML Backend** adds an extra layer of utility to an 
-  existing GPU-specific model by enabling many features available only 
-  when the model has access to a connected CPU backend.  
-
-.. TVM 
-    add comparison detail here
-
-.. Glow/Tensor Comprehensions 
-    add comparison detail here
-   
-.. XLA  
-    add comparison detail here
 
 
 .. _whats_next:
