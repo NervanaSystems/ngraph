@@ -432,6 +432,10 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             function_output_names.push_back(get_input_name(op));
             break;
         }
+        case OP_TYPEID::GenerateMask:
+        {
+            throw ngraph_error("GenerateMask isn't yet supported on integrated GPU");
+        }
         case OP_TYPEID::GetOutputElement:
         {
             if (op->get_inputs().empty() || op->get_outputs().size() != 1)
