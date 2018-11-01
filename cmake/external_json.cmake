@@ -24,32 +24,18 @@ include(ExternalProject)
 SET(JSON_GIT_REPO_URL https://github.com/nlohmann/json)
 SET(JSON_GIT_LABEL v3.4.0)
 
-# The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
-if (${CMAKE_VERSION} VERSION_LESS 3.2)
-    ExternalProject_Add(
-        ext_json
-        PREFIX json
-        GIT_REPOSITORY ${JSON_GIT_REPO_URL}
-        GIT_TAG ${JSON_GIT_LABEL}
-        # Disable install step
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        UPDATE_COMMAND ""
-        EXCLUDE_FROM_ALL TRUE
-        )
-else()
-    ExternalProject_Add(
-        ext_json
-        PREFIX json
-        GIT_REPOSITORY ${JSON_GIT_REPO_URL}
-        GIT_TAG ${JSON_GIT_LABEL}
-        # Disable install step
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        UPDATE_COMMAND ""
-        EXCLUDE_FROM_ALL TRUE
+ExternalProject_Add(
+    ext_json
+    PREFIX json
+    GIT_REPOSITORY ${JSON_GIT_REPO_URL}
+    GIT_TAG ${JSON_GIT_LABEL}
+    # Disable install step
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    UPDATE_COMMAND ""
+    EXCLUDE_FROM_ALL TRUE
     )
-endif()
 
 #------------------------------------------------------------------------------
 
