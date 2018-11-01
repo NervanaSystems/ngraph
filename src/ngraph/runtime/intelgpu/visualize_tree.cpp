@@ -123,10 +123,17 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         break;
     }
     case OP_TYPEID::BatchNormInference:
+    {
+        const shared_ptr<op::BatchNormInference> batch_norm =
+            static_pointer_cast<op::BatchNormInference>(node);
+
+        writer << print_table_row_value("EPS", batch_norm->get_eps_value());
+        break;
+    }
     case OP_TYPEID::BatchNormTraining:
     {
-        const shared_ptr<op::BatchNormBase> batch_norm =
-            static_pointer_cast<op::BatchNormBase>(node);
+        const shared_ptr<op::BatchNormTraining> batch_norm =
+            static_pointer_cast<op::BatchNormTraining>(node);
 
         writer << print_table_row_value("EPS", batch_norm->get_eps_value());
         break;
