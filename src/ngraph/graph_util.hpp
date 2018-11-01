@@ -289,6 +289,10 @@ namespace ngraph
         insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
                                       const std::shared_ptr<Node>& dst_node);
 
+    std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
+        insert_result_parameter_split_size(const std::shared_ptr<Node>& src_node,
+                                           const std::shared_ptr<Node>& dst_node);
+
     void insert_new_node_between(const std::shared_ptr<Node>& src_node,
                                  const std::shared_ptr<Node>& dst_node,
                                  const std::shared_ptr<Node>& new_node);

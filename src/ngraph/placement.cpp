@@ -370,7 +370,7 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
             {
                 // Split src_node and dst_node
                 pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>> res_par_pair =
-                    insert_result_parameter_split(src_node, dst_node);
+                    insert_result_parameter_split_size(src_node, dst_node);
                 shared_ptr<op::Result> res_node = res_par_pair.first;
                 shared_ptr<op::Parameter> par_node = res_par_pair.second;
                 map_parameter_to_result[par_node] = res_node;

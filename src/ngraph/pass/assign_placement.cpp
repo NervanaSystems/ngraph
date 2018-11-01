@@ -37,17 +37,15 @@ bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
 {
     if (!m_placement_backends.empty())
     {
-        NGRAPH_INFO << "placement based on backend";
         size_t backend_indx = 0;
         for (auto backend : m_placement_backends)
         {
-            backend_indx+=1;
+            backend_indx += 1;
             if (backend->is_supported(node))
             {
-                NGRAPH_INFO << node->description() << " placement on backend-" << backend_indx;
                 node->set_placement(backend_indx);
-                
-                return true;
+
+                return false;
             }
         }
     }
@@ -56,6 +54,5 @@ bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
         node->set_placement(m_placement_policy(node));
         return false;
     }
-    NGRAPH_INFO << node->description() << " placement not assigned ";
     return false;
 }

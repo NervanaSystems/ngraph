@@ -110,9 +110,7 @@ bool TestBackend::call(shared_ptr<Function> func,
     {
         // Init backend
         size_t placement = get_colocated_function_placement_size(sub_function);
-        auto backend =
-            m_backend_list[(placement - 1)]; // (placement-1) as 0 is default placement
-        
+        auto backend = m_backend_list[(placement - 1)]; // (placement-1) as 0 is default placement
 
         // Prepare parameter TensorViews
         vector<shared_ptr<runtime::Tensor>> parameter_tvs;
@@ -127,7 +125,7 @@ bool TestBackend::call(shared_ptr<Function> func,
                 auto result_node = instance.m_map_parameter_to_result.at(parameter_node);
                 auto result_tv = map_node_to_tensor_view.at(result_node);
                 auto parameter_tv = backend->create_tensor(parameter_node->get_element_type(),
-                                                            parameter_node->get_shape());
+                                                           parameter_node->get_shape());
                 copy_data(parameter_tv, read_vector<float>(result_tv));
                 map_node_to_tensor_view[parameter_node] = parameter_tv;
                 parameter_tvs.push_back(parameter_tv);

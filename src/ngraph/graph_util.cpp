@@ -355,6 +355,33 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     return make_pair(res_node, par_node);
 }
 
+pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
+    ngraph::insert_result_parameter_split_size(const shared_ptr<Node>& src_node,
+                                               const shared_ptr<Node>& dst_node)
+{
+    if (src_node->get_output_size() != 1)
+    {
+        throw ngraph_error("Multiple output per op not supported in graph partition yet.");
+    }
+
+    // Make parameter node
+    shared_ptr<op::Parameter> par_node = make_shared<op::Parameter>(
+        src_node->get_output_element_type(0), src_node->get_output_shape(0));
+    par_node->set_placement(dst_node->get_placement_size());
+
+    // Fix input / output among src, dst and par
+    descriptor::Input* dst_input = dst_node->get_input_from(src_node);
+    descriptor::Output* src_output = src_node->get_output_to(dst_node);
+    src_output->remove_input(dst_input);    // Remove [0]
+    dst_input->replace_output(par_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
+
+    // Add res node
+    shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
+    res_node->set_placement(src_node->get_placement_size());
+
+    return make_pair(res_node, par_node);
+}
+
 // Insert unary node between two nodes like S->D => S->N->D
 // Before:                        |  After:
 // +-----+---+       +---+-----+  |  +-----+---+       +---+-----+---+       +---+-----+
@@ -435,10 +462,9 @@ size_t ngraph::get_colocated_function_placement_size(shared_ptr<Function> func)
     size_t function_placement = 0;
     traverse_nodes(func, [&](shared_ptr<Node> node) {
         size_t node_placement = node->get_placement_size();
+
         if (node_placement == 0)
         {
-            NGRAPH_INFO << node->description() << "get_colocated_function_placement_size with zero "; 
-
             throw ngraph_error("Node should have a device placement, not Placement::DEFAULT");
         }
         if (function_placement == 0)
