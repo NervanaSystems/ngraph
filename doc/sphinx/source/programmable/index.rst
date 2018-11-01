@@ -53,7 +53,4 @@ training with large data sets.
 
 
 
-
-
-
 .. _PlaidML: https://github.com/plaidml
