@@ -193,16 +193,16 @@ example, many high-performance kernels built with Intel MKL-DNN can be
 
 * The latest **PlaidML Backend** adds an extra layer of utility to an 
   existing GPU-specific model by enabling many features available only 
-  with a connected CPU backend; nGraph brings 
+  when the model has access to a connected CPU backend.  
 
-..  TVM 
+.. TVM 
     add comparison detail here
 
 .. Glow/Tensor Comprehensions 
     add comparison detail here
    
 .. XLA  
-   add comparison detail here
+    add comparison detail here
 
 
 
