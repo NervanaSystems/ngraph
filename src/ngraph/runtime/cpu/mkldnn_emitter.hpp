@@ -228,7 +228,8 @@ namespace ngraph
                     else if (std::is_same<OP, ngraph::op::QuantizedConvolution>())
                     {
                         auto qc = dynamic_cast<const ngraph::op::QuantizedConvolution*>(node);
-                        auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(qc->get_arguments()[2]);
+                        auto scale_const_op =
+                            std::dynamic_pointer_cast<ngraph::op::Constant>(qc->get_arguments()[2]);
                         if (scale_const_op == nullptr)
                         {
                             throw ngraph_error("QuantizedConvolution scale must be a Constant");
@@ -250,7 +251,8 @@ namespace ngraph
                     else if (std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
                     {
                         auto qcr = dynamic_cast<const ngraph::op::QuantizedConvolutionRelu*>(node);
-                        auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(qcr->get_arguments()[2]);
+                        auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                            qcr->get_arguments()[2]);
                         if (scale_const_op == nullptr)
                         {
                             throw ngraph_error("QuantizedConvolutionRelu scale must be a Constant");
@@ -272,7 +274,8 @@ namespace ngraph
                     else if (std::is_same<OP, ngraph::op::QuantizedConvolutionBias>())
                     {
                         auto qcb = dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node);
-                        auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(qcb->get_arguments()[3]);
+                        auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                            qcb->get_arguments()[3]);
                         if (scale_const_op == nullptr)
                         {
                             throw ngraph_error("QuantizedConvolutionBias scale must be a Constant");
