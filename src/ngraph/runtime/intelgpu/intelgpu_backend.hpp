@@ -82,5 +82,6 @@ private:
 
     bool m_profile_enable = false;
     long m_profile_lines_limit_count = 10;
+    bool m_dump_graph_enable = false;
     std::string delim = std::string(":");
 };

@@ -23,14 +23,7 @@
 #include <typeinfo>
 #include <unordered_map>
 
-// Kill clang diagnostics bug
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wreserved-id-macro"
-
-#undef __TBB_PREVIEW_LIGHTWEIGHT_POLICY
-#define __TBB_PREVIEW_LIGHTWEIGHT_POLICY 1
-
-#pragma clang diagnostic pop
+#define TBB_PREVIEW_FLOW_GRAPH_TRACE 1
 
 #include <tbb/flow_graph.h>
 
@@ -425,8 +418,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
                 "CPU Backend: Tracing and performance breakdowns might not be accurate with TBB "
                 "enabled due to concurrent graph execution");
         }
-        writer << "#undef __TBB_PREVIEW_LIGHTWEIGHT_POLICY \n";
-        writer << "#define __TBB_PREVIEW_LIGHTWEIGHT_POLICY 1\n";
         writer << "#include <tbb/flow_graph.h>";
     }
 
@@ -674,10 +665,9 @@ using namespace ngraph::runtime;
             writer << "\n";
             writer << "if (ctx->first_iteration) {\n";
             writer.indent++;
-            writer << "tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>* "
+            writer << "tbb::flow::continue_node<tbb::flow::continue_msg>* "
                       "flowgraph_node_start"
-                   << " = new tbb::flow::continue_node<tbb::flow::continue_msg, "
-                      "tbb::flow::lightweight>"
+                   << " = new tbb::flow::continue_node<tbb::flow::continue_msg> "
                       "(*(ctx->G), [&](const tbb::flow::continue_msg &msg)\n{});\n";
         }
 
@@ -774,12 +764,10 @@ using namespace ngraph::runtime;
                 }
                 if (m_use_tbb)
                 {
-                    writer << "tbb::flow::continue_node<tbb::flow::continue_msg, "
-                              "tbb::flow::lightweight>* "
+                    writer << "tbb::flow::continue_node<tbb::flow::continue_msg>* "
                               "flowgraph_node_"
                            << node->get_name()
-                           << " = new tbb::flow::continue_node<tbb::flow::continue_msg, "
-                              "tbb::flow::lightweight>"
+                           << " = new tbb::flow::continue_node<tbb::flow::continue_msg> "
                               "(*(ctx->G), [&](const tbb::flow::continue_msg &msg)\n{\n";
                     writer.indent++;
                 }
@@ -941,8 +929,8 @@ using namespace ngraph::runtime;
             writer << "}\n";
 
             // Execute the flow graph
-            writer << "(static_cast<tbb::flow::continue_node<tbb::flow::continue_msg, "
-                      "tbb::flow::lightweight>*>(&(*(ctx->G->begin()))))"
+            writer << "(static_cast<tbb::flow::continue_node<tbb::flow::continue_msg>*>"
+                      "(&(*(ctx->G->begin()))))"
                    << "->try_put(tbb::flow::continue_msg());\n";
             writer << "try { ctx->G->wait_for_all(); } catch(...) { throw; }\n";
         }
@@ -1480,7 +1468,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
 
         m_op_attrs.emplace_back(node->description(), out_names, in_names);
-
+        op_names.push_back(node->get_name());
         handler->second(this, node.get(), in, out);
 
         bool disable_caching = computes_result(node.get()) || possibly_overwritten(node.get());
@@ -1631,22 +1619,18 @@ void runtime::cpu::CPU_ExternalFunction::build()
             // Build the flow graph
             if (ctx->first_iteration)
             {
-                std::unordered_map<
-                    std::string,
-                    tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>*>
+                std::unordered_map<std::string, tbb::flow::continue_node<tbb::flow::continue_msg>*>
                     nodename_tbbnode_map;
-                tbb::flow::continue_node<tbb::flow::continue_msg,
-                                         tbb::flow::lightweight>* flowgraph_node_start =
-                    new tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>(
+                tbb::flow::continue_node<tbb::flow::continue_msg>* flowgraph_node_start =
+                    new tbb::flow::continue_node<tbb::flow::continue_msg>(
                         *(ctx->G), [&](const tbb::flow::continue_msg& msg) {});
                 auto it = enable_nodename_list.begin();
                 for (const auto& p : enables)
                 {
                     auto index = profiler_count++;
-                    tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>*
-                        flowgraph_node = new tbb::flow::continue_node<tbb::flow::continue_msg,
-                                                                      tbb::flow::lightweight>(
-                            *(ctx->G), [&, index](const tbb::flow::continue_msg& msg) {
+                    tbb::flow::continue_node<tbb::flow::continue_msg>* flowgraph_node =
+                        new tbb::flow::continue_node<tbb::flow::continue_msg>(
+                            *(ctx->G), [&, functor, index](const tbb::flow::continue_msg& msg) {
                                 if (p(ctx) || ctx->first_iteration)
                                 {
                                     if (runtime::cpu::IsTracingEnabled() || m_emit_timing)
@@ -1686,8 +1670,11 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                         m_perf_counters[index].m_call_count++;
                                     }
                                 }
-                                std::advance(functor, 1);
                             });
+#ifdef TBB_PREVIEW_FLOW_GRAPH_TRACE
+                    flowgraph_node->set_name(it->second.c_str());
+#endif
+                    std::advance(functor, 1);
                     nodename_tbbnode_map.insert({it->second, flowgraph_node});
                     it++;
                 }
@@ -1720,9 +1707,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                 }
             }
             // Execute the flow graph
-            (static_cast<
-                 tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>*>(
-                 &(*(ctx->G->begin()))))
+            (static_cast<tbb::flow::continue_node<tbb::flow::continue_msg>*>(&(*(ctx->G->begin()))))
                 ->try_put(tbb::flow::continue_msg());
             try
             {
@@ -1735,10 +1720,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
         else
         {
-            for (const auto& p : enables)
+            for (; ctx->pc < functors.size(); ctx->pc++)
             {
                 auto index = profiler_count++;
-                if (p(ctx) || ctx->first_iteration)
+                if ((enables.at(ctx->pc))(ctx) || ctx->first_iteration)
                 {
                     // Each Op will have exactly one functor, start the clock before the exceution of functor
                     // and collect the profiler_count once the execution complets
@@ -1746,7 +1731,15 @@ void runtime::cpu::CPU_ExternalFunction::build()
                     {
                         start_ts = cpu::Clock::now();
                     }
-                    (*functor)(ctx);
+
+                    (functors.at(ctx->pc))(ctx);
+
+                    if (ctx->breakpoints.count(ctx->pc + 1))
+                    {
+                        ctx->pc++;
+                        break;
+                    }
+
                     if (runtime::cpu::IsTracingEnabled() || m_emit_timing)
                     {
                         end_ts = cpu::Clock::now();
@@ -1778,11 +1771,9 @@ void runtime::cpu::CPU_ExternalFunction::build()
                         m_perf_counters[index].m_call_count++;
                     }
                 }
-                std::advance(functor, 1);
             }
         }
         ctx->first_iteration = false;
-
         if (runtime::cpu::IsTracingEnabled())
         {
             assert(m_op_attrs.size() == profiler_count);
