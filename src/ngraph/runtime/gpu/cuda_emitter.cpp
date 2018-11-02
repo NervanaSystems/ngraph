@@ -1245,7 +1245,6 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const std::array<std::string, 2
     if (compiled_kernel == nullptr)
     {
         codegen::CodeWriter writer;
-        writer << include_helpers();
         CudaKernelBuilder::get_avg_pool(writer, kernel_name, dtypes, include_pad);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
@@ -1597,7 +1596,6 @@ size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::vector<std::st
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-        writer << include_helpers();
         CudaKernelBuilder::get_softmax_divide_op(
             writer, kernel_name, dtypes, axes_flag, input_shape.size());
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
@@ -1713,7 +1711,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-        writer << include_helpers();
         if (kernel)
         {
             CudaKernelBuilder::get_device_helper(
@@ -1789,7 +1786,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar(const std::vector<std::
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-        writer << include_helpers();
         if (kernel)
         {
             CudaKernelBuilder::get_device_helper(
@@ -1858,7 +1854,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar_acc(const std::vector<s
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-        writer << include_helpers();
         if (kernel)
         {
             CudaKernelBuilder::get_device_helper(
@@ -2142,7 +2137,6 @@ size_t
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-        writer << include_helpers();
         if (kernel)
         {
             CudaKernelBuilder::get_device_helper(writer, op, kernel, dtypes);
@@ -2373,9 +2367,8 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
     if (compiled_kernel == nullptr)
     {
         codegen::CodeWriter writer;
-        writer << include_helpers();
         runtime::gpu::CudaKernelBuilder::get_broadcast_op(
-            writer, kernel_name, args, result_shape.size());
+            writer, kernel_name, dtypes[0], args, result_shape.size());
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
@@ -2755,7 +2748,6 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const std::array<std::string
     if (compiled_kernel == nullptr)
     {
         codegen::CodeWriter writer;
-        writer << include_helpers();
         runtime::gpu::CudaKernelBuilder::get_convolution_forward(writer,
                                                                  kernel_name,
                                                                  dtypes,
@@ -2841,109 +2833,6 @@ void runtime::gpu::CUDAEmitter::print_tensor_from_gpu(codegen::CodeWriter& write
         writer << "printf(\"\\n\");\n";
     }
     writer.block_end();
-}
-
-std::string runtime::gpu::CUDAEmitter::include_helpers()
-{
-    std::stringstream ss;
-#if defined(CUDA_VERSION) && CUDA_VERSION < 9000
-    ss << R"(
-#define WARP_SIZE 32
-#define __ballot_sync(mask, predicate) __ballot(predicate)
-#define __shfl_down_sync(mask, val, delta, width) __shfl_down(val, delta, width)
-#define __shfl_xor_sync(mask, val, laneMask, width) __shfl_xor(val, laneMask, width)
-)";
-#endif
-
-    // add modern type definitions
-    ss << "typedef signed char int8_t;\n";
-    ss << "typedef signed short int16_t;\n";
-    ss << "typedef signed int int32_t;\n";
-    ss << "typedef signed long int int64_t;\n";
-    ss << "typedef unsigned char uint8_t;\n";
-    ss << "typedef unsigned short uint16_t;\n";
-    ss << "typedef unsigned int uint32_t;\n";
-    ss << "typedef unsigned long int uint64_t;\n";
-    ss << "\n";
-
-    // division_by_invariant_multiplication:
-    // fast integer division via invariant multiplication and shifting
-    // if value is a power of 2, magic will be 1 and only shifting
-    // is required (predicate p below)
-    // load: helper to load from constant memory for fast access
-    ss << R"(
-__device__ __forceinline__ int division_by_invariant_multiplication(int value, int magic, int shift)
-{
-    int result;
-    asm("{\n\t"
-        ".reg .pred p;\n\t"
-        ".reg .u64 res64;\n\t"
-        ".reg .u32 lo32, hi32;\n\t"
-        "setp.ne.s32 p, %2, 1;\n\t"
-        "mul.wide.u32 res64, %1, %2;\n\t"
-        "mov.b64 {lo32, hi32}, res64;\n\t"
-        "selp.u32 hi32, hi32, %1, p;\n\t"
-        "shr.u32 %0, hi32, %3;\n\t"
-        "}" : "=r"(result) : "r"(value), "r"(magic), "r"(shift));
-    return result;
-}
-
-__device__ __forceinline__ void idiv_fast(int numerator, int denominator, float rcp,
-                                          int& result, int& remainder)
-{
-    result = (int)((float)numerator * rcp);
-    remainder = numerator - (result * denominator);
-    result = (remainder >= denominator) ? (result + 1) : result;
-    remainder = (remainder >= denominator) ? (remainder - denominator) : remainder;
-}
-
-__device__ __forceinline__ int mod16(int numerator, int div, int maxdiv)
-{
-    int res;
-    asm("vmad.s32.u32.u32 %0, -%1.h0, %2.h0, %3;" : "=r"(res) : "r"(div), "r"(maxdiv), "r"(numerator));
-    return res;
-}
-__device__ __forceinline__ int mad16(int a, int b, int c)
-{
-    int res;
-    asm("vmad.s32.u32.u32 %0, %1.h0, %2.h0, %3;" : "=r"(res) : "r"(a), "r"(b), "r"(c));
-    return res;
-}
-__device__ __forceinline__ int msub16(int a, int b, int c)
-{
-    int res;
-    asm("vmad.s32.u32.u32 %0, %1.h0, %2.h0, -%3;" : "=r"(res) : "r"(a), "r"(b), "r"(c));
-    return res;
-}
-__device__ __forceinline__ float  load(const float*  __restrict__ in, int i=0, bool b=true)
-{
-    float v = 0.0f;
-    if (b)
-    {
-        v = __ldg(in + i);
-    }
-    return v;
-}
-__device__ __forceinline__ int32_t  load(const int32_t*  __restrict__ in, int i=0, bool b=true)
-{
-    int32_t v = 0;
-    if (b)
-    {
-        v = __ldg(in + i);
-    }
-    return v;
-}
-__device__ __forceinline__ int64_t  load(const int64_t*  __restrict__ in, int i=0, bool b=true)
-{
-    int64_t v = 0;
-    if (b)
-    {
-        v = __ldg(in + i);
-    }
-    return v;
-}
-)";
-    return ss.str();
 }
 
 uint32_t runtime::gpu::CUDAEmitter::align_to_block_size(uint32_t threads, uint32_t block_size)
