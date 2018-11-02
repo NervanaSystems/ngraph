@@ -72,8 +72,8 @@ static bool cse_constant(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
         return false;
     }
 
-    auto ca = std::static_pointer_cast<op::Constant>(a);
-    auto cb = std::static_pointer_cast<op::Constant>(b);
+    auto ca = std::dynamic_pointer_cast<op::Constant>(a);
+    auto cb = std::dynamic_pointer_cast<op::Constant>(b);
 
     size_t size = shape_size(a->get_shape()) * a->get_element_type().size();
 
@@ -84,8 +84,8 @@ static bool cse_reshape(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_reshape for " << a->get_name() << " and " << b->get_name();
 
-    auto reshape_a = std::static_pointer_cast<ngraph::op::Reshape>(a);
-    auto reshape_b = std::static_pointer_cast<ngraph::op::Reshape>(b);
+    auto reshape_a = std::dynamic_pointer_cast<ngraph::op::Reshape>(a);
+    auto reshape_b = std::dynamic_pointer_cast<ngraph::op::Reshape>(b);
 
     return (a->get_argument(0) == b->get_argument(0)) &&
            (reshape_a->get_input_order() == reshape_b->get_input_order()) &&
@@ -95,8 +95,8 @@ static bool cse_broadcast(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_broadcast for " << a->get_name() << " and " << b->get_name();
 
-    auto broadcast_a = std::static_pointer_cast<ngraph::op::Broadcast>(a);
-    auto broadcast_b = std::static_pointer_cast<ngraph::op::Broadcast>(b);
+    auto broadcast_a = std::dynamic_pointer_cast<ngraph::op::Broadcast>(a);
+    auto broadcast_b = std::dynamic_pointer_cast<ngraph::op::Broadcast>(b);
 
     return (a->get_argument(0) == b->get_argument(0)) &&
            (broadcast_a->get_broadcast_axes() == broadcast_b->get_broadcast_axes()) &&
@@ -121,8 +121,8 @@ static bool cse_reduction(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_reduction for " << a->get_name() << " and " << b->get_name();
 
-    auto ar_a = std::static_pointer_cast<op::util::ArithmeticReduction>(a);
-    auto ar_b = std::static_pointer_cast<op::util::ArithmeticReduction>(b);
+    auto ar_a = std::dynamic_pointer_cast<op::util::ArithmeticReduction>(a);
+    auto ar_b = std::dynamic_pointer_cast<op::util::ArithmeticReduction>(b);
 
     return ar_a->get_argument(0) == ar_b->get_argument(0) &&
            ar_a->get_reduction_axes() == ar_b->get_reduction_axes();
@@ -175,8 +175,12 @@ static std::unordered_map<std::type_index,
 class NodeKey
 {
 public:
-    NodeKey(std::shared_ptr<Node> n)
+    NodeKey(std::shared_ptr<Node> n,
+            std::unordered_map<std::type_index,
+                               std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
+                backend_handlers)
         : m_node(n)
+        , m_backend_handlers(backend_handlers)
     {
     }
 
@@ -191,17 +195,30 @@ public:
             return false;
         }
 
-        auto eh = ops_to_cse_handlers.find(TI(p_this));
-        if (eh == ops_to_cse_handlers.end())
         {
-            return false;
+            auto eh = ops_to_cse_handlers.find(TI(p_this));
+            if (eh != ops_to_cse_handlers.end())
+            {
+                return eh->second(m_node, other.get_node());
+            }
         }
 
-        return eh->second(m_node, other.get_node());
+        {
+            auto eh = m_backend_handlers.find(TI(p_this));
+            if (eh != m_backend_handlers.end())
+            {
+                return eh->second(m_node, other.get_node());
+            }
+        }
+
+        return false;
     }
 
 private:
     std::shared_ptr<Node> m_node;
+    std::unordered_map<std::type_index,
+                       std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
+        m_backend_handlers;
 };
 
 namespace std
@@ -254,7 +271,7 @@ bool ngraph::pass::CommonSubexpressionElimination::run_on_function(
             continue;
         }
 
-        NodeKey n_key{n};
+        NodeKey n_key(n, m_backend_cse_handlers);
         if (expressions.count(n_key))
         {
             ngraph::replace_node(n, expressions.at(n_key));

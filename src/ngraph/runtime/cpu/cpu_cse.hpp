@@ -16,36 +16,28 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
+#include <functional>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <string>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
+
+#include "ngraph/node.hpp"
+#include "ngraph/pass/manager_state.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace runtime
     {
-        class CommonSubexpressionElimination;
+        namespace cpu
+        {
+            const std::unordered_map<
+                std::type_index,
+                std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
+                get_cse_handlers_map();
+        }
     }
 }
-
-class ngraph::pass::CommonSubexpressionElimination : public FunctionPass
-{
-public:
-    CommonSubexpressionElimination()
-        : FunctionPass()
-    {
-    }
-
-    CommonSubexpressionElimination(
-        const std::unordered_map<std::type_index,
-                                 std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
-            backend_cse_handlers)
-        : FunctionPass()
-        , m_backend_cse_handlers(backend_cse_handlers)
-    {
-    }
-
-    std::unordered_map<std::type_index,
-                       std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>
-        m_backend_cse_handlers;
-
-    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
-};
