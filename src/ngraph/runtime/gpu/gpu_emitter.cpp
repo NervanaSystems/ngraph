@@ -54,6 +54,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -327,10 +328,10 @@ void runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
     writer.block_end();
 }
 
-static void emit_BatchNorm(EMIT_ARGS, runtime::gpu::CUDNNEmitter::Prop direction, bool save_stats)
+template <typename T>
+void emit_BatchNorm(EMIT_ARGS, runtime::gpu::CUDNNEmitter::Prop direction, bool save_stats)
 {
-    const ngraph::op::BatchNormBase* batchnorm =
-        static_cast<const ngraph::op::BatchNormBase*>(node);
+    const T* batchnorm = static_cast<const T*>(node);
 
     auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
@@ -360,19 +361,20 @@ static void emit_BatchNorm(EMIT_ARGS, runtime::gpu::CUDNNEmitter::Prop direction
 
 void runtime::gpu::GPU_Emitter::emit_BatchNormInference(EMIT_ARGS)
 {
-    ::emit_BatchNorm(
+    ::emit_BatchNorm<ngraph::op::BatchNormInference>(
         external_function, writer, node, args, out, CUDNNEmitter::Prop::Inference, false);
 }
 
 void runtime::gpu::GPU_Emitter::emit_BatchNormTraining(EMIT_ARGS)
 {
-    ::emit_BatchNorm(
+    ::emit_BatchNorm<ngraph::op::BatchNormTraining>(
         external_function, writer, node, args, out, CUDNNEmitter::Prop::Forward, false);
 }
 
 void runtime::gpu::GPU_Emitter::emit_BatchNormTrainingWithStats(EMIT_ARGS)
 {
-    ::emit_BatchNorm(external_function, writer, node, args, out, CUDNNEmitter::Prop::Forward, true);
+    ::emit_BatchNorm<ngraph::op::gpu::BatchNormTrainingWithStats>(
+        external_function, writer, node, args, out, CUDNNEmitter::Prop::Forward, true);
 }
 
 void runtime::gpu::GPU_Emitter::emit_BatchNormTrainingBackprop(EMIT_ARGS)
@@ -655,6 +657,11 @@ void runtime::gpu::GPU_Emitter::emit_FunctionCall(EMIT_ARGS)
         writer << function->get_name() << "(input, output, ctx);\n";
     }
     writer.block_end();
+}
+
+void runtime::gpu::GPU_Emitter::emit_GenerateMask(EMIT_ARGS)
+{
+    throw ngraph_error("GenerateMask is not supported yet on NVIDIA GPU");
 }
 
 void runtime::gpu::GPU_Emitter::emit_GetOutputElement(EMIT_ARGS)
@@ -1583,7 +1590,32 @@ void runtime::gpu::GPU_Emitter::emit_Tanh(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
 {
-    throw unsupported_op("Unsupported op '" + node->description() + "'");
+    if (out[0].get_size() == 0)
+    {
+        return;
+    }
+    auto topk = static_cast<const ngraph::op::TopK*>(node);
+    size_t topk_axis = topk->get_top_k_axis();
+    size_t topk_k = topk->get_k();
+    auto index_elem_type = topk->get_index_element_type();
+    bool compute_max = topk->get_compute_max();
+    std::vector<element::Type> dtypes{args[0].get_element_type()};
+    NGRAPH_ASSERT(out.size() == 2) << "TopK can only have 2 outputs";
+    for (size_t i = 0; i < out.size(); i++)
+    {
+        dtypes.push_back(out[i].get_element_type());
+    }
+    auto& input_shape = args[0].get_shape();
+    auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
+    auto index = cuda_emitter->build_topk(
+        dtypes, input_shape, topk_axis, topk_k, index_elem_type, compute_max);
+    writer.block_begin();
+    {
+        writer << "void* input[] = {" << node_names(args) << "};\n";
+        writer << "void* output[] = {" << node_names(out) << "};\n";
+        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+    }
+    writer.block_end();
 }
 
 string runtime::gpu::GPU_Emitter::node_names(const vector<GPUTensorWrapper>& args,

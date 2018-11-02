@@ -20,15 +20,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
-
-ngraph::op::BatchNormBase::BatchNormBase(const std::string& node_type,
-                                         double eps,
-                                         const NodeVector& args)
-    : Op(node_type, check_single_output_args(args))
-    , m_epsilon(eps)
-{
-    constructor_validate_and_infer_types();
-}
+#include "ngraph/validation_util.hpp"
 
 ngraph::op::BatchNormInference::BatchNormInference(double eps,
                                                    std::shared_ptr<ngraph::Node> gamma,
@@ -36,8 +28,8 @@ ngraph::op::BatchNormInference::BatchNormInference(double eps,
                                                    std::shared_ptr<ngraph::Node> input,
                                                    std::shared_ptr<ngraph::Node> mean,
                                                    std::shared_ptr<ngraph::Node> variance)
-    : BatchNormBase(
-          "BatchNormInference", eps, check_single_output_args({gamma, beta, input, mean, variance}))
+    : Op("BatchNormInference", check_single_output_args({gamma, beta, input, mean, variance}))
+    , m_epsilon(eps)
 {
     constructor_validate_and_infer_types();
 }
@@ -46,76 +38,54 @@ ngraph::op::BatchNormTraining::BatchNormTraining(double eps,
                                                  std::shared_ptr<ngraph::Node> gamma,
                                                  std::shared_ptr<ngraph::Node> beta,
                                                  std::shared_ptr<ngraph::Node> input)
-    : BatchNormBase("BatchNormTraining", eps, check_single_output_args({gamma, beta, input}))
+    : Op("BatchNormTraining", check_single_output_args({gamma, beta, input}))
+    , m_epsilon(eps)
 {
     constructor_validate_and_infer_types();
 }
 
 void ngraph::op::BatchNormInference::validate_and_infer_types()
 {
-    if (validate_punt_if_dynamic())
-    {
-        return;
-    }
+    element::Type result_et;
+    PartialShape result_batch_shape;
+    PartialShape result_channel_shape; // unused here
 
-    auto bn_input_shape = get_input_shape(INPUT);
-    BatchNormBase::validate_and_infer_types();
-    auto& et = get_input_element_type(INPUT);
+    std::tie(result_et, result_batch_shape, result_channel_shape) =
+        infer_batch_norm_forward(this,
+                                 get_input_element_type(INPUT_DATA),
+                                 get_input_element_type(INPUT_GAMMA),
+                                 get_input_element_type(INPUT_BETA),
+                                 get_input_element_type(INPUT_MEAN),
+                                 get_input_element_type(INPUT_VARIANCE),
+                                 get_input_partial_shape(INPUT_DATA),
+                                 get_input_partial_shape(INPUT_GAMMA),
+                                 get_input_partial_shape(INPUT_BETA),
+                                 get_input_partial_shape(INPUT_MEAN),
+                                 get_input_partial_shape(INPUT_VARIANCE));
+
     set_output_size(1);
-    set_output_type(0, et, bn_input_shape);
+    set_output_type(0, result_et, result_batch_shape);
 }
 
 void ngraph::op::BatchNormTraining::validate_and_infer_types()
 {
-    if (validate_punt_if_dynamic())
-    {
-        return;
-    }
+    element::Type result_et;
+    PartialShape result_batch_shape;
+    PartialShape result_channel_shape;
 
-    auto bn_input_shape = get_input_shape(INPUT);
-    BatchNormBase::validate_and_infer_types();
-    auto& et = get_input_element_type(INPUT);
-    Shape channel_shape{bn_input_shape[1]};
+    std::tie(result_et, result_batch_shape, result_channel_shape) =
+        infer_batch_norm_forward(this,
+                                 get_input_element_type(INPUT_DATA),
+                                 get_input_element_type(INPUT_GAMMA),
+                                 get_input_element_type(INPUT_BETA),
+                                 get_input_partial_shape(INPUT_DATA),
+                                 get_input_partial_shape(INPUT_GAMMA),
+                                 get_input_partial_shape(INPUT_BETA));
+
     set_output_size(3);
-    set_output_type(0, et, bn_input_shape);
-    set_output_type(1, et, channel_shape);
-    set_output_type(2, et, channel_shape);
-}
-
-void ngraph::op::BatchNormBase::validate_and_infer_types()
-{
-    auto bn_input_shape = get_input_shape(INPUT);
-    NODE_VALIDATION_ASSERT(this, bn_input_shape.size() >= 2)
-        << "Input argument must have rank of at least 2 (input argument shape: " << bn_input_shape
-        << ").";
-
-    NODE_VALIDATION_ASSERT(this, bn_input_shape[1] != 0)
-        << "Input argument's channel dimension must have size of at least 1 (input argument shape: "
-        << bn_input_shape << ").";
-
-    auto& et = get_input_element_type(INPUT);
-
-    Shape channel_shape{bn_input_shape[1]};
-
-    const char* input_names[]{"gamma", "beta", "input", "mean", "variance"};
-
-    for (size_t i = 0; i < get_input_size(); i++)
-    {
-        if (i == INPUT)
-        {
-            continue;
-        }
-
-        NODE_VALIDATION_ASSERT(this, get_input_element_type(i) == et)
-            << "Element type of " << input_names[i] << " (" << get_input_element_type(i)
-            << ") is not equal to the element type of input (" << et << ").";
-
-        NODE_VALIDATION_ASSERT(this, get_input_shape(i) == channel_shape)
-            << "Shape of " << input_names[i] << " must match the channel dimension of the "
-            << "input data (expected shape: " << channel_shape << ", actual shape of "
-            << input_names[i] << ": " << get_input_shape(i)
-            << ", shape of input: " << bn_input_shape << ").";
-    }
+    set_output_type(0, result_et, result_batch_shape);
+    set_output_type(1, result_et, result_channel_shape);
+    set_output_type(2, result_et, result_channel_shape);
 }
 
 std::shared_ptr<ngraph::Node>
@@ -144,7 +114,7 @@ ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(
     std::shared_ptr<ngraph::Node> delta)
     : Op("BatchNormTrainingBackprop",
          check_single_output_args({gamma, beta, input, mean, variance, delta}))
-    , epsilon(eps)
+    , m_epsilon(eps)
 
 {
     constructor_validate_and_infer_types();
@@ -152,55 +122,52 @@ ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(
 
 void ngraph::op::BatchNormTrainingBackprop::validate_and_infer_types()
 {
-    if (validate_punt_if_dynamic())
-    {
-        return;
-    }
+    PartialShape input_and_delta_shape{get_input_partial_shape(INPUT_DATA)};
 
-    set_output_size(3);
+    NODE_VALIDATION_ASSERT(
+        this, PartialShape::merge_into(input_and_delta_shape, get_input_partial_shape(INPUT_DELTA)))
+        << "Shape of delta does not match the shape of the input data (input data shape: "
+        << get_input_partial_shape(INPUT_DATA)
+        << ", delta shape: " << get_input_partial_shape(INPUT_DELTA) << ").";
 
-    NODE_VALIDATION_ASSERT(this, get_input_shape(INPUT).size() == 4)
-        << "Input data shape is not a 4D tensor (input data shape: " << get_input_shape(INPUT)
+    element::Type input_and_delta_et;
+
+    NODE_VALIDATION_ASSERT(this,
+                           element::Type::merge(input_and_delta_et,
+                                                get_input_element_type(INPUT_DATA),
+                                                get_input_element_type(INPUT_DELTA)))
+        << "Element type for input (" << get_input_element_type(INPUT_DATA)
+        << ") does not match element type for delta (" << get_input_element_type(INPUT_DATA)
         << ").";
 
-    auto et = get_input_element_type(INPUT);
-    const char* input_names[] = {"gamma", "beta", "input", "mean", "variance", "delta"};
+    element::Type result_et;
+    PartialShape result_batch_shape;
+    PartialShape result_channel_shape;
 
-    Shape channel_shape{get_input_shape(INPUT)[1]};
+    std::tie(result_et, result_batch_shape, result_channel_shape) =
+        infer_batch_norm_forward(this,
+                                 input_and_delta_et,
+                                 get_input_element_type(INPUT_GAMMA),
+                                 get_input_element_type(INPUT_BETA),
+                                 get_input_element_type(INPUT_MEAN),
+                                 get_input_element_type(INPUT_VARIANCE),
+                                 input_and_delta_shape,
+                                 get_input_partial_shape(INPUT_GAMMA),
+                                 get_input_partial_shape(INPUT_BETA),
+                                 get_input_partial_shape(INPUT_MEAN),
+                                 get_input_partial_shape(INPUT_VARIANCE));
 
-    for (size_t i = 0; i < get_input_size(); i++)
-    {
-        NODE_VALIDATION_ASSERT(this, get_input_element_type(i) == et)
-            << "Element type of " << input_names[i] << " (" << get_input_element_type(i)
-            << ") is not equal to the element type of input (" << et << ").";
-
-        // Note that the shape of delta, a special case, will be checked after the loop.
-        if (i == DELTA || i == INPUT)
-        {
-            continue;
-        }
-
-        NODE_VALIDATION_ASSERT(this, get_input_shape(i) == channel_shape)
-            << "Shape of " << input_names[i] << " must match the channel dimension of the "
-            << "input data (expected shape: " << channel_shape << ", actual shape of "
-            << input_names[i] << ": " << get_input_shape(i)
-            << ", shape of input: " << get_input_shape(INPUT) << ").";
-    }
-
-    NODE_VALIDATION_ASSERT(this, get_input_shape(DELTA) == get_input_shape(INPUT))
-        << "Shape of delta must match the shape of the input data (expected shape: "
-        << get_input_shape(INPUT) << ", actual shape of delta: " << get_input_shape(DELTA) << ").";
-
-    set_output_type(0, get_input_element_type(INPUT), get_input_shape(INPUT));
-    set_output_type(1, get_input_element_type(GAMMA), get_input_shape(GAMMA));
-    set_output_type(2, get_input_element_type(BETA), get_input_shape(BETA));
+    set_output_size(3);
+    set_output_type(0, result_et, result_batch_shape);
+    set_output_type(1, result_et, result_channel_shape);
+    set_output_type(2, result_et, result_channel_shape);
 }
 
 std::shared_ptr<ngraph::Node>
     ngraph::op::BatchNormTrainingBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return std::make_shared<op::BatchNormTrainingBackprop>(epsilon,
+    return std::make_shared<op::BatchNormTrainingBackprop>(m_epsilon,
                                                            new_args.at(0),
                                                            new_args.at(1),
                                                            new_args.at(2),

@@ -21,15 +21,27 @@
 #include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 
 #include "ngraph/node.hpp"
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dot.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/lrn.hpp"
+#include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/min.hpp"
+#include "ngraph/op/one_hot.hpp"
+#include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/reduce.hpp"
+#include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/util.hpp"
 
@@ -40,6 +52,7 @@ using namespace std;
 enum class OP_TYPEID
 {
 #include "ngraph/op/op_tbl.hpp"
+    UNDEFINED_OP
 };
 #undef NGRAPH_OP
 
@@ -57,13 +70,13 @@ static OP_TYPEID get_typeid(const string& s)
     auto it = typeid_map.find(s);
     if (it == typeid_map.end())
     {
-        throw unsupported_op("Unsupported op '" + s + "'");
+        return OP_TYPEID::UNDEFINED_OP;
     }
     return it->second;
 }
 
-static const string table_begin = "<table border=\"0\">";
-static const string table_end = "</table>";
+static const string table_begin = "\n<table border=\"0\">";
+static const string table_end = "\n</table>";
 static const string cell_end = "</td>";
 static const string table_row_end = cell_end + "</tr>";
 static const string font_small_begin = "<font point-size=\"7\">";
@@ -76,7 +89,25 @@ static string cell_begin(const string& align = string("left"))
 
 static string table_row_begin(const string& align = string("left"))
 {
-    return string("<tr>") + cell_begin(align);
+    return string("\n<tr>") + cell_begin(align);
+}
+
+template <typename T>
+static string print_table_row_dims(const string& name, const T& shape)
+{
+    return table_row_begin() + font_small_begin + name + vector_to_string(shape) + font_end +
+           table_row_end;
+}
+
+template <typename T>
+static string print_table_row_value(const string& name, T val)
+{
+    stringstream result;
+
+    result << table_row_begin() << font_small_begin << name << ":" << val << font_end
+           << table_row_end;
+
+    return result.str();
 }
 
 void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
@@ -87,21 +118,24 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
     {
         const shared_ptr<op::BatchNormTrainingBackprop> batch_norm =
             static_pointer_cast<op::BatchNormTrainingBackprop>(node);
-        const double eps = batch_norm->get_eps_value();
 
-        writer << table_row_begin() << font_small_begin << "EPS:" << eps << font_end
-               << table_row_end;
+        writer << print_table_row_value("EPS", batch_norm->get_eps_value());
         break;
     }
     case OP_TYPEID::BatchNormInference:
+    {
+        const shared_ptr<op::BatchNormInference> batch_norm =
+            static_pointer_cast<op::BatchNormInference>(node);
+
+        writer << print_table_row_value("EPS", batch_norm->get_eps_value());
+        break;
+    }
     case OP_TYPEID::BatchNormTraining:
     {
-        const shared_ptr<op::BatchNormBase> batch_norm =
-            static_pointer_cast<op::BatchNormBase>(node);
-        const double eps = batch_norm->get_eps_value();
+        const shared_ptr<op::BatchNormTraining> batch_norm =
+            static_pointer_cast<op::BatchNormTraining>(node);
 
-        writer << table_row_begin() << font_small_begin << "EPS:" << eps << font_end
-               << table_row_end;
+        writer << print_table_row_value("EPS", batch_norm->get_eps_value());
         break;
     }
     case OP_TYPEID::GetOutputElement:
@@ -109,22 +143,17 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         const shared_ptr<op::GetOutputElement> elem =
             static_pointer_cast<op::GetOutputElement>(node);
 
-        writer << table_row_begin() << font_small_begin << "element:" << elem->get_n() << font_end
-               << table_row_end;
+        writer << print_table_row_value("element", elem->get_n());
         break;
     }
     case OP_TYPEID::MaxPool:
     {
         const shared_ptr<op::MaxPool> max_pool = static_pointer_cast<op::MaxPool>(node);
 
-        writer << table_row_begin() << font_small_begin << "win_shape"
-               << vector_to_string(max_pool->get_window_shape()) << font_end << table_row_end
-               << table_row_begin() << font_small_begin << "win_strides"
-               << vector_to_string(max_pool->get_window_movement_strides()) << font_end
-               << table_row_end << table_row_begin() << font_small_begin << "pad_above"
-               << vector_to_string(max_pool->get_padding_above()) << font_end << table_row_end
-               << table_row_begin() << font_small_begin << "pad_below"
-               << vector_to_string(max_pool->get_padding_below()) << font_end << table_row_end;
+        writer << print_table_row_dims("win_shape", max_pool->get_window_shape())
+               << print_table_row_dims("win_strides", max_pool->get_window_movement_strides())
+               << print_table_row_dims("pad_above", max_pool->get_padding_above())
+               << print_table_row_dims("pad_below", max_pool->get_padding_below());
         break;
     }
     case OP_TYPEID::MaxPoolBackprop:
@@ -132,31 +161,22 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         const shared_ptr<op::MaxPoolBackprop> max_pool_b =
             static_pointer_cast<op::MaxPoolBackprop>(node);
 
-        writer << table_row_begin() << font_small_begin << "win_shape"
-               << vector_to_string(max_pool_b->get_window_shape()) << font_end << table_row_end
-               << table_row_begin() << font_small_begin << "win_strides"
-               << vector_to_string(max_pool_b->get_window_movement_strides()) << font_end
-               << table_row_end << table_row_begin() << font_small_begin << "pad_above"
-               << vector_to_string(max_pool_b->get_padding_above()) << font_end << table_row_end
-               << table_row_begin() << font_small_begin << "pad_below"
-               << vector_to_string(max_pool_b->get_padding_below()) << font_end << table_row_end;
+        writer << print_table_row_dims("win_shape", max_pool_b->get_window_shape())
+               << print_table_row_dims("win_strides", max_pool_b->get_window_movement_strides())
+               << print_table_row_dims("pad_above", max_pool_b->get_padding_above())
+               << print_table_row_dims("pad_below", max_pool_b->get_padding_below());
         break;
     }
     case OP_TYPEID::AvgPool:
     {
         const shared_ptr<op::AvgPool> avg_pool = static_pointer_cast<op::AvgPool>(node);
 
-        writer << table_row_begin() << font_small_begin << "win_shape"
-               << vector_to_string(avg_pool->get_window_shape()) << font_end << table_row_end
-               << table_row_begin() << font_small_begin << "win_strides"
-               << vector_to_string(avg_pool->get_window_movement_strides()) << font_end
-               << table_row_end << table_row_begin() << font_small_begin << "pad_above"
-               << vector_to_string(avg_pool->get_padding_above()) << font_end << table_row_end
-               << table_row_begin() << font_small_begin << "pad_below"
-               << vector_to_string(avg_pool->get_padding_below()) << font_end << table_row_end
-               << table_row_begin() << font_small_begin
-               << "pad_included:" << avg_pool->get_include_padding_in_avg_computation() << font_end
-               << table_row_end;
+        writer << print_table_row_dims("win_shape", avg_pool->get_window_shape())
+               << print_table_row_dims("win_strides", avg_pool->get_window_movement_strides())
+               << print_table_row_dims("pad_above", avg_pool->get_padding_above())
+               << print_table_row_dims("pad_below", avg_pool->get_padding_below())
+               << print_table_row_value("pad_included",
+                                        avg_pool->get_include_padding_in_avg_computation());
         break;
     }
     case OP_TYPEID::AvgPoolBackprop:
@@ -164,79 +184,205 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         const shared_ptr<op::AvgPoolBackprop> avg_pool_b =
             static_pointer_cast<op::AvgPoolBackprop>(node);
 
-        writer << table_row_begin() << font_small_begin << "win_shape"
-               << vector_to_string(avg_pool_b->get_window_shape()) << font_end << table_row_end
-               << table_row_begin() << font_small_begin << "win_strides"
-               << vector_to_string(avg_pool_b->get_window_movement_strides()) << font_end
-               << table_row_end << table_row_begin() << font_small_begin << "pad_above"
-               << vector_to_string(avg_pool_b->get_padding_above()) << font_end << table_row_end
-               << table_row_begin() << font_small_begin << "pad_below"
-               << vector_to_string(avg_pool_b->get_padding_below()) << font_end << table_row_end
-               << table_row_begin() << font_small_begin
-               << "pad_included:" << avg_pool_b->get_include_padding_in_avg_computation()
-               << font_end << table_row_end;
+        writer << print_table_row_dims("win_shape", avg_pool_b->get_window_shape())
+               << print_table_row_dims("win_strides", avg_pool_b->get_window_movement_strides())
+               << print_table_row_dims("pad_above", avg_pool_b->get_padding_above())
+               << print_table_row_dims("pad_below", avg_pool_b->get_padding_below())
+               << print_table_row_value("pad_included",
+                                        avg_pool_b->get_include_padding_in_avg_computation());
         break;
     }
     case OP_TYPEID::Broadcast:
     {
         const shared_ptr<op::Broadcast> broadcast = static_pointer_cast<op::Broadcast>(node);
 
-        writer << table_row_begin() << font_small_begin << "broadcast_axis"
-               << vector_to_string(broadcast->get_broadcast_axes()) << font_end << table_row_end;
+        writer << print_table_row_dims("broadcast_axis", broadcast->get_broadcast_axes());
         break;
     }
+    case OP_TYPEID::Max:
+    case OP_TYPEID::Min:
+    case OP_TYPEID::Product:
     case OP_TYPEID::Sum:
     {
-        const shared_ptr<op::Sum> sum = static_pointer_cast<op::Sum>(node);
+        const shared_ptr<op::util::ArithmeticReduction> arith_op =
+            static_pointer_cast<op::util::ArithmeticReduction>(node);
 
-        writer << table_row_begin() << font_small_begin << "reduction_axis"
-               << vector_to_string(sum->get_reduction_axes()) << font_end << table_row_end;
+        writer << print_table_row_dims("reduction_axis", arith_op->get_reduction_axes());
         break;
     }
-    case OP_TYPEID::Product:
+    case OP_TYPEID::ArgMin:
+    case OP_TYPEID::ArgMax:
     {
-        const shared_ptr<op::Product> prod = static_pointer_cast<op::Product>(node);
+        const shared_ptr<op::util::IndexReduction> arg_op =
+            static_pointer_cast<op::util::IndexReduction>(node);
 
-        writer << table_row_begin() << font_small_begin << "reduction_axis"
-               << vector_to_string(prod->get_reduction_axes()) << font_end << table_row_end;
+        writer << print_table_row_value("reduction_axis", arg_op->get_reduction_axis())
+               << table_row_begin() << font_small_begin
+               << "idx_elem_type:" << arg_op->get_element_type() << font_end << table_row_end;
+        break;
+    }
+    case OP_TYPEID::LRN:
+    {
+        const shared_ptr<op::LRN> lrn_op = static_pointer_cast<op::LRN>(node);
+
+        writer << print_table_row_value("nsize", lrn_op->get_nsize())
+               << print_table_row_value("bias", lrn_op->get_bias())
+               << print_table_row_value("alpha", lrn_op->get_alpha())
+               << print_table_row_value("beta", lrn_op->get_beta());
+
+        break;
+    }
+    case OP_TYPEID::OneHot:
+    {
+        const shared_ptr<op::OneHot> one_hot_op = static_pointer_cast<op::OneHot>(node);
+
+        writer << print_table_row_value("one_hot_axis", one_hot_op->get_one_hot_axis());
+        break;
+    }
+    case OP_TYPEID::Dot:
+    {
+        const shared_ptr<op::Dot> dot_op = static_pointer_cast<op::Dot>(node);
+
+        writer << print_table_row_value("reduction_axes_count", dot_op->get_reduction_axes_count());
+        break;
+    }
+    case OP_TYPEID::Constant:
+    {
+        size_t val_id = 0;
+        const shared_ptr<op::Constant> constant_op = static_pointer_cast<op::Constant>(node);
+        const vector<string>& values = constant_op->get_value_strings();
+
+        // let's print no more than 3 items
+        for (auto it = values.cbegin(); (it != values.cend()) && (val_id < 3); ++it)
+        {
+            writer << print_table_row_value("value[" + to_string(val_id) + "]", *it);
+            ++val_id;
+        }
         break;
     }
     case OP_TYPEID::Reshape:
     {
         const shared_ptr<op::Reshape> op_reshape = static_pointer_cast<op::Reshape>(node);
 
-        writer << table_row_begin() << font_small_begin
-               << "broadcast_axes:" << vector_to_string(op_reshape->get_input_order()) << font_end
-               << table_row_end << table_row_begin() << font_small_begin
-               << "transpose:" << op_reshape->get_is_transpose() << font_end << table_row_end;
+        writer << print_table_row_dims("broadcast_axes", op_reshape->get_input_order())
+               << print_table_row_value("transpose", op_reshape->get_is_transpose());
         break;
     }
     case OP_TYPEID::Concat:
     {
         const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(node);
 
-        writer << table_row_begin() << font_small_begin
-               << "concat_axis:" << concat_op->get_concatenation_axis() << font_end
-               << table_row_end;
+        writer << print_table_row_value("concat_axis", concat_op->get_concatenation_axis());
+        break;
+    }
+    case OP_TYPEID::Reduce:
+    {
+        const shared_ptr<op::Reduce> red_op = static_pointer_cast<op::Reduce>(node);
+        const AxisSet& axis = red_op->get_reduction_axes();
+
+        writer << print_table_row_dims("reduction_axis", red_op->get_reduction_axes())
+               << print_table_row_value("Function:TBD", 0);
+        break;
+    }
+    case OP_TYPEID::ReduceWindow:
+    {
+        const shared_ptr<op::ReduceWindow> red_win_op = static_pointer_cast<op::ReduceWindow>(node);
+
+        writer << print_table_row_dims("window_shape", red_win_op->get_window_shape())
+               << print_table_row_dims("window_stride", red_win_op->get_window_movement_strides())
+               << print_table_row_value("Function:TBD", 0);
+        break;
+    }
+    case OP_TYPEID::Pad:
+    {
+        const shared_ptr<op::Pad> pad = static_pointer_cast<op::Pad>(node);
+
+        writer << print_table_row_dims("pad_above", pad->get_padding_above())
+               << print_table_row_dims("pad_below", pad->get_padding_below())
+               << print_table_row_dims("pad_interior", pad->get_padding_interior());
+        break;
+    }
+    case OP_TYPEID::Slice:
+    {
+        const shared_ptr<op::Slice> elem = static_pointer_cast<op::Slice>(node);
+
+        writer << print_table_row_dims("upper_bounds", elem->get_upper_bounds())
+               << print_table_row_dims("lower_bounds", elem->get_lower_bounds())
+               << print_table_row_dims("strides", elem->get_strides());
+
         break;
     }
     case OP_TYPEID::Convolution:
     {
         const shared_ptr<op::Convolution> conv_op = static_pointer_cast<op::Convolution>(node);
 
-        writer << table_row_begin() << font_small_begin << "win_stride"
-               << vector_to_string(conv_op->get_window_movement_strides()) << font_end
-               << table_row_end << table_row_begin() << font_small_begin << "win_dilation"
-               << vector_to_string(conv_op->get_window_dilation_strides()) << font_end
-               << table_row_end << table_row_begin() << font_small_begin << "data_dilation"
-               << vector_to_string(conv_op->get_data_dilation_strides()) << font_end
-               << table_row_end << table_row_begin() << font_small_begin << "pad_below"
-               << vector_to_string(conv_op->get_padding_below()) << font_end << table_row_end
-               << table_row_begin() << font_small_begin << "pad_above"
-               << vector_to_string(conv_op->get_padding_above()) << font_end << table_row_end
-               << table_row_begin() << font_small_begin << "def_val"
-               << vector_to_string(conv_op->get_default_value()->get_shape()) << font_end
-               << table_row_end;
+        writer << print_table_row_dims("win_stride", conv_op->get_window_movement_strides())
+               << print_table_row_dims("win_dilation", conv_op->get_window_dilation_strides())
+               << print_table_row_dims("data_dilation", conv_op->get_data_dilation_strides())
+               << print_table_row_dims("pad_above", conv_op->get_padding_above())
+               << print_table_row_dims("pad_below", conv_op->get_padding_below());
+        break;
+    }
+    case OP_TYPEID::ConvolutionBackpropFilters:
+    {
+        const shared_ptr<op::ConvolutionBackpropFilters> conv_op_filt =
+            static_pointer_cast<op::ConvolutionBackpropFilters>(node);
+
+        writer << print_table_row_dims("filters_shape", conv_op_filt->get_filters_shape())
+               << print_table_row_dims("window_movement_strides_forward",
+                                       conv_op_filt->get_window_movement_strides_forward())
+               << print_table_row_dims("window_dilation_strides_forward",
+                                       conv_op_filt->get_window_dilation_strides_forward())
+               << print_table_row_dims("data_dilation_strides_forward",
+                                       conv_op_filt->get_data_dilation_strides_forward())
+               << print_table_row_dims("pad_above_forward",
+                                       conv_op_filt->get_padding_above_forward())
+               << print_table_row_dims("pad_below_forward",
+                                       conv_op_filt->get_padding_below_forward())
+               << print_table_row_dims("window_movement_strides_backward",
+                                       conv_op_filt->get_window_movement_strides_backward())
+               << print_table_row_dims("window_dilation_strides_backward",
+                                       conv_op_filt->get_window_dilation_strides_backward())
+               << print_table_row_dims("data_dilation_strides_backward",
+                                       conv_op_filt->get_data_dilation_strides_backward())
+               << print_table_row_dims("padding_above_backward",
+                                       conv_op_filt->get_padding_above_backward())
+               << print_table_row_dims("padding_below_backward",
+                                       conv_op_filt->get_padding_below_backward());
+        break;
+    }
+    case OP_TYPEID::ConvolutionBackpropData:
+    {
+        const shared_ptr<op::ConvolutionBackpropData> conv_op_data =
+            static_pointer_cast<op::ConvolutionBackpropData>(node);
+
+        writer << print_table_row_dims("data_batch_shape", conv_op_data->get_data_batch_shape())
+               << print_table_row_dims("window_movement_strides_forward",
+                                       conv_op_data->get_window_movement_strides_forward())
+               << print_table_row_dims("window_dilation_strides_forward",
+                                       conv_op_data->get_window_dilation_strides_forward())
+               << print_table_row_dims("data_dilation_strides_forward",
+                                       conv_op_data->get_data_dilation_strides_forward())
+               << print_table_row_dims("pad_above_forward",
+                                       conv_op_data->get_padding_above_forward())
+               << print_table_row_dims("pad_below_forward",
+                                       conv_op_data->get_padding_below_forward())
+               << print_table_row_dims("window_movement_strides_backward",
+                                       conv_op_data->get_window_movement_strides_backward())
+               << print_table_row_dims("window_dilation_strides_backward",
+                                       conv_op_data->get_window_dilation_strides_backward())
+               << print_table_row_dims("data_dilation_strides_backward",
+                                       conv_op_data->get_data_dilation_strides_backward())
+               << print_table_row_dims("padding_above_backward",
+                                       conv_op_data->get_padding_above_backward())
+               << print_table_row_dims("padding_below_backward",
+                                       conv_op_data->get_padding_below_backward());
+        break;
+    }
+    case OP_TYPEID::UNDEFINED_OP:
+    default:
+    {
+        ; // Some operations are not defined in ngraph/op/op_tbl.hpp
     }
     }
 }
@@ -290,7 +436,7 @@ void print_node(ostringstream& writer, const shared_ptr<Node>& node)
     print_node_parameters(writer, node);
 
     writer << table_end;
-    writer << " >]\n";
+    writer << " >];\n";
 }
 
 void runtime::intelgpu::visualize_tree(const shared_ptr<Function>& func,
@@ -301,7 +447,7 @@ void runtime::intelgpu::visualize_tree(const shared_ptr<Function>& func,
     ostringstream writer;
 
     // Begin of the main graph
-    writer << "digraph ngraph\n{\n";
+    writer << "digraph ngraph\n{\nsplines=\"line\";\n\n";
 
     for (const shared_ptr<Node> op : func->get_ordered_ops())
     {
@@ -324,7 +470,7 @@ void runtime::intelgpu::visualize_tree(const shared_ptr<Function>& func,
     }
 
     // print summary with operations used
-    writer << "subgraph clusterFooter\n{\nmargin=0\nstyle=\"invis\"\nLEGEND ["
+    writer << "\nsubgraph clusterFooter\n{\nmargin=0\nstyle=\"invis\"\nLEGEND ["
            << "shape=box style=filled fillcolor=gray margin=0 label=<" << table_begin
            << table_row_begin("center") << "Operations summary" << table_row_end;
     size_t total_op_count = 0;
@@ -336,7 +482,7 @@ void runtime::intelgpu::visualize_tree(const shared_ptr<Function>& func,
         total_op_count += it.second;
     }
     writer << table_row_begin() << "Total:" << cell_end << cell_begin() << total_op_count
-           << table_row_end << table_end << " >]\n}\n";
+           << table_row_end << table_end << "\n>];\n}\n";
 
     // End of the main graph
     writer << "}\n";

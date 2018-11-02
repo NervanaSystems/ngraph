@@ -69,6 +69,7 @@ set(SRC
     builder/softmax.cpp
     builder/sum.cpp
     builder/topk.cpp
+    builder/state.cpp
     builder/quantization.cpp
     kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
@@ -82,6 +83,7 @@ set(SRC
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/group_conv.cpp
+    op/group_conv_bias.cpp
     op/halide_op.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
