@@ -32,25 +32,6 @@ ngraph::op::gpu::BatchNormTrainingWithStats::BatchNormTrainingWithStats(
     set_output_type(output_index++, input->get_element_type(), channel_shape);
 }
 
-ngraph::op::gpu::BatchNormTrainingWithStats::BatchNormTrainingWithStats(
-    double eps,
-    std::shared_ptr<ngraph::Node> gamma,
-    std::shared_ptr<ngraph::Node> beta,
-    std::shared_ptr<ngraph::Node> input,
-    std::shared_ptr<ngraph::Node> mean,
-    std::shared_ptr<ngraph::Node> variance,
-    bool training)
-    : ngraph::op::BatchNormTraining(eps, gamma, beta, input, mean, variance)
-{
-    auto output_index = get_output_size();
-    set_output_size(output_index + 2);
-    Shape channel_shape{input->get_shape()[1]};
-    // saved batch mean
-    set_output_type(output_index++, input->get_element_type(), channel_shape);
-    // saved batch inverse variance
-    set_output_type(output_index++, input->get_element_type(), channel_shape);
-}
-
 std::shared_ptr<ngraph::Node> ngraph::op::gpu::BatchNormTrainingWithStats::copy_with_new_args(
     const NodeVector& new_args) const
 {
