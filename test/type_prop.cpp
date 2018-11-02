@@ -217,7 +217,7 @@ TEST(type_prop, broadcast_partial_rank_static_dynamic_shape_mismatch_wrong_size)
     }
 }
 
-TEST(type_prop, batchnorm_rank_less_than_2)
+TEST(type_prop, batchnorm_training_rank_less_than_2)
 {
     auto dummy = make_validated_node<op::Parameter>(element::f32, Shape{1});
     try
@@ -236,19 +236,19 @@ TEST(type_prop, batchnorm_rank_less_than_2)
     }
 }
 
-TEST(type_prop, batchnorm_zero_channel_check)
+TEST(type_prop, batchnorm_training_zero_channel_check)
 {
-    auto dummy = make_validated_node<op::Parameter>(element::f32, Shape{1, 0, 2, 3});
+    auto data_batch = make_validated_node<op::Parameter>(element::f32, Shape{1, 0, 2, 3});
+    auto gamma = make_validated_node<op::Parameter>(element::f32, Shape{0});
+    auto beta = make_validated_node<op::Parameter>(element::f32, Shape{0});
     try
     {
-        auto bc = make_validated_node<op::BatchNormTraining>(0.001, dummy, dummy, dummy);
+        auto bc = make_validated_node<op::BatchNormTraining>(0.001, gamma, beta, data_batch);
         FAIL() << "BatchNorm c-tor should throw for tensors w/ zero-dimension channels";
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Input argument's channel dimension must have size of at least 1"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Channel count must be at least 1"));
     }
     catch (...)
     {
@@ -256,22 +256,20 @@ TEST(type_prop, batchnorm_zero_channel_check)
     }
 }
 
-TEST(type_prop, batchnorm_et_check)
+TEST(type_prop, batchnorm_training_et_check)
 {
-    auto dummy_f32 = make_validated_node<op::Parameter>(element::f32, Shape{3});
-    auto dummy_f64 = make_validated_node<op::Parameter>(element::f64, Shape{3});
-    auto param = make_validated_node<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+    auto data_batch = make_validated_node<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+    auto gamma = make_validated_node<op::Parameter>(element::f64, Shape{3});
+    auto beta = make_validated_node<op::Parameter>(element::f32, Shape{3});
 
     try
     {
-        auto bc = make_validated_node<op::BatchNormTraining>(0.001, dummy_f32, dummy_f64, param);
+        auto bc = make_validated_node<op::BatchNormTraining>(0.001, gamma, beta, data_batch);
         FAIL() << "BatchNorm c-tor should throw for different element types";
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Element type of beta"));
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("is not equal to the element type of input"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input element types do not match"));
     }
     catch (...)
     {
@@ -279,22 +277,20 @@ TEST(type_prop, batchnorm_et_check)
     }
 }
 
-TEST(type_prop, batchnorm_shape_check)
+TEST(type_prop, batchnorm_training_shape_check)
 {
-    auto dummy_3 = make_validated_node<op::Parameter>(element::f32, Shape{3});
-    auto dummy_4 = make_validated_node<op::Parameter>(element::f32, Shape{4});
-    auto param = make_validated_node<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+    auto data_batch = make_validated_node<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+    auto gamma = make_validated_node<op::Parameter>(element::f32, Shape{4});
+    auto beta = make_validated_node<op::Parameter>(element::f32, Shape{3});
 
     try
     {
-        auto bc = make_validated_node<op::BatchNormTraining>(0.001, dummy_4, dummy_3, param);
+        auto bc = make_validated_node<op::BatchNormTraining>(0.001, gamma, beta, data_batch);
         FAIL() << "BatchNorm c-tor should throw if gamma and beta shapes don't match";
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Shape of gamma must match the channel dimension of the input data"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Shapes for gamma/beta do not match"));
     }
     catch (...)
     {
@@ -302,20 +298,24 @@ TEST(type_prop, batchnorm_shape_check)
     }
 }
 
-TEST(type_prop, batchnorm_backprop_4d_check)
+TEST(type_prop, batchnorm_training_backprop_et_check)
 {
-    auto dummy = make_validated_node<op::Parameter>(element::f32, Shape{});
-    auto param = make_validated_node<op::Parameter>(element::f32, Shape{2, 4});
+    auto data_batch = make_validated_node<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+    auto gamma = make_validated_node<op::Parameter>(element::f32, Shape{3});
+    auto beta = make_validated_node<op::Parameter>(element::f64, Shape{3});
+    auto mean = make_validated_node<op::Parameter>(element::f32, Shape{3});
+    auto variance = make_validated_node<op::Parameter>(element::f32, Shape{3});
+    auto delta = make_validated_node<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
 
     try
     {
         auto bc = make_validated_node<op::BatchNormTrainingBackprop>(
-            0.001, dummy, dummy, param, dummy, dummy, dummy);
+            0.001, gamma, beta, data_batch, mean, variance, delta);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input data shape is not a 4D tensor"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input element types do not match"));
     }
     catch (...)
     {
@@ -323,23 +323,25 @@ TEST(type_prop, batchnorm_backprop_4d_check)
     }
 }
 
-TEST(type_prop, batchnorm_backprop_et_check)
+TEST(type_prop, batchnorm_training_backprop_shape_check)
 {
-    auto dummy_f32 = make_validated_node<op::Parameter>(element::f32, Shape{3});
-    auto dummy_f64 = make_validated_node<op::Parameter>(element::f64, Shape{3});
-    auto param = make_validated_node<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+    auto data_batch = make_validated_node<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+    auto gamma = make_validated_node<op::Parameter>(element::f32, Shape{3});
+    auto beta = make_validated_node<op::Parameter>(element::f32, Shape{4});
+    auto mean = make_validated_node<op::Parameter>(element::f32, Shape{3});
+    auto variance = make_validated_node<op::Parameter>(element::f32, Shape{3});
+    auto delta = make_validated_node<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
 
     try
     {
         auto bc = make_validated_node<op::BatchNormTrainingBackprop>(
-            0.001, dummy_f32, dummy_f64, param, dummy_f32, dummy_f32, dummy_f32);
+            0.001, gamma, beta, data_batch, mean, variance, delta);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
     catch (const NodeValidationError& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Element type of beta"));
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("is not equal to the element type of input"));
+                             std::string("Shapes for gamma/beta/mean/variance do not match"));
     }
     catch (...)
     {
@@ -347,31 +349,7 @@ TEST(type_prop, batchnorm_backprop_et_check)
     }
 }
 
-TEST(type_prop, batchnorm_backprop_shape_check)
-{
-    auto dummy = make_validated_node<op::Parameter>(element::f32, Shape{3});
-    auto dummy2 = make_validated_node<op::Parameter>(element::f32, Shape{4});
-    auto param = make_validated_node<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
-
-    try
-    {
-        auto bc = make_validated_node<op::BatchNormTrainingBackprop>(
-            0.001, dummy, dummy2, param, dummy2, dummy2, dummy2);
-        FAIL() << "Deduced type should disagree with c-tor arguments";
-    }
-    catch (const NodeValidationError& error)
-    {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Shape of beta must match the channel dimension of the input data"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, batchnorm_backprop_delta_check)
+TEST(type_prop, batchnorm_training_backprop_delta_check)
 {
     auto dummy = make_validated_node<op::Parameter>(element::f32, Shape{3});
     auto dummy2 = make_validated_node<op::Parameter>(element::f32, Shape{4});
@@ -386,8 +364,1152 @@ TEST(type_prop, batchnorm_backprop_delta_check)
     }
     catch (const NodeValidationError& error)
     {
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("Shape of delta does not match the shape of the input data"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchnorm_inference_partial_all_rank_dynamic)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{PartialShape::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{PartialShape::dynamic()};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+
+    auto bn = make_validated_node<op::BatchNormInference>(
+        epsilon, gamma, beta, data_batch, mean, variance);
+
+    ASSERT_EQ(bn->get_output_size(), 1);
+    ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
+    ASSERT_TRUE(bn->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_ok)
+{
+    PartialShape data_batch_shape{
+        64, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape gamma_shape{PartialShape::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{PartialShape::dynamic()};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+
+    auto bn = make_validated_node<op::BatchNormInference>(
+        epsilon, gamma, beta, data_batch, mean, variance);
+
+    ASSERT_EQ(bn->get_output_size(), 1);
+    ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
+    ASSERT_TRUE(bn->get_output_partial_shape(0).same_scheme(
+        PartialShape{64, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_zero_channels)
+{
+    PartialShape data_batch_shape{
+        Dimension::dynamic(), 0, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape gamma_shape{PartialShape::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{PartialShape::dynamic()};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormInference>(
+            epsilon, gamma, beta, data_batch, mean, variance);
+        FAIL() << "Zero channel count not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Channel count must be at least 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchnorm_inference_partial_input_rank_dynamic_some_rank_static_dynamic_ok)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{Dimension::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{Dimension::dynamic()};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+
+    auto bn = make_validated_node<op::BatchNormInference>(
+        epsilon, gamma, beta, data_batch, mean, variance);
+
+    ASSERT_EQ(bn->get_output_size(), 1);
+    ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
+    ASSERT_TRUE(bn->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, batchnorm_inference_partial_input_rank_dynamic_some_rank_static_dynamic_wrong_rank)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormInference>(
+            epsilon, gamma, beta, data_batch, mean, variance);
+        FAIL() << "Wrong gamma/beta/mean/variance shape not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Shape for gamma/beta/mean/variance ({?,?}) does not have rank 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     batchnorm_inference_partial_input_rank_dynamic_some_rank_static_dynamic_inconsistent_rank)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{3, Dimension::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{Dimension::dynamic()};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormInference>(
+            epsilon, gamma, beta, data_batch, mean, variance);
+        FAIL() << "Inconsistent gamma/beta/mean/variance shape not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Shape of delta must match the shape of the input data"));
+                             std::string("Shapes for gamma/beta/mean/variance do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     batchnorm_inference_partial_input_rank_dynamic_some_static_inconsistent_channel_count)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{3};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{4};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormInference>(
+            epsilon, gamma, beta, data_batch, mean, variance);
+        FAIL() << "Inconsistent gamma/beta/mean/variance channel count not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Shapes for gamma/beta/mean/variance do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_some_static_ok)
+{
+    PartialShape data_batch_shape{64, Dimension::dynamic(), Dimension::dynamic(), 224};
+    PartialShape gamma_shape{3};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{3};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+
+    auto bn = make_validated_node<op::BatchNormInference>(
+        epsilon, gamma, beta, data_batch, mean, variance);
+
+    ASSERT_EQ(bn->get_output_size(), 1);
+    ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
+    ASSERT_TRUE(bn->get_output_partial_shape(0).same_scheme(
+        PartialShape{64, 3, Dimension::dynamic(), 224}));
+}
+
+TEST(type_prop,
+     batchnorm_inference_partial_input_rank_static_dynamic_some_static_inconsistent_channel_count)
+{
+    PartialShape data_batch_shape{64, 4, Dimension::dynamic(), 224};
+    PartialShape gamma_shape{3};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{3};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormInference>(
+            epsilon, gamma, beta, data_batch, mean, variance);
+        FAIL() << "Inconsistent input/gamma/beta/mean/variance channel count not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input channel dimension (4) does not match "
+                                         "shape for gamma/beta/mean/variance ({3})"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchnorm_training_partial_all_rank_dynamic)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{PartialShape::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+
+    auto bn = make_validated_node<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+
+    ASSERT_EQ(bn->get_output_size(), 3);
+    ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(1), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(2), data_batch_et);
+    ASSERT_TRUE(bn->get_output_partial_shape(0).rank().is_dynamic());
+    ASSERT_TRUE(bn->get_output_partial_shape(1).same_scheme(PartialShape::dynamic(1)));
+    ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape::dynamic(1)));
+}
+
+TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_batch_size_known_ok)
+{
+    PartialShape data_batch_shape{
+        64, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape gamma_shape{PartialShape::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+
+    auto bn = make_validated_node<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+
+    ASSERT_EQ(bn->get_output_size(), 3);
+    ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(1), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(2), data_batch_et);
+    ASSERT_TRUE(bn->get_output_partial_shape(0).same_scheme(
+        PartialShape{64, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+    ASSERT_TRUE(bn->get_output_partial_shape(1).same_scheme(PartialShape::dynamic(1)));
+    ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape::dynamic(1)));
+}
+
+TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_channel_count_known_ok)
+{
+    PartialShape data_batch_shape{
+        Dimension::dynamic(), 3, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape gamma_shape{PartialShape::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+
+    auto bn = make_validated_node<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+
+    ASSERT_EQ(bn->get_output_size(), 3);
+    ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(1), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(2), data_batch_et);
+    ASSERT_TRUE(bn->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), 3, Dimension::dynamic(), Dimension::dynamic()}));
+    ASSERT_TRUE(bn->get_output_partial_shape(1).same_scheme(PartialShape{3}));
+    ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape{3}));
+}
+
+TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_zero_channels)
+{
+    PartialShape data_batch_shape{
+        Dimension::dynamic(), 0, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape gamma_shape{PartialShape::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+        FAIL() << "Zero channel count not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Channel count must be at least 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchnorm_training_partial_input_rank_dynamic_some_rank_static_dynamic_ok)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{Dimension::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+
+    auto bn = make_validated_node<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+
+    ASSERT_EQ(bn->get_output_size(), 3);
+    ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(1), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(2), data_batch_et);
+    ASSERT_TRUE(bn->get_output_partial_shape(0).rank().is_dynamic());
+    ASSERT_TRUE(bn->get_output_partial_shape(1).same_scheme(PartialShape::dynamic(1)));
+    ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape::dynamic(1)));
+}
+
+TEST(type_prop, batchnorm_training_partial_input_rank_dynamic_some_rank_static_dynamic_wrong_rank)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+        FAIL() << "Wrong gamma/beta shape not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Shape for gamma/beta ({?,?}) does not have rank 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     batchnorm_training_partial_input_rank_dynamic_some_rank_static_dynamic_inconsistent_rank)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{3, Dimension::dynamic()};
+    PartialShape beta_shape{Dimension::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+        FAIL() << "Inconsistent gamma/beta shape not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Shapes for gamma/beta do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     batchnorm_training_partial_input_rank_dynamic_some_static_inconsistent_channel_count)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{3};
+    PartialShape beta_shape{4};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+        FAIL() << "Inconsistent gamma/beta channel count not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Shapes for gamma/beta do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_some_static_ok)
+{
+    PartialShape data_batch_shape{64, Dimension::dynamic(), Dimension::dynamic(), 224};
+    PartialShape gamma_shape{3};
+    PartialShape beta_shape{3};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+
+    auto bn = make_validated_node<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+
+    ASSERT_EQ(bn->get_output_size(), 3);
+    ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(1), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(2), data_batch_et);
+    ASSERT_TRUE(bn->get_output_partial_shape(0).same_scheme(
+        PartialShape{64, 3, Dimension::dynamic(), 224}));
+    ASSERT_TRUE(bn->get_output_partial_shape(1).same_scheme(PartialShape{3}));
+    ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape{3}));
+}
+
+TEST(type_prop,
+     batchnorm_training_partial_input_rank_static_dynamic_some_static_inconsistent_channel_count)
+{
+    PartialShape data_batch_shape{64, 4, Dimension::dynamic(), 224};
+    PartialShape gamma_shape{3};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+        FAIL() << "Inconsistent input/gamma/beta channel count not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Input channel dimension (4) does not match shape for gamma/beta ({3})"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+////
+////
+////
+////
+
+TEST(type_prop, batchnorm_training_backprop_partial_all_rank_dynamic)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{PartialShape::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{PartialShape::dynamic()};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    PartialShape delta_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+    element::Type delta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+    auto delta = make_validated_node<op::Parameter>(delta_et, delta_shape);
+
+    auto bn = make_validated_node<op::BatchNormTrainingBackprop>(
+        epsilon, gamma, beta, data_batch, mean, variance, delta);
+
+    ASSERT_EQ(bn->get_output_size(), 3);
+    ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(1), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(2), data_batch_et);
+    ASSERT_TRUE(bn->get_output_partial_shape(0).rank().is_dynamic());
+    ASSERT_TRUE(bn->get_output_partial_shape(1).same_scheme(PartialShape::dynamic(1)));
+    ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape::dynamic(1)));
+}
+
+TEST(type_prop, batchnorm_training_backprop_partial_input_rank_static_dynamic_ok)
+{
+    PartialShape data_batch_shape{
+        64, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape gamma_shape{PartialShape::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{PartialShape::dynamic()};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    PartialShape delta_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+    element::Type delta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+    auto delta = make_validated_node<op::Parameter>(delta_et, delta_shape);
+
+    auto bn = make_validated_node<op::BatchNormTrainingBackprop>(
+        epsilon, gamma, beta, data_batch, mean, variance, delta);
+
+    ASSERT_EQ(bn->get_output_size(), 3);
+    ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(1), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(2), data_batch_et);
+    ASSERT_TRUE(bn->get_output_partial_shape(0).same_scheme(
+        PartialShape{64, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+    ASSERT_TRUE(bn->get_output_partial_shape(1).same_scheme(PartialShape::dynamic(1)));
+    ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape::dynamic(1)));
+}
+
+TEST(type_prop, batchnorm_training_backprop_partial_input_rank_static_dynamic_zero_channels)
+{
+    PartialShape data_batch_shape{
+        Dimension::dynamic(), 0, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape gamma_shape{PartialShape::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{PartialShape::dynamic()};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    PartialShape delta_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+    element::Type delta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+    auto delta = make_validated_node<op::Parameter>(delta_et, delta_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormTrainingBackprop>(
+            epsilon, gamma, beta, data_batch, mean, variance, delta);
+        FAIL() << "Zero channel count not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Channel count must be at least 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_ok)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{PartialShape::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{PartialShape::dynamic()};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    PartialShape delta_shape{64, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+    element::Type delta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+    auto delta = make_validated_node<op::Parameter>(delta_et, delta_shape);
+
+    auto bn = make_validated_node<op::BatchNormTrainingBackprop>(
+        epsilon, gamma, beta, data_batch, mean, variance, delta);
+
+    ASSERT_EQ(bn->get_output_size(), 3);
+    ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(1), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(2), data_batch_et);
+    ASSERT_TRUE(bn->get_output_partial_shape(0).same_scheme(
+        PartialShape{64, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
+    ASSERT_TRUE(bn->get_output_partial_shape(1).same_scheme(PartialShape::dynamic(1)));
+    ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape::dynamic(1)));
+}
+
+TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_channels_known)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{PartialShape::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{PartialShape::dynamic()};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    PartialShape delta_shape{Dimension::dynamic(), 5, Dimension::dynamic(), Dimension::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+    element::Type delta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+    auto delta = make_validated_node<op::Parameter>(delta_et, delta_shape);
+
+    auto bn = make_validated_node<op::BatchNormTrainingBackprop>(
+        epsilon, gamma, beta, data_batch, mean, variance, delta);
+
+    ASSERT_EQ(bn->get_output_size(), 3);
+    ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(1), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(2), data_batch_et);
+    ASSERT_TRUE(bn->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), 5, Dimension::dynamic(), Dimension::dynamic()}));
+    ASSERT_TRUE(bn->get_output_partial_shape(1).same_scheme(PartialShape{5}));
+    ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape{5}));
+}
+
+TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_zero_channels)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{PartialShape::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{PartialShape::dynamic()};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    PartialShape delta_shape{Dimension::dynamic(), 0, Dimension::dynamic(), Dimension::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+    element::Type delta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+    auto delta = make_validated_node<op::Parameter>(delta_et, delta_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormTrainingBackprop>(
+            epsilon, gamma, beta, data_batch, mean, variance, delta);
+        FAIL() << "Zero channel count not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Channel count must be at least 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     batchnorm_training_backprop_partial_input_and_delta_rank_dynamic_some_rank_static_dynamic_ok)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{Dimension::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{Dimension::dynamic()};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    PartialShape delta_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+    element::Type delta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+    auto delta = make_validated_node<op::Parameter>(delta_et, delta_shape);
+
+    auto bn = make_validated_node<op::BatchNormTrainingBackprop>(
+        epsilon, gamma, beta, data_batch, mean, variance, delta);
+
+    ASSERT_EQ(bn->get_output_size(), 3);
+    ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(1), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(2), data_batch_et);
+    ASSERT_TRUE(bn->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+    ASSERT_TRUE(bn->get_output_partial_shape(1).same_scheme(PartialShape::dynamic(1)));
+    ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape::dynamic(1)));
+}
+
+TEST(
+    type_prop,
+    batchnorm_training_backprop_partial_input_and_delta_rank_dynamic_some_rank_static_dynamic_wrong_rank)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    PartialShape delta_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+    element::Type delta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+    auto delta = make_validated_node<op::Parameter>(delta_et, delta_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormTrainingBackprop>(
+            epsilon, gamma, beta, data_batch, mean, variance, delta);
+        FAIL() << "Wrong gamma/beta/mean/variance shape not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Shape for gamma/beta/mean/variance ({?,?}) does not have rank 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    batchnorm_training_backprop_partial_input_and_delta_rank_dynamic_some_rank_static_dynamic_inconsistent_rank)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{3, Dimension::dynamic()};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{Dimension::dynamic()};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    PartialShape delta_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+    element::Type delta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+    auto delta = make_validated_node<op::Parameter>(delta_et, delta_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormTrainingBackprop>(
+            epsilon, gamma, beta, data_batch, mean, variance, delta);
+        FAIL() << "Wrong gamma/beta/mean/variance shape not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Shapes for gamma/beta/mean/variance do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    batchnorm_training_backprop_partial_input_and_delta_rank_dynamic_some_static_inconsistent_channel_count)
+{
+    PartialShape data_batch_shape{PartialShape::dynamic()};
+    PartialShape gamma_shape{3};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{4};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    PartialShape delta_shape{PartialShape::dynamic()};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+    element::Type delta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+    auto delta = make_validated_node<op::Parameter>(delta_et, delta_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormTrainingBackprop>(
+            epsilon, gamma, beta, data_batch, mean, variance, delta);
+        FAIL() << "nconsistent gamma/beta/mean/variance channel count not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Shapes for gamma/beta/mean/variance do not match"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop,
+     batchnorm_training_backprop_partial_input_and_delta_rank_static_dynamic_some_static_ok)
+{
+    PartialShape data_batch_shape{64, Dimension::dynamic(), Dimension::dynamic(), 224};
+    PartialShape gamma_shape{3};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{3};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    PartialShape delta_shape{Dimension::dynamic(), 3, 448, 224};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+    element::Type delta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+    auto delta = make_validated_node<op::Parameter>(delta_et, delta_shape);
+
+    auto bn = make_validated_node<op::BatchNormTrainingBackprop>(
+        epsilon, gamma, beta, data_batch, mean, variance, delta);
+
+    ASSERT_EQ(bn->get_output_size(), 3);
+    ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(1), data_batch_et);
+    ASSERT_EQ(bn->get_output_element_type(2), data_batch_et);
+    ASSERT_TRUE(bn->get_output_partial_shape(0).same_scheme(PartialShape{64, 3, 448, 224}));
+    ASSERT_TRUE(bn->get_output_partial_shape(1).same_scheme(PartialShape{3}));
+    ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape{3}));
+}
+
+TEST(
+    type_prop,
+    batchnorm_training_backprop_partial_input_and_delta_rank_static_dynamic_some_static_inconsistent_channel_count)
+{
+    PartialShape data_batch_shape{64, Dimension::dynamic(), Dimension::dynamic(), 224};
+    PartialShape gamma_shape{3};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{3};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    PartialShape delta_shape{Dimension::dynamic(), 4, 448, 224};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+    element::Type delta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+    auto delta = make_validated_node<op::Parameter>(delta_et, delta_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormTrainingBackprop>(
+            epsilon, gamma, beta, data_batch, mean, variance, delta);
+        FAIL() << "Inconsistent delta/gamma/beta/mean/variance channel count not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input channel dimension (4) does not match "
+                                         "shape for gamma/beta/mean/variance ({3})"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    batchnorm_training_backprop_partial_input_and_delta_rank_static_dynamic_some_static_inconsistent_batch_size)
+{
+    PartialShape data_batch_shape{64, 3, Dimension::dynamic(), 224};
+    PartialShape gamma_shape{3};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{3};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    PartialShape delta_shape{128, 4, Dimension::dynamic(), 224};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+    element::Type delta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+    auto delta = make_validated_node<op::Parameter>(delta_et, delta_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormTrainingBackprop>(
+            epsilon, gamma, beta, data_batch, mean, variance, delta);
+        FAIL() << "Inconsistent input/delta batch size not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Shape of delta does not match the shape of the input data (input data "
+                        "shape: {64,3,?,224}, delta shape: {128,4,?,224})"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(
+    type_prop,
+    batchnorm_training_backprop_partial_input_and_delta_rank_static_dynamic_some_static_inconsistent_spatial_dims)
+{
+    PartialShape data_batch_shape{Dimension::dynamic(), 3, Dimension::dynamic(), 224};
+    PartialShape gamma_shape{3};
+    PartialShape beta_shape{PartialShape::dynamic()};
+    PartialShape mean_shape{3};
+    PartialShape variance_shape{PartialShape::dynamic()};
+    PartialShape delta_shape{Dimension::dynamic(), 3, Dimension::dynamic(), 448};
+    double epsilon = 0.001;
+    element::Type data_batch_et = element::f32;
+    element::Type gamma_et = element::f32;
+    element::Type beta_et = element::f32;
+    element::Type mean_et = element::f32;
+    element::Type variance_et = element::f32;
+    element::Type delta_et = element::f32;
+
+    auto data_batch = make_validated_node<op::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_validated_node<op::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_validated_node<op::Parameter>(beta_et, beta_shape);
+    auto mean = make_validated_node<op::Parameter>(mean_et, mean_shape);
+    auto variance = make_validated_node<op::Parameter>(variance_et, variance_shape);
+    auto delta = make_validated_node<op::Parameter>(delta_et, delta_shape);
+
+    try
+    {
+        auto bn = make_validated_node<op::BatchNormTrainingBackprop>(
+            epsilon, gamma, beta, data_batch, mean, variance, delta);
+        FAIL() << "Inconsistent input/delta spatial dimensions not detected";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Shape of delta does not match the shape of the input data "
+                        "(input data shape: {?,3,?,224}, delta shape: {?,3,?,448})"));
     }
     catch (...)
     {
