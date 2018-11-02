@@ -54,8 +54,8 @@ namespace ngraph
                     size_t dequantize_index =
                         mkldnn_emitter->build_dequantization(node, input_desc, result_desc);
                     auto& deps = mkldnn_emitter->get_primitive_deps(dequantize_index);
-                    auto functor = [&, dequantize_index](CPURuntimeContext* ctx,
-                                                         CPUExecutionContext* ectx) {
+                    functor = [&, dequantize_index](CPURuntimeContext* ctx,
+                                                    CPUExecutionContext* ectx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, dequantize_index);
