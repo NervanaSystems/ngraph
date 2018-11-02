@@ -29,10 +29,23 @@ namespace ngraph
 class ngraph::pass::PropagateCacheability : public FunctionPass
 {
 public:
-	PropagateCacheability()
+    PropagateCacheability()
         : FunctionPass()
     {
     }
 
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
+
+    void set_op_annotations_func(
+        std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)> func)
+    {
+        op_annotations_func = func;
+    }
+
+private:
+    std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)> op_annotations_func =
+        []() -> std::shared_ptr<ngraph::op::util::OpAnnotations> {
+        auto op_annotations = std::make_shared<ngraph::op::util::OpAnnotations>();
+        return op_annotations;
+    };
 };

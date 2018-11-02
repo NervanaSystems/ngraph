@@ -60,7 +60,19 @@ public:
         return m_visualize_tree_ops_map;
     }
 
+    void set_op_annotations_func(
+        std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)> func)
+    {
+        m_op_annotations_func = func;
+    }
+
+    std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)> get_op_annotations_func()
+    {
+        return m_op_annotations_func;
+    }
+
 private:
     std::vector<std::shared_ptr<Function>> m_function_list;
     visualize_tree_ops_map_t m_visualize_tree_ops_map;
+    std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)> m_op_annotations_func;
 };
