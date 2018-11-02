@@ -129,6 +129,11 @@ set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}")
 set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
 set(NGRAPH_INSTALL_BACKEND "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BACKEND_DIR}")
 set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../backend:$ORIGIN/../lib")
+if (DEFINED NGRAPH_RPATH)
+    set(CMAKE_INSTALL_RPATH "$ORIGIN:${NGRAPH_RPATH}")
+else()
+    set(CMAKE_INSTALL_RPATH "$ORIGIN")
+endif()
 
 message(STATUS "Backend  directory: ${NGRAPH_INSTALL_BACKEND}")
 #-----------------------------------------------------------------------------------------------
