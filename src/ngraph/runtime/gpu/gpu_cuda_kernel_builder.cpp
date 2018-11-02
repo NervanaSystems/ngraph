@@ -18,8 +18,8 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_args.hpp"
-#include "ngraph/runtime/gpu/type_info.hpp"
 #include "ngraph/runtime/gpu/nvrtc/helpers.hpp"
+#include "ngraph/runtime/gpu/type_info.hpp"
 
 using namespace ngraph;
 

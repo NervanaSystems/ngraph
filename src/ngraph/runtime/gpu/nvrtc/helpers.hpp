@@ -15,9 +15,11 @@
 //*****************************************************************************
 #pragma once
 
-#include "cuda.h"
-#include <string>
+#include <cuda.h>
 #include <sstream>
+#include <string>
+
+#include "ngraph/except.hpp"
 
 namespace ngraph
 {
@@ -28,12 +30,21 @@ namespace ngraph
             namespace nvrtc
             {
                 std::string helpers();
-                std::string define_zero(const std::string& dtype, const std::string& name = "zero_");
-                std::string define_vzero(std::string dtype, const uint32_t& n, const std::string& name = "zero_");
-                std::string define_coherent_load(const std::string& dtype, const std::string& name = "load_");
-                std::string define_coherent_vload(std::string dtype, const uint32_t& n, const std::string& name = "load_");
-                std::string define_non_coherent_load(const std::string& dtype, const std::string& name = "load_");
-                std::string define_non_coherent_vload(std::string dtype, const uint32_t& n, const std::string& name = "load_");
+                std::string define_zero(const std::string& dtype,
+                                        const std::string& name = "zero_");
+                std::string define_vzero(std::string dtype,
+                                         const uint32_t& n,
+                                         const std::string& name = "zero_");
+                std::string define_coherent_load(const std::string& dtype,
+                                                 const std::string& name = "load_");
+                std::string define_coherent_vload(std::string dtype,
+                                                  const uint32_t& n,
+                                                  const std::string& name = "load_");
+                std::string define_non_coherent_load(const std::string& dtype,
+                                                     const std::string& name = "load_");
+                std::string define_non_coherent_vload(std::string dtype,
+                                                      const uint32_t& n,
+                                                      const std::string& name = "load_");
             }
         }
     }
@@ -115,15 +126,19 @@ __device__ __forceinline__ int msub16(int a, int b, int c)
     return ss.str();
 }
 
-std::string ngraph::runtime::gpu::nvrtc::define_zero(const std::string& dtype, const std::string& name)
+std::string ngraph::runtime::gpu::nvrtc::define_zero(const std::string& dtype,
+                                                     const std::string& name)
 {
     std::stringstream ss;
     std::string zero = "static_cast<" + dtype + ">(0)";
-    ss << "__device__ __forceinline__ void " << name << "(" << dtype << "& a) { a = " << zero << "; }\n";
+    ss << "__device__ __forceinline__ void " << name << "(" << dtype << "& a) { a = " << zero
+       << "; }\n";
     return ss.str();
 }
 
-std::string ngraph::runtime::gpu::nvrtc::define_vzero(std::string dtype, const uint32_t& n, const std::string& name)
+std::string ngraph::runtime::gpu::nvrtc::define_vzero(std::string dtype,
+                                                      const uint32_t& n,
+                                                      const std::string& name)
 {
     std::stringstream ss;
     if (n == 1 || n == 2 || n == 4)
@@ -132,7 +147,7 @@ std::string ngraph::runtime::gpu::nvrtc::define_vzero(std::string dtype, const u
         static std::vector<std::string> assignment = {"a.x = ", "a.y = ", "a.z = "};
         dtype = dtype + std::to_string(n);
         ss << "__device__ __forceinline__ void " << name << "(" << dtype << "& a) { ";
-        for (auto i=0u; i <= (n >> 1); i++)
+        for (auto i = 0u; i <= (n >> 1); i++)
         {
             ss << assignment[i];
         }
@@ -144,9 +159,13 @@ std::string ngraph::runtime::gpu::nvrtc::define_vzero(std::string dtype, const u
     }
     return ss.str();
 }
-#define LOAD_C "__device__ __forceinline__ " << dtype << " " << name << "(const " << dtype << "*  __restrict__ in, int i=0, bool b=true) { " << dtype << "  v; zero_(v); if (b) v = in[i]; return v; }\n"
+#define LOAD_C                                                                                     \
+    "__device__ __forceinline__ " << dtype << " " << name << "(const " << dtype                    \
+                                  << "*  __restrict__ in, int i=0, bool b=true) { " << dtype       \
+                                  << "  v; zero_(v); if (b) v = in[i]; return v; }\n"
 
-std::string ngraph::runtime::gpu::nvrtc::define_coherent_load(const std::string& dtype, const std::string& name)
+std::string ngraph::runtime::gpu::nvrtc::define_coherent_load(const std::string& dtype,
+                                                              const std::string& name)
 {
     std::stringstream ss;
     ss << define_zero(dtype);
@@ -154,7 +173,9 @@ std::string ngraph::runtime::gpu::nvrtc::define_coherent_load(const std::string&
     return ss.str();
 }
 
-std::string ngraph::runtime::gpu::nvrtc::define_coherent_vload(std::string dtype, const uint32_t& n, const std::string& name)
+std::string ngraph::runtime::gpu::nvrtc::define_coherent_vload(std::string dtype,
+                                                               const uint32_t& n,
+                                                               const std::string& name)
 {
     std::stringstream ss;
     ss << define_vzero(dtype, n);
@@ -162,9 +183,13 @@ std::string ngraph::runtime::gpu::nvrtc::define_coherent_vload(std::string dtype
     return ss.str();
 }
 
-#define LOAD_NC  "__device__ __forceinline__ " << dtype << " " << name << "(const " << dtype << "*  __restrict__ in, int i=0, bool b=true) { " << dtype << "  v; zero_(v); if (b) v = __ldg(in + i); return v; }\n"
+#define LOAD_NC                                                                                    \
+    "__device__ __forceinline__ " << dtype << " " << name << "(const " << dtype                    \
+                                  << "*  __restrict__ in, int i=0, bool b=true) { " << dtype       \
+                                  << "  v; zero_(v); if (b) v = __ldg(in + i); return v; }\n"
 
-std::string ngraph::runtime::gpu::nvrtc::define_non_coherent_load(const std::string& dtype, const std::string& name)
+std::string ngraph::runtime::gpu::nvrtc::define_non_coherent_load(const std::string& dtype,
+                                                                  const std::string& name)
 {
     std::stringstream ss;
     ss << define_zero(dtype);
@@ -172,7 +197,9 @@ std::string ngraph::runtime::gpu::nvrtc::define_non_coherent_load(const std::str
     return ss.str();
 }
 
-std::string ngraph::runtime::gpu::nvrtc::define_non_coherent_vload(std::string dtype, const uint32_t& n, const std::string& name)
+std::string ngraph::runtime::gpu::nvrtc::define_non_coherent_vload(std::string dtype,
+                                                                   const uint32_t& n,
+                                                                   const std::string& name)
 {
     std::stringstream ss;
     ss << define_vzero(dtype, n);
