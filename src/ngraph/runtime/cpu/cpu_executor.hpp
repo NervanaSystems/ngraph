@@ -52,7 +52,7 @@ namespace ngraph
                                  CPURuntimeContext* ctx,
                                  CPUExecutionContext* ectx,
                                  bool use_tbb = false);
-
+                    int get_num_thread_pools() { return m_num_thread_pools; }
                 private:
                     std::vector<std::unique_ptr<Eigen::ThreadPool>> m_thread_pools;
                     std::vector<std::unique_ptr<Eigen::ThreadPoolDevice>> m_thread_pool_devices;

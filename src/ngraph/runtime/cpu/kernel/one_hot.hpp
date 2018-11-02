@@ -32,10 +32,8 @@ namespace ngraph
             namespace kernel
             {
                 template <typename ElementType>
-                void one_hot_rank_0(void* arg,
-                                    void* out,
-                                    const Shape& out_shape,
-                                    size_t one_hot_axis)
+                void one_hot_rank_0(
+                    void* arg, void* out, const Shape& out_shape, size_t one_hot_axis, int arena)
 
                 {
                     memset(out, 0, sizeof(ElementType) * shape_size(out_shape));
@@ -49,7 +47,8 @@ namespace ngraph
                                     void* out,
                                     const Shape& arg_shape,
                                     const Shape& out_shape,
-                                    size_t one_hot_axis)
+                                    size_t one_hot_axis,
+                                    int arena)
 
                 {
                     Eigen::array<Eigen::Index, 2> out_dims;
@@ -74,7 +73,7 @@ namespace ngraph
                     };
 
                     out_tensor.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                        0)) = out_tensor.generate(generator);
+                        arena)) = out_tensor.generate(generator);
                 }
 
                 template <typename ElementType>
