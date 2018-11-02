@@ -37,12 +37,12 @@ namespace ngraph
                                          const std::string& name = "zero_");
                 std::string define_coherent_load(const std::string& dtype,
                                                  const std::string& name = "load_");
-                std::string define_coherent_vload(std::string dtype,
+                std::string define_coherent_vload(const std::string& dtype,
                                                   const uint32_t& n,
                                                   const std::string& name = "load_");
                 std::string define_non_coherent_load(const std::string& dtype,
                                                      const std::string& name = "load_");
-                std::string define_non_coherent_vload(std::string dtype,
+                std::string define_non_coherent_vload(const std::string& dtype,
                                                       const uint32_t& n,
                                                       const std::string& name = "load_");
             }
@@ -173,7 +173,7 @@ std::string ngraph::runtime::gpu::nvrtc::define_coherent_load(const std::string&
     return ss.str();
 }
 
-std::string ngraph::runtime::gpu::nvrtc::define_coherent_vload(std::string dtype,
+std::string ngraph::runtime::gpu::nvrtc::define_coherent_vload(const std::string& dtype,
                                                                const uint32_t& n,
                                                                const std::string& name)
 {
@@ -197,7 +197,7 @@ std::string ngraph::runtime::gpu::nvrtc::define_non_coherent_load(const std::str
     return ss.str();
 }
 
-std::string ngraph::runtime::gpu::nvrtc::define_non_coherent_vload(std::string dtype,
+std::string ngraph::runtime::gpu::nvrtc::define_non_coherent_vload(const std::string& dtype,
                                                                    const uint32_t& n,
                                                                    const std::string& name)
 {
