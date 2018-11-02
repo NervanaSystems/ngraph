@@ -52,6 +52,7 @@ bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
     else
     {
         node->set_placement(m_placement_policy(node));
-        return false;
     }
+
+    return false;
 }
