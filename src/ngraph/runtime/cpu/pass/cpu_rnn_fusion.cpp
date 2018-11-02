@@ -740,16 +740,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         NGRAPH_DEBUG << "batch_size: " << batch_size;
         NGRAPH_DEBUG << "feature_size: " << feature_size;
 
-        if ((src_layer->get_arguments().size()) != rnn_nodes[0]->get_num_timesteps() &&
+        if ((src_layer->get_shape()[0] / batch_size) != rnn_nodes[0]->get_num_timesteps() &&
             !std::dynamic_pointer_cast<op::Parameter>(src_layer))
-        {
-            throw ngraph_error(
-                " input symbols for the layer fused RNN op, should be captured only for the first "
-                "layer");
-        }
-
-        if (std::dynamic_pointer_cast<op::Parameter>(src_layer) &&
-            rnn_nodes[0]->get_num_timesteps() != 1)
         {
             throw ngraph_error(
                 " input symbols for the layer fused RNN op, should be captured only for the first "

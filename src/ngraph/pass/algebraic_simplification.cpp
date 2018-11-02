@@ -200,6 +200,10 @@ static bool simplify_concat(std::shared_ptr<Node> n)
         }
     }
 
+    if (slice_axis == std::numeric_limits<size_t>::max())
+    {
+        return false;
+    }
     auto replacement = branch_tip;
     if (btip_shape != n->get_shape())
     {
