@@ -65,6 +65,8 @@ ExternalProject_Add(
     EXCLUDE_FROM_ALL TRUE
     )
 
+# Not sure if all of these are used by Halide but we can trim it down later
+# if needed
 set(HALIDE_LLVM_LINK_LIBS
     ${SOURCE_DIR}/lib/libLLVMX86AsmParser.a
     ${SOURCE_DIR}/lib/libLLVMX86CodeGen.a
