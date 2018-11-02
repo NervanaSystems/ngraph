@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "util/test_tools.hpp"
 
 #include <memory>
 using namespace std;
@@ -24,16 +25,6 @@ using namespace ngraph;
 
 #define EXPECT_HAS_SUBSTRING(haystack, needle)                                                     \
     EXPECT_PRED_FORMAT2(testing::IsSubstring, needle, haystack)
-
-// TODO(amprocte): Consider moving this out of test; might be useful or even needed for other
-// things.
-template <typename T, typename... Args>
-std::shared_ptr<T> make_validated_node(Args&&... args)
-{
-    std::shared_ptr<T> node = std::make_shared<T>(args...);
-    node->delayed_validate_and_infer_types();
-    return node;
-}
 
 TEST(type_prop, broadcast_deduce)
 {

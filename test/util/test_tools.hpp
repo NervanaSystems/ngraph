@@ -135,3 +135,13 @@ std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& fu
     }
     return result_vectors;
 }
+
+// TODO(amprocte): Consider moving this out of test; might be useful or even needed for other
+// things.
+template <typename T, typename... Args>
+std::shared_ptr<T> make_validated_node(Args&&... args)
+{
+    std::shared_ptr<T> node = std::make_shared<T>(args...);
+    node->delayed_validate_and_infer_types();
+    return node;
+}

@@ -62,16 +62,16 @@ TEST(build_graph, literal)
     // float scalar from a float
     // auto float0 = FloatConstant::make(3.0);
     vector<float> float_t{3.0};
-    auto float0 = make_shared<op::Constant>(element::f32, Shape{}, float_t);
+    auto float0 = make_validated_node<op::Constant>(element::f32, Shape{}, float_t);
     ASSERT_EQ(float0->get_vector<float>(), std::vector<float>{3.0});
     ASSERT_EQ(float0->get_element_type(), element::f32);
     ASSERT_EQ(float0->get_shape(), Shape{});
-    auto d = make_shared<op::Dot>(float0, float0);
+    auto d = make_validated_node<op::Dot>(float0, float0);
     ASSERT_EQ(d->get_arguments().at(0), float0);
     ASSERT_EQ(d->get_arguments().at(1), float0);
 
     vector<int32_t> int32{3};
-    auto int32_0 = make_shared<op::Constant>(element::i32, Shape{}, int32);
+    auto int32_0 = make_validated_node<op::Constant>(element::i32, Shape{}, int32);
     ASSERT_EQ(int32_0->get_vector<int32_t>(), std::vector<int>{3});
     ASSERT_EQ(int32_0->get_element_type(), element::i32);
     ASSERT_EQ(int32_0->get_shape(), Shape{});
@@ -83,16 +83,16 @@ TEST(build_graph, tensor)
     // auto float0 = FloatConstant::make(3.0);
     Shape shape{2, 3};
     vector<float> float_t(shape_size(shape), 0);
-    auto float0 = make_shared<op::Constant>(element::f32, shape, float_t);
+    auto float0 = make_validated_node<op::Constant>(element::f32, shape, float_t);
     ASSERT_EQ(float0->get_element_type(), element::f32);
     ASSERT_EQ(float0->get_shape(), shape);
-    auto d = make_shared<op::Add>(float0, float0);
+    auto d = make_validated_node<op::Add>(float0, float0);
     ASSERT_EQ(d->get_arguments().at(0), float0);
     ASSERT_EQ(d->get_arguments().at(1), float0);
 
     Shape ishape{3, 5};
     vector<int32_t> idata(shape_size(ishape), 0);
-    auto int32_0 = make_shared<op::Constant>(element::i32, ishape, idata);
+    auto int32_0 = make_validated_node<op::Constant>(element::i32, ishape, idata);
     ASSERT_EQ(int32_0->get_element_type(), element::i32);
     ASSERT_EQ(int32_0->get_shape(), ishape);
 }
