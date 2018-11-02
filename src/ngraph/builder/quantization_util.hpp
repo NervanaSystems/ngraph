@@ -56,7 +56,7 @@ namespace ngraph
             }
 
             template <class T>
-            std::shared_ptr<Node> makeConstant(const element::Type& type, const Shape& shape, T num)
+            std::shared_ptr<Node> make_constant(const element::Type& type, const Shape& shape, T num)
             {
                 std::shared_ptr<Node> val = nullptr;
 
@@ -70,9 +70,49 @@ namespace ngraph
                     val = std::make_shared<ngraph::op::Constant>(
                         type, ngraph::Shape{}, std::vector<double>{static_cast<double>(num)});
                 }
+                else if (type == element::i64)
+                {
+                    val = std::make_shared<ngraph::op::Constant>(
+                        type, ngraph::Shape{}, std::vector<int64_t>{static_cast<int64_t>(num)});
+                }
+                else if (type == element::i32)
+                {
+                    val = std::make_shared<ngraph::op::Constant>(
+                        type, ngraph::Shape{}, std::vector<int32_t>{static_cast<int32_t>(num)});
+                }
+                else if (type == element::i16)
+                {
+                    val = std::make_shared<ngraph::op::Constant>(
+                        type, ngraph::Shape{}, std::vector<int16_t>{static_cast<int16_t>(num)});
+                }
+                else if (type == element::i8)
+                {
+                    val = std::make_shared<ngraph::op::Constant>(
+                        type, ngraph::Shape{}, std::vector<int8_t>{static_cast<int8_t>(num)});
+                }
+                else if (type == element::u64)
+                {
+                    val = std::make_shared<ngraph::op::Constant>(
+                        type, ngraph::Shape{}, std::vector<uint64_t>{static_cast<uint64_t>(num)});
+                }
+                else if (type == element::u32)
+                {
+                    val = std::make_shared<ngraph::op::Constant>(
+                        type, ngraph::Shape{}, std::vector<uint32_t>{static_cast<uint32_t>(num)});
+                }
+                else if (type == element::u16)
+                {
+                    val = std::make_shared<ngraph::op::Constant>(
+                        type, ngraph::Shape{}, std::vector<uint16_t>{static_cast<uint16_t>(num)});
+                }
+                else if (type == element::u8)
+                {
+                    val = std::make_shared<ngraph::op::Constant>(
+                        type, ngraph::Shape{}, std::vector<uint8_t>{static_cast<uint8_t>(num)});
+                }
                 else
                 {
-                    throw ngraph_error("TODO");
+                    throw ngraph_error("make_constant: Unsupported element type");
                 }
 
                 if (shape.size() > 0)
@@ -110,11 +150,11 @@ namespace ngraph
                         "quantization_range_for_multiplication: min and max must have same shape");
                 }
 
-                auto u8_range = makeConstant(type,
+                auto u8_range = make_constant(type,
                                              shape,
                                              std::numeric_limits<uint8_t>::max() -
                                                  std::numeric_limits<uint8_t>::min());
-                auto i8_range = makeConstant(type,
+                auto i8_range = make_constant(type,
                                              shape,
                                              std::numeric_limits<int8_t>::max() -
                                                  std::numeric_limits<int8_t>::min());
@@ -123,8 +163,8 @@ namespace ngraph
                 auto b_one_quant_level = (max_b - min_b) / i8_range;
                 auto c_one_quant_level = a_one_quant_level * b_one_quant_level;
 
-                auto i32_min = makeConstant(type, shape, std::numeric_limits<int32_t>::min());
-                auto i32_max = makeConstant(type, shape, std::numeric_limits<int32_t>::max());
+                auto i32_min = make_constant(type, shape, std::numeric_limits<int32_t>::min());
+                auto i32_max = make_constant(type, shape, std::numeric_limits<int32_t>::max());
 
                 auto min_c = c_one_quant_level * i32_min;
                 auto max_c = c_one_quant_level * i32_max;
@@ -169,11 +209,11 @@ namespace ngraph
                 // s32 = f32 * std::pow(2, 31)/ max_abs32;
                 // s8 = f32 * std::pow(2, 7)/ max_abs8;
                 // s8 = s32 * std::pow(2, -24) * max_abs32 / max_abs8;
-                auto y = makeConstant(type, shape, std::pow(2, -24));
+                auto y = make_constant(type, shape, std::pow(2, -24));
                 return y * (max_abs32 / max_abs8);
             }
 
-            std::shared_ptr<Node> get_quantization_scale(std::shared_ptr<Node> input_min_range,
+            std::shared_ptr<Node> get_scale(std::shared_ptr<Node> input_min_range,
                                                          std::shared_ptr<Node> input_max_range,
                                                          const ngraph::element::Type& quant_type,
                                                          bool bump_by_eps = false)
@@ -195,13 +235,13 @@ namespace ngraph
 
                 if (bump_by_eps)
                 {
-                    auto zero = makeConstant(type, shape, 0);
+                    auto zero = make_constant(type, shape, 0);
                     min_range = std::make_shared<op::Minimum>(zero, input_min_range);
 
                     auto max_abs_input_range = max_abs(input_min_range, input_max_range);
 
-                    auto one = makeConstant(type, shape, 1);
-                    auto hundred = makeConstant(type, shape, 100);
+                    auto one = make_constant(type, shape, 1);
+                    auto hundred = make_constant(type, shape, 100);
                     auto epsilon =
                         std::make_shared<op::Maximum>(one, max_abs_input_range) / hundred;
 
@@ -215,7 +255,7 @@ namespace ngraph
                     (quant_type.is_signed() ? std::pow(2, (bw - 1)) : std::pow(2, bw)) - 1);
 
                 auto max_abs_range = max_abs(min_range, max_range);
-                auto target_range = makeConstant(type, shape, range);
+                auto target_range = make_constant(type, shape, range);
 
                 return max_abs_range / target_range;
             }
