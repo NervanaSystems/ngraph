@@ -1346,3 +1346,19 @@ TEST(onnx, model_custom_op_default_domain)
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
+
+TEST(onnx, model_matmul_vec_ten3D)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_vec_ten3D.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{0.f, 1.f});
+    inputs.emplace_back(
+        test::NDArray<float, 3>{{{0.f}, {1.f}}, {{2.f}, {3.f}}, {{4.f}, {5.f}}}.get_vector());
+
+    Outputs expected_output{test::NDArray<float, 2>{{1.f}, {3.f}, {5.f}}};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
