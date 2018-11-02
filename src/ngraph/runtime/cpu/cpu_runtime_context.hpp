@@ -37,6 +37,8 @@ namespace ngraph
     {
         class AlignedBuffer;
     }
+
+    class State;
 }
 
 namespace ngraph
@@ -60,6 +62,7 @@ namespace ngraph
                 char* const* mkldnn_workspaces;
                 tbb::flow::graph* G;
                 tbb::global_control* c;
+                State* const* states;
                 std::set<size_t> breakpoints;
                 size_t pc;
             };

@@ -70,6 +70,7 @@ set(SRC
     builder/softmax.cpp
     builder/sum.cpp
     builder/topk.cpp
+    builder/state.cpp
     builder/quantization.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp

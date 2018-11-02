@@ -53,11 +53,6 @@ public:
     }
 
     void add_matcher(std::shared_ptr<pattern::Matcher> m) { m_matchers.push_back(m); }
-    static bool
-        run_matchers_on_nodes_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes,
-                                   const std::vector<std::shared_ptr<pattern::Matcher>>& matchers,
-                                   std::shared_ptr<ngraph::Function> f);
-
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 
 private:

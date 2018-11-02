@@ -228,6 +228,7 @@ function_name
 fuse_max_with_constant_zero_input_as_relu
 greater
 greatereq
+generate_mask
 kahan_sum_3d_to_vector
 kahan_sum_to_scalar
 less

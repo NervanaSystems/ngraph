@@ -130,6 +130,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
     ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
     ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
+    ctx->states = m_external_function->m_states.data();
 
     if (std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
     {

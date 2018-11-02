@@ -10,6 +10,7 @@ concat_matrix_int64
 divide_by_zero_int32
 #int64 is not supprted by cuDNN
 dot_matrix_vector_int64
+generate_mask
 #no mkldnn on GPU
 #error throw is not the same on GPU, not supported yet
 one_hot_scalar_fp_nonint_in_3
