@@ -59,6 +59,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/util.hpp"
@@ -1794,5 +1795,42 @@ void ngraph::runtime::cpu::pass::CPUFusion::
         };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(prelu, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::fuse_lstm_recurrent_state()
+{
+    auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
+    auto src_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});
+    auto weights_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{100, 400});
+    auto weights_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{100, 400});
+    auto bias_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
+    auto lstm1 = std::make_shared<op::Lstm>(
+        src_layer_label, src_iter_label, weights_layer_label, weights_iter_label, bias_label);
+
+    auto lstm1_goe0 = std::make_shared<op::GetOutputElement>(lstm1, 0);
+    auto lstm1_goe1 = std::make_shared<op::GetOutputElement>(lstm1, 1);
+    auto lstm1_goe1_label =
+        std::make_shared<pattern::op::Label>(lstm1_goe1, nullptr, NodeVector{lstm1_goe1});
+    auto lstm1_goe0_slice =
+        std::make_shared<op::Slice>(lstm1_goe0, Coordinate{0, 0}, Coordinate{10, 100});
+    auto lstm1_goe1_slice =
+        std::make_shared<op::Slice>(lstm1_goe1_label, Coordinate{10, 0}, Coordinate{20, 100});
+
+    auto concat = std::make_shared<op::Concat>(NodeVector{lstm1_goe0_slice, lstm1_goe1_slice}, 0);
+    auto concat_label = std::make_shared<pattern::op::Label>(concat, nullptr, NodeVector{concat});
+    //auto lstm2 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100},  pattern::has_class<op::Lstm>());
+
+    ngraph::pattern::graph_rewrite_callback callback =
+        [lstm1, concat_label, lstm1_goe1_label](pattern::Matcher& m) {
+
+            NGRAPH_DEBUG << "In Lstm concat fusion" << m.get_match_root()->get_name();
+            auto pattern_map = m.get_pattern_map();
+
+            // we can replace the concat lstm_goe_1 which had both recurrent state tensor
+            ngraph::replace_node(pattern_map[concat_label], pattern_map[lstm1_goe1_label]);
+            return true;
+        };
+    auto m = std::make_shared<ngraph::pattern::Matcher>(concat_label, callback);
     this->add_matcher(m);
 }

@@ -78,6 +78,7 @@ public:
             // construct_conv_add() should always be after construct_conv_bias()
             construct_conv_add();
             construct_conv_add_relu();
+            fuse_lstm_recurrent_state();
         }
     }
 
@@ -104,4 +105,5 @@ private:
     void construct_conv_bias_affine_folding();
     void construct_groupconv_batchnorm_global_stats_folding();
     void construct_groupconv_batchnorm_global_stats_folding_relu();
+    void fuse_lstm_recurrent_state();
 };
