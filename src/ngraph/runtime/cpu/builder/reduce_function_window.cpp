@@ -62,7 +62,7 @@ namespace ngraph
 
                 auto functor =
                     [&, kernel, arg0_shape, out_shape, window_shape, window_movement_strides](
-                        CPURuntimeContext* ctx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         kernel(arg0_tensor,
                                arg1_tensor,
                                out_tensor,

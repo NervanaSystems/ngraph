@@ -28,7 +28,7 @@ namespace ngraph
             namespace kernel
             {
                 template <typename ElementType>
-                void result(const void* arg, void* out, size_t count)
+                void result(const void* arg, void* out, size_t count, int arena)
                 {
                     if (arg != out)
                     {

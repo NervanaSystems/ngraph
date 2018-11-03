@@ -17,6 +17,8 @@
 #include "cpu_layout_descriptor.hpp"
 #include <algorithm>
 #include <numeric>
+
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 namespace ngraph
@@ -108,7 +110,7 @@ namespace ngraph
                 try
                 {
                     auto mem_prim_desc =
-                        mkldnn::memory::primitive_desc(md, mkldnn_utils::global_cpu_engine);
+                        mkldnn::memory::primitive_desc(md, executor::global_cpu_engine);
                     m_buffer_size = mem_prim_desc.get_size();
                 }
                 catch (const mkldnn::error& e)

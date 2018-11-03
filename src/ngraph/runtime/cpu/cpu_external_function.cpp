@@ -133,6 +133,7 @@
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
@@ -1647,7 +1648,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                     {
                                         start_ts = cpu::Clock::now();
                                     }
-                                    (*functor)(ctx);
+                                    CPUExecutionContext ectx{0};
+                                    executor::GetCPUExecutor().execute(*functor, ctx, &ectx, true);
                                     if (runtime::cpu::IsTracingEnabled() || m_emit_timing)
                                     {
                                         end_ts = cpu::Clock::now();
@@ -1741,8 +1743,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
                     {
                         start_ts = cpu::Clock::now();
                     }
-
-                    (functors.at(ctx->pc))(ctx);
+                    CPUExecutionContext ectx{0};
+                    executor::GetCPUExecutor().execute(functors.at(ctx->pc), ctx, &ectx);
 
                     if (ctx->breakpoints.count(ctx->pc + 1))
                     {
