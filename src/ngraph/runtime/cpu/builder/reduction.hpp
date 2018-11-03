@@ -33,7 +33,7 @@
     if (reduction_axes.empty())                                                                    \
     {                                                                                              \
         size_t size = out[0].get_size() * out[0].get_element_type().size();                        \
-        auto functor = [&, size](CPURuntimeContext* ctx) {                                         \
+        auto functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {              \
             memcpy(out_tensor, arg_tensor, size);                                                  \
         };                                                                                         \
         functors.emplace_back(functor);                                                            \
@@ -45,8 +45,9 @@
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_all<float, 2>)> kernel;          \
         SELECT_KERNEL_BY_RANK(                                                                     \
             kernel, result_element_type, arg_rank, runtime::cpu::kernel::reduce_##K##_all);        \
-        auto functor = [&, kernel, arg_shape, result_shape](CPURuntimeContext* ctx) {              \
-            kernel(arg_tensor, out_tensor, arg_shape, result_shape);                               \
+        auto functor = [&, kernel, arg_shape, result_shape](CPURuntimeContext* ctx,                \
+                                                            CPUExecutionContext* ectx) {           \
+            kernel(arg_tensor, out_tensor, arg_shape, result_shape, ectx->arena);                  \
         };                                                                                         \
         functors.emplace_back(functor);                                                            \
         return;                                                                                    \
@@ -62,8 +63,9 @@
                                   result_element_type,                                             \
                                   arg_rank,                                                        \
                                   runtime::cpu::kernel::reduce_##K##_innermost_1rd);               \
-            auto functor = [&, kernel, arg_shape, result_shape](CPURuntimeContext* ctx) {          \
-                kernel(arg_tensor, out_tensor, arg_shape, result_shape);                           \
+            auto functor = [&, kernel, arg_shape, result_shape](CPURuntimeContext* ctx,            \
+                                                                CPUExecutionContext* ectx) {       \
+                kernel(arg_tensor, out_tensor, arg_shape, result_shape, ectx->arena);              \
             };                                                                                     \
             functors.emplace_back(functor);                                                        \
             return;                                                                                \
@@ -72,10 +74,10 @@
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_1rd<float, 2>)> kernel;          \
         SELECT_KERNEL_BY_RANK(                                                                     \
             kernel, result_element_type, arg_rank, runtime::cpu::kernel::reduce_##K##_1rd);        \
-        auto functor =                                                                             \
-            [&, kernel, arg_shape, result_shape, reduction_axes](CPURuntimeContext* ctx) {         \
-                kernel(arg_tensor, out_tensor, arg_shape, result_shape, reduction_axes);           \
-            };                                                                                     \
+        auto functor = [&, kernel, arg_shape, result_shape, reduction_axes](                       \
+            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                                   \
+            kernel(arg_tensor, out_tensor, arg_shape, result_shape, reduction_axes, ectx->arena);  \
+        };                                                                                         \
         functors.emplace_back(functor);                                                            \
         return;                                                                                    \
     }                                                                                              \
@@ -84,10 +86,10 @@
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_3d_2rd<float>)> kernel;          \
         SELECT_KERNEL(kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_3d_2rd);     \
-        auto functor =                                                                             \
-            [&, kernel, arg_shape, result_shape, reduction_axes](CPURuntimeContext* ctx) {         \
-                kernel(arg_tensor, out_tensor, arg_shape, result_shape, reduction_axes);           \
-            };                                                                                     \
+        auto functor = [&, kernel, arg_shape, result_shape, reduction_axes](                       \
+            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                                   \
+            kernel(arg_tensor, out_tensor, arg_shape, result_shape, reduction_axes, ectx->arena);  \
+        };                                                                                         \
         functors.emplace_back(functor);                                                            \
         return;                                                                                    \
     }                                                                                              \
@@ -96,10 +98,10 @@
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_4d_2rd<float>)> kernel;          \
         SELECT_KERNEL(kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_4d_2rd);     \
-        auto functor =                                                                             \
-            [&, kernel, arg_shape, result_shape, reduction_axes](CPURuntimeContext* ctx) {         \
-                kernel(arg_tensor, out_tensor, arg_shape, result_shape, reduction_axes);           \
-            };                                                                                     \
+        auto functor = [&, kernel, arg_shape, result_shape, reduction_axes](                       \
+            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                                   \
+            kernel(arg_tensor, out_tensor, arg_shape, result_shape, reduction_axes, ectx->arena);  \
+        };                                                                                         \
         functors.emplace_back(functor);                                                            \
         return;                                                                                    \
     }                                                                                              \
@@ -108,10 +110,10 @@
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_5d_2rd<float>)> kernel;          \
         SELECT_KERNEL(kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_5d_2rd);     \
-        auto functor =                                                                             \
-            [&, kernel, arg_shape, result_shape, reduction_axes](CPURuntimeContext* ctx) {         \
-                kernel(arg_tensor, out_tensor, arg_shape, result_shape, reduction_axes);           \
-            };                                                                                     \
+        auto functor = [&, kernel, arg_shape, result_shape, reduction_axes](                       \
+            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                                   \
+            kernel(arg_tensor, out_tensor, arg_shape, result_shape, reduction_axes, ectx->arena);  \
+        };                                                                                         \
         functors.emplace_back(functor);                                                            \
         return;                                                                                    \
     }                                                                                              \
@@ -120,8 +122,8 @@
                                                                                                    \
     SELECT_KERNEL(ref_kernel, result_element_type, runtime::cpu::kernel::K);                       \
                                                                                                    \
-    auto functor =                                                                                 \
-        [&, ref_kernel, arg_shape, result_shape, reduction_axes](CPURuntimeContext* ctx) {         \
-            ref_kernel(arg_tensor, out_tensor, arg_shape, result_shape, reduction_axes);           \
-        };                                                                                         \
+    auto functor = [&, ref_kernel, arg_shape, result_shape, reduction_axes](                       \
+        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                                       \
+        ref_kernel(arg_tensor, out_tensor, arg_shape, result_shape, reduction_axes, ectx->arena);  \
+    };                                                                                             \
     functors.emplace_back(functor);

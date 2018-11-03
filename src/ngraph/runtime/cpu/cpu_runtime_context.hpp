@@ -62,12 +62,18 @@ namespace ngraph
                 char* const* mkldnn_workspaces;
                 tbb::flow::graph* G;
                 tbb::global_control* c;
-                tbb::task_scheduler_init* init;
                 State* const* states;
                 std::set<size_t> breakpoints;
                 size_t pc;
             };
             }
+
+            struct CPUExecutionContext
+            {
+                int arena;
+            };
+
+            typedef std::function<void(CPURuntimeContext*, CPUExecutionContext*)> CPUKernelFunctor;
         }
     }
 }
