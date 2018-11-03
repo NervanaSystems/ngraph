@@ -47,6 +47,7 @@
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -866,7 +867,7 @@ namespace ngraph
                                                              mkldnn_padding_below,
                                                              mkldnn_padding_above,
                                                              padding_kind::zero},
-                                                            mkldnn_utils::global_cpu_engine);
+                                                            executor::global_cpu_engine);
                         i_mds.push_back(input_desc);
                         o_mds.push_back(prim_desc.dst_primitive_desc().desc());
                     }
@@ -946,7 +947,7 @@ namespace ngraph
                                                                  mkldnn_padding_below,
                                                                  mkldnn_padding_above,
                                                                  padding_kind::zero},
-                                                                mkldnn_utils::global_cpu_engine);
+                                                                executor::global_cpu_engine);
                             auto prim_desc =
                                 pooling_backward::primitive_desc({algorithm_enumerator,
                                                                   result_desc,
@@ -956,7 +957,7 @@ namespace ngraph
                                                                   mkldnn_padding_below,
                                                                   mkldnn_padding_above,
                                                                   padding_kind::zero},
-                                                                 mkldnn_utils::global_cpu_engine,
+                                                                 executor::global_cpu_engine,
                                                                  fwd_prim_desc);
                             i_mds.push_back(input_desc);
                             o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
@@ -1018,7 +1019,7 @@ namespace ngraph
                                                              mkldnn_padding_below,
                                                              mkldnn_padding_above,
                                                              padding_kind::zero},
-                                                            mkldnn_utils::global_cpu_engine);
+                                                            executor::global_cpu_engine);
                         i_mds.push_back(input_desc);
                         o_mds.push_back(prim_desc.dst_primitive_desc().desc());
 
@@ -1162,7 +1163,7 @@ namespace ngraph
                                                              mkldnn_padding_below,
                                                              mkldnn_padding_above,
                                                              padding_kind::zero},
-                                                            mkldnn_utils::global_cpu_engine);
+                                                            executor::global_cpu_engine);
 
                         auto prim_desc =
                             pooling_backward::primitive_desc({algorithm_enumerator,
@@ -1173,7 +1174,7 @@ namespace ngraph
                                                               mkldnn_padding_below,
                                                               mkldnn_padding_above,
                                                               padding_kind::zero},
-                                                             mkldnn_utils::global_cpu_engine,
+                                                             executor::global_cpu_engine,
                                                              fwd_prim_desc);
                         i_mds.push_back(fprop_input_md);
                         i_mds.push_back(diff_dst_desc);
@@ -1803,7 +1804,7 @@ namespace ngraph
                         {
                             auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), i);
                             inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                                input_md, mkldnn_utils::global_cpu_engine));
+                                input_md, executor::global_cpu_engine));
                         }
                         try
                         {
