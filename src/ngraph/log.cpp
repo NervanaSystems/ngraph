@@ -28,9 +28,17 @@
 using namespace std;
 using namespace ngraph;
 
+namespace
+{
+    class NilStreamBuf final : public streambuf
+    {
+    };
+}
+
 ostream& ngraph::get_nil_stream()
 {
-    static stringstream nil;
+    static NilStreamBuf nil_buf;
+    static ostream nil{&nil_buf};
     return nil;
 }
 
