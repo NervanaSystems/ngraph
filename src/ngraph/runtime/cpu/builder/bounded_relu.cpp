@@ -43,7 +43,8 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto bounded_relu_index = mkldnn_emitter->build_bounded_relu(node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
-                    auto functor = [&, bounded_relu_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, bounded_relu_index](CPURuntimeContext* ctx,
+                                                           CPUExecutionContext* ectx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], input_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, bounded_relu_index);
@@ -58,8 +59,9 @@ namespace ngraph
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::bounded_relu);
 
                     auto alpha = static_cast<const op::BoundedRelu*>(node)->get_alpha();
-                    auto functor = [&, kernel, alpha, count](CPURuntimeContext* ctx) {
-                        kernel(input_tensor, out_tensor, alpha, count);
+                    auto functor = [&, kernel, alpha, count](CPURuntimeContext* ctx,
+                                                             CPUExecutionContext* ectx) {
+                        kernel(input_tensor, out_tensor, alpha, count, ectx->arena);
                     };
                     functors.emplace_back(functor);
                 }
