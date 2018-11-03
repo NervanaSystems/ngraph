@@ -28,198 +28,207 @@
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 #include "ngraph/runtime/plaidml/plaidml_translate.hpp"
 
-// Abs performs a simple elementwise absolute value.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Abs>::operator()()
+namespace ngraph
 {
-    check_inputs(1);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "I"})
-                   .add(builder::Output{"O"})
-                   .add(builder::Elementwise{"O", "abs(I)"})
-                   .finalize());
-}
+    namespace runtime
+    {
+        namespace plaidml
+        {
+            // Abs performs a simple elementwise absolute value.
+            template <>
+            void Impl<op::Abs>::operator()()
+            {
+                check_inputs(1);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "I"})
+                               .add(builder::Output{"O"})
+                               .add(builder::Elementwise{"O", "abs(I)"})
+                               .finalize());
+            }
 
-// Add performs a simple elementwise addition.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Add>::operator()()
-{
-    check_inputs(2);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "A"})
-                   .add(builder::Input{op_input(1), "B"})
-                   .add(builder::Output{"C"})
-                   .add(builder::Elementwise{"C", "A + B"})
-                   .finalize());
-}
+            // Add performs a simple elementwise addition.
+            template <>
+            void Impl<op::Add>::operator()()
+            {
+                check_inputs(2);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "A"})
+                               .add(builder::Input{op_input(1), "B"})
+                               .add(builder::Output{"C"})
+                               .add(builder::Elementwise{"C", "A + B"})
+                               .finalize());
+            }
 
-// Ceiling performs a simple elementwise ceiling.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Ceiling>::operator()()
-{
-    check_inputs(1);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "I"})
-                   .add(builder::Output{"O"})
-                   .add(builder::Elementwise{"O", "ceil(I)"})
-                   .finalize());
-}
+            // Ceiling performs a simple elementwise ceiling.
+            template <>
+            void Impl<op::Ceiling>::operator()()
+            {
+                check_inputs(1);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "I"})
+                               .add(builder::Output{"O"})
+                               .add(builder::Elementwise{"O", "ceil(I)"})
+                               .finalize());
+            }
 
-// Divide performs a simple elementwise division.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Divide>::operator()()
-{
-    check_inputs(2);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "A"})
-                   .add(builder::Input{op_input(1), "B"})
-                   .add(builder::Output{"C"})
-                   .add(builder::Elementwise{"C", "A / B"})
-                   .finalize());
-}
+            // Divide performs a simple elementwise division.
+            template <>
+            void Impl<op::Divide>::operator()()
+            {
+                check_inputs(2);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "A"})
+                               .add(builder::Input{op_input(1), "B"})
+                               .add(builder::Output{"C"})
+                               .add(builder::Elementwise{"C", "A / B"})
+                               .finalize());
+            }
 
-// Floor performs a simple elementwise floor.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Floor>::operator()()
-{
-    check_inputs(1);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "I"})
-                   .add(builder::Output{"O"})
-                   .add(builder::Elementwise{"O", "floor(I)"})
-                   .finalize());
-}
+            // Floor performs a simple elementwise floor.
+            template <>
+            void Impl<op::Floor>::operator()()
+            {
+                check_inputs(1);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "I"})
+                               .add(builder::Output{"O"})
+                               .add(builder::Elementwise{"O", "floor(I)"})
+                               .finalize());
+            }
 
-// Multiply performs a simple elementwise multiplication.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Multiply>::operator()()
-{
-    check_inputs(2);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "A"})
-                   .add(builder::Input{op_input(1), "B"})
-                   .add(builder::Output{"C"})
-                   .add(builder::Elementwise{"C", "A * B"})
-                   .finalize());
-}
+            // Multiply performs a simple elementwise multiplication.
+            template <>
+            void Impl<op::Multiply>::operator()()
+            {
+                check_inputs(2);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "A"})
+                               .add(builder::Input{op_input(1), "B"})
+                               .add(builder::Output{"C"})
+                               .add(builder::Elementwise{"C", "A * B"})
+                               .finalize());
+            }
 
-// Negative performs a simple elementwise negation.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Negative>::operator()()
-{
-    check_inputs(1);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(), "I"})
-                   .add(builder::Output{"O"})
-                   .add(builder::Elementwise{"O", "-I"})
-                   .finalize());
-}
+            // Negative performs a simple elementwise negation.
+            template <>
+            void Impl<op::Negative>::operator()()
+            {
+                check_inputs(1);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(), "I"})
+                               .add(builder::Output{"O"})
+                               .add(builder::Elementwise{"O", "-I"})
+                               .finalize());
+            }
 
-// Relu implements a simple elementwise rectified linear unit.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Relu>::operator()()
-{
-    check_inputs(1);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(), "I"})
-                   .add(builder::Output{"O"})
-                   .add(builder::Elementwise{"O", "relu(I)"})
-                   .finalize());
-}
+            // Relu implements a simple elementwise rectified linear unit.
+            template <>
+            void Impl<op::Relu>::operator()()
+            {
+                check_inputs(1);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(), "I"})
+                               .add(builder::Output{"O"})
+                               .add(builder::Elementwise{"O", "relu(I)"})
+                               .finalize());
+            }
 
-// ReluBackprop computes the derivative of Relu.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::ReluBackprop>::operator()()
-{
-    check_inputs(2);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "I"})
-                   .add(builder::Input{op_input(1), "DO"})
-                   .add(builder::Output{"DI"})
-                   .add(builder::Elementwise{"DI", "I > 0 ? DO : 0"})
-                   .finalize());
-}
+            // ReluBackprop computes the derivative of Relu.
+            template <>
+            void Impl<op::ReluBackprop>::operator()()
+            {
+                check_inputs(2);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "I"})
+                               .add(builder::Input{op_input(1), "DO"})
+                               .add(builder::Output{"DI"})
+                               .add(builder::Elementwise{"DI", "I > 0 ? DO : 0"})
+                               .finalize());
+            }
 
-// Sigmoid computes a standard ML sigmoid: 1/(1+exp(-X))
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Sigmoid>::operator()()
-{
-    check_inputs(1);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "I"})
-                   .add(builder::Output{"O"})
-                   .add(builder::Elementwise{"O", "1/(1+exp(-I))"})
-                   .finalize());
-}
+            // Sigmoid computes a standard ML sigmoid: 1/(1+exp(-X))
+            template <>
+            void Impl<op::Sigmoid>::operator()()
+            {
+                check_inputs(1);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "I"})
+                               .add(builder::Output{"O"})
+                               .add(builder::Elementwise{"O", "1/(1+exp(-I))"})
+                               .finalize());
+            }
 
-// SigmoidBackprop computes the derivative of a standard ML
-// sigmoid: dOutput * sigmoid(X) * (1-sigmoid(X))
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::SigmoidBackprop>::operator()()
-{
-    check_inputs(2);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "I"})
-                   .add(builder::Input{op_input(1), "DO"})
-                   .add(builder::Output{"DI"})
-                   .add(builder::Elementwise{"O", "1/(1+exp(-I))"})
-                   .add(builder::Elementwise{"DI", "DO * O * (1-O)"})
-                   .finalize());
-}
+            // SigmoidBackprop computes the derivative of a standard ML
+            // sigmoid: dOutput * sigmoid(X) * (1-sigmoid(X))
+            template <>
+            void Impl<op::SigmoidBackprop>::operator()()
+            {
+                check_inputs(2);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "I"})
+                               .add(builder::Input{op_input(1), "DO"})
+                               .add(builder::Output{"DI"})
+                               .add(builder::Elementwise{"O", "1/(1+exp(-I))"})
+                               .add(builder::Elementwise{"DI", "DO * O * (1-O)"})
+                               .finalize());
+            }
 
-// Sign returns the sign of an element.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Sign>::operator()()
-{
-    check_inputs(1);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "I"})
-                   .add(builder::Output{"O"})
-                   .add(builder::Elementwise{"S", "(I < 0) ? -1 : ((I > 0) ? 1 : 0)"})
-                   .add(builder::Elementwise{"O", tile_converter("S", op().get_element_type())})
-                   .finalize());
-}
+            // Sign returns the sign of an element.
+            template <>
+            void Impl<op::Sign>::operator()()
+            {
+                check_inputs(1);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "I"})
+                               .add(builder::Output{"O"})
+                               .add(builder::Elementwise{"S", "(I < 0) ? -1 : ((I > 0) ? 1 : 0)"})
+                               .add(builder::Elementwise{
+                                   "O", tile_converter("S", op().get_element_type())})
+                               .finalize());
+            }
 
-// Subtract performs a simple elementwise subtraction.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Subtract>::operator()()
-{
-    check_inputs(2);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "A"})
-                   .add(builder::Input{op_input(1), "B"})
-                   .add(builder::Output{"C"})
-                   .add(builder::Elementwise{"C", "A - B"})
-                   .finalize());
-}
+            // Subtract performs a simple elementwise subtraction.
+            template <>
+            void Impl<op::Subtract>::operator()()
+            {
+                check_inputs(2);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "A"})
+                               .add(builder::Input{op_input(1), "B"})
+                               .add(builder::Output{"C"})
+                               .add(builder::Elementwise{"C", "A - B"})
+                               .finalize());
+            }
 
-namespace
-{
-    ngraph::runtime::plaidml::Impl<ngraph::op::Abs>::Registration register_abs;
-    ngraph::runtime::plaidml::Impl<ngraph::op::Add>::Registration register_add;
-    ngraph::runtime::plaidml::Impl<ngraph::op::Ceiling>::Registration register_ceiling;
-    ngraph::runtime::plaidml::Impl<ngraph::op::Divide>::Registration register_divide;
-    ngraph::runtime::plaidml::Impl<ngraph::op::Floor>::Registration register_floor;
-    ngraph::runtime::plaidml::Impl<ngraph::op::Multiply>::Registration register_multiply;
-    ngraph::runtime::plaidml::Impl<ngraph::op::Negative>::Registration register_negative;
-    ngraph::runtime::plaidml::Impl<ngraph::op::Relu>::Registration register_relu;
-    ngraph::runtime::plaidml::Impl<ngraph::op::ReluBackprop>::Registration register_relu_backprop;
-    ngraph::runtime::plaidml::Impl<ngraph::op::Sigmoid>::Registration register_sigmoid;
-    ngraph::runtime::plaidml::Impl<ngraph::op::SigmoidBackprop>::Registration
-        register_sigmoid_backprop;
-    ngraph::runtime::plaidml::Impl<ngraph::op::Sign>::Registration register_sign;
-    ngraph::runtime::plaidml::Impl<ngraph::op::Subtract>::Registration register_subtract;
+            namespace
+            {
+                Impl<op::Abs>::Registration register_abs;
+                Impl<op::Add>::Registration register_add;
+                Impl<op::Ceiling>::Registration register_ceiling;
+                Impl<op::Divide>::Registration register_divide;
+                Impl<op::Floor>::Registration register_floor;
+                Impl<op::Multiply>::Registration register_multiply;
+                Impl<op::Negative>::Registration register_negative;
+                Impl<op::Relu>::Registration register_relu;
+                Impl<op::ReluBackprop>::Registration register_relu_backprop;
+                Impl<op::Sigmoid>::Registration register_sigmoid;
+                Impl<op::SigmoidBackprop>::Registration register_sigmoid_backprop;
+                Impl<op::Sign>::Registration register_sign;
+                Impl<op::Subtract>::Registration register_subtract;
+            }
+        }
+    }
 }

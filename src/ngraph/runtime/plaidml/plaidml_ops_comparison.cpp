@@ -24,132 +24,141 @@
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 
-// Equal performs a simple elementwise equality.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Equal>::operator()()
+namespace ngraph
 {
-    check_inputs(2);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0, TensorContents::LOGICAL), "A"})
-                   .add(builder::Input{op_input(1, TensorContents::LOGICAL), "B"})
-                   .add(builder::Output{"C"})
-                   .add(builder::Elementwise{"C", "A == B"})
-                   .finalize(),
-               TensorContents::LOGICAL);
-}
+    namespace runtime
+    {
+        namespace plaidml
+        {
+            // Equal performs a simple elementwise equality.
+            template <>
+            void Impl<op::Equal>::operator()()
+            {
+                check_inputs(2);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0, TensorContents::LOGICAL), "A"})
+                               .add(builder::Input{op_input(1, TensorContents::LOGICAL), "B"})
+                               .add(builder::Output{"C"})
+                               .add(builder::Elementwise{"C", "A == B"})
+                               .finalize(),
+                           TensorContents::LOGICAL);
+            }
 
-// Greater performs a simple elementwise greater-than comparison.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Greater>::operator()()
-{
-    check_inputs(2);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "A"})
-                   .add(builder::Input{op_input(1), "B"})
-                   .add(builder::Output{"C"})
-                   .add(builder::Elementwise{"C", "A > B"})
-                   .finalize(),
-               TensorContents::LOGICAL);
-}
+            // Greater performs a simple elementwise greater-than comparison.
+            template <>
+            void Impl<op::Greater>::operator()()
+            {
+                check_inputs(2);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "A"})
+                               .add(builder::Input{op_input(1), "B"})
+                               .add(builder::Output{"C"})
+                               .add(builder::Elementwise{"C", "A > B"})
+                               .finalize(),
+                           TensorContents::LOGICAL);
+            }
 
-// GreaterEq performs a simple elementwise greater-than-or-equal-to comparison.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::GreaterEq>::operator()()
-{
-    check_inputs(2);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "A"})
-                   .add(builder::Input{op_input(1), "B"})
-                   .add(builder::Output{"C"})
-                   .add(builder::Elementwise{"C", "A >= B"})
-                   .finalize(),
-               TensorContents::LOGICAL);
-}
+            // GreaterEq performs a simple elementwise greater-than-or-equal-to comparison.
+            template <>
+            void Impl<op::GreaterEq>::operator()()
+            {
+                check_inputs(2);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "A"})
+                               .add(builder::Input{op_input(1), "B"})
+                               .add(builder::Output{"C"})
+                               .add(builder::Elementwise{"C", "A >= B"})
+                               .finalize(),
+                           TensorContents::LOGICAL);
+            }
 
-// Less performs a simple elementwise less-than comparison.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Less>::operator()()
-{
-    check_inputs(2);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "A"})
-                   .add(builder::Input{op_input(1), "B"})
-                   .add(builder::Output{"C"})
-                   .add(builder::Elementwise{"C", "A < B"})
-                   .finalize(),
-               TensorContents::LOGICAL);
-}
+            // Less performs a simple elementwise less-than comparison.
+            template <>
+            void Impl<op::Less>::operator()()
+            {
+                check_inputs(2);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "A"})
+                               .add(builder::Input{op_input(1), "B"})
+                               .add(builder::Output{"C"})
+                               .add(builder::Elementwise{"C", "A < B"})
+                               .finalize(),
+                           TensorContents::LOGICAL);
+            }
 
-// LessEq performs a simple elementwise less-than-or-equal-to comparison.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::LessEq>::operator()()
-{
-    check_inputs(2);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "A"})
-                   .add(builder::Input{op_input(1), "B"})
-                   .add(builder::Output{"C"})
-                   .add(builder::Elementwise{"C", "A <= B"})
-                   .finalize(),
-               TensorContents::LOGICAL);
-}
+            // LessEq performs a simple elementwise less-than-or-equal-to comparison.
+            template <>
+            void Impl<op::LessEq>::operator()()
+            {
+                check_inputs(2);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "A"})
+                               .add(builder::Input{op_input(1), "B"})
+                               .add(builder::Output{"C"})
+                               .add(builder::Elementwise{"C", "A <= B"})
+                               .finalize(),
+                           TensorContents::LOGICAL);
+            }
 
-// Maximum performs a simple elementwise maximum.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Maximum>::operator()()
-{
-    check_inputs(2);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "A"})
-                   .add(builder::Input{op_input(1), "B"})
-                   .add(builder::Output{"C"})
-                   .add(builder::Elementwise{"C", "max(A, B)"})
-                   .finalize());
-}
+            // Maximum performs a simple elementwise maximum.
+            template <>
+            void Impl<op::Maximum>::operator()()
+            {
+                check_inputs(2);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "A"})
+                               .add(builder::Input{op_input(1), "B"})
+                               .add(builder::Output{"C"})
+                               .add(builder::Elementwise{"C", "max(A, B)"})
+                               .finalize());
+            }
 
-// Minimum performs a simple elementwise minimum.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Minimum>::operator()()
-{
-    check_inputs(2);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0), "A"})
-                   .add(builder::Input{op_input(1), "B"})
-                   .add(builder::Output{"C"})
-                   .add(builder::Elementwise{"C", "min(A, B)"})
-                   .finalize());
-}
+            // Minimum performs a simple elementwise minimum.
+            template <>
+            void Impl<op::Minimum>::operator()()
+            {
+                check_inputs(2);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0), "A"})
+                               .add(builder::Input{op_input(1), "B"})
+                               .add(builder::Output{"C"})
+                               .add(builder::Elementwise{"C", "min(A, B)"})
+                               .finalize());
+            }
 
-// NotEqual performs a simple elementwise not-equality.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::NotEqual>::operator()()
-{
-    check_inputs(2);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(0, TensorContents::LOGICAL), "A"})
-                   .add(builder::Input{op_input(1, TensorContents::LOGICAL), "B"})
-                   .add(builder::Output{"C"})
-                   .add(builder::Elementwise{"C", "A != B"})
-                   .finalize(),
-               TensorContents::LOGICAL);
-}
+            // NotEqual performs a simple elementwise not-equality.
+            template <>
+            void Impl<op::NotEqual>::operator()()
+            {
+                check_inputs(2);
+                check_outputs(1);
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(0, TensorContents::LOGICAL), "A"})
+                               .add(builder::Input{op_input(1, TensorContents::LOGICAL), "B"})
+                               .add(builder::Output{"C"})
+                               .add(builder::Elementwise{"C", "A != B"})
+                               .finalize(),
+                           TensorContents::LOGICAL);
+            }
 
-namespace
-{
-    ngraph::runtime::plaidml::Impl<ngraph::op::Equal>::Registration register_equal;
-    ngraph::runtime::plaidml::Impl<ngraph::op::Greater>::Registration register_greater;
-    ngraph::runtime::plaidml::Impl<ngraph::op::GreaterEq>::Registration register_greater_eq;
-    ngraph::runtime::plaidml::Impl<ngraph::op::Less>::Registration register_less;
-    ngraph::runtime::plaidml::Impl<ngraph::op::LessEq>::Registration register_less_eq;
-    ngraph::runtime::plaidml::Impl<ngraph::op::Maximum>::Registration register_maximum;
-    ngraph::runtime::plaidml::Impl<ngraph::op::Minimum>::Registration register_minimum;
-    ngraph::runtime::plaidml::Impl<ngraph::op::NotEqual>::Registration register_not_equal;
+            namespace
+            {
+                Impl<op::Equal>::Registration register_equal;
+                Impl<op::Greater>::Registration register_greater;
+                Impl<op::GreaterEq>::Registration register_greater_eq;
+                Impl<op::Less>::Registration register_less;
+                Impl<op::LessEq>::Registration register_less_eq;
+                Impl<op::Maximum>::Registration register_maximum;
+                Impl<op::Minimum>::Registration register_minimum;
+                Impl<op::NotEqual>::Registration register_not_equal;
+            }
+        }
+    }
 }

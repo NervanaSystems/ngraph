@@ -25,6 +25,7 @@ divide_by_zero_int32
 dot_3d_multi_axis
 dot_4d_5d_multi_axis
 dot_4d_5d_multi_axis_more
+generate_mask
 function_call
 max_pool_3d
 numeric_double_inf

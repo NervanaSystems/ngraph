@@ -63,6 +63,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
@@ -133,6 +134,7 @@
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
@@ -194,6 +196,10 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
 
 runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
 {
+    for (auto state : m_states)
+    {
+        delete state;
+    }
 }
 
 class StaticInitializers
@@ -359,12 +365,12 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::runtime::cpu::op::LoopKernel),
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::LoopKernel>},
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
+    {TI(ngraph::op::GenerateMask), &runtime::cpu::CPU_Emitter::emit<ngraph::op::GenerateMask>},
     {TI(ngraph::op::ConvolutionAdd), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionAdd>},
-    {TI(ngraph::op::Quantize), &runtime::cpu::CPU_Emitter::emit<op::Quantize>},
-    {TI(ngraph::op::Dequantize), &runtime::cpu::CPU_Emitter::emit<op::Dequantize>},
+    {TI(ngraph::op::Quantize), &runtime::cpu::CPU_Emitter::emit<ngraph::op::Quantize>},
+    {TI(ngraph::op::Dequantize), &runtime::cpu::CPU_Emitter::emit<ngraph::op::Dequantize>},
     {TI(ngraph::op::GroupConvolutionBias),
      &runtime::cpu::CPU_Emitter::emit<op::GroupConvolutionBias>},
-
 };
 
 static void
@@ -444,6 +450,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/reference/convolution.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
+#include "ngraph/runtime/reference/generate_mask.hpp"
 #include "ngraph/runtime/reference/lrn.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
@@ -467,6 +474,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/state/rng_state.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/util.hpp"
 
@@ -1642,7 +1650,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                     {
                                         start_ts = cpu::Clock::now();
                                     }
-                                    (*functor)(ctx);
+                                    CPUExecutionContext ectx{0};
+                                    executor::GetCPUExecutor().execute(*functor, ctx, &ectx, true);
                                     if (runtime::cpu::IsTracingEnabled() || m_emit_timing)
                                     {
                                         end_ts = cpu::Clock::now();
@@ -1736,8 +1745,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
                     {
                         start_ts = cpu::Clock::now();
                     }
-
-                    (functors.at(ctx->pc))(ctx);
+                    CPUExecutionContext ectx{0};
+                    executor::GetCPUExecutor().execute(functors.at(ctx->pc), ctx, &ectx);
 
                     if (ctx->breakpoints.count(ctx->pc + 1))
                     {
