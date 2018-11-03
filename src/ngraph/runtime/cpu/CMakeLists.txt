@@ -20,6 +20,7 @@ set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
     cpu_call_frame.cpp
+    cpu_executor.cpp
     cpu_external_function.cpp
     cpu_kernels.cpp
     cpu_layout_descriptor.cpp
@@ -71,7 +72,6 @@ set(SRC
     builder/topk.cpp
     builder/state.cpp
     builder/quantization.cpp
-    kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
     kernel/reduce_sum.cpp

@@ -44,18 +44,6 @@ ngraph::op::BatchNormTraining::BatchNormTraining(double eps,
     constructor_validate_and_infer_types();
 }
 
-ngraph::op::BatchNormTraining::BatchNormTraining(double eps,
-                                                 std::shared_ptr<ngraph::Node> gamma,
-                                                 std::shared_ptr<ngraph::Node> beta,
-                                                 std::shared_ptr<ngraph::Node> input,
-                                                 std::shared_ptr<ngraph::Node> mean,
-                                                 std::shared_ptr<ngraph::Node> variance)
-    : Op("BatchNormTraining", check_single_output_args({gamma, beta, input, mean, variance}))
-    , m_epsilon(eps)
-{
-    constructor_validate_and_infer_types();
-}
-
 void ngraph::op::BatchNormInference::validate_and_infer_types()
 {
     element::Type result_et;
