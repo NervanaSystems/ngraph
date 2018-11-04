@@ -34,7 +34,7 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
 
                 auto gm = static_cast<const ngraph::op::GenerateMask*>(node);
-                function<void(CPURuntimeContext*)> functor;
+                CPUKernelFunctor functor;
 
                 auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
@@ -46,7 +46,8 @@ namespace ngraph
 
                 if (args[0].get_element_type() == element::f32)
                 {
-                    functor = [&, index, element_count](CPURuntimeContext* ctx) {
+                    functor = [&, index, element_count](CPURuntimeContext* ctx,
+                                                        CPUExecutionContext* ectx) {
                         bool training = static_cast<bool>(static_cast<float*>(arg_tensor)[0]);
                         reference::generate_mask(static_cast<float*>(out_tensor),
                                                  element_count,
@@ -56,7 +57,8 @@ namespace ngraph
                 }
                 else if (args[0].get_element_type() == element::f64)
                 {
-                    functor = [&, index, element_count](CPURuntimeContext* ctx) {
+                    functor = [&, index, element_count](CPURuntimeContext* ctx,
+                                                        CPUExecutionContext* ectx) {
                         bool training = static_cast<bool>(static_cast<double*>(arg_tensor)[0]);
                         reference::generate_mask(static_cast<double*>(out_tensor),
                                                  element_count,

@@ -42,7 +42,7 @@ namespace ngraph
         }
         virtual void activate() override;
         virtual void deactivate() override;
-        virtual ~RNGState() {}
+        virtual ~RNGState() override {}
         std::mt19937& get_generator() { return m_generator; }
         std::bernoulli_distribution& get_distribution() { return m_distribution; }
     protected:

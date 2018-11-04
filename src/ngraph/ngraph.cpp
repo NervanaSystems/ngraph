@@ -14,22 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#define EIGEN_USE_THREADS
-#include <unsupported/Eigen/CXX11/Tensor>
-
-namespace ngraph
+extern "C" const char* get_ngraph_version_string()
 {
-    namespace runtime
-    {
-        namespace cpu
-        {
-            namespace eigen
-            {
-                extern Eigen::ThreadPool global_thread_pool;
-                extern Eigen::ThreadPoolDevice global_thread_pool_device;
-            }
-        }
-    }
+    return NGRAPH_VERSION;
 }
