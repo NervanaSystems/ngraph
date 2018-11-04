@@ -27,44 +27,49 @@ namespace ngraph
                 void reduce_sum_all_1d_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
-                                               const Shape& output_shape)
+                                               const Shape& output_shape,
+                                               int arena)
                 {
-                    reduce_sum_all<float, 1>(input, output, input_shape, output_shape);
+                    reduce_sum_all<float, 1>(input, output, input_shape, output_shape, arena);
                 }
 
                 void reduce_sum_all_2d_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
-                                               const Shape& output_shape)
+                                               const Shape& output_shape,
+                                               int arena)
                 {
-                    reduce_sum_all<float, 2>(input, output, input_shape, output_shape);
+                    reduce_sum_all<float, 2>(input, output, input_shape, output_shape, arena);
                 }
 
                 void reduce_sum_2d_1rd_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
                                                const Shape& output_shape,
-                                               const AxisSet& reduction_axes)
+                                               const AxisSet& reduction_axes,
+                                               int arena)
                 {
                     reduce_sum<float, 2, 1>(
-                        input, output, input_shape, output_shape, reduction_axes);
+                        input, output, input_shape, output_shape, reduction_axes, arena);
                 }
 
                 void reduce_sum_all_4d_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
-                                               const Shape& output_shape)
+                                               const Shape& output_shape,
+                                               int arena)
                 {
-                    reduce_sum_all<float, 4>(input, output, input_shape, output_shape);
+                    reduce_sum_all<float, 4>(input, output, input_shape, output_shape, arena);
                 }
                 void reduce_sum_4d_2rd_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
                                                const Shape& output_shape,
-                                               const AxisSet& reduction_axes)
+                                               const AxisSet& reduction_axes,
+                                               int arena)
                 {
                     reduce_sum<float, 4, 2>(
-                        input, output, input_shape, output_shape, reduction_axes);
+                        input, output, input_shape, output_shape, reduction_axes, arena);
                 }
             }
         }

@@ -34,6 +34,7 @@ set (SRC
     file_util.cpp
     function.cpp
     log.cpp
+    ngraph.cpp
     node.cpp
     op/abs.cpp
     op/acos.cpp

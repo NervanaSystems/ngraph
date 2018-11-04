@@ -28,6 +28,7 @@
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
@@ -597,8 +598,8 @@ bool runtime::cpu::mkldnn_utils::compare_mkldnn_formats(mkldnn::memory::format l
 bool runtime::cpu::mkldnn_utils::compare_mkldnn_mds(const mkldnn::memory::desc& lhs,
                                                     const mkldnn::memory::desc& rhs)
 {
-    return (memory::primitive_desc(lhs, runtime::cpu::mkldnn_utils::global_cpu_engine) ==
-            memory::primitive_desc(rhs, runtime::cpu::mkldnn_utils::global_cpu_engine));
+    return (memory::primitive_desc(lhs, runtime::cpu::executor::global_cpu_engine) ==
+            memory::primitive_desc(rhs, runtime::cpu::executor::global_cpu_engine));
 }
 
 bool runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(mkldnn::memory::format fmt)
