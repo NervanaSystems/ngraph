@@ -37,7 +37,7 @@ extern "C" const char* get_ngraph_version_string()
 
 extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
-    map<string, shared_ptr<runtime::Backend>> backend_list{
+    vector<pair<string, shared_ptr<runtime::Backend>>> backend_list{
         {"GPU", make_shared<runtime::gpu::GPU_Backend>()}};
 
     auto wrapper = new runtime::hybrid::HybridWrapper(backend_list);
@@ -233,14 +233,22 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& node) const
     element::Type type;
     if (node.description() == "Select")
     {
+        NGRAPH_INFO;
         type = node.get_input_element_type(1);
     }
     else if (node.description() == "Constant")
     {
+        NGRAPH_INFO;
+        type = node.get_outputs().at(0).get_element_type();
+    }
+    else if (node.description() == "Parameter")
+    {
+        NGRAPH_INFO;
         type = node.get_outputs().at(0).get_element_type();
     }
     else
     {
+        NGRAPH_INFO;
         type = node.get_input_element_type(0);
     }
 
@@ -249,5 +257,6 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& node) const
         rc = false;
     }
 
+    NGRAPH_INFO << rc;
     return rc;
 }

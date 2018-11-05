@@ -38,7 +38,7 @@ class ngraph::runtime::hybrid::HybridWrapper : public ngraph::runtime::Backend
 {
 public:
     HybridWrapper(
-        const std::map<std::string, std::shared_ptr<runtime::Backend>>& backend_list);
+        const std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>>& backend_list);
 
     std::shared_ptr<ngraph::runtime::Tensor>
         create_tensor(const ngraph::element::Type& element_type,
@@ -58,5 +58,16 @@ public:
     bool is_supported(const ngraph::Node& node) const override;
 
 private:
-    std::map<std::string, std::shared_ptr<runtime::Backend>> m_backend_list;
+    class FunctionInstance
+    {
+    public:
+        std::shared_ptr<ngraph::Function> m_function;
+        std::vector<std::shared_ptr<ngraph::Function>> m_sub_functions;
+        std::unordered_map<std::shared_ptr<ngraph::op::Parameter>,
+                           std::shared_ptr<ngraph::op::Result>>
+            m_map_parameter_to_result;
+    };
+
+    std::map<std::shared_ptr<ngraph::Function>, FunctionInstance> m_function_map;
+    std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>> m_backend_list;
 };

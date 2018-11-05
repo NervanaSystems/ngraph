@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
