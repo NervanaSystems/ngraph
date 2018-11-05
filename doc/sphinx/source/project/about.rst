@@ -72,7 +72,7 @@ The *nGraph core* uses a **strongly-typed and platform-neutral stateless graph
 representation** for computations. Each node, or *op*, in the graph corresponds
 to one :term:`step` in a computation, where each step produces zero or more 
 tensor outputs from zero or more tensor inputs. For a more detailed dive into 
-how this works, read our documentation on how to :doc:`../howto/execute`.
+how this works, read some of our :doc:`how to <../howto/execute>` articles.
 
 
 .. _framework-flexibility:

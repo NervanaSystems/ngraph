@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <iterator>
 #include <numeric>
 #include <vector>
 
@@ -30,8 +31,8 @@
 /// \param left_shape Shape of first input tensor.
 /// \param right_shape Shape of the second input tensor.
 /// \return Shape of the output tensor and full shape of input tensors.
-static std::vector<ngraph::Shape> calculate_numpy_broadcast_shape(ngraph::Shape left_shape,
-                                                                  ngraph::Shape right_shape)
+std::vector<ngraph::Shape> get_numpy_broadcast_shape(ngraph::Shape left_shape,
+                                                     ngraph::Shape right_shape)
 {
     ngraph::Shape output_shape;
     auto rank_left = left_shape.size();
@@ -54,53 +55,162 @@ static std::vector<ngraph::Shape> calculate_numpy_broadcast_shape(ngraph::Shape 
     return {output_shape, left_shape, right_shape};
 }
 
+/// \brief      Broadcast input node.
+///
+/// \note       The source shape does not have to be the actual shape of input node. However
+///             it should be a superset of it (containing it as a continuous subset). This implies
+///             we may expand the number of axes of input node.
+///
+/// \param[in]  node          The input Node to be broadcasted.
+/// \param[in]  output_shape  The output shape.
+/// \param[in]  source_shape  The source shape from which we want to broadcast input node.
+///
+/// \return     The boroadcasted Node.
+///
+static std::shared_ptr<ngraph::Node> broadcast(const std::shared_ptr<ngraph::Node>& node,
+                                               const ngraph::Shape& output_shape,
+                                               const ngraph::Shape& source_shape)
+{
+    ngraph::AxisVector broadcast_axes;
+    ngraph::Shape squeezed_shape;
+    // Positions of axes which have length of 1 are needed to calculate broadcast_axes
+    // for nGraph broadcast operation. We need to remove all ones from source shape
+    // to avoid broadcasting axis conflict.
+    for (std::size_t index = 0; index < output_shape.size(); ++index)
+    {
+        if (source_shape.at(index) == 1)
+        {
+            broadcast_axes.push_back(index);
+        }
+        else
+        {
+            squeezed_shape.push_back(source_shape.at(index));
+        }
+    }
+
+    // Remove axes which have length of 1 from source shape
+    auto broadcasted_node = std::make_shared<ngraph::op::Reshape>(
+        node,
+        ngraph::onnx_import::reshape::get_default_axis_vector(node->get_shape().size()),
+        squeezed_shape);
+
+    return std::make_shared<ngraph::op::Broadcast>(broadcasted_node, output_shape, broadcast_axes);
+}
+
 namespace ngraph
 {
     namespace onnx_import
     {
-        NodeVector numpy_style_broadcast_for_binary_operation(const std::shared_ptr<Node>& left,
-                                                              const std::shared_ptr<Node>& right)
+        NodeVector
+            numpy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
+                                                       const std::shared_ptr<ngraph::Node>& right)
         {
-            auto left_shape = left->get_shape();
-            auto right_shape = right->get_shape();
-            auto numpy_shapes = calculate_numpy_broadcast_shape(left_shape, right_shape);
+            const auto& left_shape = left->get_shape();
+            const auto& right_shape = right->get_shape();
+            const auto& numpy_shapes = get_numpy_broadcast_shape(left_shape, right_shape);
             auto output_shape = numpy_shapes.at(0);
             auto left_full_shape = numpy_shapes.at(1);
             auto right_full_shape = numpy_shapes.at(2);
 
-            AxisVector left_broadcast_axes;
-            AxisVector right_broadcast_axes;
-            Shape new_left_shape;
-            Shape new_right_shape;
-            // Positions of dims which have length of 1 are needed to calculate broadcast_axes for nGraph broadcast operation.
-            // We need to remove all ones from source shape (left_broadcast_axes) to avoid broadcasting axis conflict.
-            for (auto index = 0; index < output_shape.size(); ++index)
+            return {broadcast(left, output_shape, left_full_shape),
+                    broadcast(right, output_shape, right_full_shape)};
+        }
+
+        NodeVector
+            numpy_style_broadcast_for_matmul_operation(const std::shared_ptr<ngraph::Node>& left,
+                                                       const std::shared_ptr<ngraph::Node>& right)
+        {
+            const auto& left_shape = left->get_shape();
+            const auto& right_shape = right->get_shape();
+            // Broadcast only _stack of matrices_ axes.
+            const auto& numpy_shapes = get_numpy_broadcast_shape(
+                Shape{std::begin(left_shape), std::next(std::end(left_shape), -2)},
+                Shape{std::begin(right_shape), std::next(std::end(right_shape), -2)});
+
+            // Prepare tensors output shapes with broadcasted _stack of matrices_ axes.
+            auto left_output_shape = numpy_shapes.at(0);
+            auto right_output_shape = numpy_shapes.at(0);
+            // Append the last two axes original dimensions.
+            left_output_shape.insert(std::end(left_output_shape),
+                                     std::next(std::begin(left_shape), left_shape.size() - 2),
+                                     std::end(left_shape));
+            right_output_shape.insert(std::end(right_output_shape),
+                                      std::next(std::begin(right_shape), right_shape.size() - 2),
+                                      std::end(right_shape));
+
+            auto left_full_shape = numpy_shapes.at(1);
+            auto right_full_shape = numpy_shapes.at(2);
+            // Append the last two axes original dimensions.
+            left_full_shape.insert(std::end(left_full_shape),
+                                   std::next(std::begin(left_shape), left_shape.size() - 2),
+                                   std::end(left_shape));
+            right_full_shape.insert(std::end(right_full_shape),
+                                    std::next(std::begin(right_shape), right_shape.size() - 2),
+                                    std::end(right_shape));
+
+            return {broadcast(left, left_output_shape, left_full_shape),
+                    broadcast(right, right_output_shape, right_full_shape)};
+        }
+
+        NodeVector
+            legacy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
+                                                        const std::shared_ptr<ngraph::Node>& right,
+                                                        std::size_t start_match_axis)
+        {
+            const auto& left_shape = left->get_shape();
+            const auto& right_shape = right->get_shape();
+
+            bool dimensions_identical = (left_shape == right_shape);
+            if (dimensions_identical)
             {
-                (left_full_shape.at(index) == 1)
-                    ? left_broadcast_axes.push_back(index)
-                    : new_left_shape.push_back(left_full_shape.at(index));
-                (right_full_shape.at(index) == 1)
-                    ? right_broadcast_axes.push_back(index)
-                    : new_right_shape.push_back(right_full_shape.at(index));
+                return {left, right};
             }
 
-            // Remove dims which have length of 1 from source shape
-            std::shared_ptr<Node> broadcasted_left = std::make_shared<op::Reshape>(
-                left, reshape::get_default_axis_vector(left->get_shape().size()), new_left_shape);
+            // Prepare new shape of right operand for broadcasting
+            // Remove dimensions with length=1 from back
+            auto new_right_shape = right_shape;
+            for (int dimension = new_right_shape.size() - 1; dimension >= 0; --dimension)
+            {
+                if (new_right_shape[dimension] == 1)
+                {
+                    new_right_shape.pop_back();
+                }
+                else
+                {
+                    break;
+                }
+            }
 
-            // Remove dims which have length of 1 from source shape
-            std::shared_ptr<Node> broadcasted_right = std::make_shared<op::Reshape>(
-                right,
-                reshape::get_default_axis_vector(right->get_shape().size()),
-                new_right_shape);
+            // Find first dimensions at front with length different from 1
+            size_t num_ones = 0;
+            for (size_t dimension : new_right_shape)
+            {
+                if (dimension == 1)
+                {
+                    ++num_ones;
+                }
+                else
+                {
+                    break;
+                }
+            }
 
-            broadcasted_left = std::make_shared<op::Broadcast>(
-                broadcasted_left, output_shape, left_broadcast_axes);
+            // Remove dimensions with length=1 from front
+            new_right_shape.erase(std::begin(new_right_shape),
+                                  std::next(std::begin(new_right_shape), num_ones));
 
-            broadcasted_right = std::make_shared<op::Broadcast>(
-                broadcasted_right, output_shape, right_broadcast_axes);
+            auto reshape_right = std::make_shared<ngraph::op::Reshape>(
+                right, reshape::get_default_axis_vector(right_shape.size()), new_right_shape);
 
-            return {broadcasted_left, broadcasted_right};
+            // Move broadcast start axis parameter to right
+            start_match_axis += num_ones;
+
+            auto broadcast_right = std::make_shared<ngraph::op::Broadcast>(
+                reshape_right,
+                left_shape,
+                calculate_broadcast_axes(left_shape, new_right_shape, start_match_axis));
+
+            return {left, broadcast_right};
         }
 
         AxisSet calculate_broadcast_axes(const Shape& output_shape,

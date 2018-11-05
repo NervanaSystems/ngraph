@@ -15,15 +15,11 @@
 //*****************************************************************************
 
 #include <algorithm>
-#include <cstddef>
 #include <functional>
 #include <iterator>
 #include <numeric>
-#include <stdexcept>
 
-#include "ngraph/axis_vector.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/shape.hpp"
 
 #include "exceptions.hpp"
 #include "utils/common.hpp"
@@ -143,6 +139,71 @@ namespace ngraph
                 std::iota(std::begin(axes_order), std::end(axes_order), 0);
                 std::reverse(std::begin(axes_order), std::end(axes_order));
                 return reorder_axes(node, axes_order);
+            }
+
+            std::shared_ptr<ngraph::Node> squeeze(const std::shared_ptr<ngraph::Node>& node,
+                                                  std::vector<std::size_t> axes)
+            {
+                if (axes.empty())
+                {
+                    return node;
+                }
+
+                Shape in_shape{node->get_shape()};
+                for (std::size_t idx = 0; idx < axes.size(); ++idx)
+                {
+                    in_shape.at(idx) = 0;
+                }
+                Shape output_shape;
+                for (auto axis : in_shape)
+                {
+                    if (axis != 0)
+                    {
+                        output_shape.push_back(axis);
+                    }
+                }
+                return reshape(node, output_shape);
+            }
+
+            std::shared_ptr<ngraph::Node> collapse(const std::shared_ptr<ngraph::Node>& node,
+                                                   const std::size_t start_axis,
+                                                   const std::size_t end_axis)
+            {
+                auto shape = node->get_shape();
+                std::size_t collapsed_axis_size =
+                    std::accumulate(std::next(std::begin(shape), start_axis),
+                                    std::next(std::begin(shape), end_axis + 1),
+                                    1UL,
+                                    std::multiplies<std::size_t>());
+
+                Shape output_shape{collapsed_axis_size};
+                output_shape.insert(std::end(output_shape),
+                                    std::next(std::begin(shape), end_axis + 1),
+                                    std::end(shape));
+                return reshape(node, output_shape);
+            }
+
+            std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
+                                                  const AxisVector& axis_order,
+                                                  const Shape& shape)
+            {
+                return std::make_shared<ngraph::op::Reshape>(
+                    node, get_default_axis_vector(node->get_shape().size()), shape);
+            }
+
+            std::shared_ptr<ngraph::Node> add_empty_axes(const std::shared_ptr<ngraph::Node>& node,
+                                                         std::size_t outermost_axes_count,
+                                                         std::size_t innermost_axes_count)
+            {
+                // Add outermost empty dimensions.
+                Shape output_shape(outermost_axes_count, 1);
+                output_shape.insert(std::end(output_shape),
+                                    std::begin(node->get_shape()),
+                                    std::end(node->get_shape()));
+                // Add innermost empty dimensions.
+                output_shape.insert(std::end(output_shape), innermost_axes_count, 1);
+                return std::make_shared<ngraph::op::Reshape>(
+                    node, reshape::get_default_axis_vector(node->get_shape().size()), output_shape);
             }
 
         } // namespace  reshape
