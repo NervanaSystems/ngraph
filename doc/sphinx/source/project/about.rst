@@ -165,7 +165,6 @@ get custom solutions working, such as for edge cases.
    MXNet, Yes, Yes
    PaddlePaddle, Coming Soon, Yes
    PyTorch, No, Yes
-   CNTK, No, Yes
    Other, Write your own, Custom
 
 
