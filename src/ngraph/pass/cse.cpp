@@ -175,8 +175,12 @@ static std::unordered_map<std::type_index,
 class NodeKey
 {
 public:
-    NodeKey(std::shared_ptr<Node> n)
+    NodeKey(std::shared_ptr<Node> n,
+            std::unordered_map<std::type_index,
+                               std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
+                backend_handlers)
         : m_node(n)
+        , m_backend_handlers(backend_handlers)
     {
     }
 
@@ -191,17 +195,30 @@ public:
             return false;
         }
 
-        auto eh = ops_to_cse_handlers.find(TI(p_this));
-        if (eh == ops_to_cse_handlers.end())
         {
-            return false;
+            auto eh = ops_to_cse_handlers.find(TI(p_this));
+            if (eh != ops_to_cse_handlers.end())
+            {
+                return eh->second(m_node, other.get_node());
+            }
         }
 
-        return eh->second(m_node, other.get_node());
+        {
+            auto eh = m_backend_handlers.find(TI(p_this));
+            if (eh != m_backend_handlers.end())
+            {
+                return eh->second(m_node, other.get_node());
+            }
+        }
+
+        return false;
     }
 
 private:
     std::shared_ptr<Node> m_node;
+    std::unordered_map<std::type_index,
+                       std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
+        m_backend_handlers;
 };
 
 namespace std
@@ -254,7 +271,7 @@ bool ngraph::pass::CommonSubexpressionElimination::run_on_function(
             continue;
         }
 
-        NodeKey n_key{n};
+        NodeKey n_key(n, m_backend_cse_handlers);
         if (expressions.count(n_key))
         {
             ngraph::replace_node(n, expressions.at(n_key));
