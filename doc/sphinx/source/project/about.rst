@@ -1,52 +1,114 @@
 .. about: 
 
 
-############################
-FAQs, Features, and Overview
-############################
+About Features, FAQ's
+#####################
 
-* :ref:`comparisons`
-* :ref:`faq`
 * :ref:`features`
+* :ref:`faq`
 * :ref:`whats_next`
 
 
-.. _comparisons: 
+.. _features:
 
-Comparisons  
-===========
+Features
+========
 
-How does nGraph compare to similar efforts in the industry?
-------------------------------------------------------------
+The nGraph :abbr:`Intermediary Representation (IR)` contains a combination of 
+device-specific and non device-specific optimization and compilation paths, 
+enabling such things as:
 
-Additional and specialized work is being done cross-industry. With nGraph, 
-work done for other similar efforts can be ported and tested natively. For 
-example, many high-performance kernels built with Intel MKL-DNN can be 
-run with nGraph providing another layer for creating specialized sub-graphs
-that themselves can be further optimized when specialized hardware is 
-available.  
+* **Fusion** -- Fuse multiple ``Ops`` to reduce memory utilization frequency. 
+* **Memory management** -- Prevent peak memory usage by intercepting a graph 
+  with or by a "saved checkpoint," and to enable data auditing. 
+* **Data reuse** -- Save result and reuse for subgraphs with the same input
+* **Graph scheduling** -- Run similar subgraphs in parallel 
+* **Graph partitioning** -- Partition subgraphs to run on different devices to 
+  speed up computation.
+* :abbr:`Direct EXecution mode (DEX)` or **DEX** -- Execute kernels for the 
+  op directly instead of using codegen when traversing the computation graph.
+* **Data layout abstraction** -- Make abstraction easier and faster with nGraph 
+  translating element order to work best for whatever given or available device.  
 
-.. TODO:  Add link to subgraph_snippets docs when PR  
-
-.. important:: Our design philosophy is that the graph is not a script for 
-   running kernels; rather, our compilation will match ``ops`` to appropriate 
-   kernels for available backends. Thus, we expect that adding of new Core 
-   ops should be infrequent and that most functionality instead gets added 
-   with new functions that build sub-graphs from existing core ops.
+.. figure:: ../graphics/features-figure-latest.png
+   :width: 578px
 
 
-* The latest **PlaidML Backend** adds an extra layer of utility to an 
-  existing GPU-specific model by enabling many features available only 
-  when the model has access to a connected CPU backend.  
+.. _portable:
 
-.. TVM 
-    add comparison detail here
+Portable
+--------
 
-.. Glow/Tensor Comprehensions 
-    add comparison detail here
-   
-.. XLA  
-    add comparison detail here
+One of nGraph's key features is **framework neutrality**. While we currently 
+support :doc:`three popular <../framework-integration-guides>` frameworks with 
+pre-optimized deployment runtimes for training :abbr:`Deep Neural Network (DNN)`, 
+models, you are not limited to these when choosing among frontends. Architects 
+of any framework (even those not listed above) can use our documentation for how
+to :doc:`compile and run <../howto/execute>` a training model and design or tweak 
+a framework to bridge directly to the nGraph compiler. With a *portable* model 
+at the core of your :abbr:`DL (Deep Learning)` ecosystem, it's no longer necessary 
+to bring large datasets to the model for training; you can take your model -- in 
+whole, or in part -- to where the data lives and save potentially significant 
+or quantifiable machine resources.  
+
+
+.. _adaptable: 
+
+Adaptable
+---------
+
+We've recently begun support for the `ONNX`_ format. Developers who already have 
+a "trained" :abbr:`DNN (Deep Neural Network)` model can use nGraph to bypass 
+significant framework-based complexity and :doc:`import it <../howto/import>` 
+to test or run on targeted and efficient backends with our user-friendly 
+Python-based API. See the `ngraph onnx companion tool`_ to get started. 
+
+
+.. _deployable:
+
+Deployable
+----------
+
+It's no secret that the :abbr:`DL (Deep Learning)` ecosystem is evolving 
+rapidly. Benchmarking comparisons can be blown steeply out of proportion by 
+subtle tweaks to batch or latency numbers here and there. Where traditional 
+GPU-based training excels, inference can lag and vice versa. Sometimes what we
+care about is not "speed at training a large dataset" but rather latency 
+compiling a complex multi-layer algorithm locally, and then outputting back to 
+an edge network, where it can be analyzed by an already-trained model. 
+
+Indeed, when choosing among topologies, it is important to not lose sight of 
+the ultimate deployability and machine-runtime demands of your component in
+the larger ecosystem. It doesn't make sense to use a heavy-duty backhoe to 
+plant a flower bulb. Furthermore, if you are trying to develop an entirely 
+new genre of modeling for a :abbr:`DNN (Deep Neural Network)` component, it 
+may be especially beneficial to consider ahead of time how portable and 
+mobile you want that model to be within the rapidly-changing ecosystem.  
+With nGraph, any modern CPU can be used to design, write, test, and deploy 
+a training or inference model. You can then adapt and update that same core 
+model to run on a variety of backends  
+
+
+.. _no-lockin:
+
+Develop without lock-in
+-----------------------
+
+Being able to increase training performance or reduce inference latency by 
+simply adding another device of *any* form factor -- more compute (CPU), GPU or 
+VPU processing power, custom ASIC or FPGA, or a yet-to-be invented generation of 
+NNP or accelerator -- is a key benefit for framework developers building with 
+nGraph. Our commitment to bake flexibility into our ecosystem ensures developers' 
+freedom to design user-facing APIs for various hardware deployments directly 
+into their frameworks. 
+
+.. figure:: ../graphics/develop-without-lockin.png
+
+
+The value we're offering to the developer community is empowerment: we are 
+confident that Intel® Architecture already provides the best computational 
+resources available for the breadth of ML/DL tasks. 
+
 
 
 .. _faq:
@@ -118,104 +180,6 @@ have been exported from a framework and saved as serialized file, such as ONNX.
 To learn how to convert such serialized files to an nGraph model, please see 
 the :doc:`../howto/import` documentation.  
 
-.. _no-lockin:
-
-Develop without lock-in
-~~~~~~~~~~~~~~~~~~~~~~~
-
-Being able to increase training performance or reduce inference latency by 
-simply adding another device of *any* form factor -- more compute (CPU), GPU or 
-VPU processing power, custom ASIC or FPGA, or a yet-to-be invented generation of 
-NNP or accelerator -- is a key benefit for framework developers building with 
-nGraph. Our commitment to bake flexibility into our ecosystem ensures developers' 
-freedom to design user-facing APIs for various hardware deployments directly 
-into their frameworks. 
-
-.. figure:: ../graphics/develop-without-lockin.png
-
-
-The value we're offering to the developer community is empowerment: we are 
-confident that Intel® Architecture already provides the best computational 
-resources available for the breadth of ML/DL tasks. 
-
-
-.. _features:
-
-Features
-========
-
-The nGraph IR contains a combination of device-specific and non device-specific 
-optimization and compilation paths, enabling such things as:
-
-* **Fusion** -- Fuse multiple ``Ops`` to reduce memory utilization frequency. 
-* **Memory management** -- Prevent peak memory usage by intercepting a graph 
-  and 
-* **Data reuse** -- Save result and reuse for subgraphs with the same input
-* **Graph scheduling** -- Run similar subgraphs in parallel 
-* **Graph partitioning** -- Partition subgraphs to run on different devices to 
-  speed up computation.
-* :abbr:`Direct EXecution mode (DEX)` or **DEX** -- Execute kernels for the 
-  op directly instead of using codegen when traversing the computation graph.
-* **Data layout abstraction** -- Make abstraction easier and faster with nGraph 
-  translating element order to work best for whatever given or available device.  
-
-.. figure:: ../graphics/features-figure-latest.png
-   :width: 578px
-
-
-.. _portable:
-
-Portable
---------
-
-One of nGraph's key features is **framework neutrality**. While we currently 
-support :doc:`three popular <../framework-integration-guides>` frameworks with 
-pre-optimized deployment runtimes for training :abbr:`Deep Neural Network (DNN)`, 
-models, you are not limited to these when choosing among frontends. Architects 
-of any framework (even those not listed above) can use our documentation for how
-to :doc:`compile and run <../howto/execute>` a training model and design or tweak 
-a framework to bridge directly to the nGraph compiler. With a *portable* model 
-at the core of your :abbr:`DL (Deep Learning)` ecosystem, it's no longer 
-necessary to bring large datasets to the model for training; you can take your 
-model -- in whole, or in part -- to where the data lives and save potentially 
-significant or quantifiable machine resources.  
-
-
-.. _adaptable: 
-
-Adaptable
----------
-
-We've recently begun support for the `ONNX`_ format. Developers who already have 
-a "trained" :abbr:`DNN (Deep Neural Network)` model can use nGraph to bypass 
-significant framework-based complexity and :doc:`import it <../howto/import>` 
-to test or run on targeted and efficient backends with our user-friendly 
-Python-based API. See the `ngraph onnx companion tool`_ to get started. 
-
-
-.. _deployable:
-
-Deployable
-----------
-
-It's no secret that the :abbr:`DL (Deep Learning)` ecosystem is evolving 
-rapidly. Benchmarking comparisons can be blown steeply out of proportion by 
-subtle tweaks to batch or latency numbers here and there. Where traditional 
-GPU-based training excels, inference can lag and vice versa. Sometimes what we
-care about is not "speed at training a large dataset" but rather latency 
-compiling a complex multi-layer algorithm locally, and then outputting back to 
-an edge network, where it can be analyzed by an already-trained model. 
-
-Indeed, when choosing among topologies, it is important to not lose sight of 
-the ultimate deployability and machine-runtime demands of your component in
-the larger ecosystem. It doesn't make sense to use a heavy-duty backhoe to 
-plant a flower bulb. Furthermore, if you are trying to develop an entirely 
-new genre of modeling for a :abbr:`DNN (Deep Neural Network)` component, it 
-may be especially beneficial to consider ahead of time how portable and 
-mobile you want that model to be within the rapidly-changing ecosystem.  
-With nGraph, any modern CPU can be used to design, write, test, and deploy 
-a training or inference model. You can then adapt and update that same core 
-model to run on a variety of backends  
 
 
 .. _whats_next:
@@ -227,6 +191,9 @@ We developed nGraph to simplify the realization of optimized deep learning
 performance across frameworks and hardware platforms. You can read more about 
 design decisions and what is tentatively in the pipeline for development in 
 our `arXiv paper`_ from the 2018 SysML conference.
+
+
+
 
 
 .. _arXiv paper: https://arxiv.org/pdf/1801.08058.pdf

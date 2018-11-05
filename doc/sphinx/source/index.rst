@@ -41,7 +41,10 @@ Quick Start
 We have documentation to help you get started.  
 
 * **Framework users of TensorFlow or MXNet** can get started with 
-  * :doc:`framework-integration-guides`.
+  :doc:`framework-integration-guides`; see also: 
+
+   * `TensorFlow bridge to nGraph`_ 
+   * `Compiling MXNet with nGraph`_ 
 
 * **Data scientists** interested in the `ONNX`_ format will find the 
   `nGraph ONNX companion tool`_ of interest. 
@@ -60,26 +63,6 @@ We have documentation to help you get started.
 * For details about **PlaidML integration** and other nGraph runtime APIs, 
   see the section :doc:`programmable/index`.
 
-
-Platforms 
-----------
-
-.. csv-table::
-   :header: "Backend", "Current support", "Future nGraph support"
-   :widths: 35, 10, 10
-
-   Intel® Architecture Processors (CPUs), Yes, Yes
-   Intel® Nervana™ Neural Network Processor (NNPs), Yes, Yes
-   AMD\* GPUs, via PlaidML, Yes
-   NVIDIA\* GPUs, via PlaidML, Some 
-   Intel® Architecture GPUs, Yes, Yes 
-   :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs), Coming soon, Yes
-   Intel Movidius™ Myriad™ 2 (VPU), Coming soon, Yes
-   Other, Not yet, Ask
-
-Supported frameworks
---------------------
-
 .. csv-table::
    :header: "Framework", "Bridge Available?", "ONNX Support?"
    :widths: 27, 10, 10
@@ -88,8 +71,20 @@ Supported frameworks
    MXNet, Yes, Yes
    PaddlePaddle, Coming Soon, Yes
    PyTorch, No, Yes
-   CNTK, No, Yes
    Other, Write your own, Custom
+
+
+.. csv-table::
+   :header: "Backend", "Current support", "Future nGraph support"
+   :widths: 35, 10, 10
+
+   Intel® Architecture Processors (CPUs), Yes, Yes
+   Intel® Nervana™ Neural Network Processor (NNPs), Yes, Yes
+   Intel® Architecture GPUs, Yes, Yes 
+   AMD\* GPUs, via PlaidML, Yes
+   :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs), Coming soon, Yes
+   NVIDIA\* GPUs, via PlaidML, Some 
+   Intel Movidius™ Myriad™ 2 (VPU), Coming soon, Yes
 
 
 .. note:: The Library code is under active development as we're continually 
@@ -132,3 +127,5 @@ Indices and tables
 .. _ONNX: http://onnx.ai
 .. _Movidius: https://www.movidius.com/
 .. _contributions: https://github.com/NervanaSystems/ngraph#how-to-contribute
+.. _TensorFlow bridge to nGraph: https://github.com/NervanaSystems/ngraph-tf/blob/master/README.md
+.. _Compiling MXNet with nGraph: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/NGRAPH_README.md
