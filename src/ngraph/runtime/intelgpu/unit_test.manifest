@@ -91,6 +91,7 @@ zero_sized_cos
 zero_sized_cosh
 zero_sized_divide
 zero_sized_eq
+zero_sized_exp
 zero_sized_floor
 zero_sized_greater
 zero_sized_greatereq
