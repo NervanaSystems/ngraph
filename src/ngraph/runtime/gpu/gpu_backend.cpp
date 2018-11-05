@@ -218,3 +218,7 @@ vector<runtime::PerformanceCounter>
     }
     return rc;
 }
+
+bool runtime::gpu::GPU_Backend::is_supported(const Node& node) const
+{
+}
