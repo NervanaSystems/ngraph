@@ -110,7 +110,6 @@ confident that Intel® Architecture already provides the best computational
 resources available for the breadth of ML/DL tasks. 
 
 
-
 .. _faq:
 
 FAQs
@@ -154,10 +153,9 @@ MXNet currently make use of custom bridge code, see the section on
 Given that we have no way to predict how many other frameworks designed around 
 model, workload, or framework-specific purposes there may be, it would be  
 impossible for us to create bridges for every framework that currently exists 
-(or that will exist in the future). Thus, we provide documentation to help 
-developers and engineers work with a lower-level API that can be used to load 
-the function graph, to run Interpreter mode to help in writing "bridge code" for 
-new or novel frameworks or algorithms. 
+(or that will exist in the future). Although we only support a few frameworks, 
+we provide documentation to help developers and engineers figure out how to 
+get custom solutions working, such as for edge cases. 
 
 .. csv-table::
    :header: "Framework", "Bridge Available?", "ONNX Support?"
@@ -181,11 +179,10 @@ To learn how to convert such serialized files to an nGraph model, please see
 the :doc:`../howto/import` documentation.  
 
 
-
 .. _whats_next:
 
 What's next?
--------------
+============
   
 We developed nGraph to simplify the realization of optimized deep learning 
 performance across frameworks and hardware platforms. You can read more about 
