@@ -16,21 +16,17 @@
 
 #pragma once
 
-#include "ngraph/ngraph.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/backend_manager.hpp"
-#include "util/all_close.hpp"
-#include "util/all_close_f.hpp"
-#include "util/ndarray.hpp"
-#include "util/random.hpp"
-#include "util/test_control.hpp"
-#include "util/test_tools.hpp"
+#include <string>
+#include <set>
 
-class TestBackend : public ngraph::runtime::Backend
+#include "ngraph/runtime/backend.hpp"
+
+class BackendWrapper : public ngraph::runtime::Backend
 {
 public:
-    TestBackend(const std::vector<std::shared_ptr<ngraph::runtime::Backend>>& backend_list);
+    BackendWrapper(const std::string& backend_name,
+                   const std::set<std::string>& supported_ops,
+                   const std::string& name);
 
     std::shared_ptr<ngraph::runtime::Tensor>
         create_tensor(const ngraph::element::Type& element_type,
@@ -47,21 +43,10 @@ public:
               const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& outputs,
               const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& inputs) override;
 
+    bool is_supported(const ngraph::Node& node) const override;
+
 private:
-    // This list of backends is in order of priority with the first backend higher priority
-    // than the second.
-    std::vector<std::shared_ptr<ngraph::runtime::Backend>> m_backend_list;
-
-protected:
-    class FunctionInstance
-    {
-    public:
-        std::shared_ptr<ngraph::Function> m_function;
-        std::vector<std::shared_ptr<ngraph::Function>> m_sub_functions;
-        std::unordered_map<std::shared_ptr<ngraph::op::Parameter>,
-                           std::shared_ptr<ngraph::op::Result>>
-            m_map_parameter_to_result;
-    };
-
-    std::map<std::shared_ptr<ngraph::Function>, FunctionInstance> m_function_map;
+    std::shared_ptr<ngraph::runtime::Backend> m_backend;
+    const std::set<std::string> m_supported_ops;
+    const std::string m_name;
 };

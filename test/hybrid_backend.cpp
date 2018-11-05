@@ -23,6 +23,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/hybrid/hybrid_wrapper.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
