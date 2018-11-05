@@ -129,12 +129,15 @@ namespace ngraph
                         NodeVector new_goes;
                         for (auto& goe : goes)
                         {
-                            auto out_idx =
-                                std::dynamic_pointer_cast<op::GetOutputElement>(goe)->get_n();
-                            auto new_goe =
-                                std::make_shared<op::GetOutputElement>(new_topk, out_idx);
-                            ngraph::replace_node(goe, new_goe);
-                            new_goes.push_back(new_goe);
+                            auto goe_ptr = std::dynamic_pointer_cast<op::GetOutputElement>(goe);
+                            if (goe_ptr)
+                            {
+                                auto out_idx = goe_ptr->get_n();
+                                auto new_goe =
+                                    std::make_shared<op::GetOutputElement>(new_topk, out_idx);
+                                ngraph::replace_node(goe, new_goe);
+                                new_goes.push_back(new_goe);
+                            }
                         }
                         Shape reordered_out_shape;
                         for (size_t j = 0; j < ndim; j++)
