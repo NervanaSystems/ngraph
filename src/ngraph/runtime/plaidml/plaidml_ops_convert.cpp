@@ -18,21 +18,31 @@
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 #include "ngraph/runtime/plaidml/plaidml_translate.hpp"
 
-// Convert views a tensor as a new type.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Convert>::operator()()
+namespace ngraph
 {
-    check_inputs(1);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(), "I"})
-                   .add(builder::Output{"O"})
-                   .add(builder::Elementwise{
-                       "O", tile_converter("I", to_plaidml(op().get_convert_element_type()))})
-                   .finalize());
-}
+    namespace runtime
+    {
+        namespace plaidml
+        {
+            // Convert views a tensor as a new type.
+            template <>
+            void Impl<op::Convert>::operator()()
+            {
+                check_inputs(1);
+                check_outputs(1);
+                set_output(
+                    start_tile_function()
+                        .add(builder::Input{op_input(), "I"})
+                        .add(builder::Output{"O"})
+                        .add(builder::Elementwise{
+                            "O", tile_converter("I", to_plaidml(op().get_convert_element_type()))})
+                        .finalize());
+            }
 
-namespace
-{
-    ngraph::runtime::plaidml::Impl<ngraph::op::Convert>::Registration register_convert;
+            namespace
+            {
+                Impl<op::Convert>::Registration register_convert;
+            }
+        }
+    }
 }

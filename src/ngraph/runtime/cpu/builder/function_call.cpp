@@ -33,7 +33,7 @@ namespace ngraph
             {
                 auto function_call = static_cast<const ngraph::op::FunctionCall*>(node);
                 auto function = function_call->get_functions()[0];
-                auto backend = runtime::Backend::create("CPU");
+                shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
                 auto& functors = external_function->get_functors();
                 auto& callees = external_function->get_callees();
