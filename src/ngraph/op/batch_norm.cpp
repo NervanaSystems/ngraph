@@ -31,6 +31,7 @@ ngraph::op::BatchNormInference::BatchNormInference(double eps,
     : Op("BatchNormInference", check_single_output_args({gamma, beta, input, mean, variance}))
     , m_epsilon(eps)
 {
+    set_output_size(1);
     constructor_validate_and_infer_types();
 }
 
@@ -41,6 +42,7 @@ ngraph::op::BatchNormTraining::BatchNormTraining(double eps,
     : Op("BatchNormTraining", check_single_output_args({gamma, beta, input}))
     , m_epsilon(eps)
 {
+    set_output_size(3);
     constructor_validate_and_infer_types();
 }
 
@@ -63,7 +65,6 @@ void ngraph::op::BatchNormInference::validate_and_infer_types()
                                  get_input_partial_shape(INPUT_MEAN),
                                  get_input_partial_shape(INPUT_VARIANCE));
 
-    set_output_size(1);
     set_output_type(0, result_et, result_batch_shape);
 }
 
@@ -82,7 +83,6 @@ void ngraph::op::BatchNormTraining::validate_and_infer_types()
                                  get_input_partial_shape(INPUT_GAMMA),
                                  get_input_partial_shape(INPUT_BETA));
 
-    set_output_size(3);
     set_output_type(0, result_et, result_batch_shape);
     set_output_type(1, result_et, result_channel_shape);
     set_output_type(2, result_et, result_channel_shape);
@@ -117,6 +117,7 @@ ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(
     , m_epsilon(eps)
 
 {
+    set_output_size(3);
     constructor_validate_and_infer_types();
 }
 
@@ -157,7 +158,6 @@ void ngraph::op::BatchNormTrainingBackprop::validate_and_infer_types()
                                  get_input_partial_shape(INPUT_MEAN),
                                  get_input_partial_shape(INPUT_VARIANCE));
 
-    set_output_size(3);
     set_output_type(0, result_et, result_batch_shape);
     set_output_type(1, result_et, result_channel_shape);
     set_output_type(2, result_et, result_channel_shape);
