@@ -348,7 +348,6 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                 writer << "uint32_t dim_idx_generator = tid;\n";
             }
             writer << "uint32_t in_idx = 0;\n";
-            //writer << data_types[1] << " r = 0;\n";
 
             // loop through all reduction axis
             for (int64_t i = 0; i < static_cast<int64_t>(out_rank); i++)
