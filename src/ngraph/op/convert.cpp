@@ -30,7 +30,7 @@ op::Convert::Convert(const shared_ptr<Node>& arg, const element::Type& element_t
 
 void op::Convert::validate_and_infer_types()
 {
-    set_output_type(0, m_element_type, get_input_shape(0));
+    set_output_type(0, m_element_type, get_input_partial_shape(0));
 }
 
 shared_ptr<Node> op::Convert::copy_with_new_args(const NodeVector& new_args) const
