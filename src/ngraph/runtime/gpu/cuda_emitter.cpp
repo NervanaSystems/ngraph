@@ -1655,7 +1655,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
     size_t reduce_rank = reduce_axis.size();
     size_t out_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
-    std::string kernel_name = "reduce_nd_" + join(dtypes, "_");
+    std::string kernel_name = "reduce_nd_" + join(dtypes, "_") + "_" + op;
     kernel_name +=
         "_ri_" + std::to_string(input_shape.size()) + "_rr_" + std::to_string(reduce_axis.size());
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
@@ -1754,7 +1754,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar(const std::vector<std::
                                                          const char* kernel)
 {
     // assumes NC{d1,...,dn} format
-    std::string kernel_name = "reduce_scalar_" + join(dtypes, "_");
+    std::string kernel_name = "reduce_scalar_" + join(dtypes, "_") + "_" + op;
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
     std::stringstream ss;
@@ -1831,7 +1831,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar_acc(const std::vector<s
                                                              const char* kernel)
 {
     // assumes NC{d1,...,dn} format
-    std::string kernel_name = "reduce_acc_" + join(dtypes, "_");
+    std::string kernel_name = "reduce_acc_" + join(dtypes, "_") + "_" + op;
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
     std::stringstream ss;
@@ -1901,7 +1901,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     size_t reduce_rank = reduce_axis.size();
     size_t out_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
-    std::string kernel_name = "reduce_" + join(dtypes, "_");
+    std::string kernel_name = "reduce_" + join(dtypes, "_") + "_" + op;
     if (out_rank != 0)
     {
         kernel_name += "_ri_" + std::to_string(input_shape.size()) + "_rr_" +

@@ -1032,10 +1032,10 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                 dtypes.push_back(out[0].get_type());
                 auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
                 auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
-                
+
                 size_t emitter_index;
                 // Reduction function should only have one op
-                size_t op_index;
+                std::shared_ptr<Node> reduce_op;
                 std::string op_name;
                 int op_count = 0;
                 for (auto op : reduction_function_ops)
@@ -1049,42 +1049,48 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                     // with shared pointers, which is fine here but clang doesn't like it.)
                     auto& fn = *op;
                     op_name = fn.get_name();
-                    op_index = type_index(typeid(fn)).hash_code();
+                    reduce_op = op;
                     if (op_count != 1)
                     {
                         throw runtime_error("reduce with more than one op is not implement yet.");
                     }
                 }
 
-                switch(op_index)
+                auto& fn = *reduce_op;
+                if (TI(fn) == TI(ngraph::op::Add))
                 {
-                    case TI(ngraph::op::Add).hash_code():
-                        emitter_index = cuda_emitter->build_reduce<ngraph::op::Add>(
+                    emitter_index = cuda_emitter->build_reduce<ngraph::op::Add>(
                         dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
-                        break;
-                    case TI(ngraph::op::Add).hash_code():
-                        emitter_index = cuda_emitter->build_reduce<ngraph::op::Multiply>(
+                }
+                else if (TI(fn) == TI(ngraph::op::Multiply))
+                {
+                    emitter_index = cuda_emitter->build_reduce<ngraph::op::Multiply>(
                         dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
-                        break;
-                    case TI(ngraph::op::Add).hash_code():
-                        emitter_index = cuda_emitter->build_reduce<ngraph::op::Maximum>(
+                }
+                else if (TI(fn) == TI(ngraph::op::Maximum))
+                {
+                    emitter_index = cuda_emitter->build_reduce<ngraph::op::Maximum>(
                         dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
-                        break;
-                    case TI(ngraph::op::Add).hash_code():
-                        emitter_index = cuda_emitter->build_reduce<ngraph::op::Minimum>(
+                }
+                else if (TI(fn) == TI(ngraph::op::Minimum))
+                {
+                    emitter_index = cuda_emitter->build_reduce<ngraph::op::Minimum>(
                         dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
-                        break;
-                    case TI(ngraph::op::Add).hash_code():
-                        emitter_index = cuda_emitter->build_reduce<ngraph::op::And>(
+                }
+                else if (TI(fn) == TI(ngraph::op::And))
+                {
+                    emitter_index = cuda_emitter->build_reduce<ngraph::op::And>(
                         dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
-                        break;
-                    case TI(ngraph::op::Add).hash_code():
-                        emitter_index = cuda_emitter->build_reduce<ngraph::op::Or>(
+                }
+                else if (TI(fn) == TI(ngraph::op::Or))
+                {
+                    emitter_index = cuda_emitter->build_reduce<ngraph::op::Or>(
                         dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
-                        break;
-                    default:
-                        throw runtime_error("reduce with function " + op_name +
-                                            " is not implement yet.");
+                }
+                else
+                {
+                    throw runtime_error("reduce with function " + op_name +
+                                        " is not implement yet.");
                 }
                 writer << "void* input[] = {" << node_names(args) << "};\n";
                 writer << "void* output[] = {" << node_names(out) << "};\n";
