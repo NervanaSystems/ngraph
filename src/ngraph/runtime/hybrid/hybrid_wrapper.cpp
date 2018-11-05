@@ -23,7 +23,6 @@
 using namespace ngraph;
 using namespace std;
 
-
 template <typename T>
 void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& data)
 {
@@ -44,9 +43,6 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
     tv->read(rc.data(), 0, size);
     return rc;
 }
-
-
-
 
 runtime::hybrid::HybridWrapper::HybridWrapper(
     const std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>>& backend_list)
@@ -86,16 +82,20 @@ bool runtime::hybrid::HybridWrapper::compile(shared_ptr<Function> func)
         instance.m_function = clone_function(*func);
 
         // Run placement pass
+    NGRAPH_INFO;
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::AssignPlacement>(backend_list);
         pass_manager.run_passes(instance.m_function);
 
         // Split function to sub_functions
+    NGRAPH_INFO;
         tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
             split_function_by_placement_size(instance.m_function);
+    NGRAPH_INFO;
         m_function_map.insert({func, instance});
 
         // Compile subfunctions in corresponding backends
+    NGRAPH_INFO;
         for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
         {
             size_t placement = get_colocated_function_placement_size(sub_function);
@@ -103,8 +103,10 @@ bool runtime::hybrid::HybridWrapper::compile(shared_ptr<Function> func)
                 m_backend_list[(placement - 1)]; // (placement-1) as 0 is default placement
             backend.second->compile(sub_function);
         }
+    NGRAPH_INFO;
     }
 
+    NGRAPH_INFO;
     return true;
 }
 
@@ -123,12 +125,14 @@ bool runtime::hybrid::HybridWrapper::call(shared_ptr<Function> func,
         it = m_function_map.find(func);
     }
 
-    if (it == m_function_map.end())
+     NGRAPH_INFO;
+   if (it == m_function_map.end())
     {
         throw runtime_error("Error constructing backend.");
     }
     FunctionInstance& instance = it->second;
 
+    NGRAPH_INFO;
     // Parameter and result node in sub_function maps to one Tensor
     unordered_map<shared_ptr<Node>, shared_ptr<runtime::Tensor>> map_node_to_tensor_view;
     for (size_t i = 0; i < inputs.size(); ++i)

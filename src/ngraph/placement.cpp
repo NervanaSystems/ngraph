@@ -253,12 +253,14 @@ static Node* take_independent_node_with_placement_priority_size(
 static vector<unordered_set<shared_ptr<Node>>>
     group_function_nodes_to_clusters_size(const shared_ptr<Function>& f)
 {
+    NGRAPH_INFO;
     // Topologically sort nodes by picking independent node with the same placement as the
     // previously picked node greedily
     map<size_t, deque<Node*>> independent_nodes_by_placement;
     unordered_map<Node*, size_t> node_dependency_count;
     unordered_map<ngraph::Node*, shared_ptr<ngraph::Node>> node_map;
 
+    NGRAPH_INFO;
     for (shared_ptr<Node> node : f->get_ops())
     {
         size_t dependency_count = node->get_arguments().size();
@@ -270,6 +272,7 @@ static vector<unordered_set<shared_ptr<Node>>>
         }
     }
 
+    NGRAPH_INFO;
     list<shared_ptr<Node>> sorted_nodes;
     size_t previous_placement = 0; // Placement::DEFAULT
     while (Node* independent_node = take_independent_node_with_placement_priority_size(
@@ -290,6 +293,7 @@ static vector<unordered_set<shared_ptr<Node>>>
         }
     }
 
+    NGRAPH_INFO;
     if (sorted_nodes.size() != f->get_ops().size())
     {
         throw ngraph_error("sorted_nodes.size()== " + to_string(sorted_nodes.size()) +
@@ -297,21 +301,29 @@ static vector<unordered_set<shared_ptr<Node>>>
                            ". Internal error with topological sort.");
     }
 
+    NGRAPH_INFO;
     // Build clusters from the sorted_nodes
     previous_placement = 0; // Placement::DEFAULT;
     vector<unordered_set<shared_ptr<Node>>> clusters;
     for (shared_ptr<Node> node : sorted_nodes)
     {
+        NGRAPH_INFO;
         size_t node_placement = node->get_placement_size();
+        NGRAPH_INFO << node_placement;
+        NGRAPH_INFO << previous_placement;
         if (node_placement != previous_placement)
         {
             unordered_set<shared_ptr<Node>> new_cluster;
             clusters.push_back(new_cluster);
         }
+        NGRAPH_INFO;
         clusters.back().insert(node);
+        NGRAPH_INFO;
         previous_placement = node_placement;
+        NGRAPH_INFO;
     }
 
+    NGRAPH_INFO;
     // Sanity check for node duplication and full node coverage
     unordered_set<shared_ptr<Node>> cluster_nodes;
     for (auto cluster : clusters)
@@ -325,11 +337,13 @@ static vector<unordered_set<shared_ptr<Node>>>
             cluster_nodes.insert(node);
         }
     }
+    NGRAPH_INFO;
     unordered_set<shared_ptr<Node>> f_nodes;
     for (auto node : f->get_ordered_ops())
     {
         f_nodes.insert(node);
     }
+    NGRAPH_INFO;
     if (cluster_nodes != f_nodes)
     {
         throw ngraph_error(
@@ -337,6 +351,18 @@ static vector<unordered_set<shared_ptr<Node>>>
             to_string(cluster_nodes.size()) + ", f_nodes.size()=" + to_string(f_nodes.size()));
     }
 
+    for (shared_ptr<Node> node : f->get_ops())
+    {
+        if (node->get_placement_size() == 0)
+        {
+            NGRAPH_INFO << "node not placed " << node->get_name();
+            NGRAPH_INFO;
+            throw runtime_error("Node " + node->get_name() + " not supported by any backend");
+            NGRAPH_INFO;
+        }
+    }
+
+    NGRAPH_INFO;
     return clusters;
 }
 
@@ -345,16 +371,20 @@ static vector<unordered_set<shared_ptr<Node>>>
 pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>>>
     ngraph::split_function_by_placement_size(const shared_ptr<Function>& f)
 {
+    NGRAPH_INFO;
     // Split functions to clusters of nodes that can be computed together
     vector<unordered_set<shared_ptr<Node>>> clusters = group_function_nodes_to_clusters_size(f);
 
     // Map from (intermediate) parameter to result node, for guiding data copy among devices
+    NGRAPH_INFO;
     unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>> map_parameter_to_result;
 
     // Split neighboring nodes if they belong to different clusters
     // TODO: optimization to group multiple result node from the same source,
     //       and to group the parameter node in the same cluster with the same result node source
+    NGRAPH_INFO;
     unordered_map<shared_ptr<Node>, unordered_set<shared_ptr<Node>>*> map_node_to_cluster;
+    NGRAPH_INFO;
     for (auto& cluster : clusters)
     {
         for (auto node : cluster)
@@ -362,6 +392,7 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
             map_node_to_cluster[node] = &cluster;
         }
     }
+    NGRAPH_INFO;
     for (auto dst_node : f->get_ordered_ops())
     {
         for (auto src_node : dst_node->get_arguments())
@@ -385,6 +416,7 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
     }
 
     // Create functions from clusters
+    NGRAPH_INFO;
     vector<shared_ptr<Function>> sub_functions;
     for (auto cluster : clusters)
     {
@@ -405,5 +437,6 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
         sub_functions.push_back(sub_function);
     }
 
+    NGRAPH_INFO;
     return make_pair(sub_functions, map_parameter_to_result);
 }
