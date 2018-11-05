@@ -32,7 +32,7 @@ void runtime::cpu::CPU_CountTracepoint::operator()(void** outputs, const std::st
     {
         return;
     }
-    if (++m_iteration == m_count)
+    if (++m_iteration >= m_count)
     {
         m_callback(outputs, name);
         m_iteration = 0;

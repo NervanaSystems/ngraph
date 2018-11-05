@@ -88,6 +88,7 @@ namespace ngraph
                 void* inspect(std::shared_ptr<Node> op, size_t output_index = 0);
 
             protected:
+                // Returns a tuple with the following items <found, pc>
                 std::tuple<bool, size_t> find_pc_for_node(std::shared_ptr<Node> op);
                 CPU_Debugger(const CPU_Debugger&) = delete;
                 CPU_Debugger(CPU_Debugger&&) = delete;
