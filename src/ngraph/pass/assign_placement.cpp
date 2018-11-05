@@ -37,13 +37,13 @@ bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
 {
     if (!m_placement_backends.empty())
     {
-        size_t backend_indx = 0;
+        size_t backend_index = 0;
         for (auto backend : m_placement_backends)
         {
-            backend_indx += 1;
+            backend_index += 1;
             if (backend->is_supported(*node))
             {
-                node->set_placement(backend_indx);
+                node->set_placement(backend_index);
 
                 return false;
             }
