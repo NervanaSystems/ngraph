@@ -36,6 +36,25 @@ namespace ngraph
     {
         namespace cpu
         {
+            class CPU_CountTracepoint
+            {
+            public:
+                CPU_CountTracepoint(const std::function<void(void**, const std::string&)>& callback,
+                                    size_t count)
+                    : m_callback(callback)
+                    , m_count(count)
+                    , m_iteration(0)
+                {
+                }
+
+                void operator()(void** outputs, const std::string& name);
+
+            private:
+                std::function<void(void**, const std::string&)> m_callback;
+                size_t m_count;
+                size_t m_iteration;
+            };
+
             class CPU_Debugger
             {
             public:

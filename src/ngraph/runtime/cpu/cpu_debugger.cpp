@@ -26,6 +26,19 @@
 using namespace std;
 using namespace ngraph;
 
+void runtime::cpu::CPU_CountTracepoint::operator()(void** outputs, const std::string& name)
+{
+    if (m_count == 0)
+    {
+        return;
+    }
+    if (++m_iteration == m_count)
+    {
+        m_callback(outputs, name);
+        m_iteration = 0;
+    }
+}
+
 runtime::cpu::CPU_Debugger::CPU_Debugger(ngraph::runtime::cpu::CPU_CallFrame& callframe)
     : m_callframe(callframe)
 {

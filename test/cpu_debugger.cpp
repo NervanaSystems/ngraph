@@ -265,6 +265,48 @@ TEST(tracer, basic)
     dbg.call({result}, {a, b});
 }
 
+TEST(tracer, count_tracepoint)
+{
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto B = make_shared<op::Parameter>(element::i32, shape);
+
+    auto add = make_shared<op::Add>(A, B);
+
+    auto f = make_shared<Function>(add, op::ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shape);
+
+    auto cf =
+        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+
+    ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+
+    const size_t num_iterations = 10;
+    const size_t offset = 5;
+    int countdown = num_iterations;
+
+    std::function<void(void**, const std::string&)> callback =
+        [num_iterations, offset](void** values, const std::string& name) {
+            ASSERT_EQ(static_cast<int*>(values[0])[0], num_iterations - 1 + offset);
+        };
+
+    ngraph::runtime::cpu::CPU_CountTracepoint count_tracepoint(callback, 10);
+    for (size_t i = 0; i < num_iterations; i++)
+    {
+        dbg.add_tracepoint(add, count_tracepoint);
+        vector<int> dataA{static_cast<int>(offset)};
+        vector<int> dataB{static_cast<int>(i)};
+        copy_data(a, dataA);
+        copy_data(b, dataB);
+        dbg.call({result}, {a, b});
+    }
+}
+
 TEST(tracer, conditional_tracepoint)
 {
     Shape shape{};
