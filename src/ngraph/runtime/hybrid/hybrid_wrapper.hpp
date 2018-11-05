@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include <string>
 #include <set>
+#include <string>
 
 #include "ngraph/runtime/backend.hpp"
 
@@ -27,17 +27,17 @@ namespace ngraph
     {
         namespace hybrid
         {
-            class BackendWrapper;
+            class HybridWrapper;
         }
     }
 }
 
-class ngraph::runtime::hybrid::BackendWrapper : public ngraph::runtime::Backend
+class ngraph::runtime::hybrid::HybridWrapper : public ngraph::runtime::Backend
 {
 public:
-    BackendWrapper(const std::string& backend_name,
-                   const std::set<std::string>& supported_ops,
-                   const std::string& name);
+    HybridWrapper(const std::string& backend_name,
+                  const std::set<std::string>& supported_ops,
+                  const std::string& name);
 
     std::shared_ptr<ngraph::runtime::Tensor>
         create_tensor(const ngraph::element::Type& element_type,

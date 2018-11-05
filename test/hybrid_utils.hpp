@@ -65,3 +65,33 @@ protected:
 
     std::map<std::shared_ptr<ngraph::Function>, FunctionInstance> m_function_map;
 };
+
+class BackendWrapper : public ngraph::runtime::Backend
+{
+public:
+    BackendWrapper(const std::string& backend_name,
+                   const std::set<std::string>& supported_ops,
+                   const std::string& name);
+
+    std::shared_ptr<ngraph::runtime::Tensor>
+        create_tensor(const ngraph::element::Type& element_type,
+                      const ngraph::Shape& shape) override;
+
+    std::shared_ptr<ngraph::runtime::Tensor>
+        create_tensor(const ngraph::element::Type& element_type,
+                      const ngraph::Shape& shape,
+                      void* memory_pointer) override;
+
+    bool compile(std::shared_ptr<ngraph::Function> func) override;
+
+    bool call(std::shared_ptr<ngraph::Function> func,
+              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& outputs,
+              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& inputs) override;
+
+    bool is_supported(const ngraph::Node& node) const override;
+
+private:
+    std::shared_ptr<ngraph::runtime::Backend> m_backend;
+    const std::set<std::string> m_supported_ops;
+    const std::string m_name;
+};
