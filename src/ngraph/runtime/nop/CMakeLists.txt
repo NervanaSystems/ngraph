@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_NOP_BACKEND_ENABLE)
+if (NGRAPH_NOP_ENABLE)
     add_library(nop_backend SHARED nop_backend.cpp)
     set_target_properties(nop_backend PROPERTIES VERSION ${NGRAPH_VERSION})
     target_link_libraries(nop_backend PUBLIC ngraph)
