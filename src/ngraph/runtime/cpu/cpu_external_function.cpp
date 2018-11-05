@@ -1320,9 +1320,12 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
                 auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
                 if (in_place_oi_pairs.size() > 0)
                 {
+
                     auto arg = slice->get_argument(0);
+                    auto input = slice->get_input_from(arg);
+                    auto index = input->get_output().get_index();
                     auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
-                    auto input_tensor = &input_node->get_output_tensor();
+                    auto input_tensor = &input_node->get_output_tensor(index);
                     auto offset = input_tensor->get_pool_offset();
                     auto lower_bounds = slice->get_lower_bounds();
                     auto start = 0, accumulated = 1;
