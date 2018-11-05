@@ -22,7 +22,7 @@
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -60,8 +60,9 @@ namespace ngraph
 
                         Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
                             static_cast<ElementType*>(inputs[i].get()), in_dims);
-                        out.slice(concat_pos, in_dims).device(eigen::global_thread_pool_device) =
-                            in;
+                        out.slice(concat_pos, in_dims)
+                            .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                                0)) = in;
                         concat_pos[axis] += in_dims[axis];
                     }
                 }

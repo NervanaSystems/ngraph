@@ -71,7 +71,7 @@ namespace ngraph
                                 arg_tensors,
                                 out_shapes,
                                 out_types,
-                                out_tensors](CPURuntimeContext* ctx) {
+                                out_tensors](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     TensorViewPtrs inputs, outputs;
                     for (int i = 0; i < arg_shapes.size(); i++)
                     {

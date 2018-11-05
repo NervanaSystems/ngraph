@@ -39,14 +39,6 @@ namespace ngraph
                                            std::shared_ptr<Node> beta,
                                            std::shared_ptr<Node> input);
 
-                BatchNormTrainingWithStats(double eps,
-                                           std::shared_ptr<ngraph::Node> gamma,
-                                           std::shared_ptr<ngraph::Node> beta,
-                                           std::shared_ptr<ngraph::Node> input,
-                                           std::shared_ptr<ngraph::Node> mean,
-                                           std::shared_ptr<ngraph::Node> variance,
-                                           bool training = false);
-
             protected:
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
