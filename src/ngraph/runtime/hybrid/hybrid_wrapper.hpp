@@ -16,8 +16,10 @@
 
 #pragma once
 
-#include <set>
+#include <vector>
+#include <map>
 #include <string>
+#include <memory>
 
 #include "ngraph/runtime/backend.hpp"
 
@@ -35,9 +37,8 @@ namespace ngraph
 class ngraph::runtime::hybrid::HybridWrapper : public ngraph::runtime::Backend
 {
 public:
-    HybridWrapper(const std::string& backend_name,
-                  const std::set<std::string>& supported_ops,
-                  const std::string& name);
+    HybridWrapper(
+        const std::map<std::string, std::shared_ptr<runtime::Backend>>& backend_list);
 
     std::shared_ptr<ngraph::runtime::Tensor>
         create_tensor(const ngraph::element::Type& element_type,
@@ -57,7 +58,5 @@ public:
     bool is_supported(const ngraph::Node& node) const override;
 
 private:
-    std::shared_ptr<ngraph::runtime::Backend> m_backend;
-    const std::set<std::string> m_supported_ops;
-    const std::string m_name;
+    std::map<std::string, std::shared_ptr<runtime::Backend>> m_backend_list;
 };

@@ -19,41 +19,48 @@
 using namespace ngraph;
 using namespace std;
 
-runtime::hybrid::HybridWrapper::HybridWrapper(const string& backend_name,
-                                              const set<string>& supported_ops,
-                                              const string& name)
-    : m_backend{runtime::Backend::create(backend_name)}
-    , m_supported_ops{supported_ops}
-    , m_name{name}
+runtime::hybrid::HybridWrapper::HybridWrapper(
+    const std::map<std::string, std::shared_ptr<runtime::Backend>>& backend_list)
+    : m_backend_list{backend_list}
 {
+    NGRAPH_INFO << m_backend_list.size();
 }
 
 shared_ptr<runtime::Tensor>
     runtime::hybrid::HybridWrapper::create_tensor(const element::Type& element_type,
                                                   const Shape& shape)
 {
-    return m_backend->create_tensor(element_type, shape);
+    auto it = m_backend_list.begin();
+    NGRAPH_INFO << it->first;
+    return it->second->create_tensor(element_type, shape);
 }
 
 shared_ptr<runtime::Tensor> runtime::hybrid::HybridWrapper::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
-    return m_backend->create_tensor(element_type, shape, memory_pointer);
+    NGRAPH_INFO;
+    auto it = m_backend_list.begin();
+    return it->second->create_tensor(element_type, shape, memory_pointer);
 }
 
 bool runtime::hybrid::HybridWrapper::compile(shared_ptr<Function> func)
 {
-    return m_backend->compile(func);
+    NGRAPH_INFO;
+    auto it = m_backend_list.begin();
+    return it->second->compile(func);
 }
 
 bool runtime::hybrid::HybridWrapper::call(shared_ptr<Function> func,
                                           const vector<shared_ptr<runtime::Tensor>>& outputs,
                                           const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    return m_backend->call(func, outputs, inputs);
+    NGRAPH_INFO;
+    auto it = m_backend_list.begin();
+    return it->second->call(func, outputs, inputs);
 }
 
 bool runtime::hybrid::HybridWrapper::is_supported(const Node& node) const
 {
-    return m_supported_ops.find(node.description()) != m_supported_ops.end();
+    NGRAPH_INFO;
+    return true;
 }

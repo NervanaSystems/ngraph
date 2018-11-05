@@ -37,8 +37,12 @@ extern "C" const char* get_ngraph_version_string()
 
 extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
-    // auto wrapper = new runtime::hybrid::HybridWrapper("GPU");
-    return new runtime::gpu::GPU_Backend();
+    NGRAPH_INFO;
+    map<string, shared_ptr<runtime::Backend>> backend_list{
+        {"GPU", make_shared<runtime::gpu::GPU_Backend>()}};
+
+    auto wrapper = new runtime::hybrid::HybridWrapper(backend_list);
+    return wrapper;
 }
 
 extern "C" void delete_backend(runtime::Backend* backend)
@@ -50,6 +54,7 @@ runtime::gpu::GPU_Backend::GPU_Backend()
     : runtime::Backend()
     , m_context(new BackendContext())
 {
+    NGRAPH_INFO;
 }
 
 runtime::gpu::GPU_Backend::BackendContext::BackendContext()
@@ -103,12 +108,14 @@ runtime::gpu::GPU_Backend::BackendContext::~BackendContext()
 shared_ptr<runtime::Tensor>
     runtime::gpu::GPU_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
+    NGRAPH_INFO;
     return make_shared<runtime::gpu::GPUTensor>(element_type, shape);
 }
 
 shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
+    NGRAPH_INFO;
     return make_shared<runtime::gpu::GPUTensor>(element_type, shape, memory_pointer);
 }
 
@@ -149,6 +156,7 @@ bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
                                      const vector<shared_ptr<runtime::Tensor>>& outputs,
                                      const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    NGRAPH_INFO;
     bool rc = true;
 
     validate_call(func, outputs, inputs);
@@ -223,6 +231,7 @@ vector<runtime::PerformanceCounter>
 
 bool runtime::gpu::GPU_Backend::is_supported(const Node& node) const
 {
+    NGRAPH_INFO;
     bool rc = true;
 
     // get op type
