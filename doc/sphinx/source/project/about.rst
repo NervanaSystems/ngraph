@@ -189,9 +189,6 @@ design decisions and what is tentatively in the pipeline for development in
 our `arXiv paper`_ from the 2018 SysML conference.
 
 
-
-
-
 .. _arXiv paper: https://arxiv.org/pdf/1801.08058.pdf
 .. _ONNX: http://onnx.ai 
 .. _nGraph ONNX companion tool: https://github.com/NervanaSystems/ngraph-onnx

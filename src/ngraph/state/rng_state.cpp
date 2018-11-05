@@ -14,22 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <random>
 
-#define EIGEN_USE_THREADS
-#include <unsupported/Eigen/CXX11/Tensor>
+#include "except.hpp"
+#include "rng_state.hpp"
 
-namespace ngraph
+using namespace std;
+using namespace ngraph;
+
+void ngraph::RNGState::activate()
 {
-    namespace runtime
-    {
-        namespace cpu
-        {
-            namespace eigen
-            {
-                extern Eigen::ThreadPool global_thread_pool;
-                extern Eigen::ThreadPoolDevice global_thread_pool_device;
-            }
-        }
-    }
+}
+
+void ngraph::RNGState::deactivate()
+{
 }

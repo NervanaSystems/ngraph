@@ -100,7 +100,7 @@ namespace ngraph
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
                     auto functor = [&, batchnorm_index, stacked_weights, weight_sizes](
-                        CPURuntimeContext* ctx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         memcpy(stacked_weights.get(), arg0_tensor, weight_sizes[0]);
                         memcpy(
                             stacked_weights.get() + weight_sizes[0], arg1_tensor, weight_sizes[1]);
@@ -143,7 +143,7 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
 
                     auto functor = [&, batchnorm_index, stacked_weights, weight_sizes](
-                        CPURuntimeContext* ctx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         memcpy(stacked_weights.get(), arg0_tensor, weight_sizes[0]);
                         memcpy(
                             stacked_weights.get() + weight_sizes[0], arg1_tensor, weight_sizes[1]);
@@ -190,7 +190,8 @@ namespace ngraph
                         auto& out2_tensor = external_function->get_tensor_data(out[2].get_name());
                         auto eps = batchnorm->get_eps_value();
 
-                        auto functor = [&, kernel, arg2_shape, eps](CPURuntimeContext* ctx) {
+                        auto functor = [&, kernel, arg2_shape, eps](CPURuntimeContext* ctx,
+                                                                    CPUExecutionContext* ectx) {
                             kernel(eps,
                                    arg0_tensor,
                                    arg1_tensor,
@@ -223,7 +224,8 @@ namespace ngraph
                         auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
                         auto eps = batchnorm->get_eps_value();
 
-                        auto functor = [&, kernel, arg2_shape, eps](CPURuntimeContext* ctx) {
+                        auto functor = [&, kernel, arg2_shape, eps](CPURuntimeContext* ctx,
+                                                                    CPUExecutionContext* ectx) {
                             kernel(eps,
                                    arg0_tensor,
                                    arg1_tensor,
@@ -270,7 +272,8 @@ namespace ngraph
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
                     auto eps = batchnorm->get_eps_value();
 
-                    auto functor = [&, kernel, arg2_shape, eps](CPURuntimeContext* ctx) {
+                    auto functor = [&, kernel, arg2_shape, eps](CPURuntimeContext* ctx,
+                                                                CPUExecutionContext* ectx) {
                         kernel(eps,
                                arg0_tensor,
                                arg1_tensor,
@@ -349,7 +352,7 @@ namespace ngraph
                                 batchnorm_index,
                                 stacked_weights,
                                 stacked_dweights,
-                                weight_sizes](CPURuntimeContext* ctx) {
+                                weight_sizes](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     memcpy(stacked_weights.get(), arg0_tensor, weight_sizes[0]);
                     memcpy(stacked_weights.get() + weight_sizes[0], arg1_tensor, weight_sizes[1]);
 

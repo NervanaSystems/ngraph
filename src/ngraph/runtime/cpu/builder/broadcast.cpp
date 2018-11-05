@@ -129,7 +129,7 @@ namespace ngraph
                 if (broadcast_axes.empty())
                 {
                     size_t size = out[0].get_size() * out[0].get_element_type().size();
-                    auto functor = [&, size](CPURuntimeContext* ctx) {
+                    auto functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         memcpy(out_tensor, arg_tensor, size);
                     };
                     functors.emplace_back(functor);
@@ -165,10 +165,10 @@ namespace ngraph
                 SELECT_KERNEL_BY_RANK(
                     kernel, args[0].get_element_type(), out_rank, runtime::cpu::kernel::broadcast);
 
-                auto functor =
-                    [&, kernel, expanded_input_shape, out_shape](CPURuntimeContext* ctx) {
-                        kernel(arg_tensor, out_tensor, expanded_input_shape, out_shape);
-                    };
+                auto functor = [&, kernel, expanded_input_shape, out_shape](
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    kernel(arg_tensor, out_tensor, expanded_input_shape, out_shape, ectx->arena);
+                };
                 functors.emplace_back(functor);
             }
 
