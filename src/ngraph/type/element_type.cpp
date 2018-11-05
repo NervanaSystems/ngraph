@@ -192,6 +192,11 @@ std::ostream& element::operator<<(std::ostream& out, const element::Type& obj)
     return out;
 }
 
+bool element::Type::compatible(element::Type t) const
+{
+    return (is_dynamic() || t.is_dynamic() || *this == t);
+}
+
 bool element::Type::merge(element::Type& dst, const element::Type& t1, const element::Type& t2)
 {
     if (t1.is_dynamic())

@@ -130,6 +130,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
     ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
     ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
+    ctx->states = m_external_function->m_states.data();
 
     if (std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
     {
@@ -137,7 +138,6 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         const auto envParallelism = std::getenv("NGRAPH_INTER_OP_PARALLELISM");
         const auto parallelism = envParallelism == nullptr ? 1 : std::atoi(envParallelism);
         ctx->c = new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
-        ctx->init = new tbb::task_scheduler_init(parallelism);
     }
 }
 
@@ -164,7 +164,6 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
             delete node;
         }
         delete ctx->c;
-        delete ctx->init;
     }
     delete ctx;
 }

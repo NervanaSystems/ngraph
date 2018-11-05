@@ -19,41 +19,50 @@
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 
-// Reverse reverses the selected axes within a tensor.
-template <>
-void ngraph::runtime::plaidml::Impl<ngraph::op::Reverse>::operator()()
+namespace ngraph
 {
-    check_inputs(1);
-    check_outputs(1);
+    namespace runtime
+    {
+        namespace plaidml
+        {
+            // Reverse reverses the selected axes within a tensor.
+            template <>
+            void Impl<op::Reverse>::operator()()
+            {
+                check_inputs(1);
+                check_outputs(1);
 
-    const auto& shape = op().get_shape();
+                const auto& shape = op().get_shape();
 
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(), "I"}.add_dims("D", 0, shape.size()))
-                   .add(builder::Output{"O"})
-                   .add(builder::UnaryContraction{"="}
-                            .set(builder::ContractionOutput{"O"}
-                                     .add_indices("d", 0, shape.size())
-                                     .add_dims("D", 0, shape.size()))
-                            .set(builder::ContractionInput{"I"}.add_indices(
-                                [&](std::back_insert_iterator<std::list<std::string>> out) {
-                                    for (std::size_t idx = 0; idx < shape.size(); ++idx)
-                                    {
-                                        auto sidx = std::to_string(idx);
-                                        if (op().get_reversed_axes().count(idx))
-                                        {
-                                            out = "D" + sidx + "-d" + sidx + "-1";
-                                        }
-                                        else
-                                        {
-                                            out = "d" + sidx;
-                                        }
-                                    }
-                                })))
-                   .finalize());
-}
+                set_output(start_tile_function()
+                               .add(builder::Input{op_input(), "I"}.add_dims("D", 0, shape.size()))
+                               .add(builder::Output{"O"})
+                               .add(builder::UnaryContraction{"="}
+                                        .set(builder::ContractionOutput{"O"}
+                                                 .add_indices("d", 0, shape.size())
+                                                 .add_dims("D", 0, shape.size()))
+                                        .set(builder::ContractionInput{"I"}.add_indices([&](
+                                            std::back_insert_iterator<std::list<std::string>> out) {
+                                            for (std::size_t idx = 0; idx < shape.size(); ++idx)
+                                            {
+                                                auto sidx = std::to_string(idx);
+                                                if (op().get_reversed_axes().count(idx))
+                                                {
+                                                    out = "D" + sidx + "-d" + sidx + "-1";
+                                                }
+                                                else
+                                                {
+                                                    out = "d" + sidx;
+                                                }
+                                            }
+                                        })))
+                               .finalize());
+            }
 
-namespace
-{
-    ngraph::runtime::plaidml::Impl<ngraph::op::Reverse>::Registration register_reverse;
+            namespace
+            {
+                Impl<op::Reverse>::Registration register_reverse;
+            }
+        }
+    }
 }

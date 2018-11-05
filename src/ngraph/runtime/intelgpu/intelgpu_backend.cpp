@@ -349,6 +349,15 @@ runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
         m_cldnn_dump_enable = true;
     }
 
+    // Delete compiled Function from the cache after execution.
+    // It helps in cases where a lot of small functions used
+    // in case of memory consumption. It slow overall execution
+    // because Function compilation required every time
+    if (getenv("NGRAPH_INTELGPU_FUNCTION_CACHE_DISABLE") != nullptr)
+    {
+        m_function_cache_disabled = true;
+    }
+
     cldnn::engine_configuration cldnn_configuration(profiling);
     ocl_engine = make_shared<cldnn::engine>(cldnn_configuration);
 }
@@ -375,6 +384,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         return true;
     }
 
+    vector<cldnn::primitive_id> function_output_names;
     cldnn::topology topology;
 
     if (m_dump_graph_enable)
@@ -428,7 +438,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             arguments_check(op, 1, 1);
 
-            do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+            function_output_names.push_back(get_input_name(op));
             break;
         }
         case OP_TYPEID::GetOutputElement:
@@ -1503,6 +1513,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         case OP_TYPEID::Quantize:
         case OP_TYPEID::ReduceWindow:
         case OP_TYPEID::ReplaceSlice:
+        case OP_TYPEID::GenerateMask:
         case OP_TYPEID::ReverseSequence:
         case OP_TYPEID::SelectAndScatter:
         case OP_TYPEID::StopGradient:
@@ -1518,6 +1529,11 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     cldnn::build_options network_build_options;
 
     network_build_options.set_option(cldnn::build_option::optimize_data(m_cldnn_graph_optimize));
+
+    if (!function_output_names.empty())
+    {
+        network_build_options.set_option(cldnn::build_option::outputs(function_output_names));
+    }
 
     if (m_cldnn_dump_enable)
     {
@@ -1587,7 +1603,7 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     {
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> ngraph_res =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(outputs[i]);
-        const string& tensor_name = func->get_output_op(i)->get_output_tensor().get_name();
+        const string& tensor_name = get_input_name(func->get_output_op(i));
 
         auto result_memory = result.at(tensor_name).get_memory().pointer<char>();
         ngraph_res->write(result_memory.data(), 0, result_memory.size());
@@ -1605,6 +1621,11 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
                                mem_before_call,
                                mem_after_compilation,
                                mem_after_call);
+    }
+
+    if (m_function_cache_disabled)
+    {
+        remove_compiled_function(func);
     }
 
     return true;
