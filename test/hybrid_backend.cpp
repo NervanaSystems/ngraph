@@ -49,7 +49,7 @@ static runtime::Backend* hybrid1_creator(const char* config)
     return new TestBackend(backend_list);
 }
 
-TEST(DISABLED_HYBRID, abc)
+TEST(HYBRID, abc)
 {
     const string backend_name = "HYBRID1";
     runtime::BackendManager::register_backend(backend_name, hybrid1_creator);
