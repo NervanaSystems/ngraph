@@ -226,38 +226,31 @@ vector<runtime::PerformanceCounter>
 
 bool runtime::gpu::GPU_Backend::is_supported(const Node& node) const
 {
-    NGRAPH_INFO;
     bool rc = true;
 
     // get op type
     element::Type type;
     if (node.description() == "Select")
     {
-        NGRAPH_INFO;
         type = node.get_input_element_type(1);
     }
     else if (node.description() == "Constant")
     {
-        NGRAPH_INFO;
         type = node.get_outputs().at(0).get_element_type();
     }
     else if (node.description() == "Parameter")
     {
-        NGRAPH_INFO;
         type = node.get_outputs().at(0).get_element_type();
     }
     else
     {
-        NGRAPH_INFO;
         type = node.get_input_element_type(0);
     }
 
     if (type != element::f32)
     {
-        NGRAPH_INFO;
         rc = false;
     }
 
-    NGRAPH_INFO;
     return rc;
 }

@@ -82,20 +82,16 @@ bool runtime::hybrid::HybridWrapper::compile(shared_ptr<Function> func)
         instance.m_function = clone_function(*func);
 
         // Run placement pass
-    NGRAPH_INFO;
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::AssignPlacement>(backend_list);
         pass_manager.run_passes(instance.m_function);
 
         // Split function to sub_functions
-    NGRAPH_INFO;
         tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
             split_function_by_placement_size(instance.m_function);
-    NGRAPH_INFO;
         m_function_map.insert({func, instance});
 
         // Compile subfunctions in corresponding backends
-    NGRAPH_INFO;
         for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
         {
             size_t placement = get_colocated_function_placement_size(sub_function);
@@ -103,10 +99,8 @@ bool runtime::hybrid::HybridWrapper::compile(shared_ptr<Function> func)
                 m_backend_list[(placement - 1)]; // (placement-1) as 0 is default placement
             backend.second->compile(sub_function);
         }
-    NGRAPH_INFO;
     }
 
-    NGRAPH_INFO;
     return true;
 }
 
