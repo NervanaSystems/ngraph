@@ -21,7 +21,18 @@
 
 #include "ngraph/runtime/backend.hpp"
 
-class BackendWrapper : public ngraph::runtime::Backend
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace hybrid
+        {
+            class BackendWrapper;
+        }
+    }
+}
+
+class ngraph::runtime::hybrid::BackendWrapper : public ngraph::runtime::Backend
 {
 public:
     BackendWrapper(const std::string& backend_name,

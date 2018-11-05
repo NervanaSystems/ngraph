@@ -37,14 +37,14 @@ static runtime::Backend* hybrid1_creator(const char* config)
 {
     vector<shared_ptr<runtime::Backend>> backend_list;
     set<string> s0 = {"Add"};
-    auto b0 = make_shared<BackendWrapper>("INTERPRETER", s0, "AddOnly");
+    auto b0 = make_shared<runtime::hybrid::BackendWrapper>("INTERPRETER", s0, "AddOnly");
     backend_list.push_back(b0);
 
 #define NGRAPH_OP(a, b) #a,
     set<string> s1 = {
 #include "ngraph/op/op_tbl.hpp"
     };
-    auto b1 = make_shared<BackendWrapper>("INTERPRETER", s1, "AllOps");
+    auto b1 = make_shared<runtime::hybrid::BackendWrapper>("INTERPRETER", s1, "AllOps");
     backend_list.push_back(b1);
 
     return new TestBackend(backend_list);
