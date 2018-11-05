@@ -180,9 +180,10 @@ namespace ngraph
                 auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                 auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                auto functor = [&, element_count](CPURuntimeContext* ctx) {
+                auto functor = [&, element_count](CPURuntimeContext* ctx,
+                                                  CPUExecutionContext* ectx) {
                     runtime::cpu::kernel::logical_and(
-                        arg0_tensor, arg1_tensor, out0_tensor, element_count);
+                        arg0_tensor, arg1_tensor, out0_tensor, element_count, ectx->arena);
                 };
                 functors.emplace_back(functor);
             }
@@ -197,9 +198,10 @@ namespace ngraph
                 auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                 auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                auto functor = [&, element_count](CPURuntimeContext* ctx) {
+                auto functor = [&, element_count](CPURuntimeContext* ctx,
+                                                  CPUExecutionContext* ectx) {
                     runtime::cpu::kernel::logical_or(
-                        arg0_tensor, arg1_tensor, out0_tensor, element_count);
+                        arg0_tensor, arg1_tensor, out0_tensor, element_count, ectx->arena);
                 };
                 functors.emplace_back(functor);
             }
@@ -352,7 +354,8 @@ namespace ngraph
                 auto& src =
                     external_function->get_tensor_data(node->get_output_tensor(0).get_name());
                 auto size = node->get_output_tensor(0).size();
-                auto functor = [&, dest, src, size](CPURuntimeContext* ctx) {
+                auto functor = [&, dest, src, size](CPURuntimeContext* ctx,
+                                                    CPUExecutionContext* ectx) {
                     for (auto p : dest)
                     {
                         memcpy(*p, src, size);
