@@ -38,6 +38,8 @@ topk_2d_max_one                         # No plans to implement TopK
 topk_2d_min_all                         # No plans to implement TopK
 topk_2d_min_partial                     # No plans to implement TopK
 topk_2d_min_one                         # No plans to implement TopK
+topk_int64                              # No plans to implement TopK
+topk_5d_max_partial                     # No plans to implement TopK
 
 # Tests that PlaidML might be able to run at some point.
 backwards_maxpool_n2_c1_hw5_3x3_str2_max_pad1x2_2x3
@@ -84,3 +86,5 @@ sum_3d_eliminate_zero_dim           # Empty dims apparently should produce shape
 dot_0_0                             # Empty dims apparently should produce shaped 0s
 dot_matrix_2x0_0x2                  # Empty dims apparently should produce shaped 0s
 dot_2x0_0                           # Empty dims apparently should produce shaped 0s
+numeric_float_nan
+numeric_double_nan

@@ -20,6 +20,7 @@ set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
     cpu_call_frame.cpp
+    cpu_executor.cpp
     cpu_external_function.cpp
     cpu_kernels.cpp
     cpu_layout_descriptor.cpp
@@ -27,6 +28,7 @@ set(SRC
     cpu_tensor_view.cpp
     cpu_tracing.cpp
     cpu_visualize_tree.cpp
+    cpu_cse.cpp
     cpu_debugger.cpp
     builder/add.cpp
     builder/allreduce.cpp
@@ -69,8 +71,8 @@ set(SRC
     builder/softmax.cpp
     builder/sum.cpp
     builder/topk.cpp
+    builder/state.cpp
     builder/quantization.cpp
-    kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
     kernel/reduce_sum.cpp

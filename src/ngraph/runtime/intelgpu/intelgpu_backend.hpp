@@ -85,6 +85,7 @@ private:
     bool m_dump_graph_enable = false;
     bool m_cldnn_graph_optimize = true;
     bool m_cldnn_dump_enable = false;
+    bool m_function_cache_disabled = false;
     std::string m_cldnn_dump_dir = std::string("intelgpu_codegen");
     std::string delim = std::string(":");
 };
