@@ -1346,3 +1346,113 @@ TEST(onnx, model_custom_op_default_domain)
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
+
+TEST(onnx, model_conv2d_custom_test)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv2d_custom_test.onnx"));
+
+    // ConvOpAttributes attrs = {
+    //   "",                           // auto_pad
+    //   vector<int64_t>{1, 1},        // dilations
+    //   1,                            // group
+    //   vector<int64_t>{3, 3},        // kernel_shape
+    //   vector<int64_t>{1, 1, 1, 2},  // pads
+    //   vector<int64_t>{3, 1}         // strides
+    // };
+
+    Inputs inputs;
+    // {2, 1, 1, 1}
+    inputs.emplace_back(
+        test::NDArray<float, 4>({{{{-0.09103918075561523f}}},
+                                 {{{-0.32513630390167236f}}}}).get_vector());
+    // {2, 1, 3, 3}
+    inputs.emplace_back(
+        test::NDArray<float, 4>({
+            {{{0.4312484860420227f, -0.12559029459953308f, 0.44889551401138306f},
+              {-0.3100617825984955f, 0.13522827625274658f, -0.06791308522224426f},
+              {0.22671669721603394f, -0.17391827702522278f, -0.31299442052841187f}}},
+            {{{-0.31545522809028625f, 0.06560015678405762f, 0.2656586766242981f},
+              {0.41363757848739624f, 0.31231558322906494f, -0.376018226146698f},
+              {-0.005708813667297363f, 0.34922850131988525f, 0.45095211267471313f}}}}).get_vector());
+
+    // {2, 2, 1, 2}
+    Outputs expected_output{
+        test::NDArray<float, 4>({
+           {{{-0.012311071157455444f, 0.02822777070105076f}},
+            {{-0.028432954102754593f, -0.037657227367162704f}}},
+           {{{-0.04396762326359749f, 0.10081233829259872f}},
+            {{-0.10154513269662857f, -0.13448859751224518f}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_conv2d_custom_test_easy)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv2d_custom_test.onnx"));
+
+    // ConvOpAttributes attrs = {
+    //   "",                           // auto_pad
+    //   vector<int64_t>{1, 1},        // dilations
+    //   1,                            // group
+    //   vector<int64_t>{3, 3},        // kernel_shape
+    //   vector<int64_t>{1, 1, 1, 2},  // pads
+    //   vector<int64_t>{3, 1}         // strides
+    // };
+
+    Inputs inputs;
+    // {2, 1, 1, 1}
+    inputs.emplace_back(
+        test::NDArray<float, 4>({{{{1.f}}},
+                                 {{{1.f}}}}).get_vector());
+    // {2, 1, 3, 3}
+    inputs.emplace_back(
+        test::NDArray<float, 4>({
+            {{{1.f, 1.f, 1.f},
+              {1.f, 1.f, 1.f},
+              {1.f, 1.f, 1.f}}},
+            {{{1.f, 1.f, 1.f},
+              {1.f, 1.f, 1.f},
+              {1.f, 1.f, 1.f}}}}).get_vector());
+
+    // {2, 2, 1, 2}
+    Outputs expected_output{
+        test::NDArray<float, 4>({
+           {{{1.f, 1.f}},
+            {{1.f, 1.f}}},
+           {{{1.f, 1.f}},
+            {{1.f, 1.f}}}}).get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+
+    inputs.clear();
+    // {2, 1, 1, 1}
+    inputs.emplace_back(
+        test::NDArray<float, 4>({{{{1.5f}}},
+                                 {{{1.5f}}}}).get_vector());
+    // {2, 1, 3, 3}
+    inputs.emplace_back(
+        test::NDArray<float, 4>({
+            {{{1.5f, 1.5f, 1.5f},
+              {1.5f, 1.5f, 1.5f},
+              {1.5f, 1.5f, 1.5f}}},
+            {{{1.5f, 1.5f, 1.5f},
+              {1.5f, 1.5f, 1.5f},
+              {1.5f, 1.5f, 1.5f}}}}).get_vector());
+
+    // {2, 2, 1, 2}
+    expected_output.clear();
+    expected_output.emplace_back(
+        test::NDArray<float, 4>({
+           {{{2.25f, 2.25f}},
+            {{2.25f, 2.25f}}},
+           {{{2.25f, 2.25f}},
+            {{2.25f, 2.25f}}}}).get_vector());
+
+    outputs.clear();
+    outputs = execute(function, inputs, "INTERPRETER");
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
