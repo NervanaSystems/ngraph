@@ -56,7 +56,8 @@ namespace ngraph
             }
 
             template <class T>
-            std::shared_ptr<Node> make_constant(const element::Type& type, const Shape& shape, T num)
+            std::shared_ptr<Node>
+                make_constant(const element::Type& type, const Shape& shape, T num)
             {
                 std::shared_ptr<Node> val = nullptr;
 
@@ -151,13 +152,13 @@ namespace ngraph
                 }
 
                 auto u8_range = make_constant(type,
-                                             shape,
-                                             std::numeric_limits<uint8_t>::max() -
-                                                 std::numeric_limits<uint8_t>::min());
+                                              shape,
+                                              std::numeric_limits<uint8_t>::max() -
+                                                  std::numeric_limits<uint8_t>::min());
                 auto i8_range = make_constant(type,
-                                             shape,
-                                             std::numeric_limits<int8_t>::max() -
-                                                 std::numeric_limits<int8_t>::min());
+                                              shape,
+                                              std::numeric_limits<int8_t>::max() -
+                                                  std::numeric_limits<int8_t>::min());
 
                 auto a_one_quant_level = (max_a - min_a) / u8_range;
                 auto b_one_quant_level = (max_b - min_b) / i8_range;
@@ -196,11 +197,11 @@ namespace ngraph
                     throw ngraph_error("get_scale: min and max must have same shape");
                 }
 
-                auto x = quantization_range_for_multiplication(
+                auto ranges = quantization_range_for_multiplication(
                     min_input, max_input, min_filter, max_filter);
 
-                auto min_out_value = x.first;
-                auto max_out_value = x.second;
+                auto min_out_value = ranges.first;
+                auto max_out_value = ranges.second;
 
                 auto max_abs32 = max_abs(min_out_value, max_out_value);
                 auto max_abs8 = max_abs(min_freezed_output, max_freezed_output);
@@ -214,20 +215,20 @@ namespace ngraph
             }
 
             std::shared_ptr<Node> get_scale(std::shared_ptr<Node> input_min_range,
-                                                         std::shared_ptr<Node> input_max_range,
-                                                         const ngraph::element::Type& quant_type,
-                                                         bool bump_by_eps = false)
+                                            std::shared_ptr<Node> input_max_range,
+                                            const ngraph::element::Type& quant_type,
+                                            bool bump_by_eps = false)
             {
                 auto type = input_min_range->get_element_type();
                 if (type != input_max_range->get_element_type())
                 {
-                    throw ngraph_error("get_quantization_scale: min and max must have same type");
+                    throw ngraph_error("get_scale: min and max must have same type");
                 }
 
                 auto shape = input_min_range->get_shape();
                 if (shape != input_max_range->get_shape())
                 {
-                    throw ngraph_error("get_quantization_scale: min and max must have same shape");
+                    throw ngraph_error("get_scale: min and max must have same shape");
                 }
 
                 auto min_range = input_min_range;

@@ -64,6 +64,8 @@ namespace ngraph
                                                const ngraph::element::Type& real_type,
                                                const ngraph::AxisSet& axes)
         {
+            auto quant_type = input->get_element_type();
+
             if (min->get_element_type() != real_type)
             {
                 throw ngraph_error("ScaledDequantize: min must match output type");
@@ -80,7 +82,6 @@ namespace ngraph
                 throw ngraph_error("ScaledDequantize: min and max must have same shape");
             }
 
-            auto quant_type = input->get_element_type();
             auto zero = quantization_util::make_constant(quant_type, shape, 0);
             auto scale = quantization_util::get_scale(min, max, quant_type);
             return make_shared<op::Dequantize>(input, scale, zero, real_type, axes);
@@ -121,11 +122,11 @@ namespace ngraph
                                            const bool with_relu)
         {
             auto requantization_scale = quantization_util::get_scale(min_input,
-                                                                              max_input,
-                                                                              min_filter,
-                                                                              max_filter,
-                                                                              min_freezed_output,
-                                                                              max_freezed_output);
+                                                                     max_input,
+                                                                     min_filter,
+                                                                     max_filter,
+                                                                     min_freezed_output,
+                                                                     max_freezed_output);
 
             return make_shared<op::QuantizedConvolutionBias>(input,
                                                              filters,
@@ -155,11 +156,11 @@ namespace ngraph
                                            std::shared_ptr<Node> max_freezed_output)
         {
             auto requantization_scale = quantization_util::get_scale(min_input,
-                                                                              max_input,
-                                                                              min_filter,
-                                                                              max_filter,
-                                                                              min_freezed_output,
-                                                                              max_freezed_output);
+                                                                     max_input,
+                                                                     min_filter,
+                                                                     max_filter,
+                                                                     min_freezed_output,
+                                                                     max_freezed_output);
 
             return make_shared<op::QuantizedConvolutionRelu>(input,
                                                              filters,
@@ -171,27 +172,26 @@ namespace ngraph
                                                              requantization_scale);
         }
 
-        std::shared_ptr<Node>
-            ScaledQuantizedConvolution(std::shared_ptr<Node> input,
-                                       std::shared_ptr<Node> filters,
-                                       const Strides& window_movement_strides,
-                                       const Strides& window_dilation_strides,
-                                       const CoordinateDiff& padding_below,
-                                       const CoordinateDiff& padding_above,
-                                       const Strides& data_dilation_strides,
-                                       std::shared_ptr<Node> min_input,
-                                       std::shared_ptr<Node> max_input,
-                                       std::shared_ptr<Node> min_filter,
-                                       std::shared_ptr<Node> max_filter,
-                                       std::shared_ptr<Node> min_freezed_output,
-                                       std::shared_ptr<Node> max_freezed_output)
+        std::shared_ptr<Node> ScaledQuantizedConvolution(std::shared_ptr<Node> input,
+                                                         std::shared_ptr<Node> filters,
+                                                         const Strides& window_movement_strides,
+                                                         const Strides& window_dilation_strides,
+                                                         const CoordinateDiff& padding_below,
+                                                         const CoordinateDiff& padding_above,
+                                                         const Strides& data_dilation_strides,
+                                                         std::shared_ptr<Node> min_input,
+                                                         std::shared_ptr<Node> max_input,
+                                                         std::shared_ptr<Node> min_filter,
+                                                         std::shared_ptr<Node> max_filter,
+                                                         std::shared_ptr<Node> min_freezed_output,
+                                                         std::shared_ptr<Node> max_freezed_output)
         {
             auto requantization_scale = quantization_util::get_scale(min_input,
-                                                                              max_input,
-                                                                              min_filter,
-                                                                              max_filter,
-                                                                              min_freezed_output,
-                                                                              max_freezed_output);
+                                                                     max_input,
+                                                                     min_filter,
+                                                                     max_filter,
+                                                                     min_freezed_output,
+                                                                     max_freezed_output);
 
             return make_shared<op::QuantizedConvolution>(input,
                                                          filters,

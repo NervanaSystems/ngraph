@@ -84,20 +84,19 @@ namespace ngraph
                                            std::shared_ptr<Node> min_freezed_output,
                                            std::shared_ptr<Node> max_freezed_output);
 
-        std::shared_ptr<Node>
-            ScaledQuantizedConvolution(std::shared_ptr<Node> input,
-                                       std::shared_ptr<Node> filters,
-                                       const Strides& window_movement_strides,
-                                       const Strides& window_dilation_strides,
-                                       const CoordinateDiff& padding_below,
-                                       const CoordinateDiff& padding_above,
-                                       const Strides& data_dilation_strides,
-                                       std::shared_ptr<Node> min_input,
-                                       std::shared_ptr<Node> max_input,
-                                       std::shared_ptr<Node> min_filter,
-                                       std::shared_ptr<Node> max_filter,
-                                       std::shared_ptr<Node> min_freezed_output,
-                                       std::shared_ptr<Node> max_freezed_output);
+        std::shared_ptr<Node> ScaledQuantizedConvolution(std::shared_ptr<Node> input,
+                                                         std::shared_ptr<Node> filters,
+                                                         const Strides& window_movement_strides,
+                                                         const Strides& window_dilation_strides,
+                                                         const CoordinateDiff& padding_below,
+                                                         const CoordinateDiff& padding_above,
+                                                         const Strides& data_dilation_strides,
+                                                         std::shared_ptr<Node> min_input,
+                                                         std::shared_ptr<Node> max_input,
+                                                         std::shared_ptr<Node> min_filter,
+                                                         std::shared_ptr<Node> max_filter,
+                                                         std::shared_ptr<Node> min_freezed_output,
+                                                         std::shared_ptr<Node> max_freezed_output);
 
         std::shared_ptr<Node> ScaledQuantizedMaxPool(std::shared_ptr<Node> input,
                                                      const Shape& window_shape,
