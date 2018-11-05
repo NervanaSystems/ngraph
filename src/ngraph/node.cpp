@@ -328,9 +328,6 @@ size_t Node::get_input_size() const
 
 const element::Type& Node::get_input_element_type(size_t i) const
 {
-    NGRAPH_INFO << get_name();
-    NGRAPH_INFO << m_inputs.size();
-    NGRAPH_INFO << i;
     return m_inputs.at(i).get_element_type();
 }
 
