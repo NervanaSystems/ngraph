@@ -29,7 +29,25 @@ using namespace std;
 
 static bool cse_convertlayout(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
-    return false;
+    NGRAPH_DEBUG << "In cse_convertlayout for " << a->get_name() << " and " << b->get_name();
+
+    auto ar_a = std::static_pointer_cast<runtime::cpu::op::ConvertLayout>(a);
+    auto ar_b = std::static_pointer_cast<runtime::cpu::op::ConvertLayout>(b);
+
+    auto get_tvl = [](std::shared_ptr<Node> node) {
+        auto tv = node->get_output_tensor_ptr();
+        auto cpu_tvl =
+            dynamic_cast<ngraph::runtime::cpu::LayoutDescriptor*>(tv->get_tensor_layout().get());
+        return cpu_tvl;
+    };
+
+    auto a_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(get_tvl(a));
+    auto b_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(get_tvl(b));
+    bool is_args_same = (ar_a->get_argument(0) == ar_b->get_argument(0));
+    bool is_output_mem_desc_same = runtime::cpu::mkldnn_utils::compare_mkldnn_mds(
+        a_tvl->get_mkldnn_md(), b_tvl->get_mkldnn_md());
+
+    return is_args_same && is_output_mem_desc_same;
 }
 
 namespace ngraph
