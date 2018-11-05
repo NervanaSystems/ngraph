@@ -28,7 +28,8 @@ namespace ngraph
             {
                 std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)> func =
                     []() -> std::shared_ptr<ngraph::op::util::OpAnnotations> {
-                    auto op_annotations = std::make_shared<ngraph::op::util::OpAnnotations>();
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                     return op_annotations;
                 };
                 return func;
