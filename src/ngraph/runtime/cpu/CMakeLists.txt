@@ -28,6 +28,7 @@ set(SRC
     cpu_tensor_view.cpp
     cpu_tracing.cpp
     cpu_visualize_tree.cpp
+    cpu_cse.cpp
     cpu_debugger.cpp
     builder/add.cpp
     builder/allreduce.cpp
