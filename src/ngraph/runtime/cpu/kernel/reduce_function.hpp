@@ -21,9 +21,9 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -80,6 +80,7 @@ namespace ngraph
                                      const Shape& input_shape,
                                      const Shape& output_shape,
                                      const AxisSet& reduction_axes,
+                                     int arena,
                                      const std::shared_ptr<CPU_ExternalFunction>& external_function)
                 {
                     Eigen::array<Eigen::Index, Rank> in_dims;
@@ -109,7 +110,7 @@ namespace ngraph
                         static_cast<ElementType*>(input0), in_dims);
                     Reducer<ElementType> reducer(*static_cast<ElementType*>(input1),
                                                  external_function);
-                    out.device(eigen::global_thread_pool_device) =
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         in.reduce(reduction_dims, reducer);
                 }
 
@@ -121,6 +122,7 @@ namespace ngraph
                     const Shape& input_shape,
                     const Shape& output_shape,
                     const AxisSet& reduction_axes,
+                    int arena,
                     const std::shared_ptr<CPU_ExternalFunction>& external_function)
                 {
                     reduce_function<ElementType, Rank, 1>(input0,
@@ -129,6 +131,7 @@ namespace ngraph
                                                           input_shape,
                                                           output_shape,
                                                           reduction_axes,
+                                                          arena,
                                                           external_function);
                 }
 
@@ -140,6 +143,7 @@ namespace ngraph
                     const Shape& input_shape,
                     const Shape& output_shape,
                     const AxisSet& reduction_axes,
+                    int arena,
                     const std::shared_ptr<CPU_ExternalFunction>& external_function)
                 {
                     reduce_function<ElementType, 2, 2>(input0,
@@ -148,6 +152,7 @@ namespace ngraph
                                                        input_shape,
                                                        output_shape,
                                                        reduction_axes,
+                                                       arena,
                                                        external_function);
                 }
 
@@ -159,6 +164,7 @@ namespace ngraph
                     const Shape& input_shape,
                     const Shape& output_shape,
                     const AxisSet& reduction_axes,
+                    int arena,
                     const std::shared_ptr<CPU_ExternalFunction>& external_function)
                 {
                     reduce_function<ElementType, 3, 2>(input0,
@@ -167,6 +173,7 @@ namespace ngraph
                                                        input_shape,
                                                        output_shape,
                                                        reduction_axes,
+                                                       arena,
                                                        external_function);
                 }
             }
