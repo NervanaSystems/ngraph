@@ -1672,7 +1672,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
     auto bn = std::make_shared<op::BatchNormInference>(eps, gamma, beta, conv_label, mean, var);
 
     ngraph::pattern::graph_rewrite_callback callback =
-        [input, filters, conv_label, mean, var, gamma, beta](pattern::Matcher& m) {
+        [input, filters, conv_label, mean, var, gamma, beta, eps](pattern::Matcher& m) {
 
             NGRAPH_DEBUG << "In callback for groupconv BatchNorm folding against node = "
                          << m.get_match_root()->get_name();

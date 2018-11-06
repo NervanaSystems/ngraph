@@ -175,55 +175,56 @@ namespace ngraph
                         const int64_t group_count = 1;
                         const int64_t group_size = shape_a[0];
 
-                        auto functor = [&, offset_a, offset_c, m, n, k, group_size](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            cblas::Transpose transpose = cblas::Transpose::None;
-                            float alpha = 1.0f;
+                        auto functor =
+                            [&, offset_a, offset_b, offset_c, m, n, k, group_size, group_count](
+                                CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                cblas::Transpose transpose = cblas::Transpose::None;
+                                float alpha = 1.0f;
 
-                            vector<const float*> a;
-                            for (size_t i = 0; i < group_size; i++)
-                            {
-                                a.emplace_back(static_cast<const float*>(arg0_tensor) +
-                                               i * offset_a);
-                            }
-                            const float** a_array = a.data();
-                            int64_t lda_array = std::max(int64_t(1), k);
+                                vector<const float*> a;
+                                for (size_t i = 0; i < group_size; i++)
+                                {
+                                    a.emplace_back(static_cast<const float*>(arg0_tensor) +
+                                                   i * offset_a);
+                                }
+                                const float** a_array = a.data();
+                                int64_t lda_array = std::max(int64_t(1), k);
 
-                            vector<const float*> b;
-                            for (size_t i = 0; i < group_size; i++)
-                            {
-                                b.emplace_back(static_cast<const float*>(arg1_tensor) +
-                                               i * offset_b);
-                            }
-                            const float** b_array = b.data();
-                            const int64_t ldb_array = std::max(int64_t(1), n);
-                            float beta = 0.0f;
+                                vector<const float*> b;
+                                for (size_t i = 0; i < group_size; i++)
+                                {
+                                    b.emplace_back(static_cast<const float*>(arg1_tensor) +
+                                                   i * offset_b);
+                                }
+                                const float** b_array = b.data();
+                                const int64_t ldb_array = std::max(int64_t(1), n);
+                                float beta = 0.0f;
 
-                            vector<float*> c;
-                            for (size_t i = 0; i < group_size; i++)
-                            {
-                                c.emplace_back(static_cast<float*>(out_tensor) + i * offset_c);
-                            }
-                            float** c_array = c.data();
-                            const int64_t ldc_array = std::max(int64_t(1), n);
+                                vector<float*> c;
+                                for (size_t i = 0; i < group_size; i++)
+                                {
+                                    c.emplace_back(static_cast<float*>(out_tensor) + i * offset_c);
+                                }
+                                float** c_array = c.data();
+                                const int64_t ldc_array = std::max(int64_t(1), n);
 
-                            cblas_sgemm_batch(cblas::Layout::RowMajor,
-                                              &transpose,
-                                              &transpose,
-                                              &m,
-                                              &n,
-                                              &k,
-                                              &alpha,
-                                              a_array,
-                                              &lda_array,
-                                              b_array,
-                                              &ldb_array,
-                                              &beta,
-                                              c_array,
-                                              &ldc_array,
-                                              group_count,
-                                              &group_size);
-                        };
+                                cblas_sgemm_batch(cblas::Layout::RowMajor,
+                                                  &transpose,
+                                                  &transpose,
+                                                  &m,
+                                                  &n,
+                                                  &k,
+                                                  &alpha,
+                                                  a_array,
+                                                  &lda_array,
+                                                  b_array,
+                                                  &ldb_array,
+                                                  &beta,
+                                                  c_array,
+                                                  &ldc_array,
+                                                  group_count,
+                                                  &group_size);
+                            };
                         functors.emplace_back(functor);
                         return;
                     }
