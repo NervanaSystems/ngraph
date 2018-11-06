@@ -23,14 +23,7 @@
 #include <typeinfo>
 #include <unordered_map>
 
-// Kill clang diagnostics bug
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wreserved-id-macro"
-
-#undef __TBB_PREVIEW_LIGHTWEIGHT_POLICY
-#define __TBB_PREVIEW_LIGHTWEIGHT_POLICY 1
-
-#pragma clang diagnostic pop
+#define TBB_PREVIEW_FLOW_GRAPH_TRACE 1
 
 #include <tbb/flow_graph.h>
 
@@ -70,6 +63,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
@@ -138,7 +132,9 @@
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_cse.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
@@ -152,6 +148,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
@@ -166,6 +163,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_horizontal_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_memory_optimization.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
@@ -198,6 +196,10 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
 
 runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
 {
+    for (auto state : m_states)
+    {
+        delete state;
+    }
 }
 
 class StaticInitializers
@@ -363,10 +365,12 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::runtime::cpu::op::LoopKernel),
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::LoopKernel>},
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
+    {TI(ngraph::op::GenerateMask), &runtime::cpu::CPU_Emitter::emit<ngraph::op::GenerateMask>},
     {TI(ngraph::op::ConvolutionAdd), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionAdd>},
-    {TI(ngraph::op::Quantize), &runtime::cpu::CPU_Emitter::emit<op::Quantize>},
-    {TI(ngraph::op::Dequantize), &runtime::cpu::CPU_Emitter::emit<op::Dequantize>},
-
+    {TI(ngraph::op::Quantize), &runtime::cpu::CPU_Emitter::emit<ngraph::op::Quantize>},
+    {TI(ngraph::op::Dequantize), &runtime::cpu::CPU_Emitter::emit<ngraph::op::Dequantize>},
+    {TI(ngraph::op::GroupConvolutionBias),
+     &runtime::cpu::CPU_Emitter::emit<op::GroupConvolutionBias>},
 };
 
 static void
@@ -424,8 +428,6 @@ void runtime::cpu::CPU_ExternalFunction::compile()
                 "CPU Backend: Tracing and performance breakdowns might not be accurate with TBB "
                 "enabled due to concurrent graph execution");
         }
-        writer << "#undef __TBB_PREVIEW_LIGHTWEIGHT_POLICY \n";
-        writer << "#define __TBB_PREVIEW_LIGHTWEIGHT_POLICY 1\n";
         writer << "#include <tbb/flow_graph.h>";
     }
 
@@ -448,6 +450,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/reference/convolution.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
+#include "ngraph/runtime/reference/generate_mask.hpp"
 #include "ngraph/runtime/reference/lrn.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
@@ -471,6 +474,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/state/rng_state.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/util.hpp"
 
@@ -629,6 +633,9 @@ using namespace ngraph::runtime;
             }
         }
 
+        // In place concatenation optimization
+        process_in_place_concat(ordered_ops);
+
         writer << "bool " << current_function->get_name() << "_t_en[" << tensor_index << "];\n";
 
         writer << "extern \"C\" void " << current_function->get_name();
@@ -670,10 +677,9 @@ using namespace ngraph::runtime;
             writer << "\n";
             writer << "if (ctx->first_iteration) {\n";
             writer.indent++;
-            writer << "tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>* "
+            writer << "tbb::flow::continue_node<tbb::flow::continue_msg>* "
                       "flowgraph_node_start"
-                   << " = new tbb::flow::continue_node<tbb::flow::continue_msg, "
-                      "tbb::flow::lightweight>"
+                   << " = new tbb::flow::continue_node<tbb::flow::continue_msg> "
                       "(*(ctx->G), [&](const tbb::flow::continue_msg &msg)\n{});\n";
         }
 
@@ -770,12 +776,10 @@ using namespace ngraph::runtime;
                 }
                 if (m_use_tbb)
                 {
-                    writer << "tbb::flow::continue_node<tbb::flow::continue_msg, "
-                              "tbb::flow::lightweight>* "
+                    writer << "tbb::flow::continue_node<tbb::flow::continue_msg>* "
                               "flowgraph_node_"
                            << node->get_name()
-                           << " = new tbb::flow::continue_node<tbb::flow::continue_msg, "
-                              "tbb::flow::lightweight>"
+                           << " = new tbb::flow::continue_node<tbb::flow::continue_msg> "
                               "(*(ctx->G), [&](const tbb::flow::continue_msg &msg)\n{\n";
                     writer.indent++;
                 }
@@ -937,8 +941,8 @@ using namespace ngraph::runtime;
             writer << "}\n";
 
             // Execute the flow graph
-            writer << "(static_cast<tbb::flow::continue_node<tbb::flow::continue_msg, "
-                      "tbb::flow::lightweight>*>(&(*(ctx->G->begin()))))"
+            writer << "(static_cast<tbb::flow::continue_node<tbb::flow::continue_msg>*>"
+                      "(&(*(ctx->G->begin()))))"
                    << "->try_put(tbb::flow::continue_msg());\n";
             writer << "try { ctx->G->wait_for_all(); } catch(...) { throw; }\n";
         }
@@ -1033,7 +1037,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     // pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
@@ -1046,7 +1050,10 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
+    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>(
+        runtime::cpu::get_cse_handlers_map());
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUMemoryOptimization>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
 }
@@ -1209,6 +1216,105 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
     } while (propagate_further);
 }
 
+void runtime::cpu::CPU_ExternalFunction::process_in_place_concat(
+    std::list<std::shared_ptr<Node>> nodes)
+{
+    for (shared_ptr<Node> node : nodes)
+    {
+        if (auto concat = std::dynamic_pointer_cast<ngraph::op::Concat>(node))
+        {
+            if (auto op_annotations = concat->get_op_annotations())
+            {
+                auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                if (in_place_oi_pairs.size() > 0)
+                {
+                    auto output_tensor = &concat->get_output_tensor();
+                    auto offset = output_tensor->get_pool_offset();
+                    for (auto arg : concat->get_arguments())
+                    {
+                        auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
+                        auto input_tensor = &input_node->get_output_tensor();
+                        auto old_offset = input_tensor->get_pool_offset();
+                        input_tensor->set_pool_offset(offset);
+                        NGRAPH_DEBUG << "cpu_external_function: change offset, old offset is "
+                                     << old_offset << ", new offset is " << offset << std::endl;
+                        offset += input_tensor->size();
+                    }
+
+                    bool found_last_concat = true;
+                    for (auto user : concat->get_users())
+                    {
+                        if (auto user_concat = dynamic_pointer_cast<ngraph::op::Concat>(user))
+                        {
+                            if (auto user_op_annotations = user_concat->get_op_annotations())
+                            {
+                                auto user_in_place_oi_pairs =
+                                    user_op_annotations->get_in_place_oi_pairs();
+                                if (user_in_place_oi_pairs.size() > 0)
+                                {
+                                    found_last_concat = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (found_last_concat)
+                    {
+                        for (auto arg : concat->get_arguments())
+                        {
+                            if (auto arg_concat = dynamic_pointer_cast<ngraph::op::Concat>(arg))
+                            {
+                                NGRAPH_DEBUG
+                                    << "cpu_external_function: call propagate_in_place_concat for "
+                                    << arg->get_name() << std::endl;
+                                propagate_in_place_concat(arg_concat);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void runtime::cpu::CPU_ExternalFunction::propagate_in_place_concat(
+    shared_ptr<ngraph::op::Concat> concat)
+{
+    std::deque<std::shared_ptr<ngraph::op::Concat>> stack;
+    stack.push_front(concat);
+
+    while (stack.size() > 0)
+    {
+        auto it = stack.front();
+        stack.pop_front();
+        if (auto op_annotations = it->get_op_annotations())
+        {
+            auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+            if (in_place_oi_pairs.size() > 0)
+            {
+                auto output_tensor = &it->get_output_tensor();
+                auto offset = output_tensor->get_pool_offset();
+                for (auto arg : it->get_arguments())
+                {
+                    auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
+                    auto input_tensor = &input_node->get_output_tensor();
+                    auto old_offset = input_tensor->get_pool_offset();
+                    input_tensor->set_pool_offset(offset);
+                    NGRAPH_DEBUG
+                        << "cpu_external_function, propagate: change offset, old offset is "
+                        << old_offset << ", new offset is " << offset << std::endl;
+                    offset += input_tensor->size();
+                    if (auto arg_concat = std::dynamic_pointer_cast<ngraph::op::Concat>(arg))
+                    {
+                        stack.push_front(arg_concat);
+                    }
+                }
+            }
+        }
+    }
+}
+
 void runtime::cpu::CPU_ExternalFunction::build()
 {
     if (m_is_built)
@@ -1270,6 +1376,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
     }
 
     // Build executor
+
+    // In place concatenation optimization
+    process_in_place_concat(m_function->get_ordered_ops());
+
     // Intermediates
     if (m_function->get_temporary_pool_size())
     {
@@ -1372,7 +1482,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
 
         m_op_attrs.emplace_back(node->description(), out_names, in_names);
-
+        op_names.push_back(node->get_name());
         handler->second(this, node.get(), in, out);
 
         bool disable_caching = computes_result(node.get()) || possibly_overwritten(node.get());
@@ -1523,29 +1633,26 @@ void runtime::cpu::CPU_ExternalFunction::build()
             // Build the flow graph
             if (ctx->first_iteration)
             {
-                std::unordered_map<
-                    std::string,
-                    tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>*>
+                std::unordered_map<std::string, tbb::flow::continue_node<tbb::flow::continue_msg>*>
                     nodename_tbbnode_map;
-                tbb::flow::continue_node<tbb::flow::continue_msg,
-                                         tbb::flow::lightweight>* flowgraph_node_start =
-                    new tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>(
+                tbb::flow::continue_node<tbb::flow::continue_msg>* flowgraph_node_start =
+                    new tbb::flow::continue_node<tbb::flow::continue_msg>(
                         *(ctx->G), [&](const tbb::flow::continue_msg& msg) {});
                 auto it = enable_nodename_list.begin();
                 for (const auto& p : enables)
                 {
                     auto index = profiler_count++;
-                    tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>*
-                        flowgraph_node = new tbb::flow::continue_node<tbb::flow::continue_msg,
-                                                                      tbb::flow::lightweight>(
-                            *(ctx->G), [&, index](const tbb::flow::continue_msg& msg) {
+                    tbb::flow::continue_node<tbb::flow::continue_msg>* flowgraph_node =
+                        new tbb::flow::continue_node<tbb::flow::continue_msg>(
+                            *(ctx->G), [&, functor, index](const tbb::flow::continue_msg& msg) {
                                 if (p(ctx) || ctx->first_iteration)
                                 {
                                     if (runtime::cpu::IsTracingEnabled() || m_emit_timing)
                                     {
                                         start_ts = cpu::Clock::now();
                                     }
-                                    (*functor)(ctx);
+                                    CPUExecutionContext ectx{0};
+                                    executor::GetCPUExecutor().execute(*functor, ctx, &ectx, true);
                                     if (runtime::cpu::IsTracingEnabled() || m_emit_timing)
                                     {
                                         end_ts = cpu::Clock::now();
@@ -1578,8 +1685,11 @@ void runtime::cpu::CPU_ExternalFunction::build()
                                         m_perf_counters[index].m_call_count++;
                                     }
                                 }
-                                std::advance(functor, 1);
                             });
+#ifdef TBB_PREVIEW_FLOW_GRAPH_TRACE
+                    flowgraph_node->set_name(it->second.c_str());
+#endif
+                    std::advance(functor, 1);
                     nodename_tbbnode_map.insert({it->second, flowgraph_node});
                     it++;
                 }
@@ -1612,9 +1722,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
                 }
             }
             // Execute the flow graph
-            (static_cast<
-                 tbb::flow::continue_node<tbb::flow::continue_msg, tbb::flow::lightweight>*>(
-                 &(*(ctx->G->begin()))))
+            (static_cast<tbb::flow::continue_node<tbb::flow::continue_msg>*>(&(*(ctx->G->begin()))))
                 ->try_put(tbb::flow::continue_msg());
             try
             {
@@ -1627,10 +1735,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
         else
         {
-            for (const auto& p : enables)
+            for (; ctx->pc < functors.size(); ctx->pc++)
             {
                 auto index = profiler_count++;
-                if (p(ctx) || ctx->first_iteration)
+                if ((enables.at(ctx->pc))(ctx) || ctx->first_iteration)
                 {
                     // Each Op will have exactly one functor, start the clock before the exceution of functor
                     // and collect the profiler_count once the execution complets
@@ -1638,7 +1746,15 @@ void runtime::cpu::CPU_ExternalFunction::build()
                     {
                         start_ts = cpu::Clock::now();
                     }
-                    (*functor)(ctx);
+                    CPUExecutionContext ectx{0};
+                    executor::GetCPUExecutor().execute(functors.at(ctx->pc), ctx, &ectx);
+
+                    if (ctx->breakpoints.count(ctx->pc + 1))
+                    {
+                        ctx->pc++;
+                        break;
+                    }
+
                     if (runtime::cpu::IsTracingEnabled() || m_emit_timing)
                     {
                         end_ts = cpu::Clock::now();
@@ -1670,11 +1786,9 @@ void runtime::cpu::CPU_ExternalFunction::build()
                         m_perf_counters[index].m_call_count++;
                     }
                 }
-                std::advance(functor, 1);
             }
         }
         ctx->first_iteration = false;
-
         if (runtime::cpu::IsTracingEnabled())
         {
             assert(m_op_attrs.size() == profiler_count);
@@ -1735,10 +1849,6 @@ const runtime::cpu::LayoutDescriptorPtrs&
 
 const vector<runtime::PerformanceCounter>& runtime::cpu::CPU_ExternalFunction::get_perf_counters()
 {
-    if (m_direct_execution)
-    {
-        return m_perf_counters;
-    }
 #if !defined(NGRAPH_DEX_ONLY)
     // Codegen. Retrieve perf counters from compiled module
     if (m_execution_engine)
@@ -1772,8 +1882,8 @@ const vector<runtime::PerformanceCounter>& runtime::cpu::CPU_ExternalFunction::g
             }
         }
     }
-    return m_perf_counters;
 #endif
+    return m_perf_counters;
 }
 
 void runtime::cpu::CPU_ExternalFunction::write_to_file(const std::string& code,

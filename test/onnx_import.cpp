@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
@@ -72,6 +73,18 @@ TEST(onnx, model_addmul_abc)
 
     auto result_vectors = execute(function, inputs, "INTERPRETER");
     EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+}
+
+TEST(onnx, model_argmin_no_keepdims)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/argmin_no_keepdims.onnx"));
+
+    Inputs inputs{test::NDArray<float, 2>{{2, 1}, {3, 10}}.get_vector()};
+    std::vector<std::vector<int64_t>> expected_output{{1, 0}};
+    std::vector<std::vector<int64_t>> result{
+        execute<float, int64_t>(function, inputs, "INTERPRETER")};
+    EXPECT_EQ(expected_output, result);
 }
 
 TEST(onnx, model_split_equal_parts_default)

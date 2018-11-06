@@ -34,5 +34,8 @@ endif()
 if (NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(nbench interpreter_backend)
 endif()
+if (NGRAPH_PLAIDML_ENABLE)
+    target_link_libraries(nbench plaidml_backend)
+endif()
 
 install(TARGETS nbench RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})

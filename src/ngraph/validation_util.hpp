@@ -52,4 +52,26 @@ namespace ngraph
                                                const PartialShape& window_shape,
                                                const Strides& window_strides,
                                                bool is_window_all_in_padding_allowed);
+
+    std::tuple<element::Type, PartialShape, PartialShape>
+        infer_batch_norm_forward(const Node* node,
+                                 element::Type input_element_type,
+                                 element::Type gamma_element_type,
+                                 element::Type beta_element_type,
+                                 element::Type mean_element_type,
+                                 element::Type variance_element_type,
+                                 const PartialShape& input_shape,
+                                 const PartialShape& gamma_shape,
+                                 const PartialShape& beta_shape,
+                                 const PartialShape& mean_shape,
+                                 const PartialShape& variance_shape);
+
+    std::tuple<element::Type, PartialShape, PartialShape>
+        infer_batch_norm_forward(const Node* node,
+                                 element::Type input_element_type,
+                                 element::Type gamma_element_type,
+                                 element::Type beta_element_type,
+                                 const PartialShape& input_shape,
+                                 const PartialShape& gamma_shape,
+                                 const PartialShape& beta_shape);
 }

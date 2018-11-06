@@ -57,7 +57,7 @@ namespace ngraph
                 if (reduction_axes.empty())
                 {
                     size_t size = args[0].get_size() * args[0].get_element_type().size();
-                    auto functor = [&, size](CPURuntimeContext* ctx) {
+                    auto functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         memcpy(out_tensor, arg0_tensor, size);
                     };
                     functors.emplace_back(functor);
@@ -72,16 +72,17 @@ namespace ngraph
                                           arg0_shape.size(),
                                           runtime::cpu::kernel::reduce_function_1rd);
 
-                    auto functor =
-                        [&, kernel, arg0_shape, out_shape, reduction_axes](CPURuntimeContext* ctx) {
-                            kernel(arg0_tensor,
-                                   arg1_tensor,
-                                   out_tensor,
-                                   arg0_shape,
-                                   out_shape,
-                                   reduction_axes,
-                                   reducer_external_function);
-                        };
+                    auto functor = [&, kernel, arg0_shape, out_shape, reduction_axes](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        kernel(arg0_tensor,
+                               arg1_tensor,
+                               out_tensor,
+                               arg0_shape,
+                               out_shape,
+                               reduction_axes,
+                               ectx->arena,
+                               reducer_external_function);
+                    };
                     functors.emplace_back(functor);
                 }
                 else if (arg0_shape.size() == 2 && reduction_axes.size() == 2)
@@ -93,16 +94,17 @@ namespace ngraph
                                   args[0].get_element_type(),
                                   runtime::cpu::kernel::reduce_function_2d_2rd);
 
-                    auto functor =
-                        [&, kernel, arg0_shape, out_shape, reduction_axes](CPURuntimeContext* ctx) {
-                            kernel(arg0_tensor,
-                                   arg1_tensor,
-                                   out_tensor,
-                                   arg0_shape,
-                                   out_shape,
-                                   reduction_axes,
-                                   reducer_external_function);
-                        };
+                    auto functor = [&, kernel, arg0_shape, out_shape, reduction_axes](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        kernel(arg0_tensor,
+                               arg1_tensor,
+                               out_tensor,
+                               arg0_shape,
+                               out_shape,
+                               reduction_axes,
+                               ectx->arena,
+                               reducer_external_function);
+                    };
                     functors.emplace_back(functor);
                 }
                 else if (arg0_shape.size() == 3 && reduction_axes.size() == 2)
@@ -114,16 +116,17 @@ namespace ngraph
                                   args[0].get_element_type(),
                                   runtime::cpu::kernel::reduce_function_3d_2rd);
 
-                    auto functor =
-                        [&, kernel, arg0_shape, out_shape, reduction_axes](CPURuntimeContext* ctx) {
-                            kernel(arg0_tensor,
-                                   arg1_tensor,
-                                   out_tensor,
-                                   arg0_shape,
-                                   out_shape,
-                                   reduction_axes,
-                                   reducer_external_function);
-                        };
+                    auto functor = [&, kernel, arg0_shape, out_shape, reduction_axes](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        kernel(arg0_tensor,
+                               arg1_tensor,
+                               out_tensor,
+                               arg0_shape,
+                               out_shape,
+                               reduction_axes,
+                               ectx->arena,
+                               reducer_external_function);
+                    };
                     functors.emplace_back(functor);
                 }
                 else

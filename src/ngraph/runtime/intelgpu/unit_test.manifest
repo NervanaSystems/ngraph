@@ -20,10 +20,12 @@ batch_norm_three_outputs
 dequantize
 dequantize_axes
 dequantize_int8
+dequantize_zero_offset
 divide_by_zero_int32
 dot_3d_multi_axis
 dot_4d_5d_multi_axis
 dot_4d_5d_multi_axis_more
+generate_mask
 function_call
 max_pool_3d
 numeric_double_inf
@@ -77,6 +79,11 @@ topk_3d_max_partial
 topk_3d_min_all
 topk_3d_min_one
 topk_3d_min_partial
+topk_5d_max_partial
+topk_int64
+topk_3d_large_input_max
+topk_3d_large_input_min
+topk_3d_single_output
 zero_sized_abs
 zero_sized_acos
 zero_sized_add

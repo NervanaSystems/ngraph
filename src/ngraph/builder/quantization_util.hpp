@@ -74,23 +74,23 @@ namespace ngraph
                     std::static_pointer_cast<ngraph::op::Constant>(min_freezed_output);
                 auto max_freezed_output_const_op =
                     std::static_pointer_cast<ngraph::op::Constant>(max_freezed_output);
-                float input_min = *(static_cast<float const*>(min_input_const_op->get_data_ptr()));
-                float input_max = *(static_cast<float const*>(max_input_const_op->get_data_ptr()));
-                float filter_min =
-                    *(static_cast<float const*>(min_filter_const_op->get_data_ptr()));
-                float filter_max =
-                    *(static_cast<float const*>(max_filter_const_op->get_data_ptr()));
-                float output_min =
-                    *(static_cast<float const*>(min_freezed_output_const_op->get_data_ptr()));
-                float output_max =
-                    *(static_cast<float const*>(max_freezed_output_const_op->get_data_ptr()));
+                auto input_min = min_input_const_op->get_vector<float>();
+                auto input_max = max_input_const_op->get_vector<float>();
+                auto filter_min = min_filter_const_op->get_vector<float>();
+                auto filter_max = max_filter_const_op->get_vector<float>();
+                auto output_min = min_freezed_output_const_op->get_vector<float>();
+                auto output_max = max_freezed_output_const_op->get_vector<float>();
 
                 float min_out_value;
                 float max_out_value;
-                quantization_range_for_multiplication<uint8_t, int8_t, int32_t>(
-                    input_min, input_max, filter_min, filter_max, &min_out_value, &max_out_value);
+                quantization_range_for_multiplication<uint8_t, int8_t, int32_t>(input_min[0],
+                                                                                input_max[0],
+                                                                                filter_min[0],
+                                                                                filter_max[0],
+                                                                                &min_out_value,
+                                                                                &max_out_value);
                 const float max_abs32 = std::max(std::abs(min_out_value), std::abs(max_out_value));
-                const float max_abs8 = std::max(std::abs(output_min), std::abs(output_max));
+                const float max_abs8 = std::max(std::abs(output_min[0]), std::abs(output_max[0]));
                 // Output is signed int.
                 // s32 = f32 * std::pow(2, 31)/ max_abs32;
                 // s8 = f32 * std::pow(2, 7)/ max_abs8;
@@ -98,6 +98,59 @@ namespace ngraph
                 const float scale = static_cast<float>(
                     (std::pow(2, -24) * static_cast<double>(max_abs32 / max_abs8)));
                 return scale;
+            }
+
+            template <typename T>
+            static inline T get_quantization_scale(const std::shared_ptr<Node> min_input,
+                                                   const std::shared_ptr<Node> max_input,
+                                                   const ngraph::element::Type& type,
+                                                   bool bump_by_eps = false)
+            {
+                auto min_input_const_op =
+                    std::dynamic_pointer_cast<ngraph::op::Constant>(min_input);
+                auto max_input_const_op =
+                    std::dynamic_pointer_cast<ngraph::op::Constant>(max_input);
+
+                if (min_input_const_op == nullptr)
+                {
+                    throw ngraph_error("min input must be constant");
+                }
+                else if (max_input_const_op == nullptr)
+                {
+                    throw ngraph_error("max input must be constant");
+                }
+
+                auto input_min_range = min_input_const_op->get_vector<T>();
+                auto input_max_range = max_input_const_op->get_vector<T>();
+
+                T min_range = std::numeric_limits<T>::min();
+                T max_range = std::numeric_limits<T>::max();
+                if (bump_by_eps)
+                {
+                    // If input_min_range and input_max_range are close,
+                    // introduce a slightly larger delta between them.
+                    min_range = std::min(static_cast<T>(0.0f), input_min_range[0]);
+                    const T epsilon = std::max(static_cast<T>(1.0f),
+                                               static_cast<T>(std::max(fabs(input_min_range[0]),
+                                                                       fabs(input_max_range[0])))) /
+                                      static_cast<T>(100.0f);
+                    max_range = std::max(input_max_range[0], min_range + epsilon);
+                    max_range = std::max(static_cast<T>(0.0f), max_range);
+                    // end code copied and pasted from
+                    // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantize_op.cc
+                }
+                else
+                {
+                    min_range = input_min_range[0];
+                    max_range = input_max_range[0];
+                }
+
+                const T max_abs = std::max(std::abs(min_range), std::abs(max_range));
+                const T bitwidth = type.bitwidth();
+                const T target_range = static_cast<T>(
+                    (type.is_signed() ? std::pow(2, (bitwidth - 1)) : std::pow(2, bitwidth)) - 1);
+                const T scale_factor = max_abs / target_range;
+                return scale_factor;
             }
         }
     }

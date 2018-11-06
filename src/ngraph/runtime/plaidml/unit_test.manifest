@@ -1,0 +1,90 @@
+# Tests not supported by the PlaidML backend
+backwards_reverse_sequence_n3_c2_h3     # No plans to implement ReverseSequence
+backwards_reverse_sequence_n4d2c3h2w2   # No plans to implement ReverseSequence
+divide_by_zero_int32                    # PlaidML does not die.
+product_matrix_rows_zero                # Out-of-range for PlaidML
+product_matrix_cols_zero                # Out-of-range for PlaidML
+product_vector_zero                     # Out-of-range for PlaidML
+product_matrix_to_scalar_zero_by_zero   # Out-of-range for PlaidML
+product_3d_eliminate_zero_dim           # Out-of-range for PlaidML
+max_matrix_rows_zero                    # Out-of-range for PlaidML
+max_matrix_cols_zero                    # Out-of-range for PlaidML
+max_vector_zero                         # Out-of-range for PlaidML
+max_matrix_to_scalar_zero_by_zero       # Out-of-range for PlaidML
+max_3d_eliminate_zero_dim               # Out-of-range for PlaidML
+min_matrix_rows_zero                    # Out-of-range for PlaidML
+min_matrix_cols_zero                    # Out-of-range for PlaidML
+min_vector_zero                         # Out-of-range for PlaidML
+min_matrix_to_scalar_zero_by_zero       # Out-of-range for PlaidML
+min_3d_eliminate_zero_dim               # Out-of-range for PlaidML
+reverse_sequence_n2c3h4w2               # No plans to implement ReverseSequence
+reverse_sequence_n4c3h2w2               # No plans to implement ReverseSequence
+reverse_sequence_n4d2c3h2w2             # No plans to implement ReverseSequence
+topk_1d_max_all                         # No plans to implement TopK
+topk_1d_max_partial                     # No plans to implement TopK
+topk_1d_max_one                         # No plans to implement TopK
+topk_1d_min_all                         # No plans to implement TopK
+topk_1d_min_partial                     # No plans to implement TopK
+topk_1d_min_one                         # No plans to implement TopK
+topk_3d_max_all                         # No plans to implement TopK
+topk_3d_max_partial                     # No plans to implement TopK
+topk_3d_max_one                         # No plans to implement TopK
+topk_3d_min_all                         # No plans to implement TopK
+topk_3d_min_partial                     # No plans to implement TopK
+topk_3d_min_one                         # No plans to implement TopK
+topk_2d_max_all                         # No plans to implement TopK
+topk_2d_max_partial                     # No plans to implement TopK
+topk_2d_max_one                         # No plans to implement TopK
+topk_2d_min_all                         # No plans to implement TopK
+topk_2d_min_partial                     # No plans to implement TopK
+topk_2d_min_one                         # No plans to implement TopK
+topk_int64                              # No plans to implement TopK
+topk_5d_max_partial                     # No plans to implement TopK
+
+# Tests that PlaidML might be able to run at some point.
+backwards_maxpool_n2_c1_hw5_3x3_str2_max_pad1x2_2x3
+backwards_slice
+batchnorm_fprop_bprop  # To debug
+batchnorm_fprop_bprop_2step  # To debug
+reduce_matrix_rows_zero  # To debug: possible broadcasting error?
+reduce_matrix_cols_zero  # To debug: possible broadcasting error?
+reduce_3d_to_vector  # To debug: possible broadcasting error?
+replace_slice_matrix_inplace
+max_pool_2d_1channel_1image_overpadded
+max_pool_3d
+reduce_window_emulating_max_pool_1d_1channel_1image
+reduce_window_emulating_max_pool_1d_1channel_2image
+reduce_window_emulating_max_pool_1d_2channel_2image
+reduce_window_emulating_max_pool_2d_2channel_2image
+reduce_window_emulating_max_pool_2d_1channel_1image_strided
+select_and_scatter_with_overlap
+select_and_scatter_without_overlap
+select_and_scatter_3d_without_overlap
+avg_pool_3d
+avg_pool_3d_uneven_strided_padded_include_in_computation
+dequantize_zero_offset              # Quantization/Dequantization is unimplemented
+quantize_ROUND_NEAREST_TOWARD_ZERO  # Quantization/Dequantization is unimplemented
+quantize_ROUND_NEAREST_UPWARD       # Quantization/Dequantization is unimplemented
+quantize_ROUND_NEAREST_DOWNWARD     # Quantization/Dequantization is unimplemented
+quantize_ROUND_NEAREST_TOWARD_EVEN  # Quantization/Dequantization is unimplemented
+quantize_ROUND_TOWARD_INFINITY      # Quantization/Dequantization is unimplemented
+quantize_ROUND_TOWARD_ZERO          # Quantization/Dequantization is unimplemented
+quantize_ROUND_UP                   # Quantization/Dequantization is unimplemented
+quantize_ROUND_DOWN                 # Quantization/Dequantization is unimplemented
+quantize                            # Quantization/Dequantization is unimplemented
+quantize_axes                       # Quantization/Dequantization is unimplemented
+quantize_int8                       # Quantization/Dequantization is unimplemented
+quantize_clamp                      # Quantization/Dequantization is unimplemented
+dequantize                          # Quantization/Dequantization is unimplemented
+dequantize_axes                     # Quantization/Dequantization is unimplemented
+dequantize_int8                     # Quantization/Dequantization is unimplemented
+sum_matrix_rows_zero                # Empty dims apparently should produce shaped 0s
+sum_matrix_cols_zero                # Empty dims apparently should produce shaped 0s
+sum_vector_zero                     # Empty dims apparently should produce shaped 0s
+sum_matrix_to_scalar_zero_by_zero   # Empty dims apparently should produce shaped 0s
+sum_3d_eliminate_zero_dim           # Empty dims apparently should produce shaped 0s
+dot_0_0                             # Empty dims apparently should produce shaped 0s
+dot_matrix_2x0_0x2                  # Empty dims apparently should produce shaped 0s
+dot_2x0_0                           # Empty dims apparently should produce shaped 0s
+numeric_float_nan
+numeric_double_nan
