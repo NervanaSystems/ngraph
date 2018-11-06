@@ -19,7 +19,7 @@
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/shape.hpp"
 
@@ -35,7 +35,8 @@ namespace ngraph
                 void reduce_max_all(void* input,
                                     void* output,
                                     const Shape& input_shape,
-                                    const Shape& output_shape)
+                                    const Shape& output_shape,
+                                    int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> in_dims;
                     Eigen::array<Eigen::Index, 0> out_dims;
@@ -49,14 +50,16 @@ namespace ngraph
                         static_cast<ElementType*>(output), out_dims);
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
                         static_cast<ElementType*>(input), in_dims);
-                    out.device(eigen::global_thread_pool_device) = in.maximum();
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
+                        in.maximum();
                 }
 
                 template <typename ElementType, unsigned int Rank>
                 void reduce_max_innermost_1rd(void* input,
                                               void* output,
                                               const Shape& input_shape,
-                                              const Shape& output_shape)
+                                              const Shape& output_shape,
+                                              int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> in_dims;
                     Eigen::array<Eigen::Index, Rank - 1> out_dims;
@@ -76,7 +79,8 @@ namespace ngraph
                         static_cast<ElementType*>(output), out_dims);
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
                         static_cast<ElementType*>(input), in_dims);
-                    out.device(eigen::global_thread_pool_device) = in.maximum(reduction_dim);
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
+                        in.maximum(reduction_dim);
                 }
 
                 template <typename ElementType, unsigned int Rank, unsigned int ReductionDims>
@@ -84,7 +88,8 @@ namespace ngraph
                                 void* output,
                                 const Shape& input_shape,
                                 const Shape& output_shape,
-                                const AxisSet& reduction_axes)
+                                const AxisSet& reduction_axes,
+                                int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> in_dims;
                     Eigen::array<Eigen::Index, Rank - ReductionDims> out_dims;
@@ -111,7 +116,8 @@ namespace ngraph
                         out(static_cast<ElementType*>(output), out_dims);
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
                         static_cast<ElementType*>(input), in_dims);
-                    out.device(eigen::global_thread_pool_device) = in.maximum(reduction_dims);
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
+                        in.maximum(reduction_dims);
                 }
 
                 template <typename ElementType, unsigned int Rank>
@@ -119,10 +125,11 @@ namespace ngraph
                                     void* output,
                                     const Shape& input_shape,
                                     const Shape& output_shape,
-                                    const AxisSet& reduction_axes)
+                                    const AxisSet& reduction_axes,
+                                    int arena)
                 {
                     reduce_max<ElementType, Rank, 1>(
-                        input, output, input_shape, output_shape, reduction_axes);
+                        input, output, input_shape, output_shape, reduction_axes, arena);
                 }
 
                 template <typename ElementType>
@@ -130,10 +137,11 @@ namespace ngraph
                                        void* output,
                                        const Shape& input_shape,
                                        const Shape& output_shape,
-                                       const AxisSet& reduction_axes)
+                                       const AxisSet& reduction_axes,
+                                       int arena)
                 {
                     reduce_max<ElementType, 3, 2>(
-                        input, output, input_shape, output_shape, reduction_axes);
+                        input, output, input_shape, output_shape, reduction_axes, arena);
                 }
 
                 template <typename ElementType>
@@ -141,10 +149,11 @@ namespace ngraph
                                        void* output,
                                        const Shape& input_shape,
                                        const Shape& output_shape,
-                                       const AxisSet& reduction_axes)
+                                       const AxisSet& reduction_axes,
+                                       int arena)
                 {
                     reduce_max<ElementType, 4, 2>(
-                        input, output, input_shape, output_shape, reduction_axes);
+                        input, output, input_shape, output_shape, reduction_axes, arena);
                 }
 
                 template <typename ElementType>
@@ -152,10 +161,11 @@ namespace ngraph
                                        void* output,
                                        const Shape& input_shape,
                                        const Shape& output_shape,
-                                       const AxisSet& reduction_axes)
+                                       const AxisSet& reduction_axes,
+                                       int arena)
                 {
                     reduce_max<ElementType, 5, 2>(
-                        input, output, input_shape, output_shape, reduction_axes);
+                        input, output, input_shape, output_shape, reduction_axes, arena);
                 }
 
                 template <typename ElementType>
@@ -163,7 +173,8 @@ namespace ngraph
                          void* out,
                          const Shape& in_shape,
                          const Shape& out_shape,
-                         const AxisSet& reduction_axes)
+                         const AxisSet& reduction_axes,
+                         int arena)
                 {
                     reference::max(static_cast<ElementType*>(arg),
                                    static_cast<ElementType*>(out),

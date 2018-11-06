@@ -16,33 +16,28 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
-
-#include "ngraph/op/batch_norm.hpp"
+#include <set>
+#include <sstream>
+#include <string>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
 
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/op.hpp"
-#include "ngraph/util.hpp"
+#include "ngraph/pass/manager_state.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace runtime
     {
-        namespace gpu
+        namespace cpu
         {
-            class BatchNormTrainingWithStats : public ngraph::op::BatchNormTraining
-            {
-            public:
-                BatchNormTrainingWithStats(double eps,
-                                           std::shared_ptr<Node> gamma,
-                                           std::shared_ptr<Node> beta,
-                                           std::shared_ptr<Node> input);
-
-            protected:
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
-            };
+            const std::unordered_map<
+                std::type_index,
+                std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
+                get_cse_handlers_map();
         }
     }
 }

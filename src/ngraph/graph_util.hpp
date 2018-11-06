@@ -283,10 +283,15 @@ namespace ngraph
 
     // Assert that nodes in the function is colocated and return that placement
     Placement get_colocated_function_placement(std::shared_ptr<Function> func);
+    size_t get_colocated_function_placement_size(std::shared_ptr<Function> func);
 
     std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
         insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
                                       const std::shared_ptr<Node>& dst_node);
+
+    std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
+        insert_result_parameter_split_size(const std::shared_ptr<Node>& src_node,
+                                           const std::shared_ptr<Node>& dst_node);
 
     void insert_new_node_between(const std::shared_ptr<Node>& src_node,
                                  const std::shared_ptr<Node>& dst_node,

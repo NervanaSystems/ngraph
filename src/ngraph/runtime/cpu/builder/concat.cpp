@@ -60,7 +60,7 @@ namespace ngraph
                     if (in_place_oi_pairs.size() > 0)
                     {
                         auto functor = [&, arg_tensors, nargs, out_shape, arg_shapes, element_size](
-                            CPURuntimeContext* ctx) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             auto out_size = shape_size(out_shape) * element_size;
                             auto offset = 0;
                             for (size_t i = 0; i < nargs; i++)
@@ -104,7 +104,8 @@ namespace ngraph
                         mkldnn_emitter->build_concat(inputs_data_desc, result_desc, concat_dim);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 
-                    auto functor = [&, arg_tensors, nargs, concat_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, arg_tensors, nargs, concat_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         for (size_t i = 0; i < nargs; i++)
                         {
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[i], arg_tensors[i]);
@@ -125,7 +126,7 @@ namespace ngraph
                                           runtime::cpu::kernel::concat);
 
                     auto functor = [&, kernel, arg_tensors, arg_shapes, out_shape, axis](
-                        CPURuntimeContext* ctx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         kernel(arg_tensors, arg_shapes, out_tensor, out_shape, axis);
                     };
                     functors.emplace_back(functor);

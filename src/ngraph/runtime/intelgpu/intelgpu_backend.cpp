@@ -349,6 +349,15 @@ runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
         m_cldnn_dump_enable = true;
     }
 
+    // Delete compiled Function from the cache after execution.
+    // It helps in cases where a lot of small functions used
+    // in case of memory consumption. It slow overall execution
+    // because Function compilation required every time
+    if (getenv("NGRAPH_INTELGPU_FUNCTION_CACHE_DISABLE") != nullptr)
+    {
+        m_function_cache_disabled = true;
+    }
+
     cldnn::engine_configuration cldnn_configuration(profiling);
     ocl_engine = make_shared<cldnn::engine>(cldnn_configuration);
 }
@@ -1612,6 +1621,11 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
                                mem_before_call,
                                mem_after_compilation,
                                mem_after_call);
+    }
+
+    if (m_function_cache_disabled)
+    {
+        remove_compiled_function(func);
     }
 
     return true;
