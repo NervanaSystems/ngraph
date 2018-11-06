@@ -337,14 +337,6 @@ static vector<unordered_set<shared_ptr<Node>>>
             to_string(cluster_nodes.size()) + ", f_nodes.size()=" + to_string(f_nodes.size()));
     }
 
-    for (shared_ptr<Node> node : f->get_ops())
-    {
-        if (node->get_placement_size() == 0)
-        {
-            throw runtime_error("Node " + node->get_name() + " not supported by any backend");
-        }
-    }
-
     return clusters;
 }
 
