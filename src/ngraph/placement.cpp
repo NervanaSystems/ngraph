@@ -259,7 +259,6 @@ static vector<unordered_set<shared_ptr<Node>>>
     unordered_map<Node*, size_t> node_dependency_count;
     unordered_map<ngraph::Node*, shared_ptr<ngraph::Node>> node_map;
 
-    NGRAPH_INFO;
     for (shared_ptr<Node> node : f->get_ops())
     {
         size_t dependency_count = node->get_arguments().size();
@@ -291,7 +290,6 @@ static vector<unordered_set<shared_ptr<Node>>>
         }
     }
 
-    NGRAPH_INFO;
     if (sorted_nodes.size() != f->get_ops().size())
     {
         throw ngraph_error("sorted_nodes.size()== " + to_string(sorted_nodes.size()) +
@@ -304,10 +302,7 @@ static vector<unordered_set<shared_ptr<Node>>>
     vector<unordered_set<shared_ptr<Node>>> clusters;
     for (shared_ptr<Node> node : sorted_nodes)
     {
-        NGRAPH_INFO;
         size_t node_placement = node->get_placement_size();
-        NGRAPH_INFO << node_placement;
-        NGRAPH_INFO << previous_placement;
         if (node_placement != previous_placement)
         {
             unordered_set<shared_ptr<Node>> new_cluster;

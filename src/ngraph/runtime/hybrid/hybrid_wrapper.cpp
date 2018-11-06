@@ -119,14 +119,12 @@ bool runtime::hybrid::HybridWrapper::call(shared_ptr<Function> func,
         it = m_function_map.find(func);
     }
 
-     NGRAPH_INFO;
    if (it == m_function_map.end())
     {
         throw runtime_error("Error constructing backend.");
     }
     FunctionInstance& instance = it->second;
 
-    NGRAPH_INFO;
     // Parameter and result node in sub_function maps to one Tensor
     unordered_map<shared_ptr<Node>, shared_ptr<runtime::Tensor>> map_node_to_tensor_view;
     for (size_t i = 0; i < inputs.size(); ++i)
