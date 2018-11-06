@@ -154,8 +154,8 @@ public:
     bool compile(std::shared_ptr<Function> function) override;
 
     bool call(std::shared_ptr<Function> function,
-              const std::vector<std::shared_ptr<Tensor>>& outputs,
-              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
+              const std::vector<Tensor*>& outputs,
+              const std::vector<Tensor*>& intputs) override;
 
     void set_nan_check(std::shared_ptr<Function> func, bool);
 
@@ -175,19 +175,18 @@ private:
     };
     std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
 
-    static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
-                                  const Node* op = nullptr);
+    static void perform_nan_check(const std::vector<HostTensor*>&, const Node* op = nullptr);
 
     void generate_calls(const element::Type& type,
                         const NodeWrapper& op,
-                        const std::vector<std::shared_ptr<HostTensor>>& outputs,
-                        const std::vector<std::shared_ptr<HostTensor>>& inputs,
+                        const std::vector<HostTensor*>& outputs,
+                        const std::vector<HostTensor*>& inputs,
                         FunctionInstance& instance);
 
     template <typename T>
     void op_engine(const NodeWrapper& node_wrapper,
-                   const std::vector<std::shared_ptr<HostTensor>>& out,
-                   const std::vector<std::shared_ptr<HostTensor>>& args,
+                   const std::vector<HostTensor*>& out,
+                   const std::vector<HostTensor*>& args,
                    FunctionInstance& instance)
     {
         const Node& node = node_wrapper.get_node();
@@ -688,16 +687,16 @@ private:
         {
             std::shared_ptr<Function> function = node.get_functions()[0];
 
-            std::vector<std::shared_ptr<runtime::Tensor>> outputs;
+            std::vector<runtime::Tensor*> outputs;
             for (auto tv : out)
             {
-                outputs.push_back(std::static_pointer_cast<runtime::Tensor>(tv));
+                outputs.push_back(static_cast<runtime::Tensor*>(tv));
             }
 
-            std::vector<std::shared_ptr<runtime::Tensor>> inputs;
+            std::vector<runtime::Tensor*> inputs;
             for (auto tv : args)
             {
-                inputs.push_back(std::static_pointer_cast<runtime::Tensor>(tv));
+                inputs.push_back(static_cast<runtime::Tensor*>(tv));
             }
 
             call(function, outputs, inputs);
@@ -940,15 +939,15 @@ private:
             std::shared_ptr<Function> reduction_function = reduce->get_functions()[0];
 
             std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
-                auto tx = std::make_shared<HostTensor>(
+                auto tx = std::make_unique<HostTensor>(
                     node.get_inputs().at(0).get_element_type(), Shape{}, "reduce_temp_x");
-                auto ty = std::make_shared<HostTensor>(
+                auto ty = std::make_unique<HostTensor>(
                     node.get_inputs().at(1).get_element_type(), Shape{}, "reduce_temp_y");
-                auto tr = std::make_shared<HostTensor>(
+                auto tr = std::make_unique<HostTensor>(
                     node.get_output_element_type(0), Shape{}, "reduce_temp_r");
                 *(tx->get_data_ptr<T>()) = x;
                 *(ty->get_data_ptr<T>()) = y;
-                call(reduction_function, {tr}, {tx, ty});
+                call(reduction_function, {tr.get()}, {tx.get(), ty.get()});
                 return *(tr->get_data_ptr<T>());
             };
 
@@ -967,15 +966,15 @@ private:
             std::shared_ptr<Function> reduction_function = reduce_window->get_functions()[0];
 
             std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
-                auto tx = std::make_shared<HostTensor>(
+                auto tx = std::make_unique<HostTensor>(
                     node.get_inputs().at(0).get_element_type(), Shape{}, "reduce_window_temp_x");
-                auto ty = std::make_shared<HostTensor>(
+                auto ty = std::make_unique<HostTensor>(
                     node.get_inputs().at(1).get_element_type(), Shape{}, "reduce_window_temp_y");
-                auto tr = std::make_shared<HostTensor>(
+                auto tr = std::make_unique<HostTensor>(
                     node.get_output_element_type(0), Shape{}, "reduce_window_temp_r");
                 *(tx->get_data_ptr<T>()) = x;
                 *(ty->get_data_ptr<T>()) = y;
-                call(reduction_function, {tr}, {tx, ty});
+                call(reduction_function, {tr.get()}, {tx.get(), ty.get()});
                 return *(tr->get_data_ptr<T>());
             };
 
@@ -1081,30 +1080,30 @@ private:
                 select_and_scatter->get_functions()[0];
             std::function<bool(T, T)> f_selection = [this, &node, selection_function](T x,
                                                                                       T y) -> bool {
-                auto tx = std::make_shared<runtime::HostTensor>(
+                auto tx = std::make_unique<runtime::HostTensor>(
                     node.get_inputs().at(0).get_element_type(), Shape{}, "selection_temp_x");
-                auto ty = std::make_shared<runtime::HostTensor>(
+                auto ty = std::make_unique<runtime::HostTensor>(
                     node.get_inputs().at(1).get_element_type(), Shape{}, "selection_temp_y");
-                auto tr = std::make_shared<runtime::HostTensor>(
+                auto tr = std::make_unique<runtime::HostTensor>(
                     element::boolean, Shape{}, "selection_temp_r");
                 *(tx->get_data_ptr<T>()) = x;
                 *(ty->get_data_ptr<T>()) = y;
-                call(selection_function, {tr}, {tx, ty});
+                call(selection_function, {tr.get()}, {tx.get(), ty.get()});
                 return *(tr->get_data_ptr<char>());
             };
 
             std::shared_ptr<ngraph::Function> scatter_function =
                 select_and_scatter->get_functions()[1];
             std::function<T(T, T)> f_scatter = [this, &node, scatter_function](T x, T y) -> T {
-                auto tx = std::make_shared<runtime::HostTensor>(
+                auto tx = std::make_unique<runtime::HostTensor>(
                     node.get_inputs().at(0).get_element_type(), Shape{}, "scatter_temp_x");
-                auto ty = std::make_shared<runtime::HostTensor>(
+                auto ty = std::make_unique<runtime::HostTensor>(
                     node.get_inputs().at(1).get_element_type(), Shape{}, "scatter_temp_y");
-                auto tr = std::make_shared<runtime::HostTensor>(
+                auto tr = std::make_unique<runtime::HostTensor>(
                     node.get_output_element_type(0), Shape{}, "scatter_temp_r");
                 *(tx->get_data_ptr<T>()) = x;
                 *(ty->get_data_ptr<T>()) = y;
-                call(scatter_function, {tr}, {tx, ty});
+                call(scatter_function, {tr.get()}, {tx.get(), ty.get()});
                 return *(tr->get_data_ptr<T>());
             };
 

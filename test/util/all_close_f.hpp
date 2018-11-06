@@ -65,8 +65,8 @@ namespace ngraph
         /// \param mantissa_bits The mantissa width of the underlying number before casting to float
         /// \param tolerance_bits Bit tolerance error
         /// Returns true iff the two TensorViews are all close in float
-        bool all_close_f(const std::shared_ptr<runtime::Tensor>& a,
-                         const std::shared_ptr<runtime::Tensor>& b,
+        bool all_close_f(const runtime::Tensor* a,
+                         const runtime::Tensor* b,
                          int mantissa_bits = 8,
                          int tolerance_bits = 2);
 
@@ -76,8 +76,8 @@ namespace ngraph
         /// \param mantissa_bits The mantissa width of the underlying number before casting to float
         /// \param tolerance_bits Bit tolerance error
         /// Returns true iff the two TensorViews are all close in float
-        bool all_close_f(const std::vector<std::shared_ptr<runtime::Tensor>>& as,
-                         const std::vector<std::shared_ptr<runtime::Tensor>>& bs,
+        bool all_close_f(const std::vector<runtime::Tensor*>& as,
+                         const std::vector<runtime::Tensor*>& bs,
                          int mantissa_bits = 8,
                          int tolerance_bits = 2);
     }

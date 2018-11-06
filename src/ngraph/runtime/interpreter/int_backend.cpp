@@ -75,8 +75,8 @@ bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
 }
 
 bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
-                                            const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                            const vector<shared_ptr<runtime::Tensor>>& inputs)
+                                            const vector<runtime::Tensor*>& outputs,
+                                            const vector<runtime::Tensor*>& inputs)
 {
     validate_call(function, outputs, inputs);
 
@@ -84,10 +84,10 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     FunctionInstance& instance = m_function_map[function];
 
     // convert inputs to HostTensor
-    vector<shared_ptr<runtime::HostTensor>> func_inputs;
+    vector<runtime::HostTensor*> func_inputs;
     for (auto tv : inputs)
     {
-        func_inputs.push_back(static_pointer_cast<runtime::HostTensor>(tv));
+        func_inputs.push_back(static_cast<runtime::HostTensor*>(tv));
     }
     if (instance.m_nan_check_enabled)
     {
@@ -95,14 +95,14 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     }
 
     // convert outputs to HostTensor
-    vector<shared_ptr<runtime::HostTensor>> func_outputs;
+    vector<runtime::HostTensor*> func_outputs;
     for (auto tv : outputs)
     {
-        func_outputs.push_back(static_pointer_cast<runtime::HostTensor>(tv));
+        func_outputs.push_back(static_cast<runtime::HostTensor*>(tv));
     }
 
     // map function params -> HostTensor
-    unordered_map<descriptor::Tensor*, shared_ptr<runtime::HostTensor>> tensor_map;
+    unordered_map<descriptor::Tensor*, runtime::HostTensor*> tensor_map;
     size_t input_count = 0;
     for (auto param : function->get_parameters())
     {
@@ -135,7 +135,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
             continue;
         }
         // get op inputs from map
-        vector<shared_ptr<runtime::HostTensor>> op_inputs;
+        vector<runtime::HostTensor*> op_inputs;
         for (const descriptor::Input& input : op->get_inputs())
         {
             descriptor::Tensor* tv = input.get_output().get_tensor_ptr().get();

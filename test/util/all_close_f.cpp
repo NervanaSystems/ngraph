@@ -79,8 +79,8 @@ bool test::all_close_f(const vector<float>& a,
     return rc;
 }
 
-bool test::all_close_f(const std::shared_ptr<runtime::Tensor>& a,
-                       const std::shared_ptr<runtime::Tensor>& b,
+bool test::all_close_f(const runtime::Tensor* a,
+                       const runtime::Tensor* b,
                        int mantissa_bits,
                        int tolerance_bits)
 {
@@ -98,8 +98,8 @@ bool test::all_close_f(const std::shared_ptr<runtime::Tensor>& a,
         read_float_vector(a), read_float_vector(b), mantissa_bits, tolerance_bits);
 }
 
-bool test::all_close_f(const std::vector<std::shared_ptr<runtime::Tensor>>& as,
-                       const std::vector<std::shared_ptr<runtime::Tensor>>& bs,
+bool test::all_close_f(const std::vector<runtime::Tensor*>& as,
+                       const std::vector<runtime::Tensor*>& bs,
                        int mantissa_bits,
                        int tolerance_bits)
 {
