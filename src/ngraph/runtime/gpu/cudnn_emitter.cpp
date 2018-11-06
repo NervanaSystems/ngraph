@@ -196,7 +196,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
     size_t workspace_size = 0;
     CUDNN_SAFE_CALL(cudnnGetReductionWorkspaceSize(
         *m_ctx->cudnn_handle, desc, input_desc, output_desc, &workspace_size));
-    size_t input_buffer_size = shape_size(input_shape)*input_type.size();
+    size_t input_buffer_size = shape_size(input_shape) * input_type.size();
     if (workspace_size < input_buffer_size)
     {
         workspace_size = input_buffer_size;
