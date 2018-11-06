@@ -25,6 +25,8 @@
 #include "op/acos.hpp"
 #include "op/add.hpp"
 #include "op/and.hpp"
+#include "op/argmax.hpp"
+#include "op/argmin.hpp"
 #include "op/asin.hpp"
 #include "op/atan.hpp"
 #include "op/average_pool.hpp"
@@ -145,7 +147,10 @@ namespace ngraph
             REGISTER_OPERATOR("Abs", 1, abs);
             REGISTER_OPERATOR("Acos", 1, acos);
             REGISTER_OPERATOR("Add", 1, add);
+            REGISTER_OPERATOR("Add", 7, add);
             REGISTER_OPERATOR("And", 1, logical_and);
+            REGISTER_OPERATOR("ArgMin", 1, argmin);
+            REGISTER_OPERATOR("ArgMax", 1, argmax);
             REGISTER_OPERATOR("Asin", 1, asin);
             REGISTER_OPERATOR("Atan", 1, atan);
             REGISTER_OPERATOR("AveragePool", 1, average_pool);
@@ -158,6 +163,7 @@ namespace ngraph
             REGISTER_OPERATOR("Conv", 1, conv);
             REGISTER_OPERATOR("Cos", 1, cos);
             REGISTER_OPERATOR("Div", 1, div);
+            REGISTER_OPERATOR("Div", 7, div);
             REGISTER_OPERATOR("Dropout", 1, identity);
             REGISTER_OPERATOR("Elu", 1, elu);
             REGISTER_OPERATOR("Equal", 1, equal);
@@ -182,6 +188,7 @@ namespace ngraph
             REGISTER_OPERATOR("Mean", 1, mean);
             REGISTER_OPERATOR("Min", 1, min);
             REGISTER_OPERATOR("Mul", 1, mul);
+            REGISTER_OPERATOR("Mul", 7, mul);
             REGISTER_OPERATOR("Neg", 1, neg);
             REGISTER_OPERATOR("Not", 1, logical_not);
             REGISTER_OPERATOR("Or", 1, logical_or);
@@ -212,6 +219,7 @@ namespace ngraph
             REGISTER_OPERATOR("Sqrt", 1, sqrt);
             REGISTER_OPERATOR("Squeeze", 1, squeeze);
             REGISTER_OPERATOR("Sub", 1, sub);
+            REGISTER_OPERATOR("Sub", 7, sub);
             REGISTER_OPERATOR("Sum", 1, sum);
             REGISTER_OPERATOR("Tan", 1, tan);
             REGISTER_OPERATOR("Tanh", 1, tanh);

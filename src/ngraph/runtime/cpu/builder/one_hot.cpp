@@ -47,8 +47,9 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::one_hot_rank_0<float>)> kernel;
                     SELECT_KERNEL(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::one_hot_rank_0);
-                    auto functor = [&, kernel, out_shape, one_hot_axis](CPURuntimeContext* ctx) {
-                        kernel(arg_tensor, out_tensor, out_shape, one_hot_axis);
+                    auto functor = [&, kernel, out_shape, one_hot_axis](CPURuntimeContext* ctx,
+                                                                        CPUExecutionContext* ectx) {
+                        kernel(arg_tensor, out_tensor, out_shape, one_hot_axis, ectx->arena);
                     };
 
                     functors.emplace_back(functor);
@@ -58,10 +59,15 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::one_hot_rank_1<float>)> kernel;
                     SELECT_KERNEL(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::one_hot_rank_1);
-                    auto functor =
-                        [&, kernel, arg_shape, out_shape, one_hot_axis](CPURuntimeContext* ctx) {
-                            kernel(arg_tensor, out_tensor, arg_shape, out_shape, one_hot_axis);
-                        };
+                    auto functor = [&, kernel, arg_shape, out_shape, one_hot_axis](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        kernel(arg_tensor,
+                               out_tensor,
+                               arg_shape,
+                               out_shape,
+                               one_hot_axis,
+                               ectx->arena);
+                    };
 
                     functors.emplace_back(functor);
                 }
@@ -72,10 +78,10 @@ namespace ngraph
                     SELECT_KERNEL(kernel,
                                   out[0].get_element_type(),
                                   runtime::cpu::kernel::one_hot_rank_2_or_more);
-                    auto functor =
-                        [&, kernel, arg_shape, out_shape, one_hot_axis](CPURuntimeContext* ctx) {
-                            kernel(arg_tensor, out_tensor, arg_shape, out_shape, one_hot_axis);
-                        };
+                    auto functor = [&, kernel, arg_shape, out_shape, one_hot_axis](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        kernel(arg_tensor, out_tensor, arg_shape, out_shape, one_hot_axis);
+                    };
 
                     functors.emplace_back(functor);
                 }

@@ -54,7 +54,9 @@
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
+#include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 
+#include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/argmax.hpp"
@@ -328,6 +330,34 @@ runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
         m_disable_backend_optimizations = true;
     }
 
+    // Disables clDNN (cldnn::network) level optimizations
+    if (getenv("NGRAPH_INTELGPU_CLDNN_DISABLE_OPTIMIZATIONS") != nullptr)
+    {
+        m_cldnn_graph_optimize = false;
+    }
+
+    // Dumps the input Function into Graphviz format
+    if (getenv("NGRAPH_INTELGPU_DUMP_FUNCTION") != nullptr)
+    {
+        m_dump_graph_enable = true;
+    }
+
+    // Dumps the clDNN internal logs into directory
+    if (getenv("NGRAPH_INTELGPU_CLDNN_DUMP") != nullptr)
+    {
+        file_util::make_directory(m_cldnn_dump_dir);
+        m_cldnn_dump_enable = true;
+    }
+
+    // Delete compiled Function from the cache after execution.
+    // It helps in cases where a lot of small functions used
+    // in case of memory consumption. It slow overall execution
+    // because Function compilation required every time
+    if (getenv("NGRAPH_INTELGPU_FUNCTION_CACHE_DISABLE") != nullptr)
+    {
+        m_function_cache_disabled = true;
+    }
+
     cldnn::engine_configuration cldnn_configuration(profiling);
     ocl_engine = make_shared<cldnn::engine>(cldnn_configuration);
 }
@@ -354,7 +384,13 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         return true;
     }
 
+    vector<cldnn::primitive_id> function_output_names;
     cldnn::topology topology;
+
+    if (m_dump_graph_enable)
+    {
+        visualize_tree(func, "intelgpu_", "_orig");
+    }
 
     if (!m_disable_backend_optimizations)
     {
@@ -369,6 +405,11 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
 
         pass_manager.run_passes(func);
+
+        if (m_dump_graph_enable)
+        {
+            visualize_tree(func, "intelgpu_", "_opt");
+        }
     }
 
     for (shared_ptr<Node> op : func->get_ops())
@@ -397,7 +438,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             arguments_check(op, 1, 1);
 
-            do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+            function_output_names.push_back(get_input_name(op));
             break;
         }
         case OP_TYPEID::GetOutputElement:
@@ -1472,6 +1513,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         case OP_TYPEID::Quantize:
         case OP_TYPEID::ReduceWindow:
         case OP_TYPEID::ReplaceSlice:
+        case OP_TYPEID::GenerateMask:
         case OP_TYPEID::ReverseSequence:
         case OP_TYPEID::SelectAndScatter:
         case OP_TYPEID::StopGradient:
@@ -1484,7 +1526,19 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
     }
 
-    cldnn::build_options network_build_options(cldnn::build_option::optimize_data(true));
+    cldnn::build_options network_build_options;
+
+    network_build_options.set_option(cldnn::build_option::optimize_data(m_cldnn_graph_optimize));
+
+    if (!function_output_names.empty())
+    {
+        network_build_options.set_option(cldnn::build_option::outputs(function_output_names));
+    }
+
+    if (m_cldnn_dump_enable)
+    {
+        network_build_options.set_option(cldnn::build_option::graph_dumps_dir(m_cldnn_dump_dir));
+    }
 
     instance.ocl_network =
         make_shared<cldnn::network>(*ocl_engine, topology, network_build_options);
@@ -1549,7 +1603,7 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     {
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> ngraph_res =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(outputs[i]);
-        const string& tensor_name = func->get_output_op(i)->get_output_tensor().get_name();
+        const string& tensor_name = get_input_name(func->get_output_op(i));
 
         auto result_memory = result.at(tensor_name).get_memory().pointer<char>();
         ngraph_res->write(result_memory.data(), 0, result_memory.size());
@@ -1567,6 +1621,11 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
                                mem_before_call,
                                mem_after_compilation,
                                mem_after_call);
+    }
+
+    if (m_function_cache_disabled)
+    {
+        remove_compiled_function(func);
     }
 
     return true;
@@ -1632,10 +1691,13 @@ vector<runtime::PerformanceCounter>
                 size_t usec = 0;
                 for (const auto& q : p.second.get_profiling_info())
                 {
-                    usec += chrono::duration_cast<
-                                chrono::duration<int64_t, chrono::milliseconds::period>>(
-                                q.value->value())
-                                .count();
+                    if (q.name == string("executing"))
+                    {
+                        usec += chrono::duration_cast<
+                                    chrono::duration<size_t, chrono::milliseconds::period>>(
+                                    q.value->value())
+                                    .count();
+                    }
                 }
                 const runtime::PerformanceCounter perf_counter(primitive_name.c_str(), usec, 1);
                 rc.push_back(perf_counter);
@@ -1645,17 +1707,17 @@ vector<runtime::PerformanceCounter>
     return rc;
 }
 
-static Shape get_shape_by_name(const shared_ptr<Function> func, const string& name)
+static Node* get_node_by_name(const shared_ptr<Function> func, const string& name)
 {
     for (shared_ptr<Node> node : func->get_ops())
     {
         if (node->get_name() == name)
         {
-            return node->get_output_shape(0);
+            return node.get();
         }
     }
 
-    return Shape();
+    return nullptr;
 }
 
 void runtime::intelgpu::IntelGPUBackend::print_call_performance(
@@ -1728,7 +1790,7 @@ void runtime::intelgpu::IntelGPUBackend::print_call_performance(
         for (auto it = data.rbegin(); (it != data.rend()) && (limit_count > 0); ++it, --limit_count)
         {
             const string ngraph_node_name = convert_cldnn_names(func, it->second.item_name);
-            const Shape ngraph_node_shape = get_shape_by_name(func, ngraph_node_name);
+            const Node* ngraph_node = get_node_by_name(func, ngraph_node_name);
 
             cout << func_name << delim << setw(max_item_name_size) << it->second.item_name << delim
                  << "time(ms)" << delim << scientific << setprecision(2) << it->first;
@@ -1736,7 +1798,30 @@ void runtime::intelgpu::IntelGPUBackend::print_call_performance(
             {
                 cout << delim << item.first << "(ms)" << delim << item.second;
             }
-            cout << delim << ngraph_node_name << delim << ngraph_node_shape << "\n";
+            cout << delim << ngraph_node_name;
+
+            if (ngraph_node) // it might be initialized by nullptr
+            {
+                // print all input shapes for the Node
+                size_t arg_idx = 0;
+                for (const descriptor::Input& op_input : ngraph_node->get_inputs())
+                {
+                    cout << delim << op_input.get_element_type().c_type_string() << " input"
+                         << arg_idx << vector_to_string(op_input.get_shape());
+                    ++arg_idx;
+                }
+
+                // print all output shapes for the Node
+                arg_idx = 0;
+                for (const descriptor::Output& op_output : ngraph_node->get_outputs())
+                {
+                    cout << delim << op_output.get_element_type().c_type_string() << " output"
+                         << arg_idx << vector_to_string(op_output.get_shape());
+                    ++arg_idx;
+                }
+            }
+
+            cout << "\n";
         }
 
         // Print bottom line summary

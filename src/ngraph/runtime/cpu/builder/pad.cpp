@@ -56,14 +56,15 @@ namespace ngraph
                                           runtime::cpu::kernel::pad);
 
                     auto functor = [&, kernel, arg_shape, out_shape, padding_below, padding_above](
-                        CPURuntimeContext* ctx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         kernel(arg_tensor,
                                out_tensor,
                                padding_value,
                                arg_shape,
                                out_shape,
                                padding_below,
-                               padding_above);
+                               padding_above,
+                               ectx->arena);
                     };
                     functors.emplace_back(functor);
                 }
@@ -81,7 +82,8 @@ namespace ngraph
                                     out_shape,
                                     padding_below,
                                     padding_above,
-                                    padding_interior](CPURuntimeContext* ctx) {
+                                    padding_interior](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
                         kernel(arg_tensor,
                                padding_value,
                                out_tensor,
@@ -89,7 +91,8 @@ namespace ngraph
                                out_shape,
                                padding_below,
                                padding_above,
-                               padding_interior);
+                               padding_interior,
+                               ectx->arena);
                     };
                     functors.emplace_back(functor);
                 }

@@ -81,7 +81,7 @@ namespace ngraph
                 // Retrieve the kernel parameter signature given the added kernel arguments.
                 //
                 std::string get_input_signature();
-
+                size_t get_size() { return m_argument_list.size(); }
             private:
                 //
                 // Cache the host argument for persistence, add it to the argument list,

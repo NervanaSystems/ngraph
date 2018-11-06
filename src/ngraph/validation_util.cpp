@@ -324,3 +324,123 @@ PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
 
     return data_batch_output_shape;
 }
+
+struct ChannelShapedInputSpec
+{
+    element::Type m_element_type;
+    PartialShape m_shape;
+    std::string m_input_name;
+};
+
+static std::tuple<element::Type, PartialShape, PartialShape> infer_batch_norm_forward_helper(
+    const Node* node,
+    element::Type input_element_type,
+    const PartialShape& input_shape,
+    const std::vector<ChannelShapedInputSpec>& channel_shaped_inputs)
+{
+    // Built up a slash-separated string naming all the channel-shaped inputs, for use in error
+    // messages.
+    std::stringstream ss;
+    bool first = true;
+    for (auto& inp : channel_shaped_inputs)
+    {
+        if (!first)
+        {
+            ss << "/";
+        }
+        ss << inp.m_input_name;
+        first = false;
+    }
+    std::string channel_input_names = ss.str();
+
+    // Infer output element type.
+    element::Type et_result{input_element_type};
+
+    for (auto& inp : channel_shaped_inputs)
+    {
+        NODE_VALIDATION_ASSERT(node, element::Type::merge(et_result, et_result, inp.m_element_type))
+            << "Input element types do not match.";
+    }
+
+    // Extract channel dimension from input shape.
+    Dimension channel_dim{Dimension::dynamic()};
+
+    NODE_VALIDATION_ASSERT(node,
+                           input_shape.is_dynamic() || static_cast<size_t>(input_shape.rank()) >= 2)
+        << "Input argument must have rank of at least 2 (input argument shape: " << input_shape
+        << ").";
+
+    if (input_shape.rank().is_static())
+    {
+        channel_dim = input_shape[1];
+    }
+
+    // Infer gamma/beta/mu/sigma shape, which must be consistent with a vector of size "channel_dim".
+    PartialShape channel_shape{PartialShape::dynamic()};
+
+    for (auto& inp : channel_shaped_inputs)
+    {
+        NODE_VALIDATION_ASSERT(node, PartialShape::merge_into(channel_shape, inp.m_shape))
+            << "Shapes for " << channel_input_names << " do not match.";
+    }
+
+    NODE_VALIDATION_ASSERT(node, channel_shape.merge_rank(1)) << "Shape for " << channel_input_names
+                                                              << " (" << channel_shape
+                                                              << ") does not have rank 1.";
+
+    NODE_VALIDATION_ASSERT(node, Dimension::merge(channel_dim, channel_dim, channel_shape[0]))
+        << "Input channel dimension (" << channel_dim << ") does not match shape for "
+        << channel_input_names << " (" << channel_shape << ").";
+
+    NODE_VALIDATION_ASSERT(node, channel_dim.is_dynamic() || static_cast<size_t>(channel_dim) >= 1)
+        << "Channel count must be at least 1.";
+
+    // Batch result shape is same as the input shape, except we may possibly have inferred more
+    // information from the channel count via gamma/beta/etc.
+    PartialShape batch_result_shape{input_shape};
+
+    if (batch_result_shape.rank().is_static())
+    {
+        batch_result_shape[1] = channel_dim;
+    }
+
+    return std::make_tuple(et_result, batch_result_shape, PartialShape{channel_dim});
+}
+
+std::tuple<element::Type, PartialShape, PartialShape>
+    ngraph::infer_batch_norm_forward(const Node* node,
+                                     element::Type input_element_type,
+                                     element::Type gamma_element_type,
+                                     element::Type beta_element_type,
+                                     element::Type mean_element_type,
+                                     element::Type variance_element_type,
+                                     const PartialShape& input_shape,
+                                     const PartialShape& gamma_shape,
+                                     const PartialShape& beta_shape,
+                                     const PartialShape& mean_shape,
+                                     const PartialShape& variance_shape)
+{
+    return infer_batch_norm_forward_helper(node,
+                                           input_element_type,
+                                           input_shape,
+                                           {{gamma_element_type, gamma_shape, "gamma"},
+                                            {beta_element_type, beta_shape, "beta"},
+                                            {mean_element_type, mean_shape, "mean"},
+                                            {variance_element_type, variance_shape, "variance"}});
+}
+
+std::tuple<element::Type, PartialShape, PartialShape>
+    ngraph::infer_batch_norm_forward(const Node* node,
+                                     element::Type input_element_type,
+                                     element::Type gamma_element_type,
+                                     element::Type beta_element_type,
+                                     const PartialShape& input_shape,
+                                     const PartialShape& gamma_shape,
+                                     const PartialShape& beta_shape)
+{
+    return infer_batch_norm_forward_helper(
+        node,
+        input_element_type,
+        input_shape,
+        {{gamma_element_type, gamma_shape, "gamma"}, {beta_element_type, beta_shape, "beta"}});
+}
