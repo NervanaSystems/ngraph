@@ -83,7 +83,7 @@ We have many documentation pages to help you get started.
    AMD\* GPUs, via PlaidML, Yes
    :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs), Coming soon, Yes
    NVIDIA\* GPUs, via PlaidML, Some 
-   Intel `Movidius`_™ Myriad™ 2 (VPU), Coming soon, Yes
+   Intel Movidius™ Myriad™ 2 (VPU), Coming soon, Yes
 
 
 .. note:: The Library code is under active development as we're continually 
