@@ -79,10 +79,11 @@ namespace ngraph
 
                     if (left_rank == 0 || right_rank == 0)
                     {
-                        NGRAPH_WARN << (node) << " "
-                                    << "ONNX standard doesn't allow scalar operands, however Ngraph "
-                                       "accepts them. Consider use of element-wise multiplication instead "
-                                       "to conform with ONNX standard.";
+                        NGRAPH_WARN
+                            << (node) << " "
+                            << "ONNX standard doesn't allow scalar operands, however Ngraph "
+                               "accepts them. Consider use of element-wise multiplication instead "
+                               "to conform with ONNX standard.";
                     }
 
                     // First (easy) case that is already internally handled by Ngraph Dot operator.
