@@ -30,6 +30,7 @@
 
 #include <limits>
 #include <vector>
+#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/add.hpp"
@@ -53,80 +54,6 @@ namespace ngraph
                 auto abs_a = std::make_shared<op::Abs>(a);
                 auto abs_b = std::make_shared<op::Abs>(b);
                 return std::make_shared<op::Maximum>(abs_a, abs_b);
-            }
-
-            template <class T>
-            std::shared_ptr<Node>
-                make_constant(const element::Type& type, const Shape& shape, T num)
-            {
-                std::shared_ptr<Node> val = nullptr;
-
-                if (type == element::f32)
-                {
-                    val = std::make_shared<ngraph::op::Constant>(
-                        type, ngraph::Shape{}, std::vector<float>{static_cast<float>(num)});
-                }
-                else if (type == element::f64)
-                {
-                    val = std::make_shared<ngraph::op::Constant>(
-                        type, ngraph::Shape{}, std::vector<double>{static_cast<double>(num)});
-                }
-                else if (type == element::i64)
-                {
-                    val = std::make_shared<ngraph::op::Constant>(
-                        type, ngraph::Shape{}, std::vector<int64_t>{static_cast<int64_t>(num)});
-                }
-                else if (type == element::i32)
-                {
-                    val = std::make_shared<ngraph::op::Constant>(
-                        type, ngraph::Shape{}, std::vector<int32_t>{static_cast<int32_t>(num)});
-                }
-                else if (type == element::i16)
-                {
-                    val = std::make_shared<ngraph::op::Constant>(
-                        type, ngraph::Shape{}, std::vector<int16_t>{static_cast<int16_t>(num)});
-                }
-                else if (type == element::i8)
-                {
-                    val = std::make_shared<ngraph::op::Constant>(
-                        type, ngraph::Shape{}, std::vector<int8_t>{static_cast<int8_t>(num)});
-                }
-                else if (type == element::u64)
-                {
-                    val = std::make_shared<ngraph::op::Constant>(
-                        type, ngraph::Shape{}, std::vector<uint64_t>{static_cast<uint64_t>(num)});
-                }
-                else if (type == element::u32)
-                {
-                    val = std::make_shared<ngraph::op::Constant>(
-                        type, ngraph::Shape{}, std::vector<uint32_t>{static_cast<uint32_t>(num)});
-                }
-                else if (type == element::u16)
-                {
-                    val = std::make_shared<ngraph::op::Constant>(
-                        type, ngraph::Shape{}, std::vector<uint16_t>{static_cast<uint16_t>(num)});
-                }
-                else if (type == element::u8)
-                {
-                    val = std::make_shared<ngraph::op::Constant>(
-                        type, ngraph::Shape{}, std::vector<uint8_t>{static_cast<uint8_t>(num)});
-                }
-                else
-                {
-                    throw ngraph_error("make_constant: Unsupported element type");
-                }
-
-                if (shape.size() > 0)
-                {
-                    ngraph::AxisSet axes;
-                    for (size_t i = 0; i < shape.size(); i++)
-                    {
-                        axes.insert(i);
-                    }
-                    val = std::make_shared<ngraph::op::Broadcast>(val, shape, axes);
-                }
-
-                return val;
             }
 
             std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
@@ -210,8 +137,7 @@ namespace ngraph
                 // s32 = f32 * std::pow(2, 31)/ max_abs32;
                 // s8 = f32 * std::pow(2, 7)/ max_abs8;
                 // s8 = s32 * std::pow(2, -24) * max_abs32 / max_abs8;
-                auto y = make_constant(type, shape, std::pow(2, -24));
-                return y * (max_abs32 / max_abs8);
+                return make_constant(type, shape, std::pow(2, -24)) * (max_abs32 / max_abs8);
             }
 
             std::shared_ptr<Node> get_scale(std::shared_ptr<Node> input_min_range,
@@ -250,7 +176,6 @@ namespace ngraph
                     max_range = std::make_shared<op::Maximum>(zero, max_range);
                 }
 
-                // TODO: need to calculated quantize_type.max() - quant_type.min()
                 size_t bw = quant_type.bitwidth();
                 float range = static_cast<float>(
                     (quant_type.is_signed() ? std::pow(2, (bw - 1)) : std::pow(2, bw)) - 1);
