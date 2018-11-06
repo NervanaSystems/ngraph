@@ -171,9 +171,23 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 #pragma GCC diagnostic ignored "-Wswitch-enum"
         switch (type_id)
         {
-        case OP_TYPEID::Select: type = op->get_input_element_type(1); break;
-        case OP_TYPEID::Constant: type = op->get_outputs().at(0).get_element_type(); break;
-        default: type = op->get_input_element_type(0); break;
+        case OP_TYPEID::Convert:
+        case OP_TYPEID::Quantize:
+        case OP_TYPEID::Dequantize:
+        case OP_TYPEID::ArgMin:
+        case OP_TYPEID::ArgMax: type = op->get_input_element_type(0); break;
+        case OP_TYPEID::Equal:
+        case OP_TYPEID::Greater:
+        case OP_TYPEID::GreaterEq:
+        case OP_TYPEID::Less:
+        case OP_TYPEID::LessEq:
+        case OP_TYPEID::NotEqual:
+            // Get the type of the second input, not the first
+            // All BinaryElementwiseComparision ops have the same type for inputs
+            // Select has bool for first input and the type we are interested in for the second
+            type = op->get_input_element_type(1);
+            break;
+        default: type = op->get_outputs().at(0).get_element_type(); break;
         }
 #pragma GCC diagnostic pop
 
