@@ -1320,7 +1320,6 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
                 auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
                 if (in_place_oi_pairs.size() > 0)
                 {
-
                     auto arg = slice->get_argument(0);
                     auto input = slice->get_input_from(arg);
                     auto index = input->get_output().get_index();

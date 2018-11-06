@@ -2015,7 +2015,6 @@ namespace ngraph
                     {
                         auto arg_shape = args[0].get_shape();
                         auto lower_bounds = slice->get_lower_bounds();
-                        auto element_size = slice->get_input_element_type(0).size();
                         auto start = 0, accumulated = 1;
                         for (int i = arg_shape.size() - 1; i >= 0; i--)
                         {
