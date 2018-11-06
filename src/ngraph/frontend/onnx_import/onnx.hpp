@@ -47,7 +47,7 @@ namespace ngraph
         /// \param sin       input stream (e.g. file stream, memory stream, etc),
         /// \param weights  weights associated with the model. If weights are embedded into
         ///                   the model this parameter shall be empty. Having weights in a model
-        ///                   and providing throguh this parameters is invalid (the weights from
+        ///                   and providing through this parameters is invalid (the weights from
         ///                   the model  will take precedence).
         /// \return The function returns a vector of nGraph functions. The number of functions
         ///          depends on number of outputs from ONNX graph.
@@ -59,7 +59,7 @@ namespace ngraph
         /// \param filename  file name (relative or absolute path name),
         /// \param weights  weights associated with the model. If weights are embedded into
         ///                   the model this parameter shall be empty. Having weights in a model
-        ///                   and providing throguh this parameters is invalid (the weights from
+        ///                   and providing through this parameters is invalid (the weights from
         ///                   the model  will take precedence).
         /// \return The function returns a vector of nGraph functions. The number of functions
         ///          depends on number of outputs from ONNX graph.
@@ -72,7 +72,7 @@ namespace ngraph
         /// \param sin       input stream (e.g. file stream, memory stream, etc),
         /// \param weights  weights associated with the model. If weights are embedded into
         ///                   the model this parameter shall be empty. Having weights in a model
-        ///                   and providing throguh this parameters is invalid (the weights from
+        ///                   and providing through this parameters is invalid (the weights from
         ///                   the model  will take precedence).
         /// \return The function returns a nGraph function representing single output from graph.
         std::shared_ptr<Function> import_onnx_function(std::istream& sin,
@@ -84,7 +84,7 @@ namespace ngraph
         /// \param filename  file name (relative or absolute path name),
         /// \param weights  weights associated with the model. If weights are embedded into
         ///                   the model this parameter shall be empty. Having weights in a model
-        ///                   and providing throguh this parameters is invalid (the weights from
+        ///                   and providing through this parameters is invalid (the weights from
         ///                   the model  will take precedence).
         /// \return The function returns a nGraph function representing single output from graph.
         std::shared_ptr<Function> import_onnx_function(const std::string& filename,

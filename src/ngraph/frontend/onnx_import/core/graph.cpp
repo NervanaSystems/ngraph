@@ -42,9 +42,10 @@ namespace ngraph
             }
         }
 
-        Graph::Graph(const onnx::GraphProto& graph_proto, const Model& model, Weights weights)
+        Graph::Graph(const onnx::GraphProto& graph_proto,
+                     const Model& model,
+                     const Weights& weights)
             : m_graph_proto{&graph_proto}
-            , m_weights{std::move(weights)}
             , m_model{&model}
         {
             for (const auto& tensor : m_graph_proto->initializer())
@@ -60,7 +61,7 @@ namespace ngraph
             {
                 m_inputs.emplace_back(input);
                 m_ng_node_cache[input.name()] =
-                    m_inputs.back().get_ng_node(m_weights, m_parameters, m_initializers);
+                    m_inputs.back().get_ng_node(m_parameters, m_initializers, weights);
             }
 
             for (const auto& output : m_graph_proto->output())
