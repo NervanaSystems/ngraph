@@ -231,9 +231,9 @@ static bool collapse_dot(std::shared_ptr<Node> n)
             cdot, ngraph::get_default_order(cdot->get_shape()), node->get_shape());
         ngraph::replace_node(n, reshape_output);
 
-        std::cout << "CollapseDims: Replaced dot " << A_shape << " . " << B_shape
-                  << " reduction count: " << reduction_count << " with " << Shape(cshape_A.fshape)
-                  << " . " << Shape(cshape_B.fshape) << std::endl;
+        NGRAPH_DEBUG << "CollapseDims: Replaced dot " << A_shape << " . " << B_shape
+                     << " reduction count: " << reduction_count << " with "
+                     << Shape(cshape_A.fshape) << " . " << Shape(cshape_B.fshape);
 
         replaced = true;
     }

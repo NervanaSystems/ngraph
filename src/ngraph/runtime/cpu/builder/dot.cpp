@@ -154,6 +154,39 @@ namespace ngraph
                     return;
                 }
 
+                if (out[0].get_element_type() == element::f32 && (arg0_shape.size() == 2) &&
+                    (arg1_shape.size() == 2) && reduction_axes_count == 1)
+                {
+                    auto m = arg0_shape[0];
+                    auto n = arg1_shape[1];
+                    auto k = arg0_shape[1];
+                    bool transpose_A = false, transpose_B = false;
+                    auto lda = arg0_shape[1];
+                    auto ldb = arg1_shape[1];
+                    const float beta = 0.0f;
+                    auto functor =
+                        [&, transpose_A, transpose_B, m, n, k, lda, ldb, beta, result_shape](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            cblas::cblas_sgemm(
+                                cblas::Layout::RowMajor,
+                                transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                                transpose_B ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                                m,
+                                n,
+                                k,
+                                1.0f,
+                                static_cast<float*>(arg0_tensor),
+                                max(1UL, lda),
+                                static_cast<float*>(arg1_tensor),
+                                max(1UL, ldb),
+                                beta,
+                                static_cast<float*>(out_tensor),
+                                max(1UL, result_shape[1]));
+                        };
+                    functors.emplace_back(functor);
+                    return;
+                }
+
                 std::function<decltype(runtime::cpu::kernel::dot<float>)> kernel;
 
                 SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::dot);
