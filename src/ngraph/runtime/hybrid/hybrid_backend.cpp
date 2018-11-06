@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/pass/assign_placement.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/tensor.hpp"
@@ -67,8 +67,6 @@ shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
 
 bool runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
 {
-    // auto it = m_backend_list.begin();
-    // return it->second->compile(func);
     if (m_function_map.find(func) == m_function_map.end())
     {
         vector<shared_ptr<runtime::Backend>> backend_list;
@@ -108,20 +106,14 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
                                           const vector<shared_ptr<runtime::Tensor>>& outputs,
                                           const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    // auto it = m_backend_list.begin();
-    // return it->second->call(func, outputs, inputs);
     // Get FunctionInstance
     bool rc = true;
+    compile(func);
+
     auto it = m_function_map.find(func);
     if (it == m_function_map.end())
     {
-        compile(func);
-        it = m_function_map.find(func);
-    }
-
-   if (it == m_function_map.end())
-    {
-        throw runtime_error("Error constructing backend.");
+        throw runtime_error("Unable to compile hybrid backend");
     }
     FunctionInstance& instance = it->second;
 
@@ -141,7 +133,8 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
     {
         // Init backend
         size_t placement = get_colocated_function_placement_size(sub_function);
-        auto backend = m_backend_list[(placement - 1)].second; // (placement-1) as 0 is default placement
+        // (placement-1) as 0 is default placement
+        auto backend = m_backend_list[(placement - 1)].second;
 
         // Prepare parameter TensorViews
         vector<shared_ptr<runtime::Tensor>> parameter_tvs;
