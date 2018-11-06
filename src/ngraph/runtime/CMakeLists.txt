@@ -32,3 +32,5 @@ endif()
 if (NGRAPH_GPU_ENABLE)
     add_subdirectory(gpu)
 endif()
+
+add_subdirectory(plaidml)

@@ -41,11 +41,6 @@ extern "C" runtime::Backend* new_backend(const char* configuration_string)
     return new runtime::interpreter::INTBackend();
 }
 
-extern "C" void delete_backend(runtime::Backend* backend)
-{
-    delete backend;
-}
-
 shared_ptr<runtime::Tensor>
     runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)
 {
@@ -178,7 +173,9 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         {
         case OP_TYPEID::Convert:
         case OP_TYPEID::Quantize:
-        case OP_TYPEID::Dequantize: type = op->get_input_element_type(0); break;
+        case OP_TYPEID::Dequantize:
+        case OP_TYPEID::ArgMin:
+        case OP_TYPEID::ArgMax: type = op->get_input_element_type(0); break;
         case OP_TYPEID::Equal:
         case OP_TYPEID::Greater:
         case OP_TYPEID::GreaterEq:
@@ -198,7 +195,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         {
             instance.m_timer_map[op].start();
         }
-        generate_calls(type, wrapped, op_outputs, op_inputs);
+        generate_calls(type, wrapped, op_outputs, op_inputs, instance);
         if (instance.m_performance_counters_enabled)
         {
             instance.m_timer_map[op].stop();
@@ -228,51 +225,52 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 void runtime::interpreter::INTBackend::generate_calls(const element::Type& type,
                                                       const NodeWrapper& op,
                                                       const vector<shared_ptr<HostTensor>>& outputs,
-                                                      const vector<shared_ptr<HostTensor>>& inputs)
+                                                      const vector<shared_ptr<HostTensor>>& inputs,
+                                                      FunctionInstance& instance)
 {
     if (type == element::boolean)
     {
-        op_engine<char>(op, outputs, inputs);
+        op_engine<char>(op, outputs, inputs, instance);
     }
     else if (type == element::f32)
     {
-        op_engine<float>(op, outputs, inputs);
+        op_engine<float>(op, outputs, inputs, instance);
     }
     else if (type == element::f64)
     {
-        op_engine<double>(op, outputs, inputs);
+        op_engine<double>(op, outputs, inputs, instance);
     }
     else if (type == element::i8)
     {
-        op_engine<int8_t>(op, outputs, inputs);
+        op_engine<int8_t>(op, outputs, inputs, instance);
     }
     else if (type == element::i16)
     {
-        op_engine<int16_t>(op, outputs, inputs);
+        op_engine<int16_t>(op, outputs, inputs, instance);
     }
     else if (type == element::i32)
     {
-        op_engine<int32_t>(op, outputs, inputs);
+        op_engine<int32_t>(op, outputs, inputs, instance);
     }
     else if (type == element::i64)
     {
-        op_engine<int64_t>(op, outputs, inputs);
+        op_engine<int64_t>(op, outputs, inputs, instance);
     }
     else if (type == element::u8)
     {
-        op_engine<uint8_t>(op, outputs, inputs);
+        op_engine<uint8_t>(op, outputs, inputs, instance);
     }
     else if (type == element::u16)
     {
-        op_engine<uint16_t>(op, outputs, inputs);
+        op_engine<uint16_t>(op, outputs, inputs, instance);
     }
     else if (type == element::u32)
     {
-        op_engine<uint32_t>(op, outputs, inputs);
+        op_engine<uint32_t>(op, outputs, inputs, instance);
     }
     else if (type == element::u64)
     {
-        op_engine<uint64_t>(op, outputs, inputs);
+        op_engine<uint64_t>(op, outputs, inputs, instance);
     }
     else
     {

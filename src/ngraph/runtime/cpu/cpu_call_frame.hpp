@@ -18,6 +18,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "ngraph/function.hpp"
@@ -33,6 +34,7 @@ namespace ngraph
         {
             class CPU_CallFrame;
             class CPU_ExternalFunction;
+            class CPU_Debugger;
 
             using EntryPoint_t = void(void** inputs, void** outputs, CPURuntimeContext* ctx);
 
@@ -42,6 +44,8 @@ namespace ngraph
             class CPU_CallFrame
             {
             public:
+                friend class CPU_Debugger;
+
                 CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
                               EntryPoint compiled_function);
                 ~CPU_CallFrame();
@@ -62,6 +66,9 @@ namespace ngraph
                 CPU_CallFrame(const CPU_CallFrame&) = delete;
                 CPU_CallFrame(CPU_CallFrame&&) = delete;
                 CPU_CallFrame& operator=(const CPU_CallFrame&) = delete;
+
+                void inner_call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                                const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;
                 EntryPoint m_compiled_function;
