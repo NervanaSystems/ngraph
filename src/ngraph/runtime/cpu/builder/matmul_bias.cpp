@@ -68,7 +68,7 @@ namespace ngraph
 
                 auto mm_functor =
                     [&, transpose_A, transpose_B, m, n, k, lda, ldb, beta, arg2_shape](
-                        CPURuntimeContext* ctx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         cblas::cblas_sgemm(
                             cblas::Layout::RowMajor,
                             transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
@@ -86,7 +86,8 @@ namespace ngraph
                             max(1UL, arg2_shape[1]));
                     };
 
-                function<void(CPURuntimeContext*)> bias_functor = [](CPURuntimeContext* ctx) {};
+                CPUKernelFunctor bias_functor = [](CPURuntimeContext* ctx,
+                                                   CPUExecutionContext* ectx) {};
 
                 if (args.size() > 2)
                 {
@@ -98,7 +99,8 @@ namespace ngraph
                         if (*(axes.begin()) == 0)
                         {
                             vector<float> ones_row(arg2_shape[0], 1.0f);
-                            bias_functor = [&, ones_row, arg2_shape](CPURuntimeContext* ctx) {
+                            bias_functor = [&, ones_row, arg2_shape](CPURuntimeContext* ctx,
+                                                                     CPUExecutionContext* ectx) {
                                 cblas::cblas_sgemm(cblas::Layout::RowMajor,
                                                    cblas::Transpose::None,
                                                    cblas::Transpose::None,
@@ -118,7 +120,8 @@ namespace ngraph
                         else
                         {
                             vector<float> ones_col(arg2_shape[1], 1.0f);
-                            bias_functor = [&, ones_col, arg2_shape](CPURuntimeContext* ctx) {
+                            bias_functor = [&, ones_col, arg2_shape](CPURuntimeContext* ctx,
+                                                                     CPUExecutionContext* ectx) {
                                 cblas::cblas_sgemm(cblas::Layout::RowMajor,
                                                    cblas::Transpose::None,
                                                    cblas::Transpose::None,
@@ -145,7 +148,8 @@ namespace ngraph
 
                         vector<float> ones_scalar(arg2_shape[0], 1.0f);
 
-                        bias_functor = [&, ones_scalar, arg2_shape](CPURuntimeContext* ctx) {
+                        bias_functor = [&, ones_scalar, arg2_shape](CPURuntimeContext* ctx,
+                                                                    CPUExecutionContext* ectx) {
                             vector<float> bias(arg2_shape[1], *static_cast<float*>(arg2_tensor));
                             cblas::cblas_sgemm(cblas::Layout::RowMajor,
                                                cblas::Transpose::None,
@@ -165,9 +169,10 @@ namespace ngraph
                     }
                 }
 
-                auto functor = [&, mm_functor, bias_functor](CPURuntimeContext* ctx) {
-                    mm_functor(ctx);
-                    bias_functor(ctx);
+                auto functor = [&, mm_functor, bias_functor](CPURuntimeContext* ctx,
+                                                             CPUExecutionContext* ectx) {
+                    mm_functor(ctx, ectx);
+                    bias_functor(ctx, ectx);
                 };
                 functors.emplace_back(functor);
             }
@@ -200,7 +205,7 @@ namespace ngraph
                 void*& data_c;
                 int64_t group_count;
 
-                void call(CPURuntimeContext* ctx)
+                void call(CPURuntimeContext* ctx, CPUExecutionContext* ectx)
                 {
                     std::vector<float*> a_array(group_sizes[0]);
                     std::vector<float*> b_array(group_sizes[0]);
@@ -242,17 +247,17 @@ namespace ngraph
                 }
             };
 
-            static function<void(CPURuntimeContext*)> emitCblasSgemmBatch(const Shape& shape_a,
-                                                                          const Shape& shape_b,
-                                                                          const Shape& shape_c,
-                                                                          bool transpose_a,
-                                                                          bool transpose_b,
-                                                                          void*& data_a,
-                                                                          void*& data_b,
-                                                                          void*& data_c,
-                                                                          const float alpha,
-                                                                          const float beta,
-                                                                          size_t group_size)
+            static CPUKernelFunctor emitCblasSgemmBatch(const Shape& shape_a,
+                                                        const Shape& shape_b,
+                                                        const Shape& shape_c,
+                                                        bool transpose_a,
+                                                        bool transpose_b,
+                                                        void*& data_a,
+                                                        void*& data_b,
+                                                        void*& data_c,
+                                                        const float alpha,
+                                                        const float beta,
+                                                        size_t group_size)
             {
                 size_t m = shape_a[1];
                 size_t k = shape_a[2];
@@ -306,8 +311,10 @@ namespace ngraph
                 options.ldc_array.push_back(ldc);
                 options.group_sizes.push_back(group_size);
 
-                function<void(CPURuntimeContext*)> cblas_func =
-                    [options](CPURuntimeContext* ctx) mutable { options.call(ctx); };
+                CPUKernelFunctor cblas_func = [options](CPURuntimeContext* ctx,
+                                                        CPUExecutionContext* ectx) mutable {
+                    options.call(ctx, ectx);
+                };
                 return cblas_func;
             }
 

@@ -47,7 +47,8 @@ namespace ngraph
                     data_type = MPI_DOUBLE;
                 }
 
-                auto functor = [&, count, data_type](CPURuntimeContext* ctx) {
+                auto functor = [&, count, data_type](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
                     MPI_Allreduce(
                         arg_tensor, out_tensor, count, data_type, MPI_SUM, MPI_COMM_WORLD);
                 };

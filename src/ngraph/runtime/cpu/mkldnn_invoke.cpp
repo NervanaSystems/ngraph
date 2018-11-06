@@ -19,10 +19,9 @@
 #include <mkldnn.hpp>
 
 #include "mkldnn_invoke.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
-
-mkldnn::engine ngraph::runtime::cpu::mkldnn_utils::global_cpu_engine(mkldnn::engine::cpu, 0);
 
 extern "C" void ngraph::runtime::cpu::mkldnn_utils::set_memory_ptr(CPURuntimeContext* ctx,
                                                                    size_t primitive_index,
