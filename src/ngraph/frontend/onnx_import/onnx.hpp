@@ -22,6 +22,7 @@
 #include "ngraph/function.hpp"
 
 #include "core/operator_set.hpp"
+#include "core/weight.hpp"
 
 namespace ngraph
 {
@@ -34,16 +35,19 @@ namespace ngraph
                                Operator fn);
 
         // Convert on ONNX model to a vector of nGraph Functions (input stream)
-        std::vector<std::shared_ptr<Function>> load_onnx_model(std::istream&);
+        std::vector<std::shared_ptr<Function>> load_onnx_model(std::istream&,
+                                                               const Weights& weights = {});
 
         // Convert an ONNX model to a vector of nGraph Functions
-        std::vector<std::shared_ptr<Function>> load_onnx_model(const std::string&);
+        std::vector<std::shared_ptr<Function>> load_onnx_model(const std::string&,
+                                                               const Weights& weights = {});
 
         // Convert the first output of an ONNX model to an nGraph Function (input stream)
-        std::shared_ptr<Function> import_onnx_function(std::istream&);
+        std::shared_ptr<Function> import_onnx_function(std::istream&, const Weights& weights = {});
 
         // Convert the first output of an ONNX model to an nGraph Function
-        std::shared_ptr<Function> import_onnx_function(const std::string&);
+        std::shared_ptr<Function> import_onnx_function(const std::string&,
+                                                       const Weights& weights = {});
 
     } // namespace onnx_import
 

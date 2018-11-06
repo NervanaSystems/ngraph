@@ -25,6 +25,7 @@
 
 #include "node.hpp"
 #include "tensor.hpp"
+#include "weight.hpp"
 
 namespace ngraph
 {
@@ -103,7 +104,8 @@ namespace ngraph
             }
 
             std::shared_ptr<ngraph::Node>
-                get_ng_node(op::ParameterVector& parameters,
+                get_ng_node(const Weights& weights,
+                            op::ParameterVector& parameters,
                             const std::map<std::string, Tensor>& initializers) const
             {
                 const auto it = initializers.find(get_name());
@@ -113,15 +115,25 @@ namespace ngraph
                 }
                 else
                 {
-                    parameters.push_back(get_ng_parameter());
-                    return parameters.back();
+                    const auto pt = weights.find(get_name());
+                    if (pt != std::end(weights))
+                    {
+                        return get_ng_constant(pt->second);
+                    }
                 }
+                parameters.push_back(get_ng_parameter());
+                return parameters.back();
             }
 
         protected:
             std::shared_ptr<op::Parameter> get_ng_parameter() const
             {
                 return std::make_shared<op::Parameter>(get_element_type(), get_shape());
+            }
+
+            std::shared_ptr<op::Constant> get_ng_constant(const Weight& weight) const
+            {
+                return std::make_shared<op::Constant>(weight.type(), weight.shape(), weight.data());
             }
 
             std::shared_ptr<op::Constant> get_ng_constant(const Tensor& tensor) const

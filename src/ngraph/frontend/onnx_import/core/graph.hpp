@@ -26,6 +26,7 @@
 #include "model.hpp"
 #include "operator_set.hpp"
 #include "value_info.hpp"
+#include "weight.hpp"
 
 namespace ngraph
 {
@@ -34,7 +35,7 @@ namespace ngraph
         class Graph
         {
         public:
-            Graph(const onnx::GraphProto& proto, const Model& model);
+            Graph(const onnx::GraphProto& proto, const Model& model, Weights weights = {});
 
             const std::vector<Node>& get_nodes() const { return m_nodes; }
             const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }
@@ -58,6 +59,7 @@ namespace ngraph
             std::vector<ValueInfo> m_outputs;
             op::ParameterVector m_parameters;
             std::map<std::string, std::shared_ptr<ngraph::Node>> m_ng_node_cache;
+            Weights m_weights;
             std::map<std::string, Tensor> m_initializers;
             const Model* m_model;
         };
