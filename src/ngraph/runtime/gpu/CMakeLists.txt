@@ -151,9 +151,12 @@ if (NGRAPH_GPU_ENABLE)
             ${CUDA_cudart_LIBRARY}
             ${CUDA_LIBRARIES}
             ${CUDA_CUBLAS_LIBRARIES}
-            ${CUDNN_LIBRARIES}
-        PRIVATE
-            hybrid_backend)
+            ${CUDNN_LIBRARIES})
+    if (NGRAPH_HYBRID_ENABLE)
+        target_link_libraries(gpu_backend
+            PRIVATE
+                hybrid_backend)
+    endif()
     set_target_properties(gpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     install(TARGETS gpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
