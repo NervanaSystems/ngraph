@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "ngraph/coordinate.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -76,9 +77,13 @@ namespace ngraph
                     std::size_t left_rank{left->get_shape().size()};
                     std::size_t right_rank{right->get_shape().size()};
 
-                    ASSERT_VALID_ARGUMENT(node, (left_rank != 0 && right_rank != 0))
-                        << "Scalar operands are not allowed, use element-wise multiplication "
-                           "instead.";
+                    if (left_rank == 0 || right_rank == 0)
+                    {
+                        NGRAPH_WARN << (node) << " "
+                                    << "ONNX standard doesn't allow scalar operands, however Ngraph "
+                                       "accepts them. Consider use of element-wise multiplication instead "
+                                       "to conform with ONNX standard.";
+                    }
 
                     // First (easy) case that is already internally handled by Ngraph Dot operator.
                     // Multiply two tensors where both of them has rank lower equal 2.
