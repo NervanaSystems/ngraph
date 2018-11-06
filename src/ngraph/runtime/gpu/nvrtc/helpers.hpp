@@ -130,9 +130,7 @@ std::string ngraph::runtime::gpu::nvrtc::define_zero(const std::string& dtype,
                                                      const std::string& name)
 {
     std::stringstream ss;
-    std::string zero = "static_cast<" + dtype + ">(0)";
-    ss << "__device__ __forceinline__ void " << name << "(" << dtype << "& a) { a = " << zero
-       << "; }\n";
+    ss << "__device__ __forceinline__ void " << name << "(" << dtype << "& a) { a = 0; }\n";
     return ss.str();
 }
 
@@ -143,7 +141,6 @@ std::string ngraph::runtime::gpu::nvrtc::define_vzero(std::string dtype,
     std::stringstream ss;
     if (n == 1 || n == 2 || n == 4)
     {
-        std::string zero = "static_cast<" + dtype + ">(0)";
         static std::vector<std::string> assignment = {"a.x = ", "a.y = ", "a.z = "};
         dtype = dtype + std::to_string(n);
         ss << "__device__ __forceinline__ void " << name << "(" << dtype << "& a) { ";
@@ -151,7 +148,7 @@ std::string ngraph::runtime::gpu::nvrtc::define_vzero(std::string dtype,
         {
             ss << assignment[i];
         }
-        ss << zero << "; }\n";
+        ss << "0; }\n";
     }
     else
     {
