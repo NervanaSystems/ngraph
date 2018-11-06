@@ -658,15 +658,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
                 std::make_shared<op::Reshape>(bias, order, Shape{conv->get_input_shape(1)[0]});
             auto conv_bias = std::shared_ptr<Node>(new op::ConvolutionBias(conv, bias_reshape));
             ngraph::replace_node(m.get_match_root(), conv_bias);
-            return true;
         }
         else
         {
             auto conv_bias = std::shared_ptr<Node>(new op::ConvolutionBias(conv, bias));
             ngraph::replace_node(m.get_match_root(), conv_bias);
-            return true;
         }
-        return false;
+        return true;
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(p_conv_bias, callback);
