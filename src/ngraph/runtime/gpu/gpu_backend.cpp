@@ -24,7 +24,7 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor.hpp"
-#include "ngraph/runtime/hybrid/hybrid_wrapper.hpp"
+#include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -41,7 +41,7 @@ extern "C" runtime::Backend* new_backend(const char* configuration_string)
     vector<pair<string, shared_ptr<runtime::Backend>>> backend_list{
         {"GPU", make_shared<runtime::gpu::GPU_Backend>()}};
 
-    auto wrapper = new runtime::hybrid::HybridWrapper(backend_list);
+    auto wrapper = new runtime::hybrid::HybridBackend(backend_list);
     return wrapper;
 #else
     return new runtime::gpu::GPU_Backend();

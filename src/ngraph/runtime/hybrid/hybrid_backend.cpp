@@ -14,44 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
-#include <sstream>
-#include <string>
-#include <typeindex>
-#include <typeinfo>
-#include <vector>
-
-#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
-#include "ngraph/except.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/pass/assign_layout.hpp"
-#include "ngraph/pass/assign_placement.hpp"
-#include "ngraph/pass/like_replacement.hpp"
-#include "ngraph/pass/liveness.hpp"
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
-#include "ngraph/util.hpp"
+#include "ngraph/pass/assign_placement.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
-using namespace std;
 using namespace ngraph;
-
-using descriptor::layout::DenseTensorLayout;
-
-extern "C" const char* get_ngraph_version_string()
-{
-    return NGRAPH_VERSION;
-}
-
-extern "C" runtime::Backend* new_backend(const char* configuration_string)
-{
-    return new runtime::hybrid::HYBRIDBackend();
-}
-
-extern "C" void delete_backend(runtime::Backend* backend)
-{
-    delete backend;
-}
+using namespace std;
 
 template <typename T>
 void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& data)
@@ -74,49 +44,149 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
     return rc;
 }
 
-shared_ptr<runtime::Backend> runtime::hybrid::HYBRIDBackend::get_cached_backend(Placement placement)
+runtime::hybrid::HybridBackend::HybridBackend(
+    const std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>>& backend_list)
+    : m_backend_list{backend_list}
 {
-    if (m_cached_backends.find(placement) == m_cached_backends.end())
+}
+
+shared_ptr<runtime::Tensor>
+    runtime::hybrid::HybridBackend::create_tensor(const element::Type& element_type,
+                                                  const Shape& shape)
+{
+    auto it = m_backend_list.begin();
+    return it->second->create_tensor(element_type, shape);
+}
+
+shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
+    const element::Type& element_type, const Shape& shape, void* memory_pointer)
+{
+    auto it = m_backend_list.begin();
+    return it->second->create_tensor(element_type, shape, memory_pointer);
+}
+
+bool runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
+{
+    // auto it = m_backend_list.begin();
+    // return it->second->compile(func);
+    if (m_function_map.find(func) == m_function_map.end())
     {
-        m_cached_backends[placement] = runtime::Backend::create(placement_to_string(placement));
-    }
-    return m_cached_backends.at(placement);
-}
+        vector<shared_ptr<runtime::Backend>> backend_list;
+        for (auto p : m_backend_list)
+        {
+            backend_list.push_back(p.second);
+        }
 
-shared_ptr<runtime::Tensor> runtime::hybrid::HYBRIDBackend::create_tensor(const element::Type& type,
-                                                                          const Shape& shape)
-{
-    return make_shared<runtime::HostTensor>(type, shape, "external");
-}
-
-shared_ptr<runtime::Tensor> runtime::hybrid::HYBRIDBackend::create_tensor(const element::Type& type,
-                                                                          const Shape& shape,
-                                                                          void* memory_pointer)
-{
-    return make_shared<runtime::HostTensor>(type, shape, memory_pointer, "external");
-}
-
-bool runtime::hybrid::HYBRIDBackend::compile(shared_ptr<Function> function)
-{
-    if (m_function_map.find(function) == m_function_map.end())
-    {
         // Clone function
         FunctionInstance instance;
-        instance.m_function = clone_function(*function);
+        instance.m_function = clone_function(*func);
 
+        // Run placement pass
         pass::Manager pass_manager;
+        pass_manager.register_pass<pass::AssignPlacement>(backend_list);
         pass_manager.run_passes(instance.m_function);
+
+        // Split function to sub_functions
+        tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
+            split_function_by_placement_size(instance.m_function);
+        m_function_map.insert({func, instance});
+
+        // Compile subfunctions in corresponding backends
+        for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
+        {
+            size_t placement = get_colocated_function_placement_size(sub_function);
+            auto backend =
+                m_backend_list[(placement - 1)]; // (placement-1) as 0 is default placement
+            backend.second->compile(sub_function);
+        }
     }
+
     return true;
 }
 
-bool runtime::hybrid::HYBRIDBackend::call(shared_ptr<Function> function,
+bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
                                           const vector<shared_ptr<runtime::Tensor>>& outputs,
                                           const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    validate_call(function, outputs, inputs);
+    // auto it = m_backend_list.begin();
+    // return it->second->call(func, outputs, inputs);
+    // Get FunctionInstance
+    bool rc = true;
+    auto it = m_function_map.find(func);
+    if (it == m_function_map.end())
+    {
+        compile(func);
+        it = m_function_map.find(func);
+    }
 
-    compile(function);
+   if (it == m_function_map.end())
+    {
+        throw runtime_error("Error constructing backend.");
+    }
+    FunctionInstance& instance = it->second;
 
+    // Parameter and result node in sub_function maps to one Tensor
+    unordered_map<shared_ptr<Node>, shared_ptr<runtime::Tensor>> map_node_to_tensor_view;
+    for (size_t i = 0; i < inputs.size(); ++i)
+    {
+        map_node_to_tensor_view[instance.m_function->get_parameters()[i]] = inputs[i];
+    }
+    for (size_t i = 0; i < outputs.size(); ++i)
+    {
+        map_node_to_tensor_view[instance.m_function->get_results()[i]] = outputs[i];
+    }
+
+    // Call subfunctions
+    for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
+    {
+        // Init backend
+        size_t placement = get_colocated_function_placement_size(sub_function);
+        auto backend = m_backend_list[(placement - 1)].second; // (placement-1) as 0 is default placement
+
+        // Prepare parameter TensorViews
+        vector<shared_ptr<runtime::Tensor>> parameter_tvs;
+        for (auto parameter_node : sub_function->get_parameters())
+        {
+            if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
+            {
+                parameter_tvs.push_back(map_node_to_tensor_view.at(parameter_node));
+            }
+            else
+            {
+                auto result_node = instance.m_map_parameter_to_result.at(parameter_node);
+                auto result_tv = map_node_to_tensor_view.at(result_node);
+                auto parameter_tv = backend->create_tensor(parameter_node->get_element_type(),
+                                                           parameter_node->get_shape());
+                copy_data(parameter_tv, read_vector<float>(result_tv));
+                map_node_to_tensor_view[parameter_node] = parameter_tv;
+                parameter_tvs.push_back(parameter_tv);
+            }
+        }
+
+        // Prepare result TensorViews
+        vector<shared_ptr<runtime::Tensor>> result_tvs;
+        for (auto result_node : sub_function->get_results())
+        {
+            if (map_node_to_tensor_view.find(result_node) != map_node_to_tensor_view.end())
+            {
+                result_tvs.push_back(map_node_to_tensor_view.at(result_node));
+            }
+            else
+            {
+                auto result_tv = backend->create_tensor(result_node->get_element_type(),
+                                                        result_node->get_shape());
+                map_node_to_tensor_view[result_node] = result_tv;
+                result_tvs.push_back(result_tv);
+            }
+        }
+
+        // Call
+        backend->call_with_validate(sub_function, result_tvs, parameter_tvs);
+    }
+    return rc;
+}
+
+bool runtime::hybrid::HybridBackend::is_supported(const Node& node) const
+{
     return true;
 }
