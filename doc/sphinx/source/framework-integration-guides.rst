@@ -9,9 +9,15 @@ Integrate Supported Frameworks
 * :ref:`neon_intg`
 
 A framework is "supported" when there is a framework :term:`bridge` that can be 
-cloned from one of our GitHub repos and built to connect to a supported backend
-with nGraph, all the while maintaining the framework's programmatic or user 
-interface. Current bridge-enabled frameworks include TensorFlow* and MXNet*. 
+cloned from one of our GitHub repos and built to connect to nGraph-enabled 
+backends, all the while maintaining the framework's programmatic or user 
+interface. Current bridge-enabled frameworks include TensorFlow\* and MXNet\*. 
+
+.. figure:: graphics/bridge-to-graph-compiler.png
+    :width: 733px
+    :alt: JiT compiling of a computation
+
+    :abbr:`Just-in-Time (JiT)` Compiling for computation
 
 Once connected via the bridge, the framework can then run and train a deep 
 learning model with various workloads on various backends using nGraph Compiler 
@@ -24,6 +30,8 @@ MXNet\* bridge
 ===============
 
 #. See the README on `nGraph-MXNet`_ Integration for how to enable the bridge.
+
+#. 
 
 #. (Optional) For experimental or alternative approaches to distributed training
    methodologies, including data parallel training, see the MXNet-relevant sections

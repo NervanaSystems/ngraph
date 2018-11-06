@@ -38,10 +38,9 @@ overview can be found on our project :doc:`project/about`.
 Quick Start
 ===========
 
-We have documentation to help you get started.  
+We have many documentation pages to help you get started.  
 
-* **Framework users of TensorFlow or MXNet** can get started with 
-  :doc:`framework-integration-guides`; see also: 
+* **TensorFlow or MXNet users** can get started with :doc:`framework-integration-guides`; see also: 
 
    * `TensorFlow bridge to nGraph`_ 
    * `Compiling MXNet with nGraph`_ 
@@ -84,7 +83,7 @@ We have documentation to help you get started.
    AMD\* GPUs, via PlaidML, Yes
    :abbr:`Field Programmable Gate Arrays (FPGA)` (FPGAs), Coming soon, Yes
    NVIDIA\* GPUs, via PlaidML, Some 
-   Intel Movidius™ Myriad™ 2 (VPU), Coming soon, Yes
+   Intel `Movidius`_™ Myriad™ 2 (VPU), Coming soon, Yes
 
 
 .. note:: The Library code is under active development as we're continually 
