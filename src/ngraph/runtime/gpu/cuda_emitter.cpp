@@ -1519,11 +1519,9 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
                                                    padded_size * args[0].get_element_type().size());
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_index = cuda_emitter->build_pad({{input_type, output_type}},
-                                            input_shape,
-                                            input_shape_padded,
-                                            padding_below,
-                                            padding_interior);
+        std::vector<std::string> dtypes = {input_type, output_type};
+        pad_index = cuda_emitter->build_pad(
+            dtypes, input_shape, input_shape_padded, padding_below, padding_interior);
 
         // asymetric padding has been applied, zero out padding vectors to
         // ensure cuDNN does not assume padding during pooling
@@ -2566,8 +2564,8 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node, 
     Shape input_strides = row_major_strides(input_shape);
     Shape replace_strides = row_major_strides(replace_shape);
 
-    size_t pad_index = build_pad(
-        {{input_type, output_type}}, replace_shape, input_shape, lower_bounds, slice_strides);
+    std::vector<std::string> dtypes = {input_type, output_type};
+    size_t pad_index = build_pad(dtypes, replace_shape, input_shape, lower_bounds, slice_strides);
 
     if (in_place_op)
     {

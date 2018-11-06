@@ -28,9 +28,23 @@
 using namespace std;
 using namespace ngraph;
 
+namespace
+{
+    class NilStreamBuf final : public streambuf
+    {
+        // N.B. We derive from the base streambuf implementation, in
+        //      which underflow() and overflow() both return
+        //      Traits::eof() -- any access returns a failure.
+    };
+}
+
 ostream& ngraph::get_nil_stream()
 {
-    static stringstream nil;
+    // N.B. When debug logging is disabled, multiple threads may
+    //      access the nil stream simultaneously, so it's important to
+    //      return a threadsafe nil stream implementation.
+    static NilStreamBuf nil_buf;
+    static ostream nil{&nil_buf};
     return nil;
 }
 

@@ -571,3 +571,99 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_one)
     backend->call_with_validate(f1, {result1}, {a});
     EXPECT_EQ((vector<float>{3, 1, 4}), read_vector<float>(result1));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_max)
+{
+    Shape shape{4, 8192, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 10, true);
+
+    auto interp_f_0 =
+        make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), op::ParameterVector{A});
+    auto interp_f_1 =
+        make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), op::ParameterVector{A});
+    auto gpu_f_0 = ngraph::clone_function(*interp_f_0);
+    auto gpu_f_1 = ngraph::clone_function(*interp_f_1);
+
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : interp_f_0->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        iota(tensor_val.begin(), tensor_val.end(), 0.0f);
+        args.push_back(tensor_val);
+    }
+
+    auto interp_results_0 = execute<float, int32_t>(interp_f_0, args, "INTERPRETER");
+    auto gpu_results_0 = execute<float, int32_t>(gpu_f_0, args, "${BACKEND_NAME}");
+    for (size_t i = 0; i < gpu_results_0.size(); i++)
+    {
+        EXPECT_EQ(gpu_results_0.at(i), interp_results_0.at(i));
+    }
+
+    auto interp_results_1 = execute(interp_f_1, args, "INTERPRETER");
+    auto gpu_results_1 = execute(gpu_f_1, args, "${BACKEND_NAME}");
+
+    for (size_t i = 0; i < gpu_results_1.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close_f(gpu_results_1.at(i), interp_results_1.at(i), 24, 0));
+    }
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_min)
+{
+    Shape shape{4, 8192, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 10, false);
+
+    auto interp_f_0 =
+        make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), op::ParameterVector{A});
+    auto interp_f_1 =
+        make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), op::ParameterVector{A});
+    auto gpu_f_0 = ngraph::clone_function(*interp_f_0);
+    auto gpu_f_1 = ngraph::clone_function(*interp_f_1);
+
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : interp_f_0->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        iota(tensor_val.begin(), tensor_val.end(), 0.0f);
+        args.push_back(tensor_val);
+    }
+
+    auto interp_results_0 = execute<float, int32_t>(interp_f_0, args, "INTERPRETER");
+    auto gpu_results_0 = execute<float, int32_t>(gpu_f_0, args, "${BACKEND_NAME}");
+    for (size_t i = 0; i < gpu_results_0.size(); i++)
+    {
+        EXPECT_EQ(gpu_results_0.at(i), interp_results_0.at(i));
+    }
+
+    auto interp_results_1 = execute(interp_f_1, args, "INTERPRETER");
+    auto gpu_results_1 = execute(gpu_f_1, args, "${BACKEND_NAME}");
+
+    for (size_t i = 0; i < gpu_results_1.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close_f(gpu_results_1.at(i), interp_results_1.at(i), 24, 0));
+    }
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, topk_3d_single_output)
+{
+    Shape shape{2, 3, 2};
+    Shape rshape{2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 2, false);
+    auto f0 =
+        make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{12, 2, 10, 9, 8, 4, 6, 1, 5, 3, 11, 7});
+    auto result0 = backend->create_tensor(element::i32, rshape);
+
+    backend->call_with_validate(f0, {result0}, {a});
+    EXPECT_EQ((vector<int32_t>{2, 0, 1, 2, 1, 0, 0, 1}), read_vector<int32_t>(result0));
+}
