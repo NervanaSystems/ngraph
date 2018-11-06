@@ -66,7 +66,7 @@ public:
         m_op_annotations_func = func;
     }
 
-    std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)> get_op_annotations_func()
+    std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)> get_op_annotations_func() const
     {
         return m_op_annotations_func;
     }
