@@ -35,18 +35,18 @@ bool ngraph::pass::PropagateCacheability::run_on_function(std::shared_ptr<Functi
             if (!op_annotations)
             {
                 NGRAPH_DEBUG << "propagate cacheability: create op_annotations";
-                op_annotations = op_annotations_func();
+                op_annotations = op_annotations_factory();
                 op->set_op_annotations(op_annotations);
             }
             if (std::dynamic_pointer_cast<op::Constant>(node))
             {
                 op_annotations->set_cacheable(true);
-                NGRAPH_DEBUG << "propagate cacheability: cacheablility is 1";
+                NGRAPH_DEBUG << "propagate cacheability: cacheability is 1";
             }
             else if (auto parameter = std::dynamic_pointer_cast<op::Parameter>(node))
             {
                 op_annotations->set_cacheable(parameter->get_cacheable());
-                NGRAPH_DEBUG << "propagate cacheability: cacheablility is "
+                NGRAPH_DEBUG << "propagate cacheability: cacheability is "
                              << parameter->get_cacheable();
             }
             else
@@ -59,11 +59,15 @@ bool ngraph::pass::PropagateCacheability::run_on_function(std::shared_ptr<Functi
                     {
                         auto arg_op_annotations = arg_op->get_op_annotations();
                         NGRAPH_ASSERT(arg_op_annotations);
-                        cacheable = cacheable && arg_op_annotations->is_cacheable();
+                        if (!arg_op_annotations->is_cacheable())
+                        {
+                            cacheable = false;
+                            break;
+                        }
                     }
-                    NGRAPH_DEBUG << "propagate cacheablility: cacheablility is " << cacheable;
-                    op_annotations->set_cacheable(cacheable);
                 }
+                NGRAPH_DEBUG << "propagate cacheability: cacheability is " << cacheable;
+                op_annotations->set_cacheable(cacheable);
             }
         }
     }

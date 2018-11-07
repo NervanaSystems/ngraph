@@ -39,7 +39,7 @@ namespace ngraph
             };
 
             std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)>
-                get_op_annotations_func();
+                get_annotations_factory();
         }
     }
 }

@@ -34,16 +34,17 @@ public:
     {
     }
 
-    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
-
-    void set_op_annotations_func(
+    PropagateCacheability(
         std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)> func)
+        : FunctionPass()
+        , op_annotations_factory(func)
     {
-        op_annotations_func = func;
     }
 
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
+
 private:
-    std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)> op_annotations_func =
+    std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)> op_annotations_factory =
         []() -> std::shared_ptr<ngraph::op::util::OpAnnotations> {
         auto op_annotations = std::make_shared<ngraph::op::util::OpAnnotations>();
         return op_annotations;

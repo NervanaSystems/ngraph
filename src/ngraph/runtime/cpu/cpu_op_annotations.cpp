@@ -24,7 +24,7 @@ namespace ngraph
         namespace cpu
         {
             std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)>
-                get_op_annotations_func()
+                get_annotations_factory()
             {
                 std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)> func =
                     []() -> std::shared_ptr<ngraph::op::util::OpAnnotations> {

@@ -30,7 +30,6 @@
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/pass.hpp"
-#include "ngraph/pass/propagate_cacheability.hpp"
 #include "ngraph/pass/serialize.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/util.hpp"
@@ -99,10 +98,6 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
         }
         else if (function_pass)
         {
-            if (auto pc_pass = dynamic_pointer_cast<pass::PropagateCacheability>(function_pass))
-            {
-                pc_pass->set_op_annotations_func(get_state().get_op_annotations_func());
-            }
             for (shared_ptr<Function> f : fs)
             {
                 function_pass->run_on_function(f);

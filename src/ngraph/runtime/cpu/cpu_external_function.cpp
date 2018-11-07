@@ -407,7 +407,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, node_function_map, common_function_string);
     pass_manager.register_pass<ngraph::pass::Liveness>();
-    pass_manager.register_pass<ngraph::pass::PropagateCacheability>();
+    pass_manager.register_pass<ngraph::pass::PropagateCacheability>(
+        runtime::cpu::get_annotations_factory());
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function);
 
@@ -1057,7 +1058,6 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     pass_manager.register_pass<runtime::cpu::pass::CPUMemoryOptimization>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
-    pass_manager.get_state().set_op_annotations_func(runtime::cpu::get_op_annotations_func());
 }
 
 bool runtime::cpu::CPU_ExternalFunction::computes_result(Node* node)
@@ -1338,7 +1338,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
     ngraph::pass::Manager pass_manager;
     register_common_passes(pass_manager);
     pass_manager.register_pass<ngraph::pass::Liveness>();
-    pass_manager.register_pass<ngraph::pass::PropagateCacheability>();
+    pass_manager.register_pass<ngraph::pass::PropagateCacheability>(
+        runtime::cpu::get_annotations_factory());
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function, false);
 
