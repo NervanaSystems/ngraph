@@ -98,7 +98,10 @@ size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
 }
 
 template <typename T>
-void init_int_tv(std::shared_ptr<ngraph::runtime::Tensor> tv, std::default_random_engine& engine, T min, T max)
+void init_int_tv(std::shared_ptr<ngraph::runtime::Tensor> tv,
+                 std::default_random_engine& engine,
+                 T min,
+                 T max)
 {
     size_t size = tv->get_element_count();
     std::uniform_int_distribution<T> dist(min, max);
@@ -111,7 +114,10 @@ void init_int_tv(std::shared_ptr<ngraph::runtime::Tensor> tv, std::default_rando
 }
 
 template <typename T>
-void init_real_tv(std::shared_ptr<ngraph::runtime::Tensor> tv, std::default_random_engine& engine, T min, T max)
+void init_real_tv(std::shared_ptr<ngraph::runtime::Tensor> tv,
+                  std::default_random_engine& engine,
+                  T min,
+                  T max)
 {
     size_t size = tv->get_element_count();
     std::uniform_real_distribution<T> dist(min, max);
@@ -174,9 +180,8 @@ void print_results(std::vector<T>& ref_data, std::vector<T>& actual_data, size_t
     for (size_t i = 0; i < num_results; ++i)
     {
         std::cout << "\n"
-                  << std::setw(4) << i << " ref: " << std::setw(16) << std::left
-                  << ref_data[i] << "  actual: " << std::setw(16) << std::left
-                  << actual_data[i];
+                  << std::setw(4) << i << " ref: " << std::setw(16) << std::left << ref_data[i]
+                  << "  actual: " << std::setw(16) << std::left << actual_data[i];
     }
     std::cout << std::endl;
 }

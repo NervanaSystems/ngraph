@@ -131,6 +131,7 @@ set(MULTI_TEST_SRC
     backend_sum.in.cpp
     backend_topk.in.cpp
     backend_arg_reduce.in.cpp
+    backend_graph_comparison.in.cpp
     backend_test.in.cpp
     backend_unary_elementwise.in.cpp
     convolution_test.in.cpp

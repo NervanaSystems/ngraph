@@ -140,6 +140,7 @@ broadcast_vector_rowwise
 broadcast_vector_rowwise_int64
 broadcast_vector_rowwise_reversed
 ceiling
+compare_backends_with_graphs
 computation_reuse
 concat_2d_tensor
 concat_4d_tensor
