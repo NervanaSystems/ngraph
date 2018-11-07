@@ -25,20 +25,16 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
-#include "ngraph/op/add.hpp"
 #include "ngraph/op/concat.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
-#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
-#include "ngraph/op/slice.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/type/element_type.hpp"
 
 #include "exceptions.hpp"
 #include "lstm.hpp"
-#include "utils/broadcasting.hpp"
+#include "utils/arithmetic_operators.hpp"
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
 
@@ -51,18 +47,6 @@ namespace ngraph
             namespace
             {
                 using NgraphNodePtr = std::shared_ptr<ngraph::Node>;
-
-                NgraphNodePtr add(const NgraphNodePtr& lhs, const NgraphNodePtr& rhs)
-                {
-                    auto args = numpy_style_broadcast_for_binary_operation(lhs, rhs);
-                    return {std::make_shared<ngraph::op::Add>(args.at(0), args.at(1))};
-                }
-
-                NgraphNodePtr mul(const NgraphNodePtr& lhs, const NgraphNodePtr& rhs)
-                {
-                    auto args = numpy_style_broadcast_for_binary_operation(lhs, rhs);
-                    return {std::make_shared<ngraph::op::Multiply>(args.at(0), args.at(1))};
-                }
 
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ACTIVATION FUNCTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -88,7 +72,7 @@ namespace ngraph
                         const std::size_t gates_count{4};
                         const std::size_t peepholes_count{3};
 
-                        // Mandatory inputs
+                        // ----- Mandatory inputs ------
                         // Packed input sequences. Shape: [seq_length, batch_size, input_size]
                         m_map["X"] = ng_inputs.at(0);
                         // Weight tensor for the gates. Shape: [num_directions, 4*hidden_size, input_size]
@@ -100,7 +84,7 @@ namespace ngraph
                         const std::size_t batch_size = m_map["X"]->get_shape().at(1);
                         const std::size_t n_dirs = m_map["W"]->get_shape().front();
 
-                        // Optional inputs
+                        // ------ Optional inputs ------
                         // The bias tensor for input gate. Shape [num_directions, 8*hidden_size]
                         if (ng_inputs.size() >= 4)
                         {
@@ -108,7 +92,6 @@ namespace ngraph
                         }
                         else
                         {
-                            // XXX: single or double precision?
                             m_map["B"] = common::make_constant_node<float>(
                                     element::f32, {n_dirs, 2 * gates_count * hidden_size}, {0.f});
                         }
@@ -277,7 +260,7 @@ namespace ngraph
                                 reshape::transpose(m_input_map["W"]));
                             auto Ht_W = std::make_shared<ngraph::op::Dot>(H_t,
                                 reshape::transpose(m_input_map["R"]));
-                            auto gates = add(Xt_W, add(Ht_W, bias));
+                            auto gates = Xt_W + Ht_W + bias;
 
                             NodeVector split_gates = reshape::split(gates, 4, -1);
                             auto i = split_gates.at(0);
@@ -285,11 +268,11 @@ namespace ngraph
                             auto f = split_gates.at(2);
                             auto c = split_gates.at(3);
 
-                            i = m_f(add(i, mul(p_i, C_t)));
-                            f = m_f(add(f, mul(p_f, C_t)));
-                            auto C = add(mul(f, C_t), mul(i, m_g(c)));
-                            o = m_f(add(o, mul(p_o, C)));
-                            auto H = mul(o, m_h(C));
+                            i = m_f(i + p_i * C_t);
+                            f = m_f(f + p_f * C_t);
+                            auto C = f * C_t + i * m_g(c);
+                            o = m_f(o + p_o * C);
+                            auto H = o * m_h(C);
                             h_list.push_back(H);
                             H_t = H;
                             C_t = C;
