@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <functional>
 #include <thread>
 
 #include <mkldnn.hpp>

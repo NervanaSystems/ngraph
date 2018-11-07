@@ -16,27 +16,37 @@
 
 #pragma once
 
-#include "ngraph/node.hpp"
-#include "ngraph/pattern/op/pattern.hpp"
+#include <memory>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
 {
-    namespace pattern
+    namespace runtime
     {
-        namespace op
+        namespace nop
         {
-            /// \brief \p Skip allows users to specify unexpected nodes in a pattern
-            /// and skip them if a predicate condition is satisfied.
-            ///
-            class Skip : public Pattern
-            {
-            public:
-                Skip(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
-                    : Pattern("Skip", NodeVector{arg}, predicate)
-                {
-                    set_output_type(0, arg->get_element_type(), arg->get_output_partial_shape(0));
-                }
-            };
+            class NOPBackend;
         }
     }
 }
+
+class ngraph::runtime::nop::NOPBackend : public Backend
+{
+public:
+    std::shared_ptr<Tensor>
+        create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
+
+    std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
+
+    bool compile(std::shared_ptr<Function> function) override;
+
+    bool call(std::shared_ptr<Function> function,
+              const std::vector<std::shared_ptr<Tensor>>& outputs,
+              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
+};
