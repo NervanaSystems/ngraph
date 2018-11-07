@@ -1693,7 +1693,7 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<std::string>& 
     uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
     // TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
-    if(reduce_flag.back() == 1)
+    if (reduce_flag.back() == 1)
     {
         block_size_x = 8;
     }
@@ -2093,7 +2093,6 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Softmax* node)
     ss << "softmax_" << runtime::gpu::kernel::emit_type_string(node) << "_s"
        << join(input_shape, "_") << "_ra" << join(axes, "_");
     auto hash = ss.str();
-    NGRAPH_INFO << hash;
 
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
