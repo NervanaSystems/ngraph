@@ -218,6 +218,7 @@ namespace ngraph
 
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);
 
+#if (__cplusplus < 201402)
 namespace std
 {
     template <class T>
@@ -254,3 +255,4 @@ namespace std
     template <class T, class... Args>
     typename _Unique_if<T>::_Known_bound make_unique(Args&&...) = delete;
 }
+#endif
