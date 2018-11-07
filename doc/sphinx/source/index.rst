@@ -29,8 +29,8 @@ nGraph is an open-source C++ library, compiler, and runtime accelerator for
 software engineering in the :abbr:`Deep Learning (DL)` ecosystem. nGraph 
 simplifies development and makes it possible to design, write, compile, and
 deploy :abbr:`Deep Neural Network (DNN)`-based solutions. A more detailed 
-explanation on the feature set of nGraph Compiler, as well as a high-level 
-overview can be found on our project :doc:`project/about`. 
+explanation of the feature set of nGraph Compiler, as well as a high-level 
+overview, can be found on our project :doc:`project/about`. 
 
 
 .. _quickstart:

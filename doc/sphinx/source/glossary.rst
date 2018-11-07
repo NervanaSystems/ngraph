@@ -55,10 +55,7 @@ Glossary
 
    quantization
 
-      Quantization is one form of low-precision computing, a technique 
-      used to reduce the time and energy needed to perform a computation 
-      by reducing the size of the data transfers and the number of steps 
-      needed to perform the computation. 
+      Quantization refers to the conversion of numerical data into a lower-precision representation. Quantization is often used in deep learning to reduce the time and energy needed to perform computations by reducing the size of data transfers and the number of steps needed to perform a computation. This improvement in speed and energy usage comes at a cost in terms of numerical accuracy, but deep learning models are often able to function well in spite of this reduced accuracy. 
 
    result
 
