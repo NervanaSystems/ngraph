@@ -1881,6 +1881,7 @@ size_t runtime::gpu::CUDNNEmitter::build_softmax(const cudnnSoftmaxAlgorithm_t& 
     ss << "softmax_op_" << mode << "_dtype_" << dtype << "_alg" << algorithm << "_dir"
        << static_cast<int>(direction) << "_s" << join(tensor_shape, "_");
     std::string hash = ss.str();
+    NGRAPH_INFO << hash;
 
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);

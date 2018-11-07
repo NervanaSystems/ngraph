@@ -191,6 +191,13 @@ namespace ngraph
                                                   std::vector<size_t> axes_flag,
                                                   size_t rank);
 
+                static void get_softmax_op(codegen::CodeWriter& writer,
+                                           const std::string& name,
+                                           runtime::gpu::GPUKernelArgs& args,
+                                           const std::vector<std::string>& data_types,
+                                           size_t out_rank,
+                                           size_t reduce_rank);
+
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
 
                 /// \brief Given kernel input variables i_* produce register variables o_coordinates{i}

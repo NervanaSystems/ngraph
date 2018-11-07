@@ -190,6 +190,9 @@ namespace ngraph
                                             NVShape input_shape,
                                             NVShape reduce_shape,
                                             std::vector<size_t> axes_flag);
+                size_t build_softmax(const std::vector<std::string>& dtypes,
+                                     NVShape input_shape,
+                                     NVShape reduce_axis);
 
                 void debug_sync();
                 void sync();

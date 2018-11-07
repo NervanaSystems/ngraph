@@ -5431,3 +5431,61 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop_2step)
     results = execute(func, args, "${BACKEND_NAME}");
     EXPECT_TRUE(test::all_close_f(std::vector<float>{350.957, -388.67}, results.at(0)));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, compare_bks)
+{
+    stringstream ss("mxnet-ngraph-Function_255-CompileForward-fprop_compiled.json");
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+
+    NodeVector new_results;
+    for (auto n : func->get_ordered_ops())
+    {
+        //dont include op::Results otherwise Function c-tor will complain
+        if (!n->is_output() && !n->is_parameter() && !n->is_constant() &&
+            !(n->get_outputs().size() > 1) && n->get_element_type() == element::f32)
+        {
+            // place conditionals here if you want to only make certain ops an output/result node
+            new_results.push_back(n);
+        }
+    }
+
+    //no need to include original results they are subsumed by new_results
+    auto new_func = make_shared<Function>(new_results, func->get_parameters());
+
+    // // uncomment these lines to serialize the new_func for later use
+    // // I use this for splicing a small graph out of a larger one
+    // string js = serialize(new_func, 4);
+    // std::ofstream outfile;
+    // outfile.open("conv_bprop_filters.json");
+    // outfile << js;
+    // outfile.close();
+    // if (new_func) exit(0);
+
+    test::Uniform<float> rng(1.0f, 2.0f, 2112);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : new_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto cpu_func = clone_function(*new_func);
+    auto bk_func = clone_function(*new_func);
+    auto cpu_results = execute(cpu_func, args, "CPU");
+    auto bk_results = execute(bk_func, args, "${BACKEND_NAME}");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        std::cout << "Comparing results for " << new_results.at(i)->get_name() << std::endl;
+        if (auto node = dynamic_pointer_cast<op::GetOutputElement>(new_results.at(i)))
+        {
+            std::cout << "  Parent node: ";
+            for (auto& p : node->get_arguments())
+            {
+                std::cout << " " << p->get_name() << std::endl;
+                std::cout << "   nargs: " << p->get_arguments().size() << std::endl;
+            }
+        }
+        EXPECT_TRUE(test::all_close_f(cpu_results.at(i), bk_results.at(i), 24, 11));
+    }
+}
