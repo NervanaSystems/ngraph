@@ -112,6 +112,22 @@ op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
     constructor_validate_and_infer_types();
 }
 
+op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
+                                     const shared_ptr<Node>& delta,
+                                     const shared_ptr<Node>& result_forward,
+                                     const Shape& window_shape,
+                                     const Strides& window_movement_strides,
+                                     const Shape& padding_below,
+                                     const Shape& padding_above)
+    : Op("MaxPoolBackprop", check_single_output_args({arg_forward, delta, result_forward}))
+    , m_window_shape(window_shape)
+    , m_window_movement_strides(window_movement_strides)
+    , m_padding_below(padding_below)
+    , m_padding_above(padding_above)
+{
+    constructor_validate_and_infer_types();
+}
+
 void op::MaxPoolBackprop::validate_and_infer_types()
 {
     element::Type forward_arg_et = get_input_element_type(0);
@@ -168,6 +184,7 @@ void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
     auto operand = get_argument(0);
     auto backprop = make_shared<op::MaxPoolBackprop>(operand,
                                                      delta,
+                                                     static_pointer_cast<op::MaxPool>(shared_from_this()),
                                                      m_window_shape,
                                                      m_window_movement_strides,
                                                      m_padding_below,
