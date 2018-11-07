@@ -1447,34 +1447,69 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
-#if 0
-TEST(cpu_fusion, loop_kernel_one_input_one_output)
+#if defined(NGRAPH_HALIDE)
+
+TEST(cpu_fusion, loop_kernel_one_input_one_output_halide)
 {
     Shape shapeA{2, 2};
-    auto A = make_shared<op::Parameter>(element::i32, shapeA);
-    auto neg_a = make_shared<op::Negative>(A);
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto relu_a = make_shared<op::Relu>(A);
+    auto relu_relu_a = make_shared<op::Relu>(relu_a);
     auto lk = make_shared<runtime::cpu::op::LoopKernel>(
-        NodeVector{neg_a}, NodeVector{neg_a}, NodeVector{A});
+        NodeVector{relu_a, relu_relu_a}, NodeVector{relu_relu_a}, NodeVector{A});
     auto f = make_shared<Function>(NodeVector{lk}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("CPU");
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shapeA);
 
-    vector<int> dataA{1, 4, 1, 4};
+    vector<float> dataA{-1, 4, -1, 4};
     copy_data(a, dataA);
-    vector<int> expected{-1, -4, -1, -4};
+    vector<float> expected{0, 4, 0, 4};
 
     backend->call_with_validate(f, {result}, {a});
 
-    EXPECT_EQ(read_vector<int>(result), expected);
+    EXPECT_TRUE(test::all_close(read_vector<float>(result), expected));
 }
 
-TEST(cpu_fusion, loop_kernel_embedded_graph)
+TEST(cpu_fusion, loop_kernel_two_input_two_output_halide)
 {
     Shape shapeA{2, 2};
-    auto A = make_shared<op::Parameter>(element::i32, shapeA);
-    auto B = make_shared<op::Parameter>(element::i32, shapeA);
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto B = make_shared<op::Parameter>(element::f32, shapeA);
+    auto relu_a = make_shared<op::Relu>(A);
+    auto add_ab = make_shared<op::Add>(relu_a, B);
+
+    auto lk = make_shared<runtime::cpu::op::LoopKernel>(
+        NodeVector{relu_a, add_ab}, NodeVector{relu_a, add_ab}, NodeVector{A, B});
+
+    auto goe1 = make_shared<op::GetOutputElement>(lk, 0);
+    auto goe2 = make_shared<op::GetOutputElement>(lk, 1);
+    auto f = make_shared<Function>(NodeVector{goe1, goe2}, ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> result_relu = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> result_add = backend->create_tensor(element::f32, shapeA);
+
+    vector<float> dataA{-1, 4, -1, 4};
+    vector<float> dataB{0, 4, 0, 4};
+    copy_data(a, dataA);
+    copy_data(b, dataB);
+    vector<float> expected_relu{0, 4, 0, 4};
+    vector<float> expected_add{4, 4, 4, 4};
+
+    backend->call_with_validate(f, {result_relu, result_add}, {a, b});
+
+    EXPECT_TRUE(test::all_close(read_vector<float>(result_relu), expected_relu));
+}
+
+TEST(cpu_fusion, loop_kernel_embedded_graph_halide)
+{
+    Shape shapeA{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto B = make_shared<op::Parameter>(element::f32, shapeA);
     auto neg_a = make_shared<op::Negative>(A);
     auto neg_b = make_shared<op::Negative>(B);
     auto add = neg_a + neg_b;
@@ -1483,52 +1518,52 @@ TEST(cpu_fusion, loop_kernel_embedded_graph)
     auto f = make_shared<Function>(NodeVector{lk}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("CPU");
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shapeA);
 
-    vector<int> dataA{1, 4, 1, 4};
+    vector<float> dataA{1, 4, 1, 4};
     copy_data(a, dataA);
-    vector<int> dataB{1, 2, 3, 4};
+    vector<float> dataB{1, 2, 3, 4};
     copy_data(b, dataB);
-    vector<int> expected{-2, -6, -4, -8};
+    vector<float> expected{-2, -6, -4, -8};
     backend->call_with_validate(f, {result}, {a, b});
-    EXPECT_EQ(read_vector<int>(result), expected);
+    EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-TEST(cpu_fusion, loop_kernel_two_inputs_one_output)
+TEST(cpu_fusion, loop_kernel_two_inputs_one_output_halide)
 {
     Shape shapeA{2, 2};
-    auto A = make_shared<op::Parameter>(element::i32, shapeA);
-    auto B = make_shared<op::Parameter>(element::i32, shapeA);
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto B = make_shared<op::Parameter>(element::f32, shapeA);
     auto add = A + B;
     auto lk = make_shared<runtime::cpu::op::LoopKernel>(
         NodeVector{add}, NodeVector{add}, NodeVector{A, B});
     auto f = make_shared<Function>(NodeVector{lk}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("CPU");
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shapeA);
 
-    vector<int> dataA{1, 4, 1, 4};
+    vector<float> dataA{1, 4, 1, 4};
     copy_data(a, dataA);
-    vector<int> dataB{1, 2, 3, 4};
+    vector<float> dataB{1, 2, 3, 4};
     copy_data(b, dataB);
-    vector<int> expected{2, 6, 4, 8};
+    vector<float> expected{2, 6, 4, 8};
 
     backend->call_with_validate(f, {result}, {a, b});
 
-    EXPECT_EQ(read_vector<int>(result), expected);
+    EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-TEST(cpu_fusion, loop_kernel_multiple_outputs)
+TEST(cpu_fusion, loop_kernel_multiple_outputs_halide)
 {
     Shape shapeA{2, 2};
-    auto A = make_shared<op::Parameter>(element::i32, shapeA);
-    auto B = make_shared<op::Parameter>(element::i32, shapeA);
-    auto C = make_shared<op::Parameter>(element::i32, shapeA);
-    auto D = make_shared<op::Parameter>(element::i32, shapeA);
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto B = make_shared<op::Parameter>(element::f32, shapeA);
+    auto C = make_shared<op::Parameter>(element::f32, shapeA);
+    auto D = make_shared<op::Parameter>(element::f32, shapeA);
 
     auto neg_a = make_shared<op::Negative>(A);
     auto neg_b = make_shared<op::Negative>(B);
@@ -1552,18 +1587,18 @@ TEST(cpu_fusion, loop_kernel_multiple_outputs)
 
     auto backend = runtime::Backend::create("CPU");
 
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> c = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> d = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> r1 = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> r2 = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> r3 = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> c = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> d = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> r1 = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> r2 = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> r3 = backend->create_tensor(element::f32, shapeA);
 
-    vector<int> dataA{1, 4, 1, 4};
-    vector<int> dataB{3, 3, 3, 9};
-    vector<int> dataC{1, 2, 3, 4};
-    vector<int> dataD{-2, 2, -1, 1};
+    vector<float> dataA{1, 4, 1, 4};
+    vector<float> dataB{3, 3, 3, 9};
+    vector<float> dataC{1, 2, 3, 4};
+    vector<float> dataD{-2, 2, -1, 1};
     copy_data(a, dataA);
     copy_data(b, dataB);
     copy_data(c, dataC);
@@ -1571,12 +1606,12 @@ TEST(cpu_fusion, loop_kernel_multiple_outputs)
 
     backend->call_with_validate(f, {r1, r2, r3}, {a, b, c, d});
 
-    vector<int> expected1{5, 11, 5, 17};
-    vector<int> expected2{2, 7, 5, 14};
-    vector<int> expected3{-3, -3, -3, -9};
-    EXPECT_EQ(read_vector<int>(r1), expected1);
-    EXPECT_EQ(read_vector<int>(r2), expected2);
-    EXPECT_EQ(read_vector<int>(r3), expected3);
+    vector<float> expected1{5, 11, 5, 17};
+    vector<float> expected2{2, 7, 5, 14};
+    vector<float> expected3{-3, -3, -3, -9};
+    EXPECT_EQ(read_vector<float>(r1), expected1);
+    EXPECT_EQ(read_vector<float>(r2), expected2);
+    EXPECT_EQ(read_vector<float>(r3), expected3);
 }
 
 TEST(cpu_fusion, loop_kernel_copy_with_new_args)
