@@ -50,8 +50,8 @@ vector<ngraph::runtime::PerformanceCounter>
 }
 
 void runtime::Backend::validate_call(shared_ptr<const Function> function,
-                                     const vector<runtime::Tensor*>& outputs,
-                                     const vector<runtime::Tensor*>& inputs)
+                                     const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                     const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     const op::ParameterVector& input_parameters = function->get_parameters();
     if (input_parameters.size() != inputs.size())
@@ -110,7 +110,7 @@ void runtime::Backend::validate_call(shared_ptr<const Function> function,
 
 bool runtime::Backend::is_supported(const Node& node) const
 {
-    // The default behavior is that a backend fully supports all ops. If this is not the case
+    // The default behavior is that a backend does not support any ops. If this is not the case
     // then override this method and enhance.
     return false;
 }
