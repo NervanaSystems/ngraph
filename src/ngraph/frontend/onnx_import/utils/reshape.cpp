@@ -243,7 +243,7 @@ namespace ngraph
 
             NodeVector split(const std::shared_ptr<ngraph::Node>& node,
                              std::vector<std::size_t> length_parts,
-                             int axis)
+                             std::size_t axis)
             {
                 std::size_t start_index{0};
                 NodeVector outputs;

@@ -24,15 +24,15 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        shared_ptr<ngraph::Node> operator+(const shared_ptr<ngraph::Node>& lhs,
-                                           const shared_ptr<ngraph::Node>& rhs)
+        std::shared_ptr<ngraph::Node> operator+(const std::shared_ptr<ngraph::Node>& lhs,
+                                                const std::shared_ptr<ngraph::Node>& rhs)
         {
             auto args = numpy_style_broadcast_for_binary_operation(lhs, rhs);
             return {std::make_shared<ngraph::op::Add>(args.at(0), args.at(1))};
         }
 
-        shared_ptr<ngraph::Node> operator*(const shared_ptr<ngraph::Node>& lhs,
-                                           const shared_ptr<ngraph::Node>& rhs)
+        std::shared_ptr<ngraph::Node> operator*(const std::shared_ptr<ngraph::Node>& lhs,
+                                                const std::shared_ptr<ngraph::Node>& rhs)
         {
             auto args = numpy_style_broadcast_for_binary_operation(lhs, rhs);
             return {std::make_shared<ngraph::op::Multiply>(args.at(0), args.at(1))};

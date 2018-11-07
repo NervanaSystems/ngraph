@@ -24,9 +24,9 @@ namespace ngraph
 {
     namespace onnx_import
     {
-        shared_ptr<ngraph::Node> operator+(const shared_ptr<ngraph::Node>& lhs,
-                                           const shared_ptr<ngraph::Node>& rhs);
-        shared_ptr<ngraph::Node> operator*(const shared_ptr<ngraph::Node>& lhs,
-                                           const shared_ptr<ngraph::Node>& rhs);
+        std::shared_ptr<ngraph::Node> operator+(const std::shared_ptr<ngraph::Node>& lhs,
+                                                const std::shared_ptr<ngraph::Node>& rhs);
+        std::shared_ptr<ngraph::Node> operator*(const std::shared_ptr<ngraph::Node>& lhs,
+                                                const std::shared_ptr<ngraph::Node>& rhs);
     }
 }

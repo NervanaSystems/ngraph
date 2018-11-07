@@ -151,7 +151,7 @@ namespace ngraph
             ///
             NodeVector split(const std::shared_ptr<ngraph::Node>& node,
                              std::vector<std::size_t> length_parts,
-                             int axis = 0);
+                             std::size_t axis = 0);
 
             /// \brief      Split node on specified axis into multiple parts.
             ///

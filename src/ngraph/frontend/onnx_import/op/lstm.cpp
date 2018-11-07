@@ -30,6 +30,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
 #include "exceptions.hpp"
@@ -295,7 +296,7 @@ namespace ngraph
                         // [seq_length, num_directions, batch_size, hidden_size]
                         if (m_attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
                         {
-                            const Shape& shape{Y->get_shape()};
+                            Shape shape{Y->get_shape()};
                             shape.insert(std::next(std::begin(shape)), 1);
                             Y = std::make_shared<ngraph::op::Reshape>(Y,
                                     reshape::get_default_axis_vector(Y->get_shape().size()),
