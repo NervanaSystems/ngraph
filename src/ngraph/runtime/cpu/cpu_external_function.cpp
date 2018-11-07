@@ -118,6 +118,7 @@
 #include "ngraph/op/topk.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
+#include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
@@ -1049,6 +1050,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
     pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
     pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
+    pass_manager.register_pass<ngraph::pass::ConstantFolding>();
     pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>(
         runtime::cpu::get_cse_handlers_map());
