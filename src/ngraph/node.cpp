@@ -150,6 +150,16 @@ void Node::set_placement(Placement placement)
     m_placement = placement;
 }
 
+size_t Node::get_placement_size() const
+{
+    return m_placement_size;
+}
+
+void Node::set_placement(size_t placement)
+{
+    m_placement_size = placement;
+}
+
 std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     for (auto& i : get_inputs())
