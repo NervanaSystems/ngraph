@@ -363,7 +363,7 @@ bool all_close_f(const std::vector<float>& a,
         {
             if (count < 5)
             {
-                NGRAPH_INFO << a[i] << " is not close to " << b[i] << "at idx " << i;
+                NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at idx " << i;
             }
             rc = false;
             count++;

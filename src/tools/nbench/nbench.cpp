@@ -292,6 +292,7 @@ OPTIONS
         -i|--iterations           Iterations (default: 10)
         -s|--statistics           Display op stastics
         -v|--visualize            Visualize a model (WARNING: requires GraphViz installed)
+        --validation              Compare selected backend result with CPU
         --timing_detail           Gather detailed timing
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
