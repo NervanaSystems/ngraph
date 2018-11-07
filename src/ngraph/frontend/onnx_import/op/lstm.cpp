@@ -199,8 +199,7 @@ namespace ngraph
                         }
                     }
 
-                    ~LSTMNode(){}
-
+                    ~LSTMNode() {}
                     NodeVector run()
                     {
                         NodeVector p_iof = reshape::split(m_input_map["P"], 3);
