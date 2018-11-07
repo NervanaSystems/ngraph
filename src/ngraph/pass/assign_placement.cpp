@@ -44,10 +44,10 @@ bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
             if (backend->is_supported(*node))
             {
                 node->set_placement(backend_index);
-
                 return false;
             }
         }
+        throw runtime_error("Node " + node->get_name() + " not supported by any backend");
     }
     else
     {
