@@ -193,13 +193,14 @@ void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
     auto delta = deltas.at(0);
 
     auto operand = get_argument(0);
-    auto backprop = make_shared<op::MaxPoolBackprop>(operand,
-                                                     delta,
-                                                     static_pointer_cast<op::MaxPool>(shared_from_this()),
-                                                     m_window_shape,
-                                                     m_window_movement_strides,
-                                                     m_padding_below,
-                                                     m_padding_above);
+    auto backprop =
+        make_shared<op::MaxPoolBackprop>(operand,
+                                         delta,
+                                         static_pointer_cast<op::MaxPool>(shared_from_this()),
+                                         m_window_shape,
+                                         m_window_movement_strides,
+                                         m_padding_below,
+                                         m_padding_above);
 
     adjoints.add_delta(operand, backprop);
 }

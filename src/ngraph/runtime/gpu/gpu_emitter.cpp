@@ -800,7 +800,9 @@ void runtime::gpu::GPU_Emitter::emit_MaxPoolBackprop(EMIT_ARGS)
 
         if (args.size() != 3)
         {
-            throw ngraph_error("The NVGPU MaxPoolBackprop kernel requires the pooling result as input to the backward operation.");
+            throw ngraph_error(
+                "The NVGPU MaxPoolBackprop kernel requires the pooling result as input to the "
+                "backward operation.");
         }
         if (fp_input_shape.size() >= 4)
         {

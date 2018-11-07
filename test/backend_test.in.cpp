@@ -5442,7 +5442,8 @@ NGRAPH_TEST(${BACKEND_NAME}, compare_bks)
     for (auto n : new_func->get_ordered_ops())
     {
         //dont include op::Results otherwise Function c-tor will complain
-        std::cout << "Node: " << n->get_name() << " element type: " << n->get_element_type() << " nargs: " << n->get_arguments().size() << std::endl;
+        std::cout << "Node: " << n->get_name() << " element type: " << n->get_element_type()
+                  << " nargs: " << n->get_arguments().size() << std::endl;
         // if (!n->is_output() && !n->is_parameter() && !n->is_constant() && !(n->get_outputs().size()>1)
         //     && n->get_element_type() == element::f32)
         // {
@@ -5474,7 +5475,7 @@ NGRAPH_TEST(${BACKEND_NAME}, compare_bks)
 
     auto& params = new_func->get_parameters();
     std::vector<float> tensor_val(shape_size(params.front()->get_shape()), 1.0f);
-    args.emplace_back(shape_size(params.front()->get_shape()),NAN);
+    args.emplace_back(shape_size(params.front()->get_shape()), NAN);
     args.push_back(tensor_val);
     args.push_back(tensor_val);
 
@@ -5484,7 +5485,7 @@ NGRAPH_TEST(${BACKEND_NAME}, compare_bks)
     auto bk_results = execute(bk_func, args, "${BACKEND_NAME}");
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
-        std::cout << "Comparing results for " << new_results.at(i)->get_name() <<std::endl;
+        std::cout << "Comparing results for " << new_results.at(i)->get_name() << std::endl;
         if (auto node = dynamic_pointer_cast<op::GetOutputElement>(new_results.at(i)))
         {
             std::cout << "  Parent node: ";
