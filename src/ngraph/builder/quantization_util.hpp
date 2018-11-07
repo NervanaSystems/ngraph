@@ -93,7 +93,7 @@ namespace ngraph
                                             std::shared_ptr<Node> max_filter,
                                             std::shared_ptr<Node> min_freezed_output,
                                             std::shared_ptr<Node> max_freezed_output,
-                                            bool is_output_signed)
+                                            const ngraph::element::Type& output_type)
             {
                 auto type = min_input->get_element_type();
                 if (type != max_input->get_element_type() ||
@@ -127,39 +127,36 @@ namespace ngraph
                 // s8 = f32 * std::pow(2, 7)/ max_abs8;
                 // s8 = s32 * std::pow(2, -24) * max_abs32 / max_abs8;
 
-                // TODO: CLEANUP
-                if (is_output_signed)
-                {
-                    return make_constant(type, shape, std::pow(2, -24)) * (max_abs32 / max_abs8);
-                }
-                else
-                {
-                    return make_constant(type, shape, std::pow(2, -23)) * (max_abs32 / max_abs8);
-                }
-
-                return nullptr;
+                return make_constant(
+                           type, shape, std::pow(2, (output_type == element::i8) ? -24 : -23)) *
+                       (max_abs32 / max_abs8);
             }
 
-            float get_bias_scale(const std::shared_ptr<Node> min_input,
-                                 const std::shared_ptr<Node> max_input,
-                                 const std::shared_ptr<Node> min_filter,
-                                 const std::shared_ptr<Node> max_filter)
+            std::shared_ptr<Node> get_bias_scale(std::shared_ptr<Node> min_input,
+                                                 std::shared_ptr<Node> max_input,
+                                                 std::shared_ptr<Node> min_filter,
+                                                 std::shared_ptr<Node> max_filter)
             {
-                auto min_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(min_input);
-                auto max_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(max_input);
-                auto min_filter_const_op =
-                    std::static_pointer_cast<ngraph::op::Constant>(min_filter);
-                auto max_filter_const_op =
-                    std::static_pointer_cast<ngraph::op::Constant>(max_filter);
-                auto input_min = min_input_const_op->get_vector<float>();
-                auto input_max = max_input_const_op->get_vector<float>();
-                auto filter_min = min_filter_const_op->get_vector<float>();
-                auto filter_max = max_filter_const_op->get_vector<float>();
+                auto type = min_input->get_element_type();
+                if (type != max_input->get_element_type() ||
+                    type != min_filter->get_element_type() ||
+                    type != max_filter->get_element_type())
+                {
+                    throw ngraph_error("get_scale: min and max must have same type");
+                }
 
-                float bias_scale =
-                    255.0 * 127.0 / (std::max(std::abs(input_min[0]), std::abs(input_max[0])) *
-                                     std::max(std::abs(filter_min[0]), std::abs(filter_max[0])));
-                return bias_scale;
+                auto shape = min_input->get_shape();
+                if (shape != max_input->get_shape() || shape != min_filter->get_shape() ||
+                    shape != max_filter->get_shape())
+                {
+                    throw ngraph_error("get_scale: min and max must have same shape");
+                }
+
+                auto max_abs_input_range = max_abs(min_input, max_input);
+                auto max_abs_filter_range = max_abs(min_filter, max_filter);
+                auto range = make_constant(type, shape, 255.0 * 127.0);
+
+                return range / (max_abs_input_range * max_abs_filter_range);
             }
 
             std::shared_ptr<Node> get_scale(std::shared_ptr<Node> input_min_range,

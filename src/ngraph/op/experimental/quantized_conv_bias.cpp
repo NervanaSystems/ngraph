@@ -35,10 +35,8 @@ op::QuantizedConvolutionBias::QuantizedConvolutionBias(const shared_ptr<Node>& d
                                                        const CoordinateDiff& padding_above,
                                                        const Strides& data_dilation_strides,
                                                        const std::shared_ptr<Node> scale,
-                                                       const std::shared_ptr<Node> bias_scale,
                                                        const bool with_relu)
-    : Op("QuantizedConvolutionBias",
-         check_single_output_args({data_batch, filters, bias, scale, bias_scale}))
+    : Op("QuantizedConvolutionBias", check_single_output_args({data_batch, filters, bias, scale}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -50,11 +48,6 @@ op::QuantizedConvolutionBias::QuantizedConvolutionBias(const shared_ptr<Node>& d
 
     auto& data_batch_shape = data_batch->get_shape();
     auto& filters_shape = filters->get_shape();
-
-    // TODO: move this to the backend
-    auto bias_scale_const_op = std::static_pointer_cast<ngraph::op::Constant>(bias_scale);
-    auto bias_scale_val = bias_scale_const_op->get_vector<float>();
-    this->m_bias_scale = bias_scale_val[0];
 
     // TODO: call ngraph util
     // util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
@@ -81,7 +74,7 @@ op::QuantizedConvolutionBias::QuantizedConvolutionBias(const shared_ptr<Node>& d
 
 shared_ptr<Node> op::QuantizedConvolutionBias::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 5)
+    if (new_args.size() != 4)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
@@ -95,6 +88,5 @@ shared_ptr<Node> op::QuantizedConvolutionBias::copy_with_new_args(const NodeVect
                                                          get_padding_above(),
                                                          get_data_dilation_strides(),
                                                          new_args.at(3),
-                                                         new_args.at(4),
                                                          m_with_relu));
 }

@@ -131,24 +131,6 @@ namespace ngraph
                     const float scale,
                     const mkldnn::post_ops& pops = mkldnn::post_ops());
 
-                /**
-                 * QuantizedConvolution + bias forward
-                 */
-                std::vector<size_t> build_quantized_convolution_bias_reorder(
-                    const mkldnn::memory::desc& input_data_desc,
-                    const mkldnn::memory::desc& weights_desc,
-                    const mkldnn::memory::desc& bias_desc,
-                    const mkldnn::memory::desc& reorder_bias_desc,
-                    const mkldnn::memory::desc& result_desc,
-                    const ngraph::Strides& strides,
-                    const ngraph::Strides& dilation_strides,
-                    const ngraph::CoordinateDiff& padding_below,
-                    const ngraph::CoordinateDiff& padding_above,
-                    const float scale,
-                    const float bias_scale,
-                    int size,
-                    const mkldnn::post_ops& pops = mkldnn::post_ops());
-
                 template <typename OP>
                 size_t build_convolution(const ngraph::Node* node,
                                          const std::vector<TensorViewWrapper>& args,
@@ -643,12 +625,6 @@ namespace ngraph
                 size_t build_quantize_reorder(const mkldnn::memory::desc& input_desc,
                                               const mkldnn::memory::desc& result_desc,
                                               const std::vector<float>& scales);
-
-                std::vector<size_t>
-                    build_bias_reorder(const ngraph::Node* node,
-                                       const std::vector<TensorViewWrapper>& args,
-                                       const std::vector<TensorViewWrapper>& out,
-                                       const mkldnn::memory::desc& reorder_bias_desc);
 
             private:
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;
