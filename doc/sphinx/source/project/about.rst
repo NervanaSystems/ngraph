@@ -1,8 +1,8 @@
 .. about: 
 
 
-About Features, FAQ's
-#####################
+About Features, FAQs
+####################
 
 * :ref:`features`
 * :ref:`faq`
@@ -14,11 +14,11 @@ About Features, FAQ's
 Features
 ========
 
-The nGraph :abbr:`Intermediary Representation (IR)` contains a combination of 
-device-specific and non device-specific optimization and compilation paths, 
-enabling such things as:
+The nGraph :abbr:`Intermediate Representation (IR)` contains a combination of 
+device-specific and non device-specific optimization and compilations to  
+enable:
 
-* **Fusion** -- Fuse multiple ``Ops`` to reduce memory utilization frequency. 
+* **Fusion** -- Fuse multiple ``ops`` to to decrease memory usage "localities". 
 * **Memory management** -- Prevent peak memory usage by intercepting a graph 
   with or by a "saved checkpoint," and to enable data auditing. 
 * **Data reuse** -- Save result and reuse for subgraphs with the same input
@@ -27,6 +27,11 @@ enabling such things as:
   speed up computation.
 * :abbr:`Direct EXecution mode (DEX)` or **DEX** -- Execute kernels for the 
   op directly instead of using codegen when traversing the computation graph.
+
+  .. :important:: See :doc:`../ops/index` to learn the nGraph design philosophy.
+
+
+
 * **Data layout abstraction** -- Make abstraction easier and faster with nGraph 
   translating element order to work best for whatever given or available device.  
 
@@ -119,7 +124,7 @@ How does it work?
 ------------------
 
 The :doc:`nGraph Core <../ops/index>` uses a **strongly-typed** and 
-**platform-neutral** :abbr:`Intermediary Representation (IR)` to construct a 
+**platform-neutral** :abbr:`Intermediate Representation (IR)` to construct a 
 "stateless" graph. Each node, or *op*, in the graph corresponds to one 
 :term:`step` in a computation, where each step produces zero or more tensor 
 outputs from zero or more tensor inputs. 
@@ -187,9 +192,6 @@ We developed nGraph to simplify the realization of optimized deep learning
 performance across frameworks and hardware platforms. You can read more about 
 design decisions and what is tentatively in the pipeline for development in 
 our `arXiv paper`_ from the 2018 SysML conference.
-
-
-
 
 
 .. _arXiv paper: https://arxiv.org/pdf/1801.08058.pdf
