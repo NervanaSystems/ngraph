@@ -21,7 +21,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set(COMPILE_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
     endif()    
 endif()
-message(STATUS "xcxxxxxxxxxxxxxxxxxx ${COMPILE_FLAGS}")
 
 ExternalProject_Add(
     ext_clang
