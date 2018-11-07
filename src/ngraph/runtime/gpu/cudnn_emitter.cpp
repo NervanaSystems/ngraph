@@ -1617,9 +1617,6 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
         }
         pool.reset(new gpu::primitive{
             [=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
-                // cuDNN requires the output tensor of the maxpool fprop to be passed even though
-                // it is not mathematically necessary. It appears, however, that it is not actually
-                // used as the adjoints are passed in place and the correct result is achieved.
                 CUDNN_SAFE_CALL(cudnnPoolingBackward(*m_ctx->cudnn_handle,
                                                      desc,
                                                      alpha,

@@ -169,6 +169,17 @@ void op::MaxPoolBackprop::validate_and_infer_types()
 shared_ptr<Node> op::MaxPoolBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
+    if (this->get_arguments().size() == 3)
+    {
+        return make_shared<op::MaxPoolBackprop>(new_args.at(0),
+                                                new_args.at(1),
+                                                new_args.at(2),
+                                                m_window_shape,
+                                                m_window_movement_strides,
+                                                m_padding_below,
+                                                m_padding_above);
+    }
+
     return make_shared<op::MaxPoolBackprop>(new_args.at(0),
                                             new_args.at(1),
                                             m_window_shape,
