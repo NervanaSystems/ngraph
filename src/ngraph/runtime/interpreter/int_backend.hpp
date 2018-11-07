@@ -163,6 +163,7 @@ public:
     std::vector<PerformanceCounter>
         get_performance_data(std::shared_ptr<Function> func) const override;
 
+    bool is_supported(const Node& node) const override { return true; }
 private:
     class FunctionInstance
     {
