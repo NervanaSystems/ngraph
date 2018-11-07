@@ -56,7 +56,7 @@ We have many documentation pages to help you get started.
 * To start learning about nGraph's set of **Core ops** and how they can 
   be used with Ops from other frameworks, go to :doc:`ops/index`.
 
-* **Optimization pass writers** will find :doc:`fusion/index` useful, Also 
+* **Optimization pass writers** will find :doc:`fusion/index` useful. Also 
   look for our upcoming documentation on :term:`quantization`.
 
 * For details about **PlaidML integration** and other nGraph runtime APIs, 
