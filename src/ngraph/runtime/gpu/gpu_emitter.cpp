@@ -1504,7 +1504,7 @@ void runtime::gpu::GPU_Emitter::emit_Softmax(EMIT_ARGS)
         {
             axes_vec.push_back(a);
         }
-        vector<string> dtypes;
+        std::vector<string> dtypes;
         dtypes.push_back(args[0].get_type());
         dtypes.push_back(out[0].get_type());
         auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
