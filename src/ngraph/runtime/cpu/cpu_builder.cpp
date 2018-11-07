@@ -99,6 +99,7 @@
 #include "ngraph/runtime/cpu/kernel/tanh.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/halide_op.hpp"
+#include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -369,6 +370,8 @@ namespace ngraph
                     {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
                     {TI(ngraph::runtime::cpu::op::ConvertLayout),
                      &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::ConvertLayout>},
+                    {TI(ngraph::runtime::cpu::op::LoopKernel),
+                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::LoopKernel>},
                     {TI(ngraph::runtime::cpu::op::HalideOp),
                      &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::HalideOp>}};
 

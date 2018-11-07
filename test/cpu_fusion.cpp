@@ -1448,6 +1448,29 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
+TEST(cpu_fusion, loop_kernel_one_input_one_output_halide)
+{
+    Shape shapeA{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto relu_a = make_shared<op::Relu>(A);
+    auto relu_relu_a = make_shared<op::Relu>(relu_a);
+    auto lk = make_shared<runtime::cpu::op::LoopKernel>(
+        NodeVector{relu_a, relu_relu_a}, NodeVector{relu_relu_a}, NodeVector{A});
+    auto f = make_shared<Function>(NodeVector{lk}, op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shapeA);
+
+    vector<float> dataA{-1, 4, -1, 4};
+    copy_data(a, dataA);
+    vector<float> expected{0, 4, 0, 4};
+
+    backend->call_with_validate(f, {result}, {a});
+
+    EXPECT_TRUE(test::all_close(read_vector<float>(result), expected));
+}
+
 #if 0
 TEST(cpu_fusion, loop_kernel_one_input_one_output)
 {
