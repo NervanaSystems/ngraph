@@ -476,7 +476,7 @@ void op::ConvolutionBackpropFilters::validate_and_infer_types()
 
     const PartialShape& data_batch_shape = get_input_partial_shape(0);
     element::Type data_batch_et = get_input_element_type(0);
-    const PartialShape& delta_shape = get_input_shape(1);
+    const PartialShape& delta_shape = get_input_partial_shape(1);
     element::Type delta_et = get_input_element_type(1);
 
     element::Type forward_result_et;

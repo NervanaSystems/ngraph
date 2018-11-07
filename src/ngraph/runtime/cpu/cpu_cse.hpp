@@ -16,31 +16,28 @@
 
 #pragma once
 
-#include <exception>
 #include <functional>
+#include <memory>
+#include <set>
 #include <sstream>
+#include <string>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
 
-#include "ngraph/pass/pass.hpp"
-#include "ngraph/placement.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/pass/manager_state.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace runtime
     {
-        class AssignPlacement : public NodePass
+        namespace cpu
         {
-        public:
-            // TODO: make policy a class
-            AssignPlacement(std::function<Placement(std::shared_ptr<Node>)> placement_policy);
-            AssignPlacement(
-                std::vector<std::shared_ptr<ngraph::runtime::Backend>> placement_backends);
-
-        private:
-            bool run_on_node(std::shared_ptr<Node> node) override;
-
-            std::vector<std::shared_ptr<ngraph::runtime::Backend>> m_placement_backends;
-
-            std::function<Placement(std::shared_ptr<Node>)> m_placement_policy;
-        };
+            const std::unordered_map<
+                std::type_index,
+                std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
+                get_cse_handlers_map();
+        }
     }
 }
