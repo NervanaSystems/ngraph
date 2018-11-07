@@ -33,7 +33,6 @@ namespace ngraph
             {
                 extern mkldnn::engine global_cpu_engine;
 
-                bool IsMKLDNNOp(ngraph::Node& op);
                 mkldnn::memory::format
                     CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
                 mkldnn::memory::format CreateNativeDataFormat(const Shape& shape);
@@ -73,7 +72,6 @@ namespace ngraph
 
                 bool use_mkldnn_kernel(const ngraph::Node* node);
 
-                std::unordered_set<std::type_index>& get_op_registry();
                 std::map<element::Type, const mkldnn::memory::data_type>&
                     get_mkldnn_data_type_map();
                 std::map<element::Type, const std::string>& get_mkldnn_data_type_string_map();

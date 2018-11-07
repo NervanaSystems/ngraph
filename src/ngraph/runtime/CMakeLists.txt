@@ -20,7 +20,6 @@ if (NGRAPH_HYBRID_ENABLE)
     add_subdirectory(hybrid)
 endif()
 
-
 if (NGRAPH_CPU_ENABLE)
     add_subdirectory(cpu)
 endif()
@@ -32,3 +31,5 @@ endif()
 if (NGRAPH_GPU_ENABLE)
     add_subdirectory(gpu)
 endif()
+
+add_subdirectory(plaidml)

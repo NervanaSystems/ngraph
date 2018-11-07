@@ -31,6 +31,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
@@ -81,6 +82,7 @@
 #include "ngraph/runtime/reference/equal.hpp"
 #include "ngraph/runtime/reference/exp.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
+#include "ngraph/runtime/reference/generate_mask.hpp"
 #include "ngraph/runtime/reference/greater.hpp"
 #include "ngraph/runtime/reference/greater_eq.hpp"
 #include "ngraph/runtime/reference/less.hpp"
@@ -161,6 +163,7 @@ public:
     std::vector<PerformanceCounter>
         get_performance_data(std::shared_ptr<Function> func) const override;
 
+    bool is_supported(const Node& node) const override { return true; }
 private:
     class FunctionInstance
     {
@@ -179,12 +182,14 @@ private:
     void generate_calls(const element::Type& type,
                         const NodeWrapper& op,
                         const std::vector<std::shared_ptr<HostTensor>>& outputs,
-                        const std::vector<std::shared_ptr<HostTensor>>& inputs);
+                        const std::vector<std::shared_ptr<HostTensor>>& inputs,
+                        FunctionInstance& instance);
 
     template <typename T>
     void op_engine(const NodeWrapper& node_wrapper,
                    const std::vector<std::shared_ptr<HostTensor>>& out,
-                   const std::vector<std::shared_ptr<HostTensor>>& args)
+                   const std::vector<std::shared_ptr<HostTensor>>& args,
+                   FunctionInstance& instance)
     {
         const Node& node = node_wrapper.get_node();
         std::string node_op = node.description();
@@ -311,6 +316,11 @@ private:
                                    avg_pool->get_padding_above(),
                                    avg_pool->get_include_padding_in_avg_computation());
             break;
+        }
+        case OP_TYPEID::GenerateMask:
+        {
+            throw ngraph_error(
+                "GenerateMask is an experimental op that's only supported on CPU backend");
         }
         case OP_TYPEID::GetOutputElement:
         {

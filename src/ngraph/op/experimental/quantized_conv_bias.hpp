@@ -48,7 +48,6 @@ namespace ngraph
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            float get_scale() const { return m_scale; }
             float get_bias_scale() const { return m_bias_scale; }
             std::shared_ptr<Node> get_bias() { return get_argument(2); }
             std::shared_ptr<Node> get_filters() { return get_argument(1); }
@@ -64,7 +63,6 @@ namespace ngraph
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
             bool m_with_relu;
-            float m_scale;
             float m_bias_scale;
         };
     }

@@ -47,6 +47,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
@@ -98,6 +99,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -109,6 +111,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
@@ -179,9 +182,9 @@ namespace ngraph
                     auto input1_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                        input0_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+                        input0_data_desc, runtime::cpu::executor::global_cpu_engine));
                     inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                        input1_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+                        input1_data_desc, runtime::cpu::executor::global_cpu_engine));
 
                     size_t add_index = 0;
                     add_index = mkldnn_emitter->build_elementwise_add(
@@ -1724,7 +1727,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(reshape->get_input_order()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ",  0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 4 && out[0].get_shape().size() == 4)
@@ -1734,7 +1737,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(reshape->get_input_order()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else
                 {
@@ -2165,7 +2168,7 @@ namespace ngraph
                            << ", " << out[0].get_name() << ", "
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 2 && sum->get_reduction_axes().size() == 2)
@@ -2174,7 +2177,7 @@ namespace ngraph
                            << ", " << out[0].get_name() << ", "
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 2 && sum->get_reduction_axes().size() == 1)
@@ -2184,7 +2187,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}, "
                            << "{" << join(sum->get_reduction_axes()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 4 && sum->get_reduction_axes().size() == 2)
@@ -2194,7 +2197,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}, "
                            << "{" << join(sum->get_reduction_axes()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 4 && sum->get_reduction_axes().size() == 4)
@@ -2825,6 +2828,77 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error("unsupported parameters for GroupConvolution");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GroupConvolutionBias)
+            {
+                auto convolution = static_cast<const ngraph::op::GroupConvolutionBias*>(node);
+
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto arg2_shape = args[2].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    Strides window_dilation_strides_adjusted;
+                    for (size_t s : convolution->get_window_dilation_strides())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+
+                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    auto padding_below = convolution->get_padding_below();
+                    auto padding_above = convolution->get_padding_above();
+                    auto filter_strides = convolution->get_window_movement_strides();
+
+                    const float ops_scale = 1.f;
+                    const float ops_alpha = -0.f; // relu negative slope
+                    const float ops_beta = 0.f;
+
+                    mkldnn::post_ops ops;
+                    if (convolution->with_relu())
+                    {
+                        ops.append_eltwise(
+                            ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+                    }
+
+                    size_t conv_index =
+                        mkldnn_emitter->build_convolution_forward(input_data_desc,
+                                                                  weights_desc,
+                                                                  bias_desc,
+                                                                  result_desc,
+                                                                  filter_strides,
+                                                                  window_dilation_strides_adjusted,
+                                                                  padding_below,
+                                                                  padding_above,
+                                                                  ops);
+
+                    // invoke group convolution bias
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("Unsupported parameters for GroupConvolutionBias");
                 }
             }
 
@@ -3550,7 +3624,7 @@ namespace ngraph
                            << "                            {" << join(pad->get_padding_below())
                            << "},\n"
                            << "                            {" << join(pad->get_padding_above())
-                           << "});\n";
+                           << "}, 0);\n";
                 }
                 else
                 {
@@ -3851,7 +3925,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}, "
                            << "{" << join(max->get_reduction_axes()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else
                 {
@@ -3956,17 +4030,27 @@ namespace ngraph
                          result_desc.data.ndims == 5 /*Goihw16g/Goihw8g/etc*/ &&
                          node->get_users().size() == 1)
                 {
-                    auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
-                        *(begin(node->get_users())));
-                    if (gconv)
+                    Shape weights_shape_groups;
+                    if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
+                            node->get_users()[0]))
                     {
-                        Shape weights_shape_groups = gconv->get_weights_dimensions();
-                        input_desc = mkldnn::memory::desc(
-                            mkldnn::memory::dims(weights_shape_groups.begin(),
-                                                 weights_shape_groups.end()),
-                            mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
-                            mkldnn::memory::format::goihw);
+                        weights_shape_groups = gconv->get_weights_dimensions();
                     }
+                    else if (auto gconvb =
+                                 std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(
+                                     node->get_users()[0]))
+                    {
+                        weights_shape_groups = gconvb->get_weights_dimensions();
+                    }
+                    else
+                    {
+                        throw ngraph_error("Incompatible input/output shape in ConvertLayout op");
+                    }
+                    input_desc = mkldnn::memory::desc(
+                        mkldnn::memory::dims(weights_shape_groups.begin(),
+                                             weights_shape_groups.end()),
+                        mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                        mkldnn::memory::format::goihw);
                 }
 
                 size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);
@@ -4704,6 +4788,23 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GenerateMask)
+            {
+                auto gm = static_cast<const ngraph::op::GenerateMask*>(node);
+                writer.block_begin();
+                auto index = external_function->add_state(
+                    ngraph::RNGState::create_rng_state(gm->get_seed(), gm->get_probability()));
+                writer << "auto state = static_cast<ngraph::RNGState*>(ctx->states[" << index
+                       << "]);\n";
+                writer << "bool training = static_cast<bool>(" << args[0].get_name() << "[0]);\n";
+                writer << "reference::generate_mask(";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            " << out[0].get_size() << ",\n";
+                writer << "            state, training);\n";
+                writer.block_end();
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Dequantize)
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
@@ -4778,7 +4879,7 @@ namespace ngraph
                     writer << "            {" << join(args[0].get_shape()) << "},\n";
                     writer << "            {" << join(args[1].get_shape()) << "},\n";
                     writer << "            {" << join(quantize->get_axes()) << "},\n";
-                    writer << "            static_cast<op::Quantize::RoundMode>("
+                    writer << "            static_cast<ngraph::op::Quantize::RoundMode>("
                            << static_cast<int>(quantize->get_round_mode()) << "));\n";
                 }
             }

@@ -51,10 +51,7 @@ op::QuantizedConvolutionBias::QuantizedConvolutionBias(const shared_ptr<Node>& d
     auto& data_batch_shape = data_batch->get_shape();
     auto& filters_shape = filters->get_shape();
 
-    auto scale_const_op = std::static_pointer_cast<ngraph::op::Constant>(scale);
-    auto scale_val = scale_const_op->get_vector<float>();
-    this->m_scale = scale_val[0];
-
+    // TODO: move this to the backend
     auto bias_scale_const_op = std::static_pointer_cast<ngraph::op::Constant>(bias_scale);
     auto bias_scale_val = bias_scale_const_op->get_vector<float>();
     this->m_bias_scale = bias_scale_val[0];

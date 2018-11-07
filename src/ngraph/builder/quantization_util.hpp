@@ -13,25 +13,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-//*******************************************************************************
-//  Copyright 2016 The TensorFlow Authors. All Rights Reserved.
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//    http://www.apache.org/licenses/LICENSE-2.0
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-//==============================================================================
 
 #pragma once
 
 #include <limits>
 #include <vector>
+#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/abs.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/subtract.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -40,65 +37,107 @@ namespace ngraph
     {
         namespace quantization_util
         {
-            template <class T1, class T2, class T3>
-            void quantization_range_for_multiplication(
-                float min_a, float max_a, float min_b, float max_b, float* min_c, float* max_c)
+            std::shared_ptr<Node> max_abs(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
             {
-                // begin code copied and pasted (and modified) from
-                // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantization_utils.h
-                float a_one_quant_level = (max_a - min_a) / (std::numeric_limits<T1>::max() -
-                                                             std::numeric_limits<T1>::min());
-                float b_one_quant_level = (max_b - min_b) / (std::numeric_limits<T2>::max() -
-                                                             std::numeric_limits<T2>::min());
-                float c_one_quant_level = a_one_quant_level * b_one_quant_level;
-                *min_c = c_one_quant_level * std::numeric_limits<T3>::min();
-                *max_c = c_one_quant_level * std::numeric_limits<T3>::max();
-                // end code copied and pasted (and modified) from
-                // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantization_utils.h
+                auto abs_a = std::make_shared<op::Abs>(a);
+                auto abs_b = std::make_shared<op::Abs>(b);
+                return std::make_shared<op::Maximum>(abs_a, abs_b);
             }
 
-            float get_scale(const std::shared_ptr<Node> min_input,
-                            const std::shared_ptr<Node> max_input,
-                            const std::shared_ptr<Node> min_filter,
-                            const std::shared_ptr<Node> max_filter,
-                            const std::shared_ptr<Node> min_freezed_output,
-                            const std::shared_ptr<Node> max_freezed_output,
-                            bool is_output_signed)
+            std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
+                quantization_range_for_multiplication(std::shared_ptr<Node> min_a,
+                                                      std::shared_ptr<Node> max_a,
+                                                      std::shared_ptr<Node> min_b,
+                                                      std::shared_ptr<Node> max_b)
             {
-                auto min_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(min_input);
-                auto max_input_const_op = std::static_pointer_cast<ngraph::op::Constant>(max_input);
-                auto min_filter_const_op =
-                    std::static_pointer_cast<ngraph::op::Constant>(min_filter);
-                auto max_filter_const_op =
-                    std::static_pointer_cast<ngraph::op::Constant>(max_filter);
-                auto min_freezed_output_const_op =
-                    std::static_pointer_cast<ngraph::op::Constant>(min_freezed_output);
-                auto max_freezed_output_const_op =
-                    std::static_pointer_cast<ngraph::op::Constant>(max_freezed_output);
-                auto input_min = min_input_const_op->get_vector<float>();
-                auto input_max = max_input_const_op->get_vector<float>();
-                auto filter_min = min_filter_const_op->get_vector<float>();
-                auto filter_max = max_filter_const_op->get_vector<float>();
-                auto output_min = min_freezed_output_const_op->get_vector<float>();
-                auto output_max = max_freezed_output_const_op->get_vector<float>();
+                auto type = min_a->get_element_type();
+                if (type != max_a->get_element_type() || type != min_b->get_element_type() ||
+                    type != max_b->get_element_type())
+                {
+                    throw ngraph_error(
+                        "quantization_range_for_multiplication: min and max must have same type");
+                }
 
-                float min_out_value;
-                float max_out_value;
-                quantization_range_for_multiplication<uint8_t, int8_t, int32_t>(input_min[0],
-                                                                                input_max[0],
-                                                                                filter_min[0],
-                                                                                filter_max[0],
-                                                                                &min_out_value,
-                                                                                &max_out_value);
-                const float max_abs32 = std::max(std::abs(min_out_value), std::abs(max_out_value));
-                const float max_abs8 = std::max(std::abs(output_min[0]), std::abs(output_max[0]));
+                auto shape = min_a->get_shape();
+                if (shape != max_a->get_shape() || shape != min_b->get_shape() ||
+                    shape != max_b->get_shape())
+                {
+                    throw ngraph_error(
+                        "quantization_range_for_multiplication: min and max must have same shape");
+                }
+
+                auto u8_range = make_constant(type,
+                                              shape,
+                                              std::numeric_limits<uint8_t>::max() -
+                                                  std::numeric_limits<uint8_t>::min());
+                auto i8_range = make_constant(type,
+                                              shape,
+                                              std::numeric_limits<int8_t>::max() -
+                                                  std::numeric_limits<int8_t>::min());
+
+                auto a_one_quant_level = (max_a - min_a) / u8_range;
+                auto b_one_quant_level = (max_b - min_b) / i8_range;
+                auto c_one_quant_level = a_one_quant_level * b_one_quant_level;
+
+                auto i32_min = make_constant(type, shape, std::numeric_limits<int32_t>::min());
+                auto i32_max = make_constant(type, shape, std::numeric_limits<int32_t>::max());
+
+                auto min_c = c_one_quant_level * i32_min;
+                auto max_c = c_one_quant_level * i32_max;
+                return std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>(min_c, max_c);
+            }
+
+            std::shared_ptr<Node> get_scale(std::shared_ptr<Node> min_input,
+                                            std::shared_ptr<Node> max_input,
+                                            std::shared_ptr<Node> min_filter,
+                                            std::shared_ptr<Node> max_filter,
+                                            std::shared_ptr<Node> min_freezed_output,
+                                            std::shared_ptr<Node> max_freezed_output,
+                                            bool is_output_signed)
+            {
+                auto type = min_input->get_element_type();
+                if (type != max_input->get_element_type() ||
+                    type != min_filter->get_element_type() ||
+                    type != max_filter->get_element_type() ||
+                    type != min_freezed_output->get_element_type() ||
+                    type != max_freezed_output->get_element_type())
+                {
+                    throw ngraph_error("get_scale: min and max must have same type");
+                }
+
+                auto shape = min_input->get_shape();
+                if (shape != max_input->get_shape() || shape != min_filter->get_shape() ||
+                    shape != max_filter->get_shape() || shape != min_freezed_output->get_shape() ||
+                    shape != max_freezed_output->get_shape())
+                {
+                    throw ngraph_error("get_scale: min and max must have same shape");
+                }
+
+                auto ranges = quantization_range_for_multiplication(
+                    min_input, max_input, min_filter, max_filter);
+
+                auto min_out_value = ranges.first;
+                auto max_out_value = ranges.second;
+
+                auto max_abs32 = max_abs(min_out_value, max_out_value);
+                auto max_abs8 = max_abs(min_freezed_output, max_freezed_output);
+
                 // Output is signed int.
                 // s32 = f32 * std::pow(2, 31)/ max_abs32;
                 // s8 = f32 * std::pow(2, 7)/ max_abs8;
                 // s8 = s32 * std::pow(2, -24) * max_abs32 / max_abs8;
-                float scale = static_cast<float>((std::pow(2, is_output_signed ? -24 : -23) *
-                                                  static_cast<double>(max_abs32 / max_abs8)));
-                return scale;
+
+                // TODO: CLEANUP
+                if (is_output_signed)
+                {
+                    return make_constant(type, shape, std::pow(2, -24)) * (max_abs32 / max_abs8);
+                }
+                else
+                {
+                    return make_constant(type, shape, std::pow(2, -23)) * (max_abs32 / max_abs8);
+                }
+
+                return nullptr;
             }
 
             float get_bias_scale(const std::shared_ptr<Node> min_input,
@@ -123,57 +162,50 @@ namespace ngraph
                 return bias_scale;
             }
 
-            template <typename T>
-            static inline T get_quantization_scale(const std::shared_ptr<Node> min_input,
-                                                   const std::shared_ptr<Node> max_input,
-                                                   const ngraph::element::Type& type,
-                                                   bool bump_by_eps = false)
+            std::shared_ptr<Node> get_scale(std::shared_ptr<Node> input_min_range,
+                                            std::shared_ptr<Node> input_max_range,
+                                            const ngraph::element::Type& quant_type,
+                                            bool bump_by_eps = false)
             {
-                auto min_input_const_op =
-                    std::dynamic_pointer_cast<ngraph::op::Constant>(min_input);
-                auto max_input_const_op =
-                    std::dynamic_pointer_cast<ngraph::op::Constant>(max_input);
-
-                if (min_input_const_op == nullptr)
+                auto type = input_min_range->get_element_type();
+                if (type != input_max_range->get_element_type())
                 {
-                    throw ngraph_error("min input must be constant");
-                }
-                else if (max_input_const_op == nullptr)
-                {
-                    throw ngraph_error("max input must be constant");
+                    throw ngraph_error("get_scale: min and max must have same type");
                 }
 
-                auto input_min_range = min_input_const_op->get_vector<T>();
-                auto input_max_range = max_input_const_op->get_vector<T>();
+                auto shape = input_min_range->get_shape();
+                if (shape != input_max_range->get_shape())
+                {
+                    throw ngraph_error("get_scale: min and max must have same shape");
+                }
 
-                T min_range = std::numeric_limits<T>::min();
-                T max_range = std::numeric_limits<T>::max();
+                auto min_range = input_min_range;
+                auto max_range = input_max_range;
+
                 if (bump_by_eps)
                 {
-                    // If input_min_range and input_max_range are close,
-                    // introduce a slightly larger delta between them.
-                    min_range = std::min(static_cast<T>(0.0f), input_min_range[0]);
-                    const T epsilon = std::max(static_cast<T>(1.0f),
-                                               static_cast<T>(std::max(fabs(input_min_range[0]),
-                                                                       fabs(input_max_range[0])))) /
-                                      static_cast<T>(100.0f);
-                    max_range = std::max(input_max_range[0], min_range + epsilon);
-                    max_range = std::max(static_cast<T>(0.0f), max_range);
-                    // end code copied and pasted from
-                    // github.com/tensorflow/tensorflow/blob/master/tensorflow/core/kernels/quantize_op.cc
-                }
-                else
-                {
-                    min_range = input_min_range[0];
-                    max_range = input_max_range[0];
+                    auto zero = make_constant(type, shape, 0);
+                    min_range = std::make_shared<op::Minimum>(zero, input_min_range);
+
+                    auto max_abs_input_range = max_abs(input_min_range, input_max_range);
+
+                    auto one = make_constant(type, shape, 1);
+                    auto hundred = make_constant(type, shape, 100);
+                    auto epsilon =
+                        std::make_shared<op::Maximum>(one, max_abs_input_range) / hundred;
+
+                    max_range = std::make_shared<op::Maximum>(input_max_range, min_range + epsilon);
+                    max_range = std::make_shared<op::Maximum>(zero, max_range);
                 }
 
-                const T max_abs = std::max(std::abs(min_range), std::abs(max_range));
-                const T bitwidth = type.bitwidth();
-                const T target_range = static_cast<T>(
-                    (type.is_signed() ? std::pow(2, (bitwidth - 1)) : std::pow(2, bitwidth)) - 1);
-                const T scale_factor = max_abs / target_range;
-                return scale_factor;
+                size_t bw = quant_type.bitwidth();
+                float range = static_cast<float>(
+                    (quant_type.is_signed() ? std::pow(2, (bw - 1)) : std::pow(2, bw)) - 1);
+
+                auto max_abs_range = max_abs(min_range, max_range);
+                auto target_range = make_constant(type, shape, range);
+
+                return max_abs_range / target_range;
             }
         }
     }

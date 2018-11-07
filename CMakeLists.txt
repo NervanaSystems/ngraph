@@ -20,8 +20,8 @@ include(cmake/Modules/git_tags.cmake)
 
 NGRAPH_GET_VERSION_LABEL()
 
-string(REGEX MATCH "([0-9]+)\.([0-9]+)\.([0-9]+)" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
-string(REGEX MATCH "([0-9]+)\.([0-9]+)" NGRAPH_API_VERSION "${NGRAPH_VERSION_LABEL}")
+string(REGEX MATCH "([0-9?]+)\.([0-9?]+)\.([0-9?]+)" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
+string(REGEX MATCH "([0-9?]+)\.([0-9?]+)" NGRAPH_API_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REGEX MATCH "[^v](.*)" NGRAPH_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REPLACE "." ";" NGRAPH_VERSION_PARTS "${NGRAPH_VERSION_SHORT}")
 list(GET NGRAPH_VERSION_PARTS 0 NGRAPH_VERSION_MAJOR)
@@ -99,10 +99,29 @@ option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 
+message(STATUS "NGRAPH_UNIT_TEST_ENABLE:      ${NGRAPH_UNIT_TEST_ENABLE}")
+message(STATUS "NGRAPH_TOOLS_ENABLE:          ${NGRAPH_TOOLS_ENABLE}")
+message(STATUS "NGRAPH_CPU_ENABLE:            ${NGRAPH_CPU_ENABLE}")
+message(STATUS "NGRAPH_INTELGPU_ENABLE:       ${NGRAPH_INTELGPU_ENABLE}")
+message(STATUS "NGRAPH_GPU_ENABLE:            ${NGRAPH_GPU_ENABLE}")
+message(STATUS "NGRAPH_INTERPRETER_ENABLE:    ${NGRAPH_INTERPRETER_ENABLE}")
+message(STATUS "NGRAPH_HYBRID_ENABLE:         ${NGRAPH_HYBRID_ENABLE}")
+message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:    ${NGRAPH_DISTRIBUTED_ENABLE}")
+message(STATUS "NGRAPH_DEBUG_ENABLE:          ${NGRAPH_DEBUG_ENABLE}")
+message(STATUS "NGRAPH_ONNX_IMPORT_ENABLE:    ${NGRAPH_ONNX_IMPORT_ENABLE}")
+message(STATUS "NGRAPH_DEX_ONLY:              ${NGRAPH_DEX_ONLY}")
+message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:  ${NGRAPH_CODE_COVERAGE_ENABLE}")
+
+if (NGRAPH_HYBRID_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_HYBRID_ENABLE")
+endif()
+
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
     option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
 endif()
+
+option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" FALSE)
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
@@ -110,7 +129,6 @@ endif()
 
 if (LINUX)
     include(GNUInstallDirs)
-    include(cmake/platform.cmake)
 else()
     set(CMAKE_INSTALL_BINDIR "bin")
     set(CMAKE_INSTALL_INCLUDEDIR "include")
@@ -128,7 +146,11 @@ set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
 set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}")
 set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
-set(CMAKE_INSTALL_RPATH "$ORIGIN")
+if (DEFINED NGRAPH_RPATH)
+    set(CMAKE_INSTALL_RPATH "$ORIGIN:${NGRAPH_RPATH}")
+else()
+    set(CMAKE_INSTALL_RPATH "$ORIGIN")
+endif()
 
 #-----------------------------------------------------------------------------------------------
 # Compiler-specific logic...
@@ -204,6 +226,10 @@ endif()
 
 if (NGRAPH_CPU_ENABLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")	
+endif()
+
+if (NGRAPH_PLAIDML_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_PlaidML_ENABLE")
 endif()
 
 if (NOT DEFINED NGRAPH_TBB_ENABLE)

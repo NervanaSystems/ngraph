@@ -19,7 +19,7 @@
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 
 namespace ngraph
@@ -31,7 +31,7 @@ namespace ngraph
             namespace kernel
             {
                 template <typename ElementType>
-                void relu(void* input0, void* output, size_t count)
+                void relu(void* input0, void* output, size_t count, int arena)
                 {
                     Eigen::array<Eigen::Index, 1> out_dims, in_dims;
 
@@ -42,11 +42,13 @@ namespace ngraph
                     Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> in0(
                         static_cast<ElementType*>(input0), in_dims);
 
-                    out.device(eigen::global_thread_pool_device) = in0.cwiseMax(ElementType(0));
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
+                        in0.cwiseMax(ElementType(0));
                 }
 
                 template <typename ElementType>
-                void bounded_relu(void* input0, void* output, ElementType alpha, size_t count)
+                void bounded_relu(
+                    void* input0, void* output, ElementType alpha, size_t count, int arena)
                 {
                     Eigen::array<Eigen::Index, 1> out_dims, in_dims;
 
@@ -57,12 +59,12 @@ namespace ngraph
                     Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> in0(
                         static_cast<ElementType*>(input0), in_dims);
 
-                    out.device(eigen::global_thread_pool_device) =
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         in0.cwiseMax(ElementType(0)).cwiseMin(alpha);
                 }
 
                 template <typename ElementType>
-                void relu_backprop(void* arg, void* delta_arg, void* out, size_t count)
+                void relu_backprop(void* arg, void* delta_arg, void* out, size_t count, int arena)
                 {
                     reference::relu_backprop<ElementType>(static_cast<ElementType*>(arg),
                                                           static_cast<ElementType*>(delta_arg),

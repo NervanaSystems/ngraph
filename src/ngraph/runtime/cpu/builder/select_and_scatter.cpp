@@ -36,7 +36,7 @@ namespace ngraph
                 auto select_function = select_and_scatter->get_functions()[0];
                 auto scatter_function = select_and_scatter->get_functions()[1];
 
-                auto backend = runtime::Backend::create("CPU");
+                shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
                 auto& functors = external_function->get_functors();
                 auto& callees = external_function->get_callees();
@@ -106,7 +106,8 @@ namespace ngraph
                                 arg1_shape,
                                 out_shape,
                                 window_shape,
-                                window_movement_strides](CPURuntimeContext* ctx) {
+                                window_movement_strides](CPURuntimeContext* ctx,
+                                                         CPUExecutionContext* ectx) {
                     reference::select_and_scatter<float>(static_cast<float*>(arg0_tensor),
                                                          static_cast<float*>(arg1_tensor),
                                                          static_cast<float*>(arg2_tensor),

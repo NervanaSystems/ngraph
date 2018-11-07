@@ -25,6 +25,7 @@
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
@@ -241,6 +242,16 @@ namespace ngraph
                     }
                     else if (std::is_same<OP, ngraph::op::QuantizedConvolution>())
                     {
+                        auto qc = dynamic_cast<const ngraph::op::QuantizedConvolution*>(node);
+                        auto scale_const_op =
+                            std::dynamic_pointer_cast<ngraph::op::Constant>(qc->get_arguments()[2]);
+                        if (scale_const_op == nullptr)
+                        {
+                            throw ngraph_error("QuantizedConvolution scale must be a Constant");
+                        }
+
+                        auto scale_val = scale_const_op->get_vector<float>();
+
                         return build_quantized_convolution_forward(
                             data_desc,
                             weights_desc,
@@ -249,12 +260,21 @@ namespace ngraph
                             window_dilation_strides_adjusted,
                             convolution->get_padding_below(),
                             convolution->get_padding_above(),
-                            (dynamic_cast<const ngraph::op::QuantizedConvolution*>(node))
-                                ->get_scale(),
+                            scale_val[0],
                             ops);
                     }
                     else if (std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
                     {
+                        auto qcr = dynamic_cast<const ngraph::op::QuantizedConvolutionRelu*>(node);
+                        auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                            qcr->get_arguments()[2]);
+                        if (scale_const_op == nullptr)
+                        {
+                            throw ngraph_error("QuantizedConvolutionRelu scale must be a Constant");
+                        }
+
+                        auto scale_val = scale_const_op->get_vector<float>();
+
                         return build_quantized_convolution_forward(
                             data_desc,
                             weights_desc,
@@ -263,12 +283,21 @@ namespace ngraph
                             window_dilation_strides_adjusted,
                             convolution->get_padding_below(),
                             convolution->get_padding_above(),
-                            (dynamic_cast<const ngraph::op::QuantizedConvolutionRelu*>(node))
-                                ->get_scale(),
+                            scale_val[0],
                             ops);
                     }
                     else if (std::is_same<OP, ngraph::op::QuantizedConvolutionBias>())
                     {
+                        auto qcb = dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node);
+                        auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                            qcb->get_arguments()[3]);
+                        if (scale_const_op == nullptr)
+                        {
+                            throw ngraph_error("QuantizedConvolutionBias scale must be a Constant");
+                        }
+
+                        auto scale_val = scale_const_op->get_vector<float>();
+
                         // conv+bias = cvt_to_int8(scale*(dst + bias))
                         auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                         return build_quantized_convolution_forward(
@@ -280,8 +309,7 @@ namespace ngraph
                             window_dilation_strides_adjusted,
                             convolution->get_padding_below(),
                             convolution->get_padding_above(),
-                            (dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node))
-                                ->get_scale(),
+                            scale_val[0],
                             ops);
                     }
                     else
