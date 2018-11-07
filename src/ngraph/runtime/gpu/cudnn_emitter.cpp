@@ -1625,7 +1625,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
                                                      alpha,
                                                      // output (wrt maxpool) tensor
                                                      output_desc,
-                                                     inputs[1],
+                                                     inputs[2],
                                                      // adjoint of output
                                                      output_desc,
                                                      inputs[1],

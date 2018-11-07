@@ -798,6 +798,10 @@ void runtime::gpu::GPU_Emitter::emit_MaxPoolBackprop(EMIT_ARGS)
 
         auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
+        if (args.size() != 3)
+        {
+            throw ngraph_error("The NVGPU MaxPoolBackprop kernel requires the pooling result as input to the backward operation.");
+        }
         if (fp_input_shape.size() >= 4)
         {
             auto index = cudnn_emitter->build_pooling(CUDNN_POOLING_MAX,
