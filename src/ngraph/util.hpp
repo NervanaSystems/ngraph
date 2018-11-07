@@ -219,6 +219,7 @@ namespace ngraph
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);
 
 #if (__cplusplus < 201402)
+// Copied from https://isocpp.org/files/papers/N3656.txt
 namespace std
 {
     template <class T>
