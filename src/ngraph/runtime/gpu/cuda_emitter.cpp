@@ -202,9 +202,9 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::string& dtype,
                                           1,
                                           1, // block dim
                                           0,
-                                          NULL, // shared mem and stream
+                                          nullptr, // shared mem and stream
                                           args_list.data(),
-                                          0)); // arguments
+                                          nullptr)); // arguments
             debug_sync();
         }
     }});
@@ -310,9 +310,9 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
                                               1,
                                               1,
                                               0,
-                                              NULL, // stream
+                                              nullptr, // stream
                                               args_list,
-                                              0)); // arguments
+                                              nullptr)); // arguments
                 debug_sync();
             }});
         primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
@@ -334,9 +334,9 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
                                               1,
                                               1,
                                               shared_data_bytes, // shared mem
-                                              NULL,              //stream
+                                              nullptr,           //stream
                                               args_list,
-                                              0)); // arguments
+                                              nullptr)); // arguments
                 debug_sync();
             }});
         primitive_index = this->m_primitive_emitter->insert(std::move(kernel_launch));
@@ -406,9 +406,9 @@ size_t runtime::gpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>&
                                           1,
                                           1, // block dim
                                           0,
-                                          NULL, // shared mem and stream
+                                          nullptr, // shared mem and stream
                                           args_list.data(),
-                                          0)); // arguments
+                                          nullptr)); // arguments
             debug_sync();
         }});
 
@@ -477,9 +477,9 @@ size_t runtime::gpu::CUDAEmitter::build_reverse(const std::array<std::string, 2>
                                       1,
                                       1, // block dim
                                       0,
-                                      NULL, // shared mem and stream
+                                      nullptr, // shared mem and stream
                                       args_list.data(),
-                                      0)); // arguments
+                                      nullptr)); // arguments
         debug_sync();
     }});
 
@@ -562,9 +562,9 @@ size_t runtime::gpu::CUDAEmitter::build_pad(const std::vector<std::string>& dtyp
                                           1,
                                           1, // block dim
                                           0,
-                                          NULL, // shared mem and stream
+                                          nullptr, // shared mem and stream
                                           args_list,
-                                          0)); // arguments
+                                          nullptr)); // arguments
             debug_sync();
         }});
 
@@ -650,9 +650,9 @@ size_t runtime::gpu::CUDAEmitter::build_pad_fill(const std::vector<std::string>&
                                           1,
                                           1, // block dim
                                           0,
-                                          NULL, // shared mem and stream
+                                          nullptr, // shared mem and stream
                                           args_list,
-                                          0)); // arguments
+                                          nullptr)); // arguments
             debug_sync();
         }});
 
@@ -734,9 +734,9 @@ size_t runtime::gpu::CUDAEmitter::build_reshape(const std::array<std::string, 2>
                                           1,
                                           1, // block dim
                                           0,
-                                          NULL, // shared mem and stream
+                                          nullptr, // shared mem and stream
                                           args_list,
-                                          0)); // arguments
+                                          nullptr)); // arguments
             debug_sync();
         }});
 
@@ -820,9 +820,9 @@ size_t runtime::gpu::CUDAEmitter::build_reshape_2d(const std::array<std::string,
                                           block_size,
                                           1, // block dim
                                           0,
-                                          NULL, // shared mem and stream
+                                          nullptr, // shared mem and stream
                                           args_list,
-                                          0)); // arguments
+                                          nullptr)); // arguments
             debug_sync();
         }});
 
@@ -910,9 +910,9 @@ size_t runtime::gpu::CUDAEmitter::build_reshape_3d(const std::array<std::string,
                                           block_size[1],
                                           block_size[2], // block dim
                                           0,
-                                          NULL, // shared mem and stream
+                                          nullptr, // shared mem and stream
                                           args_list,
-                                          0)); // arguments
+                                          nullptr)); // arguments
             debug_sync();
         }});
 
@@ -997,9 +997,9 @@ size_t runtime::gpu::CUDAEmitter::build_slice(const std::array<std::string, 2>& 
                                       1,
                                       1, // block dim
                                       0,
-                                      NULL, // shared mem and stream
+                                      nullptr, // shared mem and stream
                                       args_list.data(),
-                                      0)); // arguments
+                                      nullptr)); // arguments
         debug_sync();
     }});
 
@@ -1078,9 +1078,9 @@ size_t runtime::gpu::CUDAEmitter::build_reverse_sequence(const std::array<std::s
                                       1,
                                       1, // block dim
                                       0,
-                                      NULL, // shared mem and stream
+                                      nullptr, // shared mem and stream
                                       args_list.data(),
-                                      0)); // arguments
+                                      nullptr)); // arguments
         debug_sync();
     }});
 
@@ -1136,9 +1136,9 @@ size_t runtime::gpu::CUDAEmitter::build_1d_max_pool(const std::array<std::string
                                           1,
                                           1, // block dim
                                           0,
-                                          NULL, // shared mem and stream
+                                          nullptr, // shared mem and stream
                                           args_list,
-                                          0)); // arguments
+                                          nullptr)); // arguments
             debug_sync();
         }});
 
@@ -1321,9 +1321,9 @@ size_t runtime::gpu::CUDAEmitter::build_avg_pool(const std::array<std::string, 2
                                           1,
                                           1,
                                           0,
-                                          NULL,
+                                          nullptr,
                                           args_list,
-                                          0));
+                                          nullptr));
             debug_sync();
         }});
 
@@ -1395,9 +1395,9 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const std::vector<std
                                           1,
                                           1, // block dim
                                           0,
-                                          NULL, // shared mem and stream
+                                          nullptr, // shared mem and stream
                                           args_list.data(),
-                                          0)); // arguments
+                                          nullptr)); // arguments
             debug_sync();
         }});
 
@@ -1460,9 +1460,9 @@ size_t runtime::gpu::CUDAEmitter::build_cudnn_bn_inv_var(const std::vector<std::
                                           1,
                                           1, // block dim
                                           0,
-                                          NULL, // shared mem and stream
+                                          nullptr, // shared mem and stream
                                           args_list,
-                                          0)); // arguments
+                                          nullptr)); // arguments
             debug_sync();
         }});
 
@@ -1632,9 +1632,9 @@ size_t runtime::gpu::CUDAEmitter::build_softmax_divide(const std::vector<std::st
                                           1,
                                           1, // block dim
                                           0,
-                                          NULL, // shared mem and stream
+                                          nullptr, // shared mem and stream
                                           arg_list.data(),
-                                          0)); // arguments
+                                          nullptr)); // arguments
             debug_sync();
         }});
 
@@ -1733,9 +1733,9 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
                                           1,
                                           1,
                                           0,
-                                          NULL,
+                                          nullptr,
                                           args_list,
-                                          0));
+                                          nullptr));
             debug_sync();
         }});
 
@@ -1808,9 +1808,9 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar(const std::vector<std::
                                           1,
                                           1,
                                           shared_data_bytes,
-                                          NULL,
+                                          nullptr,
                                           args_list,
-                                          0));
+                                          nullptr));
             debug_sync();
         }});
 
@@ -1875,9 +1875,9 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar_acc(const std::vector<s
                                           1,
                                           1,
                                           0,
-                                          NULL,
+                                          nullptr,
                                           args_list,
-                                          0));
+                                          nullptr));
         }});
 
     return this->m_primitive_emitter->register_primitive(reduce_acc, hash);
@@ -2173,9 +2173,9 @@ size_t
                                           1,
                                           1,
                                           0,
-                                          NULL,
+                                          nullptr,
                                           args_list,
-                                          0));
+                                          nullptr));
             debug_sync();
         }});
 
@@ -2189,8 +2189,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window(const OpName op_name,
                                                       NVShape reduce_window_shape,
                                                       NVShape reduce_window_strides)
 {
-    const char* op = NULL;
-    const char* kernel = NULL;
+    const char* op = nullptr;
+    const char* kernel = nullptr;
     switch (op_name)
     {
     case OpName::add:
@@ -2268,7 +2268,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window(const OpName op_name,
         void* param_reduce_window_strides =
             runtime::gpu::invoke_memory_primitive(m_ctx, idx_reduce_window_strides);
 
-        std::vector<void*> args_list(7, NULL);
+        std::vector<void*> args_list(7, nullptr);
         args_list[0] = &inputs[0];
         args_list[1] = &outputs[0];
         args_list[2] = &param_input_strides;
@@ -2285,9 +2285,9 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window(const OpName op_name,
                                       1,
                                       1, // block dim
                                       0,
-                                      NULL, // shared mem and stream
+                                      nullptr, // shared mem and stream
                                       args_list.data(),
-                                      0)); // arguments
+                                      nullptr)); // arguments
         debug_sync();
     }});
 
@@ -2384,9 +2384,9 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
                                           1,
                                           1,
                                           0,
-                                          NULL,
+                                          nullptr,
                                           args_list,
-                                          0));
+                                          nullptr));
             debug_sync();
         }});
 
@@ -2789,9 +2789,9 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const std::array<std::string
                                           threads.y,
                                           threads.z,
                                           0,
-                                          NULL,
+                                          nullptr,
                                           args_list,
-                                          0));
+                                          nullptr));
             debug_sync();
         }});
 

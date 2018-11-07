@@ -14,6 +14,14 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.0.0")
+        # gtest has issues with this with v1.8.x
+        # gtest issue is supposed to be addressed after v1.8.x
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-zero-as-null-pointer-constant")
+    endif()
+endif()
+
 set(SRC
     algebraic_simplification.cpp
     all_close_f.cpp
@@ -197,6 +205,10 @@ if (NGRAPH_TBB_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_TBB_ENABLE)
 endif()
 
+if (NGRAPH_HALIDE)
+    target_compile_definitions(unit-test PRIVATE "NGRAPH_HALIDE")
+endif()
+
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
@@ -208,6 +220,10 @@ endif()
 
 if (NGRAPH_GPU_ENABLE)
     target_link_libraries(unit-test PRIVATE gpu_backend)
+endif()
+
+if (NGRAPH_NOP_ENABLE)
+    target_link_libraries(unit-test PRIVATE nop_backend)
 endif()
 
 if (NGRAPH_ONNXIFI_ENABLE)

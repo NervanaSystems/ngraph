@@ -891,7 +891,6 @@ TEST(cpu_fusion, conv_bias_relu_n2c1h2w2_2)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
-#if 0
 TEST(cpu_fusion, conv_horizontal_fusion)
 {
     Shape shape_a{2, 1, 6, 6};
@@ -942,7 +941,6 @@ TEST(cpu_fusion, conv_horizontal_fusion)
     size_t cpu_cb = count_ops_of_type<op::ConvolutionBias>(cpu_f);
     ASSERT_EQ(cpu_cb, 1);
 }
-#endif
 
 // ConvolutionBiasAdd relies on an in-place fused MKLDNN kernel.
 // Need to ensure that it is fused only when in-place buffer allocation is feasible
