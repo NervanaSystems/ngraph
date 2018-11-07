@@ -734,8 +734,7 @@ void runtime::gpu::CudaKernelBuilder::get_onehot_op(codegen::CodeWriter& writer,
             writer << "if(in_pixel >= 0 && in_pixel < hot_axis_shape)\n";
             writer.block_begin();
             {
-                writer << "uint32_t idx = tid / hot_axis_stride * hot_axis_stride * "
-                          "hot_axis_shape "
+                writer << "uint32_t idx = tid / hot_axis_stride * hot_axis_stride * hot_axis_shape "
                           "+ (hot_axis_stride * in_pixel) + tid % "
                           "hot_axis_stride;\n";
                 writer << "out[idx] = 1;\n";
@@ -1113,9 +1112,9 @@ void runtime::gpu::CudaKernelBuilder::get_reverse_op(codegen::CodeWriter& writer
                 writer << "uint32_t idx = i - 1;\n";
                 writer << "uint32_t axes_i_in = input_idx % input_shape[idx];\n";
                 writer << "input_idx /= input_shape[idx];\n";
-                writer << "uint32_t axes_i_out = reverse_axes[idx] ? input_shape[idx] - "
-                          "axes_i_in - "
-                          "1 : axes_i_in;\n";
+                writer
+                    << "uint32_t axes_i_out = reverse_axes[idx] ? input_shape[idx] - axes_i_in - "
+                       "1 : axes_i_in;\n";
                 writer << "output_idx += axes_i_out * stride;\n";
                 writer << "stride *= input_shape[idx];\n";
             }
