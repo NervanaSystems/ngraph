@@ -728,7 +728,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         std::vector<std::shared_ptr<op::Rnn>> rnn_nodes;
         for (auto& goe0 : rnn_goe0_bounded_nodes)
         {
-            if (auto goe0_arg = std::dynamic_pointer_cast<op::Rnn>(goe0->get_argument(0)))
+            if (auto goe0_arg = std::dynamic_pointer_cast<op::Rnn>(goe0->get_arguments()[0]))
             {
                 rnn_nodes.push_back(goe0_arg);
             }
@@ -866,7 +866,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                 {
                     replace_rnn_output_cellstate(goe1_node, num_fused_rnn_layers - index);
                 }
-                else
+                else if (!goe1_node)
                 {
                     return false;
                 }
@@ -875,7 +875,6 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
         // Replace the RNN ht output of the last cell
         ngraph::replace_node(rnn_goe0_bounded_nodes[0], layer_rnn_ht);
-
         return true;
     };
 
