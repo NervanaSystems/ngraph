@@ -14,6 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <future>
+
 #include "ngraph/runtime/interpreter/node_wrapper.hpp"
 
 using namespace ngraph;
@@ -22,6 +24,7 @@ using namespace std;
 runtime::interpreter::NodeWrapper::NodeWrapper(const shared_ptr<const Node>& node)
     : m_node{node}
 {
+    shared_future<void> sf;
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
 // {"Abs", runtime::interpreter::OP_TYPEID::Abs},
 // {"Acos", runtime::interpreter::OP_TYPEID::Acos},
