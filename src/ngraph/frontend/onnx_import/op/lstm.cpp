@@ -182,13 +182,18 @@ namespace ngraph
                         // If absent - no clipping.
                         m_clip = node.get_attribute_value<float>("clip",
                                                                  {std::numeric_limits<float>::max()});
+                        ASSERT_IS_SUPPORTED(node, (m_clip != std::numeric_limits<float>::max()))
+                            << "Currently clipping is not supported.";
+
                         std::string direction =
                             node.get_attribute_value<std::string>("direction", "forward");
                         ASSERT_IS_SUPPORTED(node, (direction == "forward"))
-                            << "Currently only forward mode is supported";
+                            << "Currently only forward mode is supported.";
 
                         m_input_forget = static_cast<bool>(
                                             node.get_attribute_value<std::int64_t>("input_forget", 0));
+                        ASSERT_IS_SUPPORTED(node, (m_input_forget != 0))
+                            << "Coupling input and forget gates is currently not supported.";
 
                         // Register available activation functions.
                         m_atcivation_funcs.emplace("Sigmoid", std::bind(Sigmoid, std::placeholders::_1));
