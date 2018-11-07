@@ -86,16 +86,21 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
                                             const vector<shared_ptr<runtime::Tensor>>& outputs,
                                             const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    NGRAPH_INFO;
     validate_call(function, outputs, inputs);
 
+    NGRAPH_INFO;
     compile(function);
+    NGRAPH_INFO;
     FunctionInstance& instance = m_function_map[function];
 
     // convert inputs to HostTensor
+    NGRAPH_INFO;
     vector<void*> func_inputs;
     for (auto tv : inputs)
     {
-        func_inputs.push_back(static_cast<void*>(tv.get()));
+        auto htv = static_pointer_cast<runtime::HostTensor>(tv);
+        func_inputs.push_back(static_cast<void*>(htv->get_data_ptr()));
     }
     // if (instance.m_nan_check_enabled)
     // {
@@ -103,13 +108,16 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     // }
 
     // convert outputs to HostTensor
+    NGRAPH_INFO;
     vector<void*> func_outputs;
     for (auto tv : outputs)
     {
-        func_outputs.push_back(static_cast<void*>(tv.get()));
+        auto htv = static_pointer_cast<runtime::HostTensor>(tv);
+        func_outputs.push_back(static_cast<void*>(htv->get_data_ptr()));
     }
 
     // map function params -> HostTensor
+    NGRAPH_INFO;
     unordered_map<descriptor::Tensor*, void*> tensor_map;
     size_t input_count = 0;
     for (auto param : function->get_parameters())
@@ -122,6 +130,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     }
 
     // map function outputs -> HostTensor
+    NGRAPH_INFO;
     for (size_t output_count = 0; output_count < function->get_output_size(); ++output_count)
     {
         auto output = function->get_output_op(output_count);
@@ -134,9 +143,11 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     }
 
     // for each ordered op in the graph
+    NGRAPH_INFO;
     for (const NodeWrapper& wrapped : instance.m_wrapped_nodes)
     {
         const Node* op = &wrapped.get_node();
+        NGRAPH_INFO << op->get_name();
         auto type_id = wrapped.get_typeid();
         if (type_id == OP_TYPEID::Parameter)
         {
@@ -152,6 +163,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 
         // get op outputs from map or create
         vector<void*> op_outputs;
+        NGRAPH_INFO;
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
             descriptor::Tensor* tv = op->get_output_tensor_ptr(i).get();
@@ -170,6 +182,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
             op_outputs.push_back(htv);
         }
 
+        NGRAPH_INFO;
         // get op type
         element::Type type;
 #pragma GCC diagnostic push
@@ -196,11 +209,14 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         }
 #pragma GCC diagnostic pop
 
+        NGRAPH_INFO;
         if (instance.m_performance_counters_enabled)
         {
             instance.m_timer_map[op].start();
         }
+        NGRAPH_INFO;
         generate_calls(type, wrapped, op_outputs, op_inputs, instance);
+        NGRAPH_INFO;
         if (instance.m_performance_counters_enabled)
         {
             instance.m_timer_map[op].stop();
@@ -209,8 +225,10 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         // {
         //     perform_nan_check(op_outputs, op);
         // }
+        NGRAPH_INFO;
     }
 
+    NGRAPH_INFO;
     return true;
 }
 
