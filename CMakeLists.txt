@@ -64,7 +64,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
         message(FATAL_ERROR "Apple Clang version must be at least ${APPLE_CLANG_MIN_VERSION}!")
     endif()
 else()
-    message(WARNING "You are using an unsupported compiler. Compilation has only been tested with Clang (${CLANG_MIN_VERSION} and up), Apple Clang (${APPLE_CLANG_MIN_VERSION} and up), and GCC (${GCC_MIN_VERSION} and up).")
+    message(WARNING "You are using an unsupported compiler.")
 endif()
 
 # Prevent Eigen from using any LGPL3 code
@@ -168,7 +168,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (DEFINED NGRAPH_USE_CXX_ABI)
         message( STATUS "nGraph using CXX11 ABI: " ${NGRAPH_USE_CXX_ABI} )
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
-    endif()    
+    endif()
 endif()
 
 ngraph_var(NGRAPH_WARNINGS_AS_ERRORS DEFAULT "OFF")
@@ -225,7 +225,7 @@ if(WIN32)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")	
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
 endif()
 
 if (NGRAPH_PLAIDML_ENABLE)
