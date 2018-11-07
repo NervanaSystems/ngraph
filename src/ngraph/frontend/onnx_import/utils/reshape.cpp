@@ -15,11 +15,15 @@
 //*****************************************************************************
 
 #include <algorithm>
+#include <cstddef>
+#include <cmath>
 #include <functional>
 #include <iterator>
 #include <numeric>
+#include <vector>
 
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/slice.hpp"
 
 #include "exceptions.hpp"
 #include "utils/common.hpp"
@@ -31,6 +35,37 @@ namespace ngraph
     {
         namespace reshape
         {
+            namespace detail
+            {
+                template <typename T>
+                inline T get_valid_array_index(T left, T right)
+                {
+                    return (left >= 0) ? std::min(left, right)
+                                       : std::max(static_cast<T>(0), right + left);
+                }
+
+                inline std::shared_ptr<op::Slice>
+                    make_ng_slice(const std::shared_ptr<ngraph::Node>& node,
+                                  std::vector<std::size_t> axes,
+                                  std::vector<std::size_t> starts,
+                                  std::vector<std::size_t> ends)
+                {
+                    std::vector<std::size_t> upper_bounds{node->get_shape()};
+                    std::vector<std::size_t> lower_bounds(upper_bounds.size());
+                    for (std::size_t index{0}; index < axes.size(); ++index)
+                    {
+                        std::size_t axis{axes.at(index)};
+                        lower_bounds.at(axis) =
+                            get_valid_array_index(starts.at(index), node->get_shape().at(axis));
+                        upper_bounds.at(axis) =
+                            get_valid_array_index(ends.at(index), node->get_shape().at(axis));
+                    }
+                    return std::make_shared<op::Slice>(
+                        node, lower_bounds, upper_bounds);
+                }
+
+            } // namespace detail
+
             std::shared_ptr<ngraph::Node> flatten(const std::shared_ptr<ngraph::Node>& node,
                                                   int axis)
             {
@@ -204,6 +239,36 @@ namespace ngraph
                 output_shape.insert(std::end(output_shape), innermost_axes_count, 1);
                 return std::make_shared<ngraph::op::Reshape>(
                     node, reshape::get_default_axis_vector(node->get_shape().size()), output_shape);
+            }
+
+            NodeVector split(const std::shared_ptr<ngraph::Node>& node,
+                             std::vector<std::size_t> length_parts,
+                             int axis)
+            {
+                std::size_t start_index{0};
+                NodeVector outputs;
+                for (const auto& length_part : length_parts)
+                {
+                    std::size_t end_index{start_index + length_part};
+                    outputs.push_back(detail::make_ng_slice(input, {axis}, {start_index}, {end_index}));
+                    start_index = end_index;
+                }
+                return outputs;
+            }
+
+            NodeVector split(const std::shared_ptr<ngraph::Node>& node,
+                             std::size_t split_parts,
+                             int axis)
+            {
+                std::size_t axis_to_split{static_cast<std::size_t>(axis)};
+                if (axis < 0)
+                {
+                    axis_to_split = node->get_shape().size() + axis;
+                }
+
+                std::size_t length_axis_to_split{node->get_shape().at(axis_to_split)};
+                std::vector<std::size_t> length_parts(split_parts, length_axis_to_split / split_parts);
+                return split(node, length_parts, axis_to_split);
             }
 
         } // namespace  reshape
