@@ -164,10 +164,6 @@ namespace ngraph
                         m_activation_beta =
                             node.get_attribute_value<std::vector<float>>("activation_beta", {});
 
-                        // FIXME: causes ld errors!
-                        // m_activations = node.get_attribute_value<std::vector<std::string>>(
-                        //                            "activations", {"Sigmoid", "Tanh", "Tanh"});
-
                         // If absent - no clipping.
                         m_clip = node.get_attribute_value<float>(
                             "clip", {std::numeric_limits<float>::max()});
@@ -192,7 +188,6 @@ namespace ngraph
 
                     std::vector<float> m_activation_alpha;
                     std::vector<float> m_activation_beta;
-                    std::vector<std::string> m_activations{"Sigmoid", "Tanh", "Tanh"};
                     ActivationFuncsMap m_atcivation_funcs;
                     float m_clip;
                     LSTMDirection m_direction{LSTMDirection::LSTM_DIRECTION_FORWARD};
