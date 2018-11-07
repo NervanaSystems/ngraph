@@ -77,54 +77,6 @@ void runtime::gpu::CudaKernelBuilder::get_cudnn_bn_inv_var_op(codegen::CodeWrite
     return;
 }
 
-void runtime::gpu::CudaKernelBuilder::get_softmax_divide_op(
-    codegen::CodeWriter& writer,
-    const std::string& name,
-    const std::vector<std::string>& data_types,
-    std::vector<size_t> axes_flag,
-    size_t rank)
-{
-    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in0, "
-           << data_types[1] << "* in1, " << data_types[2] << "* out,";
-    for (size_t i = 0; i < axes_flag.size(); i++)
-    {
-        writer << "uint32_t input0_strides" << i << ", ";
-    }
-    for (size_t i = 0; i < axes_flag.size(); i++)
-    {
-        writer << "uint32_t input1_strides" << i << ", ";
-    }
-    writer << "uint32_t n)\n";
-    writer.block_begin();
-    {
-        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
-        writer << "if (tid < n)\n";
-        writer.block_begin();
-        {
-            writer << "uint32_t input0_idx = tid;\n";
-            writer << "uint32_t input1_idx = 0;\n";
-            size_t i = 0;
-            for (; i < rank - 1; i++)
-            {
-                if (axes_flag[i] != 1)
-                {
-                    writer << "input1_idx += (input0_idx / input0_strides" << i
-                           << ") * input1_strides" << i << ";\n";
-                }
-                writer << "input0_idx %= input0_strides" << i << ";\n";
-            }
-            if (axes_flag[i] != 1)
-            {
-                writer << "input1_idx += (input0_idx / input0_strides" << i << ") * input1_strides"
-                       << i << ";\n";
-            }
-            writer << "out[tid] = in0[tid] / in1[input1_idx];\n";
-        }
-        writer.block_end();
-    }
-    writer.block_end();
-}
-
 void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
     codegen::CodeWriter& writer,
     const std::string& name,
