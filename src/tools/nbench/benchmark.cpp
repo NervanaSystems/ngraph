@@ -19,7 +19,8 @@
 
 #include "benchmark.hpp"
 #include "ngraph/file_util.hpp"
-#include "ngraph/runtime/backend.hpp"
+#include "ngraph/graph_util.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
@@ -252,4 +253,126 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
 
     vector<runtime::PerformanceCounter> perf_data = backend->get_performance_data(f);
     return perf_data;
+}
+
+void run_benchmark_validation(shared_ptr<Function> f, const string& backend_name)
+{
+    NodeVector new_results;
+    for (auto n : f->get_ordered_ops())
+    {
+        //dont include op::Results otherwise Function c-tor will complain
+        if (!n->is_output() && !n->is_parameter() && !n->is_constant() &&
+            !(n->get_outputs().size() > 1) && n->get_element_type() == element::f32)
+        {
+            // place conditionals here if you want to only make certain ops an output/result node
+            new_results.push_back(n);
+        }
+    }
+
+    //no need to include original results they are subsumed by new_results
+    auto new_func = make_shared<Function>(new_results, f->get_parameters());
+
+    // // uncomment these lines to serialize the new_func for later use
+    // // I use this for splicing a small graph out of a larger one
+    // string js = serialize(new_func, 4);
+    // std::ofstream outfile;
+    // outfile.open("conv_bprop_filters.json");
+    // outfile << js;
+    // outfile.close();
+    // if (new_func) exit(0);
+
+    Uniform<float> rng(1.0f, 2.0f, 2112);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : new_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto cpu_func = ngraph::clone_function(*new_func);
+    auto bk_func = ngraph::clone_function(*new_func);
+
+    auto cpu_results = execute(cpu_func, args, "CPU");
+    auto bk_results = execute(bk_func, args, backend_name);
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        std::cout << "Comparing results for " << new_results.at(i)->get_name() << std::endl;
+        if (auto node = dynamic_pointer_cast<op::GetOutputElement>(new_results.at(i)))
+        {
+            std::cout << "  Parent node: ";
+            for (auto& p : node->get_arguments())
+            {
+                std::cout << " " << p->get_name() << std::endl;
+                std::cout << "   nargs: " << p->get_arguments().size() << std::endl;
+            }
+        }
+        all_close_f(cpu_results.at(i), bk_results.at(i), 24, 0);
+    }
+
+    cout << "validation for" << f->get_name() << " done." << endl;
+    return;
+}
+
+bool close_f(float a, float b, int mantissa_bits, int tolerance_bits)
+{
+    // isfinite(a) => !isinf(a) && !isnan(a)
+    if (!std::isfinite(a) || !std::isfinite(b))
+    {
+        return false;
+    }
+
+    FloatUnion a_fu{a};
+    FloatUnion b_fu{b};
+    uint32_t a_uint = a_fu.i;
+    uint32_t b_uint = b_fu.i;
+
+    // A trick to handle both positive and negative numbers, see https://goo.gl/YbdnFQ
+    // - If negative: convert to two's complement
+    // - If positive: mask with sign bit
+    uint32_t sign_mask = static_cast<uint32_t>(1U) << 31;
+    a_uint = (sign_mask & a_uint) ? (~a_uint + 1) : (sign_mask | a_uint);
+    b_uint = (sign_mask & b_uint) ? (~b_uint + 1) : (sign_mask | b_uint);
+
+    uint32_t distance = (a_uint >= b_uint) ? (a_uint - b_uint) : (b_uint - a_uint);
+
+    // e.g. for float with 24 bit mantissa, 2 bit accuracy, and hard-coded 8 bit exponent_bits
+    // tolerance_bit_shift = 32 -           (1 +  8 + (24 -     1         ) - 2             )
+    //                       float_length    sign exp  mantissa implicit 1    tolerance_bits
+    uint32_t tolerance_bit_shift = 32 - (1 + 8 + (mantissa_bits - 1) - tolerance_bits);
+    uint32_t tolerance = static_cast<uint32_t>(1U) << tolerance_bit_shift;
+
+    return distance <= tolerance;
+}
+
+bool all_close_f(const std::vector<float>& a,
+                 const std::vector<float>& b,
+                 int mantissa_bits,
+                 int tolerance_bits)
+{
+    bool rc = true;
+    if (a.size() != b.size())
+    {
+        throw ngraph::ngraph_error("a.size() != b.size() for all_close comparison.");
+    }
+    size_t count = 0;
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+        bool is_close_f = close_f(a[i], b[i], mantissa_bits, tolerance_bits);
+        if (!is_close_f)
+        {
+            if (count < 5)
+            {
+                NGRAPH_INFO << a[i] << " is not close to " << b[i] << "at idx " << i;
+            }
+            rc = false;
+            count++;
+        }
+    }
+
+    if (!rc)
+    {
+        NGRAPH_INFO << "diff count " << count << " out of " << a.size();
+    }
+    return rc;
 }

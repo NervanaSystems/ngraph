@@ -190,6 +190,7 @@ int main(int argc, char** argv)
     bool failed = false;
     bool statistics = false;
     bool timing_detail = false;
+    bool validation = false;
     bool visualize = false;
     int warmup_iterations = 1;
     bool copy_data = true;
@@ -224,6 +225,10 @@ int main(int argc, char** argv)
         else if (arg == "--timing_detail" || arg == "--timing-detail")
         {
             timing_detail = true;
+        }
+        else if (arg == "--validation")
+        {
+            validation = true;
         }
         else if (arg == "--no_copy_data")
         {
@@ -386,8 +391,16 @@ OPTIONS
             {
                 cout << "\n---- Benchmark ----\n";
                 shared_ptr<Function> f = deserialize(model);
-                auto perf_data = run_benchmark(
-                    f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                vector<runtime::PerformanceCounter> perf_data;
+                if (validation)
+                {
+                    run_benchmark_validation(f, backend);
+                }
+                else
+                {
+                    perf_data = run_benchmark(
+                        f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                }
                 auto perf_shape = to_perf_shape(f, perf_data);
                 aggregate_perf_data.insert(
                     aggregate_perf_data.end(), perf_shape.begin(), perf_shape.end());
