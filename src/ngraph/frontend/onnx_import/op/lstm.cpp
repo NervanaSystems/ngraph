@@ -158,41 +158,15 @@ namespace ngraph
                         // ---- Required -----
                         m_hidden_size = node.get_attribute_value<std::int64_t>("hidden_size");
 
-                        // ---- Optional -----
-                        m_activation_alpha =
-                            node.get_attribute_value<std::vector<float>>("activation_alpha", {});
-                        m_activation_beta =
-                            node.get_attribute_value<std::vector<float>>("activation_beta", {});
-
-                        // If absent - no clipping.
-                        m_clip = node.get_attribute_value<float>(
-                            "clip", {std::numeric_limits<float>::max()});
-                        ASSERT_IS_SUPPORTED(node, (m_clip == std::numeric_limits<float>::max()))
-                            << "Currently clipping is not supported.";
-
-                        std::string direction =
-                            node.get_attribute_value<std::string>("direction", "forward");
-                        ASSERT_IS_SUPPORTED(node, (direction == "forward"))
-                            << "Currently only forward mode is supported.";
-
-                        m_input_forget = static_cast<bool>(
-                            node.get_attribute_value<std::int64_t>("input_forget", 0));
-                        ASSERT_IS_SUPPORTED(node, (m_input_forget == 0))
-                            << "Coupling input and forget gates is currently not supported.";
-
                         // Register available activation functions.
                         m_atcivation_funcs.emplace("Sigmoid",
                                                    std::bind(Sigmoid, std::placeholders::_1));
                         m_atcivation_funcs.emplace("Tanh", std::bind(Tanh, std::placeholders::_1));
                     }
 
-                    std::vector<float> m_activation_alpha{};
-                    std::vector<float> m_activation_beta{};
                     ActivationFuncsMap m_atcivation_funcs{};
-                    float m_clip{std::numeric_limits<float>::max()};
                     LSTMDirection m_direction{LSTMDirection::LSTM_DIRECTION_FORWARD};
                     std::int64_t m_hidden_size{0};
-                    bool m_input_forget{false};
                 };
 
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LSTM NODE CLASS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -224,7 +198,8 @@ namespace ngraph
                             }
                         }
                     }
-                    ~LSTMNode(){};
+
+                    ~LSTMNode(){}
 
                     NodeVector run()
                     {
