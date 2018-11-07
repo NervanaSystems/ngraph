@@ -94,7 +94,7 @@ namespace ngraph
                         else
                         {
                             m_map["B"] = common::make_constant_node<float>(
-                                    element::f32, {n_dirs, 2 * gates_count * hidden_size}, {0.f});
+                                element::f32, {n_dirs, 2 * gates_count * hidden_size}, {0.f});
                         }
                         // The lengths of the sequences in a batch. Shape [batch_size]
                         if (ng_inputs.size() >= 5)
@@ -109,7 +109,7 @@ namespace ngraph
                         else
                         {
                             m_map["init_H"] = common::make_constant_node<float>(
-                                        element::f32, {n_dirs, batch_size, hidden_size}, {0.f});
+                                element::f32, {n_dirs, batch_size, hidden_size}, {0.f});
                         }
                         // The initial value of the cell. Shape [num_directions, batch_size, hidden_size]
                         if (ng_inputs.size() >= 7)
@@ -119,7 +119,7 @@ namespace ngraph
                         else
                         {
                             m_map["init_C"] = common::make_constant_node<float>(
-                                        element::f32, {n_dirs, batch_size, hidden_size}, {0.f});
+                                element::f32, {n_dirs, batch_size, hidden_size}, {0.f});
                         }
                         // The weight tensor for peepholes. Shape [num_directions, 3*hidde_size]
                         if (ng_inputs.size() >= 8)
@@ -129,25 +129,13 @@ namespace ngraph
                         else
                         {
                             m_map["P"] = common::make_constant_node<float>(
-                                        element::f32, {n_dirs, peepholes_count * hidden_size}, {0.f});
+                                element::f32, {n_dirs, peepholes_count * hidden_size}, {0.f});
                         }
                     }
 
-                    NgraphNodePtr& operator[](const std::string& key)
-                    {
-                        return m_map[key];
-                    }
-
-                    iterator begin()
-                    {
-                        return m_map.begin();
-                    }
-
-                    iterator end()
-                    {
-                        return m_map.end();
-                    }
-
+                    NgraphNodePtr& operator[](const std::string& key) { return m_map[key]; }
+                    iterator begin() { return m_map.begin(); }
+                    iterator end() { return m_map.end(); }
                     std::map<std::string, NgraphNodePtr> m_map;
                 };
 
@@ -171,18 +159,18 @@ namespace ngraph
                         m_hidden_size = node.get_attribute_value<std::int64_t>("hidden_size");
 
                         // ---- Optional -----
-                        m_activation_alpha = node.get_attribute_value<std::vector<float>>(
-                                                    "activation_alpha", {});
-                        m_activation_beta = node.get_attribute_value<std::vector<float>>(
-                                                    "activation_beta", {});
+                        m_activation_alpha =
+                            node.get_attribute_value<std::vector<float>>("activation_alpha", {});
+                        m_activation_beta =
+                            node.get_attribute_value<std::vector<float>>("activation_beta", {});
 
                         // FIXME: causes ld errors!
                         // m_activations = node.get_attribute_value<std::vector<std::string>>(
                         //                            "activations", {"Sigmoid", "Tanh", "Tanh"});
 
                         // If absent - no clipping.
-                        m_clip = node.get_attribute_value<float>("clip",
-                                                                 {std::numeric_limits<float>::max()});
+                        m_clip = node.get_attribute_value<float>(
+                            "clip", {std::numeric_limits<float>::max()});
                         ASSERT_IS_SUPPORTED(node, (m_clip != std::numeric_limits<float>::max()))
                             << "Currently clipping is not supported.";
 
@@ -192,12 +180,13 @@ namespace ngraph
                             << "Currently only forward mode is supported.";
 
                         m_input_forget = static_cast<bool>(
-                                            node.get_attribute_value<std::int64_t>("input_forget", 0));
+                            node.get_attribute_value<std::int64_t>("input_forget", 0));
                         ASSERT_IS_SUPPORTED(node, (m_input_forget != 0))
                             << "Coupling input and forget gates is currently not supported.";
 
                         // Register available activation functions.
-                        m_atcivation_funcs.emplace("Sigmoid", std::bind(Sigmoid, std::placeholders::_1));
+                        m_atcivation_funcs.emplace("Sigmoid",
+                                                   std::bind(Sigmoid, std::placeholders::_1));
                         m_atcivation_funcs.emplace("Tanh", std::bind(Tanh, std::placeholders::_1));
                     }
 
@@ -217,11 +206,11 @@ namespace ngraph
                 {
                 public:
                     explicit LSTMNode(const Node& node)
-                      : m_input_map{node},
-                        m_attributes{node},
-                        m_f{m_attributes.m_atcivation_funcs["Sigmoid"]},
-                        m_g{m_attributes.m_atcivation_funcs["Tanh"]},
-                        m_h{m_attributes.m_atcivation_funcs["Tanh"]}
+                        : m_input_map{node}
+                        , m_attributes{node}
+                        , m_f{m_attributes.m_atcivation_funcs["Sigmoid"]}
+                        , m_g{m_attributes.m_atcivation_funcs["Tanh"]}
+                        , m_h{m_attributes.m_atcivation_funcs["Tanh"]}
                     {
                         if (m_attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
                         {
@@ -230,15 +219,17 @@ namespace ngraph
                             {
                                 if (ng_in.first != "X" && ng_in.first != "seq_lengths")
                                 {
-                                    ASSERT_VALID_ARGUMENT(node, ng_in.second->get_shape().at(0) == 1)
-                                        << "Input: { " << ng_in.first << " } first axis has size different "
+                                    ASSERT_VALID_ARGUMENT(node,
+                                                          ng_in.second->get_shape().at(0) == 1)
+                                        << "Input: { " << ng_in.first
+                                        << " } first axis has size different "
                                            "from 1, while direction attribute set to 'forward'.";
                                     ng_in.second = reshape::squeeze(ng_in.second);
                                 }
                             }
                         }
                     }
-                    ~LSTMNode() {};
+                    ~LSTMNode(){};
 
                     NodeVector run()
                     {
@@ -246,14 +237,14 @@ namespace ngraph
                         NgraphNodePtr p_i = p_iof.at(0);
                         NgraphNodePtr p_o = p_iof.at(1);
                         NgraphNodePtr p_f = p_iof.at(2);
-                        NgraphNodePtr H_t = m_input_map["init_H"];;
-                        NgraphNodePtr C_t = m_input_map["init_C"];;
+                        NgraphNodePtr H_t = m_input_map["init_H"];
+                        NgraphNodePtr C_t = m_input_map["init_C"];
                         NodeVector h_list;
 
                         NodeVector b_W_R = reshape::split(m_input_map["B"], 2);
                         NgraphNodePtr bias = b_W_R.at(0) + b_W_R.at(1);
-                        NodeVector in_seqs = reshape::split(m_input_map["X"],
-                                                            m_input_map["X"]->get_shape().at(0));
+                        NodeVector in_seqs =
+                            reshape::split(m_input_map["X"], m_input_map["X"]->get_shape().at(0));
                         for (auto& in_x : in_seqs)
                         {
                             // remove first empty dim, after above split.
@@ -262,10 +253,10 @@ namespace ngraph
 
                         for (const auto& in_x : in_seqs)
                         {
-                            auto Xt_W = std::make_shared<ngraph::op::Dot>(in_x,
-                                reshape::transpose(m_input_map["W"]));
-                            auto Ht_W = std::make_shared<ngraph::op::Dot>(H_t,
-                                reshape::transpose(m_input_map["R"]));
+                            auto Xt_W = std::make_shared<ngraph::op::Dot>(
+                                in_x, reshape::transpose(m_input_map["W"]));
+                            auto Ht_W = std::make_shared<ngraph::op::Dot>(
+                                H_t, reshape::transpose(m_input_map["R"]));
                             auto gates = Xt_W + Ht_W + bias;
 
                             NodeVector split_gates = reshape::split(gates, 4, -1);
@@ -298,9 +289,8 @@ namespace ngraph
                         {
                             Shape shape{Y->get_shape()};
                             shape.insert(std::next(std::begin(shape)), 1);
-                            Y = std::make_shared<ngraph::op::Reshape>(Y,
-                                    reshape::get_default_axis_vector(Y->get_shape().size()),
-                                    shape);
+                            Y = std::make_shared<ngraph::op::Reshape>(
+                                Y, reshape::get_default_axis_vector(Y->get_shape().size()), shape);
                         }
                         return {Y, exp_h_list.back()};
                     }
