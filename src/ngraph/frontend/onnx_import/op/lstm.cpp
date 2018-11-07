@@ -186,13 +186,13 @@ namespace ngraph
                         m_atcivation_funcs.emplace("Tanh", std::bind(Tanh, std::placeholders::_1));
                     }
 
-                    std::vector<float> m_activation_alpha;
-                    std::vector<float> m_activation_beta;
-                    ActivationFuncsMap m_atcivation_funcs;
-                    float m_clip;
+                    std::vector<float> m_activation_alpha{};
+                    std::vector<float> m_activation_beta{};
+                    ActivationFuncsMap m_atcivation_funcs{};
+                    float m_clip{std::numeric_limits<float>::max()};
                     LSTMDirection m_direction{LSTMDirection::LSTM_DIRECTION_FORWARD};
-                    std::int64_t m_hidden_size;
-                    bool m_input_forget;
+                    std::int64_t m_hidden_size{0};
+                    bool m_input_forget{false};
                 };
 
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LSTM NODE CLASS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
