@@ -348,14 +348,9 @@ namespace ngraph
                         // The tensor that concats all the intermediate output values of the hidden.
                         // It has shape [seq_length, batch_size, hidden_size]
                         NodeVector exp_h_list;
-                        Shape shape{1};
-                        shape.insert(std::end(shape), std::begin(H_t->get_shape()),
-                                     std::end(H_t->get_shape()));
                         for (const auto& ht : h_list)
                         {
-                            exp_h_list.push_back(std::make_shared<ngraph::op::Reshape>(ht,
-                                    reshape::get_default_axis_vector(ht->get_shape().size()),
-                                    shape));
+                            exp_h_list.push_back(reshape::add_empty_axes(ht));
                         }
                         NgraphNodePtr Y{std::make_shared<ngraph::op::Concat>(exp_h_list, 0)};
 
@@ -363,7 +358,7 @@ namespace ngraph
                         // [seq_length, num_directions, batch_size, hidden_size]
                         if (m_attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
                         {
-                            shape = Y->get_shape();
+                            const Shape& shape{Y->get_shape()};
                             shape.insert(std::next(std::begin(shape)), 1);
                             Y = std::make_shared<ngraph::op::Reshape>(Y,
                                     reshape::get_default_axis_vector(Y->get_shape().size()),
