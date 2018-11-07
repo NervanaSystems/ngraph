@@ -1659,9 +1659,9 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<std::string>& 
                                           1,
                                           1,
                                           0,
-                                          NULL,
+                                          nullptr,
                                           args_list,
-                                          0));
+                                          nullptr));
             debug_sync();
         }});
 
