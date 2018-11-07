@@ -1692,7 +1692,11 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<std::string>& 
     NVShape output_strides = row_major_strides(output_shape);
     uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
     // TODO: currently we set it to 64, will add tuning method later
-    uint32_t block_size_x = 8;
+    uint32_t block_size_x = 64;
+    if(reduce_flag.back() == 1)
+    {
+        block_size_x = 8;
+    }
     uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
     auto args = m_primitive_emitter->add_kernel_args();
     args.add_placeholder(dtypes[0], "in")

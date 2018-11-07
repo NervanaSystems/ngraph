@@ -439,7 +439,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
                     for (int k = 0; k < unroll_num; k++)
                     {
                         writer << "input_i = expf(in[reduce_idx] - r_max);\n";
-                        writer << "out[reduce_idx] = input_i;\n";
+                        //writer << "out[reduce_idx] = input_i;\n";
                         writer << "r_sum += input_i;\n";
                         writer << "reduce_idx += step;\n";
                     }
@@ -450,7 +450,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
                 writer.block_begin();
                 {
                     writer << "input_i = expf(in[reduce_idx] - r_max);\n";
-                    writer << "out[reduce_idx] = input_i;\n";
+                    //writer << "out[reduce_idx] = input_i;\n";
                     writer << "r_sum += input_i;\n";
                     writer << "reduce_idx += step;\n";
                 }
@@ -486,8 +486,9 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
                 {
                     for (int k = 0; k < unroll_num; k++)
                     {
-                        //writer << data_types[1] << " input_i = expf(in[reduce_idx] - r_max) / r_sum;\n";
-                        writer << "out[reduce_idx] /= r_sum;\n";
+                        writer << "input_i = expf(in[reduce_idx] - r_max) / r_sum;\n";
+                        writer << "out[reduce_idx] = input_i;\n";
+                        //writer << "out[reduce_idx] /= r_sum;\n";
                         writer << "reduce_idx += step;\n";
                     }
                 }
@@ -496,8 +497,9 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
                        << last_r_idx << "++)\n";
                 writer.block_begin();
                 {
-                    //writer << data_types[1] << " input_i = expf(in[reduce_idx] - r_max) / r_sum;\n";
-                    writer << "out[reduce_idx] /= r_sum;\n";
+                    writer << "input_i = expf(in[reduce_idx] - r_max) / r_sum;\n";
+                    writer << "out[reduce_idx] = input_i;\n";
+                    //writer << "out[reduce_idx] /= r_sum;\n";
                     writer << "reduce_idx += step;\n";
                 }
                 writer.block_end();
