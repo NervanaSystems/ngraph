@@ -28,15 +28,17 @@ enable:
 * :abbr:`Direct EXecution mode (DEX)` or **DEX** -- Execute kernels for the 
   op directly instead of using codegen when traversing the computation graph.
 
-  .. :important:: See :doc:`../ops/index` to learn the nGraph design philosophy.
+  .. important:: See :doc:`../ops/index` to learn the nGraph means for graph 
+     computations.
 
-
+.. Our design philosophy is that the graph is not a script for running kernels; 
+   rather, our compilation will match ``ops`` to appropriate available kernels
+   (or when available, such as with CPU cycles). Thus, we expect that adding of 
+   new Core ops should be infrequent and that most functionality instead gets 
+   added with new functions that build sub-graphs from existing core ops.   
 
 * **Data layout abstraction** -- Make abstraction easier and faster with nGraph 
   translating element order to work best for whatever given or available device.  
-
-.. figure:: ../graphics/features-figure-latest.png
-   :width: 578px
 
 
 .. _portable:

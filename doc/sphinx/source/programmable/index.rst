@@ -12,7 +12,7 @@ Backends are responsible for function execution and value allocation. They
 can be used to :doc:`carry out a programmed computation<../howto/execute>`
 from a framework by using a CPU or GPU; or they can be used with an *Interpreter* 
 mode, which is primarily intended for testing, to analyze a program, or for a 
-framework developer to develop a custom UI. Experimental APIs to support 
+framework developer to develop customizations. Experimental APIs to support 
 current and future nGraph Backends are also available; see, for example, the 
 section on :ref:`plaidml_`.
 
