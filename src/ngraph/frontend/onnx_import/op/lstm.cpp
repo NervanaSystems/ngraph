@@ -52,62 +52,6 @@ namespace ngraph
             {
                 using NgraphNodePtr = std::shared_ptr<ngraph::Node>;
 
-                inline std::shared_ptr<ngraph::op::Slice>
-                make_ng_slice(const std::shared_ptr<ngraph::Node>& node,
-                              std::vector<std::size_t> axes,
-                              std::vector<std::size_t> starts,
-                              std::vector<std::size_t> ends)
-                {
-                    std::vector<std::size_t> upper_bounds{node->get_shape()};
-                    std::vector<std::size_t> lower_bounds(upper_bounds.size());
-                    for (std::size_t index{0}; index < axes.size(); ++index)
-                    {
-                        std::size_t axis{axes.at(index)};
-                        lower_bounds.at(axis) = starts.at(index);
-                        upper_bounds.at(axis) = ends.at(index);
-                    }
-                    return std::make_shared<ngraph::op::Slice>(node, lower_bounds, upper_bounds);
-                }
-
-                NodeVector split(const NgraphNodePtr& node,
-                                 std::size_t split_parts,
-                                 int axis = 0,
-                                 bool flatten = false)
-                {
-                    // TODO: refactor! Mostly copy-paste from split.cpp::split
-
-                    std::size_t axis_to_split{static_cast<std::size_t>(axis)};
-                    if (axis < 0)
-                    {
-                        axis_to_split = node->get_shape().size() + axis;
-                    }
-                    std::size_t length_axis_to_split{node->get_shape().at(axis_to_split)};
-                    std::vector<std::size_t> length_parts(split_parts, length_axis_to_split / split_parts);
-
-                    std::size_t start_index{0};
-                    NodeVector outputs;
-                    for (const auto& length_part : length_parts)
-                    {
-                        std::size_t end_index{start_index + length_part};
-                        std::shared_ptr<ngraph::Node> sliced_node = make_ng_slice(node,
-                                                                                  {axis_to_split},
-                                                                                  {start_index},
-                                                                                  {end_index});
-                        start_index = end_index;
-                        if (flatten)
-                        {
-                            auto sliced_shape{sliced_node->get_shape()};
-                            Shape output_shape{std::next(std::begin(sliced_shape)), std::end(sliced_shape)};
-                            sliced_node = std::make_shared<ngraph::op::Reshape>(
-                                sliced_node,
-                                reshape::get_default_axis_vector(sliced_shape.size()),
-                                output_shape);
-                        }
-                        outputs.push_back(sliced_node);
-                    }
-                    return outputs;
-                }
-
                 NgraphNodePtr add(const NgraphNodePtr& lhs, const NgraphNodePtr& rhs)
                 {
                     auto args = numpy_style_broadcast_for_binary_operation(lhs, rhs);
@@ -309,7 +253,7 @@ namespace ngraph
 
                     NodeVector run()
                     {
-                        NodeVector p_iof = split(m_input_map["P"], 3);
+                        NodeVector p_iof = reshape::split(m_input_map["P"], 3);
                         NgraphNodePtr p_i = p_iof.at(0);
                         NgraphNodePtr p_o = p_iof.at(1);
                         NgraphNodePtr p_f = p_iof.at(2);
@@ -317,10 +261,15 @@ namespace ngraph
                         NgraphNodePtr C_t = m_input_map["init_C"];;
                         NodeVector h_list;
 
-                        NodeVector b_W_R = split(m_input_map["B"], 2);
+                        NodeVector b_W_R = reshape::split(m_input_map["B"], 2);
                         NgraphNodePtr bias = b_W_R.at(0) + b_W_R.at(1);
-                        NodeVector in_seqs = split(m_input_map["X"], m_input_map["X"]->get_shape().at(0),
-                                                   0, true);
+                        NodeVector in_seqs = reshape::split(m_input_map["X"],
+                                                            m_input_map["X"]->get_shape().at(0));
+                        for (auto& in_x : in_seqs)
+                        {
+                            // remove first empty dim, after above split.
+                            in_x = reshape::squeeze(in_x);
+                        }
 
                         for (const auto& in_x : in_seqs)
                         {
@@ -330,7 +279,7 @@ namespace ngraph
                                 reshape::transpose(m_input_map["R"]));
                             auto gates = add(Xt_W, add(Ht_W, bias));
 
-                            NodeVector split_gates = split(gates, 4, -1);
+                            NodeVector split_gates = reshape::split(gates, 4, -1);
                             auto i = split_gates.at(0);
                             auto o = split_gates.at(1);
                             auto f = split_gates.at(2);
