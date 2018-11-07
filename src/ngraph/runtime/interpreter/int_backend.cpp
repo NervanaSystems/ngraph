@@ -24,6 +24,7 @@
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -63,7 +64,12 @@ bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
         pass_manager.register_pass<pass::LikeReplacement>();
         pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
         pass_manager.register_pass<pass::Liveness>();
+        pass_manager.register_pass<pass::MemoryLayout>(m_alignment);
         pass_manager.run_passes(function);
+
+        size_t memory_pool_size = function->get_temporary_pool_size();
+        NGRAPH_INFO << "memory pool size " << memory_pool_size;
+        instance.m_temporary_memory.reset(new AlignedBuffer(memory_pool_size, m_alignment));
 
         for (const shared_ptr<Node>& node : function->get_ordered_ops())
         {
@@ -84,25 +90,25 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     FunctionInstance& instance = m_function_map[function];
 
     // convert inputs to HostTensor
-    vector<shared_ptr<runtime::HostTensor>> func_inputs;
+    vector<void*> func_inputs;
     for (auto tv : inputs)
     {
-        func_inputs.push_back(static_pointer_cast<runtime::HostTensor>(tv));
+        func_inputs.push_back(static_cast<void*>(tv.get()));
     }
-    if (instance.m_nan_check_enabled)
-    {
-        perform_nan_check(func_inputs);
-    }
+    // if (instance.m_nan_check_enabled)
+    // {
+    //     perform_nan_check(func_inputs);
+    // }
 
     // convert outputs to HostTensor
-    vector<shared_ptr<runtime::HostTensor>> func_outputs;
+    vector<void*> func_outputs;
     for (auto tv : outputs)
     {
-        func_outputs.push_back(static_pointer_cast<runtime::HostTensor>(tv));
+        func_outputs.push_back(static_cast<void*>(tv.get()));
     }
 
     // map function params -> HostTensor
-    unordered_map<descriptor::Tensor*, shared_ptr<runtime::HostTensor>> tensor_map;
+    unordered_map<descriptor::Tensor*, void*> tensor_map;
     size_t input_count = 0;
     for (auto param : function->get_parameters())
     {
@@ -135,7 +141,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
             continue;
         }
         // get op inputs from map
-        vector<shared_ptr<runtime::HostTensor>> op_inputs;
+        vector<void*> op_inputs;
         for (const descriptor::Input& input : op->get_inputs())
         {
             descriptor::Tensor* tv = input.get_output().get_tensor_ptr().get();
@@ -143,19 +149,16 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         }
 
         // get op outputs from map or create
-        vector<shared_ptr<runtime::HostTensor>> op_outputs;
+        vector<void*> op_outputs;
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
             descriptor::Tensor* tv = op->get_output_tensor_ptr(i).get();
-            shared_ptr<runtime::HostTensor> htv;
+            void* htv = nullptr;
             auto it = tensor_map.find(tv);
             if (it == tensor_map.end())
             {
-                // the output tensor is not in the tensor map so create a new tensor
-                const Shape& shape = op->get_output_shape(i);
-                const element::Type& type = op->get_output_element_type(i);
-                string name = op->get_output_tensor(i).get_name();
-                htv = make_shared<runtime::HostTensor>(type, shape, name);
+                auto offset = op->get_output_tensor(i).get_pool_offset();
+                htv = instance.get_temporary_pointer(offset);
                 tensor_map.insert({tv, htv});
             }
             else
@@ -307,11 +310,11 @@ vector<runtime::PerformanceCounter>
     return rc;
 }
 
-void runtime::interpreter::INTBackend::perform_nan_check(const vector<shared_ptr<HostTensor>>& tvs,
+void runtime::interpreter::INTBackend::perform_nan_check(const vector<HostTensor*>& tvs,
                                                          const Node* op)
 {
     size_t arg_number = 1;
-    for (shared_ptr<HostTensor> tv : tvs)
+    for (const HostTensor* tv : tvs)
     {
         const element::Type& type = tv->get_element_type();
         if (type == element::f32)
