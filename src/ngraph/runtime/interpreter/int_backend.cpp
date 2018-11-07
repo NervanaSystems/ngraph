@@ -70,7 +70,6 @@ bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
         pass_manager.run_passes(function);
 
         size_t memory_pool_size = function->get_temporary_pool_size();
-        NGRAPH_INFO << "memory pool size " << memory_pool_size;
         instance.m_temporary_memory.reset(new AlignedBuffer(memory_pool_size, m_alignment));
 
         for (const shared_ptr<Node>& node : function->get_ordered_ops())
@@ -86,16 +85,12 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
                                             const vector<shared_ptr<runtime::Tensor>>& outputs,
                                             const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    NGRAPH_INFO;
     validate_call(function, outputs, inputs);
 
-    NGRAPH_INFO;
     compile(function);
-    NGRAPH_INFO;
     FunctionInstance& instance = m_function_map[function];
 
     // convert inputs to HostTensor
-    NGRAPH_INFO;
     vector<void*> func_inputs;
     for (auto tv : inputs)
     {
@@ -108,7 +103,6 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     // }
 
     // convert outputs to HostTensor
-    NGRAPH_INFO;
     vector<void*> func_outputs;
     for (auto tv : outputs)
     {
@@ -117,7 +111,6 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     }
 
     // map function params -> HostTensor
-    NGRAPH_INFO;
     unordered_map<descriptor::Tensor*, void*> tensor_map;
     size_t input_count = 0;
     for (auto param : function->get_parameters())
@@ -130,7 +123,6 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     }
 
     // map function outputs -> HostTensor
-    NGRAPH_INFO;
     for (size_t output_count = 0; output_count < function->get_output_size(); ++output_count)
     {
         auto output = function->get_output_op(output_count);
@@ -143,11 +135,9 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     }
 
     // for each ordered op in the graph
-    NGRAPH_INFO;
     for (const NodeWrapper& wrapped : instance.m_wrapped_nodes)
     {
         const Node* op = &wrapped.get_node();
-        NGRAPH_INFO << op->get_name();
         auto type_id = wrapped.get_typeid();
         if (type_id == OP_TYPEID::Parameter)
         {
@@ -163,7 +153,6 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 
         // get op outputs from map or create
         vector<void*> op_outputs;
-        NGRAPH_INFO;
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
             descriptor::Tensor* tv = op->get_output_tensor_ptr(i).get();
@@ -182,7 +171,6 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
             op_outputs.push_back(htv);
         }
 
-        NGRAPH_INFO;
         // get op type
         element::Type type;
 #pragma GCC diagnostic push
@@ -209,14 +197,11 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         }
 #pragma GCC diagnostic pop
 
-        NGRAPH_INFO;
         if (instance.m_performance_counters_enabled)
         {
             instance.m_timer_map[op].start();
         }
-        NGRAPH_INFO;
         generate_calls(type, wrapped, op_outputs, op_inputs, instance);
-        NGRAPH_INFO;
         if (instance.m_performance_counters_enabled)
         {
             instance.m_timer_map[op].stop();
@@ -225,10 +210,8 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         // {
         //     perform_nan_check(op_outputs, op);
         // }
-        NGRAPH_INFO;
     }
 
-    NGRAPH_INFO;
     return true;
 }
 

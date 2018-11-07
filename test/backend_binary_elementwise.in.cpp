@@ -51,12 +51,9 @@ NGRAPH_TEST(${BACKEND_NAME}, add)
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
-    NGRAPH_INFO;
     backend->call_with_validate(f, {result}, {a, b});
-    NGRAPH_INFO;
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
-    NGRAPH_INFO;
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, add_overload)
