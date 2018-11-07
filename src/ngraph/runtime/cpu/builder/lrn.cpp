@@ -35,7 +35,7 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
 
                 const ngraph::op::LRN* lrn = static_cast<const ngraph::op::LRN*>(node);
-                function<void(CPURuntimeContext*)> functor;
+                CPUKernelFunctor functor;
 
                 auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
@@ -55,7 +55,7 @@ namespace ngraph
                                                           static_cast<int>(lrn->get_nsize()));
 
                     auto& deps = mkldnn_emitter->get_primitive_deps(lrn_index);
-                    functor = [&, lrn_index](CPURuntimeContext* ctx) {
+                    functor = [&, lrn_index](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, lrn_index);
@@ -72,7 +72,8 @@ namespace ngraph
                     auto element_type = lrn->get_element_type();
                     if (element_type == element::f32)
                     {
-                        functor = [&, alpha, beta, bias, arg_shape, nsize](CPURuntimeContext* ctx) {
+                        functor = [&, alpha, beta, bias, arg_shape, nsize](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::lrn<float>(static_cast<float*>(arg_tensor),
                                                                    static_cast<float*>(out_tensor),
                                                                    arg_shape,
@@ -84,7 +85,8 @@ namespace ngraph
                     }
                     else if (element_type == element::f64)
                     {
-                        functor = [&, alpha, beta, bias, arg_shape, nsize](CPURuntimeContext* ctx) {
+                        functor = [&, alpha, beta, bias, arg_shape, nsize](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::lrn<double>(
                                 static_cast<double*>(arg_tensor),
                                 static_cast<double*>(out_tensor),

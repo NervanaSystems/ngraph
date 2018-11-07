@@ -47,6 +47,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
@@ -98,6 +99,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -180,9 +182,9 @@ namespace ngraph
                     auto input1_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                        input0_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+                        input0_data_desc, runtime::cpu::executor::global_cpu_engine));
                     inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                        input1_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+                        input1_data_desc, runtime::cpu::executor::global_cpu_engine));
 
                     size_t add_index = 0;
                     add_index = mkldnn_emitter->build_elementwise_add(
@@ -1725,7 +1727,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(reshape->get_input_order()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ",  0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 4 && out[0].get_shape().size() == 4)
@@ -1735,7 +1737,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(reshape->get_input_order()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else
                 {
@@ -2166,7 +2168,7 @@ namespace ngraph
                            << ", " << out[0].get_name() << ", "
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 2 && sum->get_reduction_axes().size() == 2)
@@ -2175,7 +2177,7 @@ namespace ngraph
                            << ", " << out[0].get_name() << ", "
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 2 && sum->get_reduction_axes().size() == 1)
@@ -2185,7 +2187,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}, "
                            << "{" << join(sum->get_reduction_axes()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 4 && sum->get_reduction_axes().size() == 2)
@@ -2195,7 +2197,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}, "
                            << "{" << join(sum->get_reduction_axes()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 4 && sum->get_reduction_axes().size() == 4)
@@ -3586,7 +3588,7 @@ namespace ngraph
                            << "                            {" << join(pad->get_padding_below())
                            << "},\n"
                            << "                            {" << join(pad->get_padding_above())
-                           << "});\n";
+                           << "}, 0);\n";
                 }
                 else
                 {
@@ -3887,7 +3889,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}, "
                            << "{" << join(max->get_reduction_axes()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else
                 {
@@ -4750,6 +4752,23 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GenerateMask)
+            {
+                auto gm = static_cast<const ngraph::op::GenerateMask*>(node);
+                writer.block_begin();
+                auto index = external_function->add_state(
+                    ngraph::RNGState::create_rng_state(gm->get_seed(), gm->get_probability()));
+                writer << "auto state = static_cast<ngraph::RNGState*>(ctx->states[" << index
+                       << "]);\n";
+                writer << "bool training = static_cast<bool>(" << args[0].get_name() << "[0]);\n";
+                writer << "reference::generate_mask(";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            " << out[0].get_size() << ",\n";
+                writer << "            state, training);\n";
+                writer.block_end();
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Dequantize)
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
@@ -4824,7 +4843,7 @@ namespace ngraph
                     writer << "            {" << join(args[0].get_shape()) << "},\n";
                     writer << "            {" << join(args[1].get_shape()) << "},\n";
                     writer << "            {" << join(quantize->get_axes()) << "},\n";
-                    writer << "            static_cast<op::Quantize::RoundMode>("
+                    writer << "            static_cast<ngraph::op::Quantize::RoundMode>("
                            << static_cast<int>(quantize->get_round_mode()) << "));\n";
                 }
             }
