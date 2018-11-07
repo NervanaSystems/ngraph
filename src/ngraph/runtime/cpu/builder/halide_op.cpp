@@ -111,7 +111,7 @@ namespace ngraph
                 auto& terminal_func = halide_functions[out_tensor_name];
                 auto out_size = out[0].get_size();
 
-                auto functor = [&, out_size](CPURuntimeContext* ctx) {
+                auto functor = [&, out_size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     for (auto& param : subgraph_params)
                     {
                         Halide::Buffer<float> param_buffer(
