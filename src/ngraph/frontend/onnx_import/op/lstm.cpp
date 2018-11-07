@@ -52,16 +52,6 @@ namespace ngraph
             {
                 using NgraphNodePtr = std::shared_ptr<ngraph::Node>;
 
-                NgraphNodePtr squeeze_first_dim(const NgraphNodePtr& node)
-                {
-                    auto data_shape{node->get_shape()};
-                    Shape output_shape(std::next(std::begin(data_shape)), std::end(data_shape));
-                    return std::make_shared<ngraph::op::Reshape>(
-                        node,
-                        reshape::get_default_axis_vector(data_shape.size()),
-                        output_shape);
-                }
-
                 inline std::shared_ptr<ngraph::op::Slice>
                 make_ng_slice(const std::shared_ptr<ngraph::Node>& node,
                               std::vector<std::size_t> axes,
@@ -302,7 +292,6 @@ namespace ngraph
                     {
                         if (m_attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
                         {
-
                             // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
                             for (auto& ng_in : m_input_map)
                             {
@@ -311,7 +300,7 @@ namespace ngraph
                                     ASSERT_VALID_ARGUMENT(node, ng_in.second->get_shape().at(0) == 1)
                                         << "Input: { " << ng_in.first << " } first axis has size different "
                                            "from 1, while direction attribute set to 'forward'.";
-                                    ng_in.second = squeeze_first_dim(ng_in.second);
+                                    ng_in.second = reshape::squeeze(ng_in.second);
                                 }
                             }
                         }
