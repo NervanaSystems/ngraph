@@ -60,20 +60,19 @@ namespace ngraph
                             start += lower_bounds[i] * accumulated;
                             accumulated *= arg_shape[i];
                         }
-                        auto functor =
-                            [&, start, out_shape, arg_shape, element_size](CPURuntimeContext* ctx) {
-                                auto out_size = shape_size(out_shape) * element_size;
-                                auto arg_size = shape_size(arg_shape) * element_size;
-                                auto offset = start * element_size;
-                                if (out_tensor < arg_tensor ||
-                                    out_tensor >= reinterpret_cast<char*>(arg_tensor) + arg_size)
-                                {
-                                    memcpy(out_tensor,
-                                           reinterpret_cast<char*>(arg_tensor) + offset,
-                                           out_size);
-                                }
-
-                            };
+                        auto functor = [&, start, out_shape, arg_shape, element_size](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            auto out_size = shape_size(out_shape) * element_size;
+                            auto arg_size = shape_size(arg_shape) * element_size;
+                            auto offset = start * element_size;
+                            if (out_tensor < arg_tensor ||
+                                out_tensor >= reinterpret_cast<char*>(arg_tensor) + arg_size)
+                            {
+                                memcpy(out_tensor,
+                                       reinterpret_cast<char*>(arg_tensor) + offset,
+                                       out_size);
+                            }
+                        };
 
                         functors.emplace_back(functor);
                         return;
