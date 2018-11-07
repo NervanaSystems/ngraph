@@ -16,6 +16,13 @@
 
 include(ExternalProject)
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (DEFINED NGRAPH_USE_CXX_ABI)
+        set(COMPILE_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
+    endif()    
+endif()
+message(STATUS "xcxxxxxxxxxxxxxxxxxx ${COMPILE_FLAGS}")
+
 ExternalProject_Add(
     ext_clang
     GIT_REPOSITORY https://github.com/llvm-mirror/clang.git
@@ -70,6 +77,7 @@ ExternalProject_Add(
     CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                 -DCMAKE_ASM_COMPILER=${LLVM_CMAKE_ASM_COMPILER}
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                -DCMAKE_CXX_FLAGS=${COMPILE_FLAGS}
                 -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/llvm
                 -DCMAKE_BUILD_TYPE=Release
                 -DLLVM_ENABLE_ASSERTIONS=OFF
