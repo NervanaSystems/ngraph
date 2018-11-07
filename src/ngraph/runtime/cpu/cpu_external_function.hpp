@@ -47,6 +47,7 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
+#include "ngraph/state/state.hpp"
 
 namespace ngraph
 {
@@ -117,15 +118,18 @@ namespace ngraph
                     return m_mkldnn_emitter;
                 }
 
+                size_t add_state(ngraph::State* state)
+                {
+                    m_states.push_back(state);
+                    return m_states.size() - 1;
+                }
+
                 const std::string& get_function_name() const { return m_function_name; }
                 const std::shared_ptr<ngraph::Function> get_function() { return m_function; }
                 // Temporary Memory Pool alignment
                 static constexpr size_t s_memory_pool_alignment = 4096;
 
-                std::vector<std::function<void(CPURuntimeContext*)>>& get_functors()
-                {
-                    return functors;
-                }
+                std::vector<CPUKernelFunctor>& get_functors() { return functors; }
                 std::unordered_map<std::string, void*>& get_tensor_data() { return tensor_data; }
                 void*& get_tensor_data(const std::string& name);
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>&
@@ -173,6 +177,8 @@ namespace ngraph
                 void compile();
 
 #endif
+
+                std::vector<ngraph::State*> m_states;
 
             private:
                 // Register passes that are common to codegen and DEX
@@ -256,7 +262,7 @@ namespace ngraph
 
                 std::string m_function_name;
 
-                std::vector<std::function<void(CPURuntimeContext*)>> functors;
+                std::vector<CPUKernelFunctor> functors;
                 std::vector<std::string> op_names;
                 std::vector<std::function<bool(CPURuntimeContext*)>> enables;
                 std::list<std::pair<std::function<bool(CPURuntimeContext*)>, std::string>>

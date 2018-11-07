@@ -10,6 +10,7 @@ concat_matrix_int64
 divide_by_zero_int32
 #int64 is not supprted by cuDNN
 dot_matrix_vector_int64
+generate_mask
 #no mkldnn on GPU
 #error throw is not the same on GPU, not supported yet
 one_hot_scalar_fp_nonint_in_3
@@ -29,24 +30,6 @@ backwards_maxpool_n2_c1_hw5_3x3_str2_max
 backwards_avgpool_n1_c1_hw2x2
 backwards_avgpool_n1_c1_hw4x4
 backwards_avgpool_n2_c2_hw4x4
-topk_1d_max_all
-topk_1d_max_partial
-topk_1d_max_one
-topk_1d_min_all
-topk_1d_min_partial
-topk_1d_min_one
-topk_2d_max_all
-topk_2d_max_partial
-topk_2d_max_one
-topk_2d_min_all
-topk_2d_min_partial
-topk_2d_min_one
-topk_3d_max_all
-topk_3d_max_partial
-topk_3d_max_one
-topk_3d_min_all
-topk_3d_min_partial
-topk_3d_min_one
 quantize
 quantize_axes
 quantize_int8

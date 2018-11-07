@@ -18,6 +18,7 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_args.hpp"
+#include "ngraph/runtime/gpu/nvrtc/helpers.hpp"
 #include "ngraph/runtime/gpu/type_info.hpp"
 
 using namespace ngraph;
@@ -84,6 +85,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_divide_op(
     std::vector<size_t> axes_flag,
     size_t rank)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in0, "
            << data_types[1] << "* in1, " << data_types[2] << "* out,";
     for (size_t i = 0; i < axes_flag.size(); i++)
@@ -136,6 +138,7 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
     bool save_elementwise,
     size_t rank)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
@@ -202,6 +205,130 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
     return;
 }
 
+void runtime::gpu::CudaKernelBuilder::get_topk(codegen::CodeWriter& writer,
+                                               const std::string& name,
+                                               const std::vector<std::string>& dtypes,
+                                               bool compute_max,
+                                               runtime::gpu::GPUKernelArgs& args,
+                                               bool use_malloc)
+{
+    writer << "struct Entry\n";
+    writer.block_begin();
+    {
+        writer << dtypes[0] << " value;\n";
+        writer << dtypes[1] << " index;\n";
+        writer << "__device__ " << dtypes[1] << " get_index() {return index;}\n";
+        writer << "__device__ "
+               << "void set_index(" << dtypes[1] << " id) {index = id;}\n";
+        writer << "__device__ " << dtypes[0] << " get_value() {return value;}\n";
+        writer << "__device__ "
+               << "void set_value(" << dtypes[0] << " val) {value = val;}\n";
+    }
+    writer.block_end();
+    writer << ";\n";
+    writer << "__device__ void swap(Entry& a, Entry& b)\n";
+    writer.block_begin();
+    {
+        writer << "Entry t = a;\n";
+        writer << "a = b;\n";
+        writer << "b = t;\n";
+    }
+    writer.block_end();
+    writer << "__device__ void heapify(Entry *heap, size_t heap_size, size_t idx)\n";
+    writer.block_begin();
+    {
+        writer << "size_t largest = idx;\n";
+        writer << "size_t left = (idx << 1) + 1;\n";
+        writer << "size_t right = (idx + 1) << 1;\n";
+        std::string g_op = ((compute_max) ? ">" : "<");
+        writer << "if (left < heap_size && heap[left].get_value() " << g_op
+               << " heap[largest].get_value())\n";
+        writer.block_begin();
+        {
+            writer << "largest = left;\n";
+        }
+        writer.block_end();
+        writer << "if (right < heap_size && heap[right].get_value() " << g_op
+               << " heap[largest].get_value())\n";
+        writer.block_begin();
+        {
+            writer << "largest = right;\n";
+        }
+        writer.block_end();
+        writer << "if (largest != idx)\n";
+        writer.block_begin();
+        {
+            writer << "swap(heap[largest], heap[idx]);\n";
+            writer << "heapify(heap, heap_size, largest);\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+    writer << "__device__ void create_and_build(Entry *entry, size_t size)\n";
+    writer.block_begin();
+    {
+        writer << "for (int i = (size-2) / 2; i >= 0; --i)\n";
+        writer.block_begin();
+        {
+            writer << "heapify(entry, size, i);\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
+    writer.block_begin();
+    {
+        writer << "in = in + blockIdx.x * num_cols;\n";
+        if (use_malloc)
+        {
+            writer << "entry = entry + blockIdx.x * num_cols;\n";
+        }
+        writer << "out_id = out_id + blockIdx.x * topk_k;\n";
+        writer << "out_val = out_val + blockIdx.x * topk_k;\n";
+        if (!use_malloc)
+        {
+            writer << "extern __shared__ Entry entry[];\n";
+        }
+
+        writer << "for (size_t i = threadIdx.x; i < num_cols; i += blockDim.x)\n";
+        writer.block_begin();
+        {
+            writer << "entry[i].set_value(in[i]);\n";
+            writer << "entry[i].set_index(i);\n";
+        }
+        writer.block_end();
+
+        writer << "__syncthreads();\n";
+
+        writer << "if (threadIdx.x == 0)\n";
+        writer.block_begin();
+        {
+            writer << "create_and_build(entry, num_cols);\n";
+
+            writer << "size_t changed_size_of_heap = num_cols;\n";
+            writer << "size_t k = 0;\n";
+            writer << "while (k++ < topk_k)\n";
+            writer.block_begin();
+            {
+                writer << "swap(*entry, entry[changed_size_of_heap - 1]);\n";
+                writer << "heapify(entry, --changed_size_of_heap, 0);\n";
+            }
+            writer.block_end();
+
+            writer << "for (size_t i = threadIdx.x; i < topk_k; i++)\n";
+            writer.block_begin();
+            {
+                writer << "out_val[i] = entry[num_cols - 1 - i].get_value();\n";
+                writer << "out_id[i] = entry[num_cols - 1 - i].get_index();\n";
+            }
+            writer.block_end();
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+}
+
 //each thread calculate the whole reduction of one output
 void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
     codegen::CodeWriter& writer,
@@ -212,6 +339,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
     size_t out_rank,
     size_t reduce_rank)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
@@ -292,6 +420,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
     const std::string& reduce_op,
     uint32_t block_size_x)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
@@ -385,6 +514,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
     const std::vector<std::string>& data_types,
     const std::string& reduce_op)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
@@ -424,9 +554,12 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
 
 void runtime::gpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& writer,
                                                        const std::string& name,
+                                                       const std::string& data_type,
                                                        runtime::gpu::GPUKernelArgs& args,
                                                        const size_t rank)
 {
+    writer << runtime::gpu::nvrtc::helpers();
+    writer << runtime::gpu::nvrtc::define_non_coherent_load(data_type, "load");
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
@@ -629,38 +762,39 @@ void runtime::gpu::CudaKernelBuilder::get_reshape_op_3d(codegen::CodeWriter& wri
 
 void runtime::gpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
                                                     const std::string& name,
-                                                    const std::vector<std::string>& data_types,
+                                                    const std::string& data_type,
                                                     size_t num_inputs)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(";
     for (size_t i = 0; i < num_inputs; i++)
     {
-        writer << data_types[i] << "* in" << i << ", ";
+        writer << data_type << "* in" << i << ", ";
     }
-    writer << data_types[num_inputs]
-           << "* out, uint32_t* block_strides, uint32_t block_size, uint32_t n)\n";
+    writer << data_type << "* out, uint32_t* inputs_strides, uint32_t output_stride, uint32_t "
+                           "split_output_stride, uint32_t split_input_stride_offset, uint32_t "
+                           "input_offset, uint32_t n)\n";
     writer.block_begin();
     {
         writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
         writer << "if(tid < n)\n";
         writer.block_begin();
         {
-            writer << "out[tid] = 1;\n";
-            writer << "uint32_t output_idx = tid;\n";
-            writer << "uint32_t block_id = tid / block_size;\n";
-            writer << "uint32_t block_idx = tid % block_size;\n";
-            writer << "bool processed = false;\n";
+            writer << "uint32_t block_id = tid / split_output_stride;\n";
+            writer << "uint32_t block_idx = tid % split_output_stride;\n";
+            writer << "uint32_t output_idx = block_id * output_stride + block_idx + "
+                      "split_input_stride_offset;\n";
+            writer << "out[output_idx] = 1;\n";
             for (size_t i = 0; i < num_inputs; i++)
             {
-                writer << "if(!processed && (block_idx < block_strides[" << i << "]))\n";
+                writer << "if(block_idx < inputs_strides[" << i << " + input_offset])\n";
                 writer.block_begin();
                 {
-                    writer << "out[output_idx] = in" << i << "[block_id * block_strides[" << i
-                           << "] + block_idx];";
-                    writer << "processed = true;\n";
+                    writer << "out[output_idx] = in" << i << "[block_id * inputs_strides[" << i
+                           << " + input_offset] + block_idx];\n";
+                    writer << "return;\n";
                 }
                 writer.block_end();
-                writer << "block_idx -= block_strides[" << i << "];\n";
+                writer << "block_idx -= inputs_strides[" << i << " + input_offset];\n";
             }
         }
         writer.block_end();
@@ -1006,6 +1140,8 @@ void runtime::gpu::CudaKernelBuilder::get_avg_pool(codegen::CodeWriter& writer,
                                                    const std::array<std::string, 2>& data_types,
                                                    bool include_pad)
 {
+    writer << runtime::gpu::nvrtc::helpers();
+    writer << runtime::gpu::nvrtc::define_non_coherent_load(data_types[0], "load");
     // In the pooling operation out = P(in) where in: NCDHW -> out: NKMPQ
     // via pooling window: JTRS. Currently feature pooling
     // is not supported and so K = C and J is unused
@@ -1124,6 +1260,7 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
     int sm_tile_size,
     int reg_tile_size)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "#define NUM_ROWS 8\n";
     writer << "#define FILTER_SIZE " << filter_size << "\n";
     writer << "#define SM_TILE_SIZE " << sm_tile_size << "\n";

@@ -20,6 +20,7 @@ set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
     cpu_call_frame.cpp
+    cpu_executor.cpp
     cpu_external_function.cpp
     cpu_kernels.cpp
     cpu_layout_descriptor.cpp
@@ -28,6 +29,7 @@ set(SRC
     cpu_tensor_view.cpp
     cpu_tracing.cpp
     cpu_visualize_tree.cpp
+    cpu_cse.cpp
     cpu_debugger.cpp
     builder/add.cpp
     builder/allreduce.cpp
@@ -70,8 +72,8 @@ set(SRC
     builder/softmax.cpp
     builder/sum.cpp
     builder/topk.cpp
+    builder/state.cpp
     builder/quantization.cpp
-    kernel/eigen_thread_pool.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
     kernel/reduce_sum.cpp
@@ -83,6 +85,7 @@ set(SRC
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/group_conv.cpp
+    op/group_conv_bias.cpp
     op/halide_op.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
@@ -167,7 +170,8 @@ if (NGRAPH_CPU_ENABLE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_HALIDE")
         ExternalProject_Get_Property(ext_halide BINARY_DIR)
         target_include_directories(cpu_backend SYSTEM PRIVATE ${BINARY_DIR}/include)
-        target_link_libraries(cpu_backend PRIVATE ${BINARY_DIR}/lib/libHalide.so)
+        target_link_libraries(cpu_backend PRIVATE ${BINARY_DIR}/lib/libHalide.a libhalidellvm)
+        add_dependencies(cpu_backend ext_halide)
     endif()
 
     if(OPENMP_FOUND)
@@ -200,7 +204,7 @@ if (NGRAPH_CPU_ENABLE)
         # CPU backend picking up the wrong version or even multiple versions of the
         # third-party library. -Bsymbolic-functions tells the linker to prefer the internal
         # version inside cpu_backend over what is available through the global symbol table
-        set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions")
+        set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
     endif()
 
     install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})

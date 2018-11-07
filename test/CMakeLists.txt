@@ -14,6 +14,14 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.0.0")
+        # gtest has issues with this with v1.8.x
+        # gtest issue is supposed to be addressed after v1.8.x
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-zero-as-null-pointer-constant")
+    endif()
+endif()
+
 set(SRC
     algebraic_simplification.cpp
     all_close_f.cpp
@@ -61,7 +69,12 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
 endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
-    list(APPEND SRC backend_debug_api.cpp builder.cpp backend_api.cpp)
+    list(APPEND SRC
+        backend_debug_api.cpp
+        builder.cpp
+        backend_api.cpp
+        hybrid_backend.cpp
+        hybrid_utils.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
@@ -91,6 +104,10 @@ if (NGRAPH_HYBRID_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} HYBRID)
 endif()
 
+if (NGRAPH_PLAIDML_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
+endif()
+
 add_subdirectory(models)
 add_subdirectory(files)
 add_subdirectory(util)
@@ -112,6 +129,8 @@ set(MULTI_TEST_SRC
     backend_reduce.in.cpp
     backend_reshape.in.cpp
     backend_sum.in.cpp
+    backend_topk.in.cpp
+    backend_arg_reduce.in.cpp
     backend_test.in.cpp
     backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
@@ -178,8 +197,16 @@ if (NGRAPH_CPU_ENABLE)
     target_link_libraries(unit-test PRIVATE libmkldnn)
 endif()
 
+if (NGRAPH_PLAIDML_ENABLE)
+    target_link_libraries(unit-test PRIVATE plaidml_backend)
+endif()
+
 if (NGRAPH_TBB_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_TBB_ENABLE)
+endif()
+
+if (NGRAPH_HALIDE)
+    target_compile_definitions(unit-test PRIVATE "NGRAPH_HALIDE")
 endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
@@ -193,6 +220,10 @@ endif()
 
 if (NGRAPH_GPU_ENABLE)
     target_link_libraries(unit-test PRIVATE gpu_backend)
+endif()
+
+if (NGRAPH_NOP_ENABLE)
+    target_link_libraries(unit-test PRIVATE nop_backend)
 endif()
 
 if (NGRAPH_ONNXIFI_ENABLE)
