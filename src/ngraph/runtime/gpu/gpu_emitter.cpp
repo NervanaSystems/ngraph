@@ -1434,6 +1434,11 @@ void runtime::gpu::GPU_Emitter::emit_SelectAndScatter(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
+void runtime::gpu::GPU_Emitter::emit_ShapeOf(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 void runtime::gpu::GPU_Emitter::emit_Sigmoid(EMIT_ARGS)
 {
     emit_elementwise<ngraph::op::Sigmoid>(external_function, writer, node, args, out);

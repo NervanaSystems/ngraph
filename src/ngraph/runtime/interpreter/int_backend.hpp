@@ -32,6 +32,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
@@ -114,6 +115,7 @@
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
 #include "ngraph/runtime/reference/select.hpp"
 #include "ngraph/runtime/reference/select_and_scatter.hpp"
+#include "ngraph/runtime/reference/shape_of.hpp"
 #include "ngraph/runtime/reference/sigmoid.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
 #include "ngraph/runtime/reference/sin.hpp"
@@ -1120,6 +1122,11 @@ private:
                                              f_scatter,
                                              select_and_scatter->get_window_shape(),
                                              select_and_scatter->get_window_movement_strides());
+            break;
+        }
+        case OP_TYPEID::ShapeOf:
+        {
+            reference::shape_of(args[0]->get_shape(), out[0]->get_data_ptr<uint64_t>());
             break;
         }
         case OP_TYPEID::Sigmoid:
