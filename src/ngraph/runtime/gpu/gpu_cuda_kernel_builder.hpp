@@ -46,6 +46,7 @@ namespace ngraph
 
                 static void get_broadcast_op(codegen::CodeWriter& writer,
                                              const std::string& name,
+                                             const std::string& data_type,
                                              GPUKernelArgs& args,
                                              const size_t rank);
 
