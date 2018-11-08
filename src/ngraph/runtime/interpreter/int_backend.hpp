@@ -184,12 +184,6 @@ private:
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);
 
-    void create_tensor_array(Function* function,
-                             const std::vector<void*>& out,
-                             const std::vector<const void*>& args,
-                             std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                             std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
-
     void generate_calls(const element::Type& type,
                         const NodeWrapper& op,
                         const std::vector<void*>& outputs,
@@ -704,8 +698,24 @@ private:
             std::shared_ptr<Function> function = node.get_functions()[0];
 
             std::vector<std::shared_ptr<runtime::Tensor>> outputs;
+            for (size_t i = 0; i < function->get_output_size(); i++)
+            {
+                element::Type et = function->get_output_element_type(i);
+                Shape shape = function->get_output_shape(i);
+                auto htv = std::make_shared<HostTensor>(et, shape, out[i]);
+                outputs.push_back(std::static_pointer_cast<runtime::Tensor>(htv));
+            }
+
             std::vector<std::shared_ptr<runtime::Tensor>> inputs;
-            create_tensor_array(function.get(), out, args, outputs, inputs);
+            auto parameters = function->get_parameters();
+            for (size_t i = 0; i < parameters.size(); i++)
+            {
+                auto parameter = parameters[i];
+                element::Type et = parameter->get_element_type();
+                Shape shape = parameter->get_shape();
+                auto htv = std::make_shared<HostTensor>(et, shape, const_cast<void*>(args[i]));
+                inputs.push_back(std::static_pointer_cast<runtime::Tensor>(htv));
+            }
 
             call(function, outputs, inputs);
             break;
