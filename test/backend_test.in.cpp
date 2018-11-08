@@ -57,13 +57,19 @@ class UnhandledOp : public ngraph::op::Op
 {
 public:
     UnhandledOp(const std::shared_ptr<Node>& arg)
-        : Op("Unsupported_op", {})
+        : Op("Unsupported_op", check_single_output_args({arg}))
     {
-        set_output_type(0, arg->get_element_type(), arg->get_shape());
+        constructor_validate_and_infer_types();
     }
     shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
     {
         return make_shared<UnhandledOp>(new_args[0]);
+    }
+
+protected:
+    void validate_and_infer_types() override
+    {
+        set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
     }
 };
 
@@ -2237,6 +2243,7 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_ceiling)
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_exp)
 {
+    make_unary_empty_test<op::Exp>("${BACKEND_NAME}");
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_floor)

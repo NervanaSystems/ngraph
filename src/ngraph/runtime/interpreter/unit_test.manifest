@@ -9,3 +9,5 @@ batchnorm_fprop_bprop_2step
 computation_reuse
 generate_mask
 topk_int64
+topk_3d_large_input_max
+topk_3d_large_input_min

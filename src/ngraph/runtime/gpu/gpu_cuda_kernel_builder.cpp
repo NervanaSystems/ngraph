@@ -18,6 +18,7 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_args.hpp"
+#include "ngraph/runtime/gpu/nvrtc/helpers.hpp"
 #include "ngraph/runtime/gpu/type_info.hpp"
 
 using namespace ngraph;
@@ -84,6 +85,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_divide_op(
     std::vector<size_t> axes_flag,
     size_t rank)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in0, "
            << data_types[1] << "* in1, " << data_types[2] << "* out,";
     for (size_t i = 0; i < axes_flag.size(); i++)
@@ -136,6 +138,7 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
     bool save_elementwise,
     size_t rank)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
@@ -336,6 +339,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
     size_t out_rank,
     size_t reduce_rank)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
@@ -422,6 +426,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
     const std::string& reduce_op,
     uint32_t block_size_x)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
@@ -515,6 +520,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
     const std::vector<std::string>& data_types,
     const std::string& reduce_op)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
@@ -554,9 +560,12 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
 
 void runtime::gpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& writer,
                                                        const std::string& name,
+                                                       const std::string& data_type,
                                                        runtime::gpu::GPUKernelArgs& args,
                                                        const size_t rank)
 {
+    writer << runtime::gpu::nvrtc::helpers();
+    writer << runtime::gpu::nvrtc::define_non_coherent_load(data_type, "load");
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
@@ -1137,6 +1146,8 @@ void runtime::gpu::CudaKernelBuilder::get_avg_pool(codegen::CodeWriter& writer,
                                                    const std::array<std::string, 2>& data_types,
                                                    bool include_pad)
 {
+    writer << runtime::gpu::nvrtc::helpers();
+    writer << runtime::gpu::nvrtc::define_non_coherent_load(data_types[0], "load");
     // In the pooling operation out = P(in) where in: NCDHW -> out: NKMPQ
     // via pooling window: JTRS. Currently feature pooling
     // is not supported and so K = C and J is unused
@@ -1255,6 +1266,7 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
     int sm_tile_size,
     int reg_tile_size)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "#define NUM_ROWS 8\n";
     writer << "#define FILTER_SIZE " << filter_size << "\n";
     writer << "#define SM_TILE_SIZE " << sm_tile_size << "\n";

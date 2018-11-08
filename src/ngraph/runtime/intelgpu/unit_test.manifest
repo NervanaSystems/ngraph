@@ -81,6 +81,9 @@ topk_3d_min_one
 topk_3d_min_partial
 topk_5d_max_partial
 topk_int64
+topk_3d_large_input_max
+topk_3d_large_input_min
+topk_3d_single_output
 zero_sized_abs
 zero_sized_acos
 zero_sized_add
@@ -91,6 +94,7 @@ zero_sized_cos
 zero_sized_cosh
 zero_sized_divide
 zero_sized_eq
+zero_sized_exp
 zero_sized_floor
 zero_sized_greater
 zero_sized_greatereq

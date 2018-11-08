@@ -22,7 +22,7 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 SET(GTEST_GIT_REPO_URL https://github.com/google/googletest.git)
-SET(GTEST_GIT_LABEL release-1.8.0)
+SET(GTEST_GIT_LABEL release-1.8.1)
 
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
