@@ -69,7 +69,8 @@ namespace ngraph
                     Shape output;
                     for (std::size_t idx = 0; idx < input.size(); ++idx)
                     {
-                        output.emplace_back(std::ceil(input.at(idx) / strides.at(idx)));
+                        output.emplace_back(std::ceil(static_cast<float>(input.at(idx)) /
+                                                      static_cast<float>(strides.at(idx))));
                     }
                     return output;
                 }
