@@ -494,7 +494,6 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                 writer << "uint32_t dim_idx_generator = tid;\n";
             }
             writer << "uint32_t in_idx = 0;\n";
-            writer << data_types[1] << " r = 0;\n";
 
             // loop through all reduction axis
             for (int64_t i = 0; i < static_cast<int64_t>(out_rank); i++)
@@ -503,6 +502,8 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                        << ") * non_reduce_strides" << i << ";\n";
                 writer << "dim_idx_generator %= out_strides" << i << ";\n";
             }
+            writer << "uint32_t init_in_idx = in_idx;\n";
+            writer << data_types[1] << " r = in[init_in_idx];\n";
             int64_t last_r_idx = static_cast<int64_t>(reduce_rank) - 1;
             for (int64_t j = 0; j < last_r_idx; j++)
             {
@@ -516,13 +517,19 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                 {
                     writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
                 }
-                writer << "int idx" << last_r_idx << " = 0;\n";
                 writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
+                writer << "if(reduce_idx != init_in_idx)\n";
+                writer.block_begin();
+                {
+                    writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
+                }
+                writer.block_end();
+                writer << "reduce_idx += step;\n";
+                writer << "int idx" << last_r_idx << " = 1;\n";
                 // unroll last reduction axis
                 uint32_t unroll_num = 8;
-                uint32_t unroll_shift = 3;
-                writer << "for(; idx" << last_r_idx << " < (reduce_shape" << last_r_idx << " >> "
-                       << unroll_shift << "); idx" << last_r_idx << "++)\n";
+                writer << "for(; idx" << last_r_idx << " + " << unroll_num << " - 1 < reduce_shape"
+                       << last_r_idx << "; idx" << last_r_idx << " += " << unroll_num << ")\n";
                 writer.block_begin();
                 {
                     for (int k = 0; k < unroll_num; k++)
@@ -532,7 +539,6 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                     }
                 }
                 writer.block_end();
-                writer << "idx" << last_r_idx << " <<= " << unroll_shift << ";\n";
                 writer << "for(; idx" << last_r_idx << " < reduce_shape" << last_r_idx << "; idx"
                        << last_r_idx << "++)\n";
                 writer.block_begin();
