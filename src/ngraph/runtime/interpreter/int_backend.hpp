@@ -463,9 +463,7 @@ private:
         }
         case OP_TYPEID::Constant:
         {
-            // const op::Constant* c = static_cast<const op::Constant*>(&node);
-            // size_t element_count = shape_size(node.get_output_shape(0));
-            // reference::constant<T>(c->get_data_ptr<T>(), static_cast<T*>(out[0]), element_count);
+            // Constant is handled in the main loop
             break;
         }
         case OP_TYPEID::Convert:
