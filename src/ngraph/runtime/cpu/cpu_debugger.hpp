@@ -39,6 +39,7 @@ namespace ngraph
             class CPU_CountTracepoint
             {
             public:
+                /// \brief A convenience class that wraps user's callback to run it every *count* iterations
                 CPU_CountTracepoint(const std::function<void(void**, const std::string&)>& callback,
                                     size_t count)
                     : m_callback(callback)
@@ -93,7 +94,7 @@ namespace ngraph
                 CPU_Debugger(const CPU_Debugger&) = delete;
                 CPU_Debugger(CPU_Debugger&&) = delete;
                 CPU_Debugger& operator=(const CPU_Debugger&) = delete;
-                std::map<size_t, std::function<void(CPURuntimeContext*)>> replaced_functors;
+                std::map<size_t, CPUKernelFunctor> replaced_functors;
                 CPU_CallFrame& m_callframe;
                 std::vector<std::shared_ptr<runtime::Tensor>> m_inputs;
                 std::vector<std::shared_ptr<runtime::Tensor>> m_outputs;

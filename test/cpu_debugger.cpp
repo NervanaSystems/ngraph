@@ -237,7 +237,7 @@ TEST(tracer, basic)
 
     auto f = make_shared<Function>(neg, op::ParameterVector{A, B});
 
-    auto backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -275,7 +275,7 @@ TEST(tracer, count_tracepoint)
 
     auto f = make_shared<Function>(add, op::ParameterVector{A, B});
 
-    auto backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -317,7 +317,7 @@ TEST(tracer, conditional_tracepoint)
 
     auto f = make_shared<Function>(add, op::ParameterVector{A, B});
 
-    auto backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);

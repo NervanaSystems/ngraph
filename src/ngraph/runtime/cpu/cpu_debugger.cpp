@@ -151,23 +151,24 @@ bool runtime::cpu::CPU_Debugger::add_tracepoint(
         std::vector<void**> poutputs;
         for (size_t i = 0; i < op->get_outputs().size(); i++)
         {
-            poutputs.push_back(&external_function->tensor_data.at(op_name + "_" + to_string(i)));
+            poutputs.push_back(&external_function->get_tensor_data(op_name + "_" + to_string(i)));
         }
 
         auto original_functor = external_function->functors.at(pc);
 
-        auto trace_functor =
-            [poutputs, callback, original_functor, op_name](CPURuntimeContext* ctx) {
-                original_functor(ctx);
+        auto trace_functor = [poutputs, callback, original_functor, op_name](
+            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
 
-                std::vector<void*> outputs;
-                for (auto pout : poutputs)
-                {
-                    outputs.push_back(*pout);
-                }
+            original_functor(ctx, ectx);
 
-                callback(outputs.data(), op_name);
-            };
+            std::vector<void*> outputs;
+            for (auto pout : poutputs)
+            {
+                outputs.push_back(*pout);
+            }
+
+            callback(outputs.data(), op_name);
+        };
         replaced_functors[pc] = original_functor;
         external_function->functors.at(pc) = trace_functor;
         return true;
