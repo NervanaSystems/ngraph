@@ -109,6 +109,7 @@ Contents
    frameworks/index.rst
    fusion/index.rst
    programmable/index.rst
+   shared/index.rst
    distr/index.rst
    python_api/index.rst
    project/index.rst
