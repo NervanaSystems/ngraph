@@ -31,8 +31,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-// Params to drive concat_vector_large testing variations
-class frozen_graph_files : public ::testing::TestWithParam<string>
+class serialized_graph_files : public ::testing::TestWithParam<string>
 {
 public:
     void compare_results(NodeVector& result_nodes,
@@ -138,11 +137,11 @@ public:
     }
 
 protected:
-    frozen_graph_files() { file_name = GetParam(); }
+    serialized_graph_files() { file_name = GetParam(); }
     string file_name;
 };
 
-NGRAPH_TEST_P(${BACKEND_NAME}, frozen_graph_files, compare_backends_with_graphs)
+NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_graphs)
 {
     // Compare against CPU for speed. Running large graphs against the
     // interpreter is too slow.
@@ -179,15 +178,6 @@ NGRAPH_TEST_P(${BACKEND_NAME}, frozen_graph_files, compare_backends_with_graphs)
 
     //no need to include original results they are subsumed by new_results
     auto new_func = make_shared<Function>(new_results, func->get_parameters());
-
-    // // uncomment these lines to serialize the new_func for later use
-    // // I use this for splicing a small graph out of a larger one
-    // string js = serialize(new_func, 4);
-    // ofstream outfile;
-    // outfile.open("conv_bprop_filters.json");
-    // outfile << js;
-    // outfile.close();
-    // if (new_func) exit(0);
 
     auto ref_func = clone_function(*new_func);
     auto bk_func = clone_function(*new_func);
@@ -255,7 +245,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, frozen_graph_files, compare_backends_with_graphs)
 NGRAPH_INSTANTIATE_TEST_CASE_P(
     ${BACKEND_NAME},
     tf_resnet8_files,
-    frozen_graph_files,
+    serialized_graph_files,
     testing::Values("tensorflow/resnet8/"
                     "tf_function_cluster_12[_XlaCompiledKernel=true,_XlaNumConstantArgs=3,_"
                     "XlaNumResourceArgs=0].v23.json",
