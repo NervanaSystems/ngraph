@@ -86,10 +86,12 @@ def CreateStage(String stageName, Closure method, configurationMaps) {
         try {
             def prepareEnvMap = GenerateMap(genericBodyMethod, configurationMaps)
             parallel prepareEnvMap
-        } catch(hudson.AbortException e) {
-            AbortedException(e)
         } catch(e) {
-            Exception(e)
+            if ("$e".contains("143")) {
+                currentBuild.result = "ABORTED"
+            } else {
+                currentBuild.result = "FAILURE"
+            }
         }
     }
 }
@@ -134,14 +136,6 @@ def ShowStatusMap() {
     */
 
     echo "${STAGES_STATUS_MAP}"
-}
-
-def Exception(e) {
-    currentBuild.result = 'FAILURE'
-}
-
-def AbortedException(e) {
-    currentBuild.result = 'ABORTED'
 }
 
 return this
