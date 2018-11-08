@@ -4145,8 +4145,12 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_overflow)
     auto d2 = expf(2) + expf(5);
 
     backend->call_with_validate(f, {result}, {a});
-    vector<float> expected{
-        expf(high - high) / d0, expf(1) / d1, expf(2) / d2, expf(3 - high) / d0, expf(4) / d1, expf(5) / d2};
+    vector<float> expected{expf(high - high) / d0,
+                           expf(1) / d1,
+                           expf(2) / d2,
+                           expf(3 - high) / d0,
+                           expf(4) / d1,
+                           expf(5) / d2};
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 
