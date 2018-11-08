@@ -18,6 +18,7 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_builder.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_args.hpp"
+#include "ngraph/runtime/gpu/nvrtc/helpers.hpp"
 #include "ngraph/runtime/gpu/type_info.hpp"
 
 using namespace ngraph;
@@ -84,6 +85,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_divide_op(
     std::vector<size_t> axes_flag,
     size_t rank)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in0, "
            << data_types[1] << "* in1, " << data_types[2] << "* out,";
     for (size_t i = 0; i < axes_flag.size(); i++)
@@ -136,6 +138,7 @@ void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
     bool save_elementwise,
     size_t rank)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
@@ -336,6 +339,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
     size_t out_rank,
     size_t reduce_rank)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
@@ -348,7 +352,6 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                 writer << "uint32_t dim_idx_generator = tid;\n";
             }
             writer << "uint32_t in_idx = 0;\n";
-            writer << data_types[1] << " r = 0;\n";
 
             // loop through all reduction axis
             for (int64_t i = 0; i < static_cast<int64_t>(out_rank); i++)
@@ -357,6 +360,8 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                        << ") * non_reduce_strides" << i << ";\n";
                 writer << "dim_idx_generator %= out_strides" << i << ";\n";
             }
+            writer << "uint32_t init_in_idx = in_idx;\n";
+            writer << data_types[1] << " r = in[init_in_idx];\n";
             int64_t last_r_idx = static_cast<int64_t>(reduce_rank) - 1;
             for (int64_t j = 0; j < last_r_idx; j++)
             {
@@ -370,13 +375,19 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                 {
                     writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
                 }
-                writer << "int idx" << last_r_idx << " = 0;\n";
                 writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
+                writer << "if(reduce_idx != init_in_idx)\n";
+                writer.block_begin();
+                {
+                    writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
+                }
+                writer.block_end();
+                writer << "reduce_idx += step;\n";
+                writer << "int idx" << last_r_idx << " = 1;\n";
                 // unroll last reduction axis
                 uint32_t unroll_num = 8;
-                uint32_t unroll_shift = 3;
-                writer << "for(; idx" << last_r_idx << " < (reduce_shape" << last_r_idx << " >> "
-                       << unroll_shift << "); idx" << last_r_idx << "++)\n";
+                writer << "for(; idx" << last_r_idx << " + " << unroll_num << " - 1 < reduce_shape"
+                       << last_r_idx << "; idx" << last_r_idx << " += " << unroll_num << ")\n";
                 writer.block_begin();
                 {
                     for (int k = 0; k < unroll_num; k++)
@@ -386,7 +397,6 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                     }
                 }
                 writer.block_end();
-                writer << "idx" << last_r_idx << " <<= " << unroll_shift << ";\n";
                 writer << "for(; idx" << last_r_idx << " < reduce_shape" << last_r_idx << "; idx"
                        << last_r_idx << "++)\n";
                 writer.block_begin();
@@ -416,6 +426,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
     const std::string& reduce_op,
     uint32_t block_size_x)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
@@ -509,6 +520,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
     const std::vector<std::string>& data_types,
     const std::string& reduce_op)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
@@ -548,9 +560,12 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
 
 void runtime::gpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& writer,
                                                        const std::string& name,
+                                                       const std::string& data_type,
                                                        runtime::gpu::GPUKernelArgs& args,
                                                        const size_t rank)
 {
+    writer << runtime::gpu::nvrtc::helpers();
+    writer << runtime::gpu::nvrtc::define_non_coherent_load(data_type, "load");
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
@@ -1131,6 +1146,8 @@ void runtime::gpu::CudaKernelBuilder::get_avg_pool(codegen::CodeWriter& writer,
                                                    const std::array<std::string, 2>& data_types,
                                                    bool include_pad)
 {
+    writer << runtime::gpu::nvrtc::helpers();
+    writer << runtime::gpu::nvrtc::define_non_coherent_load(data_types[0], "load");
     // In the pooling operation out = P(in) where in: NCDHW -> out: NKMPQ
     // via pooling window: JTRS. Currently feature pooling
     // is not supported and so K = C and J is unused
@@ -1249,6 +1266,7 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
     int sm_tile_size,
     int reg_tile_size)
 {
+    writer << runtime::gpu::nvrtc::helpers();
     writer << "#define NUM_ROWS 8\n";
     writer << "#define FILTER_SIZE " << filter_size << "\n";
     writer << "#define SM_TILE_SIZE " << sm_tile_size << "\n";

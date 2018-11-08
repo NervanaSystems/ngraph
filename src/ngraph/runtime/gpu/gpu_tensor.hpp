@@ -38,7 +38,7 @@ class ngraph::runtime::gpu::GPUTensor : public ngraph::runtime::Tensor
 public:
     GPUTensor(const ngraph::element::Type& element_type, const Shape& shape);
     GPUTensor(const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer);
-    virtual ~GPUTensor();
+    virtual ~GPUTensor() override;
 
     /// \brief Write bytes directly into the tensor
     /// \param p Pointer to source of data

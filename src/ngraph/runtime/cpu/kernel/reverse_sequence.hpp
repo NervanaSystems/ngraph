@@ -21,7 +21,7 @@
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -38,7 +38,8 @@ namespace ngraph
                                       const Shape& input_shape,
                                       size_t batch_axis,
                                       size_t sequence_axis,
-                                      void* sequence_lengths)
+                                      void* sequence_lengths,
+                                      int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> in_dims;
 
@@ -62,7 +63,8 @@ namespace ngraph
                         return in(k);
                     };
 
-                    out.device(eigen::global_thread_pool_device) = in.generate(generator);
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
+                        in.generate(generator);
                 }
 
                 template <typename InputElementType, unsigned int Rank>
@@ -71,10 +73,16 @@ namespace ngraph
                                             const Shape& input_shape,
                                             size_t batch_axis,
                                             size_t sequence_axis,
-                                            void* sequence_lengths)
+                                            void* sequence_lengths,
+                                            int arena)
                 {
-                    reverse_sequence<InputElementType, int32_t, Rank>(
-                        input, output, input_shape, batch_axis, sequence_axis, sequence_lengths);
+                    reverse_sequence<InputElementType, int32_t, Rank>(input,
+                                                                      output,
+                                                                      input_shape,
+                                                                      batch_axis,
+                                                                      sequence_axis,
+                                                                      sequence_lengths,
+                                                                      arena);
                 }
             }
         }

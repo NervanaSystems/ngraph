@@ -158,7 +158,7 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
             string name = typeid(*p).name();
 #ifndef WIN32
             int status;
-            name = abi::__cxa_demangle(name.c_str(), 0, 0, &status);
+            name = abi::__cxa_demangle(name.c_str(), nullptr, nullptr, &status);
 #endif
             cout << setw(7) << pass_timer.get_milliseconds() << "ms " << name << "\n";
         }
