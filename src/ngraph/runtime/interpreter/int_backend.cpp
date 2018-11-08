@@ -355,3 +355,29 @@ void runtime::interpreter::INTBackend::perform_nan_check(const vector<HostTensor
     //     arg_number++;
     // }
 }
+
+void runtime::interpreter::INTBackend::create_tensor_array(
+    Function* function,
+    const vector<void*>& out,
+    const vector<const void*>& args,
+    vector<shared_ptr<runtime::Tensor>>& outputs,
+    vector<shared_ptr<runtime::Tensor>>& inputs)
+{
+    for (size_t i = 0; i < function->get_output_size(); i++)
+    {
+        element::Type et = function->get_output_element_type(i);
+        Shape shape = function->get_output_shape(i);
+        auto htv = make_shared<HostTensor>(et, shape, out[i]);
+        outputs.push_back(static_pointer_cast<runtime::Tensor>(htv));
+    }
+
+    auto parameters = function->get_parameters();
+    for (size_t i = 0; i < parameters.size(); i++)
+    {
+        auto parameter = parameters[i];
+        element::Type et = parameter->get_element_type();
+        Shape shape = parameter->get_shape();
+        auto htv = make_shared<HostTensor>(et, shape, const_cast<void*>(args[i]));
+        inputs.push_back(static_pointer_cast<runtime::Tensor>(htv));
+    }
+}

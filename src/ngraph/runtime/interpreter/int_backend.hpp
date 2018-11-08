@@ -183,6 +183,12 @@ private:
 
     static void perform_nan_check(const std::vector<HostTensor*>&, const Node* op = nullptr);
 
+    void create_tensor_array(Function* function,
+                             const std::vector<void*>& out,
+                             const std::vector<const void*>& args,
+                             std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                             std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+
     void generate_calls(const element::Type& type,
                         const NodeWrapper& op,
                         const std::vector<void*>& outputs,
@@ -681,21 +687,13 @@ private:
         }
         case OP_TYPEID::FunctionCall:
         {
-            // std::shared_ptr<Function> function = node.get_functions()[0];
+            std::shared_ptr<Function> function = node.get_functions()[0];
 
-            // std::vector<std::shared_ptr<runtime::Tensor>> outputs;
-            // for (auto tv : out)
-            // {
-            //     outputs.push_back(std::static_pointer_cast<runtime::Tensor>(tv));
-            // }
+            std::vector<std::shared_ptr<runtime::Tensor>> outputs;
+            std::vector<std::shared_ptr<runtime::Tensor>> inputs;
+            create_tensor_array(function.get(), out, args, outputs, inputs);
 
-            // std::vector<std::shared_ptr<runtime::Tensor>> inputs;
-            // for (auto tv : args)
-            // {
-            //     inputs.push_back(std::static_pointer_cast<runtime::Tensor>(tv));
-            // }
-
-            // call(function, outputs, inputs);
+            call(function, outputs, inputs);
             break;
         }
         case OP_TYPEID::GenerateMask:
