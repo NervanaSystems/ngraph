@@ -175,7 +175,7 @@ def main(String label, String projectName, String projectRoot, String dockerCont
                 }
             }
             catch(e) {
-                // Set result to ABORTED if exception contains exit code for build interrupt
+                // Set result to ABORTED if exception contains exit code of a process interrupted by SIGTERM
                 if ("$e".contains("143")) {
                     currentBuild.result = "ABORTED"
                 } else {
