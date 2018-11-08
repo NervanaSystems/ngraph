@@ -6,10 +6,10 @@
 
 /cmake/                             @rkimballn1 @silee2
 
-/.ci/                               @crlishka
+/.ci/                               @aslepko @crlishka
 /.ci/travis/                        @postrational
 /.ci/onnx/                          @postrational
-/contrib/docker/                    @crlishka
+/contrib/docker/                    @aslepko @crlishka
 /.travis.yml                        @postrational
 
 /.clang-format                      @rkimballn1
@@ -23,8 +23,8 @@
 /INSTALL.md                         @indie
 /CONTRIB.md                         @indie
 
-/licenses/                          @diyessi @kimjanik @crlishka
-/LICENSE                            @diyessi @kimjanik @crlishka
+/licenses/                          @diyessi @raramer01 @aslepko
+/LICENSE                            @diyessi @raramer01 @aslepko
 
 /python/                            @postrational
 
