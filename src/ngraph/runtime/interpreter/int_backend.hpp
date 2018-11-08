@@ -336,18 +336,19 @@ private:
                                    avg_pool->get_include_padding_in_avg_computation());
             break;
         }
-        case OP_TYPEID::AvgPoolBackprop:
+        case OP_TYPEID::GenerateMask:
         {
-            const op::AvgPoolBackprop* apb = static_cast<const op::AvgPoolBackprop*>(&node);
-            reference::avg_pool_backprop<T>(static_cast<const T*>(args[0]),
-                                            static_cast<T*>(out[0]),
-                                            node.get_input_shape(0),
-                                            node.get_output_shape(0),
-                                            apb->get_window_shape(),
-                                            apb->get_window_movement_strides(),
-                                            apb->get_padding_below(),
-                                            apb->get_padding_above(),
-                                            apb->get_include_padding_in_avg_computation());
+            throw ngraph_error(
+                "GenerateMask is an experimental op that's only supported on CPU backend");
+        }
+        case OP_TYPEID::GetOutputElement:
+        {
+            const op::GetOutputElement* get_output_element =
+                static_cast<const op::GetOutputElement*>(&node);
+            size_t n = get_output_element->get_n();
+            size_t element_count = shape_size(node.get_output_shape(0));
+            size_t num_bytes = element_count * node.get_output_element_type(0).size();
+            std::memcpy(static_cast<T*>(out[0]), args[n], num_bytes);
             break;
         }
         case OP_TYPEID::BatchNormTraining:
@@ -407,6 +408,20 @@ private:
                                            static_cast<T*>(out[1]),
                                            static_cast<T*>(out[2]),
                                            node.get_input_shape(2));
+            break;
+        }
+        case OP_TYPEID::AvgPoolBackprop:
+        {
+            const op::AvgPoolBackprop* apb = static_cast<const op::AvgPoolBackprop*>(&node);
+            reference::avg_pool_backprop<T>(static_cast<const T*>(args[0]),
+                                            static_cast<T*>(out[0]),
+                                            node.get_input_shape(0),
+                                            node.get_output_shape(0),
+                                            apb->get_window_shape(),
+                                            apb->get_window_movement_strides(),
+                                            apb->get_padding_below(),
+                                            apb->get_padding_above(),
+                                            apb->get_include_padding_in_avg_computation());
             break;
         }
         case OP_TYPEID::Broadcast:
@@ -695,21 +710,6 @@ private:
             create_tensor_array(function.get(), out, args, outputs, inputs);
 
             call(function, outputs, inputs);
-            break;
-        }
-        case OP_TYPEID::GenerateMask:
-        {
-            throw ngraph_error(
-                "GenerateMask is an experimental op that's only supported on CPU backend");
-        }
-        case OP_TYPEID::GetOutputElement:
-        {
-            const op::GetOutputElement* get_output_element =
-                static_cast<const op::GetOutputElement*>(&node);
-            size_t n = get_output_element->get_n();
-            size_t element_count = shape_size(node.get_output_shape(0));
-            size_t num_bytes = element_count * node.get_output_element_type(0).size();
-            std::memcpy(static_cast<T*>(out[0]), args[n], num_bytes);
             break;
         }
         case OP_TYPEID::Greater:
