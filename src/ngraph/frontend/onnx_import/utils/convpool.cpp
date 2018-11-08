@@ -130,8 +130,8 @@ namespace ngraph
                 }
                 else
                 {
-                    return {{std::begin(pads) + pads.size() / 2, std::end(pads)},
-                            {std::begin(pads), std::begin(pads) + pads.size() / 2}};
+                    return {{std::begin(pads), std::begin(pads) + pads.size() / 2},
+                            {std::begin(pads) + pads.size() / 2, std::end(pads)}};
                 }
             }
 
