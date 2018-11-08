@@ -71,12 +71,15 @@ bool test::all_close_f(const vector<float>& a,
     for (size_t i = 0; i < a.size(); ++i)
     {
         bool is_close_f = close_f(a[i], b[i], mantissa_bits, tolerance_bits);
-        if (!is_close_f && count < 5)
+        if (!is_close_f)
         {
-            NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
+            if (count < 5)
+            {
+                NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
+            }
             rc = false;
+            count++;
         }
-        count++;
     }
     if (!rc)
     {
