@@ -11,6 +11,6 @@ generate_mask
 topk_int64
 topk_3d_large_input_max
 topk_3d_large_input_min
-// This set of parameterized unit tests would be extremely slow
-// to run on interpreter
+# This set of parameterized unit tests would be extremely slow
+# to run on interpreter
 compare_backends_with_graphs

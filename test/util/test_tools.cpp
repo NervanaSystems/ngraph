@@ -149,7 +149,7 @@ shared_ptr<Function> make_test_graph()
 }
 
 template <>
-void init_int_tv<char>(std::shared_ptr<ngraph::runtime::Tensor> tv,
+void init_int_tv<char>(ngraph::runtime::Tensor* tv,
                        std::default_random_engine& engine,
                        char min,
                        char max)
@@ -165,7 +165,7 @@ void init_int_tv<char>(std::shared_ptr<ngraph::runtime::Tensor> tv,
 }
 
 template <>
-void init_int_tv<int8_t>(std::shared_ptr<ngraph::runtime::Tensor> tv,
+void init_int_tv<int8_t>(ngraph::runtime::Tensor* tv,
                          std::default_random_engine& engine,
                          int8_t min,
                          int8_t max)
@@ -181,7 +181,7 @@ void init_int_tv<int8_t>(std::shared_ptr<ngraph::runtime::Tensor> tv,
 }
 
 template <>
-void init_int_tv<uint8_t>(std::shared_ptr<ngraph::runtime::Tensor> tv,
+void init_int_tv<uint8_t>(ngraph::runtime::Tensor* tv,
                           std::default_random_engine& engine,
                           uint8_t min,
                           uint8_t max)
@@ -196,7 +196,7 @@ void init_int_tv<uint8_t>(std::shared_ptr<ngraph::runtime::Tensor> tv,
     tv->write(vec.data(), 0, vec.size() * sizeof(uint8_t));
 }
 
-void random_init(std::shared_ptr<ngraph::runtime::Tensor> tv, std::default_random_engine& engine)
+void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine)
 {
     element::Type et = tv->get_element_type();
     if (et == element::boolean)

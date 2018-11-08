@@ -99,10 +99,7 @@ size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
 }
 
 template <typename T>
-void init_int_tv(std::shared_ptr<ngraph::runtime::Tensor> tv,
-                 std::default_random_engine& engine,
-                 T min,
-                 T max)
+void init_int_tv(ngraph::runtime::Tensor* tv, std::default_random_engine& engine, T min, T max)
 {
     size_t size = tv->get_element_count();
     std::uniform_int_distribution<T> dist(min, max);
@@ -115,10 +112,7 @@ void init_int_tv(std::shared_ptr<ngraph::runtime::Tensor> tv,
 }
 
 template <typename T>
-void init_real_tv(std::shared_ptr<ngraph::runtime::Tensor> tv,
-                  std::default_random_engine& engine,
-                  T min,
-                  T max)
+void init_real_tv(ngraph::runtime::Tensor* tv, std::default_random_engine& engine, T min, T max)
 {
     size_t size = tv->get_element_count();
     std::uniform_real_distribution<T> dist(min, max);
@@ -130,7 +124,7 @@ void init_real_tv(std::shared_ptr<ngraph::runtime::Tensor> tv,
     tv->write(vec.data(), 0, vec.size() * sizeof(T));
 }
 
-void random_init(std::shared_ptr<ngraph::runtime::Tensor> tv, std::default_random_engine& engine);
+void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine);
 
 template <typename T, typename T1 = T>
 std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& function,

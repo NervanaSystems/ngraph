@@ -26,119 +26,120 @@
 #include "util/all_close_f.hpp"
 #include "util/test_control.hpp"
 
+using namespace std;
 using namespace ngraph;
 
-static std::string s_manifest = "${MANIFEST}";
+static string s_manifest = "${MANIFEST}";
 
 // Params to drive concat_vector_large testing variations
-class frozen_graph_files : public ::testing::TestWithParam<std::string>
+class frozen_graph_files : public ::testing::TestWithParam<string>
 {
 public:
     void compare_results(NodeVector& result_nodes,
-                         std::vector<std::shared_ptr<runtime::Tensor>> ref_results,
-                         std::vector<std::shared_ptr<runtime::Tensor>> bk_results)
+                         vector<shared_ptr<runtime::Tensor>> ref_results,
+                         vector<shared_ptr<runtime::Tensor>> bk_results)
     {
         for (int i = 0; i < ref_results.size(); ++i)
         {
-            const std::shared_ptr<runtime::Tensor>& ref_data = ref_results.at(i);
-            const std::shared_ptr<runtime::Tensor>& bk_data = bk_results.at(i);
+            const shared_ptr<runtime::Tensor>& ref_data = ref_results.at(i);
+            const shared_ptr<runtime::Tensor>& bk_data = bk_results.at(i);
 
-            std::cout << "Comparing results for " << result_nodes.at(i)->get_name() << std::endl;
-            if (auto node = std::dynamic_pointer_cast<op::GetOutputElement>(result_nodes.at(i)))
+            cout << "Comparing results for " << result_nodes.at(i)->get_name() << endl;
+            if (auto node = dynamic_pointer_cast<op::GetOutputElement>(result_nodes.at(i)))
             {
-                std::cout << "  Parent node: ";
+                cout << "  Parent node: ";
                 for (auto& p : node->get_arguments())
                 {
-                    std::cout << " " << p->get_name() << std::endl;
-                    std::cout << "   nargs: " << p->get_arguments().size() << std::endl;
+                    cout << " " << p->get_name() << endl;
+                    cout << "   nargs: " << p->get_arguments().size() << endl;
                 }
             }
 
-            EXPECT_EQ(ref_data->get_element_type(), bk_data->get_element_type());
-            EXPECT_EQ(ref_data->get_element_count(), bk_data->get_element_count());
-            EXPECT_EQ(ref_data->get_shape(), bk_data->get_shape());
+            ASSERT_EQ(ref_data->get_element_type(), bk_data->get_element_type());
+            ASSERT_EQ(ref_data->get_element_count(), bk_data->get_element_count());
+            ASSERT_EQ(ref_data->get_shape(), bk_data->get_shape());
 
             element::Type et = ref_data->get_element_type();
             if (et == element::boolean)
             {
-                std::vector<char> ref_data_vector = read_vector<char>(ref_data);
-                std::vector<char> bk_data_vector = read_vector<char>(bk_data);
+                vector<char> ref_data_vector = read_vector<char>(ref_data);
+                vector<char> bk_data_vector = read_vector<char>(bk_data);
                 print_results(ref_data_vector, bk_data_vector);
                 EXPECT_TRUE(test::all_close<char>(ref_data_vector, bk_data_vector));
             }
             else if ((et == element::f32) || (et == element::f64))
             {
-                std::vector<float> ref_data_vector = read_float_vector(ref_data);
-                std::vector<float> bk_data_vector = read_float_vector(bk_data);
+                vector<float> ref_data_vector = read_float_vector(ref_data);
+                vector<float> bk_data_vector = read_float_vector(bk_data);
                 print_results(ref_data_vector, bk_data_vector);
                 EXPECT_TRUE(test::all_close_f(ref_data_vector, bk_data_vector));
             }
             else if (et == element::i8)
             {
-                std::vector<int8_t> ref_data_vector = read_vector<int8_t>(ref_data);
-                std::vector<int8_t> bk_data_vector = read_vector<int8_t>(bk_data);
+                vector<int8_t> ref_data_vector = read_vector<int8_t>(ref_data);
+                vector<int8_t> bk_data_vector = read_vector<int8_t>(bk_data);
                 print_results(ref_data_vector, bk_data_vector);
                 EXPECT_TRUE(test::all_close<int8_t>(ref_data_vector, bk_data_vector));
             }
             else if (et == element::i16)
             {
-                std::vector<int16_t> ref_data_vector = read_vector<int16_t>(ref_data);
-                std::vector<int16_t> bk_data_vector = read_vector<int16_t>(bk_data);
+                vector<int16_t> ref_data_vector = read_vector<int16_t>(ref_data);
+                vector<int16_t> bk_data_vector = read_vector<int16_t>(bk_data);
                 print_results(ref_data_vector, bk_data_vector);
                 EXPECT_TRUE(test::all_close<int16_t>(ref_data_vector, bk_data_vector));
             }
             else if (et == element::i32)
             {
-                std::vector<int32_t> ref_data_vector = read_vector<int32_t>(ref_data);
-                std::vector<int32_t> bk_data_vector = read_vector<int32_t>(bk_data);
+                vector<int32_t> ref_data_vector = read_vector<int32_t>(ref_data);
+                vector<int32_t> bk_data_vector = read_vector<int32_t>(bk_data);
                 print_results(ref_data_vector, bk_data_vector);
                 EXPECT_TRUE(test::all_close<int32_t>(ref_data_vector, bk_data_vector));
             }
             else if (et == element::i64)
             {
-                std::vector<int64_t> ref_data_vector = read_vector<int64_t>(ref_data);
-                std::vector<int64_t> bk_data_vector = read_vector<int64_t>(bk_data);
+                vector<int64_t> ref_data_vector = read_vector<int64_t>(ref_data);
+                vector<int64_t> bk_data_vector = read_vector<int64_t>(bk_data);
                 print_results(ref_data_vector, bk_data_vector);
                 EXPECT_TRUE(test::all_close<int64_t>(ref_data_vector, bk_data_vector));
             }
             else if (et == element::u8)
             {
-                std::vector<uint8_t> ref_data_vector = read_vector<uint8_t>(ref_data);
-                std::vector<uint8_t> bk_data_vector = read_vector<uint8_t>(bk_data);
+                vector<uint8_t> ref_data_vector = read_vector<uint8_t>(ref_data);
+                vector<uint8_t> bk_data_vector = read_vector<uint8_t>(bk_data);
                 print_results(ref_data_vector, bk_data_vector);
                 EXPECT_TRUE(test::all_close<uint8_t>(ref_data_vector, bk_data_vector));
             }
             else if (et == element::u16)
             {
-                std::vector<uint16_t> ref_data_vector = read_vector<uint16_t>(ref_data);
-                std::vector<uint16_t> bk_data_vector = read_vector<uint16_t>(bk_data);
+                vector<uint16_t> ref_data_vector = read_vector<uint16_t>(ref_data);
+                vector<uint16_t> bk_data_vector = read_vector<uint16_t>(bk_data);
                 print_results(ref_data_vector, bk_data_vector);
                 EXPECT_TRUE(test::all_close<uint16_t>(ref_data_vector, bk_data_vector));
             }
             else if (et == element::u32)
             {
-                std::vector<uint32_t> ref_data_vector = read_vector<uint32_t>(ref_data);
-                std::vector<uint32_t> bk_data_vector = read_vector<uint32_t>(bk_data);
+                vector<uint32_t> ref_data_vector = read_vector<uint32_t>(ref_data);
+                vector<uint32_t> bk_data_vector = read_vector<uint32_t>(bk_data);
                 print_results(ref_data_vector, bk_data_vector);
                 EXPECT_TRUE(test::all_close<uint32_t>(ref_data_vector, bk_data_vector));
             }
             else if (et == element::u64)
             {
-                std::vector<uint64_t> ref_data_vector = read_vector<uint64_t>(ref_data);
-                std::vector<uint64_t> bk_data_vector = read_vector<uint64_t>(bk_data);
+                vector<uint64_t> ref_data_vector = read_vector<uint64_t>(ref_data);
+                vector<uint64_t> bk_data_vector = read_vector<uint64_t>(bk_data);
                 print_results(ref_data_vector, bk_data_vector);
                 EXPECT_TRUE(test::all_close<uint64_t>(ref_data_vector, bk_data_vector));
             }
             else
             {
-                throw std::runtime_error("unsupported type");
+                throw runtime_error("unsupported type");
             }
         }
     }
 
 protected:
     frozen_graph_files() { file_name = GetParam(); }
-    std::string file_name;
+    string file_name;
 };
 
 NGRAPH_TEST_P(${BACKEND_NAME}, frozen_graph_files, compare_backends_with_graphs)
@@ -148,7 +149,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, frozen_graph_files, compare_backends_with_graphs)
     auto ref = runtime::Backend::create("CPU");
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    std::string frozen_graph_path;
+    string frozen_graph_path;
     if (file_name[0] != '/')
     {
         // Path is relative to serialized zoo path
@@ -160,9 +161,9 @@ NGRAPH_TEST_P(${BACKEND_NAME}, frozen_graph_files, compare_backends_with_graphs)
         frozen_graph_path = file_name;
     }
 
-    std::cout << frozen_graph_path << std::endl;
-    std::stringstream ss(frozen_graph_path);
-    std::shared_ptr<Function> func = ngraph::deserialize(ss);
+    cout << frozen_graph_path << endl;
+    stringstream ss(frozen_graph_path);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
 
     NodeVector new_results;
     for (auto n : func->get_ordered_ops())
@@ -177,12 +178,12 @@ NGRAPH_TEST_P(${BACKEND_NAME}, frozen_graph_files, compare_backends_with_graphs)
     }
 
     //no need to include original results they are subsumed by new_results
-    auto new_func = std::make_shared<Function>(new_results, func->get_parameters());
+    auto new_func = make_shared<Function>(new_results, func->get_parameters());
 
     // // uncomment these lines to serialize the new_func for later use
     // // I use this for splicing a small graph out of a larger one
     // string js = serialize(new_func, 4);
-    // std::ofstream outfile;
+    // ofstream outfile;
     // outfile.open("conv_bprop_filters.json");
     // outfile << js;
     // outfile.close();
@@ -191,14 +192,14 @@ NGRAPH_TEST_P(${BACKEND_NAME}, frozen_graph_files, compare_backends_with_graphs)
     auto ref_func = clone_function(*new_func);
     auto bk_func = clone_function(*new_func);
 
-    std::vector<std::shared_ptr<runtime::Tensor>> ref_args;
-    std::vector<std::shared_ptr<runtime::Tensor>> bk_args;
-    std::default_random_engine engine(2112);
-    for (std::shared_ptr<op::Parameter> param : new_func->get_parameters())
+    vector<shared_ptr<runtime::Tensor>> ref_args;
+    vector<shared_ptr<runtime::Tensor>> bk_args;
+    default_random_engine engine(2112);
+    for (shared_ptr<op::Parameter> param : new_func->get_parameters())
     {
-        auto data = std::make_shared<ngraph::runtime::HostTensor>(param->get_element_type(),
-                                                                  param->get_shape());
-        random_init(data, engine);
+        auto data =
+            make_shared<ngraph::runtime::HostTensor>(param->get_element_type(), param->get_shape());
+        random_init(data.get(), engine);
         auto ref_tensor = ref->create_tensor(param->get_element_type(), param->get_shape());
         auto bk_tensor = backend->create_tensor(param->get_element_type(), param->get_shape());
         ref_tensor->write(
@@ -209,13 +210,13 @@ NGRAPH_TEST_P(${BACKEND_NAME}, frozen_graph_files, compare_backends_with_graphs)
         bk_args.push_back(bk_tensor);
     }
 
-    std::vector<std::shared_ptr<runtime::Tensor>> ref_results;
-    std::vector<std::shared_ptr<runtime::Tensor>> bk_results;
+    vector<shared_ptr<runtime::Tensor>> ref_results;
+    vector<shared_ptr<runtime::Tensor>> bk_results;
 
     ref_results.reserve(new_results.size());
     bk_results.reserve(new_results.size());
 
-    for (std::shared_ptr<Node>& out : new_results)
+    for (shared_ptr<Node>& out : new_results)
     {
         auto ref_result = ref->create_tensor(out->get_element_type(), out->get_shape());
         ref_results.push_back(ref_result);
