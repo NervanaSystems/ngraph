@@ -144,7 +144,7 @@ def cleanup(configurationMaps) {
     UTILS.createStage("cleanup", cleanupMethod, configurationMaps)
 }
 
-def notify() {
+def notifyByEmail() {
     configurationMaps = []
     configurationMaps.add([
         "name": "notify"
@@ -204,7 +204,7 @@ def main(String label, String projectName, String projectRoot, String dockerCont
             }
             finally {
                 cleanup(configurationMaps)
-                notify()
+                notifyByEmail()
             }
         }
     }
