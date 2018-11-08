@@ -184,3 +184,15 @@ add_custom_target(check
     style-check
     unit-test-check
 )
+
+install(TARGETS unit-test RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})
+install(DIRECTORY
+    ${CMAKE_CURRENT_SOURCE_DIR}/
+    DESTINATION "${NGRAPH_INSTALL_INCLUDE}/"
+    FILES_MATCHING PATTERN "*.hpp"
+)
+install(DIRECTORY
+    ${CMAKE_CURRENT_SOURCE_DIR}/
+    DESTINATION "${NGRAPH_INSTALL_TEST}/"
+    FILES_MATCHING PATTERN "*.cpp"
+)
