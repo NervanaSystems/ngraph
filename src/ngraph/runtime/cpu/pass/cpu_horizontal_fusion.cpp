@@ -61,6 +61,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
         //check if the node has been replaced
         if (conv_bias_root->get_users().empty())
         {
+            NGRAPH_DEBUG << "conv_horizontal_fusion: root node has been replaced\n";
             return false;
         }
 
@@ -75,8 +76,14 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
 
         for (auto u : m.get_pattern_map()[data_conv]->get_users())
         {
+            if (!is_used(u.get()))
+            {
+                NGRAPH_DEBUG << "conv_horizontal_fusion: dead node\n";
+                continue;
+            }
             if (!pattern::has_class<ngraph::op::ConvolutionBias>()(u))
             {
+                NGRAPH_DEBUG << "conv_horizontal_fusion: not conv_bias node\n";
                 continue;
             }
             if (u->get_argument(0) != m.get_pattern_map()[data_conv])
@@ -96,6 +103,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
             bias_nodes.push_back(u->get_argument(2));
             conv_bias_nodes.push_back(u);
         }
+
         if (conv_bias_nodes.size() <= 1)
         {
             NGRAPH_DEBUG << "conv_horizontal_fusion: need more than one nodes to do fusion\n";
