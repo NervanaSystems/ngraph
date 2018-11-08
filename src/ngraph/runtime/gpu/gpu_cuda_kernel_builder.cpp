@@ -372,7 +372,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
             writer << data_types[1] << " r_sum = 0;\n";
             writer << data_types[1] << " c = 0;\n";
             writer << data_types[1] << " y;\n";
-            writer << data_types[1] << " t;\n";            
+            writer << data_types[1] << " t;\n";
             writer.block_begin();
             for (int64_t j = 0; j < last_r_idx; j++)
             {
@@ -397,11 +397,10 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
                     for (int k = 0; k < unroll_num; k++)
                     {
                         writer << "input_i = expf(in[reduce_idx] - r_max);\n";
-                        //writer << "out[reduce_idx] = input_i;\n";
-                        writer << "y = input_i - c;\n"
-                        writer << "t = r_sum + y;\n"
+                        writer << "y = input_i - c;\n";
+                        writer << "t = r_sum + y;\n";
                         writer << "c = (t - r_sum) - y;\n";
-                        writer << "r_sum = t;\n"
+                        writer << "r_sum = t;\n";
                         writer << "reduce_idx += step;\n";
                     }
                 }
@@ -411,11 +410,10 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
                 writer.block_begin();
                 {
                     writer << "input_i = expf(in[reduce_idx] - r_max);\n";
-                    //writer << "out[reduce_idx] = input_i;\n";
-                    writer << "y = input_i - c;\n"
-                    writer << "t = r_sum + y;\n"
+                    writer << "y = input_i - c;\n";
+                    writer << "t = r_sum + y;\n";
                     writer << "c = (t - r_sum) - y;\n";
-                    writer << "r_sum = t;\n"
+                    writer << "r_sum = t;\n";
                     writer << "reduce_idx += step;\n";
                 }
                 writer.block_end();
