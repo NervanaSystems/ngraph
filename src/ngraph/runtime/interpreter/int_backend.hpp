@@ -454,57 +454,57 @@ private:
             if (type == element::boolean)
             {
                 reference::convert<T>(
-                    static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<char*>(out[0]), element_count);
             }
             else if (type == element::f32)
             {
                 reference::convert<T>(
-                    static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<float*>(out[0]), element_count);
             }
             else if (type == element::f64)
             {
                 reference::convert<T>(
-                    static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<double*>(out[0]), element_count);
             }
             else if (type == element::i8)
             {
                 reference::convert<T>(
-                    static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<int8_t*>(out[0]), element_count);
             }
             else if (type == element::i16)
             {
                 reference::convert<T>(
-                    static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<int16_t*>(out[0]), element_count);
             }
             else if (type == element::i32)
             {
                 reference::convert<T>(
-                    static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<int32_t*>(out[0]), element_count);
             }
             else if (type == element::i64)
             {
                 reference::convert<T>(
-                    static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<int64_t*>(out[0]), element_count);
             }
             else if (type == element::u8)
             {
                 reference::convert<T>(
-                    static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<uint8_t*>(out[0]), element_count);
             }
             else if (type == element::u16)
             {
                 reference::convert<T>(
-                    static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<uint16_t*>(out[0]), element_count);
             }
             else if (type == element::u32)
             {
                 reference::convert<T>(
-                    static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<uint32_t*>(out[0]), element_count);
             }
             else if (type == element::u64)
             {
                 reference::convert<T>(
-                    static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<uint64_t*>(out[0]), element_count);
             }
             else
             {
@@ -608,9 +608,9 @@ private:
             if (type == element::f32)
             {
                 reference::dequantize<T>(static_cast<const T*>(args[0]),
-                                         static_cast<const T*>(args[1]),
+                                         static_cast<const float*>(args[1]),
                                          static_cast<const T*>(args[2]),
-                                         static_cast<T*>(out[0]),
+                                         static_cast<float*>(out[0]),
                                          node.get_input_shape(0),
                                          node.get_input_shape(1),
                                          dequantize->get_axes());
@@ -618,9 +618,9 @@ private:
             else if (type == element::f64)
             {
                 reference::dequantize<T>(static_cast<const T*>(args[0]),
-                                         static_cast<const T*>(args[1]),
+                                         static_cast<const double*>(args[1]),
                                          static_cast<const T*>(args[2]),
-                                         static_cast<T*>(out[0]),
+                                         static_cast<double*>(out[0]),
                                          node.get_input_shape(0),
                                          node.get_input_shape(1),
                                          dequantize->get_axes());
@@ -930,8 +930,8 @@ private:
             {
                 reference::quantize<T>(static_cast<const T*>(args[0]),
                                        static_cast<const T*>(args[1]),
-                                       static_cast<const T*>(args[2]),
-                                       static_cast<T*>(out[0]),
+                                       static_cast<const uint8_t*>(args[2]),
+                                       static_cast<uint8_t*>(out[0]),
                                        node.get_input_shape(0),
                                        node.get_input_shape(1),
                                        quantize->get_axes(),
@@ -941,8 +941,8 @@ private:
             {
                 reference::quantize<T>(static_cast<const T*>(args[0]),
                                        static_cast<const T*>(args[1]),
-                                       static_cast<const T*>(args[2]),
-                                       static_cast<T*>(out[0]),
+                                       static_cast<const int8_t*>(args[2]),
+                                       static_cast<int8_t*>(out[0]),
                                        node.get_input_shape(0),
                                        node.get_input_shape(1),
                                        quantize->get_axes(),
