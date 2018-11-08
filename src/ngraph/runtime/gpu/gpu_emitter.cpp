@@ -1046,10 +1046,7 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                         continue;
                     }
                     op_count++;
-                    // Work around a compiler warning (*node inside typeid may have effects
-                    // with shared pointers, which is fine here but clang doesn't like it.)
-                    auto& fn = *op;
-                    op_name = fn.get_name();
+                    op_name = op->get_name();
                     reduce_func = op;
                     if (op_count != 1)
                     {
@@ -1057,33 +1054,32 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                     }
                 }
 
-                auto& fn = *reduce_func;
-                if (TI(fn) == TI(ngraph::op::Add))
+                if (dynamic_pointer_cast<ngraph::op::Add>(reduce_func))
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::Add>(
                         dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
                 }
-                else if (TI(fn) == TI(ngraph::op::Multiply))
+                else if (dynamic_pointer_cast<ngraph::op::Multiply>(reduce_func))
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::Multiply>(
                         dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
                 }
-                else if (TI(fn) == TI(ngraph::op::Maximum))
+                else if (dynamic_pointer_cast<ngraph::op::Maximum>(reduce_func))
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::Maximum>(
                         dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
                 }
-                else if (TI(fn) == TI(ngraph::op::Minimum))
+                else if (dynamic_pointer_cast<ngraph::op::Minimum>(reduce_func))
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::Minimum>(
                         dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
                 }
-                else if (TI(fn) == TI(ngraph::op::And))
+                else if (dynamic_pointer_cast<ngraph::op::And>(reduce_func))
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::And>(
                         dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
                 }
-                else if (TI(fn) == TI(ngraph::op::Or))
+                else if (dynamic_pointer_cast<ngraph::op::Or>(reduce_func))
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::Or>(
                         dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
