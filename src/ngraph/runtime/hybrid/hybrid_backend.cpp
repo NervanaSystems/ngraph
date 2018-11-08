@@ -67,6 +67,7 @@ shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
 
 bool runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
 {
+    NGRAPH_INFO << "hybrid compile begin " ; 
     if (m_function_map.find(func) == m_function_map.end())
     {
         vector<shared_ptr<runtime::Backend>> backend_list;
