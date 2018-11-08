@@ -90,12 +90,12 @@ def buildImage(configurationMaps) {
                                 --dockerfile_path=${configMap["dockerfilePath"]}
         """
     }
-    UTILS.createStage("build_Image", buildMethod, configurationMaps)
+    UTILS.createStage("Build_image", buildMethod, configurationMaps)
 }
 
 def runDockerContainers(configurationMaps) {
     Closure runContainerMethod = { configMap ->
-        UTILS.propagateStatus("Build_Image", configMap["name"])
+        UTILS.propagateStatus("Build_image", configMap["name"])
         sh """
             mkdir -p ${HOME}/ONNX_CI
             ${CI_ROOT}/utils/docker.sh start \
@@ -105,7 +105,7 @@ def runDockerContainers(configurationMaps) {
                                 --volumes="-v ${WORKSPACE}/${BUILD_NUMBER}:/logs -v ${HOME}/ONNX_CI:/home -v ${WORKDIR}:/root"
         """
     }
-    UTILS.createStage("run_docker_containers", runContainerMethod, configurationMaps)
+    UTILS.createStage("Run_docker_containers", runContainerMethod, configurationMaps)
 }
 
 def prepareEnvironment(configurationMaps) {
@@ -116,7 +116,7 @@ def prepareEnvironment(configurationMaps) {
             docker exec ${configMap["dockerContainerName"]} bash -c "/root/${CI_ROOT}/prepare_environment.sh"
         """
     }
-    UTILS.createStage("prepare_environment", prepareEnvironmentMethod, configurationMaps)
+    UTILS.createStage("Prepare_environment", prepareEnvironmentMethod, configurationMaps)
 }
 
 def runToxTests(configurationMaps) {
@@ -127,7 +127,7 @@ def runToxTests(configurationMaps) {
             docker exec -e TOX_INSTALL_NGRAPH_FROM=\${NGRAPH_WHL} ${configMap["dockerContainerName"]} tox -c /root/
         """
     }
-    UTILS.createStage("run_tox_tests", runToxTestsMethod, configurationMaps)
+    UTILS.createStage("Run_tox_tests", runToxTestsMethod, configurationMaps)
 }
 
 def cleanup(configurationMaps) {
@@ -142,13 +142,13 @@ def cleanup(configurationMaps) {
             rm -rf ${WORKSPACE}/${BUILD_NUMBER}
         """
     }
-    UTILS.createStage("cleanup", cleanupMethod, configurationMaps)
+    UTILS.createStage("Cleanup", cleanupMethod, configurationMaps)
 }
 
 def notifyByEmail() {
     configurationMaps = []
     configurationMaps.add([
-        "name": "notify"
+        "name": "Notify"
     ])
     String notifyPeople = "$GIT_PR_AUTHOR_EMAIL, $GIT_COMMIT_AUTHOR_EMAIL"
     Closure notifyMethod = { configMap ->
@@ -171,7 +171,7 @@ def notifyByEmail() {
             )
         }
     }
-    UTILS.createStage("notify", notifyMethod, configurationMaps)
+    UTILS.createStage("Notify", notifyMethod, configurationMaps)
 }
 
 def main(String label, String projectName, String projectRoot, String dockerContainerName, String jenkins_github_credential_id, String ngraph_git_address, String onnx_git_address) {
