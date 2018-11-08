@@ -11,5 +11,3 @@ generate_mask
 topk_int64
 topk_3d_large_input_max
 topk_3d_large_input_min
-#fail on all_close with NaN check
-backwards_power

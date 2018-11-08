@@ -46,5 +46,3 @@ quantize_ROUND_TOWARD_INFINITY
 quantize_ROUND_TOWARD_ZERO
 quantize_ROUND_UP
 quantize_ROUND_DOWN
-#fail on all_close with NaN check
-backwards_power
