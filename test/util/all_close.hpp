@@ -43,7 +43,8 @@ namespace ngraph
             assert(a.size() == b.size());
             for (size_t i = 0; i < a.size(); ++i)
             {
-                if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]) || !std::isfinite(a[i] || !std::isfinite(b[i]))
+                if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]) || !std::isfinite(a[i]) ||
+                    !std::isfinite(b[i]))
                 {
                     NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
                     rc = false;
