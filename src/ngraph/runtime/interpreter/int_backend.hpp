@@ -702,8 +702,8 @@ private:
             {
                 element::Type et = function->get_output_element_type(i);
                 Shape shape = function->get_output_shape(i);
-                auto htv = std::make_shared<HostTensor>(et, shape, out[i]);
-                outputs.push_back(std::static_pointer_cast<runtime::Tensor>(htv));
+                auto host_tensor = std::make_shared<HostTensor>(et, shape, out[i]);
+                outputs.push_back(std::static_pointer_cast<runtime::Tensor>(host_tensor));
             }
 
             std::vector<std::shared_ptr<runtime::Tensor>> inputs;
@@ -713,8 +713,9 @@ private:
                 auto parameter = parameters[i];
                 element::Type et = parameter->get_element_type();
                 Shape shape = parameter->get_shape();
-                auto htv = std::make_shared<HostTensor>(et, shape, const_cast<void*>(args[i]));
-                inputs.push_back(std::static_pointer_cast<runtime::Tensor>(htv));
+                auto host_tensor =
+                    std::make_shared<HostTensor>(et, shape, const_cast<void*>(args[i]));
+                inputs.push_back(std::static_pointer_cast<runtime::Tensor>(host_tensor));
             }
 
             call(function, outputs, inputs);

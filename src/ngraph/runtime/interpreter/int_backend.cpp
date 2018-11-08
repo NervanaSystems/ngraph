@@ -93,11 +93,11 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     // convert inputs to HostTensor
     vector<void*> func_inputs;
     vector<shared_ptr<runtime::HostTensor>> htv_inputs;
-    for (auto tv : inputs)
+    for (auto tensor : inputs)
     {
-        auto htv = static_pointer_cast<runtime::HostTensor>(tv);
-        func_inputs.push_back(static_cast<void*>(htv->get_data_ptr()));
-        htv_inputs.push_back(htv);
+        auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
+        func_inputs.push_back(static_cast<void*>(host_tensor->get_data_ptr()));
+        htv_inputs.push_back(host_tensor);
     }
     if (instance.m_nan_check_enabled)
     {
@@ -106,10 +106,10 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 
     // convert outputs to HostTensor
     vector<void*> func_outputs;
-    for (auto tv : outputs)
+    for (auto tensor : outputs)
     {
-        auto htv = static_pointer_cast<runtime::HostTensor>(tv);
-        func_outputs.push_back(static_cast<void*>(htv->get_data_ptr()));
+        auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
+        func_outputs.push_back(static_cast<void*>(host_tensor->get_data_ptr()));
     }
 
     // map function params -> HostTensor
@@ -119,8 +119,8 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
-            descriptor::Tensor* tv = param->get_output_tensor_ptr(i).get();
-            tensor_map.insert({tv, func_inputs[input_count++]});
+            descriptor::Tensor* tensor = param->get_output_tensor_ptr(i).get();
+            tensor_map.insert({tensor, func_inputs[input_count++]});
         }
     }
 
@@ -132,8 +132,8 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
-        descriptor::Tensor* tv = output->get_output_tensor_ptr(0).get();
-        tensor_map.insert({tv, func_outputs[output_count]});
+        descriptor::Tensor* tensor = output->get_output_tensor_ptr(0).get();
+        tensor_map.insert({tensor, func_outputs[output_count]});
     }
 
     // for each ordered op in the graph
@@ -148,16 +148,16 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         if (type_id == OP_TYPEID::Constant)
         {
             const op::Constant* c = static_cast<const op::Constant*>(op);
-            descriptor::Tensor* tv = op->get_output_tensor_ptr(0).get();
-            tensor_map.insert({tv, const_cast<void*>(c->get_data_ptr())});
+            descriptor::Tensor* tensor = op->get_output_tensor_ptr(0).get();
+            tensor_map.insert({tensor, const_cast<void*>(c->get_data_ptr())});
             continue;
         }
         // get op inputs from map
         vector<const void*> op_inputs;
         for (const descriptor::Input& input : op->get_inputs())
         {
-            descriptor::Tensor* tv = input.get_output().get_tensor_ptr().get();
-            op_inputs.push_back(tensor_map.at(tv));
+            descriptor::Tensor* tensor = input.get_output().get_tensor_ptr().get();
+            op_inputs.push_back(tensor_map.at(tensor));
         }
 
         // get op outputs from map or create
@@ -165,22 +165,22 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         vector<shared_ptr<runtime::HostTensor>> htv_outputs;
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
-            descriptor::Tensor* tv = op->get_output_tensor_ptr(i).get();
-            void* htv = nullptr;
-            auto it = tensor_map.find(tv);
+            descriptor::Tensor* tensor = op->get_output_tensor_ptr(i).get();
+            void* host_tensor = nullptr;
+            auto it = tensor_map.find(tensor);
             if (it == tensor_map.end())
             {
                 auto offset = op->get_output_tensor(i).get_pool_offset();
-                htv = instance.get_temporary_pointer(offset);
-                tensor_map.insert({tv, htv});
+                host_tensor = instance.get_temporary_pointer(offset);
+                tensor_map.insert({tensor, host_tensor});
             }
             else
             {
-                htv = it->second;
+                host_tensor = it->second;
             }
-            op_outputs.push_back(htv);
-            htv_outputs.push_back(
-                make_shared<runtime::HostTensor>(tv->get_element_type(), tv->get_shape(), htv));
+            op_outputs.push_back(host_tensor);
+            htv_outputs.push_back(make_shared<runtime::HostTensor>(
+                tensor->get_element_type(), tensor->get_shape(), host_tensor));
         }
 
         // get op type
@@ -312,17 +312,17 @@ vector<runtime::PerformanceCounter>
     return rc;
 }
 
-void runtime::interpreter::INTBackend::perform_nan_check(const vector<shared_ptr<HostTensor>>& tvs,
-                                                         const Node* op)
+void runtime::interpreter::INTBackend::perform_nan_check(
+    const vector<shared_ptr<HostTensor>>& tensors, const Node* op)
 {
     size_t arg_number = 1;
-    for (const shared_ptr<HostTensor>& tv : tvs)
+    for (const shared_ptr<HostTensor>& tensor : tensors)
     {
-        const element::Type& type = tv->get_element_type();
+        const element::Type& type = tensor->get_element_type();
         if (type == element::f32)
         {
-            const float* data = tv->get_data_ptr<float>();
-            for (size_t i = 0; i < tv->get_element_count(); i++)
+            const float* data = tensor->get_data_ptr<float>();
+            for (size_t i = 0; i < tensor->get_element_count(); i++)
             {
                 if (std::isnan(data[i]))
                 {
@@ -340,8 +340,8 @@ void runtime::interpreter::INTBackend::perform_nan_check(const vector<shared_ptr
         }
         else if (type == element::f64)
         {
-            const double* data = tv->get_data_ptr<double>();
-            for (size_t i = 0; i < tv->get_element_count(); i++)
+            const double* data = tensor->get_data_ptr<double>();
+            for (size_t i = 0; i < tensor->get_element_count(); i++)
             {
                 if (std::isnan(data[i]))
                 {
