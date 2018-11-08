@@ -30,6 +30,25 @@ GIT_COMMIT_AUTHOR_EMAIL=""
 GIT_COMMIT_HASH=""
 GIT_COMMIT_SUBJECT=""
 
+// "temporary" workaround for aborting previous builds on PR update
+@NonCPS
+def KillPreviousRunningJobs() {
+    def jobname = env.JOB_NAME
+    def buildnum = env.BUILD_NUMBER.toInteger()
+
+    def job = Jenkins.instance.getItemByFullName(jobname)
+    for (build in job.builds) {
+        if (!build.isBuilding()){ 
+            continue; 
+        }
+        if (buildnum == build.getNumber().toInteger()){ 
+            continue;
+        }
+        echo "Kill task = ${build}"
+        build.doStop();
+    }
+}
+
 def CloneRepository(String jenkins_github_credential_id, String ngraph_git_address, String onnx_git_address) {
     stage('Clone Repos') {
         try {
@@ -155,6 +174,7 @@ def Notify() {
 }
 
 def main(String label, String projectName, String projectRoot, String dockerContainerName, String jenkins_github_credential_id, String ngraph_git_address, String onnx_git_address) {
+    KillPreviousRunningJobs()
     node(label) {
         timeout(activity: true, time: 15) {
             WORKDIR = "${WORKSPACE}/${BUILD_NUMBER}"
