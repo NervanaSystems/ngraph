@@ -2081,8 +2081,6 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     const int number_of_timesteps = 1;
     const int number_of_gates_per_cell = 4;
     const int src_seq_length = 1;
-    const int src_layer_feature_size = 100;
-    const int feature_size = 100;
     const int num_rnn_cell_states = 2;
     const int rnn_direction = 1;
     const int num_of_rnn_fused_layer = 1;
@@ -2094,8 +2092,6 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
                                          number_of_timesteps,
                                          number_of_gates_per_cell,
                                          src_seq_length,
-                                         src_layer_feature_size,
-                                         feature_size,
                                          num_rnn_cell_states,
                                          rnn_direction,
                                          num_of_rnn_fused_layer);

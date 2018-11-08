@@ -1830,8 +1830,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fuse_lstm_recurrent_state(
             NGRAPH_DEBUG << "In Lstm concat fusion" << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
 
-            if (pattern_map[lstm1_goe0_label]->get_argument(0) !=
-                pattern_map[lstm1_goe1_label]->get_argument(0))
+            if (pattern_map[lstm1_goe0_label]->get_arguments()[0] !=
+                pattern_map[lstm1_goe1_label]->get_arguments()[0])
             {
                 return false;
             }
