@@ -16,31 +16,37 @@
 
 #pragma once
 
-#include <exception>
-#include <functional>
+#include <memory>
 #include <sstream>
+#include <string>
+#include <vector>
 
-#include "ngraph/pass/pass.hpp"
-#include "ngraph/placement.hpp"
+#include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace runtime
     {
-        class AssignPlacement : public NodePass
+        namespace nop
         {
-        public:
-            // TODO: make policy a class
-            AssignPlacement(std::function<Placement(std::shared_ptr<Node>)> placement_policy);
-            AssignPlacement(
-                std::vector<std::shared_ptr<ngraph::runtime::Backend>> placement_backends);
-
-        private:
-            bool run_on_node(std::shared_ptr<Node> node) override;
-
-            std::vector<std::shared_ptr<ngraph::runtime::Backend>> m_placement_backends;
-
-            std::function<Placement(std::shared_ptr<Node>)> m_placement_policy;
-        };
+            class NOPBackend;
+        }
     }
 }
+
+class ngraph::runtime::nop::NOPBackend : public Backend
+{
+public:
+    std::shared_ptr<Tensor>
+        create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
+
+    std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
+
+    bool compile(std::shared_ptr<Function> function) override;
+
+    bool call(std::shared_ptr<Function> function,
+              const std::vector<std::shared_ptr<Tensor>>& outputs,
+              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
+};
