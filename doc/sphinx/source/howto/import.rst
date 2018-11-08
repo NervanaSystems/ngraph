@@ -74,15 +74,15 @@ skip ahead to the next section, :ref:`install_ngonnx`.
       $ cd onnx/
       $ . bin/activate
 
-#. Check for the binary wheel file under ``/ngraph/python/dist/`` and install it 
+#. Check for the binary wheel file under ``ngraph/python/dist`` and install it 
    with pip.
 
    .. code-block:: console
 
-      (onnx)$ pip install -U python/dist/ngraph-0.5.0-cp35-cp35m-linux_x86_64.whl    
+      (onnx)$ pip install -U python/dist/ngraph-0.9.0-cp36-cp36m-linux_x86_64.whl    
 
 
-#. Confirm ngraph is properly installed through a Python interpreter:
+#. Confirm ``ngraph`` is properly installed through a Python interpreter:
 
    .. code-block:: console
 
@@ -115,6 +115,7 @@ Install the ``ngraph-onnx`` companion tool using pip:
 
    (onnx) $ pip install git+https://github.com/NervanaSystems/ngraph-onnx/
  
+
 
 Importing a serialized model
 =============================
