@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "util/all_close.hpp"
@@ -50,6 +51,19 @@ private:
     // This list of backends is in order of priority with the first backend higher priority
     // than the second.
     std::vector<std::shared_ptr<ngraph::runtime::Backend>> m_backend_list;
+
+protected:
+    class FunctionInstance
+    {
+    public:
+        std::shared_ptr<ngraph::Function> m_function;
+        std::vector<std::shared_ptr<ngraph::Function>> m_sub_functions;
+        std::unordered_map<std::shared_ptr<ngraph::op::Parameter>,
+                           std::shared_ptr<ngraph::op::Result>>
+            m_map_parameter_to_result;
+    };
+
+    std::map<std::shared_ptr<ngraph::Function>, FunctionInstance> m_function_map;
 };
 
 class BackendWrapper : public ngraph::runtime::Backend
