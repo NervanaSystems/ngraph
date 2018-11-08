@@ -4126,6 +4126,30 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_underflow)
     EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, softmax_overflow)
+{
+    Shape shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto high = std::numeric_limits<float>::max();
+
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{high, 1, 2, 3, 4, 5});
+    auto result = backend->create_tensor(element::f32, shape);
+
+    auto d0 = expf(high - high) + expf(3 - high);
+    auto d1 = expf(1) + expf(4);
+    auto d2 = expf(2) + expf(5);
+
+    backend->call_with_validate(f, {result}, {a});
+    vector<float> expected{
+        expf(high - high) / d0, expf(1) / d1, expf(2) / d2, expf(3 - high) / d0, expf(4) / d1, expf(5) / d2};
+    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, multiple_backends)
 {
     Shape shape{2, 2};

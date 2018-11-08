@@ -1638,7 +1638,6 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<std::string>& 
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-        writer << include_helpers();
         runtime::gpu::CudaKernelBuilder::get_softmax_op(
             writer, kernel_name, args, dtypes, out_rank, reduce_rank);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
