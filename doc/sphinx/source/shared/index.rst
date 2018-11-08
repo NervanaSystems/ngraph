@@ -9,9 +9,7 @@ increasingly important to be able to work in collaborative spaces like
 subgraphs.  
 
 Intel nGraph Library is designed to allow the framework considerable leverage in 
-what optimizations can be done either for :abbr:`Ahead of Time (AoT)` compilation 
-scenarios, or for :abbr:`Just in Time (JiT)` execution of training workloads.
-More details on these compilation scenarios is coming soon.  
+what optimizations can be done.  
 
 
 

@@ -36,10 +36,7 @@ If you already have your ``onnx`` virtual environment set from the install, reac
 .. code-block:: console
 
    /opt/libraries/ngraph/onnx$ . bin/activate
-   (onnx) indie@toimisaki:/opt/libraries/ngraph/onnx$ python3
-   Python 3.6.6 (default, Sep 12 2018, 18:26:19) 
-   [GCC 8.0.1 20180414 (experimental) [trunk revision 259383]] on linux
-   Type "help", "copyright", "credits" or "license" for more information.
+
 
 .. code-block:: python
 
@@ -49,7 +46,7 @@ If you already have your ``onnx`` virtual environment set from the install, reac
    ng_model = import_onnx_model(onnx_protobuf)[0]
 	
 
-The output looks something like this: 
+The output should look something like this: 
 
 :: 
 
@@ -69,6 +66,7 @@ The output looks something like this:
 	More than one different shape in input nodes [<Constant: 'Constant_14379' ([])>, <BatchNormInference: 'gpu_0/gconv1_31_bn_1' ([1, 544, 7, 7])>].
 
 
+The "shape" (...)
 
 .. code-block:: python
 
