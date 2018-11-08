@@ -166,6 +166,22 @@ namespace ngraph
                         ops.append_sum(1.f);
                     }
 
+                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>())
+                    {
+                        auto qc =
+                            dynamic_cast<const ngraph::op::QuantizedConvolutionBiasAdd*>(node);
+                        auto sum_scale_const_op =
+                            std::dynamic_pointer_cast<ngraph::op::Constant>(qc->get_arguments()[5]);
+                        if (sum_scale_const_op == nullptr)
+                        {
+                            throw ngraph_error(
+                                "QuantizedConvolutionBiasAdd scale must be a Constant");
+                        }
+
+                        auto sum_scale_val = sum_scale_const_op->get_vector<float>();
+                        ops.append_sum(sum_scale_val[0]);
+                    }
+
                     auto add_relu = [&]() {
                         if (dynamic_cast<const ngraph::op::ConvolutionBias*>(node))
                         {
@@ -193,6 +209,12 @@ namespace ngraph
                         if (dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node))
                         {
                             return (dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node))
+                                ->with_relu();
+                        }
+                        if (dynamic_cast<const ngraph::op::QuantizedConvolutionBiasAdd*>(node))
+                        {
+                            return (dynamic_cast<const ngraph::op::QuantizedConvolutionBiasAdd*>(
+                                        node))
                                 ->with_relu();
                         }
 
@@ -271,6 +293,33 @@ namespace ngraph
                     else if (std::is_same<OP, ngraph::op::QuantizedConvolutionBias>())
                     {
                         auto qcb = dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node);
+                        auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                            qcb->get_arguments()[3]);
+                        if (scale_const_op == nullptr)
+                        {
+                            throw ngraph_error("QuantizedConvolutionBias scale must be a Constant");
+                        }
+
+                        auto scale_val = scale_const_op->get_vector<float>();
+
+                        // conv+bias = cvt_to_int8(scale*(dst + bias))
+                        auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                        return build_quantized_convolution_forward(
+                            data_desc,
+                            weights_desc,
+                            bias_desc,
+                            result_desc,
+                            convolution->get_window_movement_strides(),
+                            window_dilation_strides_adjusted,
+                            convolution->get_padding_below(),
+                            convolution->get_padding_above(),
+                            scale_val[0],
+                            ops);
+                    }
+                    else if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>())
+                    {
+                        auto qcb =
+                            dynamic_cast<const ngraph::op::QuantizedConvolutionBiasAdd*>(node);
                         auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
                             qcb->get_arguments()[3]);
                         if (scale_const_op == nullptr)

@@ -243,5 +243,80 @@ namespace ngraph
             return make_shared<op::QuantizedMaxPool>(
                 input, window_shape, window_movement_strides, padding_below, padding_above);
         }
+
+        std::shared_ptr<Node>
+            ScaledQuantizedConvolutionBiasAdd(std::shared_ptr<Node> input,
+                                              std::shared_ptr<Node> filters,
+                                              std::shared_ptr<Node> bias,
+                                              std::shared_ptr<Node> sum_input,
+                                              const Strides& window_movement_strides,
+                                              const Strides& window_dilation_strides,
+                                              const CoordinateDiff& padding_below,
+                                              const CoordinateDiff& padding_above,
+                                              const Strides& data_dilation_strides,
+                                              std::shared_ptr<Node> min_input,
+                                              std::shared_ptr<Node> max_input,
+                                              std::shared_ptr<Node> min_filter,
+                                              std::shared_ptr<Node> max_filter,
+                                              std::shared_ptr<Node> min_freezed_output_conv_1,
+                                              std::shared_ptr<Node> max_freezed_output_conv_1,
+                                              std::shared_ptr<Node> min_freezed_output_conv_2,
+                                              std::shared_ptr<Node> max_freezed_output_conv_2,
+                                              const bool with_relu)
+        {
+            auto output_et = with_relu ? element::u8 : element::i8;
+            auto requantization_scale = quantization_util::get_scale(min_input,
+                                                                     max_input,
+                                                                     min_filter,
+                                                                     max_filter,
+                                                                     min_freezed_output_conv_1,
+                                                                     max_freezed_output_conv_1,
+                                                                     output_et);
+
+            auto sum_scale = builder::quantization_util::get_sum_scale(min_freezed_output_conv_1,
+                                                                       max_freezed_output_conv_1,
+                                                                       min_freezed_output_conv_2,
+                                                                       max_freezed_output_conv_2);
+
+            if (bias->get_element_type() != element::i32)
+            {
+                auto zero = make_constant(element::i32, min_input->get_shape(), 0);
+                AxisSet quantization_axes;
+                auto bias_scale =
+                    quantization_util::get_bias_scale(min_input, max_input, min_filter, max_filter);
+                op::Quantize::RoundMode round_mode =
+                    op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+
+                auto reordered_bias = make_shared<op::Quantize>(
+                    bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
+                return make_shared<op::QuantizedConvolutionBiasAdd>(input,
+                                                                    filters,
+                                                                    reordered_bias,
+                                                                    sum_input,
+                                                                    window_movement_strides,
+                                                                    window_dilation_strides,
+                                                                    padding_below,
+                                                                    padding_above,
+                                                                    data_dilation_strides,
+                                                                    requantization_scale,
+                                                                    sum_scale,
+                                                                    with_relu);
+            }
+            else
+            {
+                return make_shared<op::QuantizedConvolutionBiasAdd>(input,
+                                                                    filters,
+                                                                    bias,
+                                                                    sum_input,
+                                                                    window_movement_strides,
+                                                                    window_dilation_strides,
+                                                                    padding_below,
+                                                                    padding_above,
+                                                                    data_dilation_strides,
+                                                                    requantization_scale,
+                                                                    sum_scale,
+                                                                    with_relu);
+            }
+        }
     }
 }

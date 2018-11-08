@@ -312,6 +312,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::ConvolutionBias), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBias>},
     {TI(ngraph::op::QuantizedConvolutionBias),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBias>},
+    {TI(ngraph::op::QuantizedConvolutionBiasAdd),
+     &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBiasAdd>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolution),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolution>},
