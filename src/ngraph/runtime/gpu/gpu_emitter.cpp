@@ -1564,6 +1564,11 @@ void runtime::gpu::GPU_Emitter::emit_Subtract(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Sum(EMIT_ARGS)
 {
+    runtime::gpu::GPU_Emitter::emit_Sum_1(external_function, writer, node, args, out);
+}
+
+void runtime::gpu::GPU_Emitter::emit_Sum_0(EMIT_ARGS)
+{
     const ngraph::op::Sum* sum = static_cast<const ngraph::op::Sum*>(node);
     writer.block_begin();
     {
@@ -1596,6 +1601,45 @@ void runtime::gpu::GPU_Emitter::emit_Sum(EMIT_ARGS)
                 writer << "void* input[] = {" << node_names(args) << "};\n";
                 writer << "void* output[] = {" << node_names(out) << "};\n";
                 writer << "gpu::invoke_primitive(ctx, " << sum_index << ", input, output);\n";
+            }
+        }
+    }
+    writer.block_end();
+}
+
+void runtime::gpu::GPU_Emitter::emit_Sum_1(EMIT_ARGS)
+{
+    const ngraph::op::Sum* sum = static_cast<const ngraph::op::Sum*>(node);
+    std::vector<element::Type> dtypes{args[0].get_element_type(), out[0].get_element_type()};
+    cudnnReduceTensorOp_t reduce_op = CUDNN_REDUCE_TENSOR_ADD;
+    writer.block_begin();
+    {
+        if (out[0].get_size() != 0)
+        {
+            // one of args[] axes has zero size, zero output
+            if (args[0].get_size() == 0)
+            {
+                kernel::emit_memset(writer, out[0], 0);
+            }
+            else if (args[0].get_size() == out[0].get_size())
+            {
+                kernel::emit_memcpyDtD(writer, out[0], args[0]);
+            }
+            else
+            {
+                auto& cudnn_emitter =
+                    external_function->get_primitive_emitter()->get_cudnn_emitter();
+                auto sum_index =
+                    cudnn_emitter->build_reduce_forward(reduce_op,
+                                                        dtypes,
+                                                        args[0].get_shape(),
+                                                        sum->get_reduction_axes(),
+                                                        CUDNNEmitter::ReductionMode::Reduce);
+
+                writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
+                writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
+                writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
+                writer << ");\n";
             }
         }
     }
