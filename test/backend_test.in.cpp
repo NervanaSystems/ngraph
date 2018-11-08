@@ -4151,7 +4151,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_overflow)
                            expf(3 - high) / d0,
                            expf(4) / d1,
                            expf(5) / d2};
-    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, multiple_backends)
