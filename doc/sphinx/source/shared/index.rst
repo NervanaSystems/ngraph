@@ -20,6 +20,6 @@ More details on these compilation scenarios is coming soon.
    :caption: Tutorials
 
    
-   mxnet_tutorial.rst    
+   onnx_ssg.rst    
 
 
