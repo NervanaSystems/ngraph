@@ -81,7 +81,7 @@ namespace ngraph
                     {
                         NGRAPH_WARN
                             << (node) << " "
-                            << "ONNX standard doesn't allow scalar operands, however Ngraph "
+                            << "ONNX standard doesn't allow scalar operands, however nGraph "
                                "accepts them. Consider use of element-wise multiplication instead "
                                "to conform with ONNX standard.";
                     }
@@ -122,7 +122,7 @@ namespace ngraph
 
                     // Perform multiple small dot products
                     std::size_t groups = left->get_shape().at(0);
-                    // If we haven't make broadcasting earlier this means that one of inputs is vector,
+                    // If we haven't broadcast earlier this means that one of the inputs is a vector,
                     // thus the number of groups is defined by the shape of the bigger tensor.
                     if (right->get_shape().size() > left->get_shape().size())
                     {

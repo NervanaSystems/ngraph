@@ -1347,10 +1347,10 @@ TEST(onnx, model_custom_op_default_domain)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx, model_matmul_vec_ten3D)
+TEST(onnx, model_matmul_vec_ten3d)
 {
     auto function = onnx_import::import_onnx_function(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_vec_ten3D.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_vec_ten3d.onnx"));
 
     Inputs inputs;
     inputs.emplace_back(std::vector<float>{0.f, 1.f});
