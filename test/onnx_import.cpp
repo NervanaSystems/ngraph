@@ -1347,10 +1347,10 @@ TEST(onnx, model_custom_op_default_domain)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx, model_conv2d_custom_test)
+TEST(onnx, model_conv2d_dilation_assymetric_pads_strides)
 {
     auto function = onnx_import::import_onnx_function(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/conv2d_custom_test.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv2d_dilation_assym_pads_strides.onnx"));
 
     //   "",                           // auto_pad
     //   vector<int64_t>{1, 1},        // dilations
