@@ -32,7 +32,7 @@ GIT_COMMIT_SUBJECT=""
 
 // "temporary" workaround for aborting previous builds on PR update
 @NonCPS
-def KillPreviousRunningJobs() {
+def killPreviousRunningJobs() {
     def jobname = env.JOB_NAME
     def buildnum = env.BUILD_NUMBER.toInteger()
 
@@ -49,7 +49,7 @@ def KillPreviousRunningJobs() {
     }
 }
 
-def CloneRepository(String jenkins_github_credential_id, String ngraph_git_address, String onnx_git_address) {
+def cloneRepository(String jenkins_github_credential_id, String ngraph_git_address, String onnx_git_address) {
     stage('Clone Repos') {
         try {
             sh "git clone $onnx_git_address -b $CHANGE_BRANCH ."
@@ -80,7 +80,7 @@ def CloneRepository(String jenkins_github_credential_id, String ngraph_git_addre
     }
 }
 
-def BuildImage(configurationMaps) {
+def buildImage(configurationMaps) {
     Closure buildMethod = { configMap ->
         sh """
             ${CI_ROOT}/utils/docker.sh build \
@@ -89,12 +89,12 @@ def BuildImage(configurationMaps) {
                                 --dockerfile_path=${configMap["dockerfilePath"]}
         """
     }
-    UTILS.CreateStage("Build_Image", buildMethod, configurationMaps)
+    UTILS.createStage("build_Image", buildMethod, configurationMaps)
 }
 
-def RunDockerContainers(configurationMaps) {
+def runDockerContainers(configurationMaps) {
     Closure runContainerMethod = { configMap ->
-        UTILS.PropagateStatus("Build_Image", configMap["name"])
+        UTILS.propagateStatus("Build_Image", configMap["name"])
         sh """
             mkdir -p ${HOME}/ONNX_CI
             ${CI_ROOT}/utils/docker.sh start \
@@ -104,32 +104,32 @@ def RunDockerContainers(configurationMaps) {
                                 --volumes="-v ${WORKSPACE}/${BUILD_NUMBER}:/logs -v ${HOME}/ONNX_CI:/home -v ${WORKDIR}:/root"
         """
     }
-    UTILS.CreateStage("Run_docker_containers", runContainerMethod, configurationMaps)
+    UTILS.createStage("run_docker_containers", runContainerMethod, configurationMaps)
 }
 
-def PrepareEnvironment(configurationMaps) {
+def prepareEnvironment(configurationMaps) {
     Closure prepareEnvironmentMethod = { configMap ->
-        UTILS.PropagateStatus("Run_docker_containers", configMap["dockerContainerName"])
+        UTILS.propagateStatus("Run_docker_containers", configMap["dockerContainerName"])
         sh """
             docker cp ${CI_ROOT}/utils/docker.sh ${configMap["dockerContainerName"]}:/home
             docker exec ${configMap["dockerContainerName"]} bash -c "/root/${CI_ROOT}/prepare_environment.sh"
         """
     }
-    UTILS.CreateStage("Prepare_environment", prepareEnvironmentMethod, configurationMaps)
+    UTILS.createStage("prepare_environment", prepareEnvironmentMethod, configurationMaps)
 }
 
-def RunToxTests(configurationMaps) {
+def runToxTests(configurationMaps) {
     Closure runToxTestsMethod = { configMap ->
-        UTILS.PropagateStatus("Prepare_environment", configMap["dockerContainerName"])
+        UTILS.propagateStatus("Prepare_environment", configMap["dockerContainerName"])
         sh """
             NGRAPH_WHL=\$(docker exec ${configMap["dockerContainerName"]} find /root/ngraph/python/dist/ -name 'ngraph*.whl')
             docker exec -e TOX_INSTALL_NGRAPH_FROM=\${NGRAPH_WHL} ${configMap["dockerContainerName"]} tox -c /root/
         """
     }
-    UTILS.CreateStage("Run_tox_tests", runToxTestsMethod, configurationMaps)
+    UTILS.createStage("run_tox_tests", runToxTestsMethod, configurationMaps)
 }
 
-def Cleanup(configurationMaps) {
+def cleanup(configurationMaps) {
     Closure cleanupMethod = { configMap ->
         sh """
             cd ${HOME}/ONNX_CI
@@ -141,10 +141,10 @@ def Cleanup(configurationMaps) {
             rm -rf ${WORKSPACE}/${BUILD_NUMBER}
         """
     }
-    UTILS.CreateStage("Cleanup", cleanupMethod, configurationMaps)
+    UTILS.createStage("cleanup", cleanupMethod, configurationMaps)
 }
 
-def Notify() {
+def notify() {
     configurationMaps = []
     configurationMaps.add([
         "name": "notify"
@@ -170,28 +170,28 @@ def Notify() {
             )
         }
     }
-    UTILS.CreateStage("Notify", notifyMethod, configurationMaps)
+    UTILS.createStage("notify", notifyMethod, configurationMaps)
 }
 
 def main(String label, String projectName, String projectRoot, String dockerContainerName, String jenkins_github_credential_id, String ngraph_git_address, String onnx_git_address) {
-    KillPreviousRunningJobs()
+    killPreviousRunningJobs()
     node(label) {
         timeout(activity: true, time: 15) {
             WORKDIR = "${WORKSPACE}/${BUILD_NUMBER}"
             def configurationMaps;
             try {
                 dir ("${WORKDIR}") {
-                    CloneRepository(jenkins_github_credential_id, ngraph_git_address, onnx_git_address)
+                    cloneRepository(jenkins_github_credential_id, ngraph_git_address, onnx_git_address)
                     // Load CI API
                     UTILS = load "${CI_ROOT}/utils/utils.groovy"
                     result = 'SUCCESS'
                     // Create configuration maps
-                    configurationMaps = UTILS.GetDockerEnvList(projectName, dockerContainerName, projectRoot)
+                    configurationMaps = UTILS.getDockerEnvList(projectName, dockerContainerName, projectRoot)
                     // Execute CI steps
-                    BuildImage(configurationMaps)
-                    RunDockerContainers(configurationMaps)
-                    PrepareEnvironment(configurationMaps)
-                    RunToxTests(configurationMaps)
+                    buildImage(configurationMaps)
+                    runDockerContainers(configurationMaps)
+                    prepareEnvironment(configurationMaps)
+                    runToxTests(configurationMaps)
                 }
             }
             catch(e) {
@@ -203,8 +203,8 @@ def main(String label, String projectName, String projectRoot, String dockerCont
                 }
             }
             finally {
-                Cleanup(configurationMaps)
-                Notify()
+                cleanup(configurationMaps)
+                notify()
             }
         }
     }
