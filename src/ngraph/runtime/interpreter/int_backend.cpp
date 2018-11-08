@@ -143,8 +143,15 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         {
             continue;
         }
+        if (type_id == OP_TYPEID::Constant)
+        {
+            const op::Constant* c = static_cast<const op::Constant*>(op);
+            descriptor::Tensor* tv = op->get_output_tensor_ptr(0).get();
+            tensor_map.insert({tv, const_cast<void*>(c->get_data_ptr())});
+            continue;
+        }
         // get op inputs from map
-        vector<void*> op_inputs;
+        vector<const void*> op_inputs;
         for (const descriptor::Input& input : op->get_inputs())
         {
             descriptor::Tensor* tv = input.get_output().get_tensor_ptr().get();
@@ -218,7 +225,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 void runtime::interpreter::INTBackend::generate_calls(const element::Type& type,
                                                       const NodeWrapper& op,
                                                       const vector<void*>& outputs,
-                                                      const vector<void*>& inputs,
+                                                      const vector<const void*>& inputs,
                                                       FunctionInstance& instance)
 {
     if (type == element::boolean)
