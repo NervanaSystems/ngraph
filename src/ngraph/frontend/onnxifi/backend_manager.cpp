@@ -32,7 +32,7 @@ namespace ngraph
         {
             // Create ONNXIFI backend for each registered nGraph backend.
             // Use pointer to temporary to capture the unique handle. The handles
-            // must be consistent within the single session.
+            // must be consistent within a session.
             // In spec, backends are hot-pluggable. This means two calls to
             // onnxGetBackendIDs() may result in different number of backends.
             // For now, we don't do the re-discovery.
@@ -68,5 +68,7 @@ namespace ngraph
                                });
             }
         }
-    }
-}
+
+    } // namespace onnxifi
+
+} // namespace ngraph

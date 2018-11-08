@@ -22,6 +22,8 @@
 
 #include "backend_manager.hpp"
 
+using namespace ngraph::onnxifi;
+
 extern "C" {
 
 ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
@@ -29,7 +31,7 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI
 {
     try
     {
-        ngraph::onnxifi::BackendManager::get_backend_ids(backendIDs, numBackends);
+        BackendManager::get_backend_ids(backendIDs, numBackends);
         return ONNXIFI_STATUS_SUCCESS;
     }
     catch (const std::invalid_argument&)
