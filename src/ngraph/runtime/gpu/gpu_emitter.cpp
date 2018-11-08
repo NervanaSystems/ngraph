@@ -1035,7 +1035,7 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
 
                 size_t emitter_index;
                 // Reduction function should only have one op
-                std::shared_ptr<Node> reduce_op;
+                std::shared_ptr<Node> reduce_func;
                 std::string op_name;
                 int op_count = 0;
                 for (auto op : reduction_function_ops)
@@ -1049,14 +1049,14 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                     // with shared pointers, which is fine here but clang doesn't like it.)
                     auto& fn = *op;
                     op_name = fn.get_name();
-                    reduce_op = op;
+                    reduce_func = op;
                     if (op_count != 1)
                     {
                         throw runtime_error("reduce with more than one op is not implement yet.");
                     }
                 }
 
-                auto& fn = *reduce_op;
+                auto& fn = *reduce_func;
                 if (TI(fn) == TI(ngraph::op::Add))
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::Add>(
