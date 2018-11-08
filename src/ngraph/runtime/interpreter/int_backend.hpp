@@ -181,7 +181,8 @@ private:
     };
     std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
 
-    static void perform_nan_check(const std::vector<HostTensor*>&, const Node* op = nullptr);
+    static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
+                                  const Node* op = nullptr);
 
     void create_tensor_array(Function* function,
                              const std::vector<void*>& out,

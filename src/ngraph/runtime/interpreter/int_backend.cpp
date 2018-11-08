@@ -92,15 +92,17 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 
     // convert inputs to HostTensor
     vector<void*> func_inputs;
+    vector<shared_ptr<runtime::HostTensor>> htv_inputs;
     for (auto tv : inputs)
     {
         auto htv = static_pointer_cast<runtime::HostTensor>(tv);
         func_inputs.push_back(static_cast<void*>(htv->get_data_ptr()));
+        htv_inputs.push_back(htv);
     }
-    // if (instance.m_nan_check_enabled)
-    // {
-    //     perform_nan_check(func_inputs);
-    // }
+    if (instance.m_nan_check_enabled)
+    {
+        perform_nan_check(htv_inputs);
+    }
 
     // convert outputs to HostTensor
     vector<void*> func_outputs;
@@ -160,6 +162,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 
         // get op outputs from map or create
         vector<void*> op_outputs;
+        vector<shared_ptr<runtime::HostTensor>> htv_outputs;
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
             descriptor::Tensor* tv = op->get_output_tensor_ptr(i).get();
@@ -176,6 +179,8 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
                 htv = it->second;
             }
             op_outputs.push_back(htv);
+            htv_outputs.push_back(
+                make_shared<runtime::HostTensor>(tv->get_element_type(), tv->get_shape(), htv));
         }
 
         // get op type
@@ -213,10 +218,10 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         {
             instance.m_timer_map[op].stop();
         }
-        // if (instance.m_nan_check_enabled)
-        // {
-        //     perform_nan_check(op_outputs, op);
-        // }
+        if (instance.m_nan_check_enabled)
+        {
+            perform_nan_check(htv_outputs, op);
+        }
     }
 
     return true;
@@ -307,53 +312,53 @@ vector<runtime::PerformanceCounter>
     return rc;
 }
 
-void runtime::interpreter::INTBackend::perform_nan_check(const vector<HostTensor*>& tvs,
+void runtime::interpreter::INTBackend::perform_nan_check(const vector<shared_ptr<HostTensor>>& tvs,
                                                          const Node* op)
 {
-    // size_t arg_number = 1;
-    // for (const HostTensor* tv : tvs)
-    // {
-    //     const element::Type& type = tv->get_element_type();
-    //     if (type == element::f32)
-    //     {
-    //         const float* data = tv->get_data_ptr<float>();
-    //         for (size_t i = 0; i < tv->get_element_count(); i++)
-    //         {
-    //             if (std::isnan(data[i]))
-    //             {
-    //                 if (op)
-    //                 {
-    //                     throw runtime_error("nan found in op '" + op->get_name() + "' output");
-    //                 }
-    //                 else
-    //                 {
-    //                     throw runtime_error("nan found in function's input tensor number " +
-    //                                         to_string(arg_number));
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     else if (type == element::f64)
-    //     {
-    //         const double* data = tv->get_data_ptr<double>();
-    //         for (size_t i = 0; i < tv->get_element_count(); i++)
-    //         {
-    //             if (std::isnan(data[i]))
-    //             {
-    //                 if (op)
-    //                 {
-    //                     throw runtime_error("nan found in op '" + op->get_name() + "' output");
-    //                 }
-    //                 else
-    //                 {
-    //                     throw runtime_error("nan found in function's input tensor number " +
-    //                                         to_string(arg_number));
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     arg_number++;
-    // }
+    size_t arg_number = 1;
+    for (const shared_ptr<HostTensor>& tv : tvs)
+    {
+        const element::Type& type = tv->get_element_type();
+        if (type == element::f32)
+        {
+            const float* data = tv->get_data_ptr<float>();
+            for (size_t i = 0; i < tv->get_element_count(); i++)
+            {
+                if (std::isnan(data[i]))
+                {
+                    if (op)
+                    {
+                        throw runtime_error("nan found in op '" + op->get_name() + "' output");
+                    }
+                    else
+                    {
+                        throw runtime_error("nan found in function's input tensor number " +
+                                            to_string(arg_number));
+                    }
+                }
+            }
+        }
+        else if (type == element::f64)
+        {
+            const double* data = tv->get_data_ptr<double>();
+            for (size_t i = 0; i < tv->get_element_count(); i++)
+            {
+                if (std::isnan(data[i]))
+                {
+                    if (op)
+                    {
+                        throw runtime_error("nan found in op '" + op->get_name() + "' output");
+                    }
+                    else
+                    {
+                        throw runtime_error("nan found in function's input tensor number " +
+                                            to_string(arg_number));
+                    }
+                }
+            }
+        }
+        arg_number++;
+    }
 }
 
 void runtime::interpreter::INTBackend::create_tensor_array(
