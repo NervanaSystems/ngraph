@@ -201,7 +201,7 @@ void random_init(std::shared_ptr<ngraph::runtime::Tensor> tv, std::default_rando
     element::Type et = tv->get_element_type();
     if (et == element::boolean)
     {
-        init_int_tv<char>(tv, engine, 0, 255);
+        init_int_tv<char>(tv, engine, 0, 1);
     }
     else if (et == element::f32)
     {

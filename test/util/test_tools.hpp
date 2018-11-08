@@ -21,6 +21,7 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <random>
 
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/file_util.hpp"
