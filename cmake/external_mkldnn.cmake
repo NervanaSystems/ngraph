@@ -20,7 +20,12 @@ include(ExternalProject)
 # Fetch and install MKL-DNN
 #------------------------------------------------------------------------------
 
+message(STATUS "cmake/external_mkldnn.cmake:")
+message(STATUS "   MKLDNN_INCLUDE_DIR = '${MKLDNN_INCLUDE_DIR}'")
+message(STATUS "   MKLDNN_LIB_DIR = '${MKLDNN_LIB_DIR}'")
+
 if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
+    message(STATUS "CCCCCC USING USER-PROVIDED MKLDNN")
     ExternalProject_Add(
         ext_mkldnn
         DOWNLOAD_COMMAND ""
@@ -40,6 +45,8 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
     install(DIRECTORY ${MKLDNN_LIB_DIR}/ DESTINATION ${NGRAPH_INSTALL_LIB})
     return()
 endif()
+
+message(STATUS "CCCCCC BUILDING OWN MKLDNN")
 
 # This section sets up MKL as an external project to be used later by MKLDNN
 
