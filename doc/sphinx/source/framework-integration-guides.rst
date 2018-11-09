@@ -113,7 +113,6 @@ system that already has an ``ngraph_dist`` installed.
    methodologies, including data parallel training, see the :doc:`distr/index` 
    and :doc:`How to <howto/index>` articles on :doc:`howto/distribute-train`. 
 
-
 .. _nGraph-MXNet: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/NGRAPH_README.md
 .. _MXNet: http://mxnet.incubator.apache.org
 .. _DSO: http://csweb.cs.wfu.edu/%7Etorgerse/Kokua/More_SGI/007-2360-010/sgi_html/ch03.html

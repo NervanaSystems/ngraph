@@ -1,14 +1,34 @@
-# nGraph Library [![Build Status][build-status-badge]][build-status]
+# nGraph Compiler Stack [![Build Status][build-status-badge]][build-status]
 
-Welcome to the open-source repository for the **Intel® nGraph Library**. Our code 
-base provides a Compiler and runtime suite of tools (APIs) designed to give 
-developers maximum flexibility for their software design, allowing them to 
-create or customize a scalable solution using any framework while also avoiding 
-device-level hardware lock-in that is so common with many AI vendors. A neural 
-network model compiled with nGraph can run on any of our currently-supported 
-backends, and it will be able to run on any backends we support in the future 
-with minimal disruption to your model. With nGraph, you can co-evolve your 
-software and hardware's capabilities to stay at the forefront of your industry. 
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph/blob/master/LICENSE)
+<div align="center">
+  <h4>
+    <a href="https://ngraph.nervanasys.com/docs/latest/project/about.html">
+      Architecture and features
+    </a>
+    <span> | </span>
+    <a href="https://ngraph.nervanasys.com/docs/latest">
+      Documentation
+    </a>
+    <span> | </span>
+        <a href="#Getting-started-guides" >
+      Getting started guides
+    </a>
+    <span> | </span>
+        <a href="#How-to-contribute" >
+      How to contribute
+    </a>
+    <span> | </span>
+    <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">
+      Release notes
+    </a>
+
+  </h4>
+</div>
+
+
+
 
 ![nGraph ecosystem][ngraph-ecosystem]
 
@@ -20,23 +40,27 @@ Intel® Architecture Processors (CPUs), Intel® Nervana™ Neural Network Proces
 many others. The default CPU Backend also provides an interactive *Interpreter* 
 mode that can be used to zero in on a DL model and create custom nGraph 
 optimizations that can be used to further accelerate training or inference, in 
-whatever scenario you need.  
-
-nGraph provides both  a C++ API for framework developers and a Python API which 
-can run inference on models imported from ONNX. 
+whatever scenario you need. nGraph provides both  a C++ API for framework 
+developers and a Python API which can run inference on models imported from 
+ONNX. 
 
 See the [Release Notes] for recent changes.
 
 
-|  Framework     | bridge available? | ONNX support?  |
-|----------------|-------------------|----------------|
-| TensorFlow*    | yes               | yes            |
-| MXNet*         | yes               | yes            |
-| PaddlePaddle   | yes               | yes            |   
-| PyTorch*       | no                | yes            |
-| Chainer*       | no                | yes            |
-| CNTK*          | no                | yes            |
-| Caffe2*        | no                | yes            |
+
+## Getting started guides
+
+
+|  Framework     |                            | ONNX support?  |
+|----------------|----------------------------|----------------|
+| TensorFlow*    | [ngraph tensorflow bridge] | yes            |
+| MXNet*         | [nGraph-MXNet]             | yes            |
+| PaddlePaddle   |        wip                 | yes            |   
+| ONNX           | [ngraph-onnx]              | yes            |   
+| PyTorch*       | no                         | yes            |
+| Chainer*       | no                         | yes            |
+| CNTK*          | no                         | yes            |
+| Caffe2*        | no                         | yes            |
 
 
 | Backend                                       | current support   | future support |
@@ -52,7 +76,7 @@ See the [Release Notes] for recent changes.
 
 ## Documentation
 
-See our [install] docs for how to get started.
+See our [build the Library] docs for how to get started.
 
 For this early release, we provide [framework integration guides] to
 compile MXNet and TensorFlow-based projects. If you already have a
@@ -65,7 +89,7 @@ APIs.
 Please submit your questions, feature requests and bug reports via
 [GitHub issues].
 
-## How to Contribute
+## How to contribute
 
 We welcome community contributions to nGraph. If you have an idea how
 to improve the Library:
@@ -82,11 +106,16 @@ to improve the Library:
   modifications are necessary, may provide feedback to guide you. When
   accepted, your pull request will be merged to the repository.
 
-[install]: http://ngraph.nervanasys.com/docs/latest/buildlb.html
+
+[Architecture and features]:https://ngraph.nervanasys.com/docs/latest/project/about.html
+[Documentation]: https://ngraph.nervanasys.com/docs/latest
+[build the Library]: https://ngraph.nervanasys.com/docs/latest/buildlb.html
+[Getting Started Guides]: Getting-started-guides
+[How to contribute]: How-to-contribute
 [framework integration guides]: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html
-[release notes]: http://ngraph.nervanasys.com/docs/latest/project/release-notes.html
+[release notes]: https://ngraph.nervanasys.com/docs/latest/project/release-notes.html
 [Github issues]: https://github.com/NervanaSystems/ngraph/issues
-[contrib guide]: http://ngraph.nervanasys.com/docs/latest/project/code-contributor-README.html
+[contrib guide]: https://ngraph.nervanasys.com/docs/latest/project/code-contributor-README.html
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
 [how to import]: http://ngraph.nervanasys.com/docs/latest/howto/import.html
 [ngraph-ecosystem]: doc/sphinx/source/graphics/599px-Intel-ngraph-ecosystem.png "nGraph Ecosystem"
@@ -94,3 +123,6 @@ to improve the Library:
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
 [develop-without-lockin]: doc/sphinx/source/graphics/develop-without-lockin.png "Develop on any part of the stack wtihout lockin"
 [Movidius™ Myriad™ 2]:https://www.movidius.com/solutions/vision-processing-unit
+[ngraph tensorflow bridge]: https://github.com/NervanaSystems/ngraph-tf
+[nGraph-MXNet]: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/NGRAPH_README.md
+[ngraph-onnx]: https://github.com/NervanaSystems/ngraph-onnx/blob/master/README.md
