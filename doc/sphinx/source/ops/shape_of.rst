@@ -12,8 +12,7 @@ ShapeOf
 Description
 ===========
 
-.. warning:: This op is experimental. Its semantics is subject to change without
-             notice.
+.. warning:: This op is experimental and subject to change without notice.
 
 Returns the shape of its input argument as a tensor of element type ``u64``.
 
