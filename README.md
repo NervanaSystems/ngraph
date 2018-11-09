@@ -36,7 +36,7 @@ The **nGraph Compiler** is Intel's graph compiler for Artificial Neural Networks
 Documentation in this repo describes how you can program any framework 
 to run training and inference computations on a variety of Backends including 
 Intel® Architecture Processors (CPUs), Intel® Nervana™ Neural Network Processors 
-(NNPs), cuDNN-compatible graphics cards (GPUs), custom VPUs like [Movidius], and
+(NNPs), cuDNN-compatible graphics cards (GPUs), custom VPUs like Movidius, and
 many others. The default CPU Backend also provides an interactive *Interpreter* 
 mode that can be used to zero in on a DL model and create custom nGraph 
 optimizations that can be used to further accelerate training or inference, in 
@@ -58,16 +58,13 @@ See the [Release Notes] for recent changes.
 | PaddlePaddle   |        wip                 | yes            |   
 | ONNX           | [ngraph-onnx]              | yes            |   
 | PyTorch*       | no                         | yes            |
-| Chainer*       | no                         | yes            |
-| CNTK*          | no                         | yes            |
-| Caffe2*        | no                         | yes            |
 
 
 | Backend                                       | current support   | future support |
 |-----------------------------------------------|-------------------|----------------|
 | Intel® Architecture CPU                       | yes               | yes            |
 | Intel® Nervana™ Neural Network Processor (NNP)| yes               | yes            |
-| Intel [Movidius™ Myriad™ 2] VPUs              | coming soon       | yes            |
+| Intel Movidius™ Myriad™ 2   VPUs              | coming soon       | yes            |
 | Intel® Architecture GPUs                      | via PlaidML       | yes            |
 | AMD* GPUs                                     | via PlaidML       | yes            |
 | NVIDIA* GPUs                                  | via PlaidML       | some           | 
