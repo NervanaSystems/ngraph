@@ -115,3 +115,4 @@ zero_sized_sqrt
 zero_sized_subtract
 zero_sized_tan
 zero_sized_tanh
+sum_stable_acc
