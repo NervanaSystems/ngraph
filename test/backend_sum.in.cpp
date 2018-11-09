@@ -427,3 +427,30 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_5d_to_scalar)
     backend->call_with_validate(f, {result}, {a});
     EXPECT_EQ(std::vector<float>{243.}, read_vector<float>(result));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, sum_accumulation_overflow)
+{
+    Shape shape_a{10, 10, 10, 30};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+
+    Shape shape_rt{10};
+    auto f =
+        make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1, 2, 3}), op::ParameterVector{A});
+
+    test::Uniform<float> rng(1000.0f, 1000.1f, 2112);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto cpu_func = clone_function(*f);
+    auto bk_func = clone_function(*f);
+
+    auto cpu_results = execute(cpu_func, args, "CPU");
+    auto bk_results = execute(bk_func, args, "${BACKEND_NAME}");
+
+    EXPECT_TRUE(test::all_close_f(cpu_results.at(0), bk_results.at(0), 24, 3));
+}
