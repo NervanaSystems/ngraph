@@ -43,7 +43,8 @@ extern "C" runtime::Backend* new_backend(const char* configuration_string)
     vector<pair<string, shared_ptr<runtime::Backend>>> backend_list{
         {"GPU", make_shared<runtime::gpu::GPU_Backend>()}
        ,{"CPU", make_shared<runtime::cpu::CPU_Backend>()}
-       ,{"INTERPRETER", make_shared<runtime::interpreter::INTBackend>()}};
+       ,{"INTERPRETER", make_shared<runtime::interpreter::INTBackend>()}
+       };
 
     auto wrapper = new runtime::hybrid::HybridBackend(backend_list);
     return wrapper;

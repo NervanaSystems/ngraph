@@ -55,6 +55,7 @@ shared_ptr<runtime::Tensor>
                                                   const Shape& shape)
 {
     auto it = m_backend_list.begin();
+    NGRAPH_INFO << "the backend is " << it->first ; 
     return it->second->create_tensor(element_type, shape);
 }
 
@@ -62,6 +63,7 @@ shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     auto it = m_backend_list.begin();
+    NGRAPH_INFO << "the backend is " << it->first ; 
     return it->second->create_tensor(element_type, shape, memory_pointer);
 }
 
@@ -72,7 +74,8 @@ bool runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
     {
         vector<shared_ptr<runtime::Backend>> backend_list;
         for (auto p : m_backend_list)
-        {
+        {   
+             NGRAPH_INFO << "the backend is " << p.first ;
             backend_list.push_back(p.second);
         }
 
@@ -109,9 +112,19 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
 {
     // Get FunctionInstance
     bool rc = true;
-    compile(func);
+    // compile(func);
+
+    // Backup main inputs and outputs before main_function will be split
+    vector<shared_ptr<op::Parameter>> main_inputs = func->get_parameters();
+    vector<shared_ptr<op::Result>> main_outputs = func->get_results();
 
     auto it = m_function_map.find(func);
+    if (it == m_function_map.end())
+    {
+        compile(func);
+        it = m_function_map.find(func);
+    }
+
     if (it == m_function_map.end())
     {
         throw runtime_error("Unable to compile hybrid backend");
@@ -140,7 +153,9 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
         // Prepare parameter TensorViews
         vector<shared_ptr<runtime::Tensor>> parameter_tvs;
         for (auto parameter_node : sub_function->get_parameters())
-        {
+        {   
+            // Todo: copy parameter nodes if it does not belong to the main function 
+            //  parameter backend 
             if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
             {
                 parameter_tvs.push_back(map_node_to_tensor_view.at(parameter_node));
@@ -160,7 +175,9 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
         // Prepare result TensorViews
         vector<shared_ptr<runtime::Tensor>> result_tvs;
         for (auto result_node : sub_function->get_results())
-        {
+        {   
+            // Todo: copy result nodes if it does not belong to the main function 
+            //  result backend
             if (map_node_to_tensor_view.find(result_node) != map_node_to_tensor_view.end())
             {
                 result_tvs.push_back(map_node_to_tensor_view.at(result_node));
