@@ -36,8 +36,8 @@ configure_file(${BUILD_SH_IN} ${BUILD_SH} @ONLY)
 add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/python/dist/
         POST_BUILD
-        WORKING_DIR ${CMAKE_BINARY_DIR}/python/
-        COMMAND bash build_wheel.sh
+        WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
+        COMMAND make -C ../ DESTDIR=python/_install install && bash build_wheel.sh
 )
 
 add_custom_target(python_wheel DEPENDS ngraph ${CMAKE_BINARY_DIR}/python/dist/)
