@@ -53,9 +53,9 @@ See the [Release Notes] for recent changes.
 
 |  Framework     |                                | ONNX support?              |
 |----------------|--------------------------------|----------------------------|
-| TensorFlow*    | [ngraph tensorflow bridge]     | yes                        |
+| TensorFlow*    | [nGraph TensorFlow bridge]     | yes                        |
 | MXNet*         | [nGraph-MXNet]                 | yes                        |
-| PaddlePaddle   |        wip                     | yes                        |   
+| PaddlePaddle*  |        wip                     | yes                        |   
 | ONNX           | [ngraph-onnx]                  | [early supporter]          |   
 | PyTorch*       | [ngraph for pytorch-developers]| yes                        |
 
@@ -67,7 +67,7 @@ See the [Release Notes] for recent changes.
 |-----------------------------------------------|-------------------|----------------|
 | Intel® Architecture CPU                       | yes               | yes            |
 | Intel® Nervana™ Neural Network Processor (NNP)| yes               | yes            |
-| Intel Movidius™ Myriad™ 2   VPUs              | coming soon       | yes            |
+| Intel [Movidius™ Myriad™ 2] VPUs              | coming soon       | yes            |
 | Intel® Architecture GPUs                      | via PlaidML       | yes            |
 | AMD* GPUs                                     | via PlaidML       | yes            |
 | NVIDIA* GPUs                                  | via PlaidML       | some           | 
@@ -123,7 +123,7 @@ to improve the Library:
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
 [develop-without-lockin]: doc/sphinx/source/graphics/develop-without-lockin.png "Develop on any part of the stack wtihout lockin"
 [Movidius™ Myriad™ 2]:https://www.movidius.com/solutions/vision-processing-unit
-[ngraph tensorflow bridge]: https://github.com/NervanaSystems/ngraph-tf
+[nGraph TensorFlow bridge]: https://github.com/NervanaSystems/ngraph-tf
 [nGraph-MXNet]: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/NGRAPH_README.md
 [ngraph-onnx]: https://github.com/NervanaSystems/ngraph-onnx/blob/master/README.md
 [early supporter]: https://ai.intel.com/adaptable-deep-learning-solutions-with-ngraph-compiler-and-onnx/
