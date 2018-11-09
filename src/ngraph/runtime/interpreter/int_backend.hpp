@@ -235,8 +235,8 @@ private:
 #ifdef NGRAPH_DISTRIBUTED
             reference::allreduce<T>(static_cast<const T*>(args[0]),
                                     static_cast<T*>(out[0]),
-                                    static_cast<const T*>(args[0])->get_element_type(),
-                                    static_cast<int>(args[0]->get_element_count()));
+                                    node.get_input_element_type(0),
+                                    static_cast<int>(shape_size(node.get_input_shape(0))));
 #endif
             break;
         }
