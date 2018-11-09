@@ -55,6 +55,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -1454,6 +1455,11 @@ void runtime::gpu::GPU_Emitter::emit_Select(EMIT_ARGS)
 }
 
 void runtime::gpu::GPU_Emitter::emit_SelectAndScatter(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+void runtime::gpu::GPU_Emitter::emit_ShapeOf(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
