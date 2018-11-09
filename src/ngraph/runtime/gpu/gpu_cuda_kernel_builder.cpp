@@ -450,7 +450,6 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
                     {
                         writer << "input_i = expf(in[reduce_idx] - r_max) / r_sum;\n";
                         writer << "out[reduce_idx] = input_i;\n";
-                        //writer << "out[reduce_idx] /= r_sum;\n";
                         writer << "reduce_idx += step;\n";
                     }
                 }
@@ -461,7 +460,6 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
                 {
                     writer << "input_i = expf(in[reduce_idx] - r_max) / r_sum;\n";
                     writer << "out[reduce_idx] = input_i;\n";
-                    //writer << "out[reduce_idx] /= r_sum;\n";
                     writer << "reduce_idx += step;\n";
                 }
                 writer.block_end();
