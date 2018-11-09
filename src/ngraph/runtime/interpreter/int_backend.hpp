@@ -1168,7 +1168,7 @@ private:
         }
         case OP_TYPEID::ShapeOf:
         {
-            reference::shape_of(args[0]->get_shape(), out[0]->get_data_ptr<uint64_t>());
+            reference::shape_of(node.get_input_shape(0), static_cast<uint64_t*>(out[0]));
             break;
         }
         case OP_TYPEID::Sigmoid:
