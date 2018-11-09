@@ -51,13 +51,16 @@ See the [Release Notes] for recent changes.
 ## Getting started guides
 
 
-|  Framework     |                            | ONNX support?  |
-|----------------|----------------------------|----------------|
-| TensorFlow*    | [ngraph tensorflow bridge] | yes            |
-| MXNet*         | [nGraph-MXNet]             | yes            |
-| PaddlePaddle   |        wip                 | yes            |   
-| ONNX           | [ngraph-onnx]              | yes            |   
-| PyTorch*       | no                         | yes            |
+|  Framework     |                                | ONNX support?              |
+|----------------|--------------------------------|----------------------------|
+| TensorFlow*    | [ngraph tensorflow bridge]     | yes                        |
+| MXNet*         | [nGraph-MXNet]                 | yes                        |
+| PaddlePaddle   |        wip                     | yes                        |   
+| ONNX           | [ngraph-onnx]                  | [early supporter]          |   
+| PyTorch*       | [ngraph for pytorch-developers]| yes                        |
+
+
+
 
 
 | Backend                                       | current support   | future support |
@@ -123,3 +126,5 @@ to improve the Library:
 [ngraph tensorflow bridge]: https://github.com/NervanaSystems/ngraph-tf
 [nGraph-MXNet]: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/NGRAPH_README.md
 [ngraph-onnx]: https://github.com/NervanaSystems/ngraph-onnx/blob/master/README.md
+[early supporter]: https://ai.intel.com/adaptable-deep-learning-solutions-with-ngraph-compiler-and-onnx/
+[ngraph for pytorch-developers]: https://ai.intel.com/investing-in-the-pytorch-developer-community
