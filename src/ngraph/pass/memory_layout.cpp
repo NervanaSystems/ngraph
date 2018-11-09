@@ -20,6 +20,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
@@ -44,8 +45,9 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
 
         if (auto op = std::dynamic_pointer_cast<op::Op>(node))
         {
-            // concat in_place_oi should be treated differently
-            if (!std::dynamic_pointer_cast<op::Concat>(node))
+            // concat and slice in_place_oi should be treated differently
+            if (!std::dynamic_pointer_cast<op::Concat>(node) &&
+                !std::dynamic_pointer_cast<op::Slice>(node))
             {
                 if (auto op_annotations = op->get_op_annotations())
                 {
