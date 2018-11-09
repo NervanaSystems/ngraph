@@ -288,7 +288,6 @@ TEST(tracer, count_tracepoint)
 
     const size_t num_iterations = 10;
     const size_t offset = 5;
-    int countdown = num_iterations;
 
     std::function<void(void**, const std::string&)> callback =
         [num_iterations, offset](void** values, const std::string& name) {
