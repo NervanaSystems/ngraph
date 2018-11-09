@@ -428,7 +428,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_5d_to_scalar)
     EXPECT_EQ(std::vector<float>{243.}, read_vector<float>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, sum_accumulation_overflow)
+NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc)
 {
     Shape shape_a{10, 10, 10, 30};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
