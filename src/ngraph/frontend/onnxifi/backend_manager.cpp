@@ -23,6 +23,7 @@
 
 #include "backend.hpp"
 #include "backend_manager.hpp"
+#include "exceptions.hpp"
 
 namespace ngraph
 {
@@ -49,13 +50,13 @@ namespace ngraph
         {
             if (count == nullptr)
             {
-                throw std::invalid_argument{"null pointer"};
+                throw status::null_pointer{};
             }
             std::size_t requested{*count};
             *count = m_registered_backends.size();
             if ((requested < *count) || (backend_ids == nullptr))
             {
-                throw std::length_error{"not enough space"};
+                throw status::fallback{};
             }
             {
                 std::lock_guard<decltype(m_mutex)> lock{m_mutex};
