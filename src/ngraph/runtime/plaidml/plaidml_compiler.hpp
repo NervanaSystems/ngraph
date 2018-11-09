@@ -21,7 +21,6 @@
 #include <plaidml/plaidml++.h>
 
 #include "ngraph/function.hpp"
-#include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/plaidml/plaidml_compiled_function.hpp"
 #include "ngraph/runtime/plaidml/plaidml_config.hpp"
 
@@ -49,5 +48,4 @@ public:
 
 private:
     Config* m_config;
-    ngraph::pass::Manager m_pass_manager;
 };

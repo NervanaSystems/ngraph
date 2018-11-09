@@ -156,7 +156,7 @@ def Notify() {
 
 def main(String label, String projectName, String projectRoot, String dockerContainerName, String jenkins_github_credential_id, String ngraph_git_address, String onnx_git_address) {
     node(label) {
-        timeout(activity: true, time: 60) {        
+        timeout(activity: true, time: 15) {
             WORKDIR = "${WORKSPACE}/${BUILD_NUMBER}"
             def configurationMaps;
             try {
@@ -174,8 +174,13 @@ def main(String label, String projectName, String projectRoot, String dockerCont
                     RunToxTests(configurationMaps)
                 }
             }
-            catch(hudson.AbortException e) {
-                currentBuild.result = 'ABORTED'
+            catch(e) {
+                // Set result to ABORTED if exception contains exit code of a process interrupted by SIGTERM
+                if ("$e".contains("143")) {
+                    currentBuild.result = "ABORTED"
+                } else {
+                    currentBuild.result = "FAILURE"
+                }
             }
             finally {
                 Cleanup(configurationMaps)
