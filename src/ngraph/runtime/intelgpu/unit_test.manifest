@@ -61,6 +61,7 @@ reverse_sequence_n4d2c3h2w2
 select_and_scatter_3d_without_overlap
 select_and_scatter_with_overlap
 select_and_scatter_without_overlap
+softmax_axis_3d_double
 topk_1d_max_all
 topk_1d_max_one
 topk_1d_max_partial
@@ -94,6 +95,7 @@ zero_sized_cos
 zero_sized_cosh
 zero_sized_divide
 zero_sized_eq
+zero_sized_exp
 zero_sized_floor
 zero_sized_greater
 zero_sized_greatereq

@@ -14,21 +14,14 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_library(onnxifi-ngraph SHARED
-    onnxifi.cpp
-    backend.hpp
-    backend_manager.hpp
-    backend_manager.cpp
-    exceptions.hpp)
+if (NGRAPH_NOP_ENABLE)
+    add_library(nop_backend SHARED nop_backend.cpp)
+    set_target_properties(nop_backend PROPERTIES VERSION ${NGRAPH_VERSION})
+    target_link_libraries(nop_backend PUBLIC ngraph)
+    set_target_properties(nop_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
-target_link_libraries(onnxifi-ngraph PRIVATE ngraph)
-
-add_dependencies(onnxifi-ngraph onnx::libonnx)
-target_include_directories(onnxifi-ngraph SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_IMPORT_INCLUDE_DIR})
-
-set(ONNXIFI_VERSION ${NGRAPH_VERSION})
-set(ONNXIFI_ABI_VERSION 1)
-
-set_target_properties(onnxifi-ngraph PROPERTIES VERSION ${ONNXIFI_VERSION} SOVERSION ${ONNXIFI_ABI_VERSION})
-
-install(TARGETS onnxifi-ngraph DESTINATION ${NGRAPH_INSTALL_LIB})
+    install(TARGETS nop_backend
+        LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
+        ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
+    )
+endif()

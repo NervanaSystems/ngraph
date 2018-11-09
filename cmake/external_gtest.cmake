@@ -22,7 +22,7 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 SET(GTEST_GIT_REPO_URL https://github.com/google/googletest.git)
-SET(GTEST_GIT_LABEL release-1.8.0)
+SET(GTEST_GIT_LABEL release-1.8.1)
 
 set(COMPILE_FLAGS -fPIC)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
