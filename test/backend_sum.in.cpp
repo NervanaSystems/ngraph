@@ -428,8 +428,15 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_5d_to_scalar)
     EXPECT_EQ(std::vector<float>{243.}, read_vector<float>(result));
 }
 
+#if NGRAPH_CPU_ENABLE
+
 NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc)
 {
+    std::string backend_name = "${BACKEND_NAME}";
+    if (backend_name == "INTERPRETER")
+    {
+        exit(0);
+    }
     Shape shape_a{10, 10, 10, 30};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
 
@@ -449,8 +456,9 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc)
     auto cpu_func = clone_function(*f);
     auto bk_func = clone_function(*f);
 
-    auto cpu_results = execute(cpu_func, args, "CPU");
+    auto cpu_results = execute(cpu_func, args, "INTERPRETER");
     auto bk_results = execute(bk_func, args, "${BACKEND_NAME}");
 
     EXPECT_TRUE(test::all_close_f(cpu_results.at(0), bk_results.at(0), 24, 3));
 }
+#endif
