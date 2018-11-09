@@ -428,7 +428,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_5d_to_scalar)
     EXPECT_EQ(std::vector<float>{243.}, read_vector<float>(result));
 }
 
-#if NGRAPH_CPU_ENABLE
+#if NGRAPH_INTERPRETER_ENABLE
 
 NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc)
 {
