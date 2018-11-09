@@ -12,6 +12,3 @@ one_hot_vector_1_fp
 one_hot_vector_1_fp_nonint
 backwards_batch_norm_three_outputs
 backwards_maxpool_n2_c1_hw5_3x3_str2_max_pad1x2_2x3
-# This set of parameterized unit tests is currently comparing against CPU
-# and so it doesn't make sense to run on CPU.
-compare_backends_with_graphs

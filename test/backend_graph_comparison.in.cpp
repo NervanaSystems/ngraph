@@ -31,6 +31,15 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
+// clang-format off
+#define TESTING_${BACKEND_NAME}_BACKEND 1
+#ifdef TESTING_${BACKEND_NAME}_BACKEND // avoid macro is not used warning
+#endif
+// clang-format on
+
+// Currently only used to test GPU backend, but is expected to be useful
+// testing other backends (except CPU which is used as the reference backend)
+#if defined(TESTING_GPU_BACKEND)
 class serialized_graph_files : public ::testing::TestWithParam<string>
 {
 public:
@@ -267,3 +276,5 @@ NGRAPH_INSTANTIATE_TEST_CASE_P(
                     "tensorflow/resnet8/"
                     "tf_function_cluster_8[_XlaCompiledKernel=true,_XlaNumConstantArgs=2,_"
                     "XlaNumResourceArgs=0].v28.json"));
+
+#endif // skipping tests due to backend
