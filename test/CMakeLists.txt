@@ -131,13 +131,15 @@ set(MULTI_TEST_SRC
     backend_sum.in.cpp
     backend_topk.in.cpp
     backend_arg_reduce.in.cpp
-    backend_graph_comparison.in.cpp
     backend_test.in.cpp
     backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
 )
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND MULTI_TEST_SRC distributed.in.cpp)
+endif()
+if (NGRAPH_CPU_ENABLE)
+    list(APPEND MULTI_TEST_SRC backend_graph_comparison.in.cpp)
 endif()
 
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
