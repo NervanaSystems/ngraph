@@ -5480,7 +5480,7 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto a = backend->create_tensor(element::f32, input_shape);
-    copy_data(a, vector<uint64_t>{});
+    copy_data(a, vector<float>{0});
     auto result = backend->create_tensor(element::u64, output_shape);
 
     backend->call_with_validate(f, {result}, {a});
@@ -5490,7 +5490,7 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar)
 
 NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector)
 {
-    Shape input_shape{200};
+    Shape input_shape{2};
     Shape output_shape{1};
 
     auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
@@ -5499,17 +5499,17 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto a = backend->create_tensor(element::f32, input_shape);
-    copy_data(a, vector<uint64_t>{});
+    copy_data(a, vector<float>(2, 0));
     auto result = backend->create_tensor(element::u64, output_shape);
 
     backend->call_with_validate(f, {result}, {a});
-    vector<uint64_t> expected{200};
+    vector<uint64_t> expected{2};
     EXPECT_EQ(expected, read_vector<uint64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix)
 {
-    Shape input_shape{200, 400};
+    Shape input_shape{2, 4};
     Shape output_shape{2};
 
     auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
@@ -5518,17 +5518,17 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto a = backend->create_tensor(element::f32, input_shape);
-    copy_data(a, vector<uint64_t>{});
+    copy_data(a, vector<float>(2 * 4, 0));
     auto result = backend->create_tensor(element::u64, output_shape);
 
     backend->call_with_validate(f, {result}, {a});
-    vector<uint64_t> expected{200, 400};
+    vector<uint64_t> expected{2, 4};
     EXPECT_EQ(expected, read_vector<uint64_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
 {
-    Shape input_shape{200, 400, 800, 1600, 3200};
+    Shape input_shape{2, 4, 8, 16, 32};
     Shape output_shape{5};
 
     auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
@@ -5537,10 +5537,10 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto a = backend->create_tensor(element::f32, input_shape);
-    copy_data(a, vector<uint64_t>{});
+    copy_data(a, vector<float>(2 * 4 * 8 * 16 * 32, 0));
     auto result = backend->create_tensor(element::u64, output_shape);
 
     backend->call_with_validate(f, {result}, {a});
-    vector<uint64_t> expected{200, 400, 800, 1600, 3200};
+    vector<uint64_t> expected{2, 4, 8, 16, 32};
     EXPECT_EQ(expected, read_vector<uint64_t>(result));
 }
