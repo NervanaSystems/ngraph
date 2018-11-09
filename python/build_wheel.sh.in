@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+set -e
+
+export PYBIND_HEADERS_PATH=@CMAKE_BINARY_DIR@/pybind11
+export NGRAPH_CPP_BUILD_PATH=@CMAKE_INSTALL_PREFIX@
+export NGRAPH_ONNX_IMPORT_ENABLE=@NGRAPH_ONNX_IMPORT_ENABLE@
+export NGRAPH_VERSION=@NGRAPH_VERSION_SHORT@
+
+SOURCE_DIR=@CMAKE_SOURCE_DIR@/python
+BUILD_DIR=@CMAKE_BINARY_DIR@/python
+
+! PYTHON2_DETECTED=$(($(python -c 'import sys; print(sys.version_info.major)' 2> /dev/null) == 2))
+! PYTHON3_DETECTED=$(($(python3 -c 'import sys; print(sys.version_info.major)' 2> /dev/null) == 3))
+
+mkdir -p build
+
+if [ "${PYTHON2_DETECTED}" == 1 ]; then
+    echo "Building wheel for Python 2"
+    python --version
+    cd ${BUILD_DIR}
+    virtualenv -p "$(command -v python)" build/venv2
+    source build/venv2/bin/activate
+    pip install --upgrade setuptools pip wheel
+    python ${SOURCE_DIR}/setup.py bdist_wheel
+    deactivate
+fi
+
+if [ "${PYTHON3_DETECTED}" == 1  ]; then
+    echo "Building wheel for Python 3"
+    python3 --version
+    cd ${BUILD_DIR}
+    virtualenv -p "$(command -v python3)" build/venv3
+    source build/venv3/bin/activate
+    pip install --upgrade setuptools pip wheel
+    python ${SOURCE_DIR}/setup.py bdist_wheel
+    deactivate
+fi
