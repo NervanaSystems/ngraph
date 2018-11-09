@@ -139,32 +139,19 @@ namespace ngraph
                 op::Quantize::RoundMode round_mode =
                     op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
 
-                auto reordered_bias = make_shared<op::Quantize>(
+                bias = make_shared<op::Quantize>(
                     bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
-                return make_shared<op::QuantizedConvolutionBias>(input,
-                                                                 filters,
-                                                                 reordered_bias,
-                                                                 window_movement_strides,
-                                                                 window_dilation_strides,
-                                                                 padding_below,
-                                                                 padding_above,
-                                                                 data_dilation_strides,
-                                                                 requantization_scale,
-                                                                 with_relu);
             }
-            else
-            {
-                return make_shared<op::QuantizedConvolutionBias>(input,
-                                                                 filters,
-                                                                 bias,
-                                                                 window_movement_strides,
-                                                                 window_dilation_strides,
-                                                                 padding_below,
-                                                                 padding_above,
-                                                                 data_dilation_strides,
-                                                                 requantization_scale,
-                                                                 with_relu);
-            }
+            return make_shared<op::QuantizedConvolutionBias>(input,
+                                                             filters,
+                                                             bias,
+                                                             window_movement_strides,
+                                                             window_dilation_strides,
+                                                             padding_below,
+                                                             padding_above,
+                                                             data_dilation_strides,
+                                                             requantization_scale,
+                                                             with_relu);
         }
 
         std::shared_ptr<Node>
