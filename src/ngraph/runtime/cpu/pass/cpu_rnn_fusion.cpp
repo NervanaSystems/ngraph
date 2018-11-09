@@ -152,154 +152,157 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     auto ht_label = std::make_shared<pattern::op::Label>(ht, nullptr, NodeVector{ht});
 
     // Define a call back that needs to called once the DFG matches the pattern
-    pattern::graph_rewrite_callback callback =
-        [ct_label, input_xt, weights_i2h, hidden_ht, weights_h2h, bias_i2h, bias_h2h, ct_1](
-            pattern::Matcher& m) {
-            static int count = 0;
-            NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
-                         << m.get_match_root()->get_name();
+    pattern::graph_rewrite_callback callback = [ct_label,
+                                                input_xt,
+                                                weights_i2h,
+                                                hidden_ht,
+                                                weights_h2h,
+                                                bias_i2h,
+                                                bias_h2h,
+                                                ct_1](pattern::Matcher& m) {
+        static int count = 0;
+        NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
+                     << m.get_match_root()->get_name();
 
-            auto pattern_map = m.get_pattern_map();
-            NGRAPH_DEBUG << "In Lstm fprop call back";
+        auto pattern_map = m.get_pattern_map();
+        NGRAPH_DEBUG << "In Lstm fprop call back";
 
-            if (m.get_match_root()->get_element_type() != element::f32)
-            {
-                NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
-                             << " type is not float!";
-                return false;
-            }
-            auto input_xt_rank = pattern_map[input_xt]->get_shape().size();
-            auto hidden_ht_rank = pattern_map[hidden_ht]->get_shape().size();
-            auto weights_i2h_rank = pattern_map[weights_i2h]->get_shape().size();
-            auto weights_h2h_rank = pattern_map[weights_h2h]->get_shape().size();
-            if (input_xt_rank != 2 || hidden_ht_rank != 2 || weights_i2h_rank != 2 ||
-                weights_h2h_rank != 2)
-            {
-                return false;
-            }
+        if (m.get_match_root()->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << " type is not float!";
+            return false;
+        }
+        auto input_xt_rank = pattern_map[input_xt]->get_shape().size();
+        auto hidden_ht_rank = pattern_map[hidden_ht]->get_shape().size();
+        auto weights_i2h_rank = pattern_map[weights_i2h]->get_shape().size();
+        auto weights_h2h_rank = pattern_map[weights_h2h]->get_shape().size();
+        if (input_xt_rank != 2 || hidden_ht_rank != 2 || weights_i2h_rank != 2 ||
+            weights_h2h_rank != 2)
+        {
+            return false;
+        }
 
-            if (pattern_map[bias_i2h]->get_shape().size() != 1 ||
-                pattern_map[bias_h2h]->get_shape().size() != 1)
-            {
-                throw ngraph_error("Bias should have rank of 1 for MKLDNN Rnn op");
-            }
+        if (pattern_map[bias_i2h]->get_shape().size() != 1 ||
+            pattern_map[bias_h2h]->get_shape().size() != 1)
+        {
+            throw ngraph_error("Bias should have rank of 1 for MKLDNN Rnn op");
+        }
 
-            // TODO: (Pruthvi) temproary workaround for GNMT slow down
-            // this checks avoids fusing of LSTM cells if its a part of decoder, we
-            // will remove this once mkldnn optimizes individual LSTM cell or once we have decoder pattern for GNMT.
-            /*if (!(std::dynamic_pointer_cast<op::Broadcast>(pattern_map[ct_1]) &&
+        // TODO: (Pruthvi) temproary workaround for GNMT slow down
+        // this checks avoids fusing of LSTM cells if its a part of decoder, we
+        // will remove this once mkldnn optimizes individual LSTM cell or once we have decoder pattern for GNMT.
+        if (!(std::dynamic_pointer_cast<op::Broadcast>(pattern_map[ct_1]) &&
               std::dynamic_pointer_cast<op::Constant>(pattern_map[ct_1]->get_argument(0))) &&
             !(std::dynamic_pointer_cast<op::Slice>(pattern_map[ct_1]) &&
               std::dynamic_pointer_cast<op::GetOutputElement>(pattern_map[ct_1]->get_argument(0))))
         {
             return false;
-        }*/
-            std::shared_ptr<Node> src_layer = pattern_map[input_xt];
-            std::shared_ptr<Node> hidden_state_ht = pattern_map[hidden_ht];
-            std::shared_ptr<Node> weights_layer = pattern_map[weights_i2h];
-            std::shared_ptr<Node> weights_iter = pattern_map[weights_h2h];
+        }
+        std::shared_ptr<Node> src_layer = pattern_map[input_xt];
+        std::shared_ptr<Node> hidden_state_ht = pattern_map[hidden_ht];
+        std::shared_ptr<Node> weights_layer = pattern_map[weights_i2h];
+        std::shared_ptr<Node> weights_iter = pattern_map[weights_h2h];
 
-            auto swap_lstm_inputs = [&]() -> void {
-                src_layer = pattern_map[hidden_ht];
-                hidden_state_ht = pattern_map[input_xt];
-                weights_layer = pattern_map[weights_h2h];
-                weights_iter = pattern_map[weights_i2h];
-            };
+        auto swap_lstm_inputs = [&]() -> void {
+            src_layer = pattern_map[hidden_ht];
+            hidden_state_ht = pattern_map[input_xt];
+            weights_layer = pattern_map[weights_h2h];
+            weights_iter = pattern_map[weights_i2h];
+        };
 
-            // determine which forms input/hidden inputs in the matched subgraph
-            if ((std::dynamic_pointer_cast<op::Broadcast>(src_layer) &&
-                 std::dynamic_pointer_cast<op::Constant>(src_layer->get_argument(0))) &&
-                !std::dynamic_pointer_cast<op::GetOutputElement>(src_layer->get_argument(0)))
+        // determine which forms input/hidden inputs in the matched subgraph
+        if ((std::dynamic_pointer_cast<op::Broadcast>(src_layer) &&
+             std::dynamic_pointer_cast<op::Constant>(src_layer->get_argument(0))) &&
+            !std::dynamic_pointer_cast<op::GetOutputElement>(src_layer->get_argument(0)))
+        {
+            swap_lstm_inputs();
+        }
+        else if (hidden_state_ht->get_shape() != pattern_map[ct_1]->get_shape())
+        {
+            swap_lstm_inputs();
+        }
+        // swap the inputs if the cell_state and hidden state doesnot belong to the same Lstm
+        else if (std::dynamic_pointer_cast<op::GetOutputElement>(
+                     pattern_map[ct_1]->get_argument(0)))
+        {
+            if (hidden_state_ht->get_argument(0)->get_arguments()[0] !=
+                pattern_map[ct_1]->get_argument(0)->get_arguments()[0])
             {
                 swap_lstm_inputs();
             }
-            else if (hidden_state_ht->get_shape() != pattern_map[ct_1]->get_shape())
+        }
+
+        auto replace_collapse_node_user = [](std::shared_ptr<Node> collapsed_node,
+                                             descriptor::Output& new_output) {
+            for (auto node : collapsed_node->get_users())
             {
-                swap_lstm_inputs();
-            }
-            // swap the inputs if the cell_state and hidden state doesnot belong to the same Lstm
-            else if (std::dynamic_pointer_cast<op::GetOutputElement>(
-                         pattern_map[ct_1]->get_argument(0)))
-            {
-                if (hidden_state_ht->get_argument(0)->get_arguments()[0] !=
-                    pattern_map[ct_1]->get_argument(0)->get_arguments()[0])
+                NGRAPH_DEBUG << "node_name: " << node->get_name();
+                for (size_t i = 0; i < node->get_input_size(); i++)
                 {
-                    swap_lstm_inputs();
-                }
-            }
-
-            // get LSTM cell attributes
-            size_t lstm_n_gates = 4;
-            size_t batch_size = pattern_map[input_xt]->get_shape()[0];
-            size_t direction = 1;
-            size_t layers = 1;
-            auto slc = weights_layer->get_shape()[0] / (lstm_n_gates * direction * layers);
-            auto dlc = weights_layer->get_shape()[1];
-            auto sic = weights_iter->get_shape()[0] / (lstm_n_gates * direction * layers);
-            auto dic = weights_iter->get_shape()[1];
-
-            if (dlc != dic)
-            {
-                NGRAPH_DEBUG
-                    << "Not fusing, since MKLDNN Lstm kernel requires dst_layer feature size "
-                       "equals to dts_iter feature size";
-                return false;
-            }
-
-            auto replace_collapse_node_user = [](std::shared_ptr<Node> collapsed_node,
-                                                 descriptor::Output& new_output) {
-                for (auto node : collapsed_node->get_users())
-                {
-                    NGRAPH_DEBUG << "node_name: " << node->get_name();
-                    for (size_t i = 0; i < node->get_input_size(); i++)
+                    if (node->get_argument(i) == collapsed_node)
                     {
-                        if (node->get_argument(i) == collapsed_node)
-                        {
-                            node->get_inputs().at(i).replace_output(new_output);
-                        }
+                        node->get_inputs().at(i).replace_output(new_output);
                     }
                 }
-            };
-
-            std::shared_ptr<Node> src_iter =
-                std::make_shared<op::Concat>(NodeVector{hidden_state_ht, pattern_map[ct_1]}, 0);
-            std::shared_ptr<Node> bias =
-                std::make_shared<op::Add>(pattern_map[bias_i2h], pattern_map[bias_h2h]);
-
-            // Reorder weights_layer from ldgoi -> ldigo
-            auto weights_layer_reorder = std::make_shared<op::Reshape>(
-                weights_layer, AxisVector{1, 0}, Shape{slc, lstm_n_gates * dlc});
-            // Reorder weights_iyer from ldgoi -> ldigo
-            auto weights_iter_reorder = std::make_shared<op::Reshape>(
-                weights_iter, AxisVector{1, 0}, Shape{sic, lstm_n_gates * dic});
-
-            auto lstm_node = std::make_shared<op::Lstm>(
-                src_layer, src_iter, weights_layer_reorder, weights_iter_reorder, bias);
-
-            auto lstm_ht_output = std::make_shared<op::GetOutputElement>(lstm_node, 0);
-            auto lstm_ht_ct_output = std::make_shared<op::GetOutputElement>(lstm_node, 1);
-            // dst_iter of lstm mkldnn output holds the results of both recurrent state
-            // tensor outputs. we need to slice the ct.
-            auto ht_slice = std::make_shared<op::Slice>(
-                lstm_ht_output, Coordinate{0, 0}, Coordinate{batch_size, dlc});
-            auto ct_slice = std::make_shared<op::Slice>(
-                lstm_ht_ct_output, Coordinate{batch_size, 0}, Coordinate{(2 * batch_size), dic});
-
-            if (lstm_node->get_outputs().at(0).get_inputs().size() != 2)
-            {
-                throw ngraph_error("Lstm node doesnt have two outputs");
             }
-            // Now identify the nodes which consumes the output of LSTM nodes
-            // and replace them accordingly
-            // find the user's for {ht|ct} and replace them with lstm_goe_1
-            if (ngraph::is_used(pattern_map[ct_label].get()))
-            {
-                replace_collapse_node_user(pattern_map[ct_label], ct_slice->get_outputs().at(0));
-            }
-            // find the user's for {ht} and replace them with lstm_goe_0
-            ngraph::replace_node(m.get_match_root(), ht_slice);
-            return true;
         };
+        // get LSTM cell attributes
+        size_t lstm_n_gates = 4;
+        size_t batch_size = pattern_map[input_xt]->get_shape()[0];
+        size_t direction = 1;
+        size_t layers = 1;
+        auto dlc = weights_layer->get_shape()[0] / (lstm_n_gates * direction * layers);
+        auto slc = weights_layer->get_shape()[1];
+        auto dic = weights_iter->get_shape()[0] / (lstm_n_gates * direction * layers);
+        auto sic = weights_iter->get_shape()[1];
+
+        std::shared_ptr<Node> src_iter =
+            std::make_shared<op::Concat>(NodeVector{hidden_state_ht, pattern_map[ct_1]}, 0);
+        std::shared_ptr<Node> bias =
+            std::make_shared<op::Add>(pattern_map[bias_i2h], pattern_map[bias_h2h]);
+
+        // Reorder weights_layer from ldgoi -> ldigo
+        auto weights_layer_reorder = std::make_shared<op::Reshape>(
+            weights_layer, AxisVector{1, 0}, Shape{slc, lstm_n_gates * dlc});
+        // Reorder weights_iyer from ldgoi -> ldigo
+        auto weights_iter_reorder = std::make_shared<op::Reshape>(
+            weights_iter, AxisVector{1, 0}, Shape{sic, lstm_n_gates * dic});
+
+        if (dlc != dic)
+        {
+            NGRAPH_DEBUG << "Not fusing, since MKLDNN Lstm kernel requires dst_layer feature size "
+                         << "equals to dts_iter feature size";
+            return false;
+        }
+
+        auto lstm_node = std::make_shared<op::Lstm>(
+            src_layer, src_iter, weights_layer_reorder, weights_iter_reorder, bias);
+
+        auto lstm_ht_output = std::make_shared<op::GetOutputElement>(lstm_node, 0);
+        auto lstm_ht_ct_output = std::make_shared<op::GetOutputElement>(lstm_node, 1);
+        // dst_iter of lstm mkldnn output holds the results of both recurrent state
+        // tensor outputs. we need to slice the ct.
+        auto ht_slice = std::make_shared<op::Slice>(
+            lstm_ht_output, Coordinate{0, 0}, Coordinate{batch_size, dlc});
+        auto ct_slice = std::make_shared<op::Slice>(
+            lstm_ht_ct_output, Coordinate{batch_size, 0}, Coordinate{(2 * batch_size), dic});
+
+        if (lstm_node->get_outputs().at(0).get_inputs().size() != 2)
+        {
+            throw ngraph_error("Lstm node doesnt have two outputs");
+        }
+        // Now identify the nodes which consumes the output of LSTM nodes
+        // and replace them accordingly
+        // find the user's for {ht|ct} and replace them with lstm_goe_1
+        if (ngraph::is_used(pattern_map[ct_label].get()))
+        {
+            replace_collapse_node_user(pattern_map[ct_label], ct_slice->get_outputs().at(0));
+        }
+        // find the user's for {ht} and replace them with lstm_goe_0
+        ngraph::replace_node(m.get_match_root(), ht_slice);
+        return true;
+    };
     auto m = std::make_shared<pattern::Matcher>(ht, callback);
     this->add_matcher(m);
 }
@@ -727,7 +730,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                 }
                 else
                 {
-                    src_layer = src_layer_bounded_nodes[index];
+                    src_layer = rnn_goe0_bounded_nodes[index];
                     delete_nodes(src_iter_bounded_nodes, index);
                     delete_nodes(weights_layer_bounded_nodes, index);
                     delete_nodes(weights_iter_bounded_nodes, index);
@@ -742,6 +745,11 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             }
         }
 
+        // we will return if we have less than two nodes to fuse
+        if (rnn_nodes.size() <= 1)
+        {
+            return false;
+        }
         // the last matched rnn cell with slc=dlc will be in the input of the new fused
         // node
         auto src_iter = stack_rnn_inputs(src_iter_bounded_nodes);
@@ -757,7 +765,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         size_t feature_size = rnn_nodes[0]->get_src_iter_feature_size();
         size_t num_rnn_cell_states = rnn_nodes[0]->get_num_cell_states();
         size_t rnn_direction = rnn_nodes[0]->get_direction();
-        size_t num_fused_rnn_layers = m.get_number_of_recurrent_matches();
+        size_t num_fused_rnn_layers = rnn_nodes.size();
 
         NGRAPH_DEBUG << "src_layer: " << join(src_layer->get_shape());
         NGRAPH_DEBUG << "src_iter: " << join(src_iter->get_shape());

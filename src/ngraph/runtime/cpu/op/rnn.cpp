@@ -79,12 +79,12 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
         throw ngraph_error("src_layer doesnt have a rank 2");
     }
 
-    m_src_iter_feature_size =
+    m_dst_iter_feature_size =
         weights_iter->get_shape()[1] / (m_direction * m_num_fused_layers * m_num_gates_per_cell);
-    m_src_layer_feature_size =
+    m_dst_layer_feature_size =
         weights_layer->get_shape()[1] / (m_direction * m_num_fused_layers * m_num_gates_per_cell);
-    m_dst_iter_feature_size = weights_iter->get_shape()[0];
-    m_dst_layer_feature_size = weights_layer->get_shape()[0];
+    m_src_iter_feature_size = weights_iter->get_shape()[0];
+    m_src_layer_feature_size = weights_layer->get_shape()[0];
 
     if (shape_size(src_layer->get_shape()) !=
         m_src_sequence_length * m_batch_size * m_src_layer_feature_size)
