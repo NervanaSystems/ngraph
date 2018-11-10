@@ -37,148 +37,148 @@ namespace ngraph
         INTELGPU,
         PlaidML
     };
-}
 
-using namespace ngraph;
+    static std::string s_manifest = "${MANIFEST}";
 
-static std::string s_manifest = "${MANIFEST}";
-
-template <backend_typename BACKEND_TARGET, backend_typename BACKEND_REFERENCE>
-class model_comparison : public ::testing::TestWithParam<std::string>
-{
-public:
-    void compare_results(NodeVector& result_nodes,
-                         std::vector<std::shared_ptr<runtime::Tensor>> ref_results,
-                         std::vector<std::shared_ptr<runtime::Tensor>> bk_results)
+    template <backend_typename BACKEND_TARGET, backend_typename BACKEND_REFERENCE>
+    class model_comparison : public ::testing::TestWithParam<std::string>
     {
-        for (int i = 0; i < ref_results.size(); ++i)
+    public:
+        void compare_results(NodeVector& result_nodes,
+                             std::vector<std::shared_ptr<runtime::Tensor>> ref_results,
+                             std::vector<std::shared_ptr<runtime::Tensor>> bk_results)
         {
-            const std::shared_ptr<runtime::Tensor>& ref_data = ref_results.at(i);
-            const std::shared_ptr<runtime::Tensor>& bk_data = bk_results.at(i);
-
-            std::cout << "Comparing results for " << result_nodes.at(i)->get_name() << std::endl;
-            if (auto node = std::dynamic_pointer_cast<op::GetOutputElement>(result_nodes.at(i)))
+            for (int i = 0; i < ref_results.size(); ++i)
             {
-                std::cout << "  Parent node: ";
-                for (auto& p : node->get_arguments())
+                const std::shared_ptr<runtime::Tensor>& ref_data = ref_results.at(i);
+                const std::shared_ptr<runtime::Tensor>& bk_data = bk_results.at(i);
+
+                std::cout << "Comparing results for " << result_nodes.at(i)->get_name()
+                          << std::endl;
+                if (auto node = std::dynamic_pointer_cast<op::GetOutputElement>(result_nodes.at(i)))
                 {
-                    std::cout << " " << p->get_name() << std::endl;
-                    std::cout << "   nargs: " << p->get_arguments().size() << std::endl;
+                    std::cout << "  Parent node: ";
+                    for (auto& p : node->get_arguments())
+                    {
+                        std::cout << " " << p->get_name() << std::endl;
+                        std::cout << "   nargs: " << p->get_arguments().size() << std::endl;
+                    }
+                }
+
+                ASSERT_EQ(ref_data->get_element_type(), bk_data->get_element_type());
+                ASSERT_EQ(ref_data->get_element_count(), bk_data->get_element_count());
+                ASSERT_EQ(ref_data->get_shape(), bk_data->get_shape());
+
+                element::Type et = ref_data->get_element_type();
+                if (et == element::boolean)
+                {
+                    std::vector<char> ref_data_vector = read_vector<char>(ref_data);
+                    std::vector<char> bk_data_vector = read_vector<char>(bk_data);
+                    print_results(ref_data_vector, bk_data_vector);
+                    EXPECT_TRUE(test::all_close<char>(ref_data_vector, bk_data_vector));
+                }
+                else if ((et == element::f32) || (et == element::f64))
+                {
+                    std::vector<float> ref_data_vector = read_float_vector(ref_data);
+                    std::vector<float> bk_data_vector = read_float_vector(bk_data);
+                    print_results(ref_data_vector, bk_data_vector);
+                    EXPECT_TRUE(test::all_close_f(ref_data_vector, bk_data_vector));
+                }
+                else if (et == element::i8)
+                {
+                    std::vector<int8_t> ref_data_vector = read_vector<int8_t>(ref_data);
+                    std::vector<int8_t> bk_data_vector = read_vector<int8_t>(bk_data);
+                    print_results(ref_data_vector, bk_data_vector);
+                    EXPECT_TRUE(test::all_close<int8_t>(ref_data_vector, bk_data_vector));
+                }
+                else if (et == element::i16)
+                {
+                    std::vector<int16_t> ref_data_vector = read_vector<int16_t>(ref_data);
+                    std::vector<int16_t> bk_data_vector = read_vector<int16_t>(bk_data);
+                    print_results(ref_data_vector, bk_data_vector);
+                    EXPECT_TRUE(test::all_close<int16_t>(ref_data_vector, bk_data_vector));
+                }
+                else if (et == element::i32)
+                {
+                    std::vector<int32_t> ref_data_vector = read_vector<int32_t>(ref_data);
+                    std::vector<int32_t> bk_data_vector = read_vector<int32_t>(bk_data);
+                    print_results(ref_data_vector, bk_data_vector);
+                    EXPECT_TRUE(test::all_close<int32_t>(ref_data_vector, bk_data_vector));
+                }
+                else if (et == element::i64)
+                {
+                    std::vector<int64_t> ref_data_vector = read_vector<int64_t>(ref_data);
+                    std::vector<int64_t> bk_data_vector = read_vector<int64_t>(bk_data);
+                    print_results(ref_data_vector, bk_data_vector);
+                    EXPECT_TRUE(test::all_close<int64_t>(ref_data_vector, bk_data_vector));
+                }
+                else if (et == element::u8)
+                {
+                    std::vector<uint8_t> ref_data_vector = read_vector<uint8_t>(ref_data);
+                    std::vector<uint8_t> bk_data_vector = read_vector<uint8_t>(bk_data);
+                    print_results(ref_data_vector, bk_data_vector);
+                    EXPECT_TRUE(test::all_close<uint8_t>(ref_data_vector, bk_data_vector));
+                }
+                else if (et == element::u16)
+                {
+                    std::vector<uint16_t> ref_data_vector = read_vector<uint16_t>(ref_data);
+                    std::vector<uint16_t> bk_data_vector = read_vector<uint16_t>(bk_data);
+                    print_results(ref_data_vector, bk_data_vector);
+                    EXPECT_TRUE(test::all_close<uint16_t>(ref_data_vector, bk_data_vector));
+                }
+                else if (et == element::u32)
+                {
+                    std::vector<uint32_t> ref_data_vector = read_vector<uint32_t>(ref_data);
+                    std::vector<uint32_t> bk_data_vector = read_vector<uint32_t>(bk_data);
+                    print_results(ref_data_vector, bk_data_vector);
+                    EXPECT_TRUE(test::all_close<uint32_t>(ref_data_vector, bk_data_vector));
+                }
+                else if (et == element::u64)
+                {
+                    std::vector<uint64_t> ref_data_vector = read_vector<uint64_t>(ref_data);
+                    std::vector<uint64_t> bk_data_vector = read_vector<uint64_t>(bk_data);
+                    print_results(ref_data_vector, bk_data_vector);
+                    EXPECT_TRUE(test::all_close<uint64_t>(ref_data_vector, bk_data_vector));
+                }
+                else
+                {
+                    throw std::runtime_error("unsupported type");
                 }
             }
-
-            ASSERT_EQ(ref_data->get_element_type(), bk_data->get_element_type());
-            ASSERT_EQ(ref_data->get_element_count(), bk_data->get_element_count());
-            ASSERT_EQ(ref_data->get_shape(), bk_data->get_shape());
-
-            element::Type et = ref_data->get_element_type();
-            if (et == element::boolean)
-            {
-                std::vector<char> ref_data_vector = read_vector<char>(ref_data);
-                std::vector<char> bk_data_vector = read_vector<char>(bk_data);
-                print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<char>(ref_data_vector, bk_data_vector));
-            }
-            else if ((et == element::f32) || (et == element::f64))
-            {
-                std::vector<float> ref_data_vector = read_float_vector(ref_data);
-                std::vector<float> bk_data_vector = read_float_vector(bk_data);
-                print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close_f(ref_data_vector, bk_data_vector));
-            }
-            else if (et == element::i8)
-            {
-                std::vector<int8_t> ref_data_vector = read_vector<int8_t>(ref_data);
-                std::vector<int8_t> bk_data_vector = read_vector<int8_t>(bk_data);
-                print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<int8_t>(ref_data_vector, bk_data_vector));
-            }
-            else if (et == element::i16)
-            {
-                std::vector<int16_t> ref_data_vector = read_vector<int16_t>(ref_data);
-                std::vector<int16_t> bk_data_vector = read_vector<int16_t>(bk_data);
-                print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<int16_t>(ref_data_vector, bk_data_vector));
-            }
-            else if (et == element::i32)
-            {
-                std::vector<int32_t> ref_data_vector = read_vector<int32_t>(ref_data);
-                std::vector<int32_t> bk_data_vector = read_vector<int32_t>(bk_data);
-                print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<int32_t>(ref_data_vector, bk_data_vector));
-            }
-            else if (et == element::i64)
-            {
-                std::vector<int64_t> ref_data_vector = read_vector<int64_t>(ref_data);
-                std::vector<int64_t> bk_data_vector = read_vector<int64_t>(bk_data);
-                print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<int64_t>(ref_data_vector, bk_data_vector));
-            }
-            else if (et == element::u8)
-            {
-                std::vector<uint8_t> ref_data_vector = read_vector<uint8_t>(ref_data);
-                std::vector<uint8_t> bk_data_vector = read_vector<uint8_t>(bk_data);
-                print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<uint8_t>(ref_data_vector, bk_data_vector));
-            }
-            else if (et == element::u16)
-            {
-                std::vector<uint16_t> ref_data_vector = read_vector<uint16_t>(ref_data);
-                std::vector<uint16_t> bk_data_vector = read_vector<uint16_t>(bk_data);
-                print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<uint16_t>(ref_data_vector, bk_data_vector));
-            }
-            else if (et == element::u32)
-            {
-                std::vector<uint32_t> ref_data_vector = read_vector<uint32_t>(ref_data);
-                std::vector<uint32_t> bk_data_vector = read_vector<uint32_t>(bk_data);
-                print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<uint32_t>(ref_data_vector, bk_data_vector));
-            }
-            else if (et == element::u64)
-            {
-                std::vector<uint64_t> ref_data_vector = read_vector<uint64_t>(ref_data);
-                std::vector<uint64_t> bk_data_vector = read_vector<uint64_t>(bk_data);
-                print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<uint64_t>(ref_data_vector, bk_data_vector));
-            }
-            else
-            {
-                throw std::runtime_error("unsupported type");
-            }
         }
-    }
 
-    std::pair<std::shared_ptr<ngraph::runtime::Backend>, std::shared_ptr<ngraph::runtime::Backend>>
-        get_backends()
-    {
-        std::shared_ptr<runtime::Backend> b, r;
-        switch (BACKEND_TARGET)
+        std::pair<std::shared_ptr<ngraph::runtime::Backend>,
+                  std::shared_ptr<ngraph::runtime::Backend>>
+            get_backends()
         {
-        case backend_typename::INTERPRETER: b = runtime::Backend::create("INTERPRETER"); break;
-        case backend_typename::CPU: b = runtime::Backend::create("CPU"); break;
-        case backend_typename::GPU: b = runtime::Backend::create("GPU"); break;
-        case backend_typename::INTELGPU: b = runtime::Backend::create("INTELGPU"); break;
-        case backend_typename::PlaidML: b = runtime::Backend::create("PlaidML"); break;
-        default: throw ngraph_error("Unregistered backend requested for graph comparison");
+            std::shared_ptr<runtime::Backend> b, r;
+            switch (BACKEND_TARGET)
+            {
+            case backend_typename::INTERPRETER: b = runtime::Backend::create("INTERPRETER"); break;
+            case backend_typename::CPU: b = runtime::Backend::create("CPU"); break;
+            case backend_typename::GPU: b = runtime::Backend::create("GPU"); break;
+            case backend_typename::INTELGPU: b = runtime::Backend::create("INTELGPU"); break;
+            case backend_typename::PlaidML: b = runtime::Backend::create("PlaidML"); break;
+            default: throw ngraph_error("Unregistered backend requested for graph comparison");
+            }
+            switch (BACKEND_REFERENCE)
+            {
+            case backend_typename::INTERPRETER: r = runtime::Backend::create("INTERPRETER"); break;
+            case backend_typename::CPU: r = runtime::Backend::create("CPU"); break;
+            case backend_typename::GPU: r = runtime::Backend::create("GPU"); break;
+            case backend_typename::INTELGPU: r = runtime::Backend::create("INTELGPU"); break;
+            case backend_typename::PlaidML: r = runtime::Backend::create("PlaidML"); break;
+            default:
+                throw ngraph_error("Unregistered reference backend requested for graph comparison");
+            }
+            return std::make_pair(b, r);
         }
-        switch (BACKEND_REFERENCE)
-        {
-        case backend_typename::INTERPRETER: r = runtime::Backend::create("INTERPRETER"); break;
-        case backend_typename::CPU: r = runtime::Backend::create("CPU"); break;
-        case backend_typename::GPU: r = runtime::Backend::create("GPU"); break;
-        case backend_typename::INTELGPU: r = runtime::Backend::create("INTELGPU"); break;
-        case backend_typename::PlaidML: r = runtime::Backend::create("PlaidML"); break;
-        default:
-            throw ngraph_error("Unregistered reference backend requested for graph comparison");
-        }
-        return std::make_pair(b, r);
-    }
 
-protected:
-    model_comparison() { file_name = GetParam(); }
-    std::string file_name;
-};
+    protected:
+        model_comparison() { file_name = GetParam(); }
+        std::string file_name;
+    };
+}
 
 #define NGRAPH_COMPARISON_TEST_P(test_case_name)                                                   \
     class test_case_name##_Test : public test_case_name                                            \
