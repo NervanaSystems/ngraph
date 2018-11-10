@@ -38,10 +38,8 @@ namespace ngraph
         PlaidML
     };
 
-    static std::string s_manifest = "${MANIFEST}";
-
     template <backend BACKEND_TARGET, backend BACKEND_REFERENCE>
-    class model_comparison : public ::testing::TestWithParam<std::string>
+    class backend_comparator : public ::testing::TestWithParam<std::string>
     {
     public:
         void compare_results(ngraph::NodeVector& result_nodes,
@@ -160,7 +158,10 @@ namespace ngraph
         }
 
     protected:
-        model_comparison() { file_name = GetParam(); }
+        backend_comparator()
+            : file_name(GetParam())
+        {
+        }
         std::string file_name;
     };
 }

@@ -28,13 +28,13 @@
 #include "util/graph_comparison.hpp"
 #include "util/test_control.hpp"
 
-using compare_gpu_cpu = ngraph::model_comparison<ngraph::backend::GPU, ngraph::backend::CPU>;
+using gpu_cpu_comparator = ngraph::backend_comparator<ngraph::backend::GPU, ngraph::backend::CPU>;
 
 // The set of graphs tested is not currently significant. These graphs were
 // chosen because they're already availabe and demonstrate the technique.
 NGRAPH_COMPARISON_TEST(
     tf_resnet8_files,
-    compare_gpu_cpu,
+    gpu_cpu_comparator,
     testing::Values("tensorflow/resnet8/"
                     "tf_function_cluster_12[_XlaCompiledKernel=true,_XlaNumConstantArgs=3,_"
                     "XlaNumResourceArgs=0].v23.json",
