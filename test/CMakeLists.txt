@@ -92,7 +92,10 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 
 if(NGRAPH_GPU_ENABLE)
-    list(APPEND SRC cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
+  list(APPEND SRC cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
+  if(NGRAPH_CPU_ENABLE)
+    list(APPEND SRC gpu_comparison.cpp)
+  endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
 endif()
 
@@ -122,7 +125,6 @@ set(MULTI_TEST_SRC
     autodiff.in.cpp
     backend_binary_elementwise.in.cpp
     backend_broadcast.in.cpp
-    backend_comparison.in.cpp
     backend_dot.in.cpp
     backend_one_hot.in.cpp
     backend_pool.in.cpp
@@ -137,9 +139,6 @@ set(MULTI_TEST_SRC
 )
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND MULTI_TEST_SRC distributed.in.cpp)
-endif()
-if (NGRAPH_CPU_ENABLE)
-    list(APPEND MULTI_TEST_SRC backend_graph_comparison.in.cpp)
 endif()
 
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
