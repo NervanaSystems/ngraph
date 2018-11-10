@@ -125,6 +125,7 @@ set(MULTI_TEST_SRC
     autodiff.in.cpp
     backend_binary_elementwise.in.cpp
     backend_broadcast.in.cpp
+    backend_comparison.in.cpp
     backend_dot.in.cpp
     backend_one_hot.in.cpp
     backend_pool.in.cpp
