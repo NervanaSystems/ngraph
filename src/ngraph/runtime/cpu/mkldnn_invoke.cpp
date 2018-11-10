@@ -44,3 +44,16 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(CPUR
         throw ngraph_error("Could not run mkdnn primitive " + e.message);
     }
 }
+
+extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_submit(mkldnn::primitive prim)
+{
+    mkldnn::stream s(mkldnn::stream::kind::eager);
+    try
+    {
+        s.submit({prim}).wait();
+    }
+    catch (const mkldnn::error& e)
+    {
+        throw ngraph_error("Could not run mkdnn primitive " + e.message);
+    }
+}
