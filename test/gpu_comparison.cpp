@@ -28,9 +28,7 @@
 #include "util/graph_comparison.hpp"
 #include "util/test_control.hpp"
 
-using namespace ngraph;
-
-using compare_gpu_cpu = ngraph::model_comparison<GPU, CPU>;
+using compare_gpu_cpu = ngraph::model_comparison<ngraph::backend::GPU, ngraph::backend::CPU>;
 
 // The set of graphs tested is not currently significant. These graphs were
 // chosen because they're already availabe and demonstrate the technique.

@@ -29,7 +29,7 @@
 
 namespace ngraph
 {
-    enum backend_typename
+    enum backend
     {
         INTERPRETER,
         CPU,
@@ -40,22 +40,23 @@ namespace ngraph
 
     static std::string s_manifest = "${MANIFEST}";
 
-    template <backend_typename BACKEND_TARGET, backend_typename BACKEND_REFERENCE>
+    template <backend BACKEND_TARGET, backend BACKEND_REFERENCE>
     class model_comparison : public ::testing::TestWithParam<std::string>
     {
     public:
-        void compare_results(NodeVector& result_nodes,
-                             std::vector<std::shared_ptr<runtime::Tensor>> ref_results,
-                             std::vector<std::shared_ptr<runtime::Tensor>> bk_results)
+        void compare_results(ngraph::NodeVector& result_nodes,
+                             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> ref_results,
+                             std::vector<std::shared_ptr<ngraph::runtime::Tensor>> bk_results)
         {
             for (int i = 0; i < ref_results.size(); ++i)
             {
-                const std::shared_ptr<runtime::Tensor>& ref_data = ref_results.at(i);
-                const std::shared_ptr<runtime::Tensor>& bk_data = bk_results.at(i);
+                const std::shared_ptr<ngraph::runtime::Tensor>& ref_data = ref_results.at(i);
+                const std::shared_ptr<ngraph::runtime::Tensor>& bk_data = bk_results.at(i);
 
                 std::cout << "Comparing results for " << result_nodes.at(i)->get_name()
                           << std::endl;
-                if (auto node = std::dynamic_pointer_cast<op::GetOutputElement>(result_nodes.at(i)))
+                if (auto node =
+                        std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(result_nodes.at(i)))
                 {
                     std::cout << "  Parent node: ";
                     for (auto& p : node->get_arguments())
@@ -151,23 +152,23 @@ namespace ngraph
                   std::shared_ptr<ngraph::runtime::Backend>>
             get_backends()
         {
-            std::shared_ptr<runtime::Backend> b, r;
+            std::shared_ptr<ngraph::runtime::Backend> b, r;
             switch (BACKEND_TARGET)
             {
-            case backend_typename::INTERPRETER: b = runtime::Backend::create("INTERPRETER"); break;
-            case backend_typename::CPU: b = runtime::Backend::create("CPU"); break;
-            case backend_typename::GPU: b = runtime::Backend::create("GPU"); break;
-            case backend_typename::INTELGPU: b = runtime::Backend::create("INTELGPU"); break;
-            case backend_typename::PlaidML: b = runtime::Backend::create("PlaidML"); break;
+            case backend::INTERPRETER: b = ngraph::runtime::Backend::create("INTERPRETER"); break;
+            case backend::CPU: b = ngraph::runtime::Backend::create("CPU"); break;
+            case backend::GPU: b = ngraph::runtime::Backend::create("GPU"); break;
+            case backend::INTELGPU: b = ngraph::runtime::Backend::create("INTELGPU"); break;
+            case backend::PlaidML: b = ngraph::runtime::Backend::create("PlaidML"); break;
             default: throw ngraph_error("Unregistered backend requested for graph comparison");
             }
             switch (BACKEND_REFERENCE)
             {
-            case backend_typename::INTERPRETER: r = runtime::Backend::create("INTERPRETER"); break;
-            case backend_typename::CPU: r = runtime::Backend::create("CPU"); break;
-            case backend_typename::GPU: r = runtime::Backend::create("GPU"); break;
-            case backend_typename::INTELGPU: r = runtime::Backend::create("INTELGPU"); break;
-            case backend_typename::PlaidML: r = runtime::Backend::create("PlaidML"); break;
+            case backend::INTERPRETER: r = ngraph::runtime::Backend::create("INTERPRETER"); break;
+            case backend::CPU: r = ngraph::runtime::Backend::create("CPU"); break;
+            case backend::GPU: r = ngraph::runtime::Backend::create("GPU"); break;
+            case backend::INTELGPU: r = ngraph::runtime::Backend::create("INTELGPU"); break;
+            case backend::PlaidML: r = ngraph::runtime::Backend::create("PlaidML"); break;
             default:
                 throw ngraph_error("Unregistered reference backend requested for graph comparison");
             }
@@ -209,12 +210,12 @@ namespace ngraph
 #define NGRAPH_COMPARISON_TEST(prefix, test_case_name, generator)                                  \
     NGRAPH_COMPARISON_TEST_P(test_case_name)                                                       \
     {                                                                                              \
-        std::shared_ptr<runtime::Backend> ref, backend;                                            \
+        std::shared_ptr<ngraph::runtime::Backend> ref, backend;                                    \
         std::tie(backend, ref) = get_backends();                                                   \
         std::string frozen_graph_path;                                                             \
         if (file_name[0] != '/')                                                                   \
         {                                                                                          \
-            frozen_graph_path = file_util::path_join(SERIALIZED_ZOO, file_name);                   \
+            frozen_graph_path = ngraph::file_util::path_join(SERIALIZED_ZOO, file_name);           \
         }                                                                                          \
         else                                                                                       \
         {                                                                                          \
@@ -222,8 +223,8 @@ namespace ngraph
         }                                                                                          \
         std::cout << frozen_graph_path << std::endl;                                               \
         std::stringstream ss(frozen_graph_path);                                                   \
-        std::shared_ptr<Function> func = ngraph::deserialize(ss);                                  \
-        NodeVector new_results;                                                                    \
+        std::shared_ptr<ngraph::Function> func = ngraph::deserialize(ss);                          \
+        ngraph::NodeVector new_results;                                                            \
         for (auto n : func->get_ordered_ops())                                                     \
         {                                                                                          \
             if (!n->is_output() && !n->is_parameter() && !n->is_constant() &&                      \
@@ -232,13 +233,13 @@ namespace ngraph
                 new_results.push_back(n);                                                          \
             }                                                                                      \
         }                                                                                          \
-        auto new_func = std::make_shared<Function>(new_results, func->get_parameters());           \
+        auto new_func = std::make_shared<ngraph::Function>(new_results, func->get_parameters());   \
         auto ref_func = clone_function(*new_func);                                                 \
         auto bk_func = clone_function(*new_func);                                                  \
-        std::vector<std::shared_ptr<runtime::Tensor>> ref_args;                                    \
-        std::vector<std::shared_ptr<runtime::Tensor>> bk_args;                                     \
+        std::vector<std::shared_ptr<ngraph::runtime::Tensor>> ref_args;                            \
+        std::vector<std::shared_ptr<ngraph::runtime::Tensor>> bk_args;                             \
         std::default_random_engine engine(2112);                                                   \
-        for (std::shared_ptr<op::Parameter> param : new_func->get_parameters())                    \
+        for (std::shared_ptr<ngraph::op::Parameter> param : new_func->get_parameters())            \
         {                                                                                          \
             auto data = std::make_shared<ngraph::runtime::HostTensor>(param->get_element_type(),   \
                                                                       param->get_shape());         \
@@ -255,11 +256,11 @@ namespace ngraph
             ref_args.push_back(ref_tensor);                                                        \
             bk_args.push_back(bk_tensor);                                                          \
         }                                                                                          \
-        std::vector<std::shared_ptr<runtime::Tensor>> ref_results;                                 \
-        std::vector<std::shared_ptr<runtime::Tensor>> bk_results;                                  \
+        std::vector<std::shared_ptr<ngraph::runtime::Tensor>> ref_results;                         \
+        std::vector<std::shared_ptr<ngraph::runtime::Tensor>> bk_results;                          \
         ref_results.reserve(new_results.size());                                                   \
         bk_results.reserve(new_results.size());                                                    \
-        for (std::shared_ptr<Node> & out : new_results)                                            \
+        for (std::shared_ptr<ngraph::Node> & out : new_results)                                    \
         {                                                                                          \
             auto ref_result = ref->create_tensor(out->get_element_type(), out->get_shape());       \
             ref_results.push_back(ref_result);                                                     \
