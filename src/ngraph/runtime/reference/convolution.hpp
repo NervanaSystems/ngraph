@@ -59,7 +59,7 @@ namespace ngraph
                 // At the outermost level we will walk over every output coordinate O.
                 CoordinateTransform output_transform(out_shape);
 
-                for (Coordinate out_coord : output_transform)
+                for (const Coordinate& out_coord : output_transform)
                 {
                     // Our output coordinate O will have the form:
                     //
@@ -169,9 +169,10 @@ namespace ngraph
 
                     CoordinateTransform::Iterator input_it = input_batch_transform.begin();
                     CoordinateTransform::Iterator filter_it = filter_transform.begin();
+                    CoordinateTransform::Iterator input_it_end = input_batch_transform.end();
+                    CoordinateTransform::Iterator filter_it_end = filter_transform.end();
 
-                    while (input_it != input_batch_transform.end() &&
-                           filter_it != filter_transform.end())
+                    while (input_it != input_it_end && filter_it != filter_it_end)
                     {
                         const Coordinate& input_batch_coord = *input_it;
                         Coordinate filter_coord = *filter_it;

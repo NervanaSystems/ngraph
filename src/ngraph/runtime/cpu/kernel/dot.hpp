@@ -129,6 +129,19 @@ namespace ngraph
                 }
 
                 template <typename ElementType>
+                void dot_1d_2d_1rd(void* input0,
+                                   void* input1,
+                                   void* output,
+                                   const Shape& input0_shape,
+                                   const Shape& input1_shape,
+                                   const Shape& output_shape,
+                                   int arena)
+                {
+                    dot<ElementType, 1, 2, 1>(
+                        input0, input1, output, input0_shape, input1_shape, output_shape, arena);
+                }
+
+                template <typename ElementType>
                 void dot_3d_3d_1rd(void* input0,
                                    void* input1,
                                    void* output,

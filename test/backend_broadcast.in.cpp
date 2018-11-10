@@ -53,16 +53,6 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_vector)
     EXPECT_EQ((vector<float>{6, 6, 6, 6}), read_vector<float>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, broadcast_to_non_existent_axis)
-{
-    Shape shape_a{};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_r{4};
-    ASSERT_THROW(auto f = make_shared<Function>(
-                     make_shared<op::Broadcast>(A, shape_r, AxisSet{0, 1}), op::ParameterVector{A}),
-                 ngraph_error);
-}
-
 NGRAPH_TEST(${BACKEND_NAME}, broadcast_scalar_matrix)
 {
     Shape shape_a{};

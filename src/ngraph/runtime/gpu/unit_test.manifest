@@ -46,3 +46,7 @@ quantize_ROUND_TOWARD_INFINITY
 quantize_ROUND_TOWARD_ZERO
 quantize_ROUND_UP
 quantize_ROUND_DOWN
+shape_of_scalar
+shape_of_vector
+shape_of_matrix
+shape_of_5d
