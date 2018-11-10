@@ -152,27 +152,11 @@ namespace ngraph
                   std::shared_ptr<ngraph::runtime::Backend>>
             get_backends()
         {
-            std::shared_ptr<ngraph::runtime::Backend> b, r;
-            switch (BACKEND_TARGET)
-            {
-            case backend::INTERPRETER: b = ngraph::runtime::Backend::create("INTERPRETER"); break;
-            case backend::CPU: b = ngraph::runtime::Backend::create("CPU"); break;
-            case backend::GPU: b = ngraph::runtime::Backend::create("GPU"); break;
-            case backend::INTELGPU: b = ngraph::runtime::Backend::create("INTELGPU"); break;
-            case backend::PlaidML: b = ngraph::runtime::Backend::create("PlaidML"); break;
-            default: throw ngraph_error("Unregistered backend requested for graph comparison");
-            }
-            switch (BACKEND_REFERENCE)
-            {
-            case backend::INTERPRETER: r = ngraph::runtime::Backend::create("INTERPRETER"); break;
-            case backend::CPU: r = ngraph::runtime::Backend::create("CPU"); break;
-            case backend::GPU: r = ngraph::runtime::Backend::create("GPU"); break;
-            case backend::INTELGPU: r = ngraph::runtime::Backend::create("INTELGPU"); break;
-            case backend::PlaidML: r = ngraph::runtime::Backend::create("PlaidML"); break;
-            default:
-                throw ngraph_error("Unregistered reference backend requested for graph comparison");
-            }
-            return std::make_pair(b, r);
+            static const std::vector<const char*> backend_names = {
+                "INTERPRETER", "CPU", "GPU", "INTELGPU", "PlaidML"};
+            return std::make_pair(
+                ngraph::runtime::Backend::create(backend_names.at(BACKEND_TARGET)),
+                ngraph::runtime::Backend::create(backend_names.at(BACKEND_REFERENCE)));
         }
 
     protected:
