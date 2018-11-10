@@ -28,7 +28,7 @@
 #include "util/graph_comparison.hpp"
 #include "util/test_control.hpp"
 
-using compare_gpu_cpu = serialized_graph_files<GPU, CPU>;
+using compare_gpu_cpu = ngraph::model_comparison<GPU, CPU>;
 // Another example of a graph comparison with different ops
 // using compare_cpu_interp = serialized_graph_files<CPU, INTERPRETER>;
 

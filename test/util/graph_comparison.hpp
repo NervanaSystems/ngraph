@@ -44,7 +44,7 @@ using namespace ngraph;
 static std::string s_manifest = "${MANIFEST}";
 
 template <backend_typename BACKEND_TARGET, backend_typename BACKEND_REFERENCE>
-class serialized_graph_files : public ::testing::TestWithParam<std::string>
+class model_comparison : public ::testing::TestWithParam<std::string>
 {
 public:
     void compare_results(NodeVector& result_nodes,
@@ -176,7 +176,7 @@ public:
     }
 
 protected:
-    serialized_graph_files() { file_name = GetParam(); }
+    model_comparison() { file_name = GetParam(); }
     std::string file_name;
 };
 
