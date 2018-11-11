@@ -77,6 +77,7 @@ bool test::all_close_f(const vector<float>& a,
             {
                 NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
             }
+
             rc = false;
             count++;
         }
