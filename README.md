@@ -1,34 +1,58 @@
-# nGraph Compiler Stack [![Build Status][build-status-badge]][build-status]
+# nGraph Compiler Stack (1.0 Beta) [![Build Status][build-status-badge]][build-status] 
 
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph/blob/master/LICENSE)
-<div align="center">
-  <h4>
-    <a href="https://ngraph.nervanasys.com/docs/latest/project/about.html">
-      Architecture and features
-    </a>
-    <span> | </span>
-    <a href="https://ngraph.nervanasys.com/docs/latest">
-      Documentation
-    </a>
-    <span> | </span>
-        <a href="#Getting-started-guides" >
-      Getting started guides
-    </a>
-    <span> | </span>
-        <a href="#How-to-contribute" >
-      How to contribute
-    </a>
-    <span> | </span>
-    <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">
-      Release notes
-    </a>
 
-  </h4>
+
+<div align="center">
+  <h5>
+    <a href="https://ngraph.nervanasys.com/docs/latest/project/about.html">
+      nGraph architecture and features</a><span> | </span>
+    <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">
+      Release notes</a><span> | </span>
+    <a href="https://ngraph.nervanasys.com/docs/latest">Documentation</a><span> | </span>
+    <a href="#Ecosystem" >nGraph ecosystem</a><span> | </span>
+    <a href="#Getting-started-guides" >Getting started guides</a><span> | </span>
+    <a href="#How-to-contribute" >How to contribute</a>
+ </h5>
 </div>
 
 
+## Getting started guides
 
+
+|  Framework                 | Installation guide              | Beta notes  
+|----------------------------|---------------------------------|-----------------------------------
+| TensorFlow*                | [nGraph TensorFlow bridge]      | see [workloads and criterion]
+| MXNet*                     | [nGraph-MXNet]                  | see [workloads and criterion] 
+| PaddlePaddle*              |        wip                      |   tbd
+| [early supporter] of ONNX  | [ngraph-onnx]                   | [Functional] with DenseNet-121, Inception-v1, ResNet-50, Inception-v2, ShuffleNet, SqueezeNet, VGG-19, and 7 more   
+| PyTorch*                   | [nGraph for PyTorch developers] |    
+
+Additional work is also being done via [PlaidML].
+
+
+# Introduction 
+
+C++ API for framework developers and a Python API which can run inference 
+on models imported from ONNX have been tested and work with a number of different 
+workloads for TensorFlow, MXNet, and . 
+
+See the [Release Notes] for recent changes.
+
+
+| Backend                                       | current support   | future support |
+|-----------------------------------------------|-------------------|----------------|
+| Intel® Architecture CPU                       | yes               | yes            |
+| Intel® Nervana™ Neural Network Processor (NNP)| yes               | yes            |
+| Intel [Movidius™ Myriad™ 2] VPUs              | coming soon       | yes            |
+| Intel® Architecture GPUs                      | via PlaidML       | yes            |
+| AMD* GPUs                                     | via PlaidML       | yes            |
+| NVIDIA* GPUs                                  | via PlaidML       | some           | 
+| Field Programmable Gate Arrays (FPGA)         | no                | yes            |
+
+
+## Ecosystem
 
 ![nGraph ecosystem][ngraph-ecosystem]
 
@@ -43,35 +67,6 @@ optimizations that can be used to further accelerate training or inference, in
 whatever scenario you need. nGraph provides both  a C++ API for framework 
 developers and a Python API which can run inference on models imported from 
 ONNX. 
-
-See the [Release Notes] for recent changes.
-
-
-
-## Getting started guides
-
-
-|  Framework     |                                | ONNX support?              |
-|----------------|--------------------------------|----------------------------|
-| TensorFlow*    | [nGraph TensorFlow bridge]     | yes                        |
-| MXNet*         | [nGraph-MXNet]                 | yes                        |
-| PaddlePaddle*  |        wip                     | yes                        |   
-| ONNX           | [ngraph-onnx]                  | [early supporter]          |   
-| PyTorch*       | [ngraph for pytorch-developers]| yes                        |
-
-
-
-
-
-| Backend                                       | current support   | future support |
-|-----------------------------------------------|-------------------|----------------|
-| Intel® Architecture CPU                       | yes               | yes            |
-| Intel® Nervana™ Neural Network Processor (NNP)| yes               | yes            |
-| Intel [Movidius™ Myriad™ 2] VPUs              | coming soon       | yes            |
-| Intel® Architecture GPUs                      | via PlaidML       | yes            |
-| AMD* GPUs                                     | via PlaidML       | yes            |
-| NVIDIA* GPUs                                  | via PlaidML       | some           | 
-| Field Programmable Gate Arrays (FPGA)         | no                | yes            |
 
 
 ## Documentation
@@ -123,8 +118,10 @@ to improve the Library:
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
 [develop-without-lockin]: doc/sphinx/source/graphics/develop-without-lockin.png "Develop on any part of the stack wtihout lockin"
 [Movidius™ Myriad™ 2]:https://www.movidius.com/solutions/vision-processing-unit
+[PlaidML]: https://github.com/plaidml/plaidml
 [nGraph TensorFlow bridge]: https://github.com/NervanaSystems/ngraph-tf
 [nGraph-MXNet]: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/NGRAPH_README.md
 [ngraph-onnx]: https://github.com/NervanaSystems/ngraph-onnx/blob/master/README.md
 [early supporter]: https://ai.intel.com/adaptable-deep-learning-solutions-with-ngraph-compiler-and-onnx/
-[ngraph for pytorch-developers]: https://ai.intel.com/investing-in-the-pytorch-developer-community
+[nGraph for PyTorch developers]: https://ai.intel.com/investing-in-the-pytorch-developer-community
+[Functional]: https://github.com/NervanaSystems/ngraph-onnx/blob/master/14-cwo

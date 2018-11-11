@@ -20,6 +20,7 @@ work and custom bridge code, such as that for our `ngraph tensorflow bridge`_.
    :maxdepth: 1 
 
    generic.rst
+   workload-syllabus.rst
 
 
 
