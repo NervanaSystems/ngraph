@@ -113,8 +113,9 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
     copy_data(state_iter_t, vector<float>(1000, 1));
     copy_data(params_t, vector<float>(shape_size(params->get_shape()), 1));
 
-    backend->call_with_validate(
-        func, {result_ht, result_ct}, {src_layer_t, src_iter_t, params_t, state_iter_t});
+    backend->call_with_validate(backend->compile(func),
+                                {result_ht, result_ct},
+                                {src_layer_t, src_iter_t, params_t, state_iter_t});
     vector<float> expected_ht(10 * 100, 0.964028f);
     vector<float> expected_ct;
     for (size_t i = 0; i < 10 * 100; i++)

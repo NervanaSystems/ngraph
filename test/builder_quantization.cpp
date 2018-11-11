@@ -54,7 +54,7 @@ TEST(builder, scaled_QMP_unsigned)
     auto a = backend->create_tensor(element::u8, shape_a);
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::u8, shape_r);
-    backend->call(f, {result}, {a});
+    backend->call(backend->compile(f), {result}, {a});
     EXPECT_EQ((vector<uint8_t>{3, 3, 2, 3, 3, 2}), read_vector<uint8_t>(result));
 }
 

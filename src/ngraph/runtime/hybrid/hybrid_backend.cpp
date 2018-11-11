@@ -107,7 +107,7 @@ bool runtime::hybrid::HybridBackend::call(runtime::Handle handle,
     bool rc = true;
 
     auto it = m_instances.find(handle);
-    if (it == m_function_map.end())
+    if (it == m_instances.end())
     {
         throw runtime_error("runtime::Handle supplied to call invalid");
     }

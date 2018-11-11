@@ -70,66 +70,54 @@ public:
         return get_cached_backend(Placement::INTERPRETER)->create_tensor(element_type, shape);
     }
 
-    bool compile(const shared_ptr<Function>& func)
+    runtime::Handle compile(const shared_ptr<Function>& func)
     {
-        if (m_function_map.find(func) == m_function_map.end())
+        auto instance = make_shared<FunctionInstance>();
+        m_instances.push_back(instance);
+
+        // Clone function
+        instance->m_function = clone_function(*func);
+
+        // Run placement pass
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
+        pass_manager.run_passes(instance->m_function);
+
+        // Split function to sub_functions
+        tie(instance->m_sub_functions, instance->m_map_parameter_to_result) =
+            split_function_by_placement(instance->m_function);
+
+        // Compile subfunctions in corresponding backends
+        for (shared_ptr<Function>& sub_function : instance->m_sub_functions)
         {
-            // Clone function
-            FunctionInstance instance;
-            instance.m_function = clone_function(*func);
-
-            // Run placement pass
-            pass::Manager pass_manager;
-            pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
-            pass_manager.run_passes(instance.m_function);
-
-            // Split function to sub_functions
-            tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
-                split_function_by_placement(instance.m_function);
-            m_function_map.insert({func, instance});
-
-            // Compile subfunctions in corresponding backends
-            for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
-            {
-                Placement placement = get_colocated_function_placement(sub_function);
-                auto backend = get_cached_backend(placement);
-                backend->compile(sub_function);
-            }
+            Placement placement = get_colocated_function_placement(sub_function);
+            auto backend = get_cached_backend(placement);
+            backend->compile(sub_function);
         }
-        return true;
+        return instance.get();
     }
 
-    bool call_with_validate(const shared_ptr<Function>& func,
+    bool call_with_validate(runtime::Handle handle,
                             const vector<shared_ptr<runtime::Tensor>>& outputs,
                             const vector<shared_ptr<runtime::Tensor>>& inputs)
     {
         // Get FunctionInstance
         bool rc = true;
-        auto it = m_function_map.find(func);
-        if (it == m_function_map.end())
-        {
-            compile(func);
-            it = m_function_map.find(func);
-        }
-        if (it == m_function_map.end())
-        {
-            throw runtime_error("Error constructing backend.");
-        }
-        FunctionInstance& instance = it->second;
+        FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
 
         // Parameter and result node in sub_function maps to one Tensor
         unordered_map<shared_ptr<Node>, shared_ptr<runtime::Tensor>> map_node_to_tensor_view;
         for (size_t i = 0; i < inputs.size(); ++i)
         {
-            map_node_to_tensor_view[instance.m_function->get_parameters()[i]] = inputs[i];
+            map_node_to_tensor_view[instance->m_function->get_parameters()[i]] = inputs[i];
         }
         for (size_t i = 0; i < outputs.size(); ++i)
         {
-            map_node_to_tensor_view[instance.m_function->get_results()[i]] = outputs[i];
+            map_node_to_tensor_view[instance->m_function->get_results()[i]] = outputs[i];
         }
 
         // Call subfunctions
-        for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
+        for (shared_ptr<Function>& sub_function : instance->m_sub_functions)
         {
             // Init backend
             Placement placement = get_colocated_function_placement(sub_function);
@@ -145,7 +133,7 @@ public:
                 }
                 else
                 {
-                    auto result_node = instance.m_map_parameter_to_result.at(parameter_node);
+                    auto result_node = instance->m_map_parameter_to_result.at(parameter_node);
                     auto result_tv = map_node_to_tensor_view.at(result_node);
                     auto parameter_tv = backend->create_tensor(parameter_node->get_element_type(),
                                                                parameter_node->get_shape());
@@ -197,7 +185,7 @@ protected:
     }
 
     map<Placement, shared_ptr<runtime::Backend>> m_cached_backends;
-    map<shared_ptr<Function>, FunctionInstance> m_function_map;
+    std::vector<std::shared_ptr<FunctionInstance>> m_instances;
     function<Placement(shared_ptr<Node>)> m_placement_policy;
 };
 
@@ -318,8 +306,7 @@ TEST(graph_partition, hybrid_abc_manual)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
     auto f0 = make_shared<Function>(ResultVector{R0, R1}, op::ParameterVector{A, B, C});
-    int_backend->compile(f0);
-    int_backend->call_with_validate(f0, {r0, r1}, {a, b, c});
+    int_backend->call_with_validate(int_backend->compile(f0), {r0, r1}, {a, b, c});
 
     // f1 on CPU
     auto p0 = cpu_backend->create_tensor(element::f32, shape);
@@ -329,8 +316,7 @@ TEST(graph_partition, hybrid_abc_manual)
     copy_data(p1, read_vector<float>(r1));
 
     auto f1 = make_shared<Function>(ResultVector{R2}, op::ParameterVector{P0, P1});
-    cpu_backend->compile(f1);
-    cpu_backend->call_with_validate(f1, {r2}, {p0, p1});
+    cpu_backend->call_with_validate(cpu_backend->compile(f1), {r2}, {p0, p1});
 
     // f2 on INT
     auto p2 = int_backend->create_tensor(element::f32, shape);
@@ -338,8 +324,7 @@ TEST(graph_partition, hybrid_abc_manual)
     copy_data(p2, read_vector<float>(r2));
 
     auto f2 = make_shared<Function>(ResultVector{R}, op::ParameterVector{P2});
-    int_backend->compile(f2);
-    int_backend->call_with_validate(f2, {r}, {p2});
+    int_backend->call_with_validate(int_backend->compile(f2), {r}, {p2});
 
     // Check final result on INT
     EXPECT_EQ(read_vector<float>(r),

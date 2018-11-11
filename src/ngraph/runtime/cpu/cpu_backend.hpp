@@ -18,6 +18,7 @@
 
 #include <map>
 #include <memory>
+#include <vector>
 
 #include "ngraph/runtime/backend.hpp"
 
@@ -45,18 +46,18 @@ namespace ngraph
                     create_tensor(const ngraph::element::Type& element_type,
                                   const Shape& shape) override;
 
-                bool compile(std::shared_ptr<Function> func) override;
+                runtime::Handle compile(const std::shared_ptr<Function>& func) override;
 
-                bool call(std::shared_ptr<Function> func,
+                bool call(runtime::Handle handle,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 
-                void remove_compiled_function(std::shared_ptr<Function> func) override;
-                std::shared_ptr<CPU_CallFrame> get_call_frame(std::shared_ptr<Function> func);
+                void remove_compiled_function(runtime::Handle handle) override;
+                std::shared_ptr<CPU_CallFrame> get_call_frame(runtime::Handle handle);
 
-                void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
+                void enable_performance_data(runtime::Handle handle, bool enable) override;
                 std::vector<PerformanceCounter>
-                    get_performance_data(std::shared_ptr<Function> func) const override;
+                    get_performance_data(runtime::Handle handle) const override;
 
             private:
                 class FunctionInstance
@@ -67,7 +68,7 @@ namespace ngraph
                     bool m_performance_counters_enabled = false;
                 };
 
-                std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
+                std::vector<std::shared_ptr<FunctionInstance>> m_instances;
             };
         }
     }
