@@ -42,13 +42,23 @@ namespace ngraph
         {
             bool rc = true;
             assert(a.size() == b.size());
+            size_t count = 0;
             for (size_t i = 0; i < a.size(); ++i)
             {
-                if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]))
+                if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]) || !std::isfinite(a[i]) ||
+                    !std::isfinite(b[i]))
                 {
-                    NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
+                    if (count < 5)
+                    {
+                        NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
+                    }
+                    count++;
                     rc = false;
                 }
+            }
+            if (!rc)
+            {
+                NGRAPH_INFO << "diff count: " << count << " out of " << a.size();
             }
             return rc;
         }
