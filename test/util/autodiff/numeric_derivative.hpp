@@ -58,8 +58,22 @@ namespace ngraph
             // ref_y is the function evaluated at the args
             auto ref_y = backend->create_tensor<T>(y_shape);
 
+            static std::unordered_map<std::shared_ptr<Function>, runtime::Handle>
+                s_compiled_functions;
+            auto it = s_compiled_functions.find(f);
+            runtime::Handle f_handle;
+            if (it == s_compiled_functions.end())
+            {
+                f_handle = backend->compile(f);
+                s_compiled_functions.insert({f, f_handle});
+            }
+            else
+            {
+                f_handle = it->second;
+            }
+
             backend->call_with_validate(
-                f, std::vector<std::shared_ptr<ngraph::runtime::Tensor>>{ref_y}, args);
+                f_handle, std::vector<std::shared_ptr<ngraph::runtime::Tensor>>{ref_y}, args);
             auto ref_vec = read_vector<T>(ref_y);
 
             // inc_y will hold f(x+dx) values
@@ -84,7 +98,7 @@ namespace ngraph
                         auto old_val = vec[j];
                         vec[j] += delta;
                         write_vector(arg, vec);
-                        backend->call_with_validate(f, {inc_y}, args);
+                        backend->call_with_validate(f_handle, {inc_y}, args);
                         auto inc_vec = read_vector<T>(inc_y);
                         vec[j] = old_val;
                         write_vector(arg, vec);

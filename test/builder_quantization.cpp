@@ -78,7 +78,7 @@ TEST(builder, scaled_QMP_signed)
     auto a = backend->create_tensor(element::i8, shape_a);
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::i8, shape_r);
-    backend->call_with_validate(f, {result}, {a});
+    backend->call_with_validate(backend->compile(f), {result}, {a});
     EXPECT_EQ((vector<int8_t>{2, 2, 2, 2, 2, 2}), read_vector<int8_t>(result));
 }
 
@@ -102,7 +102,7 @@ TEST(builder, scaled_QAP_unsigned)
     auto a = backend->create_tensor(element::u8, shape_a);
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::u8, shape_r);
-    backend->call_with_validate(f, {result}, {a});
+    backend->call_with_validate(backend->compile(f), {result}, {a});
     EXPECT_EQ((vector<uint8_t>{1, 1, 1, 1, 1, 0}), read_vector<uint8_t>(result));
 }
 
@@ -126,7 +126,7 @@ TEST(builder, scaled_QAP_signed)
     auto a = backend->create_tensor(element::i8, shape_a);
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::i8, shape_r);
-    backend->call_with_validate(f, {result}, {a});
+    backend->call_with_validate(backend->compile(f), {result}, {a});
     EXPECT_EQ((vector<int8_t>{2, 0, 0, 0, 0, 1}), read_vector<int8_t>(result));
 }
 
@@ -166,7 +166,7 @@ TEST(builder, scaled_QC)
     auto b = backend->create_tensor(element::i8, shape_b);
     copy_data(b, b_data);
     auto result = backend->create_tensor(element::i8, shape_r);
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<int8_t>{31, 48, 42, 45, 54, 102, 127, 61, 47, 74, 61, 55}),
               read_vector<int8_t>(result));
 }
@@ -207,7 +207,7 @@ TEST(builder, scaled_QC_with_relu)
     auto b = backend->create_tensor(element::i8, shape_b);
     copy_data(b, b_data);
     auto result = backend->create_tensor(element::u8, shape_r);
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<uint8_t>{0, 0, 0, 0, 0, 0, 69, 106, 90}), read_vector<uint8_t>(result));
 }
 
@@ -252,7 +252,7 @@ TEST(builder, scaled_QC_with_bias)
     auto c = backend->create_tensor(element::i32, Shape{1});
     copy_data(c, c_data);
     auto result = backend->create_tensor(element::i8, shape_r);
-    backend->call_with_validate(f, {result}, {a, b, c});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b, c});
     EXPECT_EQ((vector<int8_t>{38, 55, 50, 52, 61, 109, 127, 68, 54, 81, 68, 62}),
               read_vector<int8_t>(result));
 }
@@ -299,7 +299,7 @@ TEST(builder, scaled_QC_with_bias_and_relu)
     auto c = backend->create_tensor(element::i32, Shape{1});
     copy_data(c, c_data);
     auto result = backend->create_tensor(element::u8, shape_r);
-    backend->call_with_validate(f, {result}, {a, b, c});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b, c});
     EXPECT_EQ((vector<uint8_t>{0, 0, 0, 0, 0, 0, 96, 133, 117}), read_vector<uint8_t>(result));
 }
 
@@ -319,7 +319,7 @@ TEST(builder, scaled_Q_unsigned)
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::u8, shape_a);
-    backend->call_with_validate(f, {result}, {a});
+    backend->call_with_validate(backend->compile(f), {result}, {a});
     EXPECT_EQ((vector<uint8_t>{0, 0, 1, 1, 2, 64, 127, 255}), read_vector<uint8_t>(result));
 }
 
@@ -339,7 +339,7 @@ TEST(builder, scaled_Q_signed)
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::i8, shape_a);
-    backend->call_with_validate(f, {result}, {a});
+    backend->call_with_validate(backend->compile(f), {result}, {a});
     EXPECT_EQ((vector<int8_t>{-127, 0, 1, 3, 5, 64, 127, 127}), read_vector<int8_t>(result));
 }
 
@@ -357,6 +357,6 @@ TEST(builder, scaled_DQ_signed)
     auto a = backend->create_tensor(element::i8, Shape{1});
     copy_data(a, a_data);
     auto result = backend->create_tensor(element::f32, Shape{1});
-    backend->call_with_validate(f, {result}, {a});
+    backend->call_with_validate(backend->compile(f), {result}, {a});
     EXPECT_EQ((vector<float>{99.212601}), read_vector<float>(result));
 }

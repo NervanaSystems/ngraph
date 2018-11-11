@@ -65,57 +65,53 @@ shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
     return it->second->create_tensor(element_type, shape, memory_pointer);
 }
 
-bool runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::hybrid::HybridBackend::compile(const shared_ptr<Function>& func)
 {
-    if (m_function_map.find(func) == m_function_map.end())
+    vector<shared_ptr<runtime::Backend>> backend_list;
+    for (auto p : m_backend_list)
     {
-        vector<shared_ptr<runtime::Backend>> backend_list;
-        for (auto p : m_backend_list)
-        {
-            backend_list.push_back(p.second);
-        }
-
-        // Clone function
-        FunctionInstance instance;
-        instance.m_function = clone_function(*func);
-
-        // Run placement pass
-        pass::Manager pass_manager;
-        pass_manager.register_pass<pass::AssignPlacement>(backend_list);
-        pass_manager.run_passes(instance.m_function);
-
-        // Split function to sub_functions
-        tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
-            split_function_by_placement_size(instance.m_function);
-        m_function_map.insert({func, instance});
-
-        // Compile subfunctions in corresponding backends
-        for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
-        {
-            size_t placement = get_colocated_function_placement_size(sub_function);
-            auto backend =
-                m_backend_list[(placement - 1)]; // (placement-1) as 0 is default placement
-            backend.second->compile(sub_function);
-        }
+        backend_list.push_back(p.second);
     }
 
-    return true;
+    // Clone function
+    auto instance = make_shared<FunctionInstance>();
+    m_instances.push_back(instance);
+    instance->m_function = clone_function(*func);
+
+    // Run placement pass
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::AssignPlacement>(backend_list);
+    pass_manager.run_passes(instance->m_function);
+
+    // Split function to sub_functions
+    tie(instance->m_sub_functions, instance->m_map_parameter_to_result) =
+        split_function_by_placement_size(instance->m_function);
+    m_function_map.insert({func, instance});
+
+    // Compile subfunctions in corresponding backends
+    for (shared_ptr<Function>& sub_function : instance->m_sub_functions)
+    {
+        size_t placement = get_colocated_function_placement_size(sub_function);
+        auto backend = m_backend_list[(placement - 1)]; // (placement-1) as 0 is default placement
+        backend.second->compile(sub_function);
+    }
+
+    return instance.get();
 }
 
-bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
+bool runtime::hybrid::HybridBackend::call(runtime::Handle handle,
                                           const vector<shared_ptr<runtime::Tensor>>& outputs,
                                           const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     // Get FunctionInstance
     bool rc = true;
-    compile(func);
 
-    auto it = m_function_map.find(func);
+    auto it = m_instances.find(handle);
     if (it == m_function_map.end())
     {
-        throw runtime_error("Unable to compile hybrid backend");
+        throw runtime_error("runtime::Handle supplied to call invalid");
     }
-    FunctionInstance& instance = it->second;
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
 
     // Parameter and result node in sub_function maps to one Tensor
     unordered_map<shared_ptr<Node>, shared_ptr<runtime::Tensor>> map_node_to_tensor_view;

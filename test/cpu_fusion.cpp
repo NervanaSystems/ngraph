@@ -155,7 +155,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_row)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     vector<float> expected{11, 30, 38, 111};
     EXPECT_EQ(read_vector<float>(result), expected);
 }
@@ -186,7 +186,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_column)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     vector<float> expected{11, 29, 39, 111};
     EXPECT_EQ(read_vector<float>(result), expected);
 }
@@ -221,7 +221,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_matrix)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     vector<float> expected{10, 28, 37, 109};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -253,7 +253,7 @@ TEST(cpu_fusion, gemm_cpu_no_bias)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     vector<float> expected{9, 27, 36, 108};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -766,7 +766,7 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
     auto result_mean_bnr = backend->create_tensor(element::f32, mean_shape);
     auto result_variance_bnr = backend->create_tensor(element::f32, var_shape);
 
-    backend->call_with_validate(f,
+    backend->call_with_validate(backend->compile(f),
                                 {bn_output,
                                  result_mean,
                                  result_variance,
@@ -1464,7 +1464,7 @@ TEST(cpu_fusion, loop_kernel_one_input_one_output)
     copy_data(a, dataA);
     vector<int> expected{-1, -4, -1, -4};
 
-    backend->call_with_validate(f, {result}, {a});
+    backend->call_with_validate(backend->compile(f), {result}, {a});
 
     EXPECT_EQ(read_vector<int>(result), expected);
 }
@@ -1491,7 +1491,7 @@ TEST(cpu_fusion, loop_kernel_embedded_graph)
     vector<int> dataB{1, 2, 3, 4};
     copy_data(b, dataB);
     vector<int> expected{-2, -6, -4, -8};
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ(read_vector<int>(result), expected);
 }
 
@@ -1516,7 +1516,7 @@ TEST(cpu_fusion, loop_kernel_two_inputs_one_output)
     copy_data(b, dataB);
     vector<int> expected{2, 6, 4, 8};
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
 
     EXPECT_EQ(read_vector<int>(result), expected);
 }
@@ -1568,7 +1568,7 @@ TEST(cpu_fusion, loop_kernel_multiple_outputs)
     copy_data(c, dataC);
     copy_data(d, dataD);
 
-    backend->call_with_validate(f, {r1, r2, r3}, {a, b, c, d});
+    backend->call_with_validate(backend->compile(f), {r1, r2, r3}, {a, b, c, d});
 
     vector<int> expected1{5, 11, 5, 17};
     vector<int> expected2{2, 7, 5, 14};
@@ -1630,7 +1630,7 @@ TEST(cpu_fusion, loop_kernel_copy_with_new_args)
     copy_data(c, dataC);
     copy_data(d, dataD);
 
-    backend->call_with_validate(f, {r1, r2, r3}, {a, b, c, d});
+    backend->call_with_validate(backend->compile(f), {r1, r2, r3}, {a, b, c, d});
     backend->call_with_validate(copy_f, {copy_r1, copy_r2, copy_r3}, {a, b, c, d});
 
     EXPECT_EQ(read_vector<int>(r1), read_vector<int>(copy_r1));

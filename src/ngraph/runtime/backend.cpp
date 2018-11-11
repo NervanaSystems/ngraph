@@ -39,17 +39,17 @@ vector<string> runtime::Backend::get_registered_devices()
     return BackendManager::get_registered_backends();
 }
 
-void runtime::Backend::remove_compiled_function(shared_ptr<Function> func)
+void runtime::Backend::remove_compiled_function(Handle handle)
 {
 }
 
 vector<ngraph::runtime::PerformanceCounter>
-    runtime::Backend::get_performance_data(shared_ptr<Function> func) const
+    runtime::Backend::get_performance_data(Handle handle) const
 {
     return vector<PerformanceCounter>();
 }
 
-void runtime::Backend::validate_call(shared_ptr<const Function> function,
+void runtime::Backend::validate_call(const std::shared_ptr<Function>& function,
                                      const vector<shared_ptr<runtime::Tensor>>& outputs,
                                      const vector<shared_ptr<runtime::Tensor>>& inputs)
 {

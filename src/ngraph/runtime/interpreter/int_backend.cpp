@@ -56,39 +56,36 @@ shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer, "external");
 }
 
-bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
+runtime::Handle runtime::interpreter::INTBackend::compile(const shared_ptr<Function>& function)
 {
-    FunctionInstance& instance = m_function_map[function];
-    if (!instance.m_is_compiled)
+    auto instance = make_shared<FunctionInstance>();
+    m_instances.push_back(instance);
+    instance->m_function = function;
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::LikeReplacement>();
+    pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
+    pass_manager.register_pass<pass::Liveness>();
+    pass_manager.register_pass<pass::MemoryLayout>(m_alignment);
+    pass_manager.run_passes(function);
+
+    size_t memory_pool_size = function->get_temporary_pool_size();
+    instance->m_temporary_memory.reset(new AlignedBuffer(memory_pool_size, m_alignment));
+
+    for (const shared_ptr<Node>& node : function->get_ordered_ops())
     {
-        instance.m_is_compiled = true;
-        pass::Manager pass_manager;
-        pass_manager.register_pass<pass::LikeReplacement>();
-        pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
-        pass_manager.register_pass<pass::Liveness>();
-        pass_manager.register_pass<pass::MemoryLayout>(m_alignment);
-        pass_manager.run_passes(function);
-
-        size_t memory_pool_size = function->get_temporary_pool_size();
-        instance.m_temporary_memory.reset(new AlignedBuffer(memory_pool_size, m_alignment));
-
-        for (const shared_ptr<Node>& node : function->get_ordered_ops())
-        {
-            instance.m_wrapped_nodes.emplace_back(node);
-        }
+        instance->m_wrapped_nodes.emplace_back(node);
     }
 
-    return true;
+    return instance.get();
 }
 
-bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
+bool runtime::interpreter::INTBackend::call(Handle handle,
                                             const vector<shared_ptr<runtime::Tensor>>& outputs,
                                             const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    shared_ptr<Function> function = instance->m_function;
     validate_call(function, outputs, inputs);
-
-    compile(function);
-    FunctionInstance& instance = m_function_map[function];
 
     // convert inputs to HostTensor
     vector<void*> func_inputs;
@@ -99,7 +96,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         func_inputs.push_back(static_cast<void*>(host_tensor->get_data_ptr()));
         htv_inputs.push_back(host_tensor);
     }
-    if (instance.m_nan_check_enabled)
+    if (instance->m_nan_check_enabled)
     {
         perform_nan_check(htv_inputs);
     }
@@ -137,7 +134,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
     }
 
     // for each ordered op in the graph
-    for (const NodeWrapper& wrapped : instance.m_wrapped_nodes)
+    for (const NodeWrapper& wrapped : instance->m_wrapped_nodes)
     {
         const Node* op = &wrapped.get_node();
         auto type_id = wrapped.get_typeid();
@@ -171,7 +168,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
             if (it == tensor_map.end())
             {
                 auto offset = op->get_output_tensor(i).get_pool_offset();
-                host_tensor = instance.get_temporary_pointer(offset);
+                host_tensor = instance->get_temporary_pointer(offset);
                 tensor_map.insert({tensor, host_tensor});
             }
             else
@@ -209,16 +206,16 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         }
 #pragma GCC diagnostic pop
 
-        if (instance.m_performance_counters_enabled)
+        if (instance->m_performance_counters_enabled)
         {
-            instance.m_timer_map[op].start();
+            instance->m_timer_map[op].start();
         }
         generate_calls(type, wrapped, op_outputs, op_inputs, instance);
-        if (instance.m_performance_counters_enabled)
+        if (instance->m_performance_counters_enabled)
         {
-            instance.m_timer_map[op].stop();
+            instance->m_timer_map[op].stop();
         }
-        if (instance.m_nan_check_enabled)
+        if (instance->m_nan_check_enabled)
         {
             perform_nan_check(htv_outputs, op);
         }
@@ -231,7 +228,7 @@ void runtime::interpreter::INTBackend::generate_calls(const element::Type& type,
                                                       const NodeWrapper& op,
                                                       const vector<void*>& outputs,
                                                       const vector<const void*>& inputs,
-                                                      FunctionInstance& instance)
+                                                      FunctionInstance* instance)
 {
     if (type == element::boolean)
     {
@@ -285,25 +282,24 @@ void runtime::interpreter::INTBackend::generate_calls(const element::Type& type,
     }
 }
 
-void runtime::interpreter::INTBackend::set_nan_check(shared_ptr<Function> func, bool enable)
+void runtime::interpreter::INTBackend::set_nan_check(Handle handle, bool enable)
 {
-    FunctionInstance& instance = m_function_map[func];
-    instance.m_nan_check_enabled = enable;
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    instance->m_nan_check_enabled = enable;
 }
 
-void runtime::interpreter::INTBackend::enable_performance_data(shared_ptr<Function> func,
-                                                               bool enable)
+void runtime::interpreter::INTBackend::enable_performance_data(Handle handle, bool enable)
 {
-    FunctionInstance& instance = m_function_map[func];
-    instance.m_performance_counters_enabled = enable;
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    instance->m_performance_counters_enabled = enable;
 }
 
 vector<runtime::PerformanceCounter>
-    runtime::interpreter::INTBackend::get_performance_data(shared_ptr<Function> func) const
+    runtime::interpreter::INTBackend::get_performance_data(Handle handle) const
 {
     vector<runtime::PerformanceCounter> rc;
-    const FunctionInstance& instance = m_function_map.at(func);
-    for (const pair<const Node*, stopwatch> p : instance.m_timer_map)
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    for (const pair<const Node*, stopwatch> p : instance->m_timer_map)
     {
         rc.emplace_back(p.first->get_name().c_str(),
                         p.second.get_total_microseconds(),

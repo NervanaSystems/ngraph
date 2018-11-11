@@ -30,6 +30,7 @@ namespace ngraph
         class ExternalFunction;
         class Tensor;
         class Backend;
+        using Handle = void*;
     }
 }
 
@@ -80,43 +81,42 @@ public:
     /// \brief Compiles a Function.
     /// \param func The function to compile
     /// \returns true if compile is successful, false otherwise
-    virtual bool compile(std::shared_ptr<Function> func) = 0;
+    virtual Handle compile(const std::shared_ptr<Function>& func) = 0;
 
     /// \brief Executes a single iteration of a Function. If func is not compiled the call will
     ///     compile it.
-    /// \param func The function to execute
+    /// \param handle Handle returned from compile()
     /// \returns true if iteration is successful, false otherwise
-    virtual bool call(std::shared_ptr<Function> func,
+    virtual bool call(Handle handle,
                       const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                       const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) = 0;
 
     /// \brief Executes a single iteration of a Function. If func is not compiled the call will
     ///     compile it. Optionally validates the inputs and outputs against the function graph.
-    /// \param func The function to execute
+    /// \param handle Handle returned from compile()
     /// \returns true if iteration is successful, false otherwise
-    bool call_with_validate(std::shared_ptr<Function> func,
+    bool call_with_validate(Handle handle,
                             const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                             const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
     {
-        validate_call(func, outputs, inputs);
-        return call(func, outputs, inputs);
+        // validate_call(handle, outputs, inputs);
+        return call(handle, outputs, inputs);
     }
 
     /// \brief Compiled functions may be cached. This function removes a compiled function
     ///     from the cache.
-    /// \param func The function to execute
-    virtual void remove_compiled_function(std::shared_ptr<Function> func);
+    /// \param handle Handle returned from compile()
+    virtual void remove_compiled_function(Handle handle);
 
     /// \brief Enable the collection of per-op performance information on a specified Function.
     ///     Data collection is via the `get_performance_data` method.
-    /// \param func The function to collect perfomance data on.
+    /// \param handle Handle returned from compile()
     /// \param enable Set to true to enable or false to disable data collection
-    virtual void enable_performance_data(std::shared_ptr<Function> func, bool enable) {}
+    virtual void enable_performance_data(Handle handle, bool enable) {}
     /// \brief Collect performance information gathered on a Function.
-    /// \param func The function to get collected data.
+    /// \param handle Handle returned from compile()
     /// \returns Vector of PerformanceCounter information.
-    virtual std::vector<PerformanceCounter>
-        get_performance_data(std::shared_ptr<Function> func) const;
+    virtual std::vector<PerformanceCounter> get_performance_data(Handle handle) const;
 
     /// \brief Test if a backend is capable of supporting an op
     /// \param node is the op to test.
@@ -124,7 +124,7 @@ public:
     virtual bool is_supported(const Node& node) const;
 
 protected:
-    void validate_call(std::shared_ptr<const Function> func,
+    void validate_call(const std::shared_ptr<Function>& function,
                        const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                        const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 };

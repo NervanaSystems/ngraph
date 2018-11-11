@@ -173,7 +173,7 @@ public:
             }
 
             // Call
-            backend->call_with_validate(sub_function, result_tvs, parameter_tvs);
+            backend->call_with_validate(backend->compile(sub_function), result_tvs, parameter_tvs);
         }
         return rc;
     }
@@ -385,7 +385,7 @@ TEST(graph_partition, hybrid_abc)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    backend->call_with_validate(f, {r}, {a, b, c});
+    backend->call_with_validate(backend->compile(f), {r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 }
@@ -424,7 +424,7 @@ TEST(graph_partition, hybrid_abcd)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
     copy_data(d, test::NDArray<float, 2>({{13, 14}, {15, 16}}).get_vector());
 
-    backend->call_with_validate(f, {r}, {a, b, c, d});
+    backend->call_with_validate(backend->compile(f), {r}, {a, b, c, d});
     EXPECT_EQ(read_vector<float>(r), (test::NDArray<float, 2>({{32, 48}, {68, 92}})).get_vector());
 }
 
@@ -458,7 +458,7 @@ TEST(graph_partition, hybrid_back_and_forth)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    backend->call_with_validate(f, {r}, {a, b, c});
+    backend->call_with_validate(backend->compile(f), {r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{90, 180}, {308, 480}})).get_vector());
 }
@@ -495,7 +495,7 @@ TEST(graph_partition, hybrid_multi_middle_nodes)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    backend->call_with_validate(f, {r}, {a, b, c});
+    backend->call_with_validate(backend->compile(f), {r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{210, 288}, {378, 480}})).get_vector());
 }
@@ -521,7 +521,7 @@ TEST(graph_partition, hybrid_no_split)
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
-    backend->call_with_validate(f, {c}, {a, b});
+    backend->call_with_validate(backend->compile(f), {c}, {a, b});
     EXPECT_EQ(read_vector<float>(c), (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
 

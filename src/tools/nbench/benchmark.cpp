@@ -167,16 +167,16 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     stopwatch timer;
     timer.start();
     auto backend = runtime::Backend::create(backend_name);
-    backend->enable_performance_data(f, timing_detail);
-    backend->compile(f);
+    auto handle = backend->compile(f);
     timer.stop();
     cout.imbue(locale(""));
     cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
+    backend->enable_performance_data(handle, timing_detail);
 
     vector<shared_ptr<runtime::HostTensor>> arg_data;
     vector<shared_ptr<runtime::Tensor>> args;
     vector<bool> args_cacheable;
-    for (shared_ptr<op::Parameter> param : f->get_parameters())
+    for (const shared_ptr<op::Parameter>& param : f->get_parameters())
     {
         auto tensor = backend->create_tensor(param->get_element_type(), param->get_shape());
         auto tensor_data =
@@ -190,7 +190,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
 
     vector<shared_ptr<runtime::HostTensor>> result_data;
     vector<shared_ptr<runtime::Tensor>> results;
-    for (shared_ptr<Node> out : f->get_results())
+    for (const shared_ptr<Node>& out : f->get_results())
     {
         auto result = backend->create_tensor(out->get_element_type(), out->get_shape());
         auto tensor_data =
@@ -211,7 +211,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     {
         for (int i = 0; i < warmup_iterations; i++)
         {
-            backend->call(f, results, args);
+            backend->call(handle, results, args);
         }
     }
 
@@ -233,7 +233,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                 }
             }
         }
-        backend->call(f, results, args);
+        backend->call(handle, results, args);
         if (copy_data)
         {
             for (size_t result_index = 0; result_index < results.size(); result_index++)
@@ -250,6 +250,6 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     float time = t1.get_milliseconds();
     cout << time / iterations << "ms per iteration" << endl;
 
-    vector<runtime::PerformanceCounter> perf_data = backend->get_performance_data(f);
+    vector<runtime::PerformanceCounter> perf_data = backend->get_performance_data(handle);
     return perf_data;
 }

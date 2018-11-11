@@ -271,7 +271,7 @@ TEST(gpu_fusion, lstm_analytic)
     std::shared_ptr<runtime::Tensor> result_ct =
         backend->create_tensor(element::f32, ct->get_shape());
 
-    backend->call_with_validate(f,
+    backend->call_with_validate(backend->compile(f),
                                 {result_ht, result_ct},
                                 {input_xt_t, weights_i2h_t, weights_h2h_t, bias_i2h_t, bias_h2h_t});
 
@@ -410,7 +410,7 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     std::shared_ptr<runtime::Tensor> result_ct =
         backend->create_tensor(element::f32, ct->get_shape());
 
-    backend->call_with_validate(f, {result_ht, result_ct}, arg_tensors);
+    backend->call_with_validate(backend->compile(f), {result_ht, result_ct}, arg_tensors);
     //EXPECT_EQ(1, count_ops_of_type<op::gpu::Rnn>(f));
 
     auto sig = [](float x) { return 1.0f / (1.0f + std::exp(-x)); };

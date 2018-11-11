@@ -49,9 +49,9 @@ public:
                       const ngraph::Shape& shape,
                       void* memory_pointer) override;
 
-    bool compile(std::shared_ptr<ngraph::Function> func) override;
+    runtime::Handle compile(const std::shared_ptr<ngraph::Function>& func) override;
 
-    bool call(std::shared_ptr<ngraph::Function> func,
+    bool call(runtime::Handle,
               const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& outputs,
               const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& inputs) override;
 
@@ -68,6 +68,6 @@ private:
             m_map_parameter_to_result;
     };
 
-    std::map<std::shared_ptr<ngraph::Function>, FunctionInstance> m_function_map;
+    std::vector<std::shared_ptr<FunctionInstance>> m_instances;
     std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>> m_backend_list;
 };

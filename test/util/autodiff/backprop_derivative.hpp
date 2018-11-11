@@ -33,7 +33,6 @@ namespace ngraph
     class Function;
 
     static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Function>> s_df_map;
-    static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Function>> s_clone_fwd_map;
     static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Function>> s_clone_bwd_map;
 
     namespace runtime
@@ -91,6 +90,20 @@ namespace ngraph
             auto c_vec = read_vector<T>(c_arg);
             fill(c_vec.begin(), c_vec.end(), 0);
 
+            static std::unordered_map<std::shared_ptr<Function>, runtime::Handle>
+                s_compiled_functions;
+            auto it = s_compiled_functions.find(df);
+            runtime::Handle df_handle;
+            if (it == s_compiled_functions.end())
+            {
+                df_handle = backend->compile(df);
+                s_compiled_functions.insert({df, df_handle});
+            }
+            else
+            {
+                df_handle = it->second;
+            }
+
             // for each element of the adjoint
             // same as saying for each element of y
             for (size_t i = 0; i < c_vec.size(); i++)
@@ -100,7 +113,7 @@ namespace ngraph
                 write_vector(c_arg, c_vec);
 
                 // call modified df/dX* = f'(c, cached)
-                backend->call_with_validate(df, df_output_args, df_input_args);
+                backend->call_with_validate(df_handle, df_output_args, df_input_args);
 
                 // reset the adjoint element
                 c_vec[i] = 0;
@@ -192,13 +205,28 @@ namespace ngraph
             }
 
             // compile and run modified (y, cached) = f(x)
+            static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Function>>
+                s_clone_fwd_map;
             if (!s_clone_fwd_map[f])
             {
                 s_clone_fwd_map[f] = clone_function(*fprop_cache.fprop);
             }
             auto clone_fwd = s_clone_fwd_map[f];
+            static std::unordered_map<std::shared_ptr<Function>, runtime::Handle>
+                s_compiled_functions;
+            auto it = s_compiled_functions.find(clone_fwd);
+            runtime::Handle clone_fwd_handle;
+            if (it == s_compiled_functions.end())
+            {
+                clone_fwd_handle = backend->compile(clone_fwd);
+                s_compiled_functions.insert({clone_fwd, clone_fwd_handle});
+            }
+            else
+            {
+                clone_fwd_handle = it->second;
+            }
 
-            backend->call_with_validate(clone_fwd, mod_f_output_args, f_input_args);
+            backend->call_with_validate(clone_fwd_handle, mod_f_output_args, f_input_args);
 
             // call modfied f'(c, cached) to get df/dX*
             if (!s_clone_bwd_map[f])

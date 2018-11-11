@@ -153,17 +153,16 @@ public:
 
     std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
 
-    bool compile(std::shared_ptr<Function> function) override;
+    Handle compile(const std::shared_ptr<Function>& function) override;
 
-    bool call(std::shared_ptr<Function> function,
+    bool call(Handle function,
               const std::vector<std::shared_ptr<Tensor>>& outputs,
               const std::vector<std::shared_ptr<Tensor>>& intputs) override;
 
-    void set_nan_check(std::shared_ptr<Function> func, bool);
+    void set_nan_check(Handle, bool);
 
-    void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
-    std::vector<PerformanceCounter>
-        get_performance_data(std::shared_ptr<Function> func) const override;
+    void enable_performance_data(Handle, bool enable) override;
+    std::vector<PerformanceCounter> get_performance_data(Handle) const override;
 
     bool is_supported(const Node& node) const override { return true; }
 private:
@@ -171,17 +170,17 @@ private:
     class FunctionInstance
     {
     public:
-        bool m_is_compiled = false;
         bool m_nan_check_enabled = false;
         bool m_performance_counters_enabled = false;
         std::unordered_map<const Node*, stopwatch> m_timer_map;
         std::vector<NodeWrapper> m_wrapped_nodes;
         std::unordered_map<const Node*, std::unique_ptr<RNGState>> m_states;
         std::unique_ptr<AlignedBuffer> m_temporary_memory;
+        std::shared_ptr<Function> m_function;
 
         void* get_temporary_pointer(size_t offset) { return m_temporary_memory->get_ptr(offset); }
     };
-    std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
+    std::vector<std::shared_ptr<FunctionInstance>> m_instances;
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);
@@ -190,13 +189,13 @@ private:
                         const NodeWrapper& op,
                         const std::vector<void*>& outputs,
                         const std::vector<const void*>& inputs,
-                        FunctionInstance& instance);
+                        FunctionInstance* instance);
 
     template <typename T>
     void op_engine(const NodeWrapper& node_wrapper,
                    const std::vector<void*>& out,
                    const std::vector<const void*>& args,
-                   FunctionInstance& instance)
+                   FunctionInstance* instance)
     {
         const Node& node = node_wrapper.get_node();
         std::string node_op = node.description();
@@ -334,15 +333,15 @@ private:
         }
         case OP_TYPEID::GenerateMask:
         {
-            if (instance.m_states.count(&node) == 0)
+            if (instance->m_states.count(&node) == 0)
             {
                 const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
-                instance.m_states[&node] = std::unique_ptr<ngraph::RNGState>(
+                instance->m_states[&node] = std::unique_ptr<ngraph::RNGState>(
                     ngraph::RNGState::create_rng_state(gm->get_seed(), gm->get_probability()));
             }
 
             bool training = static_cast<bool>(static_cast<const T*>(args[0])[0]);
-            auto state = instance.m_states.at(&node).get();
+            auto state = instance->m_states.at(&node).get();
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::generate_mask<T>(
                 reinterpret_cast<T*>(out[0]), element_count, state, training);
@@ -731,7 +730,9 @@ private:
                 inputs.push_back(std::static_pointer_cast<runtime::Tensor>(host_tensor));
             }
 
-            call(function, outputs, inputs);
+            auto h = compile(function);
+            call(h, outputs, inputs);
+            remove_compiled_function(h);
             break;
         }
         case OP_TYPEID::Greater:
@@ -990,7 +991,9 @@ private:
                     node.get_inputs().at(1).get_element_type(), Shape{}, &y, "reduce_temp_y");
                 auto tr = std::make_shared<HostTensor>(
                     node.get_output_element_type(0), Shape{}, "reduce_temp_r");
-                call(reduction_function, {tr}, {tx, ty});
+                auto h = compile(reduction_function);
+                call(h, {tr}, {tx, ty});
+                remove_compiled_function(h);
                 return *(tr->get_data_ptr<T>());
             };
 
@@ -1019,7 +1022,9 @@ private:
                                                        "reduce_window_temp_y");
                 auto tr = std::make_shared<HostTensor>(
                     node.get_output_element_type(0), Shape{}, "reduce_window_temp_r");
-                call(reduction_function, {tr}, {tx, ty});
+                auto h = compile(reduction_function);
+                call(h, {tr}, {tx, ty});
+                remove_compiled_function(h);
                 return *(tr->get_data_ptr<T>());
             };
 
@@ -1134,7 +1139,9 @@ private:
                     node.get_inputs().at(1).get_element_type(), Shape{}, &y, "selection_temp_y");
                 auto tr = std::make_shared<runtime::HostTensor>(
                     element::boolean, Shape{}, "selection_temp_r");
-                call(selection_function, {tr}, {tx, ty});
+                auto h = compile(selection_function);
+                call(h, {tr}, {tx, ty});
+                remove_compiled_function(h);
                 return *(tr->get_data_ptr<char>());
             };
 
@@ -1147,7 +1154,9 @@ private:
                     node.get_inputs().at(1).get_element_type(), Shape{}, &y, "scatter_temp_y");
                 auto tr = std::make_shared<runtime::HostTensor>(
                     node.get_output_element_type(0), Shape{}, "scatter_temp_r");
-                call(scatter_function, {tr}, {tx, ty});
+                auto h = compile(scatter_function);
+                call(h, {tr}, {tx, ty});
+                remove_compiled_function(h);
                 return *(tr->get_data_ptr<T>());
             };
 
