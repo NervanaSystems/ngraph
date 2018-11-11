@@ -58,19 +58,7 @@ namespace ngraph
             // ref_y is the function evaluated at the args
             auto ref_y = backend->create_tensor<T>(y_shape);
 
-            static std::unordered_map<std::shared_ptr<Function>, runtime::Handle>
-                s_compiled_functions;
-            auto it = s_compiled_functions.find(f);
-            runtime::Handle f_handle;
-            if (it == s_compiled_functions.end())
-            {
-                f_handle = backend->compile(f);
-                s_compiled_functions.insert({f, f_handle});
-            }
-            else
-            {
-                f_handle = it->second;
-            }
+            runtime::Handle f_handle = backend->compile(f);
 
             backend->call_with_validate(
                 f_handle, std::vector<std::shared_ptr<ngraph::runtime::Tensor>>{ref_y}, args);
