@@ -726,32 +726,21 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         auto bias_bounded_nodes = m.get_bound_nodes_for_pattern(bias_label);
         auto rnn_goe0_bounded_nodes = m.get_bound_nodes_for_pattern(rnn_goe0_label);
 
-        auto delete_nodes = [](NodeVector& node_array, int start_index) -> NodeVector {
-            node_array.erase(node_array.begin() + start_index, node_array.end());
-            return node_array;
-        };
-
         std::vector<std::shared_ptr<op::Rnn>> rnn_nodes;
         for (size_t index = 0; index < rnn_goe0_bounded_nodes.size(); index++)
         {
             if (auto rnn_op = std::dynamic_pointer_cast<op::Rnn>(
                     rnn_goe0_bounded_nodes[index]->get_arguments()[0]))
             {
-                // we will look at the matched RNN cells and only fuse the RNN till we have
+                // we will look at the matched RNN cells and only fuse the RNN if we have
                 // SLC == DLC
                 if (rnn_op->get_dst_layer_feature_size() == rnn_op->get_src_layer_feature_size())
                 {
                     rnn_nodes.push_back(rnn_op);
-                    src_layer = src_layer_bounded_nodes[index];
                 }
                 else
                 {
-                    src_layer = rnn_goe0_bounded_nodes[index];
-                    delete_nodes(src_iter_bounded_nodes, index);
-                    delete_nodes(weights_layer_bounded_nodes, index);
-                    delete_nodes(weights_iter_bounded_nodes, index);
-                    delete_nodes(bias_bounded_nodes, index);
-                    break;
+                    return false;
                 }
             }
             else
@@ -766,8 +755,10 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         {
             return false;
         }
-        // the last matched rnn cell with slc=dlc will be in the input of the new fused
-        // node
+        // the last matched rnn cell with slc=dlc will be in the input to the new fused
+        // node, PM captures the RNN cell in the reverse order.
+        // {RNN7, RNN6, RNN5.....RNN0}
+        src_layer = src_layer_bounded_nodes[src_layer_bounded_nodes.size() - 1];
         auto src_iter = stack_rnn_inputs(src_iter_bounded_nodes);
         auto weights_layer = stack_rnn_inputs(weights_layer_bounded_nodes);
         auto weights_iter = stack_rnn_inputs(weights_iter_bounded_nodes);
@@ -884,6 +875,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             }
         };
 
+        // we will replace cell_state {ct} of all the matched RNN cell
+        // with the new {ct} of the fused RNN cell
         for (size_t index = 0; index < rnn_nodes.size(); index++)
         {
             for (auto& rnn_arg : rnn_nodes[index]->get_users())
