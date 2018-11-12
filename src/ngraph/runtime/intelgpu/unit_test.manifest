@@ -115,3 +115,7 @@ zero_sized_sqrt
 zero_sized_subtract
 zero_sized_tan
 zero_sized_tanh
+shape_of_scalar
+shape_of_vector
+shape_of_matrix
+shape_of_5d

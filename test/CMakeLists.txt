@@ -138,6 +138,9 @@ set(MULTI_TEST_SRC
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND MULTI_TEST_SRC distributed.in.cpp)
 endif()
+if (NGRAPH_CPU_ENABLE)
+    list(APPEND MULTI_TEST_SRC backend_graph_comparison.in.cpp)
+endif()
 
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     # Some---but not all---autodiff tests go through multiple iterations with
