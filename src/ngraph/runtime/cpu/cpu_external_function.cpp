@@ -166,6 +166,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_memory_optimization.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_reshape_sinking.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
 #include "ngraph/runtime/cpu/pass/halide_subgraph_extraction.hpp"
@@ -176,6 +177,17 @@
 
 using namespace std;
 using namespace ngraph;
+
+#define REGISTER_KNOBBED_PASS(name, enable_by_default, pass, ...)                                  \
+    if (pass_map.find(name) != pass_map.end())                                                     \
+    {                                                                                              \
+        if (pass_map[name])                                                                        \
+            pass_manager.register_pass<pass>(__VA_ARGS__);                                         \
+    }                                                                                              \
+    else if (enable_by_default)                                                                    \
+    {                                                                                              \
+        pass_manager.register_pass<pass>(__VA_ARGS__);                                             \
+    }
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
@@ -1029,36 +1041,44 @@ using namespace ngraph::runtime;
 
 void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Manager& pass_manager)
 {
-    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    pass_manager.register_pass<ngraph::pass::NopElimination>();
-    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
-    // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
-    // failing mxnet unit tests.
-    // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    // pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
-    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.register_pass<ngraph::pass::CoreFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
+    std::unordered_map<string, bool> pass_map;
+    ngraph::get_pass_enables(pass_map);
+
+    REGISTER_KNOBBED_PASS("LikeReplacement", true, ngraph::pass::LikeReplacement);
+    REGISTER_KNOBBED_PASS("NopElimination", true, ngraph::pass::NopElimination);
+    REGISTER_KNOBBED_PASS("ZeroDimTensorElimination", true, ngraph::pass::ZeroDimTensorElimination);
+    REGISTER_KNOBBED_PASS("LSTMFusion", false, runtime::cpu::pass::LSTMFusion);
+    REGISTER_KNOBBED_PASS("RNNFusion", false, runtime::cpu::pass::RNNFusion);
+    REGISTER_KNOBBED_PASS("AlgebraicSimplification", true, ngraph::pass::AlgebraicSimplification);
+    REGISTER_KNOBBED_PASS("MultiLayerRNNFusion", false, runtime::cpu::pass::MultiLayerRNNFusion);
+    REGISTER_KNOBBED_PASS("ConcatInputs", false, runtime::cpu::pass::ConcatInputs);
+    REGISTER_KNOBBED_PASS("CPURnnMatFusion", true, runtime::cpu::pass::CPURnnMatFusion);
+    REGISTER_KNOBBED_PASS("CPUBatchFusion", true, runtime::cpu::pass::CPUBatchFusion);
+    REGISTER_KNOBBED_PASS("CPUReshapeSinking", false, runtime::cpu::pass::CPUReshapeSinking);
+    REGISTER_KNOBBED_PASS("CoreFusion", true, ngraph::pass::CoreFusion);
+    REGISTER_KNOBBED_PASS("CPUFusion", true, runtime::cpu::pass::CPUFusion);
+    REGISTER_KNOBBED_PASS("CPUHorizontalFusion", true, runtime::cpu::pass::CPUHorizontalFusion);
+    REGISTER_KNOBBED_PASS("CPUCollapseDims", true, runtime::cpu::pass::CPUCollapseDims);
 #if defined(NGRAPH_HALIDE)
-    pass_manager.register_pass<ngraph::runtime::cpu::pass::HalideSubgraphExtraction>();
+    REGISTER_KNOBBED_PASS(
+        "HalideSubgraphExtraction", true, ngraph::runtime::cpu::pass::HalideSubgraphExtraction);
 #endif
 
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
-    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
-    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
-    pass_manager.register_pass<ngraph::pass::ConstantFolding>();
-    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
-    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>(
-        runtime::cpu::get_cse_handlers_map());
-    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUMemoryOptimization>();
-    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+    REGISTER_KNOBBED_PASS(
+        "CPUWorkspaceInsertion", true, runtime::cpu::pass::CPUWorkspaceInsertion, nv_cwi, false);
+    REGISTER_KNOBBED_PASS("CPUAssignment", true, runtime::cpu::pass::CPUAssignment, this);
+    REGISTER_KNOBBED_PASS("ConstantFolding", true, ngraph::pass::ConstantFolding);
+    REGISTER_KNOBBED_PASS("CPULayout", true, runtime::cpu::pass::CPULayout, this);
+    REGISTER_KNOBBED_PASS("CommonSubexpressionElimination",
+                          true,
+                          ngraph::pass::CommonSubexpressionElimination,
+                          runtime::cpu::get_cse_handlers_map());
+    REGISTER_KNOBBED_PASS(
+        "CPUPostLayoutOptimizations", true, runtime::cpu::pass::CPUPostLayoutOptimizations);
+    REGISTER_KNOBBED_PASS("CPUMemoryOptimization", true, runtime::cpu::pass::CPUMemoryOptimization);
+    REGISTER_KNOBBED_PASS(
+        "GetOutputElementElimination", true, ngraph::pass::GetOutputElementElimination);
     pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
 }
 
