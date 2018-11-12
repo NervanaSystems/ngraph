@@ -95,6 +95,18 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
 
 void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
 {
+    // This pattern captures the following equations in the given data
+    // flow graph
+    /*
+        i_t = sigmoid(W_{ii} x_t + b_{ii} + W_{hi} h_{(t-1)} + b_{hi})
+        f_t = sigmoid(W_{if} x_t + b_{if} + W_{hf} h_{(t-1)} + b_{hf})
+        g_t = \tanh(W_{ig} x_t + b_{ig} + W_{hc} h_{(t-1)} + b_{hg})
+        o_t = sigmoid(W_{io} x_t + b_{io} + W_{ho} h_{(t-1)} + b_{ho})
+        c_t = f_t * c_{(t-1)} + i_t * g_t \\
+        h_t = o_t * \tanh(c_t)
+    */
+
+    // (W_{ii} | (W_{if} | W_{ig} | W_{io}) * x_t + (b_{ii} | b_{if} |  b_{ig} | b_{io})
     auto input_xt = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
     auto weights_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{100, 400});
     auto dot_1 = std::make_shared<op::Dot>(input_xt, weights_i2h);
@@ -103,11 +115,11 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         return ((std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr) ||
                 (std::dynamic_pointer_cast<op::Reshape>(n) != nullptr));
     };
-
     auto bias_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 400});
     auto skip_broadcast_i2h = std::make_shared<pattern::op::Skip>(bias_i2h, broadcast_pred);
     auto add_1 = std::make_shared<op::Add>(dot_1, skip_broadcast_i2h);
 
+    // (W_{hi} | (W_{hf} | W_{hg} | W_{ho}) * h_{(t-1)} + (b_{hi} | b_{hf} |  b_{hg} | b_{ho})
     auto hidden_ht = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50});
     auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{50, 400});
     auto dot_2 = std::make_shared<op::Dot>(hidden_ht, weights_h2h);
@@ -116,17 +128,20 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     auto add_2 = std::make_shared<op::Add>(dot_2, skip_broadcast_h2h);
 
     auto X = std::make_shared<op::Add>(add_2, add_1);
-    // construct forget gate
+
+    // construct forget gate (f_t)
     auto input_slice_0 = std::make_shared<op::Slice>(X, Coordinate{0, 0}, Coordinate{10, 100});
     auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
 
-    // ct-1 -> cell state (src_iter -> {ht | ct-1}
+    // construct (c_t) cell state (src_iter -> {ht | ct-1}
     auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
     auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, ct_1);
 
-    // construct input gate
+    // construct input gate (i_t)
     auto input_slice_1 = std::make_shared<op::Slice>(X, Coordinate{0, 100}, Coordinate{10, 200});
     auto input_gate = std::make_shared<op::Sigmoid>(input_slice_1);
+
+    // construct block gate (g_t)
     auto input_slice_2 = std::make_shared<op::Slice>(X, Coordinate{0, 200}, Coordinate{10, 300});
     auto tanh_1 = std::make_shared<op::Tanh>(input_slice_2);
     auto multiply_input_gate_tanh_1 = std::make_shared<op::Multiply>(input_gate, tanh_1);
@@ -136,10 +151,12 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     auto ct_label = std::make_shared<pattern::op::Label>(
         add_ct_1_input_gate_tanh_1, nullptr, NodeVector{add_ct_1_input_gate_tanh_1});
 
-    // construct output gate
+    // construct output gate (o_t)
     auto input_slice_3 = std::make_shared<op::Slice>(X, Coordinate{0, 300}, Coordinate{10, 400});
     auto output_gate = std::make_shared<op::Sigmoid>(input_slice_3);
     auto tanh_2 = std::make_shared<op::Tanh>(ct_label);
+
+    // construct (h_t)
     auto ht = std::make_shared<op::Multiply>(output_gate, tanh_2);
     auto ht_label = std::make_shared<pattern::op::Label>(ht, nullptr, NodeVector{ht});
 
@@ -249,10 +266,20 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto dic = weights_iter->get_shape()[1] / (lstm_n_gates * direction * layers);
         auto sic = weights_iter->get_shape()[0];
 
+        if (dlc != dic)
+        {
+            NGRAPH_DEBUG << "Not fusing, since MKLDNN Lstm kernel requires dst_layer feature size "
+                         << "equals to dts_iter feature size";
+            return false;
+        }
+
+        if (hidden_state_ht->get_shape() != pattern_map[ct_1]->get_shape())
+        {
+            NGRAPH_DEBUG << "Lstm MKLDNN kernel requires recurrent output hidden states to match ";
+            return false;
+        }
         std::shared_ptr<Node> src_iter =
             std::make_shared<op::Concat>(NodeVector{hidden_state_ht, pattern_map[ct_1]}, 0);
-        std::shared_ptr<Node> bias =
-            std::make_shared<op::Add>(pattern_map[bias_i2h], pattern_map[bias_h2h]);
 
         // checks to ensure the weights are in ldigo format
         if (src_layer->get_shape()[1] != slc || src_iter->get_shape()[1] != sic)
@@ -261,18 +288,15 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             return false;
         }
 
-        if (dlc != dic)
-        {
-            NGRAPH_DEBUG << "Not fusing, since MKLDNN Lstm kernel requires dst_layer feature size "
-                         << "equals to dts_iter feature size";
-            return false;
-        }
+        std::shared_ptr<Node> bias =
+            std::make_shared<op::Add>(pattern_map[bias_i2h], pattern_map[bias_h2h]);
 
         auto lstm_node =
             std::make_shared<op::Lstm>(src_layer, src_iter, weights_layer, weights_iter, bias);
 
         auto lstm_ht_output = std::make_shared<op::GetOutputElement>(lstm_node, 0);
         auto lstm_ht_ct_output = std::make_shared<op::GetOutputElement>(lstm_node, 1);
+
         // dst_iter of lstm mkldnn output holds the results of both recurrent state
         // tensor outputs. we need to slice the ct.
         auto ht_slice = std::make_shared<op::Slice>(

@@ -23,7 +23,7 @@ using namespace ngraph;
 
 shared_ptr<Node> op::Lstm::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 5 && m_fused_inputs)
+    if (new_args.size() != 5)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
@@ -47,7 +47,6 @@ op::Lstm::Lstm(std::shared_ptr<Node> src_layer,
     , m_num_cell_states(2)
     , m_direction(1)
     , m_num_fused_layers(1)
-    , m_fused_inputs(true)
 {
     constructor_validate_and_infer_types();
 
