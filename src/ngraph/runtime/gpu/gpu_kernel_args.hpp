@@ -152,7 +152,7 @@ namespace ngraph
                 static false_type check(...);
 
             public:
-                static const bool value = sizeof(check<T>(0)) == sizeof(true_type);
+                static const bool value = sizeof(check<T>(nullptr)) == sizeof(true_type);
                 typedef T type;
             };
 
