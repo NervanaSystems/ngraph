@@ -133,7 +133,7 @@ namespace ngraph
             if (bias->get_element_type() != element::i32)
             {
                 auto zero = make_constant(element::i32, min_input->get_shape(), 0);
-                AxisSet quantization_axes{0};
+                AxisSet quantization_axes;
                 auto bias_scale =
                     quantization_util::get_bias_scale(min_input, max_input, min_filter, max_filter);
                 op::Quantize::RoundMode round_mode =

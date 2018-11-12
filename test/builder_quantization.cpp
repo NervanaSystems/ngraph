@@ -314,12 +314,12 @@ TEST(builder, scaled_QC_with_f32_bias_and_relu)
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     auto B = make_shared<op::Parameter>(element::i8, shape_b);
     auto Bias = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto C = op::Constant::create(element::f32, Shape{1}, {0.0f});
-    auto D = op::Constant::create(element::f32, Shape{1}, {255.0f});
-    auto E = op::Constant::create(element::f32, Shape{1}, {-127.0f});
-    auto F = op::Constant::create(element::f32, Shape{1}, {127.0f});
-    auto G = op::Constant::create(element::f32, Shape{1}, {20.0f});
-    auto H = op::Constant::create(element::f32, Shape{1}, {-24.0f});
+    auto C = op::Constant::create(element::f32, Shape{}, {0.0f});
+    auto D = op::Constant::create(element::f32, Shape{}, {255.0f});
+    auto E = op::Constant::create(element::f32, Shape{}, {-127.0f});
+    auto F = op::Constant::create(element::f32, Shape{}, {127.0f});
+    auto G = op::Constant::create(element::f32, Shape{}, {20.0f});
+    auto H = op::Constant::create(element::f32, Shape{}, {-24.0f});
     auto CV = ngraph::builder::ScaledQuantizedConvolutionBias(A,
                                                               B,
                                                               Bias,
