@@ -23,6 +23,7 @@
 
 #include "backend.hpp"
 #include "backend_manager.hpp"
+#include "exceptions.hpp"
 
 namespace ngraph
 {
@@ -32,7 +33,7 @@ namespace ngraph
         {
             // Create ONNXIFI backend for each registered nGraph backend.
             // Use pointer to temporary to capture the unique handle. The handles
-            // must be consistent within the single session.
+            // must be consistent within a session.
             // In spec, backends are hot-pluggable. This means two calls to
             // onnxGetBackendIDs() may result in different number of backends.
             // For now, we don't do the re-discovery.
@@ -49,13 +50,13 @@ namespace ngraph
         {
             if (count == nullptr)
             {
-                throw std::invalid_argument{"null pointer"};
+                throw status::null_pointer{};
             }
             std::size_t requested{*count};
             *count = m_registered_backends.size();
             if ((requested < *count) || (backend_ids == nullptr))
             {
-                throw std::length_error{"not enough space"};
+                throw status::fallback{};
             }
             {
                 std::lock_guard<decltype(m_mutex)> lock{m_mutex};
@@ -68,5 +69,7 @@ namespace ngraph
                                });
             }
         }
-    }
-}
+
+    } // namespace onnxifi
+
+} // namespace ngraph
