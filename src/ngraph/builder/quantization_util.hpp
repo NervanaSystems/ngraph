@@ -122,10 +122,25 @@ namespace ngraph
                 auto max_abs32 = max_abs(min_out_value, max_out_value);
                 auto max_abs8 = max_abs(min_freezed_output, max_freezed_output);
 
-                // Output is signed int.
-                // s32 = f32 * std::pow(2, 31)/ max_abs32;
-                // s8 = f32 * std::pow(2, 7)/ max_abs8;
-                // s8 = s32 * std::pow(2, -24) * max_abs32 / max_abs8;
+                // The output of int8 convolution is accumalated in int32.
+                // Mkldnn needs a scale to requantize the output back to {u}int8 based on
+                // if relu is fused or not.
+
+                // Equation to go from f32 to s32. std::pow(2, 31)/ max_abs32 can be thought of
+                // as the scale used for the quantization..
+                // 1. s32 = f32 * std::pow(2, 31)/ max_abs32;
+
+                // Equation to go from f32 to u8.
+                // 2. u8 = f32 * std::pow(2, 8)/ max_abs8;
+
+                // Equation to go from f32 to s8.
+                // 3. s8 = f32 * std::pow(2, 7)/ max_abs8;
+
+                // Replacing f32 from eq 1 in eq 2.
+                // 4. u8 = s32 * std::pow(2, -23) * max_abs32 / max_abs8;
+
+                // Replacing f32 from eq 1 in eq 3.
+                // 5. s8 = s32 * std::pow(2, -24) * max_abs32 / max_abs8;
 
                 return make_constant(
                            type, shape, std::pow(2, (output_type == element::i8) ? -24 : -23)) *
@@ -142,19 +157,22 @@ namespace ngraph
                     type != min_filter->get_element_type() ||
                     type != max_filter->get_element_type())
                 {
-                    throw ngraph_error("get_scale: min and max must have same type");
+                    throw ngraph_error("get_bias_scale: min and max must have same type");
                 }
 
                 auto shape = min_input->get_shape();
                 if (shape != max_input->get_shape() || shape != min_filter->get_shape() ||
                     shape != max_filter->get_shape())
                 {
-                    throw ngraph_error("get_scale: min and max must have same shape");
+                    throw ngraph_error("get_bias_scale: min and max must have same shape");
                 }
 
                 auto max_abs_input_range = max_abs(min_input, max_input);
                 auto max_abs_filter_range = max_abs(min_filter, max_filter);
-                auto range = make_constant(type, shape, 255.0 * 127.0);
+                auto range = make_constant(type,
+                                           shape,
+                                           std::numeric_limits<uint8_t>::max() *
+                                               std::numeric_limits<int8_t>::max());
 
                 return range / (max_abs_input_range * max_abs_filter_range);
             }
