@@ -14,34 +14,24 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/op/experimental/shape_of.hpp"
 
-#include <cstddef>
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+op::ShapeOf::ShapeOf(const shared_ptr<Node>& arg)
+    : Op("ShapeOf", check_single_output_args({arg}))
 {
-    namespace runtime
-    {
-        namespace reference
-        {
-            template <typename T>
-            void relu(const T* arg, T* out, size_t count)
-            {
-                T zero = 0;
-                for (size_t i = 0; i < count; i++)
-                {
-                    out[i] = arg[i] > zero ? arg[i] : zero;
-                }
-            }
-            template <typename T>
-            void relu_backprop(const T* arg, const T* delta_arg, T* out, size_t count)
-            {
-                T zero = 0;
-                for (size_t i = 0; i < count; i++)
-                {
-                    out[i] = arg[i] > zero ? delta_arg[i] : zero;
-                }
-            }
-        }
-    }
+    constructor_validate_and_infer_types();
+}
+
+void op::ShapeOf::validate_and_infer_types()
+{
+    set_output_type(0, element::u64, PartialShape{get_input_partial_shape(0).rank()});
+}
+
+shared_ptr<Node> op::ShapeOf::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<ShapeOf>(new_args.at(0));
 }

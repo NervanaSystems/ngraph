@@ -16,32 +16,24 @@
 
 #pragma once
 
-#include <cstddef>
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace op
     {
-        namespace reference
+        /// \brief Operation that returns the shape of its input argument as a tensor.
+        class ShapeOf : public Op
         {
-            template <typename T>
-            void relu(const T* arg, T* out, size_t count)
-            {
-                T zero = 0;
-                for (size_t i = 0; i < count; i++)
-                {
-                    out[i] = arg[i] > zero ? arg[i] : zero;
-                }
-            }
-            template <typename T>
-            void relu_backprop(const T* arg, const T* delta_arg, T* out, size_t count)
-            {
-                T zero = 0;
-                for (size_t i = 0; i < count; i++)
-                {
-                    out[i] = arg[i] > zero ? delta_arg[i] : zero;
-                }
-            }
-        }
+        public:
+            /// \brief Constructs a shape-of operation.
+            ShapeOf(const std::shared_ptr<Node>& arg);
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+        protected:
+            void validate_and_infer_types() override;
+        };
     }
 }

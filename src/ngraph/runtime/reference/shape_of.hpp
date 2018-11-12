@@ -16,8 +16,7 @@
 
 #pragma once
 
-#include <cmath>
-#include <cstddef>
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -25,27 +24,11 @@ namespace ngraph
     {
         namespace reference
         {
-            template <typename T>
-            void sigmoid(const T* arg, T* out, size_t count)
+            inline void shape_of(const Shape& arg_shape, uint64_t* out)
             {
-                T exp_value;
-                for (size_t i = 0; i < count; i++)
+                for (size_t i = 0; i < arg_shape.size(); i++)
                 {
-                    exp_value = std::exp(-arg[i]);
-                    out[i] = 1 / (1 + exp_value);
-                }
-            }
-
-            template <typename T>
-            void sigmoid_backprop(const T* arg, const T* delta_arg, T* out, size_t count)
-            {
-                T exp_value;
-                T func_x;
-                for (size_t i = 0; i < count; i++)
-                {
-                    exp_value = std::exp(-arg[i]);
-                    func_x = 1 / (1 + exp_value);
-                    out[i] = delta_arg[i] * func_x * (1 - func_x);
+                    out[i] = static_cast<uint64_t>(arg_shape[i]);
                 }
             }
         }
