@@ -96,30 +96,22 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
 void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
 {
     auto input_xt = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
-    auto weights_i2h = std::make_shared<pattern::op::Label>(
-        element::f32, Shape{400, 100}, pattern::has_class<op::Parameter>());
-    auto weights_i2h_reshape =
-        std::make_shared<op::Reshape>(weights_i2h, AxisVector{1, 0}, Shape{100, 400});
-    auto dot_1 = std::make_shared<op::Dot>(input_xt, weights_i2h_reshape);
+    auto weights_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{100, 400});
+    auto dot_1 = std::make_shared<op::Dot>(input_xt, weights_i2h);
 
     auto broadcast_pred = [](std::shared_ptr<Node> n) {
         return ((std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr) ||
                 (std::dynamic_pointer_cast<op::Reshape>(n) != nullptr));
     };
 
-    auto bias_i2h = std::make_shared<pattern::op::Label>(
-        element::f32, Shape{10, 400}, pattern::has_class<op::Parameter>());
+    auto bias_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 400});
     auto skip_broadcast_i2h = std::make_shared<pattern::op::Skip>(bias_i2h, broadcast_pred);
     auto add_1 = std::make_shared<op::Add>(dot_1, skip_broadcast_i2h);
 
     auto hidden_ht = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50});
-    auto weights_h2h = std::make_shared<pattern::op::Label>(
-        element::f32, Shape{400, 50}, pattern::has_class<op::Parameter>());
-    auto param2_2_reshape =
-        std::make_shared<op::Reshape>(weights_h2h, AxisVector{1, 0}, Shape{50, 400});
-    auto dot_2 = std::make_shared<op::Dot>(hidden_ht, param2_2_reshape);
-    auto bias_h2h = std::make_shared<pattern::op::Label>(
-        element::f32, Shape{10, 400}, pattern::has_class<op::Parameter>());
+    auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{50, 400});
+    auto dot_2 = std::make_shared<op::Dot>(hidden_ht, weights_h2h);
+    auto bias_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 400});
     auto skip_broadcast_h2h = std::make_shared<pattern::op::Skip>(bias_h2h, broadcast_pred);
     auto add_2 = std::make_shared<op::Add>(dot_2, skip_broadcast_h2h);
 
@@ -252,22 +244,22 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         size_t batch_size = pattern_map[input_xt]->get_shape()[0];
         size_t direction = 1;
         size_t layers = 1;
-        auto dlc = weights_layer->get_shape()[0] / (lstm_n_gates * direction * layers);
-        auto slc = weights_layer->get_shape()[1];
-        auto dic = weights_iter->get_shape()[0] / (lstm_n_gates * direction * layers);
-        auto sic = weights_iter->get_shape()[1];
+        auto dlc = weights_layer->get_shape()[1] / (lstm_n_gates * direction * layers);
+        auto slc = weights_layer->get_shape()[0];
+        auto dic = weights_iter->get_shape()[1] / (lstm_n_gates * direction * layers);
+        auto sic = weights_iter->get_shape()[0];
 
         std::shared_ptr<Node> src_iter =
             std::make_shared<op::Concat>(NodeVector{hidden_state_ht, pattern_map[ct_1]}, 0);
         std::shared_ptr<Node> bias =
             std::make_shared<op::Add>(pattern_map[bias_i2h], pattern_map[bias_h2h]);
 
-        // Reorder weights_layer from ldgoi -> ldigo
-        auto weights_layer_reorder = std::make_shared<op::Reshape>(
-            weights_layer, AxisVector{1, 0}, Shape{slc, lstm_n_gates * dlc});
-        // Reorder weights_iyer from ldgoi -> ldigo
-        auto weights_iter_reorder = std::make_shared<op::Reshape>(
-            weights_iter, AxisVector{1, 0}, Shape{sic, lstm_n_gates * dic});
+        // checks to ensure the weights are in ldigo format
+        if (src_layer->get_shape()[1] != slc || src_iter->get_shape()[1] != sic)
+        {
+            NGRAPH_DEBUG << "Weights are not in ldigo format as required by MKLDNN kernel";
+            return false;
+        }
 
         if (dlc != dic)
         {
@@ -276,8 +268,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             return false;
         }
 
-        auto lstm_node = std::make_shared<op::Lstm>(
-            src_layer, src_iter, weights_layer_reorder, weights_iter_reorder, bias);
+        auto lstm_node =
+            std::make_shared<op::Lstm>(src_layer, src_iter, weights_layer, weights_iter, bias);
 
         auto lstm_ht_output = std::make_shared<op::GetOutputElement>(lstm_node, 0);
         auto lstm_ht_ct_output = std::make_shared<op::GetOutputElement>(lstm_node, 1);
