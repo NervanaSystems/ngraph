@@ -144,13 +144,19 @@ if (NGRAPH_GPU_ENABLE)
 
     find_package(CUDNN 7 REQUIRED)
     target_include_directories(gpu_backend SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
-    target_link_libraries(gpu_backend PUBLIC
-        ${CUDA_cuda_LIBRARY}
-        ${CUDA_nvrtc_LIBRARY}
-        ${CUDA_cudart_LIBRARY}
-        ${CUDA_LIBRARIES}
-        ${CUDA_CUBLAS_LIBRARIES}
-        ${CUDNN_LIBRARIES})
+    target_link_libraries(gpu_backend
+        PUBLIC
+            ${CUDA_cuda_LIBRARY}
+            ${CUDA_nvrtc_LIBRARY}
+            ${CUDA_cudart_LIBRARY}
+            ${CUDA_LIBRARIES}
+            ${CUDA_CUBLAS_LIBRARIES}
+            ${CUDNN_LIBRARIES})
+    if (NGRAPH_HYBRID_ENABLE)
+        target_link_libraries(gpu_backend
+            PRIVATE
+                hybrid_backend)
+    endif()
     set_target_properties(gpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     install(TARGETS gpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})

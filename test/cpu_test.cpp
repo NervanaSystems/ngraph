@@ -32,9 +32,6 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -79,6 +76,7 @@ TEST(cpu_test, trivial_in_place_relu)
               add->get_outputs().at(0).get_tensor().get_pool_offset());
 }
 
+#ifndef NGRAPH_HALIDE
 TEST(cpu_test, trivial_in_place_relu_fail)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
@@ -92,6 +90,7 @@ TEST(cpu_test, trivial_in_place_relu_fail)
     ASSERT_NE(relu->get_outputs().at(0).get_tensor().get_pool_offset(),
               add->get_outputs().at(0).get_tensor().get_pool_offset());
 }
+#endif
 
 #ifdef NGRAPH_TBB_ENABLE
 TEST(cpu_test, abc_tbb)
@@ -511,4 +510,71 @@ TEST(cpu_test, collapse_dims1)
     // sum1 will have two reshapes added around it. sum2 will be replaced
     // with a reshape
     EXPECT_EQ(count_ops_of_type<op::Reshape>(cpu_f), 3);
+}
+
+TEST(cpu_test, collapse_dims2)
+{
+    // Collapse dims around a dot where one of the inputs is a scalar
+    auto make_function = []() -> std::shared_ptr<Function> {
+        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 3, 1, 1});
+        auto B = make_shared<op::Parameter>(element::f32, Shape{1, 1});
+        auto dot = make_shared<op::Dot>(A, B, 1);
+        return make_shared<Function>(NodeVector{dot}, op::ParameterVector{A, B});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_function();
+    auto int_f = make_function();
+
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+}
+
+TEST(cpu_test, convert_layout)
+{
+    auto make_function = []() -> std::shared_ptr<Function> {
+        auto W = std::make_shared<op::Parameter>(element::f32, Shape{10, 400});
+        auto X = std::make_shared<op::Parameter>(element::f32, Shape{400, 10});
+        auto W_reshape = std::make_shared<op::Reshape>(W, AxisVector{1, 0}, Shape{400, 10});
+
+        auto add1 = std::make_shared<op::Add>(X, W_reshape);
+        auto sub1 = std::make_shared<op::Subtract>(X, W_reshape);
+        auto mul1 = std::make_shared<op::Multiply>(X, W_reshape);
+
+        return make_shared<Function>(NodeVector{add1, sub1, mul1}, op::ParameterVector{W, X});
+    };
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_function();
+    auto int_f = make_function();
+
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    size_t count = count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f);
+    ASSERT_EQ(count, 1);
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
 }
