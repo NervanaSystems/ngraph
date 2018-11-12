@@ -98,12 +98,12 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     // This pattern captures the following equations in the given data
     // flow graph
     /*
-        i_t = sigmoid(W_{ii} x_t + b_{ii} + W_{hi} h_{(t-1)} + b_{hi})
-        f_t = sigmoid(W_{if} x_t + b_{if} + W_{hf} h_{(t-1)} + b_{hf})
-        g_t = \tanh(W_{ig} x_t + b_{ig} + W_{hc} h_{(t-1)} + b_{hg})
-        o_t = sigmoid(W_{io} x_t + b_{io} + W_{ho} h_{(t-1)} + b_{ho})
-        c_t = f_t * c_{(t-1)} + i_t * g_t \\
-        h_t = o_t * \tanh(c_t)
+        i_t = sigmoid(W_{ii} x_t + b_{ii} + W_{hi} h_{(t-1)} + b_{hi});
+        f_t = sigmoid(W_{if} x_t + b_{if} + W_{hf} h_{(t-1)} + b_{hf});
+        g_t = tanh(W_{ig} x_t + b_{ig} + W_{hc} h_{(t-1)} + b_{hg});
+        o_t = sigmoid(W_{io} x_t + b_{io} + W_{ho} h_{(t-1)} + b_{ho});
+        c_t = f_t * c_{(t-1)} + i_t * g_t;
+        h_t = o_t * \ tanh(c_t);
     */
 
     // (W_{ii} | (W_{if} | W_{ig} | W_{io}) * x_t + (b_{ii} | b_{if} |  b_{ig} | b_{io})
@@ -169,7 +169,6 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
                                                 bias_i2h,
                                                 bias_h2h,
                                                 ct_1](pattern::Matcher& m) {
-        static int count = 0;
         NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
                      << m.get_match_root()->get_name();
 
