@@ -44,7 +44,6 @@ namespace ngraph
                 friend class GPUPrimitiveEmitter;
 
             public:
-                size_t build_primitive(const op::Softmax* node);
                 size_t build_primitive(const op::Convolution* node);
                 size_t build_primitive(const op::MaxPool* node);
                 size_t build_primitive(const op::ReplaceSlice* node, bool in_place_op);
@@ -186,10 +185,9 @@ namespace ngraph
                                     size_t concat_axis,
                                     NVShape output_shape);
 
-                size_t build_softmax_divide(const std::vector<std::string>& dtypes,
-                                            NVShape input_shape,
-                                            NVShape reduce_shape,
-                                            std::vector<size_t> axes_flag);
+                size_t build_softmax(const std::vector<std::string>& dtypes,
+                                     NVShape input_shape,
+                                     NVShape reduce_axis);
 
                 void debug_sync();
                 void sync();
