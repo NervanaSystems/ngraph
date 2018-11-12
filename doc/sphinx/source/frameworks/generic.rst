@@ -5,12 +5,12 @@ Working with other frameworks
 ##############################
 
 An engineer may want to work with a deep learning framework that does not yet 
-have bridge code written. For non-supported or “generic” frameworks, it is 
+have bridge code written. For non-supported or "generic" frameworks, it is 
 expected that engineers will use the nGraph library to create custom bridge code, 
 and/or to design and document a user interface (UI) with specific runtime 
 options for whatever custom use case they need. 
 
-The two primary tasks that can be accomplished in the “bridge code” space of the 
+The two primary tasks that can be accomplished in the "bridge code" space of the 
 nGraph abstraction layer are: (1) compiling a dataflow graph and (2) executing 
 a pre-compiled graph. See the :doc:`../framework-integration-guides` for how we 
 have built bridges with other frameworks. For more in-depth help in writing 

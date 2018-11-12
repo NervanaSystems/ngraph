@@ -1,20 +1,44 @@
-.. frameworks/workload-syllabus: 
+.. frameworks/validation-testing: 
 
 
-Syllabus for validation and testing
-###################################
+Validation and testing
+######################
+
+* **Validating** -- To provide optimizations with nGraph, we first 
+  confirm that a given workload is "validated" as being functional; 
+  that is, we can successfully load its serialized graph as an nGraph 
+  :term:`function graph`. Following here is a list of 14 workloads 
+  we've tested with success.
 
 
-* **Validation** To provide optimizations with nGraph, we first confirm 
-  that a given workload is "validated" as being functional; that is, we 
-  can successfully load its serialized graph as an nGraph graph. See the 
-  `ONNX functional`_ section for the workloads we've tested with success.
+.. csv-table::
+   :header: "Workload", "Validated"
+   :widths: 27, 53
+   :escape: ~
 
-* **Testing & Performance** Optimizations for workloads that have been 
-  "validated" with nGraph are also available (via the nGraph 
+   DenseNet-121, Functional
+   Inception-v1, Functional
+   Inception-v2, Functional
+   ResNet-50, Functional
+   Shufflenet, Functional
+   SqueezeNet, Functional
+   VGG-19, Functional
+   ZFNet-512, Functional
+   MNIST, Functional
+   Emotion-FERPlus, Functional
+   BVLC AlexNet, Functional
+   BVLC GoogleNet, Functional
+   BVLC CaffeNet, Functional
+   BVLC R-CNN ILSVRC13, Functional 
+
+
+
+* **Testing & Performance Optimizations** for workloads that have been 
+  "validated" with nGraph are also available via the nGraph 
   :abbr:`Intermediate Representation (IR)`). For example, a common use 
   case for data scientists is to train a new model with a large dataset, 
-  and so nGraph already has several accelerations available.
+  and so nGraph already has several accelerations available "out of the 
+  box" for the workloads noted below.
 
 
 TensorFlow 
@@ -71,29 +95,16 @@ MXNet
    A3C, Greater than or equal to DO
 
 
-ONNX functional
-===============
 
-.. csv-table::
-   :header: "Workload", "Validated"
-   :widths: 27, 53
-   :escape: ~
+  
 
-   DenseNet-121, Functional
-   Inception-v1, Functional
-   Inception-v2, Functional
-   ResNet-50, Functional
-   Shufflenet, Functional
-   SqueezeNet, Functional
-   VGG-19, Functional
-   ZFNet-512, Functional
-   MNIST, Functional
-   Emotion-FERPlus, Functional
-   BVLC AlexNet, Functional
-   BVLC GoogleNet, Functional
-   BVLC CaffeNet, Functional
-   BVLC R-CNN ILSVRC13, Functional 
-   
+
+
+
+
+
+
+
 
 
 

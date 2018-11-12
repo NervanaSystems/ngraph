@@ -1,8 +1,7 @@
 .. framework/index: 
 
-#############################
-Integrate Generic Frameworks   
-#############################
+Integrate Other Frameworks   
+###########################
 
 In this section, written for framework architects or engineers who want 
 to optimize brand new, generic, or less widely-supported frameworks, we provide 
@@ -20,7 +19,7 @@ work and custom bridge code, such as that for our `ngraph tensorflow bridge`_.
    :maxdepth: 1 
 
    generic.rst
-   workload-syllabus.rst
+   validation-testing.rst
 
 
 
