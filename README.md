@@ -1,27 +1,21 @@
-# nGraph Compiler Stack 
-## Version: Beta (1.0) 
+# nGraph Compiler Stack Beta (1.0) 
 
 [![Build Status][build-status-badge]][build-status] [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph/blob/master/LICENSE)
- 
-
-![nGraph Compiler][ngraph-compiler-stack-readme.png]
-
 
 <div align="center">
-  <h6>
+  <h3>
     <a href="https://ngraph.nervanasys.com/docs/latest/project/about.html">
       Architecture and Features</a><span> | </span>
     <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">
       Release Notes</a><span> | </span>
     <a href="https://ngraph.nervanasys.com/docs/latest">Documentation</a><span> | </span>
     <a href="#Ecosystem" >nGraph Ecosystem</a><span> | </span>
-    <a href="#Getting-started-guides" >Getting Started Guides</a><span> | </span>
+    <a href="#Quick-start" >Quick start</a><span> | </span>
     <a href="#How-to-contribute" >How to Contribute</a>
- </h6>
+ </h3>
 </div>
 
-
-## Getting started guides
+## Quick start
 
 
 |  Framework / Version       | Installation guide                     | Notes  
@@ -42,7 +36,6 @@ Additional work is also being done via [PlaidML] which will feature running comp
 for Deep Learning with GPU accleration and support for MacOS. See our [Architecture and features]
 for what the stack looks like today and watch our [Release Notes] for recent 
 changes.
-
 
 | Backend                                       | current support   | future support |
 |-----------------------------------------------|-------------------|----------------|
@@ -104,6 +97,7 @@ to improve it:
   modifications are necessary, may provide feedback to guide you. When
   accepted, your pull request will be merged to the repository.
 
+![nGraph Compiler Stack][ngraph-compiler-stack-readme]
 
 [Architecture and features]:https://ngraph.nervanasys.com/docs/latest/project/about.html
 [Documentation]: https://ngraph.nervanasys.com/docs/latest
@@ -119,7 +113,7 @@ to improve it:
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
 [how to import]: https://ngraph.nervanasys.com/docs/latest/howto/import.html
 [ngraph-ecosystem]: doc/sphinx/source/graphics/599px-Intel-ngraph-ecosystem.png "nGraph Ecosystem"
-[ngraph-compiler-stack]: doc/sphinx/source/graphics/ngraph-compiler-stack.png "nGraph Compiler Stack"
+[ngraph-compiler-stack-readme]: doc/sphinx/source/graphics/ngraph-compiler-stack-readme.png "nGraph Compiler Stack"
 [build-status]: https://travis-ci.org/NervanaSystems/ngraph/branches
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
 [develop-without-lockin]: doc/sphinx/source/graphics/develop-without-lockin.png "Develop on any part of the stack wtihout lockin"
