@@ -1,12 +1,41 @@
 .. about: 
 
 
-About Features, FAQs
-####################
+Architecture, Features, FAQs
+############################
 
+* :ref:`architecture`
 * :ref:`features`
 * :ref:`faq`
 * :ref:`whats_next`
+
+
+.. _architecture:
+
+Stack Architecture
+==================
+
+
+.. figure:: ../graphics/stackngrknl.png
+    :width: 771px
+    :alt: Current Beta release stack
+
+    Simplified stack diagram for nGraph Compiler and components Beta 
+
+Starting from the top of the diagram, we present a simplified view of how 
+the nGraph input IR can receive a graph from a framework such as TensorFlow* 
+or MXNet when there is a corresponding "Bridge" or import method, such as 
+from NNVM or via `ONNX`_. Once the nGraph Core ops can begin parsing the 
+graph as a computation graph, they can pattern match subgraphs for device-
+specific optimizations; these are then encapsulated. Parts of the graph 
+that are not encapsulated default to framework implementation when executed. 
+nGraph keeps the input and output sematics of encapsulated subgraphs and 
+rebuilds an encapsulated subgraph which makes efficient use or re-use of 
+operations. 
+
+Acceleration of training workloads happens whenever any previous   
+
+
 
 
 .. _features:
@@ -15,8 +44,7 @@ Features
 ========
 
 The nGraph :abbr:`Intermediate Representation (IR)` contains a combination of 
-device-specific and non device-specific optimization and compilations to  
-enable:
+device-specific and non-device-specific optimization :
 
 * **Fusion** -- Fuse multiple ``ops`` to to decrease memory usage "localities". 
 * **Memory management** -- Prevent peak memory usage by intercepting a graph 
@@ -120,7 +148,11 @@ resources available for the breadth of ML/DL tasks.
 .. _faq:
 
 FAQs
-=====
+====
+
+Why nGraph? 
+-----------
+
 
 How does it work?
 ------------------
@@ -197,7 +229,8 @@ our `arXiv paper`_ from the 2018 SysML conference.
 
 
 .. _arXiv paper: https://arxiv.org/pdf/1801.08058.pdf
-.. _ONNX: http://onnx.ai 
+.. _ONNX: http://onnx.ai
+.. _NNVM: http://
 .. _nGraph ONNX companion tool: https://github.com/NervanaSystems/ngraph-onnx
 .. _Intel® MKL-DNN: https://github.com/intel/mkl-dnn
 .. _Movidius: https://developer.movidius.com/
