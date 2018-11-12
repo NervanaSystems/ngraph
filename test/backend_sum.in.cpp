@@ -453,12 +453,12 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc)
         args.push_back(tensor_val);
     }
 
-    auto cpu_func = clone_function(*f);
+    auto ref_func = clone_function(*f);
     auto bk_func = clone_function(*f);
 
-    auto cpu_results = execute(cpu_func, args, "INTERPRETER");
+    auto ref_results = execute(ref_func, args, "INTERPRETER");
     auto bk_results = execute(bk_func, args, "${BACKEND_NAME}");
 
-    EXPECT_TRUE(test::all_close_f(cpu_results.at(0), bk_results.at(0), 24, 3));
+    EXPECT_TRUE(test::all_close_f(ref_results.at(0), bk_results.at(0), 24, 3));
 }
 #endif
