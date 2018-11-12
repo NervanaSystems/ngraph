@@ -826,6 +826,9 @@ namespace ngraph
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
+                        const int ADD_INPUT = 3;
+                        // Accumulates conv into the second input of the unfused add
+                        op_annotations->add_in_place_oi_pair({0, ADD_INPUT, true});
                         quantized_conv_bias->set_op_annotations(op_annotations);
                     }
                 }
@@ -842,6 +845,9 @@ namespace ngraph
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
+                        const int ADD_INPUT = 3;
+                        // Accumulates conv into the second input of the unfused add
+                        op_annotations->add_in_place_oi_pair({0, ADD_INPUT, true});
                         quantized_conv_bias->set_op_annotations(op_annotations);
                     }
                 }

@@ -526,9 +526,13 @@ namespace ngraph
                             node, i_mds, o_mds);
 
                         auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 3, false, memory::format::x);
+                            node.get(), 4, false, memory::format::x);
+                        auto sum_scale_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 5, false, memory::format::x);
 
+                        i_mds.push_back(o_mds[0]);
                         i_mds.push_back(scale_input_md);
+                        i_mds.push_back(sum_scale_input_md);
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
@@ -550,9 +554,13 @@ namespace ngraph
                             node, i_mds, o_mds);
 
                         auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 3, false, memory::format::x);
+                            node.get(), 4, false, memory::format::x);
+                        auto sum_scale_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 5, false, memory::format::x);
 
+                        i_mds.push_back(o_mds[0]);
                         i_mds.push_back(scale_input_md);
+                        i_mds.push_back(sum_scale_input_md);
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
