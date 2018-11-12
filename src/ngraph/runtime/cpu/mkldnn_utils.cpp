@@ -282,6 +282,10 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
         et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(index));
     }
 
+    if (shape == Shape{})
+    {
+        shape = Shape{1};
+    }
     return memory::desc(memory::dims(shape.begin(), shape.end()), et, format);
 }
 

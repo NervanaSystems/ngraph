@@ -55,6 +55,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -1458,6 +1459,11 @@ void runtime::gpu::GPU_Emitter::emit_SelectAndScatter(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
+void runtime::gpu::GPU_Emitter::emit_ShapeOf(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 void runtime::gpu::GPU_Emitter::emit_Sigmoid(EMIT_ARGS)
 {
     emit_elementwise<ngraph::op::Sigmoid>(external_function, writer, node, args, out);
@@ -1522,23 +1528,17 @@ void runtime::gpu::GPU_Emitter::emit_Softmax(EMIT_ARGS)
     auto softmax = static_cast<const ngraph::op::Softmax*>(node);
     writer.block_begin();
     {
-        size_t index;
-        if (softmax->get_axes().size() != args[0].get_shape().size())
+        auto axes_set = softmax->get_axes();
+        ngraph::AxisVector axes_vec;
+        for (auto a : axes_set)
         {
-            auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
-
-            index = cuda_emitter->build_primitive(softmax);
+            axes_vec.push_back(a);
         }
-        else
-        {
-            auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
-
-            index = cudnn_emitter->build_softmax(CUDNN_SOFTMAX_FAST,
-                                                 CUDNN_SOFTMAX_MODE_INSTANCE,
-                                                 out[0].get_type(),
-                                                 CUDNNEmitter::Prop::Forward,
-                                                 args[0].get_shape());
-        }
+        std::vector<string> dtypes;
+        dtypes.push_back(args[0].get_type());
+        dtypes.push_back(out[0].get_type());
+        auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
+        size_t index = cuda_emitter->build_softmax(dtypes, args[0].get_shape(), axes_vec);
 
         writer << "void* input[] = {" << node_names(args) << "};\n";
         writer << "void* output[] = {" << node_names(out) << "};\n";

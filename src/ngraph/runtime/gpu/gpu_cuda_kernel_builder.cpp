@@ -78,55 +78,6 @@ void runtime::gpu::CudaKernelBuilder::get_cudnn_bn_inv_var_op(codegen::CodeWrite
     return;
 }
 
-void runtime::gpu::CudaKernelBuilder::get_softmax_divide_op(
-    codegen::CodeWriter& writer,
-    const std::string& name,
-    const std::vector<std::string>& data_types,
-    std::vector<size_t> axes_flag,
-    size_t rank)
-{
-    writer << runtime::gpu::nvrtc::helpers();
-    writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in0, "
-           << data_types[1] << "* in1, " << data_types[2] << "* out,";
-    for (size_t i = 0; i < axes_flag.size(); i++)
-    {
-        writer << "uint32_t input0_strides" << i << ", ";
-    }
-    for (size_t i = 0; i < axes_flag.size(); i++)
-    {
-        writer << "uint32_t input1_strides" << i << ", ";
-    }
-    writer << "uint32_t n)\n";
-    writer.block_begin();
-    {
-        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
-        writer << "if (tid < n)\n";
-        writer.block_begin();
-        {
-            writer << "uint32_t input0_idx = tid;\n";
-            writer << "uint32_t input1_idx = 0;\n";
-            size_t i = 0;
-            for (; i < rank - 1; i++)
-            {
-                if (axes_flag[i] != 1)
-                {
-                    writer << "input1_idx += (input0_idx / input0_strides" << i
-                           << ") * input1_strides" << i << ";\n";
-                }
-                writer << "input0_idx %= input0_strides" << i << ";\n";
-            }
-            if (axes_flag[i] != 1)
-            {
-                writer << "input1_idx += (input0_idx / input0_strides" << i << ") * input1_strides"
-                       << i << ";\n";
-            }
-            writer << "out[tid] = in0[tid] / in1[input1_idx];\n";
-        }
-        writer.block_end();
-    }
-    writer.block_end();
-}
-
 void runtime::gpu::CudaKernelBuilder::get_ew_collective_op(
     codegen::CodeWriter& writer,
     const std::string& name,
@@ -327,6 +278,202 @@ void runtime::gpu::CudaKernelBuilder::get_topk(codegen::CodeWriter& writer,
         writer.block_end();
     }
     writer.block_end();
+}
+
+void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer,
+                                                     const std::string& name,
+                                                     runtime::gpu::GPUKernelArgs& args,
+                                                     const std::vector<std::string>& data_types,
+                                                     size_t out_rank,
+                                                     size_t reduce_rank)
+{
+    writer << runtime::gpu::nvrtc::helpers();
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
+    writer.block_begin();
+    {
+        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
+        writer << "if (tid < nthreads)\n";
+        writer.block_begin();
+        {
+            if (out_rank > 0)
+            {
+                writer << "uint32_t dim_idx_generator = tid;\n";
+            }
+            writer << "uint32_t in_idx = 0;\n";
+
+            // loop through all reduction axis
+            for (int64_t i = 0; i < static_cast<int64_t>(out_rank); i++)
+            {
+                writer << "in_idx += (dim_idx_generator / out_strides" << i
+                       << ") * non_reduce_strides" << i << ";\n";
+                writer << "dim_idx_generator %= out_strides" << i << ";\n";
+            }
+            writer << "uint32_t init_in_idx = in_idx;\n";
+            int64_t last_r_idx = static_cast<int64_t>(reduce_rank) - 1;
+
+            //find max
+            writer << data_types[1] << " r_max = in[init_in_idx];\n";
+            writer << data_types[1] << " input_i;\n";
+
+            writer.block_begin();
+            for (int64_t j = 0; j < last_r_idx; j++)
+            {
+                writer << "for(int idx" << j << " = 0; idx" << j << "< reduce_shape" << j << "; idx"
+                       << j << "++)\n";
+                writer.block_begin();
+            }
+            {
+                writer << "uint32_t reduce_idx = in_idx;\n";
+                for (int64_t j = 0; j < last_r_idx; j++)
+                {
+                    writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
+                }
+                writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
+                writer << "if(reduce_idx != init_in_idx)\n";
+                writer.block_begin();
+                {
+                    writer << "input_i = in[reduce_idx];\n";
+                    writer << "r_max = r_max > input_i ? r_max : input_i;\n";
+                }
+                writer.block_end();
+                writer << "reduce_idx += step;\n";
+                writer << "int idx" << last_r_idx << " = 1;\n";
+                // unroll last reduction axis
+                uint32_t unroll_num = 8;
+                writer << "for(; idx" << last_r_idx << " + " << unroll_num << " - 1 < reduce_shape"
+                       << last_r_idx << "; idx" << last_r_idx << " += " << unroll_num << ")\n";
+                writer.block_begin();
+                {
+                    for (int k = 0; k < unroll_num; k++)
+                    {
+                        writer << "input_i = in[reduce_idx];\n";
+                        writer << "r_max = r_max > input_i ? r_max : input_i;\n";
+                        writer << "reduce_idx += step;\n";
+                    }
+                }
+                writer.block_end();
+                writer << "for(; idx" << last_r_idx << " < reduce_shape" << last_r_idx << "; idx"
+                       << last_r_idx << "++)\n";
+                writer.block_begin();
+                {
+                    writer << "input_i = in[reduce_idx];\n";
+                    writer << "r_max = r_max > input_i ? r_max : input_i;\n";
+                    writer << "reduce_idx += step;\n";
+                }
+                writer.block_end();
+            }
+            for (int64_t j = 0; j < last_r_idx; j++)
+            {
+                writer.block_end();
+            }
+            writer.block_end();
+
+            //exp and sum , https://en.wikipedia.org/wiki/Kahan_summation_algorithm
+            writer << data_types[1] << " r_sum = 0;\n";
+            writer << data_types[1] << " c = 0;\n";
+            writer << data_types[1] << " y;\n";
+            writer << data_types[1] << " t;\n";
+            writer.block_begin();
+            for (int64_t j = 0; j < last_r_idx; j++)
+            {
+                writer << "for(int idx" << j << " = 0; idx" << j << "< reduce_shape" << j << "; idx"
+                       << j << "++)\n";
+                writer.block_begin();
+            }
+            {
+                writer << "uint32_t reduce_idx = in_idx;\n";
+                for (int64_t j = 0; j < last_r_idx; j++)
+                {
+                    writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
+                }
+                writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
+                writer << "int idx" << last_r_idx << " = 0;\n";
+                // unroll last reduction axis
+                uint32_t unroll_num = 8;
+                writer << "for(; idx" << last_r_idx << " + " << unroll_num << " - 1 < reduce_shape"
+                       << last_r_idx << "; idx" << last_r_idx << " += " << unroll_num << ")\n";
+                writer.block_begin();
+                {
+                    for (int k = 0; k < unroll_num; k++)
+                    {
+                        writer << "input_i = expf(in[reduce_idx] - r_max);\n";
+                        writer << "y = input_i - c;\n";
+                        writer << "t = r_sum + y;\n";
+                        writer << "c = (t - r_sum) - y;\n";
+                        writer << "r_sum = t;\n";
+                        writer << "reduce_idx += step;\n";
+                    }
+                }
+                writer.block_end();
+                writer << "for(; idx" << last_r_idx << " < reduce_shape" << last_r_idx << "; idx"
+                       << last_r_idx << "++)\n";
+                writer.block_begin();
+                {
+                    writer << "input_i = expf(in[reduce_idx] - r_max);\n";
+                    writer << "y = input_i - c;\n";
+                    writer << "t = r_sum + y;\n";
+                    writer << "c = (t - r_sum) - y;\n";
+                    writer << "r_sum = t;\n";
+                    writer << "reduce_idx += step;\n";
+                }
+                writer.block_end();
+            }
+            for (int64_t j = 0; j < last_r_idx; j++)
+            {
+                writer.block_end();
+            }
+            writer.block_end();
+
+            //divide
+            writer.block_begin();
+            for (int64_t j = 0; j < last_r_idx; j++)
+            {
+                writer << "for(int idx" << j << " = 0; idx" << j << "< reduce_shape" << j << "; idx"
+                       << j << "++)\n";
+                writer.block_begin();
+            }
+            {
+                writer << "uint32_t reduce_idx = in_idx;\n";
+                for (int64_t j = 0; j < last_r_idx; j++)
+                {
+                    writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
+                }
+                writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
+                writer << "int idx" << last_r_idx << " = 0;\n";
+                // unroll last reduction axis
+                uint32_t unroll_num = 8;
+                writer << "for(; idx" << last_r_idx << " + " << unroll_num << " - 1 < reduce_shape"
+                       << last_r_idx << "; idx" << last_r_idx << " += " << unroll_num << ")\n";
+                writer.block_begin();
+                {
+                    for (int k = 0; k < unroll_num; k++)
+                    {
+                        writer << "input_i = expf(in[reduce_idx] - r_max) / r_sum;\n";
+                        writer << "out[reduce_idx] = input_i;\n";
+                        writer << "reduce_idx += step;\n";
+                    }
+                }
+                writer.block_end();
+                writer << "for(; idx" << last_r_idx << " < reduce_shape" << last_r_idx << "; idx"
+                       << last_r_idx << "++)\n";
+                writer.block_begin();
+                {
+                    writer << "input_i = expf(in[reduce_idx] - r_max) / r_sum;\n";
+                    writer << "out[reduce_idx] = input_i;\n";
+                    writer << "reduce_idx += step;\n";
+                }
+                writer.block_end();
+            }
+            for (int64_t j = 0; j < last_r_idx; j++)
+            {
+                writer.block_end();
+            }
+            writer.block_end();
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+    return;
 }
 
 //each thread calculate the whole reduction of one output
