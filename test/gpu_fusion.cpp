@@ -448,7 +448,7 @@ TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_1lstm_cell)
     }
 }
 
-TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_1rnn_layer_3lstm_cell)
+TEST(DISABLED_gpu_fusion, rnn_fusion_inter_vs_gpu_1rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
     auto gpu_f = make_function(file_name);

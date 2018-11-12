@@ -890,7 +890,6 @@ TEST(cpu_fusion, conv_bias_relu_n2c1h2w2_2)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
 }
 
-#if 0
 TEST(cpu_fusion, conv_horizontal_fusion)
 {
     Shape shape_a{2, 1, 6, 6};
@@ -941,7 +940,6 @@ TEST(cpu_fusion, conv_horizontal_fusion)
     size_t cpu_cb = count_ops_of_type<op::ConvolutionBias>(cpu_f);
     ASSERT_EQ(cpu_cb, 1);
 }
-#endif
 
 // ConvolutionBiasAdd relies on an in-place fused MKLDNN kernel.
 // Need to ensure that it is fused only when in-place buffer allocation is feasible
@@ -2210,7 +2208,7 @@ static std::shared_ptr<Function> make_function(const std::string& file_name)
     return func;
 }
 
-TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
+TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
     auto cpu_f = make_function(file_name);
@@ -2232,7 +2230,7 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
     }
 }
 
-TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
+TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
@@ -2254,7 +2252,7 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
     }
 }
 
-TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
+TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
@@ -2952,7 +2950,7 @@ TEST(cpu_fusion, fuse_rnn_across_layer)
     EXPECT_EQ(ref_rnn_count, rnn_count);
 }
 
-TEST(cpu_fusion, fuse_rnn_across_2layer_1timestep)
+TEST(DISABLED_cpu_fusion, fuse_rnn_across_2layer_1timestep)
 {
     const std::string file_name("mxnet/2rnn_layer_1timestep.json");
     auto cpu_f = make_function(file_name);

@@ -52,7 +52,8 @@ namespace ngraph
             } // namespace error
         }     // namespace detail
 
-        std::vector<std::shared_ptr<Function>> load_onnx_model(std::istream& sin)
+        std::vector<std::shared_ptr<Function>> load_onnx_model(std::istream& sin,
+                                                               const Weights& weights)
         {
             onnx::ModelProto model_proto;
             if (!model_proto.ParseFromIstream(&sin))
@@ -61,7 +62,7 @@ namespace ngraph
             }
             std::vector<std::shared_ptr<Function>> output_functions;
             Model model{model_proto};
-            Graph graph{model_proto.graph(), model};
+            Graph graph{model_proto.graph(), model, weights};
             for (const auto& output : graph.get_outputs())
             {
                 output_functions.emplace_back(std::make_shared<Function>(
@@ -70,24 +71,26 @@ namespace ngraph
             return output_functions;
         }
 
-        std::vector<std::shared_ptr<Function>> load_onnx_model(const std::string& path)
+        std::vector<std::shared_ptr<Function>> load_onnx_model(const std::string& path,
+                                                               const Weights& weights)
         {
             std::ifstream ifs{path, std::ios::in | std::ios::binary};
             if (!ifs.is_open())
             {
                 throw detail::error::file_open{path};
             }
-            return load_onnx_model(ifs);
+            return load_onnx_model(ifs, weights);
         }
 
-        std::shared_ptr<Function> import_onnx_function(std::istream& sin)
+        std::shared_ptr<Function> import_onnx_function(std::istream& sin, const Weights& weights)
         {
-            return load_onnx_model(sin).front();
+            return load_onnx_model(sin, weights).front();
         }
 
-        std::shared_ptr<Function> import_onnx_function(const std::string& path)
+        std::shared_ptr<Function> import_onnx_function(const std::string& path,
+                                                       const Weights& weights)
         {
-            return load_onnx_model(path).front();
+            return load_onnx_model(path, weights).front();
         }
 
         void register_operator(const std::string& name,
