@@ -477,11 +477,11 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
 }
 
 void runtime::gpu::CudaKernelBuilder::get_batchnorm_op(codegen::CodeWriter& writer,
-                                                     const std::string& name,
-                                                     runtime::gpu::GPUKernelArgs& args,
-                                                     const std::vector<std::string>& data_types,
-                                                     size_t out_rank,
-                                                     size_t reduce_rank)
+                                                       const std::string& name,
+                                                       runtime::gpu::GPUKernelArgs& args,
+                                                       const std::vector<std::string>& data_types,
+                                                       size_t out_rank,
+                                                       size_t reduce_rank)
 {
     writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
@@ -1412,7 +1412,9 @@ void runtime::gpu::CudaKernelBuilder::get_replace_slice_op(codegen::CodeWriter& 
         writer.block_begin();
         {
             coordinate_transform_to_multi_d(
-                writer, "dim_strides", "dim_magic", "dim_shift", "tid", "dimension", rank, true);
+                writer,"tid",  "dim_strides", "dimension", rank);
+            //coordinate_transform_to_multi_d(
+            //    writer, "dim_strides", "dim_magic", "dim_shift", "tid", "dimension", rank, true);
             writer << "int source_di;\n";
             writer << "bool on_stride;\n";
             writer << "bool in_slice_di;\n";
@@ -2049,10 +2051,12 @@ void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::C
     writer << "int coordinate_product = " << in_index << ";\n";
     for (size_t i = 0; i < rank; i++)
     {
-        writer << "int " << out_coordinates << i << " = coordinate_product / " << in_strides << i << ";\n";
+        writer << "int " << out_coordinates << i << " = coordinate_product / " << in_strides << i
+               << ";\n";
         if (i != rank - 1)
         {
-            writer << "coordinate_product -=" << out_coordinates << i  << " * " << in_strides << i << ");\n";
+            writer << "coordinate_product -=" << out_coordinates << i << " * " << in_strides << i
+                   << ");\n";
         }
     }
 }
@@ -2062,15 +2066,12 @@ std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_hel
     std::string in_index,
     std::string in_strides,
     std::string out_strides,
-    std::string out_index
+    std::string out_index,
     size_t rank)
 {
-    std::string out_coordinates = "temp_out_coordinates_"
-    coordinate_transform_to_multi_d(writer,
-                                    in_index,
-                                    in_strides,
-                                    out_coordinates,
-                                    rank);
+    std::string out_coordinates = "temp_out_coordinates_";
+     coordinate_transform_to_multi_d(
+        writer, in_index, in_strides, out_coordinates, rank);
 
     // index into reduced tensor from coordinates of non-reduced tensor
     writer << "int " << out_index << " = 0;\n";
@@ -2079,7 +2080,7 @@ std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_hel
         writer << "out_idx += " << out_coordinates << i << " * " << out_strides << i << ";\n";
     }
 
-    return reduced_idx;
+    return out_index;
 }
 
 void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::CodeWriter& writer,
