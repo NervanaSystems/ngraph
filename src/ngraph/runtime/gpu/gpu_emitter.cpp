@@ -332,6 +332,7 @@ void runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
 template <typename T>
 void emit_BatchNorm(EMIT_ARGS, runtime::gpu::CUDNNEmitter::Prop direction, bool save_stats)
 {
+    NGRAPH_INFO << "batchnorm";
     const T* batchnorm = static_cast<const T*>(node);
 
     auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();

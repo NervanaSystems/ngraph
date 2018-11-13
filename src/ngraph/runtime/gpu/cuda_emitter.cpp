@@ -2248,7 +2248,7 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm(const element::Type dtype,
                                                   const double eps)
 {
     size_t rank = result_shape.size();
-    NVShape reduce_axis(1, 1);
+    NVShape reduce_axis{0,2,3};
     size_t reduce_rank = reduce_axis.size();
     size_t out_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
