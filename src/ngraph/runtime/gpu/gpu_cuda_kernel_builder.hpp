@@ -35,6 +35,13 @@ namespace ngraph
             class CudaKernelBuilder
             {
             public:
+static void runtime::gpu::CudaKernelBuilder::get_batchnorm_op(codegen::CodeWriter& writer,
+                                                     const std::string& name,
+                                                     runtime::gpu::GPUKernelArgs& args,
+                                                     const std::vector<std::string>& data_types,
+                                                     size_t out_rank,
+                                                     size_t reduce_rank);
+
                 static void get_elementwise_op(codegen::CodeWriter& writer,
                                                const std::string& name,
                                                const std::string& op,
@@ -207,6 +214,13 @@ namespace ngraph
                                                            std::string o_coordinates,
                                                            size_t rank,
                                                            bool register_arguments = false);
+                static std::string collective_coordinate_transform_helper(
+    codegen::CodeWriter& writer,
+    std::string in_index,
+    std::string in_strides,
+    std::string out_strides,
+    std::string out_index
+    size_t rank);
                 static void coordinate_transform_to_multi_d(codegen::CodeWriter& writer,
                                                             std::string i_strides,
                                                             std::string i_stride_magic,
@@ -216,6 +230,12 @@ namespace ngraph
                                                             size_t rank,
                                                             bool register_arguments = false);
             };
+
+static void coordinate_transform_to_multi_d(codegen::CodeWriter& writer,
+                                                                      std::string in_index,
+                                                                      std::string in_strides,
+                                                                      std::string out_coordinates,
+                                                                      size_t rank);
         }
     }
 }
