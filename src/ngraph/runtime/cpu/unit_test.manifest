@@ -16,3 +16,4 @@ shape_of_scalar
 shape_of_vector
 shape_of_matrix
 shape_of_5d
+quantize_clamp_int32
