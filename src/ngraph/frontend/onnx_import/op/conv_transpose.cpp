@@ -45,8 +45,8 @@ namespace ngraph
                     auto data = inputs.at(0);
                     auto filters = inputs.at(1);
 
-                    Shape data_shape = data->get_shape();
-                    Shape weights_shape = filters->get_shape();
+                    const Shape& data_shape = data->get_shape();
+                    const Shape& weights_shape = filters->get_shape();
                     int num_spatial_dims = data_shape.size() - 2;
 
                     auto strides = convpool::get_strides(node);
