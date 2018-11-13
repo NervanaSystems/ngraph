@@ -48,6 +48,37 @@ namespace ngraph
                 auto lower_bounds = slice->get_lower_bounds();
                 auto upper_bounds = slice->get_upper_bounds();
 
+                if (auto op_annotations = slice->get_op_annotations())
+                {
+                    auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                    if (in_place_oi_pairs.size() > 0)
+                    {
+                        auto element_size = slice->get_input_element_type(0).size();
+                        auto start = 0, accumulated = 1;
+                        for (int i = arg_shape.size() - 1; i >= 0; i--)
+                        {
+                            start += lower_bounds[i] * accumulated;
+                            accumulated *= arg_shape[i];
+                        }
+                        auto out_size = shape_size(out_shape) * element_size;
+                        auto arg_size = shape_size(arg_shape) * element_size;
+                        auto offset = start * element_size;
+
+                        auto functor = [&, out_size, arg_size, offset](CPURuntimeContext* ctx,
+                                                                       CPUExecutionContext* ectx) {
+                            if (out_tensor < arg_tensor ||
+                                out_tensor >= reinterpret_cast<char*>(arg_tensor) + arg_size)
+                            {
+                                memcpy(out_tensor,
+                                       reinterpret_cast<char*>(arg_tensor) + offset,
+                                       out_size);
+                            }
+                        };
+                        functors.emplace_back(functor);
+                        return;
+                    }
+                }
+
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
