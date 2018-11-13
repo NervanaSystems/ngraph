@@ -1235,3 +1235,53 @@ NGRAPH_TEST_P(${BACKEND_NAME}, avg_pool_3d_params, avg_pool_3d_uneven_strided_pa
 
 // avg_pool_3d case generation
 NGRAPH_INSTANTIATE_TEST_CASE_P(${BACKEND_NAME}, include_pad, avg_pool_3d_params, testing::Bool());
+
+NGRAPH_TEST(${BACKEND_NAME}, maxpool_backprop_gpu_bug)
+{
+    Shape window_shape{1, 2};
+    Strides move_strides{1, 2};
+    Shape padding_below{0, 0};
+    Shape padding_above{0, 0};
+
+    const size_t num_elements = 3 * 1024 + 1; // change 1 to 0 and GPU will pass
+    auto ceil_div = [](size_t x, size_t y) { return 1 + ((x - 1) / y); };
+    const size_t num_pooled_elements = ceil_div(num_elements + padding_below.back() + padding_above.back() - window_shape.back() + 1, move_strides.back());
+    Shape shape_x{1, 1, 1, num_elements};
+    Shape shape_y{1, 1, 1, num_pooled_elements};
+
+    auto x = make_shared<op::Parameter>(element::f32, shape_x);
+    auto dy = make_shared<op::Parameter>(element::f32, shape_y);
+
+    auto bprop = make_shared<Function>(make_shared<op::MaxPoolBackprop>(x, dy, window_shape, move_strides, padding_below, padding_above), op::ParameterVector{x, dy});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/outputn
+    auto x_t = backend->create_tensor(element::f32, shape_x);
+    auto dy_t = backend->create_tensor(element::f32, shape_y);
+
+    std::vector<float> dy_data(num_pooled_elements); // = { 1, 1 };
+    test::Uniform<float> rng(0.0f, 1.0f);
+    rng.initialize(dy_data);
+
+    std::vector<float> x_data(num_elements, 0);
+    for (auto i = 0u; i < num_elements; i++)
+    {
+        x_data[i] = (i % 2);
+    }
+    copy_data(x_t, x_data);
+    copy_data(dy_t, dy_data);
+
+    auto dx_t = backend->create_tensor(element::f32, shape_x);
+    backend->call_with_validate(bprop, {dx_t}, {x_t, dy_t});
+
+    std::vector<float> expected_dx(num_elements, 0);
+    for (auto i = 0u, j = 0u; i < num_elements; i++)
+    {
+        if (x_data[i])
+        {
+            expected_dx[i] = x_data[i] * dy_data[j++];
+        }
+    }
+    EXPECT_EQ(expected_dx, read_vector<float>(dx_t));
+}
