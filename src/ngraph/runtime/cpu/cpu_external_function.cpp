@@ -178,7 +178,18 @@
 using namespace std;
 using namespace ngraph;
 
-#define REGISTER_KNOBBED_PASS(name, enable_by_default, pass, ...)                                  \
+#define REGISTER_KNOBBED_PASS(name, enable_by_default, pass)                                       \
+    if (pass_map.find(name) != pass_map.end())                                                     \
+    {                                                                                              \
+        if (pass_map[name])                                                                        \
+            pass_manager.register_pass<pass>();                                                    \
+    }                                                                                              \
+    else if (enable_by_default)                                                                    \
+    {                                                                                              \
+        pass_manager.register_pass<pass>();                                                        \
+    }
+
+#define REGISTER_KNOBBED_PASS_WITH_ARGS(name, enable_by_default, pass, ...)                        \
     if (pass_map.find(name) != pass_map.end())                                                     \
     {                                                                                              \
         if (pass_map[name])                                                                        \
@@ -1065,15 +1076,15 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
 #endif
 
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
-    REGISTER_KNOBBED_PASS(
+    REGISTER_KNOBBED_PASS_WITH_ARGS(
         "CPUWorkspaceInsertion", true, runtime::cpu::pass::CPUWorkspaceInsertion, nv_cwi, false);
-    REGISTER_KNOBBED_PASS("CPUAssignment", true, runtime::cpu::pass::CPUAssignment, this);
+    REGISTER_KNOBBED_PASS_WITH_ARGS("CPUAssignment", true, runtime::cpu::pass::CPUAssignment, this);
     REGISTER_KNOBBED_PASS("ConstantFolding", true, ngraph::pass::ConstantFolding);
-    REGISTER_KNOBBED_PASS("CPULayout", true, runtime::cpu::pass::CPULayout, this);
-    REGISTER_KNOBBED_PASS("CommonSubexpressionElimination",
-                          true,
-                          ngraph::pass::CommonSubexpressionElimination,
-                          runtime::cpu::get_cse_handlers_map());
+    REGISTER_KNOBBED_PASS_WITH_ARGS("CPULayout", true, runtime::cpu::pass::CPULayout, this);
+    REGISTER_KNOBBED_PASS_WITH_ARGS("CommonSubexpressionElimination",
+                                    true,
+                                    ngraph::pass::CommonSubexpressionElimination,
+                                    runtime::cpu::get_cse_handlers_map());
     REGISTER_KNOBBED_PASS(
         "CPUPostLayoutOptimizations", true, runtime::cpu::pass::CPUPostLayoutOptimizations);
     REGISTER_KNOBBED_PASS("CPUMemoryOptimization", true, runtime::cpu::pass::CPUMemoryOptimization);
