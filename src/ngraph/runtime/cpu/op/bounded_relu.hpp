@@ -18,7 +18,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Elementwise Minimum(Relu(arg, 0), alpha) operation.
         ///
-        class BoundedRelu : public Op
+        class BoundedRelu : public ngraph::op::util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a BoundedRelu operation.

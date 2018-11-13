@@ -53,16 +53,6 @@ namespace ngraph
 
                 private:
                     CPU_ExternalFunction* m_external_function;
-                    static std::shared_ptr<Node> insert_input_conversions(
-                        CPU_ExternalFunction* external_function,
-                        std::shared_ptr<Node>& node,
-                        const std::vector<mkldnn::memory::desc>& required_mds);
-                    static void
-                        set_output_layouts(std::shared_ptr<Node>& node,
-                                           const std::vector<mkldnn::memory::desc>& output_mds);
-                    static void set_native_layouts(CPU_ExternalFunction* external_function,
-                                                   std::shared_ptr<Node> node,
-                                                   bool use_replace);
                 };
             }
         }

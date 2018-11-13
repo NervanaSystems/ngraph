@@ -71,10 +71,10 @@ using namespace ngraph::runtime::cpu;
 // Check if the input layout matches the layout requested in `required_mds`
 // If not, insert a layout conversion node between the input tensor and
 // the `node`. For now, only MKLDNN nodes/kernels can request specific layouts
-shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
-    runtime::cpu::CPU_ExternalFunction* external_function,
-    shared_ptr<Node>& node,
-    const vector<memory::desc>& required_mds)
+static shared_ptr<Node>
+    insert_input_conversions(runtime::cpu::CPU_ExternalFunction* external_function,
+                             shared_ptr<Node>& node,
+                             const vector<memory::desc>& required_mds)
 {
     vector<shared_ptr<Node>> new_args;
     bool replace_node = false;
@@ -152,8 +152,7 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
     return node;
 }
 
-void runtime::cpu::pass::CPULayout::set_output_layouts(shared_ptr<Node>& node,
-                                                       const vector<memory::desc>& output_mds)
+static void set_output_layouts(shared_ptr<Node>& node, const vector<memory::desc>& output_mds)
 {
     for (size_t i = 0; i < node->get_output_size(); ++i)
     {
@@ -173,10 +172,9 @@ void runtime::cpu::pass::CPULayout::set_output_layouts(shared_ptr<Node>& node,
     }
 }
 
-void runtime::cpu::pass::CPULayout::set_native_layouts(
-    runtime::cpu::CPU_ExternalFunction* external_function,
-    std::shared_ptr<Node> node,
-    bool use_replace = true)
+static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_function,
+                               std::shared_ptr<Node> node,
+                               bool use_replace = true)
 {
     std::vector<shared_ptr<Node>> new_args;
     bool replace_node = false;
@@ -264,6 +262,58 @@ void runtime::cpu::pass::CPULayout::set_native_layouts(
             layout->set_mkldnn_md(native_md);
         }
         tv->set_tensor_layout(layout);
+    }
+}
+
+static void set_layouts_unaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction* external_function,
+                                     std::shared_ptr<ngraph::Node> node)
+{
+    auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+    // Non MKLDNN kernels can handle MKLDNN layouts as long as there are not padded
+    bool md_check = input_md.data.format != mkldnn_format_undef &&
+                    !mkldnn_utils::is_mkldnn_padded_layout(
+                        input_md, ngraph::get_default_order(node->get_input_shape(0)));
+    if (mkldnn_utils::use_mkldnn_kernel(node.get()) || md_check)
+    {
+        vector<memory::desc> o_mds;
+        o_mds.push_back(input_md);
+        set_output_layouts(node, o_mds);
+    }
+    else
+    {
+        set_native_layouts(external_function, node);
+    }
+}
+
+void set_layouts_binaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction* external_function,
+                               std::shared_ptr<ngraph::Node> node)
+{
+    std::vector<mkldnn::memory::desc> arg_mds{mkldnn_utils::get_input_mkldnn_md(node.get(), 0),
+                                              mkldnn_utils::get_input_mkldnn_md(node.get(), 1)};
+    bool md_check = arg_mds[0].data.format != mkldnn_format_undef &&
+                    arg_mds[1].data.format != mkldnn_format_undef &&
+                    !mkldnn_utils::is_mkldnn_padded_layout(
+                        arg_mds[0], ngraph::get_default_order(node->get_input_shape(0))) &&
+                    !mkldnn_utils::is_mkldnn_padded_layout(
+                        arg_mds[1], ngraph::get_default_order(node->get_input_shape(1)));
+    if (mkldnn_utils::use_mkldnn_kernel(node.get()) || md_check)
+    {
+        vector<memory::desc> i_mds;
+        vector<memory::desc> o_mds;
+        int select = 0;
+        if (std::getenv("NGRAPH_PASS_CPU_LAYOUT_ELTWISE") != nullptr)
+        {
+            select = std::atoi(std::getenv("NGRAPH_PASS_CPU_LAYOUT_ELTWISE"));
+        }
+        i_mds.push_back(arg_mds[select]);
+        i_mds.push_back(arg_mds[select]);
+        o_mds.push_back(arg_mds[select]);
+        node = insert_input_conversions(external_function, node, i_mds);
+        set_output_layouts(node, o_mds);
+    }
+    else
+    {
+        set_native_layouts(external_function, node);
     }
 }
 
@@ -1457,52 +1507,9 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Relu)
-                {
-                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
-                    {
-                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                        vector<memory::desc> o_mds;
-                        o_mds.push_back(input_md);
-                        set_output_layouts(node, o_mds);
-                    }
-                    else
-                    {
-                        if (mkldnn_utils::get_input_mkldnn_md(node.get(), 0).data.format ==
-                            mkldnn_format_undef)
-                        {
-                            set_native_layouts(external_function, node);
-                        }
-                        else
-                        {
-                            auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                            vector<memory::desc> o_mds;
-                            o_mds.push_back(input_md);
-                            set_output_layouts(node, o_mds);
-                        }
-                    }
-                }
-
-                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::LRN)
                 {
                     if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node.get()))
-                    {
-                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                        vector<memory::desc> o_mds;
-                        o_mds.push_back(input_md);
-                        set_output_layouts(node, o_mds);
-                    }
-                    else
-                    {
-                        set_native_layouts(external_function, node);
-                    }
-                }
-
-                template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Sigmoid)
-                {
-                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         vector<memory::desc> o_mds;
@@ -1883,22 +1890,6 @@ namespace ngraph
                         set_native_layouts(external_function, node);
                     }
                 }
-
-                template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::BoundedRelu)
-                {
-                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
-                    {
-                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                        vector<memory::desc> o_mds;
-                        o_mds.push_back(input_md);
-                        set_output_layouts(node, o_mds);
-                    }
-                    else
-                    {
-                        set_native_layouts(external_function, node);
-                    }
-                }
             }
         }
     }
@@ -1953,18 +1944,15 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::GetOutputElement),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GetOutputElement>},
     {TI(ngraph::op::LRN), &runtime::cpu::pass::CPULayout::layout<ngraph::op::LRN>},
-    {TI(ngraph::op::Relu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Relu>},
     {TI(ngraph::op::Reshape), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Reshape>},
     {TI(ngraph::op::Result), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Result>},
     {TI(ngraph::op::ReluBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ReluBackprop>},
-    {TI(ngraph::op::Sigmoid), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Sigmoid>},
     {TI(ngraph::op::SigmoidBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::SigmoidBackprop>},
     {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Lstm>},
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Rnn>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Softmax>},
-    {TI(ngraph::op::BoundedRelu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BoundedRelu>},
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
     {TI(ngraph::op::Slice), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Slice>},
@@ -1985,6 +1973,16 @@ bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::share
         if (handler != s_dispatcher.end())
         {
             handler->second(m_external_function, node);
+        }
+        else if (dynamic_pointer_cast<ngraph::op::util::UnaryElementwiseArithmetic>(node) !=
+                 nullptr)
+        {
+            set_layouts_unaryeltwise(m_external_function, node);
+        }
+        else if (dynamic_pointer_cast<ngraph::op::util::BinaryElementwiseArithmetic>(node) !=
+                 nullptr)
+        {
+            set_layouts_binaryeltwise(m_external_function, node);
         }
         else
         {
