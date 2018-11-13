@@ -85,7 +85,7 @@ public:
 
     /// \brief Executes a single iteration of a Function. If func is not compiled the call will
     ///     compile it.
-    /// \param handle Handle returned from compile()
+    /// \param handle Handle returned from compile() or load()
     /// \returns true if iteration is successful, false otherwise
     virtual bool call(Handle handle,
                       const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
@@ -93,29 +93,29 @@ public:
 
     /// \brief Executes a single iteration of a Function. If func is not compiled the call will
     ///     compile it. Optionally validates the inputs and outputs against the function graph.
-    /// \param handle Handle returned from compile()
+    /// \param handle Handle returned from compile() or load()
     /// \returns true if iteration is successful, false otherwise
     bool call_with_validate(Handle handle,
                             const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                             const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
     {
-        // validate_call(handle, outputs, inputs);
+        validate_call(handle, outputs, inputs);
         return call(handle, outputs, inputs);
     }
 
     /// \brief Compiled functions may be cached. This function removes a compiled function
     ///     from the cache.
-    /// \param handle Handle returned from compile()
+    /// \param handle Handle returned from compile() or load()
     virtual void remove_compiled_function(Handle handle);
 
     /// \brief Save the function's state.
-    /// \param handle Handle returned from compile()
+    /// \param handle Handle returned from compile() or load()
     /// \param path File system path to the output file.
     /// \returns true if save is successful.
     virtual bool save(Handle handle, const std::string& path) const;
 
     /// \brief Load a function's saved state.
-    /// \param handle Handle returned from compile()
+    /// \param path File system path to the input file.
     /// \returns non-nullptr Handle if successful, nullptr otherwise.
     virtual Handle load(const std::string& path);
 
@@ -125,7 +125,7 @@ public:
     virtual void enable_performance_data(bool enable);
 
     /// \brief Collect performance information gathered on a Function.
-    /// \param handle Handle returned from compile()
+    /// \param handle Handle returned from compile() or load()
     /// \returns Vector of PerformanceCounter information.
     virtual std::vector<PerformanceCounter> get_performance_data(Handle handle) const;
 
@@ -133,6 +133,16 @@ public:
     /// \param node is the op to test.
     /// \returns true if the op is supported, false otherwise.
     virtual bool is_supported(const Node& node) const;
+
+    /// \brief Query the input Parameters for a given Handle
+    /// \param handle Handle returned from compile() or load()
+    /// \returns an ngraph::op::ParameterVector of all input parameters
+    virtual const ngraph::op::ParameterVector& get_parameter_descriptors(Handle handle) const = 0;
+
+    /// \brief Query the output Results for a given Handle
+    /// \param handle Handle returned from compile() or load()
+    /// \returns an ngraph::ResultVector of all input parameters
+    virtual const ngraph::ResultVector& get_result_descriptors(Handle handle) const = 0;
 
 protected:
     void validate_call(Handle handle,

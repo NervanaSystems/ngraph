@@ -49,4 +49,16 @@ public:
     bool call(Handle,
               const std::vector<std::shared_ptr<Tensor>>& outputs,
               const std::vector<std::shared_ptr<Tensor>>& intputs) override;
+
+    const ngraph::op::ParameterVector& get_parameter_descriptors(Handle handle) const override;
+
+    const ngraph::ResultVector& get_result_descriptors(Handle handle) const override;
+
+private:
+    class FunctionInstance
+    {
+    public:
+        std::shared_ptr<Function> m_function;
+    };
+    std::vector<std::shared_ptr<FunctionInstance>> m_instances;
 };

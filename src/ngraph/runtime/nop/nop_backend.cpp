@@ -56,7 +56,10 @@ shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const elemen
 
 runtime::Handle runtime::nop::NOPBackend::compile(const shared_ptr<Function>& function)
 {
-    return reinterpret_cast<void*>(1);
+    auto instance = make_shared<FunctionInstance>();
+    m_instances.push_back(instance);
+    instance->m_function = function;
+    return instance.get();
 }
 
 bool runtime::nop::NOPBackend::call(Handle handle,
@@ -64,4 +67,16 @@ bool runtime::nop::NOPBackend::call(Handle handle,
                                     const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     return true;
+}
+
+const op::ParameterVector& runtime::nop::NOPBackend::get_parameter_descriptors(Handle handle) const
+{
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    return instance->m_function->get_parameters();
+}
+
+const ResultVector& runtime::nop::NOPBackend::get_result_descriptors(Handle handle) const
+{
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    return instance->m_function->get_results();
 }

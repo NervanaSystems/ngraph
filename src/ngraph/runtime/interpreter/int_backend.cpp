@@ -356,3 +356,16 @@ void runtime::interpreter::INTBackend::perform_nan_check(
         arg_number++;
     }
 }
+
+const op::ParameterVector&
+    runtime::interpreter::INTBackend::get_parameter_descriptors(Handle handle) const
+{
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    return instance->m_function->get_parameters();
+}
+
+const ResultVector& runtime::interpreter::INTBackend::get_result_descriptors(Handle handle) const
+{
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    return instance->m_function->get_results();
+}

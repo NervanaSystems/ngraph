@@ -165,6 +165,9 @@ public:
     std::vector<PerformanceCounter> get_performance_data(Handle) const override;
 
     bool is_supported(const Node& node) const override { return true; }
+    const ngraph::op::ParameterVector& get_parameter_descriptors(Handle handle) const override;
+    const ngraph::ResultVector& get_result_descriptors(Handle handle) const override;
+
 private:
     static const int m_alignment;
     class FunctionInstance
