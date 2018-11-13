@@ -5546,7 +5546,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_TOWARD_INFINITY)
     // equals (rounded)               2   3   3  -2   -3   -3   3   4   4   -3   -4   -4
 
     backend->call_with_validate(f, {y}, {x});
-    EXPECT_EQ((vector<output_c_type>{2  , 3 ,  3 , -2  , -3  , -3  , 3  , 4  , 4  , -3  , -4  , -4}),
+    EXPECT_EQ((vector<output_c_type>{2, 3, 3, -2, -3, -3, 3, 4, 4, -3, -4, -4}),
               read_vector<output_c_type>(y));
 }
 
