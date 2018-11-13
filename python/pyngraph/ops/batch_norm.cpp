@@ -30,9 +30,9 @@ void regclass_pyngraph_op_BatchNormTraining(py::module m)
         batch_norm_training(m, "BatchNormTraining");
     batch_norm_training.doc() =
         "ngraph.impl.op.BatchNormTraining wraps ngraph::op::BatchNormTraining";
-    batch_norm_training.def(py::init<double,
+    batch_norm_training.def(py::init<const std::shared_ptr<ngraph::Node>&,
                                      const std::shared_ptr<ngraph::Node>&,
-                                     const std::shared_ptr<ngraph::Node>&,
+                                     double,
                                      const std::shared_ptr<ngraph::Node>&>());
 }
 
@@ -45,11 +45,11 @@ void regclass_pyngraph_op_BatchNormInference(py::module m)
     batch_norm_inference.doc() =
         "ngraph.impl.op.BatchNormInference wraps ngraph::op::BatchNormInference";
 
-    batch_norm_inference.def(py::init<double,
+    batch_norm_inference.def(py::init<const std::shared_ptr<ngraph::Node>&,
                                       const std::shared_ptr<ngraph::Node>&,
                                       const std::shared_ptr<ngraph::Node>&,
                                       const std::shared_ptr<ngraph::Node>&,
-                                      const std::shared_ptr<ngraph::Node>&,
+                                      double,
                                       const std::shared_ptr<ngraph::Node>&>());
 }
 
@@ -61,11 +61,11 @@ void regclass_pyngraph_op_BatchNormTrainingBackprop(py::module m)
         batch_norm_training_backprop(m, "BatchNormTrainingBackprop");
     batch_norm_training_backprop.doc() =
         "ngraph.impl.op.BatchNormTrainingBackprop wraps ngraph::op::BatchNormTrainingBackprop";
-    batch_norm_training_backprop.def(py::init<double,
+    batch_norm_training_backprop.def(py::init<const std::shared_ptr<ngraph::Node>&,
                                               const std::shared_ptr<ngraph::Node>&,
                                               const std::shared_ptr<ngraph::Node>&,
                                               const std::shared_ptr<ngraph::Node>&,
                                               const std::shared_ptr<ngraph::Node>&,
-                                              const std::shared_ptr<ngraph::Node>&,
+                                              double,
                                               const std::shared_ptr<ngraph::Node>&>());
 }
