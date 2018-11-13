@@ -368,8 +368,21 @@ void runtime::gpu::GPU_Emitter::emit_BatchNormInference(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_BatchNormTraining(EMIT_ARGS)
 {
-    ::emit_BatchNorm<ngraph::op::BatchNormTraining>(
-        external_function, writer, node, args, out, CUDNNEmitter::Prop::Forward, false);
+    // ::emit_BatchNorm<ngraph::op::BatchNormTraining>(
+    //     external_function, writer, node, args, out, CUDNNEmitter::Prop::Forward, false);
+    const auto batchnorm = static_cast<const ngraph::op::BatchNormTraining*>(node);
+
+    NGRAPH_INFO << join(out[0].get_shape());
+    auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
+    auto index =
+        cuda_emitter->build_batchnorm(out[0].get_element_type(), out[0].get_shape(), batchnorm->get_eps_value());
+
+    writer.block_begin();
+    {
+        writer << "void* input[] = {" << node_names(args) << "};\n";
+        writer << "void* output[] = {" << node_names(out) << "};\n";
+        writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+    }
 }
 
 void runtime::gpu::GPU_Emitter::emit_BatchNormTrainingWithStats(EMIT_ARGS)

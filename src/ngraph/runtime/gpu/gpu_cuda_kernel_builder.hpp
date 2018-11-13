@@ -39,7 +39,7 @@ namespace ngraph
                     codegen::CodeWriter& writer,
                     const std::string& name,
                     runtime::gpu::GPUKernelArgs& args,
-                    const std::vector<std::string>& data_types,
+                    const std::string& data_type,
                     size_t out_rank,
                     size_t reduce_rank);
 
