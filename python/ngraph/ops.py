@@ -913,20 +913,20 @@ def reverse(node, reversed_axes, name=None):  # type: (Node, List[int], str) -> 
 
 
 @nameable_op
-def batch_norm(eps,             # type: float
+def batch_norm(data,            # type: Node
                gamma,           # type: Node
                beta,            # type: Node
-               data,            # type: Node
                mean=None,       # type: Node
                variance=None,   # type: Node
                name=None,       # type: str
+               eps=1e-5,        # type: float
                ):
     # type: (...) -> Node
     """Return batch normalization node."""
     if mean is None and variance is None:
-        return BatchNormTraining(eps, gamma, beta, data)
+        return BatchNormTraining(data, gamma, beta, eps)
     else:
-        return BatchNormInference(eps, gamma, beta, data, mean, variance)
+        return BatchNormInference(data, gamma, beta, mean, variance, eps)
 
 
 @nameable_op
