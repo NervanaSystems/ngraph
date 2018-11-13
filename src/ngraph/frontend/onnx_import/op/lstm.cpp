@@ -83,7 +83,7 @@ namespace ngraph
 
                         const std::size_t hidden_size = m_map["R"]->get_shape().back();
                         const std::size_t batch_size = m_map["X"]->get_shape().at(1);
-                        const std::size_t n_dirs = m_map["W"]->get_shape().front();
+                        const std::size_t num_directions = m_map["W"]->get_shape().front();
 
                         // ------ Optional inputs ------
                         // The bias tensor for input gate. Shape [num_directions, 8*hidden_size]
@@ -94,12 +94,17 @@ namespace ngraph
                         else
                         {
                             m_map["B"] = common::make_constant_node<float>(
-                                element::f32, {n_dirs, 2 * gates_count * hidden_size}, {0.f});
+                                element::f32, {num_directions, 2 * gates_count * hidden_size}, {0.f});
                         }
                         // The lengths of the sequences in a batch. Shape [batch_size]
                         if (ng_inputs.size() >= 5)
                         {
                             m_map["seq_lengths"] = ng_inputs.at(4);
+                        }
+                        else
+                        {
+                            m_map["seq_lengths"] = common::make_constant_node<std::int32_t>(
+                                element::i32, {batch_size}, {m_map["X"]->get_shape().at(0)});
                         }
                         // The initial value of the hidden. Shape [num_directions, batch_size, hidden_size]
                         if (ng_inputs.size() >= 6)
@@ -109,7 +114,7 @@ namespace ngraph
                         else
                         {
                             m_map["init_H"] = common::make_constant_node<float>(
-                                element::f32, {n_dirs, batch_size, hidden_size}, {0.f});
+                                element::f32, {num_directions, batch_size, hidden_size}, {0.f});
                         }
                         // The initial value of the cell. Shape [num_directions, batch_size, hidden_size]
                         if (ng_inputs.size() >= 7)
@@ -119,7 +124,7 @@ namespace ngraph
                         else
                         {
                             m_map["init_C"] = common::make_constant_node<float>(
-                                element::f32, {n_dirs, batch_size, hidden_size}, {0.f});
+                                element::f32, {num_directions, batch_size, hidden_size}, {0.f});
                         }
                         // The weight tensor for peepholes. Shape [num_directions, 3*hidde_size]
                         if (ng_inputs.size() >= 8)
@@ -129,7 +134,7 @@ namespace ngraph
                         else
                         {
                             m_map["P"] = common::make_constant_node<float>(
-                                element::f32, {n_dirs, peepholes_count * hidden_size}, {0.f});
+                                element::f32, {num_directions, peepholes_count * hidden_size}, {0.f});
                         }
                     }
 
@@ -159,12 +164,13 @@ namespace ngraph
                         m_hidden_size = node.get_attribute_value<std::int64_t>("hidden_size");
 
                         // Register available activation functions.
-                        m_atcivation_funcs.emplace("Sigmoid",
+                        m_activation_funcs.emplace("Sigmoid",
                                                    std::bind(Sigmoid, std::placeholders::_1));
-                        m_atcivation_funcs.emplace("Tanh", std::bind(Tanh, std::placeholders::_1));
+                        m_activation_funcs.emplace("Tanh", std::bind(Tanh, std::placeholders::_1));
                     }
 
-                    ActivationFuncsMap m_atcivation_funcs{};
+                    ActivationFuncsMap m_activation_funcs{};
+                    // Currently only LSTM_DIRECTION_FORWARD is supported.
                     LSTMDirection m_direction{LSTMDirection::LSTM_DIRECTION_FORWARD};
                     std::int64_t m_hidden_size{0};
                 };
@@ -177,9 +183,9 @@ namespace ngraph
                     explicit LSTMNode(const Node& node)
                         : m_input_map{node}
                         , m_attributes{node}
-                        , m_f{m_attributes.m_atcivation_funcs["Sigmoid"]}
-                        , m_g{m_attributes.m_atcivation_funcs["Tanh"]}
-                        , m_h{m_attributes.m_atcivation_funcs["Tanh"]}
+                        , m_activ_func_f{m_attributes.m_activation_funcs["Sigmoid"]}
+                        , m_activ_func_g{m_attributes.m_activation_funcs["Tanh"]}
+                        , m_activ_func_h{m_attributes.m_activation_funcs["Tanh"]}
                     {
                         if (m_attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
                         {
@@ -234,11 +240,11 @@ namespace ngraph
                             auto f = split_gates.at(2);
                             auto c = split_gates.at(3);
 
-                            i = m_f(i + p_i * C_t);
-                            f = m_f(f + p_f * C_t);
-                            auto C = f * C_t + i * m_g(c);
-                            o = m_f(o + p_o * C);
-                            auto H = o * m_h(C);
+                            i = m_activ_func_f(i + p_i * C_t);
+                            f = m_activ_func_f(f + p_f * C_t);
+                            auto C = f * C_t + i * m_activ_func_g(c);
+                            o = m_activ_func_f(o + p_o * C);
+                            auto H = o * m_activ_func_h(C);
                             h_list.push_back(H);
                             H_t = H;
                             C_t = C;
@@ -268,9 +274,9 @@ namespace ngraph
                     LSTMNgInputMap m_input_map;
                     LSTMAttributes m_attributes;
 
-                    const ActivationFunc& m_f;
-                    const ActivationFunc& m_g;
-                    const ActivationFunc& m_h;
+                    const ActivationFunc& m_activ_func_f;
+                    const ActivationFunc& m_activ_func_g;
+                    const ActivationFunc& m_activ_func_h;
 
                     // input, output, cell, forget
                     const std::size_t m_gates_count{4};
