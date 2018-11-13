@@ -18,7 +18,7 @@
 
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/reference/argmax.hpp"
+#include "ngraph/runtime/cpu/kernel/argmax.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -55,26 +55,27 @@ namespace ngraph
                 {
                     if (is_int64)
                     {
-                        functor = [&, in_shape, out_shape, axis](CPURuntimeContext* ctx,
-                                                                 CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::argmax<float, int64_t>(
-                                static_cast<float*>(arg_tensor),
-                                static_cast<int64_t*>(out_tensor),
-                                in_shape,
-                                out_shape,
-                                axis);
+                        std::function<decltype(runtime::cpu::kernel::argmax<float, int64_t, 1>)>
+                            kernel;
+
+                        SELECT_RANK2(
+                            kernel, float, int64_t, in_shape.size(), runtime::cpu::kernel::argmax);
+
+                        functor = [&, kernel, in_shape, out_shape, axis](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
                         };
                     }
                     else
                     {
-                        functor = [&, in_shape, out_shape, axis](CPURuntimeContext* ctx,
-                                                                 CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::argmax<float, int32_t>(
-                                static_cast<float*>(arg_tensor),
-                                static_cast<int*>(out_tensor),
-                                in_shape,
-                                out_shape,
-                                axis);
+                        std::function<decltype(runtime::cpu::kernel::argmax<float, int, 1>)> kernel;
+
+                        SELECT_RANK2(
+                            kernel, float, int, in_shape.size(), runtime::cpu::kernel::argmax);
+
+                        functor = [&, kernel, in_shape, out_shape, axis](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
                         };
                     }
                 }
@@ -82,26 +83,28 @@ namespace ngraph
                 {
                     if (is_int64)
                     {
-                        functor = [&, in_shape, out_shape, axis](CPURuntimeContext* ctx,
-                                                                 CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::argmax<double, int64_t>(
-                                static_cast<double*>(arg_tensor),
-                                static_cast<int64_t*>(out_tensor),
-                                in_shape,
-                                out_shape,
-                                axis);
+                        std::function<decltype(runtime::cpu::kernel::argmax<double, int64_t, 1>)>
+                            kernel;
+
+                        SELECT_RANK2(
+                            kernel, double, int64_t, in_shape.size(), runtime::cpu::kernel::argmax);
+
+                        functor = [&, kernel, in_shape, out_shape, axis](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
                         };
                     }
                     else
                     {
-                        functor = [&, in_shape, out_shape, axis](CPURuntimeContext* ctx,
-                                                                 CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::argmax<double, int32_t>(
-                                static_cast<double*>(arg_tensor),
-                                static_cast<int*>(out_tensor),
-                                in_shape,
-                                out_shape,
-                                axis);
+                        std::function<decltype(runtime::cpu::kernel::argmax<double, int, 1>)>
+                            kernel;
+
+                        SELECT_RANK2(
+                            kernel, double, int, in_shape.size(), runtime::cpu::kernel::argmax);
+
+                        functor = [&, kernel, in_shape, out_shape, axis](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
                         };
                     }
                 }
