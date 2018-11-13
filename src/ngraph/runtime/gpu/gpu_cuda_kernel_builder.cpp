@@ -506,7 +506,6 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_op(codegen::CodeWriter& writ
                        << ") * non_reduce_strides" << i << ";\n";
                 writer << "dim_idx_generator %= out_strides" << i << ";\n";
             }
-            writer << "uint32_t init_in_idx = in_idx;\n";
             int64_t last_r_idx = static_cast<int64_t>(reduce_rank) - 1;
 
             //find mean
@@ -573,6 +572,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_op(codegen::CodeWriter& writ
             //variance
             writer << "r_sum = 0;\n";
             writer << data_type << " r_var = 0;\n";
+            writer << data_type << " inv_sqrt_var = 0;\n";
             writer << "c = 0;\n";
             writer.block_begin();
             for (int64_t j = 0; j < last_r_idx; j++)
@@ -628,7 +628,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_op(codegen::CodeWriter& writ
                 writer.block_end();
             }
             writer << "r_var = r_sum / static_cast<float>(reduce_count);\n";
-            writer << data_type << "inv_sqrt_var = 1.0 / (r_var + eps);\n";
+            writer << "inv_sqrt_var = 1.0 / sqrtf(r_var + eps);\n";
             writer << "out2[tid] = r_var;\n";
             writer.block_end();
 
@@ -1429,8 +1429,7 @@ void runtime::gpu::CudaKernelBuilder::get_replace_slice_op(codegen::CodeWriter& 
         writer << "if (tid < nthreads)\n";
         writer.block_begin();
         {
-            coordinate_transform_to_multi_d(
-                writer,"tid",  "dim_strides", "dimension", rank);
+            coordinate_transform_to_multi_d(writer, "tid", "dim_strides", "dimension", rank);
             //coordinate_transform_to_multi_d(
             //    writer, "dim_strides", "dim_magic", "dim_shift", "tid", "dimension", rank, true);
             writer << "int source_di;\n";
@@ -2088,8 +2087,7 @@ std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_hel
     size_t rank)
 {
     std::string out_coordinates = "temp_out_coordinates_";
-     coordinate_transform_to_multi_d(
-        writer, in_index, in_strides, out_coordinates, rank);
+    coordinate_transform_to_multi_d(writer, in_index, in_strides, out_coordinates, rank);
 
     // index into reduced tensor from coordinates of non-reduced tensor
     writer << "int " << out_index << " = 0;\n";

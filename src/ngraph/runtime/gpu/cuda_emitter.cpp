@@ -2244,8 +2244,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_window(const OpName op_name,
 }
 
 size_t runtime::gpu::CUDAEmitter::build_batchnorm(const element::Type dtype,
-                                                    NVShape result_shape,
-                                                    const double eps)
+                                                  NVShape result_shape,
+                                                  const double eps)
 {
     size_t rank = result_shape.size();
     NVShape reduce_axis(1, 1);
@@ -2253,9 +2253,9 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm(const element::Type dtype,
     size_t out_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
     std::string kernel_name = "batchnorm_" + dtype.c_type_string();
-    kernel_name +=
-        "_ri_" + std::to_string(result_shape.size()) + "_eps_" + std::to_string(eps);
-        std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
+    kernel_name += "_ri_" + std::to_string(result_shape.size()) + "_eps_" + std::to_string(eps);
+    std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
+    std::replace(kernel_name.begin(), kernel_name.end(), '.', '_');
 
     std::stringstream ss;
     ss << kernel_name << "_s_" << join(result_shape, "_") << "_axis_" << join(reduce_axis, "_");
@@ -2277,25 +2277,25 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm(const element::Type dtype,
     NVShape non_reduce_strides;
     NVShape reduce_shape;
     NVShape reduce_strides;
-    NVShape input_strides = row_major_strides(input_shape);
+    NVShape input_strides = row_major_strides(result_shape);
     for (int i = 0; i < rank; i++)
     {
         if (reduce_flag[i] != 0)
         {
-            reduce_shape.push_back(input_shape[i]);
+            reduce_shape.push_back(result_shape[i]);
             reduce_strides.push_back(input_strides[i]);
         }
         else
         {
             non_reduce_strides.push_back(input_strides[i]);
-            output_shape.push_back(input_shape[i]);
+            output_shape.push_back(result_shape[i]);
         }
     }
     NVShape output_strides = row_major_strides(output_shape);
     uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
     uint32_t reduce_count = static_cast<uint32_t>(shape_size(reduce_shape));
 
-        // get an allocator for transient per kernel gpu memory
+    // get an allocator for transient per kernel gpu memory
     GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
 
     // (lazy) allocation for kernel arguments
@@ -2321,6 +2321,7 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm(const element::Type dtype,
         .add("non_reduce_strides", non_reduce_strides)
         .add("reduce_shape", reduce_shape)
         .add("reduce_strides", reduce_strides)
+        .add("eps", eps)
         .add("reduce_count", reduce_count)
         .add("nthreads", nthreads);
 
@@ -2340,8 +2341,8 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm(const element::Type dtype,
             void* param_out3 = runtime::gpu::invoke_memory_primitive(m_ctx, idx_out3);
             void* param_out4 = runtime::gpu::invoke_memory_primitive(m_ctx, idx_out4);
             void** args_list = args.resolve_placeholder(0, &inputs[0])
-            .resolve_placeholder(1, &inputs[1])
-            .resolve_placeholder(2, &inputs[2])
+                                   .resolve_placeholder(1, &inputs[1])
+                                   .resolve_placeholder(2, &inputs[2])
                                    .resolve_placeholder(3, &outputs[0])
                                    .resolve_placeholder(4, &outputs[1])
                                    .resolve_placeholder(5, &outputs[2])

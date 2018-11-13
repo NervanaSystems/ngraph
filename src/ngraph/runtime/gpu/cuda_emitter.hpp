@@ -156,8 +156,8 @@ namespace ngraph
                 }
 
                 size_t build_batchnorm(const element::Type dtype,
-                                                    NVShape result_shape,
-                                                    const double eps);
+                                       NVShape result_shape,
+                                       const double eps);
 
                 size_t build_broadcast(const std::array<std::string, 2>& dtypes,
                                        NVShape result_shape,
