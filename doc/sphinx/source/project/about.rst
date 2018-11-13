@@ -41,7 +41,7 @@ executed "automatically" during training runs. In other words, the accelerations
 are automatic: parts of the graph that are not encapsulated default to framework 
 implementation when executed. For example, if nGraph optimizes ResNet50 for 
 TensorFlow, the same optimization can be readily applied to the NNVM/MXNet 
-implementation of ResNet50. This works because the nGraph 
+implementation of ResNet50. This works efficiently because the nGraph 
 :abbr:`(IR) Intermediate Representation`, which keeps the input and output 
 semantics of encapsulated subgraphs, rebuilds an encapsulated subgraph that can 
 efficiently make use or re-use of operations. Such an  approach significantly 
