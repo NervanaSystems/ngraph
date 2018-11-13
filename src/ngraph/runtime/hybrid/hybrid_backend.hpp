@@ -57,6 +57,10 @@ public:
 
     bool is_supported(const ngraph::Node& node) const override;
 
+    const ngraph::op::ParameterVector& get_parameter_descriptors(Handle handle) const override;
+
+    const ngraph::ResultVector& get_result_descriptors(Handle handle) const override;
+
 private:
     class FunctionInstance
     {

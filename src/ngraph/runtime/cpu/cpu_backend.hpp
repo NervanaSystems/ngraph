@@ -55,9 +55,14 @@ namespace ngraph
                 void remove_compiled_function(runtime::Handle handle) override;
                 std::shared_ptr<CPU_CallFrame> get_call_frame(runtime::Handle handle);
 
-                void enable_performance_data(runtime::Handle handle, bool enable) override;
+                void enable_performance_data(bool enable) override;
                 std::vector<PerformanceCounter>
                     get_performance_data(runtime::Handle handle) const override;
+
+                const ngraph::op::ParameterVector&
+                    get_parameter_descriptors(Handle handle) const override;
+
+                const ngraph::ResultVector& get_result_descriptors(Handle handle) const override;
 
             private:
                 class FunctionInstance
@@ -69,6 +74,7 @@ namespace ngraph
                 };
 
                 std::vector<std::shared_ptr<FunctionInstance>> m_instances;
+                bool m_performance_counters_enabled = false;
             };
         }
     }

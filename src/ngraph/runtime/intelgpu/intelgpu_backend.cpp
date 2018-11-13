@@ -1833,3 +1833,16 @@ void runtime::intelgpu::IntelGPUBackend::print_call_performance(
 
     cout.flags(saved_stream_flags); // Restore stream configuration to leave it in original state
 }
+
+const op::ParameterVector&
+    runtime::intelgpu::IntelGPUBackend::get_parameter_descriptors(Handle handle) const
+{
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    return instance->m_function->get_parameters();
+}
+
+const ResultVector& runtime::intelgpu::IntelGPUBackend::get_result_descriptors(Handle handle) const
+{
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    return instance->m_function->get_results();
+}

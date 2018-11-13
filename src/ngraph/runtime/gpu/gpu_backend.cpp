@@ -124,6 +124,7 @@ runtime::Handle runtime::gpu::GPU_Backend::compile(const shared_ptr<Function>& f
     auto instance = make_shared<FunctionInstance>();
     m_instances.push_back(instance);
     instance->m_external_function = make_shared<GPU_ExternalFunction>(func, m_context);
+    instance->m_performance_counters_enabled = m_performance_counters_enabled;
     instance->m_external_function->m_emit_timing = instance->m_performance_counters_enabled;
     instance->m_external_function->compile();
     instance->m_compiled_function = instance->m_external_function->m_compiled_function;
@@ -157,7 +158,6 @@ bool runtime::gpu::GPU_Backend::call(runtime::Handle handle,
     bool rc = true;
 
     FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
-    // validate_call(func, outputs, inputs);
 
     // ensure the GPURuntimeContext primitive pointers are valid
     m_context->prepare_runtime_context();
@@ -184,14 +184,9 @@ void runtime::gpu::GPU_Backend::remove_compiled_function(runtime::Handle handle)
     }
 }
 
-void runtime::gpu::GPU_Backend::enable_performance_data(runtime::Handle handle, bool enable)
+void runtime::gpu::GPU_Backend::enable_performance_data(bool enable)
 {
-    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
-    if (instance->m_external_function != nullptr)
-    {
-        throw runtime_error("Performance data collection must be enabled prior to compiling.");
-    }
-    instance->m_performance_counters_enabled = enable;
+    m_performance_counters_enabled = enable;
 }
 
 vector<runtime::PerformanceCounter>
@@ -253,4 +248,16 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& node) const
     }
 
     return rc;
+}
+
+const op::ParameterVector& runtime::gpu::GPU_Backend::get_parameter_descriptors(Handle handle) const
+{
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    return instance->m_external_function->m_function->get_parameters();
+}
+
+const ResultVector& runtime::gpu::GPU_Backend::get_result_descriptors(Handle handle) const
+{
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    return instance->m_external_function->m_function->get_results();
 }

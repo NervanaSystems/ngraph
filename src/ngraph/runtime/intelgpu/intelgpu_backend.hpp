@@ -57,6 +57,10 @@ public:
     void enable_performance_data(bool enable) override;
     std::vector<PerformanceCounter> get_performance_data(runtime::Handle handle) const override;
 
+    const ngraph::op::ParameterVector& get_parameter_descriptors(Handle handle) const override;
+
+    const ngraph::ResultVector& get_result_descriptors(Handle handle) const override;
+
 private:
     class FunctionInstance
     {

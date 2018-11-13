@@ -179,3 +179,16 @@ bool runtime::hybrid::HybridBackend::is_supported(const Node& node) const
 {
     return true;
 }
+
+const op::ParameterVector&
+    runtime::hybrid::HybridBackend::get_parameter_descriptors(Handle handle) const
+{
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    return instance->m_function->get_parameters();
+}
+
+const ResultVector& runtime::hybrid::HybridBackend::get_result_descriptors(Handle handle) const
+{
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    return instance->m_function->get_results();
+}

@@ -58,11 +58,16 @@ namespace ngraph
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 
                 void remove_compiled_function(runtime::Handle handle) override;
-                void enable_performance_data(runtime::Handle handle, bool enable) override;
+                void enable_performance_data(bool enable) override;
                 std::vector<PerformanceCounter>
                     get_performance_data(runtime::Handle handle) const override;
 
                 bool is_supported(const Node& node) const override;
+
+                const ngraph::op::ParameterVector&
+                    get_parameter_descriptors(Handle handle) const override;
+
+                const ngraph::ResultVector& get_result_descriptors(Handle handle) const override;
 
                 class BackendContext
                 {
@@ -100,6 +105,7 @@ namespace ngraph
 
                 std::vector<std::shared_ptr<FunctionInstance>> m_instances;
                 std::shared_ptr<BackendContext> m_context;
+                bool m_performance_counters_enabled = false;
             };
         }
     }
