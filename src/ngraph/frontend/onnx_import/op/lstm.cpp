@@ -208,6 +208,40 @@ namespace ngraph
                     ~LSTMNode() {}
                     NodeVector run()
                     {
+                        // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
+                        // The names used below are analogous to the one used in ONNX documentation.
+                        //
+                        // ------ INPUTS ------
+                        // X - The input tensor. [seq_length, batch_size, input_size]
+                        // W - The weight tensor. [num_directions, 4*hidden_size, input_size]
+                        // R - The recurrence weight tensor. [num_directions, 4*hidden_size, hidden_size]
+                        // B - The bias tensor for input gate. [num_directions, 8*hidden_size]
+                        // P - The weight tensor forr peepholes. [num_directions, 3*hidde_size]
+                        // ------ ACRONYMS ------
+                        // i - input gate
+                        // o - output gate
+                        // f - forget gate
+                        // c - cell gate
+                        // t - time step (t-1 means previous time step)
+                        // ------ VARIABLE NAMES ------
+                        // W       - W parameter weight matrix for input, output, forget, and
+                        //           cell gates.
+                        // R       - R recurrence weight matrix for input, output, forget, and
+                        //           cell gates.
+                        // Wb      - W bias vectors for input, output, forget, and cell gates.
+                        // Rb      - R bias vectors for input, output, forget, and cell gates.
+                        // b_W_R   - Bias vectors for input, output, forget, and cell gates.
+                        //           Concatenation of `[Wb, Rb]`.
+                        // p_[iof] - P peephole weight vector for respectively: input, output,
+                        //           and forget gates.
+                        // H_t     - Hidden state vector at current time step.
+                        // C_t     - Cell state vector at current time step.
+                        // h_list  - The list of hidden states at all processed time steps.
+                        //
+                        // Xt_W    - Input sequence multiplied by weights tensor at current time
+                        //           step.
+                        // Ht_W    - Hidden state multiplied by weights tensor at current time step.
+
                         NodeVector p_iof = reshape::split(m_input_map["P"], 3);
                         NgraphNodePtr p_i = p_iof.at(0);
                         NgraphNodePtr p_o = p_iof.at(1);
@@ -228,22 +262,38 @@ namespace ngraph
 
                         for (const auto& in_x : in_seqs)
                         {
+
+                            // (.) - Denotes element-wise multiplication.
+                            // *   - Denotes dot product.
+
+                            // Xt*(W^T) -- for [iofc] gates.
                             auto Xt_W = std::make_shared<ngraph::op::Dot>(
                                 in_x, reshape::transpose(m_input_map["W"]));
+                            // Ht-1*(R^T)  -- for [ifc] gates.
                             auto Ht_W = std::make_shared<ngraph::op::Dot>(
                                 H_t, reshape::transpose(m_input_map["R"]));
+                            // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [ifc] gates.
                             auto gates = Xt_W + Ht_W + bias;
 
                             NodeVector split_gates = reshape::split(gates, 4, -1);
+                            // Xt*(Wi^T) + Ht-1*(Ri^T) + Wbi + Rbi
                             auto i = split_gates.at(0);
+                            // Xt*(Wo^T) + Ht-1*(Ro^T) + Wbo + Rbo
                             auto o = split_gates.at(1);
+                            // Xt*(Wf^T) + Ht-1*(Rf^T) + Wbf + Rbf
                             auto f = split_gates.at(2);
+                            // Xt*(Wc^T) + Ht-1*(Rc^T) + Wbc + Rbc
                             auto c = split_gates.at(3);
 
+                            // f(Xt*(Wi^T) + Ht-1*(Ri^T) + Pi (.) Ct-1 + Wbi + Rbi)
                             i = m_activ_func_f(i + p_i * C_t);
+                            // f(Xt*(Wf^T) + Ht-1*(Rf^T) + Pf (.) Ct-1 + Wbf + Rbf)
                             f = m_activ_func_f(f + p_f * C_t);
+                            // ft (.) Ct-1 + it (.) ct
                             auto C = f * C_t + i * m_activ_func_g(c);
+                            // f(Xt*(Wo^T) + Ht-1*(Ro^T) + Po (.) Ct + Wbo + Rbo)
                             o = m_activ_func_f(o + p_o * C);
+                            // ot (.) h(Ct)
                             auto H = o * m_activ_func_h(C);
                             h_list.push_back(H);
                             H_t = H;
