@@ -25,8 +25,10 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/tanh.hpp"
@@ -35,7 +37,7 @@
 
 #include "exceptions.hpp"
 #include "lstm.hpp"
-#include "utils/arithmetic_operators.hpp"
+#include "utils/broadcasting.hpp"
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
 
@@ -47,6 +49,20 @@ namespace ngraph
         {
             namespace
             {
+                std::shared_ptr<ngraph::Node> add(const std::shared_ptr<ngraph::Node>& lhs,
+                                                  const std::shared_ptr<ngraph::Node>& rhs)
+                {
+                    auto args = numpy_style_broadcast_for_binary_operation(lhs, rhs);
+                    return {std::make_shared<ngraph::op::Add>(args.at(0), args.at(1))};
+                }
+
+                std::shared_ptr<ngraph::Node> mul(const std::shared_ptr<ngraph::Node>& lhs,
+                                                  const std::shared_ptr<ngraph::Node>& rhs)
+                {
+                    auto args = numpy_style_broadcast_for_binary_operation(lhs, rhs);
+                    return {std::make_shared<ngraph::op::Multiply>(args.at(0), args.at(1))};
+                }
+
                 using NgraphNodePtr = std::shared_ptr<ngraph::Node>;
 
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ACTIVATION FUNCTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -251,7 +267,7 @@ namespace ngraph
                         NodeVector h_list;
 
                         NodeVector b_W_R = reshape::split(m_input_map["B"], 2);
-                        NgraphNodePtr bias = b_W_R.at(0) + b_W_R.at(1);
+                        NgraphNodePtr bias = add(b_W_R.at(0), b_W_R.at(1));
                         NodeVector in_seqs =
                             reshape::split(m_input_map["X"], m_input_map["X"]->get_shape().at(0));
                         for (auto& in_x : in_seqs)
@@ -273,7 +289,7 @@ namespace ngraph
                             auto Ht_W = std::make_shared<ngraph::op::Dot>(
                                 H_t, reshape::transpose(m_input_map["R"]));
                             // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [ifc] gates.
-                            auto gates = Xt_W + Ht_W + bias;
+                            auto gates = add(Xt_W, add(Ht_W, bias));
 
                             NodeVector split_gates = reshape::split(gates, 4, -1);
                             // Xt*(Wi^T) + Ht-1*(Ri^T) + Wbi + Rbi
@@ -286,15 +302,15 @@ namespace ngraph
                             auto c = split_gates.at(3);
 
                             // f(Xt*(Wi^T) + Ht-1*(Ri^T) + Pi (.) Ct-1 + Wbi + Rbi)
-                            i = m_activ_func_f(i + p_i * C_t);
+                            i = m_activ_func_f(add(i, mul(p_i, C_t)));
                             // f(Xt*(Wf^T) + Ht-1*(Rf^T) + Pf (.) Ct-1 + Wbf + Rbf)
-                            f = m_activ_func_f(f + p_f * C_t);
+                            f = m_activ_func_f(add(f, mul(p_f, C_t)));
                             // ft (.) Ct-1 + it (.) ct
-                            auto C = f * C_t + i * m_activ_func_g(c);
+                            auto C = add(mul(f, C_t), mul(i, m_activ_func_g(c)));
                             // f(Xt*(Wo^T) + Ht-1*(Ro^T) + Po (.) Ct + Wbo + Rbo)
-                            o = m_activ_func_f(o + p_o * C);
+                            o = m_activ_func_f(add(o, mul(p_o, C)));
                             // ot (.) h(Ct)
-                            auto H = o * m_activ_func_h(C);
+                            auto H = mul(o, m_activ_func_h(C));
                             h_list.push_back(H);
                             H_t = H;
                             C_t = C;
