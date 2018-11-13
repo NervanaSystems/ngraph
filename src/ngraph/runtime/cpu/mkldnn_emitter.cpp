@@ -18,6 +18,9 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <typeinfo>
+#include <typeindex>
+#include <cxxabi.h>
 
 #include "mkldnn_emitter.hpp"
 
@@ -30,6 +33,8 @@
 #include "ngraph/runtime/cpu/op/quantized_avg_pool.hpp"
 #include "ngraph/runtime/cpu/op/quantized_max_pool.hpp"
 #include "ngraph/type/element_type.hpp"
+
+#define TI(x) std::type_index(typeid(x))
 
 using namespace ngraph::runtime::cpu;
 
@@ -93,12 +98,13 @@ mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const Shape& shape,
                                 fmt);
 }
 
+
 std::string
     MKLDNNEmitter::serialize_descriptors_and_emit_setup_function(const std::string& filename)
 {
     std::stringstream ss;
     std::ofstream desc_file(filename, std::ios::out | std::ios::binary);
-    ss << "ifstream desc_file (\"" << filename << "\", ios::in | ios::binary);\n";
+    ss << "std::ifstream desc_file (\"" << filename << "\", std::ios::binary);\n";
 
     for (size_t i = 0; i < m_mkldnn_primitives.size(); i++)
     {
@@ -107,7 +113,8 @@ std::string
         mkldnn_primitive_desc_query(
             primitive->get_primitive_desc(), mkldnn_query_primitive_kind, 0, &kind);
 
-        if (kind == mkldnn_memory)
+        //if (kind == mkldnn_memory)
+        if (TI(mkldnn::memory) == TI((*primitive)))
         {
             //write part
             mkldnn::memory::desc md =
@@ -116,40 +123,102 @@ std::string
 
             //read part
             ss << "{\n";
-            ss << "\tmkldnn::memory::desc md;\n";
+            ss << "\tmkldnn::memory::dims dummy_dims {1};\n";
+            ss << "\tmkldnn::memory::desc md(dummy_dims, mkldnn::memory::f32, static_cast<mkldnn::memory::format>(mkldnn_format_undef));\n";
             ss << "\tdesc_file.read(reinterpret_cast<char*>(&md), sizeof(mkldnn::memory::desc));\n";
             ss << "\tprimitives.push_back(new mkldnn::memory({md, AOT::global_cpu_engine}, "
                   "\tnullptr));\n;";
             ss << "}\n";
         }
-        else if (kind == mkldnn_sum)
+        //else if (kind == mkldnn_sum)
+        else if (TI(mkldnn::sum) == TI((*primitive)))
         {
-            //write
-
             //read
             auto deps = m_primitive_deps[i];
             ss << "{\n";
-            ss << "\tstd::vector<mkldnn::memory::primitive::at> inputs_primitive;";
-            ss << "\tinputs_primitive.push_back(primitives.at(" << deps[0] << "));\n";
-            ss << "\tinputs_primitive.push_back(primitives.at(" << deps[1] << "));\n";
+            ss << "\tstd::vector<float> scale_vector(2, 1);\n";
+            ss << "\tstd::vector<mkldnn::memory::primitive::at> inputs_primitive;\n";
+            ss << "\tinputs_primitive.push_back(*primitives.at(" << deps[0] << "));\n";
+            ss << "\tinputs_primitive.push_back(*primitives.at(" << deps[1] << "));\n";
             ss << "\tstd::vector<mkldnn::memory::primitive_desc> inputs_pd;\n";
-            ss << "\tinputs_pd.push_back(&static_cast<mkldnn::memory*>(primitives.at(" << deps[0]
-               << "))->get_primitive_desc())\n;";
-            ss << "\tinputs_pd.push_back(&static_cast<mkldnn::memory*>(primitives.at(" << deps[1]
-               << "))->get_primitive_desc())\n;";
+            ss << "\tinputs_pd.push_back(static_cast<mkldnn::memory*>(primitives.at(" << deps[0]
+               << "))->get_primitive_desc());\n";
+            ss << "\tinputs_pd.push_back(static_cast<mkldnn::memory*>(primitives.at(" << deps[1]
+               << "))->get_primitive_desc());\n";
             ss << "\tmkldnn::memory::desc result_desc = static_cast<mkldnn::memory*>(primitives.at("
-               << deps[1] << "))->get_primitive_desc()->desc();\n";
+               << deps[1] << "))->get_primitive_desc().desc();\n";
             ss << "\tmkldnn::sum::primitive_desc sum_pd = mkldnn::sum::primitive_desc(result_desc, "
-                  "scale_vector, inputs_pd);";
-            ss << "\tprimitives.push_back(new mkldnn::sum(sum_pd, inputs_primitive, primitives.at(("
+                  "scale_vector, inputs_pd);\n";
+            ss << "\tprimitives.push_back(new mkldnn::sum(sum_pd, inputs_primitive, *primitives.at(("
                << deps[2] << "))));\n";
             ss << "}\n";
         }
+        //else if (kind == mkldnn_convolution)
+        else if (TI(mkldnn::convolution_forward) == TI((*primitive)))
+        {
+            auto& serialized_descs = m_serialized_descs.at(i);
+            auto deps = m_primitive_deps[i];
+            desc_file.write(serialized_descs.data(), serialized_descs.size());
+            ss << "{\n";
+            ss << "\tchar tmp_conv[sizeof(mkldnn::convolution_forward::desc)];\n";
+            ss << "\tdesc_file.read(&tmp_conv[0], sizeof(mkldnn::convolution_forward::desc));\n";
+            ss << "\tmkldnn::post_ops pops;\n";
+            ss << "\tdesc_file.read(&pops, sizeof(mkldnn::pops));\n";
+            ss << "\tmkldnn::primitive_attr conv_attr;\n";
+            ss << "\tconv_attr.set_post_ops(pops);\n";
+            ss << "\tmkldnn::convolution_forward::desc* conv_desc_ptr = reinterpret_cast<mkldnn::convolution_forward::desc*>(&tmp_conv);\n";
+            ss << "\tmkldnn::convolution_forward::primitive_desc conv_prim_desc(*conv_desc_ptr, conv_attr, AOT::global_cpu_engine);\n";
+            ss << "\tmkldnn::convolution_forward conv_prim (conv_prim_desc, primitives.at(" << deps[0] << "), " 
+                << "primitives.at(" << deps[1] << "), " 
+                << "primitives.at(" << deps[2] << "));\n";
+            ss << "primitives.push_back(conv_prim);\n";
+            ss << "}\n";
+        }
+        /*
+        else if (TI(mkldnn::convolution_forward) == TI(*primitive))
+        {
+        //mkldnn_query_primitive_kind
+        char conv_desc[sizeof(mkldnn_convolution_desc_t)];
+        mkldnn_primitive_desc_query(primitive->get_primitive_desc(), mkldnn_query_convolution_d, 0, &conv_desc[0]);
+        
+        desc_file.write(reinterpret_cast<char*>(&conv_desc[0]), sizeof(conv_desc));
+
+            ss << "{\n";
+            ss << "\tchar tmp[sizeof(mkldnn::convolution_forward::desc)];\n";
+            ss << "\tdesc_file.read(reinterpret_cast<char*>(&(reinterpret_cast<mkldnn::convolution_forward::desc*>(&tmp[0])->data)), sizeof(mkldnn_convolution_desc_t));\n";
+            ss << "\tdesc_file.read(reinterpret_cast<char*>(&tmp[0]), sizeof(mkldnn_convolution_desc_t));\n";
+
+            auto conv_prim_desc = (static_cast<mkldnn::convolution_forward*>(primitive))->get_primitive_desc();
+            const size_t offset_of_attr = 8;
+            const size_t offset_of_post_ops = 88;
+            mkldnn::post_ops* ppo =	reinterpret_cast<mkldnn::post_ops*>(reinterpret_cast<char*>(&conv_prim_desc) + offset_of_attr + offset_of_post_ops);
+            desc_file.write(reinterpret_cast<char*>(ppo), sizeof(mkldnn::post_ops));
+            
+            auto deps = m_primitive_deps[i];
+            ss << "\tmkldnn::post_ops pops;\n";
+            ss << "\tmkldnn::primitive_attr conv_attr;\n";
+            ss << "\tconv_attr.set_post_ops(pops);\n";
+            ss << "\tdesc_file.read(reinterpret_cast<mkldnn::post_ops*>(&pops), sizeof(mkldnn::post_ops));\n";
+            ss << "\tauto* conv_desc_p = reinterpret_cast<mkldnn::convolution_forward::desc*>(&tmp[0]);\n";
+            ss << "\tmkldnn::convolution_forward::primitive_desc conv_prim_desc(*conv_desc_p, conv_attr, AOT::global_cpu_engine);\n";
+            ss << "\tmkldnn::convolution_forward conv_prim (conv_prim_desc, primitives.at(" << deps[0] << "), " 
+                << "primitives.at(" << deps[1] << "), " 
+                << "primitives.at(" << deps[2] << "));\n";
+            ss << "primitives.push_back(conv_prim);\n";
+            ss << "}\n";
+        }
+        */
         else
         {
-            throw ngraph_error("Unsupported primitive!");
+            int status;
+            std::string type_name = typeid(*primitive).name();
+            type_name = abi::__cxa_demangle(type_name.c_str(), 0, 0, &status);
+            throw ngraph_error(std::string("Unsupported primitive! ") + type_name);
         }
     }
+
+
+    return ss.str();
 }
 
 mkldnn::memory::desc
@@ -304,11 +373,7 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
     mkldnn::primitive_attr conv_attr;
     conv_attr.set_post_ops(pops);
 
-    size_t conv_index = 0;
-    try
-    {
-        auto conv_prim = new mkldnn::convolution_forward(
-            {{mkldnn::prop_kind::forward,
+    mkldnn::convolution_forward::desc conv_desc {mkldnn::prop_kind::forward,
               mkldnn::algorithm::convolution_direct,
               input_data_desc,
               weights_desc,
@@ -317,7 +382,13 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
               mkldnn::memory::dims(dilation_strides.begin(), dilation_strides.end()),
               mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
               mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
-              mkldnn::padding_kind::zero},
+              mkldnn::padding_kind::zero};
+
+    size_t conv_index = 0;
+    try
+    {
+        auto conv_prim = new mkldnn::convolution_forward(
+            {conv_desc,
              conv_attr,
              mkldnn_utils::global_cpu_engine},
             *m_mkldnn_primitives[input_data_index],
@@ -332,6 +403,14 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
     {
         throw ngraph_error("Could not create mkldnn convolution " + e.message);
     }
+
+    //serialization logic
+    std::vector<char> serdesc (sizeof(mkldnn::convolution_forward::desc) + sizeof(mkldnn::post_ops));
+    char* serdesc_ptr = serdesc.data();
+    memcpy(serdesc_ptr, reinterpret_cast<char*>(&conv_desc), sizeof(mkldnn::convolution_forward::desc));
+    mkldnn::post_ops temp_post_ops = pops;
+    memcpy(serdesc_ptr + sizeof(mkldnn::convolution_forward::desc), reinterpret_cast<char*>(&temp_post_ops), sizeof(mkldnn::post_ops));
+    m_serialized_descs.emplace(conv_index, std::move(serdesc));
     return conv_index;
 }
 

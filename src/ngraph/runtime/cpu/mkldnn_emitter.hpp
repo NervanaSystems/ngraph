@@ -617,6 +617,7 @@ namespace ngraph
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;
                 std::vector<mkldnn::stream> m_mkldnn_streams;
                 std::unordered_map<size_t, std::vector<size_t>> m_primitive_deps;
+                std::unordered_map<size_t, std::vector<char>> m_serialized_descs;
                 std::vector<std::unique_ptr<MKLDNNWorkspace>> m_workspaces;
                 std::vector<char*> m_workspace_bufs;
             };

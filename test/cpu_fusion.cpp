@@ -2976,3 +2976,21 @@ TEST(cpu_fusion, rnn_input_fusion_inter_vs_cpu)
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
+
+TEST(cpu_fusion, aot_add)
+{
+    Shape shape_a{4, 4, 4, 4};
+    auto A = std::make_shared<op::Parameter>(element::f32, shape_a);
+    auto B = std::make_shared<op::Parameter>(element::f32, shape_a);
+    auto add = std::make_shared<op::Add>(A, B);
+    auto cpu_f = make_shared<Function>(NodeVector{add}, op::ParameterVector{A, B});
+
+    auto values_a = vector<float>(shape_size(shape_a), 2.f);
+    //auto values_b = vector<float>(shape_size(shape_a), 4.f);
+    vector<vector<float>> args;
+    args.push_back(values_a);
+    args.push_back(values_a);
+
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    std::cout << "result : " <<  ngraph::vector_to_string (cpu_results.at(0)) << std::endl;
+}

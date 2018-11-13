@@ -422,6 +422,9 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     writer +=
         R"(
 #include <cmath>
+#include <mkldnn.hpp>
+#include <fstream>
+
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_eigen_utils.hpp"
@@ -464,16 +467,11 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 
 using namespace ngraph::runtime::cpu::eigen;
 using namespace ngraph::runtime;
-
-std::vector<mkldnn::primitive*> primitives;
-
 )";
 
 #ifdef NGRAPH_DISTRIBUTED
     writer << "#include <mpi.h>\n\n";
 #endif
-
-    writer << "namespace AOT { mkldnn::engine global_cpu_engine; }\n";
 
     string pch_header_source = writer.get_code();
 
@@ -483,6 +481,9 @@ std::vector<mkldnn::primitive*> primitives;
     // atexit() happens too late, when the JIT is no longer alive
 
     writer << "void *__dso_handle = 0;\n\n";
+
+    writer << "std::vector<mkldnn::primitive*> primitives;\n";
+    writer << "namespace AOT { mkldnn::engine global_cpu_engine(mkldnn::engine::cpu, 0); };\n";
 
     if (m_emit_timing)
     {

@@ -82,7 +82,7 @@ namespace ngraph
                     // for smaller tensor sizes
                     if (node->get_input_element_type(0) == element::f32 &&
                         node->get_input_element_type(1) == element::f32 && arg0_rank == 4 &&
-                        arg1_rank == 4 && src_size > 64000)
+                        arg1_rank == 4 /*&& src_size > 64000*/)
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
