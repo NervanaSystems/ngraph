@@ -73,6 +73,62 @@ protected:
     }
 };
 
+#define MODEL_PATH "/nfs/site/home/yimeisun/nnp_tf_master/nnp-transformer/build/test/"
+TEST(${BACKEND_NAME}, my_comp_result_clust_5)
+{
+    const string json_path = file_util::path_join(MODEL_PATH, "tf_function_ngraph_cluster_5_test.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+
+NGRAPH_WARN << "Yimei - op size = " << func->get_ordered_ops().size();
+
+    NodeVector new_results;
+    for (auto n : func->get_ordered_ops())
+    {
+NGRAPH_WARN << "Yimei - op: " << n->description();
+
+        //dont include op::Results otherwise Function c-tor will complain
+//        if (!n->is_output() && !n->is_parameter() && !n->is_constant() && !n->get_outputs().size()>1)
+          if (!n->is_output() && !n->is_parameter() && !n->is_constant() && (n->description()!= "op: Result"))
+        {
+            new_results.push_back(n);
+        }
+
+    }
+
+NGRAPH_WARN << "Yimei - new result size = " << new_results.size();
+
+    //no need to include original results they are subsumed by new_results
+    auto new_func = make_shared<Function>(new_results, func->get_parameters());
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : new_func->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto int_results = execute(new_func, args, "CPU");
+    auto cpu_results = execute(new_func, args, "INTERPRETER");
+NGRAPH_WARN << "Yimei - NNP_SIM exec result size: " << int_results.size();
+NGRAPH_WARN << "Yimei - NNP exec result size: " << cpu_results.size();
+
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        std::cout << "Comparing results for " << new_results.at(i)->get_name() <<std::endl;
+        for (int j = 0; j < cpu_results.at(i).size(); j++)
+        {
+//        std::cout << "cpu_results " << i << ": " << j << ": " << cpu_results.at(i)[j];
+//        std::cout << "int_results " << i << ": " << j << ": " << int_results.at(i)[j];
+          EXPECT_EQ(cpu_results.at(i)[j], int_results.at(i)[j]);
+        }
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, unhandled_op)
 {
     Shape shape{2, 2};
