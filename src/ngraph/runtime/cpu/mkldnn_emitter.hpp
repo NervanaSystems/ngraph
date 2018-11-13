@@ -140,7 +140,7 @@ namespace ngraph
                         std::dynamic_pointer_cast<ngraph::op::Constant>(qc->get_arguments()[index]);
                     if (scale_const_op == nullptr)
                     {
-                        throw ngraph_error("QuantizedConvolution's scale must be a Constant");
+                        throw ngraph_error("Scale must be a Constant");
                     }
 
                     auto scale_val = scale_const_op->template get_vector<float>();
@@ -266,11 +266,10 @@ namespace ngraph
                                                          convolution->get_padding_above(),
                                                          ops);
                     }
-                    else if (std::is_same<OP, ngraph::op::QuantizedConvolution>())
+                    else if (std::is_same<OP, ngraph::op::QuantizedConvolution>() ||
+                             std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
                     {
-                        auto scale_val =
-                            extract_scale_value<ngraph::op::QuantizedConvolution>(node, 2);
-
+                        auto scale_val = extract_scale_value<OP>(node, 2);
                         return build_quantized_convolution_forward(
                             data_desc,
                             weights_desc,
@@ -282,63 +281,13 @@ namespace ngraph
                             scale_val[0],
                             ops);
                     }
-                    else if (std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
+                    else if (std::is_same<OP, ngraph::op::QuantizedConvolutionBias>() ||
+                             std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
+                             std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
                     {
-                        auto scale_val =
-                            extract_scale_value<ngraph::op::QuantizedConvolutionRelu>(node, 2);
-
-                        return build_quantized_convolution_forward(
-                            data_desc,
-                            weights_desc,
-                            result_desc,
-                            convolution->get_window_movement_strides(),
-                            window_dilation_strides_adjusted,
-                            convolution->get_padding_below(),
-                            convolution->get_padding_above(),
-                            scale_val[0],
-                            ops);
-                    }
-                    else if (std::is_same<OP, ngraph::op::QuantizedConvolutionBias>())
-                    {
-                        auto scale_val =
-                            extract_scale_value<ngraph::op::QuantizedConvolutionBias>(node, 3);
-
-                        // conv+bias = cvt_to_int8(scale*(dst + bias))
-                        auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
-                        return build_quantized_convolution_forward(
-                            data_desc,
-                            weights_desc,
-                            bias_desc,
-                            result_desc,
-                            convolution->get_window_movement_strides(),
-                            window_dilation_strides_adjusted,
-                            convolution->get_padding_below(),
-                            convolution->get_padding_above(),
-                            scale_val[0],
-                            ops);
-                    }
-                    else if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>())
-                    {
-                        auto scale_val =
-                            extract_scale_value<ngraph::op::QuantizedConvolutionBiasAdd>(node, 4);
-                        auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
-                        return build_quantized_convolution_forward(
-                            data_desc,
-                            weights_desc,
-                            bias_desc,
-                            result_desc,
-                            convolution->get_window_movement_strides(),
-                            window_dilation_strides_adjusted,
-                            convolution->get_padding_below(),
-                            convolution->get_padding_above(),
-                            scale_val[0],
-                            ops);
-                    }
-                    else if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
-                    {
-                        auto scale_val =
-                            extract_scale_value<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node,
-                                                                                               4);
+                        int index =
+                            std::is_same<OP, ngraph::op::QuantizedConvolutionBias>() ? 3 : 4;
+                        auto scale_val = extract_scale_value<OP>(node, index);
                         auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                         return build_quantized_convolution_forward(
                             data_desc,

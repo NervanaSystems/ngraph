@@ -367,7 +367,7 @@ TEST(builder, scaled_QC_with_bias_signed_add_and_relu)
     vector<uint8_t> a_data = {1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4};
     vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
     vector<int32_t> c_data = {5};
-    vector<int8_t> conv_2_data = {-1, -2, -3, 4, 5, 6, -10, 0, 1, 2, 3, 4};
+    vector<int8_t> conv_2_data = {-1, -2, -3, -4, -5, -6, -10, 0, 1, 2, 3, 4};
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     auto B = make_shared<op::Parameter>(element::i8, shape_b);
     auto Add = make_shared<op::Parameter>(element::i8, shape_a);
@@ -412,7 +412,7 @@ TEST(builder, scaled_QC_with_bias_signed_add_and_relu)
     copy_data(d, conv_2_data);
     auto result = backend->create_tensor(element::u8, shape_r);
     backend->call_with_validate(f, {result}, {a, b, c, d});
-    EXPECT_EQ((vector<uint8_t>{74, 106, 93, 113, 132, 230, 249, 136, 110, 165, 142, 133}),
+    EXPECT_EQ((vector<uint8_t>{76, 110, 99, 105, 122, 218, 255, 136, 110, 165, 142, 133}),
               read_vector<uint8_t>(result));
 }
 
