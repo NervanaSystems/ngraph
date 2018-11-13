@@ -110,7 +110,9 @@ namespace ngraph
                         else
                         {
                             m_map["B"] = common::make_constant_node<float>(
-                                element::f32, {num_directions, 2 * gates_count * hidden_size}, {0.f});
+                                element::f32,
+                                {num_directions, 2 * gates_count * hidden_size},
+                                {0.f});
                         }
                         // The lengths of the sequences in a batch. Shape [batch_size]
                         if (ng_inputs.size() >= 5)
@@ -150,7 +152,9 @@ namespace ngraph
                         else
                         {
                             m_map["P"] = common::make_constant_node<float>(
-                                element::f32, {num_directions, peepholes_count * hidden_size}, {0.f});
+                                element::f32,
+                                {num_directions, peepholes_count * hidden_size},
+                                {0.f});
                         }
                     }
 
@@ -278,7 +282,6 @@ namespace ngraph
 
                         for (const auto& in_x : in_seqs)
                         {
-
                             // (.) - Denotes element-wise multiplication.
                             // *   - Denotes dot product.
 
