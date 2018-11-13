@@ -58,6 +58,7 @@ set (SRC
     op/dequantize.cpp
     op/divide.cpp
     op/dot.cpp
+    op/embedding.cpp
     op/equal.cpp
     op/exp.cpp
     op/experimental/generate_mask.cpp

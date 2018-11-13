@@ -61,6 +61,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
@@ -287,6 +288,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Sign), &runtime::cpu::CPU_Emitter::emit<op::Sign>},
     {TI(ngraph::op::Slice), &runtime::cpu::CPU_Emitter::emit<op::Slice>},
     {TI(ngraph::op::Sum), &runtime::cpu::CPU_Emitter::emit<op::Sum>},
+    {TI(ngraph::op::Embedding), &runtime::cpu::CPU_Emitter::emit<op::Embedding>},
     {TI(ngraph::op::Exp), &runtime::cpu::CPU_Emitter::emit<op::Exp>},
     {TI(ngraph::op::Sin), &runtime::cpu::CPU_Emitter::emit<op::Sin>},
     {TI(ngraph::op::Sinh), &runtime::cpu::CPU_Emitter::emit<op::Sinh>},
@@ -455,6 +457,7 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/reference/convolution.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
+#include "ngraph/runtime/reference/embedding.hpp"
 #include "ngraph/runtime/reference/generate_mask.hpp"
 #include "ngraph/runtime/reference/lrn.hpp"
 #include "ngraph/runtime/reference/max.hpp"
