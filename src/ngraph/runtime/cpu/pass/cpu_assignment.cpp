@@ -125,47 +125,12 @@ namespace ngraph
                     }
                 }
 
-                template <typename T>
-                bool can_use_mkldnn_conv(ngraph::Node* node)
-                {
-                    auto convolution = static_cast<const T*>(node);
-                    auto arg0_rank = node->get_input_shape(0).size();
-
-                    for (size_t s : convolution->get_data_dilation_strides())
-                    {
-                        if (s != 1)
-                            return false;
-                    }
-                    if (arg0_rank != 4 && arg0_rank != 5)
-                    {
-                        return false;
-                    }
-                    if (node->get_input_element_type(0) != element::f32)
-                    {
-                        return false;
-                    }
-                    // Temporarily disable MKLDNN for large paddings due to
-                    // a bug in v0.16 - MKFDNN-982
-                    for (auto s : convolution->get_padding_below())
-                    {
-                        if (s >= 7)
-                            return false;
-                    }
-                    for (auto s : convolution->get_padding_above())
-                    {
-                        if (s >= 7)
-                            return false;
-                    }
-
-                    return true;
-                }
-
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Convolution)
                 {
                     auto convolution = static_cast<op::Convolution*>(node);
 
-                    if (can_use_mkldnn_conv<ngraph::op::Convolution>(node))
+                    if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::Convolution>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -179,7 +144,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::GroupConvolution*>(node);
 
-                    if (can_use_mkldnn_conv<ngraph::op::GroupConvolution>(node))
+                    if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::GroupConvolution>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -193,7 +158,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::GroupConvolutionBias*>(node);
 
-                    if (can_use_mkldnn_conv<ngraph::op::GroupConvolutionBias>(node))
+                    if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::GroupConvolutionBias>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -207,7 +172,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::ConvolutionRelu*>(node);
 
-                    if (can_use_mkldnn_conv<ngraph::op::ConvolutionRelu>(node))
+                    if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionRelu>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -221,7 +186,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::ConvolutionBiasAdd*>(node);
 
-                    if (can_use_mkldnn_conv<ngraph::op::ConvolutionBiasAdd>(node))
+                    if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionBiasAdd>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -238,7 +203,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::ConvolutionAdd*>(node);
 
-                    if (can_use_mkldnn_conv<ngraph::op::ConvolutionAdd>(node))
+                    if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionAdd>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -335,20 +300,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::ConvolutionBias*>(node);
 
-                    auto data_shape = node->get_input_shape(0);
-                    auto weights_shape = node->get_input_shape(1);
-                    auto result_shape = node->get_output_shape(0);
-                    auto data_rank = data_shape.size();
-                    auto weights_rank = weights_shape.size();
-
-                    bool data_dilated = false;
-                    for (size_t s : convolution->get_data_dilation_strides())
-                    {
-                        data_dilated = data_dilated || (s != 1);
-                    }
-
-                    if (!data_dilated && data_rank == 4 && weights_rank == 4 &&
-                        node->get_input_element_type(0) == element::f32)
+                    if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionBias>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
