@@ -186,11 +186,12 @@ namespace ngraph
                                                     int sm_tile_size = 8,
                                                     int reg_tile_size = 1);
 
-                static void get_softmax_divide_op(codegen::CodeWriter& writer,
-                                                  const std::string& name,
-                                                  const std::vector<std::string>& data_types,
-                                                  std::vector<size_t> axes_flag,
-                                                  size_t rank);
+                static void get_softmax_op(codegen::CodeWriter& writer,
+                                           const std::string& name,
+                                           runtime::gpu::GPUKernelArgs& args,
+                                           const std::vector<std::string>& data_types,
+                                           size_t out_rank,
+                                           size_t reduce_rank);
 
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
 

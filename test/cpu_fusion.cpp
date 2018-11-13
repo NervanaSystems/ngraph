@@ -2218,7 +2218,7 @@ static std::shared_ptr<Function> make_function(const std::string& file_name)
     return func;
 }
 
-TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
+TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
     auto cpu_f = make_function(file_name);
@@ -2240,7 +2240,7 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
     }
 }
 
-TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
+TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
@@ -2262,7 +2262,7 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
     }
 }
 
-TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
+TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
@@ -2960,7 +2960,7 @@ TEST(cpu_fusion, fuse_rnn_across_layer)
     EXPECT_EQ(ref_rnn_count, rnn_count);
 }
 
-TEST(cpu_fusion, fuse_rnn_across_2layer_1timestep)
+TEST(DISABLED_cpu_fusion, fuse_rnn_across_2layer_1timestep)
 {
     const std::string file_name("mxnet/2rnn_layer_1timestep.json");
     auto cpu_f = make_function(file_name);

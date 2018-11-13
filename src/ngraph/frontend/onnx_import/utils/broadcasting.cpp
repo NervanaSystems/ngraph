@@ -31,8 +31,8 @@
 /// \param left_shape Shape of first input tensor.
 /// \param right_shape Shape of the second input tensor.
 /// \return Shape of the output tensor and full shape of input tensors.
-std::vector<ngraph::Shape> get_numpy_broadcast_shape(ngraph::Shape left_shape,
-                                                     ngraph::Shape right_shape)
+static std::vector<ngraph::Shape> get_numpy_broadcast_shape(ngraph::Shape left_shape,
+                                                            ngraph::Shape right_shape)
 {
     ngraph::Shape output_shape;
     auto rank_left = left_shape.size();
