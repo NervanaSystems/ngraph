@@ -78,7 +78,7 @@ NGRAPH_TEST(${BACKEND_NAME}, unhandled_op)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto unhandled = make_shared<UnhandledOp>(A);
-    auto f = make_shared<Function>(unhandled, op::ParameterVector{A});
+    auto f = make_shared<Function>(unhandled, ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor<float>(shape);
@@ -91,7 +91,7 @@ NGRAPH_TEST(${BACKEND_NAME}, function_name)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(A + B, op::ParameterVector{A, B}, "funky func name");
+    auto f = make_shared<Function>(A + B, ParameterVector{A, B}, "funky func name");
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -115,7 +115,7 @@ NGRAPH_TEST(${BACKEND_NAME}, node_name)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = A + B;
     C->set_name("a node name");
-    auto f = make_shared<Function>(C, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(C, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -140,7 +140,7 @@ NGRAPH_TEST(${BACKEND_NAME}, aliased_output)
     auto C = A + B;
     auto D = A * B;
     auto E = op::Constant::create(element::f32, shape, {1, 2, 3, 4});
-    auto f = make_shared<Function>(NodeVector{C, C, D, D, C, E, E}, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(NodeVector{C, C, D, D, C, E, E}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -175,7 +175,7 @@ NGRAPH_TEST(${BACKEND_NAME}, parameter_as_output)
 {
     Shape shape{3, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(A, op::ParameterVector{A});
+    auto f = make_shared<Function>(A, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -197,7 +197,7 @@ NGRAPH_TEST(${BACKEND_NAME}, abc)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -230,7 +230,7 @@ NGRAPH_TEST(${BACKEND_NAME}, abc_int64)
     auto A = make_shared<op::Parameter>(element::i64, shape);
     auto B = make_shared<op::Parameter>(element::i64, shape);
     auto C = make_shared<op::Parameter>(element::i64, shape);
-    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -264,7 +264,7 @@ NGRAPH_TEST(${BACKEND_NAME}, multiple_result)
     auto A_add_B_mul_C = make_shared<op::Multiply>(A_add_B, C);
 
     auto f =
-        make_shared<Function>(NodeVector{A_add_B, A_add_B_mul_C}, op::ParameterVector{A, B, C});
+        make_shared<Function>(NodeVector{A_add_B, A_add_B_mul_C}, ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -300,7 +300,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_one_output)
         op::Constant::create(element::f64, shape_mean, {1.75437676, 0.37950502, 1.13727544});
 
     auto BN = make_shared<op::BatchNormInference>(1e-3, Gamma, Beta, A, Mean, Variance);
-    auto f = make_shared<Function>(BN, op::ParameterVector{A});
+    auto f = make_shared<Function>(BN, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -332,11 +332,11 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_three_outputs)
     auto BN = make_shared<op::BatchNormTraining>(1e-3, Gamma, Beta, A);
 
     auto f0 =
-        make_shared<Function>(make_shared<op::GetOutputElement>(BN, 0), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::GetOutputElement>(BN, 0), ParameterVector{A});
     auto f1 =
-        make_shared<Function>(make_shared<op::GetOutputElement>(BN, 1), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::GetOutputElement>(BN, 1), ParameterVector{A});
     auto f2 =
-        make_shared<Function>(make_shared<op::GetOutputElement>(BN, 2), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::GetOutputElement>(BN, 2), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -376,7 +376,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_colwise)
     auto C = make_shared<op::Parameter>(element::f32, shape_c);
     Shape shape_r{2, 8};
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 1),
-                                   op::ParameterVector{A, B, C});
+                                   ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -404,7 +404,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_rowwise)
     auto C = make_shared<op::Parameter>(element::f32, shape_c);
     Shape shape_r{8, 2};
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
-                                   op::ParameterVector{A, B, C});
+                                   ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -432,7 +432,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_int64)
     auto C = make_shared<op::Parameter>(element::i64, shape_c);
     Shape shape_r{8, 2};
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
-                                   op::ParameterVector{A, B, C});
+                                   ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -462,7 +462,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, concat_vector_params, concat_vector_large)
 {
     Shape shape_a{1};
     NodeVector inputs;
-    op::ParameterVector inputs_param;
+    ParameterVector inputs_param;
     for (uint32_t i = 0; i < num_inputs; i++)
     {
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -509,7 +509,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_vector)
     auto C = make_shared<op::Parameter>(element::f32, shape_c);
     Shape shape_r{12};
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
-                                   op::ParameterVector{A, B, C});
+                                   ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -534,7 +534,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_4d_tensor)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     Shape shape_r{3, 1, 1, 1};
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
-                                   op::ParameterVector{A, B, C});
+                                   ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -559,7 +559,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_2d_tensor)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     Shape shape_r{3, 1};
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{A, B, C}, 0),
-                                   op::ParameterVector{A, B, C});
+                                   ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -588,7 +588,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_2d_tensor)
     auto subtract = make_shared<op::Subtract>(C, A);
     Shape shape_r{3, 1};
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{add1, add2, subtract}, 0),
-                                   op::ParameterVector{A, B, C, D});
+                                   ParameterVector{A, B, C, D});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -620,7 +620,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_in_place_propagate_2d_tensor)
     auto subtract = make_shared<op::Subtract>(C, A);
     Shape shape_r{3, 1};
     auto f = make_shared<Function>(make_shared<op::Concat>(NodeVector{concat1, subtract}, 0),
-                                   op::ParameterVector{A, B, C, D});
+                                   ParameterVector{A, B, C, D});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -713,7 +713,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_5d)
     Shape shape_r{2, 3, 9, 3, 2};
 
     auto r = make_shared<op::Concat>(NodeVector{A, B, C}, 2);
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>(r, ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -769,7 +769,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_last)
     Shape shape_r{4};
 
     auto r = make_shared<op::Concat>(NodeVector{A, B}, 0);
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -799,7 +799,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_1d_middle)
     Shape shape_r{8};
 
     auto r = make_shared<op::Concat>(NodeVector{A, B, C}, 0);
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>(r, ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -832,7 +832,7 @@ NGRAPH_TEST(${BACKEND_NAME}, concat_zero_length_4d_middle)
     Shape shape_r{2, 2, 2, 1};
 
     auto r = make_shared<op::Concat>(NodeVector{A, B, C}, 2);
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>(r, ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -859,7 +859,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lrn)
     Shape shape{2, 3, 2, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto lrn = make_shared<op::LRN>(A, 1., 2., 1., 3);
-    auto f = make_shared<Function>(lrn, op::ParameterVector{A});
+    auto f = make_shared<Function>(lrn, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -891,7 +891,7 @@ NGRAPH_TEST(${BACKEND_NAME}, select)
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Select>(A, B, C), op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>(make_shared<op::Select>(A, B, C), ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -912,7 +912,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant)
 {
     Shape shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
-    auto f = make_shared<Function>(A, op::ParameterVector{});
+    auto f = make_shared<Function>(A, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -927,7 +927,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_2constant)
 {
     Shape shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
-    auto f = make_shared<Function>(NodeVector{A, A}, op::ParameterVector{});
+    auto f = make_shared<Function>(NodeVector{A, A}, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -944,7 +944,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_with_op)
 {
     Shape shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {-1, 2, 3, -4, 5, -6, -7, 8});
-    auto f = make_shared<Function>(make_shared<op::Abs>(A), op::ParameterVector{});
+    auto f = make_shared<Function>(make_shared<op::Abs>(A), ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -958,7 +958,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_with_op)
 NGRAPH_TEST(${BACKEND_NAME}, constant_multi_use)
 {
     auto A = make_shared<op::Constant>(element::i32, Shape{}, std::vector<std::string>{"388"});
-    auto f = make_shared<Function>(A, op::ParameterVector{});
+    auto f = make_shared<Function>(A, ParameterVector{});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     std::shared_ptr<runtime::Tensor> r1 = backend->create_tensor(element::i32, Shape{});
@@ -977,7 +977,7 @@ NGRAPH_TEST(${BACKEND_NAME}, function_call)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
     auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -986,7 +986,7 @@ NGRAPH_TEST(${BACKEND_NAME}, function_call)
     auto g =
         make_shared<Function>(make_shared<op::FunctionCall>(f, NodeVector{X + Y, Y + Z, Z + X}) +
                                   make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}),
-                              op::ParameterVector{X, Y, Z});
+                              ParameterVector{X, Y, Z});
 
     // Now call g on some test vectors.
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -1014,7 +1014,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_int32_float32)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto f =
-        make_shared<Function>(make_shared<op::Convert>(A, element::f32), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::Convert>(A, element::f32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1032,7 +1032,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_uint16_float32)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::u16, shape);
     auto f =
-        make_shared<Function>(make_shared<op::Convert>(A, element::f32), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::Convert>(A, element::f32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1050,7 +1050,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_int32_bool)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto f = make_shared<Function>(make_shared<op::Convert>(A, element::boolean),
-                                   op::ParameterVector{A});
+                                   ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1068,7 +1068,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bool)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Convert>(A, element::boolean),
-                                   op::ParameterVector{A});
+                                   ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1087,7 +1087,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_scalar)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{};
     auto r = make_shared<op::Slice>(A, Coordinate{}, Coordinate{});
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1106,7 +1106,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 2};
     auto r = make_shared<op::Slice>(A, Coordinate{0, 1}, Coordinate{3, 3});
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1125,7 +1125,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_vector)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{12};
     auto r = make_shared<op::Slice>(A, Coordinate{2}, Coordinate{14});
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1148,7 +1148,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_overlap)
     auto D = make_shared<op::Slice>(C, Coordinate{0, 0}, Coordinate{2, 4});
     auto E = make_shared<op::Slice>(C, Coordinate{1, 0}, Coordinate{3, 4});
     auto r = make_shared<op::Add>(D, E);
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1169,7 +1169,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_strided)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2};
     auto r = make_shared<op::Slice>(A, Coordinate{1, 0}, Coordinate{4, 4}, Strides{2, 3});
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1188,7 +1188,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_3d)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
     auto r = make_shared<op::Slice>(A, Coordinate{1, 1, 1}, Coordinate{3, 3, 3});
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1213,7 +1213,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
     auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 2});
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1238,7 +1238,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2};
     auto r = make_shared<op::Slice>(A, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 3});
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1260,7 +1260,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_3d_strided_different_strides)
 NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_float32)
 {
     auto r = op::Constant::create(element::f32, Shape{}, {4.75});
-    auto f = make_shared<Function>(r, op::ParameterVector{});
+    auto f = make_shared<Function>(r, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1274,7 +1274,7 @@ NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_float32)
 NGRAPH_TEST(${BACKEND_NAME}, scalar_constant_int64)
 {
     auto r = op::Constant::create(element::i64, Shape{}, {2112});
-    auto f = make_shared<Function>(r, op::ParameterVector{});
+    auto f = make_shared<Function>(r, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1289,7 +1289,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_float32)
 {
     Shape shape{2, 2};
     auto r = op::Constant::create(element::f32, shape, {4.75, 4.5, -5.25, 0.0});
-    auto f = make_shared<Function>(r, op::ParameterVector{});
+    auto f = make_shared<Function>(r, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1304,7 +1304,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_int64)
 {
     Shape shape{2, 2};
     auto r = op::Constant::create(element::i64, shape, {2112, 1848, 1776, 1964});
-    auto f = make_shared<Function>(r, op::ParameterVector{});
+    auto f = make_shared<Function>(r, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1320,7 +1320,7 @@ NGRAPH_TEST(${BACKEND_NAME}, kahan_sum_to_scalar)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1340,7 +1340,7 @@ NGRAPH_TEST(${BACKEND_NAME}, kahan_sum_3d_to_vector)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1364,11 +1364,11 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_equality_bool)
     Shape shape{4};
     // auto A = make_shared<op::Parameter>(element::boolean, shape);
     // auto B = make_shared<op::Parameter>(element::boolean, shape);
-    // auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{A, B});
+    // auto f = make_shared<Function>(make_shared<op::Equal>(A, B), ParameterVector{A, B});
 
     auto A = op::Constant::create(element::boolean, shape, {true, false, true, false});
     auto B = op::Constant::create(element::boolean, shape, {true, true, true, true});
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1387,7 +1387,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_scalar)
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{};
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{}, Coordinate{});
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1413,7 +1413,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix_inplace)
     Shape shape_r{4, 4};
     auto r = make_shared<op::ReplaceSlice>(abs_A, B, Coordinate{0, 1}, Coordinate{3, 3});
     auto abs_r = make_shared<op::Abs>(r);
-    auto f = make_shared<Function>(abs_r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(abs_r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1437,7 +1437,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix)
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{4, 4};
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{0, 1}, Coordinate{3, 3});
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1461,7 +1461,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_vector)
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{16};
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{2}, Coordinate{14});
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1486,7 +1486,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d)
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{4, 4, 4};
     auto r = make_shared<op::ReplaceSlice>(A, B, Coordinate{1, 1, 1}, Coordinate{3, 3, 3});
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1523,7 +1523,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d_strided)
     Shape shape_r{4, 4, 4};
     auto r = make_shared<op::ReplaceSlice>(
         A, B, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 2});
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1560,7 +1560,7 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_3d_strided_different_strides)
     Shape shape_r{4, 4, 4};
     auto r = make_shared<op::ReplaceSlice>(
         A, B, Coordinate{0, 0, 0}, Coordinate{4, 4, 4}, Strides{2, 2, 3});
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1592,7 +1592,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_0d)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1609,7 +1609,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_1d_nochange)
 {
     Shape shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1626,7 +1626,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_1d_0)
 {
     Shape shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1643,7 +1643,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_nochange)
 {
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1663,7 +1663,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_0)
 {
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1683,7 +1683,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_1)
 {
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1704,7 +1704,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_2d_01)
     Shape shape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
-        make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1}), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1724,7 +1724,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_nochange)
 {
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1747,7 +1747,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_0)
 {
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1770,7 +1770,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_1)
 {
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1793,7 +1793,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_2)
 {
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{2}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{2}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1817,7 +1817,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_01)
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
-        make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1}), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1841,7 +1841,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_02)
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
-        make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 2}), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 2}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1865,7 +1865,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_12)
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
-        make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1, 2}), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{1, 2}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1889,7 +1889,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_012)
     Shape shape{2, 4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Reverse>(A, AxisSet{0, 1, 2}),
-                                   op::ParameterVector{A});
+                                   ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1913,7 +1913,7 @@ NGRAPH_TEST(${BACKEND_NAME}, numeric_float_nan)
     Shape shape{5};
     auto A = op::Constant::create(element::f32, shape, {-2.5f, 25.5f, 2.25f, NAN, 6.0f});
     auto B = op::Constant::create(element::f32, shape, {10.0f, 5.0f, 2.25f, 10.0f, NAN});
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1928,7 +1928,7 @@ NGRAPH_TEST(${BACKEND_NAME}, numeric_double_nan)
     Shape shape{5};
     auto A = op::Constant::create(element::f64, shape, {-2.5f, 25.5f, 2.25f, NAN, 6.0f});
     auto B = op::Constant::create(element::f64, shape, {10.0f, 5.0f, 2.25f, 10.0f, NAN});
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1943,7 +1943,7 @@ NGRAPH_TEST(${BACKEND_NAME}, numeric_float_inf)
     Shape shape{5};
     auto A = op::Constant::create(element::f32, shape, {-2.5f, 25.5f, 2.25f, INFINITY, 6.0f});
     auto B = op::Constant::create(element::f32, shape, {10.0f, 5.0f, 2.25f, 10.0f, -INFINITY});
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1958,7 +1958,7 @@ NGRAPH_TEST(${BACKEND_NAME}, numeric_double_inf)
     Shape shape{5};
     auto A = op::Constant::create(element::f64, shape, {-2.5f, 25.5f, 2.25f, INFINITY, 6.0f});
     auto B = op::Constant::create(element::f64, shape, {10.0f, 5.0f, 2.25f, 10.0f, -INFINITY});
-    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), op::ParameterVector{});
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1978,14 +1978,14 @@ NGRAPH_TEST(${BACKEND_NAME}, select_and_scatter_with_overlap)
     Shape shape_sel_b{};
     auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
     auto sel_f = make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B),
-                                       op::ParameterVector{SEL_A, SEL_B});
+                                       ParameterVector{SEL_A, SEL_B});
 
     Shape shape_scatter_a{};
     auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
     Shape shape_scatter_b{};
     auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
     auto scatter_f =
-        make_shared<Function>(SCATTER_A + SCATTER_B, op::ParameterVector{SCATTER_A, SCATTER_B});
+        make_shared<Function>(SCATTER_A + SCATTER_B, ParameterVector{SCATTER_A, SCATTER_B});
 
     Shape shape_a{4, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1998,7 +1998,7 @@ NGRAPH_TEST(${BACKEND_NAME}, select_and_scatter_with_overlap)
     auto window_strides = Strides{2, 2};
     auto f = make_shared<Function>(
         make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
-        op::ParameterVector{A, B, C});
+        ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2031,14 +2031,14 @@ NGRAPH_TEST(${BACKEND_NAME}, select_and_scatter_without_overlap)
     Shape shape_sel_b{};
     auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
     auto sel_f = make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B),
-                                       op::ParameterVector{SEL_A, SEL_B});
+                                       ParameterVector{SEL_A, SEL_B});
 
     Shape shape_scatter_a{};
     auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
     Shape shape_scatter_b{};
     auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
     auto scatter_f =
-        make_shared<Function>(SCATTER_A + SCATTER_B, op::ParameterVector{SCATTER_A, SCATTER_B});
+        make_shared<Function>(SCATTER_A + SCATTER_B, ParameterVector{SCATTER_A, SCATTER_B});
 
     Shape shape_a{4, 6};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2051,7 +2051,7 @@ NGRAPH_TEST(${BACKEND_NAME}, select_and_scatter_without_overlap)
     auto window_strides = Strides{2, 3};
     auto f = make_shared<Function>(
         make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
-        op::ParameterVector{A, B, C});
+        ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2084,14 +2084,14 @@ NGRAPH_TEST(${BACKEND_NAME}, select_and_scatter_3d_without_overlap)
     Shape shape_sel_b{};
     auto SEL_B = make_shared<op::Parameter>(element::f32, shape_sel_b);
     auto sel_f = make_shared<Function>(make_shared<op::Greater>(SEL_A, SEL_B),
-                                       op::ParameterVector{SEL_A, SEL_B});
+                                       ParameterVector{SEL_A, SEL_B});
 
     Shape shape_scatter_a{};
     auto SCATTER_A = make_shared<op::Parameter>(element::f32, shape_scatter_a);
     Shape shape_scatter_b{};
     auto SCATTER_B = make_shared<op::Parameter>(element::f32, shape_scatter_b);
     auto scatter_f =
-        make_shared<Function>(SCATTER_A + SCATTER_B, op::ParameterVector{SCATTER_A, SCATTER_B});
+        make_shared<Function>(SCATTER_A + SCATTER_B, ParameterVector{SCATTER_A, SCATTER_B});
 
     Shape shape_a{2, 4, 6};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -2104,7 +2104,7 @@ NGRAPH_TEST(${BACKEND_NAME}, select_and_scatter_3d_without_overlap)
     auto window_strides = Strides{2, 2, 3};
     auto f = make_shared<Function>(
         make_shared<op::SelectAndScatter>(A, B, C, sel_f, scatter_f, window_shape, window_strides),
-        op::ParameterVector{A, B, C});
+        ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2136,7 +2136,7 @@ void make_unary_empty_test(const string& backend_name)
 {
     Shape shape{0};
 
-    op::ParameterVector params;
+    ParameterVector params;
     NodeVector result_list;
     for (size_t i = 0; i < s_known_element_types.size(); i++)
     {
@@ -2185,7 +2185,7 @@ template <typename OP>
 void make_binary_empty_test(const string& backend_name, bool is_comparison = false)
 {
     Shape shape{0};
-    op::ParameterVector A;
+    ParameterVector A;
     for (size_t i = 0; i < s_known_element_types.size(); i++)
     {
         A.push_back(make_shared<op::Parameter>(s_known_element_types[i], shape));
@@ -2290,7 +2290,7 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_not)
 {
     Shape shape{0};
     auto A = make_shared<op::Parameter>(element::from<char>(), shape);
-    auto f = make_shared<Function>(make_shared<op::Not>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Not>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2447,7 +2447,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convolution_outlining)
                                               CoordinateDiff{0, 0},
                                               CoordinateDiff{0, 0},
                                               Strides{1, 1});
-    auto f = make_shared<Function>(conv2, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(conv2, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2483,7 +2483,7 @@ NGRAPH_TEST(${BACKEND_NAME}, computation_reuse)
     auto bias = make_shared<op::Broadcast>(
         op::Constant::create(element::f32, Shape{}, {2.14}), shape_r, AxisSet{0, 1, 2, 3});
     auto result_op = make_shared<op::Result>(pool + bias);
-    auto f = make_shared<Function>(ResultVector{result_op}, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(ResultVector{result_op}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2516,7 +2516,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_1d)
     Shape padding_interior{2};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2546,7 +2546,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_1d)
     Shape padding_interior{0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2576,7 +2576,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
     Shape padding_interior{2};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2607,7 +2607,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_2d)
     Shape padding_interior{2, 1};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2642,7 +2642,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
     Shape padding_interior{0, 0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2675,7 +2675,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
     Shape padding_interior{0, 0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2708,7 +2708,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
     Shape padding_interior{0, 0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2741,7 +2741,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_4d_1x2x2x2)
     Shape padding_interior{0, 0, 0, 0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2808,7 +2808,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
     Shape shape_r{5, 2, 3, 2};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2840,7 +2840,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_2channel_2image_asym)
     Shape shape_r{2, 2, 6, 6};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2910,7 +2910,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_trivial)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2928,7 +2928,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_trivial_5d)
 {
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2949,7 +2949,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_to_scalar)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
-        make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2971,7 +2971,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_matrix_columns)
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2993,7 +2993,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_matrix_rows)
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3015,7 +3015,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_matrix_rows_zero)
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3039,7 +3039,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_matrix_cols_zero)
     Shape shape_a{0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3062,7 +3062,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_vector_zero)
     Shape shape_a{0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3086,7 +3086,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_matrix_to_scalar_zero_by_zero)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
     auto f =
-        make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3109,7 +3109,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_matrix_most_sig)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3137,7 +3137,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_matrix_least_sig)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{2}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{2}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3166,7 +3166,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_vector)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
     auto f =
-        make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3189,7 +3189,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_to_scalar)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
     auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1, 2}),
-                                   op::ParameterVector{A});
+                                   ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3212,7 +3212,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
     Shape shape_a{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 2};
-    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Product>(A, AxisSet{1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3233,7 +3233,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_trivial)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3251,7 +3251,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_trivial_5d)
 {
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3271,7 +3271,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_to_scalar)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3293,7 +3293,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_columns)
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3315,7 +3315,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows)
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3337,7 +3337,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_zero)
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3364,7 +3364,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_cols_zero)
     Shape shape_a{0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3389,7 +3389,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_vector_zero)
     Shape shape_a{0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3412,7 +3412,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_to_scalar_zero_by_zero)
     Shape shape_a{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3435,7 +3435,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_matrix_most_sig)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3454,7 +3454,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_matrix_least_sig)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{2}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{2}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3473,7 +3473,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_vector)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3493,7 +3493,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
     auto f =
-        make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1, 2}), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1, 2}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3512,7 +3512,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_eliminate_zero_dim)
     Shape shape_a{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 2};
-    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3535,7 +3535,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_trivial)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3553,7 +3553,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_trivial_5d)
 {
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3573,7 +3573,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_to_scalar)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3595,7 +3595,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_columns)
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3617,7 +3617,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_rows)
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3639,7 +3639,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_rows_zero)
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3666,7 +3666,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_cols_zero)
     Shape shape_a{0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3691,7 +3691,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_vector_zero)
     Shape shape_a{0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3714,7 +3714,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_to_scalar_zero_by_zero)
     Shape shape_a{0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3737,7 +3737,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_matrix_most_sig)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3756,7 +3756,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_matrix_least_sig)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{2}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{2}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3775,7 +3775,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_vector)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3795,7 +3795,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_scalar)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
     auto f =
-        make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1, 2}), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1, 2}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3814,7 +3814,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_eliminate_zero_dim)
     Shape shape_a{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 2};
-    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3836,7 +3836,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h2w2)
 {
     auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
     auto sigmoid_node = make_shared<op::Sigmoid>(input);
-    auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input});
+    auto func = make_shared<Function>(sigmoid_node, ParameterVector{input});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3855,7 +3855,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h4)
 {
     auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
     auto sigmoid_node = make_shared<op::Sigmoid>(input);
-    auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input});
+    auto func = make_shared<Function>(sigmoid_node, ParameterVector{input});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3875,7 +3875,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_bprop_n1c1h4)
     auto input = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
     auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
     auto sigmoid_node = make_shared<op::SigmoidBackprop>(input, delta);
-    auto func = make_shared<Function>(sigmoid_node, op::ParameterVector{input, delta});
+    auto func = make_shared<Function>(sigmoid_node, ParameterVector{input, delta});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, input->get_shape());
@@ -3899,7 +3899,7 @@ NGRAPH_TEST(${BACKEND_NAME}, relu_2Dfprop)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto relu = make_shared<op::Relu>(A);
     auto shape_rt = Shape{2, 5};
-    auto f = make_shared<Function>(relu, op::ParameterVector{A});
+    auto f = make_shared<Function>(relu, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3918,7 +3918,7 @@ NGRAPH_TEST(${BACKEND_NAME}, relu_4Dfprop)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto relu = make_shared<op::Relu>(A);
     auto shape_rt = Shape{2, 2, 2, 2};
-    auto f = make_shared<Function>(relu, op::ParameterVector{A});
+    auto f = make_shared<Function>(relu, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3938,7 +3938,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fuse_max_with_constant_zero_input_as_relu)
     auto B = make_shared<op::Parameter>(element::f32, shape_a);
     auto max = make_shared<op::Maximum>(A, B);
     auto shape_rt = Shape{2, 5};
-    auto f = make_shared<Function>(max, op::ParameterVector{B});
+    auto f = make_shared<Function>(max, ParameterVector{B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3958,7 +3958,7 @@ NGRAPH_TEST(${BACKEND_NAME}, relu_2Dbackprop)
     auto delta_val = make_shared<op::Parameter>(element::f32, shape_a);
     auto relu = make_shared<op::ReluBackprop>(A, delta_val);
     auto shape_rt = Shape{2, 5};
-    auto f = make_shared<Function>(relu, op::ParameterVector{A, delta_val});
+    auto f = make_shared<Function>(relu, ParameterVector{A, delta_val});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -3980,7 +3980,7 @@ NGRAPH_TEST(${BACKEND_NAME}, relu_4Dbackprop)
     auto delta_val = make_shared<op::Parameter>(element::f32, shape_a);
     auto relu = make_shared<op::ReluBackprop>(A, delta_val);
     auto shape_rt = Shape{2, 2, 2, 2};
-    auto f = make_shared<Function>(relu, op::ParameterVector{A, delta_val});
+    auto f = make_shared<Function>(relu, ParameterVector{A, delta_val});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4000,7 +4000,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_all)
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f =
-        make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0, 1}), op::ParameterVector{A});
+        make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0, 1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4016,7 +4016,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_all)
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 
     // empty AxisSet is the same as "full" AxisSet
-    f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{}), op::ParameterVector{A});
+    f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{}), ParameterVector{A});
     backend = runtime::Backend::create("${BACKEND_NAME}");
 
     backend->call_with_validate(f, {result}, {a});
@@ -4027,7 +4027,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_3d)
 {
     Shape shape{2, 2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4063,7 +4063,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_3d_double)
 {
     Shape shape{2, 2, 3};
     auto A = make_shared<op::Parameter>(element::f64, shape);
-    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4099,7 +4099,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{1}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{1}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4124,7 +4124,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_2)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4150,7 +4150,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_axis_3d_trivial)
 {
     Shape shape{1, 2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4167,7 +4167,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_underflow)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4191,7 +4191,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_overflow)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Softmax>(A, AxisSet{0}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4220,11 +4220,11 @@ NGRAPH_TEST(${BACKEND_NAME}, multiple_backends)
     Shape shape{2, 2};
     auto A1 = make_shared<op::Parameter>(element::f32, shape);
     auto B1 = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(A1 + B1, op::ParameterVector{A1, B1});
+    auto f = make_shared<Function>(A1 + B1, ParameterVector{A1, B1});
 
     auto A2 = make_shared<op::Parameter>(element::f32, shape);
     auto B2 = make_shared<op::Parameter>(element::f32, shape);
-    auto g = make_shared<Function>(A2 * B2, op::ParameterVector{A2, B2});
+    auto g = make_shared<Function>(A2 * B2, ParameterVector{A2, B2});
 
     auto backend1 = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4263,7 +4263,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensorview_custom_mem)
     auto make_external = [&]() {
         auto A = make_shared<op::Parameter>(element::f32, shape);
         auto B = make_shared<op::Parameter>(element::f32, shape);
-        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), ParameterVector{A, B});
 
         return f;
     };
@@ -4293,7 +4293,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_count)
 
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Add>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
 
     auto a = backend->create_tensor(element::f32, shape);
     auto b = backend->create_tensor(element::f32, shape);
@@ -4310,7 +4310,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_type)
 
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Add>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
 
     auto a = backend->create_tensor(element::i32, shape);
     auto b = backend->create_tensor(element::f32, shape);
@@ -4327,7 +4327,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_input_shape)
 
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Add>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
 
     auto a = backend->create_tensor(element::f32, {2, 3});
     auto b = backend->create_tensor(element::f32, shape);
@@ -4344,7 +4344,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_count)
 
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Add>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
 
     auto a = backend->create_tensor(element::f32, shape);
     auto b = backend->create_tensor(element::f32, shape);
@@ -4362,7 +4362,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_type)
 
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Add>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
 
     auto a = backend->create_tensor(element::i32, shape);
     auto b = backend->create_tensor(element::f32, shape);
@@ -4379,7 +4379,7 @@ NGRAPH_TEST(${BACKEND_NAME}, validate_call_output_shape)
 
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Add>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
 
     auto a = backend->create_tensor(element::f32, {2, 3});
     auto b = backend->create_tensor(element::f32, shape);
@@ -4393,7 +4393,7 @@ NGRAPH_TEST(${BACKEND_NAME}, logical_and)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto B = make_shared<op::Parameter>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::And>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::And>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4413,7 +4413,7 @@ NGRAPH_TEST(${BACKEND_NAME}, logical_or)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
     auto B = make_shared<op::Parameter>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::Or>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Or>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4447,7 +4447,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b1c2h2w2)
     auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
 
     auto f = make_shared<Function>(NodeVector{output_rt, mean_rt, variance_rt},
-                                   op::ParameterVector{input, gamma, beta});
+                                   ParameterVector{input, gamma, beta});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4510,7 +4510,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
     auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
 
     auto f = make_shared<Function>(NodeVector{output_rt, mean_rt, variance_rt},
-                                   op::ParameterVector{input, gamma, beta});
+                                   ParameterVector{input, gamma, beta});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto _input = backend->create_tensor(element::f32, input_shape);
@@ -4594,7 +4594,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_bprop_n4c3h2w2)
     copy_data(_delta, deltaData);
 
     auto f = make_shared<Function>(NodeVector{bn_dx, bn_dgamma, bn_dbeta},
-                                   op::ParameterVector{mean, var, input, gamma, beta});
+                                   ParameterVector{mean, var, input, gamma, beta});
 
     auto C = std::make_shared<op::Parameter>(element::f32, shape_r);
 
@@ -4607,7 +4607,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_bprop_n4c3h2w2)
     auto dbeta = adjoints.backprop_node(beta);
 
     auto df = make_shared<Function>(NodeVector{dinput, dgamma, dbeta},
-                                    op::ParameterVector{mean, var, input, gamma, beta, C});
+                                    ParameterVector{mean, var, input, gamma, beta, C});
 
     // roundtrip serialization
     string js = serialize(df, 4);
@@ -4657,7 +4657,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_inference_b2c2h2w1)
     auto shape_r = Shape{2, 2, 2, 1};
     auto bn = make_shared<op::BatchNormInference>(eps, gamma, beta, input, mean, var);
 
-    auto f = make_shared<Function>(bn, op::ParameterVector{input, gamma, beta, mean, var});
+    auto f = make_shared<Function>(bn, ParameterVector{input, gamma, beta, mean, var});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto _input = backend->create_tensor(element::f32, input_shape);
@@ -4706,7 +4706,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_globalstats_b2c2w2h1)
     auto shape_r = Shape{2, 2, 2, 1};
     auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input, mean, var);
 
-    auto f = make_shared<Function>(bn, op::ParameterVector{gamma, beta, input, mean, var});
+    auto f = make_shared<Function>(bn, ParameterVector{gamma, beta, input, mean, var});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto _input = backend->create_tensor(element::f32, input_shape);
@@ -4750,7 +4750,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n2c3h4w2)
     size_t sequence_axis = 1;
     auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
 
-    auto f = make_shared<Function>(rs, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(rs, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4791,7 +4791,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n4c3h2w2)
 
     auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
 
-    auto f = make_shared<Function>(rs, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(rs, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4830,7 +4830,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n4d2c3h2w2)
 
     auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
 
-    auto f = make_shared<Function>(rs, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(rs, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4871,7 +4871,7 @@ NGRAPH_TEST(${BACKEND_NAME}, generate_mask)
     auto training = op::Constant::create(element::f32, Shape{}, {1});
     auto gen_mask = make_shared<op::GenerateMask>(training, result_shape, element::f32, seed, 0.5);
     auto gen_mask2 = make_shared<op::GenerateMask>(training, result_shape, element::f32, seed, 0.5);
-    auto f = make_shared<Function>(NodeVector{gen_mask, gen_mask2}, op::ParameterVector{});
+    auto f = make_shared<Function>(NodeVector{gen_mask, gen_mask2}, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -4912,7 +4912,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {1});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -4945,7 +4945,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize)
     auto scale = op::Constant::create(output_type, scale_offset_shape, {2});
     auto offset = op::Constant::create(input_type, scale_offset_shape, {1});
     auto dequantize = make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
-    auto f = make_shared<Function>(dequantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(dequantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -4978,7 +4978,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_zero_offset)
     auto scale = op::Constant::create(output_type, scale_offset_shape, {2});
     auto offset = op::Constant::create(input_type, scale_offset_shape, {0});
     auto dequantize = make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
-    auto f = make_shared<Function>(dequantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(dequantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5013,7 +5013,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_axes)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {10, 20, 30, 40});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5046,7 +5046,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_axes)
     auto scale = op::Constant::create(output_type, scale_offset_shape, {2, 3, 4, 5});
     auto offset = op::Constant::create(input_type, scale_offset_shape, {10, 20, 30, 40});
     auto dequantize = make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
-    auto f = make_shared<Function>(dequantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(dequantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5082,7 +5082,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_int8)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {1});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5115,7 +5115,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int8)
     auto scale = op::Constant::create(output_type, scale_offset_shape, {2});
     auto offset = op::Constant::create(input_type, scale_offset_shape, {1});
     auto dequantize = make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
-    auto f = make_shared<Function>(dequantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(dequantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5151,7 +5151,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {1});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5184,7 +5184,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_TOWARD_ZERO)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5218,7 +5218,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_UPWARD)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5252,7 +5252,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_DOWNWARD)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5286,7 +5286,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_TOWARD_EVEN)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5325,7 +5325,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_TOWARD_INFINITY)
         output_type,
         quantization_axes,
         static_cast<op::Quantize::RoundMode>(static_cast<int>(round_mode)));
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5364,7 +5364,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_TOWARD_ZERO)
         output_type,
         quantization_axes,
         static_cast<op::Quantize::RoundMode>(static_cast<int>(round_mode)));
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5398,7 +5398,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_UP)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5432,7 +5432,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_DOWN)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5473,7 +5473,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop)
         {1.0f, 1.0f}, // dy
     };
 
-    auto func = std::make_shared<Function>(dx, op::ParameterVector{g, b, input, delta});
+    auto func = std::make_shared<Function>(dx, ParameterVector{g, b, input, delta});
     auto results = execute(func, args, "${BACKEND_NAME}");
     EXPECT_TRUE(test::all_close_f(std::vector<float>{350.957, -388.67}, results.at(0)));
 }
@@ -5493,7 +5493,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop_2step)
     auto var = std::make_shared<op::GetOutputElement>(bn_fp, 2);
 
     auto func_bn =
-        std::make_shared<Function>(NodeVector{bnorm, mean, var}, op::ParameterVector{g, b, input});
+        std::make_shared<Function>(NodeVector{bnorm, mean, var}, ParameterVector{g, b, input});
 
     std::vector<std::vector<float>> args = {
         {1.0f},       // gamma
@@ -5517,7 +5517,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop_2step)
     args.push_back(results.at(2)); // v
     args.push_back({1.0f, 1.0f});  // dy
 
-    auto func = std::make_shared<Function>(dx, op::ParameterVector{g, b, bn_output, m, v, delta});
+    auto func = std::make_shared<Function>(dx, ParameterVector{g, b, bn_output, m, v, delta});
     results = execute(func, args, "${BACKEND_NAME}");
     EXPECT_TRUE(test::all_close_f(std::vector<float>{350.957, -388.67}, results.at(0)));
 }
@@ -5528,7 +5528,7 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar)
     Shape output_shape{0};
 
     auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
-    auto f = std::make_shared<Function>(std::make_shared<op::ShapeOf>(A), op::ParameterVector{A});
+    auto f = std::make_shared<Function>(std::make_shared<op::ShapeOf>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -5547,7 +5547,7 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector)
     Shape output_shape{1};
 
     auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
-    auto f = std::make_shared<Function>(std::make_shared<op::ShapeOf>(A), op::ParameterVector{A});
+    auto f = std::make_shared<Function>(std::make_shared<op::ShapeOf>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -5566,7 +5566,7 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix)
     Shape output_shape{2};
 
     auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
-    auto f = std::make_shared<Function>(std::make_shared<op::ShapeOf>(A), op::ParameterVector{A});
+    auto f = std::make_shared<Function>(std::make_shared<op::ShapeOf>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -5585,7 +5585,7 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
     Shape output_shape{5};
 
     auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
-    auto f = std::make_shared<Function>(std::make_shared<op::ShapeOf>(A), op::ParameterVector{A});
+    auto f = std::make_shared<Function>(std::make_shared<op::ShapeOf>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

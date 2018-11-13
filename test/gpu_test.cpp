@@ -185,7 +185,7 @@ TEST(gpu_test, topk_fanout_graph_transform)
 
     auto gpu_f = make_shared<Function>(
         NodeVector{gpu_R_0, gpu_R_1, gpu_R_2, gpu_R_3},
-        op::ParameterVector{A_gpu, A_int32_gpu_1, A_int32_gpu_2, A_f32_gpu_1, A_f32_gpu_2});
+        ParameterVector{A_gpu, A_int32_gpu_1, A_int32_gpu_2, A_f32_gpu_1, A_f32_gpu_2});
 
     auto backend = runtime::Backend::create("GPU");
 

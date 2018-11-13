@@ -93,7 +93,7 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
     auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 1);
 
     auto func = make_shared<Function>(NodeVector{rnn_ht_output, rnn_ct_output},
-                                      op::ParameterVector{src_layer, src_iter, params, state_iter});
+                                      ParameterVector{src_layer, src_iter, params, state_iter});
     auto backend = runtime::Backend::create("GPU");
 
     shared_ptr<runtime::Tensor> src_layer_t =
@@ -242,7 +242,7 @@ TEST(gpu_fusion, lstm_analytic)
 
     auto f = make_shared<Function>(
         NodeVector{ht, ct},
-        op::ParameterVector{input_xt, weights_i2h, weights_h2h, bias_i2h, bias_h2h});
+        ParameterVector{input_xt, weights_i2h, weights_h2h, bias_i2h, bias_h2h});
 
     auto backend = runtime::Backend::create("GPU");
 
@@ -383,7 +383,7 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     auto ht_0 = std::make_shared<op::Multiply>(output_gate_0, tanh_2_0);
 
     auto f = make_shared<Function>(NodeVector{ht_0, ct_0},
-                                   op::ParameterVector{input_xt,
+                                   ParameterVector{input_xt,
                                                        weights_i2h,
                                                        weights_h2h,
                                                        bias_i2h,

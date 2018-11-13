@@ -43,7 +43,7 @@ TEST(CSE, abs_abs)
     auto A = std::make_shared<op::Parameter>(element::i32, zero_shape);
     auto abs1 = std::make_shared<op::Abs>(A);
     auto abs2 = std::make_shared<op::Abs>(A);
-    auto f = std::make_shared<Function>(NodeVector{abs1, abs2}, op::ParameterVector{A});
+    auto f = std::make_shared<Function>(NodeVector{abs1, abs2}, ParameterVector{A});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -58,7 +58,7 @@ TEST(CSE, abs_abs_negative)
     auto B = std::make_shared<op::Parameter>(element::i32, zero_shape);
     auto abs1 = std::make_shared<op::Abs>(A);
     auto abs2 = std::make_shared<op::Abs>(B);
-    auto f = std::make_shared<Function>(NodeVector{abs1, abs2}, op::ParameterVector{A, B});
+    auto f = std::make_shared<Function>(NodeVector{abs1, abs2}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -74,7 +74,7 @@ TEST(CSE, add_add)
     auto B = std::make_shared<op::Parameter>(element::i32, zero_shape);
     auto add1 = std::make_shared<op::Add>(A, B);
     auto add2 = std::make_shared<op::Add>(A, B);
-    auto f = std::make_shared<Function>(NodeVector{add1, add2}, op::ParameterVector{A, B});
+    auto f = std::make_shared<Function>(NodeVector{add1, add2}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -89,7 +89,7 @@ TEST(CSE, add_add_commutative)
     auto B = std::make_shared<op::Parameter>(element::i32, zero_shape);
     auto add1 = std::make_shared<op::Add>(A, B);
     auto add2 = std::make_shared<op::Add>(B, A);
-    auto f = std::make_shared<Function>(NodeVector{add1, add2}, op::ParameterVector{A, B});
+    auto f = std::make_shared<Function>(NodeVector{add1, add2}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -106,7 +106,7 @@ TEST(CSE, add_add_negative)
     auto D = std::make_shared<op::Parameter>(element::i32, zero_shape);
     auto add1 = std::make_shared<op::Add>(A, B);
     auto add2 = std::make_shared<op::Add>(C, D);
-    auto f = std::make_shared<Function>(NodeVector{add1, add2}, op::ParameterVector{A, B, C, D});
+    auto f = std::make_shared<Function>(NodeVector{add1, add2}, ParameterVector{A, B, C, D});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -126,7 +126,7 @@ TEST(CSE, abs_add)
     auto abs_b2 = std::make_shared<op::Abs>(B);
     auto add1 = std::make_shared<op::Add>(abs_a1, abs_b1);
     auto add2 = std::make_shared<op::Add>(abs_a2, abs_b2);
-    auto f = std::make_shared<Function>(NodeVector{add1, add2}, op::ParameterVector{A, B});
+    auto f = std::make_shared<Function>(NodeVector{add1, add2}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -152,7 +152,7 @@ TEST(CSE, abs_add_reshape_broadcast)
         auto broadcast1 = std::make_shared<op::Broadcast>(reshape1, Shape{1, 1, 3}, AxisSet{2});
         auto broadcast2 = std::make_shared<op::Broadcast>(reshape2, Shape{1, 1, 3}, AxisSet{2});
         auto f = std::make_shared<Function>(NodeVector{broadcast1, broadcast2},
-                                            op::ParameterVector{A, B});
+                                            ParameterVector{A, B});
         pass::Manager pass_manager;
 
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -164,7 +164,7 @@ TEST(CSE, abs_add_reshape_broadcast)
         auto reshape1 = std::make_shared<op::Reshape>(add1, AxisVector{0}, Shape{1});
         auto reshape2 = std::make_shared<op::Reshape>(add2, AxisVector{0}, Shape{1, 1});
         auto f =
-            std::make_shared<Function>(NodeVector{reshape1, reshape2}, op::ParameterVector{A, B});
+            std::make_shared<Function>(NodeVector{reshape1, reshape2}, ParameterVector{A, B});
         pass::Manager pass_manager;
 
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -176,7 +176,7 @@ TEST(CSE, abs_add_reshape_broadcast)
         auto broadcast1 = std::make_shared<op::Broadcast>(add1, Shape{1, 2}, AxisSet{1});
         auto broadcast2 = std::make_shared<op::Broadcast>(add2, Shape{1, 1, 2}, AxisSet{1, 2});
         auto f = std::make_shared<Function>(NodeVector{broadcast1, broadcast2},
-                                            op::ParameterVector{A, B});
+                                            ParameterVector{A, B});
         pass::Manager pass_manager;
 
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -201,7 +201,7 @@ TEST(CSE, abs_add_abs_add)
     auto C = std::make_shared<op::Parameter>(element::i32, zero_shape);
     auto add3 = std::make_shared<op::Add>(abs_add1, C);
     auto add4 = std::make_shared<op::Add>(abs_add2, C);
-    auto f = std::make_shared<Function>(NodeVector{add3, add4}, op::ParameterVector{A, B, C});
+    auto f = std::make_shared<Function>(NodeVector{add3, add4}, ParameterVector{A, B, C});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -226,7 +226,7 @@ TEST(CSE, abs_add_abs_add_negative)
     auto D = std::make_shared<op::Parameter>(element::i32, zero_shape);
     auto add3 = std::make_shared<op::Add>(abs_add1, C);
     auto add4 = std::make_shared<op::Add>(abs_add2, D);
-    auto f = std::make_shared<Function>(NodeVector{add3, add4}, op::ParameterVector{A, B, C, D});
+    auto f = std::make_shared<Function>(NodeVector{add3, add4}, ParameterVector{A, B, C, D});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -255,7 +255,7 @@ static void execute_cse_reduction_test()
 
     auto sub_ab = a_reduction_op - b_reduction_op;
     auto f = std::make_shared<Function>(NodeVector{sub_aa, sub_ab, a_reduction_op3},
-                                        op::ParameterVector{A, B});
+                                        ParameterVector{A, B});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -295,7 +295,7 @@ TEST(CSE, constant)
     auto abs112 = std::make_shared<op::Abs>(iconst112);
 
     auto f = std::make_shared<Function>(
-        NodeVector{abs0, abs0_1, abs1, abs1_1, absf, abs111, abs112}, op::ParameterVector{});
+        NodeVector{abs0, abs0_1, abs1, abs1_1, absf, abs111, abs112}, ParameterVector{});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();

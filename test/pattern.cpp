@@ -56,7 +56,7 @@ std::shared_ptr<Node> create_reduction(const std::shared_ptr<Node>& node,
     auto f_A = std::make_shared<op::Parameter>(et, Shape{});
     auto f_B = std::make_shared<op::Parameter>(et, Shape{});
     auto f =
-        std::make_shared<Function>(std::make_shared<T>(f_A, f_B), op::ParameterVector{f_A, f_B});
+        std::make_shared<Function>(std::make_shared<T>(f_A, f_B), ParameterVector{f_A, f_B});
 
     auto init = std::make_shared<op::Constant>(et, Shape{}, std::vector<std::string>({init_val}));
     return std::make_shared<op::Reduce>(node, init, f, reduction_axes);
@@ -270,7 +270,7 @@ static void run_passes(pass::Manager& pass_manager,
                        shared_ptr<Node> graph,
                        std::vector<shared_ptr<op::Parameter>> parms)
 {
-    auto func = make_shared<Function>(graph, op::ParameterVector{parms});
+    auto func = make_shared<Function>(graph, ParameterVector{parms});
     pass_manager.run_passes(func);
 }
 
@@ -289,7 +289,7 @@ TEST(pattern, graph_rewrite)
         auto graph_b = b + iconst0;
 
         auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, graph_a, c, graph_b},
-                                            op::ParameterVector{a, b, c});
+                                            ParameterVector{a, b, c});
         pass_manager.run_passes(f);
 
         ASSERT_TRUE(graph_a->get_output_inputs(0).empty());
@@ -750,7 +750,7 @@ TEST(pattern, recurrent_graph_rewrite)
 
         auto graph = abs_add_a3 * abs_add_b2;
 
-        auto f = std::make_shared<Function>(ngraph::NodeVector{graph}, op::ParameterVector{a, b});
+        auto f = std::make_shared<Function>(ngraph::NodeVector{graph}, ParameterVector{a, b});
         pass_manager.run_passes(f);
 
         auto left_abs = graph->get_argument(0);

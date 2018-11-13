@@ -31,7 +31,7 @@ TEST(constant_folding, constant_reshape)
     vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7};
     auto constant = make_shared<op::Constant>(element::f32, shape_in, values_in);
     auto reshape = make_shared<op::Reshape>(constant, AxisVector{0, 1}, shape_out);
-    auto f = make_shared<Function>(reshape, op::ParameterVector{});
+    auto f = make_shared<Function>(reshape, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
@@ -56,7 +56,7 @@ TEST(constant_folding, constant_reshape_permute)
     vector<double> values_in{0, 1, 2, 3, 4, 5, 6, 7};
     auto constant = make_shared<op::Constant>(element::f64, shape_in, values_in);
     auto reshape = make_shared<op::Reshape>(constant, AxisVector{1, 0}, shape_out);
-    auto f = make_shared<Function>(reshape, op::ParameterVector{});
+    auto f = make_shared<Function>(reshape, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
@@ -82,7 +82,7 @@ TEST(constant_folding, constant_broadcast)
     vector<int> values_in{0, 1};
     auto constant = make_shared<op::Constant>(element::i32, shape_in, values_in);
     auto broadcast = make_shared<op::Broadcast>(constant, shape_out, AxisSet{1});
-    auto f = make_shared<Function>(broadcast, op::ParameterVector{});
+    auto f = make_shared<Function>(broadcast, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
@@ -114,7 +114,7 @@ TEST(constant_folding, constant_pad_exterior)
 
     auto broadcast =
         make_shared<op::Pad>(constant, pad_value, padding_below, padding_above, padding_interior);
-    auto f = make_shared<Function>(broadcast, op::ParameterVector{});
+    auto f = make_shared<Function>(broadcast, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
@@ -146,7 +146,7 @@ TEST(constant_folding, constant_pad_interior)
 
     auto broadcast =
         make_shared<op::Pad>(constant, pad_value, padding_below, padding_above, padding_interior);
-    auto f = make_shared<Function>(broadcast, op::ParameterVector{});
+    auto f = make_shared<Function>(broadcast, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
@@ -192,7 +192,7 @@ TEST(constant_folding, constant_unary_binary)
     auto neg = make_shared<op::Negative>(c);
 
     auto f = make_shared<Function>(NodeVector{add, sub, mul, divn, min, max, absn, neg},
-                                   op::ParameterVector{});
+                                   ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
@@ -233,7 +233,7 @@ TEST(constant_folding, const_dequantize)
     auto offset = op::Constant::create(quant_type, scale_offset_shape, {1});
     auto dequantize =
         make_shared<op::Dequantize>(constant, scale, offset, output_type, quantization_axes);
-    auto f = make_shared<Function>(dequantize, op::ParameterVector{});
+    auto f = make_shared<Function>(dequantize, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
@@ -268,7 +268,7 @@ TEST(constant_folding, const_quantize)
     auto mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
     auto quantize =
         make_shared<op::Quantize>(constant, scale, offset, output_type, quantization_axes, mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{});
+    auto f = make_shared<Function>(quantize, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();

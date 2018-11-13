@@ -166,7 +166,7 @@ TEST(util, traverse_functions)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C}, "f");
+    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C}, "f");
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
     auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -174,7 +174,7 @@ TEST(util, traverse_functions)
     auto Z = make_shared<op::Parameter>(element::f32, shape);
     auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}) +
                                        make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}),
-                                   op::ParameterVector{X, Y, Z},
+                                   ParameterVector{X, Y, Z},
                                    "g");
 
     // Now make "h(X,Y,Z) = g(X,Y,Z) + g(X,Y,Z)"
@@ -183,7 +183,7 @@ TEST(util, traverse_functions)
     auto Z1 = make_shared<op::Parameter>(element::f32, shape);
     auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}) +
                                        make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}),
-                                   op::ParameterVector{X1, Y1, Z1},
+                                   ParameterVector{X1, Y1, Z1},
                                    "h");
 
     vector<Function*> functions;
@@ -205,7 +205,7 @@ public:
     NodeMap node_map;
     std::list<std::shared_ptr<ngraph::Node>> nodes;
     std::shared_ptr<Function> func =
-        make_shared<Function>(AplusBtimesC, op::ParameterVector{A, B, C}, "f");
+        make_shared<Function>(AplusBtimesC, ParameterVector{A, B, C}, "f");
 
     void SetUp()
     {
@@ -284,7 +284,7 @@ TEST(graph_util, clone_multiple_results)
     auto A_add_B_mul_C = make_shared<op::Multiply>(A_add_B, C);
 
     auto f =
-        make_shared<Function>(NodeVector{A_add_B, A_add_B_mul_C}, op::ParameterVector{A, B, C});
+        make_shared<Function>(NodeVector{A_add_B, A_add_B_mul_C}, ParameterVector{A, B, C});
 
     auto copy = clone_function(*f);
 }
@@ -365,7 +365,7 @@ TEST(util, test_fprop_cache)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto output = (A + B) * C + A;
 
-    auto f = make_shared<Function>(NodeVector{output}, op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>(NodeVector{output}, ParameterVector{A, B, C});
 
     auto bf = autodiff::backprop_function(f);
 
