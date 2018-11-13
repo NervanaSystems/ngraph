@@ -217,7 +217,8 @@ namespace ngraph
 
                 static void assign_batchnorm_relu(Node* node)
                 {
-                    if (node->get_argument(2 /*input data*/)->get_shape().size() == 4)
+                    if (node->get_argument(2 /*input data*/)->get_shape().size() == 4 ||
+                        node->get_argument(2 /*input data*/)->get_shape().size() == 5)
                     {
                         auto bn_relu = static_cast<op::Op*>(node);
                         auto op_annotations =
@@ -559,7 +560,8 @@ namespace ngraph
                 {
                     auto input_shape = node->get_input_shape(2);
                     auto input_rank = input_shape.size();
-                    if ((input_rank == 4 && node->get_input_element_type(2) == element::f32))
+                    if (((input_rank == 4 || input_rank == 5) &&
+                         node->get_input_element_type(2) == element::f32))
                     {
                         auto batchnorm = static_cast<op::Op*>(node);
                         auto op_annotations =
@@ -588,9 +590,10 @@ namespace ngraph
                     auto input_rank = input_shape.size();
                     auto delta_shape = node->get_input_shape(5);
                     auto delta_rank = delta_shape.size();
-                    if ((input_rank == 4 && delta_rank == 4 &&
-                         node->get_input_element_type(5) == element::f32 &&
-                         node->get_input_element_type(2) == element::f32))
+                    if (((input_rank == 4 && delta_rank == 4) ||
+                         (input_rank == 5 && delta_rank == 5)) &&
+                        node->get_input_element_type(5) == element::f32 &&
+                        node->get_input_element_type(2) == element::f32)
                     {
                         auto batchnorm = static_cast<op::BatchNormTrainingBackprop*>(node);
                         auto op_annotations =

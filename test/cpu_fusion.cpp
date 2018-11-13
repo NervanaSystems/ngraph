@@ -782,6 +782,56 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
                                 read_vector<float>(result_variance_bnr)));
 }
 
+static void test_batchnorm_fprop_relu(Shape input_shape)
+{
+    auto make_bn_relu_function = [&]() {
+        auto c_axis = input_shape[1];
+        auto input = make_shared<op::Parameter>(element::f32, input_shape);
+        auto mean_shape = Shape{c_axis};
+        auto var_shape = Shape{c_axis};
+        auto gamma_shape = Shape{c_axis};
+        auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+        auto beta_shape = Shape{c_axis};
+        auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+        double eps = 0.001;
+        auto shape_r = input_shape;
+        auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
+        auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
+
+        auto output_relu = std::make_shared<op::Relu>(output_rt);
+        auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
+        auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
+
+        auto f = make_shared<Function>(NodeVector{output_relu, mean_rt, variance_rt},
+                                       op::ParameterVector{input, gamma, beta});
+        return f;
+    };
+    auto cpu_f = make_bn_relu_function();
+    auto int_f = make_bn_relu_function();
+    test::Uniform<float> rng(-10.0f, 10.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
+TEST(cpu_fusion, batchnorm_fprop_relu)
+{
+    test_batchnorm_fprop_relu(Shape{1, 2, 2, 2});
+    test_batchnorm_fprop_relu(Shape{1, 2, 2, 2, 2});
+    test_batchnorm_fprop_relu(Shape{2, 2, 2, 4, 4});
+}
+
 TEST(cpu_fusion, fuse_conv_relu)
 {
     auto A = std::make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 2});

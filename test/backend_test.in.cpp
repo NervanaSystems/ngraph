@@ -4545,6 +4545,60 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
         test::all_close(expected_variance, read_vector<float>(result_variance), 1e-5f, 1e-6f));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2d2h1w1)
+{
+    auto input_shape = Shape{2, 2, 2, 1, 1};
+    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto mean_shape = Shape{2};
+    auto var_shape = Shape{2};
+    auto gamma_shape = Shape{2};
+    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto beta_shape = Shape{2};
+    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    double eps = 0.001;
+    auto shape_r = Shape{2, 2, 2, 1, 1};
+    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
+
+    auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
+    auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
+    auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
+
+    auto f = make_shared<Function>(NodeVector{output_rt, mean_rt, variance_rt},
+                                   op::ParameterVector{input, gamma, beta});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    // Create some tensors for input/output
+    auto _input = backend->create_tensor(element::f32, input_shape);
+    copy_data(_input,
+              vector<float>{0.54881352f,
+                            0.71518934f,
+                            0.60276335f,
+                            0.54488319f,
+                            0.42365479f,
+                            0.64589411f,
+                            0.4375872f,
+                            0.89177299f});
+
+    auto _gamma = backend->create_tensor(element::f32, gamma_shape);
+    copy_data(_gamma, vector<float>{1.0f, 1.0f});
+    auto _beta = backend->create_tensor(element::f32, beta_shape);
+    copy_data(_beta, vector<float>{0.0f, 0.0f});
+    auto bn_output = backend->create_tensor(element::f32, shape_r);
+    auto result_mean = backend->create_tensor(element::f32, mean_shape);
+    auto result_variance = backend->create_tensor(element::f32, var_shape);
+
+    vector<float> expected_result{
+        -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
+    vector<float> expected_mean{0.583388f, 0.619252f};
+    vector<float> expected_variance{0.0119972f, 0.0282681f};
+    backend->call_with_validate(
+        f, {bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
+
+    EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output)));
+    EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean)));
+    EXPECT_TRUE(
+        test::all_close(expected_variance, read_vector<float>(result_variance), 1e-5f, 1e-6f));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, batchnorm_bprop_n4c3h2w2)
 {
     auto input_shape = Shape{4, 3, 2, 2};
