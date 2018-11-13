@@ -182,7 +182,8 @@ namespace ngraph
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             // Create MKLDNN reorder primitive during the first iteration.
                             // Assumes the scales dont change for the duration of the graph
-                            static mkldnn::reorder r_prim = [&]() {
+                            if (ctx->first_iteration)
+                            {
                                 mkldnn::primitive_attr attr;
                                 vector<float> dyn_scales;
                                 dyn_scales.assign(static_cast<float*>(arg1_tensor),
@@ -193,13 +194,15 @@ namespace ngraph
                                     {input_desc, executor::global_cpu_engine},
                                     {result_desc, executor::global_cpu_engine},
                                     attr);
-                                return mkldnn::reorder(reorder_desc,
-                                                       *ctx->mkldnn_primitives[deps[0]],
-                                                       *ctx->mkldnn_primitives[deps[1]]);
-                            }();
+                                ctx->mkldnn_primitives[quantize_index]->reset(
+                                    (new mkldnn::reorder(reorder_desc,
+                                                         *ctx->mkldnn_primitives[deps[0]],
+                                                         *ctx->mkldnn_primitives[deps[1]]))
+                                        ->get());
+                            }
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
-                            cpu::mkldnn_utils::mkldnn_submit(r_prim);
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, quantize_index);
                         };
                         functors.emplace_back(functor);
                     }
