@@ -56,7 +56,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
         NGRAPH_DEBUG << "conv_horizontal_fusion: In a callback for conv horizontal fusion for "
                      << m.get_match_root()->get_name();
 
-        auto conv_bias_root = std::dynamic_pointer_cast<op::ConvolutionBias>(m.get_match_root());
+        auto conv_bias_root = std::static_pointer_cast<op::ConvolutionBias>(m.get_match_root());
 
         //check if the node has been replaced
         if (conv_bias_root->get_users().empty())

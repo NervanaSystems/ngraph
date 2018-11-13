@@ -93,6 +93,10 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
         auto tv = output.get_tensor_ptr();
         auto tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout());
 
+        if (input.get_shape() == Shape{})
+        {
+            tvl->set_mkldnn_md(required_mds[index]);
+        }
         if (!tvl)
         {
             throw ngraph_error(

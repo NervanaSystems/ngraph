@@ -60,9 +60,15 @@ set (SRC
     op/dot.cpp
     op/equal.cpp
     op/exp.cpp
+    op/experimental/generate_mask.cpp
+    op/experimental/quantized_avg_pool.cpp
+    op/experimental/quantized_conv_bias.cpp
+    op/experimental/quantized_conv_relu.cpp
+    op/experimental/quantized_conv.cpp
+    op/experimental/quantized_max_pool.cpp
+    op/experimental/shape_of.cpp
     op/floor.cpp
     op/function_call.cpp
-    op/experimental/generate_mask.cpp
     op/get_output_element.cpp
     op/greater.cpp
     op/greater_eq.cpp
@@ -87,11 +93,6 @@ set (SRC
     op/power.cpp
     op/product.cpp
     op/quantize.cpp
-    op/experimental/quantized_avg_pool.cpp
-    op/experimental/quantized_conv_bias.cpp
-    op/experimental/quantized_conv_relu.cpp
-    op/experimental/quantized_conv.cpp
-    op/experimental/quantized_max_pool.cpp
     op/reduce.cpp
     op/reduce_window.cpp
     op/relu.cpp
