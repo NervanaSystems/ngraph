@@ -61,6 +61,7 @@ runtime::Handle runtime::interpreter::INTBackend::compile(const shared_ptr<Funct
     auto instance = make_shared<FunctionInstance>();
     m_instances.push_back(instance);
     instance->m_function = function;
+    instance->m_performance_counters_enabled = m_performance_counters_enabled;
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
@@ -85,7 +86,7 @@ bool runtime::interpreter::INTBackend::call(Handle handle,
 {
     FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
     shared_ptr<Function> function = instance->m_function;
-    validate_call(function, outputs, inputs);
+    validate_call(handle, outputs, inputs);
 
     // convert inputs to HostTensor
     vector<void*> func_inputs;
@@ -288,10 +289,9 @@ void runtime::interpreter::INTBackend::set_nan_check(Handle handle, bool enable)
     instance->m_nan_check_enabled = enable;
 }
 
-void runtime::interpreter::INTBackend::enable_performance_data(Handle handle, bool enable)
+void runtime::interpreter::INTBackend::enable_performance_data(bool enable)
 {
-    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
-    instance->m_performance_counters_enabled = enable;
+    m_performance_counters_enabled = enable;
 }
 
 vector<runtime::PerformanceCounter>

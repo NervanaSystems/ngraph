@@ -376,13 +376,12 @@ shared_ptr<runtime::Tensor> runtime::intelgpu::IntelGPUBackend::create_tensor(
         element_type, shape, *ocl_engine, memory_pointer);
 }
 
-bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(const shared_ptr<Function>& func)
 {
-    FunctionInstance& instance = ocl_networks[func];
-    if (instance.ocl_network != nullptr)
-    {
-        return true;
-    }
+    auto instance = make_shared<FunctionInstance>();
+    m_instances.push_back(instance);
+    instance->m_function = func;
+    instance->m_performance_counters_enabled = m_performance_counters_enabled;
 
     vector<cldnn::primitive_id> function_output_names;
     cldnn::topology topology;
@@ -1540,13 +1539,13 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         network_build_options.set_option(cldnn::build_option::graph_dumps_dir(m_cldnn_dump_dir));
     }
 
-    instance.ocl_network =
+    instance->ocl_network =
         make_shared<cldnn::network>(*ocl_engine, topology, network_build_options);
 
-    return true;
+    return instance.get();
 }
 
-bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
+bool runtime::intelgpu::IntelGPUBackend::call(runtime::Handle handle,
                                               const vector<shared_ptr<runtime::Tensor>>& outputs,
                                               const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
@@ -1561,16 +1560,8 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
         mem_before_call = get_max_memory_rss();
         timer_compile.start();
     }
-    validate_call(func, outputs, inputs);
 
-    FunctionInstance& instance = ocl_networks[func];
-    if (instance.ocl_network == nullptr)
-    {
-        if (!compile(func))
-        {
-            return false;
-        }
-    }
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
 
     if (m_profile_enable)
     {
@@ -1579,7 +1570,7 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
         timer_call.start();
     }
 
-    shared_ptr<cldnn::network> network = instance.ocl_network;
+    shared_ptr<cldnn::network> network = instance->ocl_network;
 
     // Process input parameters. Correctness of parameters was validated by validate_call.
     // Since we have no correlation between Function::m_parameters and inputs, there is
@@ -1588,7 +1579,7 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     {
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> tv =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(inputs[i]);
-        const op::ParameterVector& input_params = func->get_parameters();
+        const op::ParameterVector& input_params = instance->m_function->get_parameters();
         const string& tensor_name = input_params[i]->get_output_tensor().get_name();
         network->set_input_data(tensor_name, *tv->get_data_ptr());
     }
@@ -1599,11 +1590,11 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     // Process output parameters. Correctness of parameters was validated by validate_call.
     // Since we have no correlation between Function::m_results and outputs, there is
     // we try to match them by index number in vectors.
-    for (size_t i = 0; i < func->get_output_size(); i++)
+    for (size_t i = 0; i < instance->m_function->get_output_size(); i++)
     {
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> ngraph_res =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(outputs[i]);
-        const string& tensor_name = get_input_name(func->get_output_op(i));
+        const string& tensor_name = get_input_name(instance->m_function->get_output_op(i));
 
         auto result_memory = result.at(tensor_name).get_memory().pointer<char>();
         ngraph_res->write(result_memory.data(), 0, result_memory.size());
@@ -1615,7 +1606,7 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
         mem_after_call = get_max_memory_rss();
 
         print_call_performance(network,
-                               func,
+                               instance->m_function,
                                timer_compile.get_milliseconds(),
                                timer_call.get_milliseconds(),
                                mem_before_call,
@@ -1625,27 +1616,27 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
 
     if (m_function_cache_disabled)
     {
-        remove_compiled_function(func);
+        remove_compiled_function(handle);
     }
 
     return true;
 }
 
-void runtime::intelgpu::IntelGPUBackend::remove_compiled_function(shared_ptr<Function> func)
+void runtime::intelgpu::IntelGPUBackend::remove_compiled_function(runtime::Handle handle)
 {
-    ocl_networks.erase(func);
+    for (auto it = m_instances.begin(); it != m_instances.end(); ++it)
+    {
+        if ((*it).get() == handle)
+        {
+            m_instances.erase(it);
+            break;
+        }
+    }
 }
 
-void runtime::intelgpu::IntelGPUBackend::enable_performance_data(shared_ptr<Function> func,
-                                                                 bool enable)
+void runtime::intelgpu::IntelGPUBackend::enable_performance_data(bool enable)
 {
-    FunctionInstance& instance = ocl_networks[func];
-    if (instance.ocl_network != nullptr)
-    {
-        throw runtime_error("Performance data collection must be enabled prior to compiling.");
-    }
-
-    instance.m_performance_counters_enabled = enable;
+    m_performance_counters_enabled = enable;
 }
 
 // The cldnn::network contains something like "generic_layer_0_Parameter_254_0" names
@@ -1672,36 +1663,33 @@ static string convert_cldnn_names(shared_ptr<Function> func, const string& cldnn
 }
 
 vector<runtime::PerformanceCounter>
-    runtime::intelgpu::IntelGPUBackend::get_performance_data(shared_ptr<Function> func) const
+    runtime::intelgpu::IntelGPUBackend::get_performance_data(runtime::Handle handle) const
 {
     vector<runtime::PerformanceCounter> rc;
-    auto it = ocl_networks.find(func);
-    if (it != ocl_networks.end())
-    {
-        const shared_ptr<cldnn::network> network = it->second.ocl_network;
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    const shared_ptr<cldnn::network> network = instance->ocl_network;
 
-        if (network != nullptr && it->second.m_performance_counters_enabled)
+    if (network != nullptr && instance->m_performance_counters_enabled)
+    {
+        const map<cldnn::primitive_id, cldnn::event>& primitives =
+            network->get_executed_primitives();
+        for (const auto& p : primitives)
         {
-            const map<cldnn::primitive_id, cldnn::event>& primitives =
-                network->get_executed_primitives();
-            for (const auto& p : primitives)
+            // Let's generate the primitive name that matches to the name in Function
+            const string primitive_name = convert_cldnn_names(instance->m_function, p.first);
+            size_t usec = 0;
+            for (const auto& q : p.second.get_profiling_info())
             {
-                // Let's generate the primitive name that matches to the name in Function
-                const string primitive_name = convert_cldnn_names(func, p.first);
-                size_t usec = 0;
-                for (const auto& q : p.second.get_profiling_info())
+                if (q.name == string("executing"))
                 {
-                    if (q.name == string("executing"))
-                    {
-                        usec += chrono::duration_cast<
-                                    chrono::duration<size_t, chrono::milliseconds::period>>(
-                                    q.value->value())
-                                    .count();
-                    }
+                    usec += chrono::duration_cast<
+                                chrono::duration<size_t, chrono::milliseconds::period>>(
+                                q.value->value())
+                                .count();
                 }
-                const runtime::PerformanceCounter perf_counter(primitive_name.c_str(), usec, 1);
-                rc.push_back(perf_counter);
             }
+            const runtime::PerformanceCounter perf_counter(primitive_name.c_str(), usec, 1);
+            rc.push_back(perf_counter);
         }
     }
     return rc;

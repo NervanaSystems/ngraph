@@ -167,11 +167,11 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     stopwatch timer;
     timer.start();
     auto backend = runtime::Backend::create(backend_name);
+    backend->enable_performance_data(timing_detail);
     auto handle = backend->compile(f);
     timer.stop();
     cout.imbue(locale(""));
     cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
-    backend->enable_performance_data(handle, timing_detail);
 
     vector<shared_ptr<runtime::HostTensor>> arg_data;
     vector<shared_ptr<runtime::Tensor>> args;

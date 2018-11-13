@@ -35,22 +35,22 @@ void regclass_pyngraph_runtime_Backend(py::module m)
                     const ngraph::element::Type&, const ngraph::Shape&)) &
                     ngraph::runtime::Backend::create_tensor);
     backend.def("compile",
-                (void (ngraph::runtime::Backend::*)(std::shared_ptr<ngraph::Function>)) &
+                (ngraph::runtime::Handle(ngraph::runtime::Backend::*)(
+                    const std::shared_ptr<ngraph::Function>&)) &
                     ngraph::runtime::Backend::compile);
     backend.def("call",
                 (void (ngraph::runtime::Backend::*)(
-                    std::shared_ptr<ngraph::Function>,
+                    void*,
                     const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>&,
                     const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>&)) &
                     ngraph::runtime::Backend::call);
     backend.def("remove_compiled_function",
-                (void (ngraph::runtime::Backend::*)(std::shared_ptr<ngraph::Function>)) &
+                (void (ngraph::runtime::Backend::*)(void*)) &
                     ngraph::runtime::Backend::remove_compiled_function);
     backend.def("enable_performance_data",
-                (void (ngraph::runtime::Backend::*)(std::shared_ptr<ngraph::Function>, bool)) &
-                    ngraph::runtime::Backend::enable_performance_data);
-    backend.def("get_performance_data",
-                (std::vector<ngraph::runtime::PerformanceCounter>(ngraph::runtime::Backend::*)(
-                    std::shared_ptr<ngraph::Function>)) &
-                    ngraph::runtime::Backend::get_performance_data);
+                (void(bool)) & ngraph::runtime::Backend::enable_performance_data);
+    backend.def(
+        "get_performance_data",
+        (std::vector<ngraph::runtime::PerformanceCounter>(ngraph::runtime::Backend::*)(void*)) &
+            ngraph::runtime::Backend::get_performance_data);
 }

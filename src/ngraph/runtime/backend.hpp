@@ -108,11 +108,22 @@ public:
     /// \param handle Handle returned from compile()
     virtual void remove_compiled_function(Handle handle);
 
+    /// \brief Save the function's state.
+    /// \param handle Handle returned from compile()
+    /// \param path File system path to the output file.
+    /// \returns true if save is successful.
+    virtual bool save(Handle handle, const std::string& path) const;
+
+    /// \brief Load a function's saved state.
+    /// \param handle Handle returned from compile()
+    /// \returns non-nullptr Handle if successful, nullptr otherwise.
+    virtual Handle load(const std::string& path);
+
     /// \brief Enable the collection of per-op performance information on a specified Function.
     ///     Data collection is via the `get_performance_data` method.
-    /// \param handle Handle returned from compile()
     /// \param enable Set to true to enable or false to disable data collection
-    virtual void enable_performance_data(Handle handle, bool enable) {}
+    virtual void enable_performance_data(bool enable);
+
     /// \brief Collect performance information gathered on a Function.
     /// \param handle Handle returned from compile()
     /// \returns Vector of PerformanceCounter information.
@@ -124,7 +135,7 @@ public:
     virtual bool is_supported(const Node& node) const;
 
 protected:
-    void validate_call(const std::shared_ptr<Function>& function,
+    void validate_call(Handle handle,
                        const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                        const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 };

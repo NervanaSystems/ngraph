@@ -161,7 +161,7 @@ public:
 
     void set_nan_check(Handle, bool);
 
-    void enable_performance_data(Handle, bool enable) override;
+    void enable_performance_data(bool enable) override;
     std::vector<PerformanceCounter> get_performance_data(Handle) const override;
 
     bool is_supported(const Node& node) const override { return true; }
@@ -181,6 +181,7 @@ private:
         void* get_temporary_pointer(size_t offset) { return m_temporary_memory->get_ptr(offset); }
     };
     std::vector<std::shared_ptr<FunctionInstance>> m_instances;
+    bool m_performance_counters_enabled = false;
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);
