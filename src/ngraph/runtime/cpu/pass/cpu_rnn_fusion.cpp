@@ -93,6 +93,22 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
     this->add_matcher(m);
 }
 
+static void replace_collapse_node_user(std::shared_ptr<Node> collapsed_node,
+                                       descriptor::Output& new_output)
+{
+    for (auto node : collapsed_node->get_users())
+    {
+        NGRAPH_DEBUG << "node_name: " << node->get_name();
+        for (size_t i = 0; i < node->get_input_size(); i++)
+        {
+            if (node->get_argument(i) == collapsed_node)
+            {
+                node->get_inputs().at(i).replace_output(new_output);
+            }
+        }
+    }
+}
+
 void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
 {
     // This pattern captures the following equations in the given data
@@ -241,20 +257,6 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             }
         }
 
-        auto replace_collapse_node_user = [](std::shared_ptr<Node> collapsed_node,
-                                             descriptor::Output& new_output) {
-            for (auto node : collapsed_node->get_users())
-            {
-                NGRAPH_DEBUG << "node_name: " << node->get_name();
-                for (size_t i = 0; i < node->get_input_size(); i++)
-                {
-                    if (node->get_argument(i) == collapsed_node)
-                    {
-                        node->get_inputs().at(i).replace_output(new_output);
-                    }
-                }
-            }
-        };
         // get LSTM cell attributes
         size_t lstm_n_gates = 4;
         size_t batch_size = pattern_map[input_xt]->get_shape()[0];
@@ -626,12 +628,23 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             }
         }
 
-        // now go through the lstm goe_0 consumers and replace them with the slice
-        for (auto& node : lstm_goe0_user)
+        if (lstm_nodes.size() == 1 && lstm_goe0_user.size() == 1)
         {
-            if (ngraph::is_used(node.get()))
+            auto it = lstm_goe0_user.begin();
+            if (ngraph::is_used((*it).get()))
             {
-                ngraph::replace_node(node, map_goe0_user_to_lstm_slices[node]);
+                ngraph::replace_node(*it, rnn_ht_goe);
+            }
+        }
+        else
+        {
+            // now go through the lstm goe_0 consumers and replace them with the slice
+            for (auto& node : lstm_goe0_user)
+            {
+                if (ngraph::is_used(node.get()))
+                {
+                    ngraph::replace_node(node, map_goe0_user_to_lstm_slices[node]);
+                }
             }
         }
         NGRAPH_DEBUG << "End of recurrent fusion call back "
@@ -688,12 +701,10 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
     auto rnn_goe0_label =
         std::make_shared<pattern::op::Label>(rnn_goe0, nullptr, NodeVector{rnn_goe0});
-    auto rnn_goe1_label =
-        std::make_shared<pattern::op::Label>(rnn_goe1, nullptr, NodeVector{rnn_goe1});
     auto rnn_goe0_slice =
         std::make_shared<op::Slice>(rnn_goe0_label, Coordinate{0, 0}, Coordinate{10, 100});
-    auto rnn_goe1_slice =
-        std::make_shared<op::Slice>(rnn_goe1_label, Coordinate{10, 0}, Coordinate{20, 100});
+    auto rnn_goe0_slice_label =
+        std::make_shared<pattern::op::Label>(rnn_goe0_slice, nullptr, NodeVector{rnn_goe0_slice});
 
     pattern::recurrent_graph_rewrite_callback callback = [src_layer_label,
                                                           src_iter_label,
@@ -701,14 +712,12 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                           weights_iter_label,
                                                           bias_label,
                                                           rnn_goe0_label,
-                                                          rnn_goe1_label](
+                                                          rnn_goe0_slice_label](
         pattern::RecurrentMatcher& m) {
-
         if (m.get_number_of_recurrent_matches() <= 1)
         {
             return false;
         }
-
         auto src_nodes = m.get_bound_nodes_for_pattern(src_layer_label);
         auto rnn_output_recurrent_hidden_state = m.get_bound_nodes_for_pattern(rnn_goe0_label);
         auto number_of_rnn_cell_matched = m.get_number_of_recurrent_matches();
@@ -844,57 +853,48 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
         // Replace all the users of RNN cell state {ct} across different user.
         auto replace_rnn_output_cellstate = [&](std::shared_ptr<Node> rnn_ct_goe1, size_t layer) {
-
             auto ct_slice = std::make_shared<op::Slice>(
                 ct_slice_across_layer,
                 Coordinate{static_cast<unsigned long>(batch_size * (layer - 1)), 0},
                 Coordinate{static_cast<unsigned long>(batch_size * rnn_direction * layer),
                            static_cast<unsigned long>(feature_size)});
 
-            if (rnn_ct_goe1->get_users().size() == 1)
+            std::shared_ptr<Node> node_to_replace = rnn_ct_goe1->get_users()[0];
+            if (ngraph::is_used(node_to_replace.get()))
             {
-                if (std::dynamic_pointer_cast<op::Slice>(rnn_ct_goe1->get_users()[0]))
-                {
-                    std::shared_ptr<Node> node_to_replace = rnn_ct_goe1->get_users()[0];
-                    if (ngraph::is_used(node_to_replace.get()))
-                    {
-                        ngraph::replace_node(node_to_replace, ct_slice);
-                    }
-                }
-                else
-                {
-                    NGRAPH_DEBUG << "RNN PM error, output of RNN GOE should go  to Slice";
-                    return false;
-                }
-            }
-            else
-            {
-                NGRAPH_DEBUG << "RNN GOE should have only one {Slice} user";
-                return false;
+                replace_collapse_node_user(node_to_replace, ct_slice->get_outputs().at(0));
             }
         };
 
         // we will replace cell_state {ct} of all the matched RNN cell
         // with the new {ct} of the fused RNN cell
+        // Note: RNN cells are captured in the reverse order
+        // i.e {RNN7, RNN6, RNN5.... RNN0}
         for (size_t index = 0; index < rnn_nodes.size(); index++)
         {
             for (auto& rnn_arg : rnn_nodes[index]->get_users())
             {
-                auto goe1_node = std::dynamic_pointer_cast<op::GetOutputElement>(rnn_arg);
-                if (goe1_node && goe1_node->get_n() == 1)
+                auto goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(rnn_arg);
+                if (goe_node && goe_node->get_n() == 1)
                 {
-                    replace_rnn_output_cellstate(goe1_node, num_fused_rnn_layers - index);
+                    replace_rnn_output_cellstate(goe_node, num_fused_rnn_layers - index);
                 }
-                else if (!goe1_node)
+                else if (!goe_node)
                 {
                     NGRAPH_DEBUG << "GOE is nullptr";
                     return false;
                 }
+
+                // Replace the RNN ht output of the last cell
+                if ((index == 0) && goe_node && goe_node->get_n() == 0)
+                {
+                    if (ngraph::is_used(goe_node.get()))
+                    {
+                        ngraph::replace_node(goe_node, layer_rnn_ht);
+                    }
+                }
             }
         }
-
-        // Replace the RNN ht output of the last cell
-        ngraph::replace_node(rnn_goe0_bounded_nodes[0], layer_rnn_ht);
         return true;
     };
 
