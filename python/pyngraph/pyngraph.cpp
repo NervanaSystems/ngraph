@@ -27,6 +27,7 @@
 #include "pyngraph/ops/util/regmodule_pyngraph_op_util.hpp"
 #include "pyngraph/passes/regmodule_pyngraph_passes.hpp"
 #include "pyngraph/runtime/regmodule_pyngraph_runtime.hpp"
+#include "pyngraph/parameter_vector.hpp"
 #include "pyngraph/serializer.hpp"
 #include "pyngraph/shape.hpp"
 #include "pyngraph/strides.hpp"
@@ -49,6 +50,7 @@ PYBIND11_MODULE(_pyngraph, m)
     regmodule_pyngraph_types(m);
     regclass_pyngraph_Function(m);
     regclass_pyngraph_Serializer(m);
+    regclass_pyngraph_ParameterVector(m);
     py::module m_op = m.def_submodule("op", "Package ngraph.impl.op that wraps ngraph::op");
     regclass_pyngraph_op_Op(m_op);
     regmodule_pyngraph_op_util(m_op);
