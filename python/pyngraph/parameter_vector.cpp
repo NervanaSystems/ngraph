@@ -20,15 +20,15 @@
 #include "ngraph/op/parameter.hpp" // ngraph::op::Parameter
 #include "ngraph/parameter_vector.hpp"
 #include "pyngraph/ops/parameter.hpp"
-#include "pyngraph/ops/parameter_vector.hpp"
+#include "pyngraph/parameter_vector.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_ParameterVector(py::module m)
+void regclass_pyngraph_ParameterVector(py::module m)
 {
     py::class_<ngraph::ParameterVector, std::shared_ptr<ngraph::ParameterVector>>
         parameter_vector(m, "ParameterVector");
-    parameter_vector.doc() = "ngraph.impl.op.ParameterVector wraps ngraph::ParameterVector";
+    parameter_vector.doc() = "ngraph.impl.ParameterVector wraps ngraph::ParameterVector";
     parameter_vector.def(
         py::init<const std::initializer_list<std::shared_ptr<ngraph::op::Parameter>>&>());
     parameter_vector.def(py::init<const std::vector<std::shared_ptr<ngraph::op::Parameter>>&>());
