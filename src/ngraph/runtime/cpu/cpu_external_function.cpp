@@ -1310,7 +1310,7 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_concat(
                     auto old_offset = input_tensor->get_pool_offset();
                     input_tensor->set_pool_offset(offset);
                     NGRAPH_DEBUG
-                        << "cpu_external_function, propagate: change offset, old offset is "
+                        << "cpu_external_function, propagate: concat, change offset, old offset is "
                         << old_offset << ", new offset is " << offset << std::endl;
                     offset += input_tensor->size();
                     if (auto arg_concat = std::dynamic_pointer_cast<ngraph::op::Concat>(arg))
@@ -1336,12 +1336,18 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
                 auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
                 if (in_place_oi_pairs.size() > 0)
                 {
-                    auto arg = slice->get_argument(0);
-                    auto input = slice->get_input_from(arg);
+                    auto input = &slice->get_inputs().at(0);
+                    auto arg = input->get_output().get_node();
                     auto index = input->get_output().get_index();
                     auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
                     auto input_tensor = &input_node->get_output_tensor(index);
                     auto offset = input_tensor->get_pool_offset();
+                    if (offset == 0)
+                    {
+                        NGRAPH_DEBUG << "cpu_external_function: function input pointer passed to "
+                                        "slice, do not change offset.";
+                        continue;
+                    }
                     auto lower_bounds = slice->get_lower_bounds();
                     auto start = 0, accumulated = 1;
                     auto in_shape = slice->get_input_shape(0);
@@ -1355,7 +1361,7 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
                     auto old_offset = output_tensor->get_pool_offset();
 
                     output_tensor->set_pool_offset(offset);
-                    NGRAPH_DEBUG << "cpu_external_function: change offset, old offset is "
+                    NGRAPH_DEBUG << "cpu_external_function: slice, change offset, old offset is "
                                  << old_offset << ", new offset is " << offset << std::endl;
                 }
             }
