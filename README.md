@@ -1,4 +1,4 @@
-# nGraph Compiler Stack Beta (1.0) 
+# nGraph Compiler Stack Beta
 
 [![Build Status][build-status-badge]][build-status] [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph/blob/master/LICENSE)
 
