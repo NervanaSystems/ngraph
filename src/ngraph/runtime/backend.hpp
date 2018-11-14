@@ -30,7 +30,7 @@ namespace ngraph
         class ExternalFunction;
         class Tensor;
         class Backend;
-       using Handle = std::shared_ptr<Function>;
+        using Handle = std::shared_ptr<Function>;
     }
 }
 
