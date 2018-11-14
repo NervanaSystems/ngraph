@@ -49,21 +49,19 @@ namespace ngraph
         {
             namespace
             {
-                std::shared_ptr<ngraph::Node> add(const std::shared_ptr<ngraph::Node>& lhs,
-                                                  const std::shared_ptr<ngraph::Node>& rhs)
+                using NgraphNodePtr = std::shared_ptr<ngraph::Node>;
+
+                NgraphNodePtr add(const NgraphNodePtr& lhs, const NgraphNodePtr& rhs)
                 {
                     auto args = numpy_style_broadcast_for_binary_operation(lhs, rhs);
                     return {std::make_shared<ngraph::op::Add>(args.at(0), args.at(1))};
                 }
 
-                std::shared_ptr<ngraph::Node> mul(const std::shared_ptr<ngraph::Node>& lhs,
-                                                  const std::shared_ptr<ngraph::Node>& rhs)
+                NgraphNodePtr mul(const NgraphNodePtr& lhs, const NgraphNodePtr& rhs)
                 {
                     auto args = numpy_style_broadcast_for_binary_operation(lhs, rhs);
                     return {std::make_shared<ngraph::op::Multiply>(args.at(0), args.at(1))};
                 }
-
-                using NgraphNodePtr = std::shared_ptr<ngraph::Node>;
 
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ACTIVATION FUNCTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
