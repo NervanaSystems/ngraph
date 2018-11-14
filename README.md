@@ -7,7 +7,7 @@
     <a href="https://ngraph.nervanasys.com/docs/latest/project/about.html">
       Architecture and features</a> | <a href="#Ecosystem" >nGraph ecosystem</a><span> </span> <span> | </span> 
     <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">
-      Beta release notes</a><span> | </span>
+      Beta release notes</a><span> | </span> <br />
     <a href="https://ngraph.nervanasys.com/docs/latest">Documentation</a><span> | </span>
     <a href="#How-to-contribute" >How to contribute</a>
  </h3>
@@ -38,15 +38,10 @@ compute for Deep Learning with GPU accleration and support for MacOS. See our
 [Architecture and features] for what the stack looks like today and watch our 
 [Release Notes] for recent changes.
 
-| Backend                                       | current support   | future support |
-|-----------------------------------------------|-------------------|----------------|
-| Intel® Architecture CPU                       | yes               | yes            |
-| Intel® Nervana™ Neural Network Processor (NNP)| yes               | yes            |
-| Intel [Movidius™ Myriad™ 2] VPUs              | coming soon       | yes            |
-| Intel® Architecture GPUs                      | via PlaidML       | yes            |
-| AMD* GPUs                                     | via PlaidML       | yes            |
-| NVIDIA* GPUs                                  | via PlaidML       | some           | 
-| Field Programmable Gate Arrays (FPGA)         | no                | yes            |
+
+## What is nGraph Compiler? 
+
+
 
 
 ## Ecosystem
@@ -99,6 +94,18 @@ to improve it:
   accepted, your pull request will be merged to the repository.
 
 ![nGraph Compiler Stack][ngraph-compiler-stack-readme]
+
+| Backend                                       | current support   | future support |
+|-----------------------------------------------|-------------------|----------------|
+| Intel® Architecture CPU                       | yes               | yes            |
+| Intel® Nervana™ Neural Network Processor (NNP)| yes               | yes            |
+| Intel [Movidius™ Myriad™ 2] VPUs              | coming soon       | yes            |
+| Intel® Architecture GPUs                      | via PlaidML       | yes            |
+| AMD* GPUs                                     | via PlaidML       | yes            |
+| NVIDIA* GPUs                                  | via PlaidML       | some           | 
+| Field Programmable Gate Arrays (FPGA)         | no                | yes            |
+
+
 
 [Architecture and features]:https://ngraph.nervanasys.com/docs/latest/project/about.html
 [Documentation]: https://ngraph.nervanasys.com/docs/latest
