@@ -1,6 +1,6 @@
-# nGraph Compiler Stack Beta (1.0) 
-
 [![Build Status][build-status-badge]][build-status] [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph/blob/master/LICENSE)
+
+![nGraph Compiler Stack][ngraph-compiler-stack-readme]
 
 <div align="center">
   <h3>
@@ -14,6 +14,8 @@
     <a href="#How-to-contribute" >How to Contribute</a>
  </h3>
 </div>
+
+# nGraph Compiler Stack Beta (1.0) 
 
 ## Quick start
 
@@ -82,22 +84,20 @@ Please submit your questions, feature requests and bug reports via
 
 ## How to contribute
 
-We welcome community contributions to nGraph. If you have an idea how
-to improve it:
+We welcome community contributions to nGraph. If you have an idea for improving 
+it:
 
 * See the [contrib guide] for code formatting and style guidelines.
 * Share your proposal via [GitHub issues].
 * Ensure you can build the product and run all the examples with your patch.
 * In the case of a larger feature, create a test.
 * Submit a [pull request].
-* Make sure your PR passes all CI tests. Note: our [Travis-CI][build-status] service
-  runs only on a CPU backend on Linux. We will run additional tests
+* Make sure your PR passes all CI tests. Note: our [Travis-CI][build-status] 
+  service runs only on a CPU backend on Linux. We will run additional tests
   in other environments.
 * We will review your contribution and, if any additional fixes or
   modifications are necessary, may provide feedback to guide you. When
   accepted, your pull request will be merged to the repository.
-
-![nGraph Compiler Stack][ngraph-compiler-stack-readme]
 
 [Architecture and features]:https://ngraph.nervanasys.com/docs/latest/project/about.html
 [Documentation]: https://ngraph.nervanasys.com/docs/latest
