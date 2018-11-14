@@ -93,8 +93,7 @@ namespace ngraph
         };
 
         Iterator begin() noexcept { return Iterator(m_target_shape); }
-        Iterator end() noexcept { return Iterator(m_target_shape, true); }
-    private:
+        Iterator end() noexcept { return m_end_iterator; }
         size_t index_source(const Coordinate& c) const;
         static Strides default_strides(size_t n_axes);
         static CoordinateDiff default_padding(size_t n_axes);
@@ -113,5 +112,6 @@ namespace ngraph
 
         Shape m_target_shape;
         size_t m_n_axes;
+        Iterator m_end_iterator;
     };
 }

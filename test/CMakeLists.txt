@@ -14,6 +14,14 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.0.0")
+        # gtest has issues with this with v1.8.x
+        # gtest issue is supposed to be addressed after v1.8.x
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-zero-as-null-pointer-constant")
+    endif()
+endif()
+
 set(SRC
     algebraic_simplification.cpp
     all_close_f.cpp
@@ -56,7 +64,7 @@ set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND SRC onnx_import.cpp)
     if (NGRAPH_ONNXIFI_ENABLE)
-        list(APPEND SRC onnxifi.cpp)
+        list(APPEND SRC onnxifi.cpp onnxifi_span.cpp)
     endif()
 endif()
 
@@ -130,6 +138,9 @@ set(MULTI_TEST_SRC
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND MULTI_TEST_SRC distributed.in.cpp)
 endif()
+if (NGRAPH_CPU_ENABLE)
+    list(APPEND MULTI_TEST_SRC backend_graph_comparison.in.cpp)
+endif()
 
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     # Some---but not all---autodiff tests go through multiple iterations with
@@ -197,6 +208,10 @@ if (NGRAPH_TBB_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_TBB_ENABLE)
 endif()
 
+if (NGRAPH_HALIDE)
+    target_compile_definitions(unit-test PRIVATE "NGRAPH_HALIDE")
+endif()
+
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
@@ -208,6 +223,10 @@ endif()
 
 if (NGRAPH_GPU_ENABLE)
     target_link_libraries(unit-test PRIVATE gpu_backend)
+endif()
+
+if (NGRAPH_NOP_ENABLE)
+    target_link_libraries(unit-test PRIVATE nop_backend)
 endif()
 
 if (NGRAPH_ONNXIFI_ENABLE)
