@@ -1574,7 +1574,7 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<std::string>& 
 {
     size_t rank = input_shape.size();
     size_t reduce_rank = reduce_axis.size();
-    size_t out_rank = rank - reduce_rank;
+    size_t non_reduce_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
     std::string kernel_name = "softmax_" + join(dtypes, "_");
     kernel_name +=
@@ -1639,7 +1639,7 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<std::string>& 
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         runtime::gpu::CudaKernelBuilder::get_softmax_op(
-            writer, kernel_name, args, dtypes, out_rank, reduce_rank);
+            writer, kernel_name, args, dtypes, non_reduce_rank, reduce_rank);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
@@ -1674,7 +1674,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
 {
     size_t rank = input_shape.size();
     size_t reduce_rank = reduce_axis.size();
-    size_t out_rank = rank - reduce_rank;
+    size_t non_reduce_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
     std::string kernel_name = "reduce_nd_" + join(dtypes, "_") + "_" + op;
     kernel_name +=
@@ -1740,7 +1740,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
                 writer, op, kernel, {{dtypes[0], dtypes[0], dtypes[1]}});
         }
         runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
-            writer, kernel_name, args, dtypes, op, out_rank, reduce_rank);
+            writer, kernel_name, args, dtypes, op, non_reduce_rank, reduce_rank);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
@@ -1917,10 +1917,10 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
 {
     size_t rank = input_shape.size();
     size_t reduce_rank = reduce_axis.size();
-    size_t out_rank = rank - reduce_rank;
+    size_t non_reduce_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
     std::string kernel_name = "reduce_" + join(dtypes, "_") + "_" + op;
-    if (out_rank != 0)
+    if (non_reduce_rank != 0)
     {
         kernel_name += "_ri_" + std::to_string(input_shape.size()) + "_rr_" +
                        std::to_string(reduce_axis.size());
@@ -1942,7 +1942,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     uint32_t block_size_x_acc = 256;
     uint32_t nthreads_acc = num_SMs * block_size_x_acc;
     //call reduce_to_nd
-    if (out_rank != 0)
+    if (non_reduce_rank != 0)
     {
         size_t reduce_idx = build_reduce_to_nd(dtypes, input_shape, reduce_axis, op, kernel);
 
@@ -2251,7 +2251,7 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm(const element::Type dtype,
     NVShape reduce_axis{0, 2, 3};
 
     size_t reduce_rank = reduce_axis.size();
-    size_t out_rank = rank - reduce_rank;
+    size_t non_reduce_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
     std::string kernel_name = "batchnorm_" + dtype.c_type_string();
     kernel_name += "_ri_" + std::to_string(result_shape.size()) + "_eps_" + std::to_string(eps);
@@ -2333,7 +2333,7 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm(const element::Type dtype,
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         runtime::gpu::CudaKernelBuilder::get_batchnorm_op(
-            writer, kernel_name, args, dtype.c_type_string(), out_rank, reduce_rank);
+            writer, kernel_name, args, dtype.c_type_string(), non_reduce_rank, reduce_rank);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
@@ -2385,7 +2385,7 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm(const element::Type dtype,
 
 //     size_t rank = simplified_result_shape.size();
 //     size_t reduce_rank = simplified_reduce_axis.size();
-//     size_t out_rank = rank - reduce_rank;
+//     size_t non_reduce_rank = rank - reduce_rank;
 //     // assumes NC{d1,...,dn} format
 //     std::string kernel_name = "batchnorm_with_stats_" + dtype.c_type_string();
 //     kernel_name += "_ri_" + std::to_string(rank) + "_rr_" + std::to_string(reduce_rank) + "_eps_" +
@@ -2466,7 +2466,7 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm(const element::Type dtype,
 //         codegen::CodeWriter writer;
 //         CudaKernelBuilder::add_pod_typedefs(writer);
 //         runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(
-//             writer, kernel_name, args, dtype.c_type_string(), out_rank, reduce_rank);
+//             writer, kernel_name, args, dtype.c_type_string(), non_reduce_rank, reduce_rank);
 //         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
 //     }
 
@@ -2508,20 +2508,13 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type
     NVShape simplified_result_shape;
     simplify_reduce(result_shape, reduce_axis, simplified_result_shape, simplified_reduce_axis);
 
-    //test, switch
-//    uint32_t tmp = simplified_result_shape.back();
- //   simplified_result_shape.back() = simplified_result_shape[1];
-  //  simplified_result_shape[1] = tmp;
-   // simplified_reduce_axis.back() = 1;
-
     // TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
     size_t rank = simplified_result_shape.size();
     size_t reduce_rank = simplified_reduce_axis.size();
-    size_t out_rank = rank - reduce_rank;
+    size_t non_reduce_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
-    std::string kernel_name = "batchnorm_with_stats_" + dtype.c_type_string();
-    kernel_name += "_ri_" + std::to_string(rank) + "_rr_" + std::to_string(reduce_rank) + "_eps_" +
+    std::string kernel_name = "batchnorm_with_stats_" + dtype.c_type_string() + "_ri_" + std::to_string(rank) + "_rr_" + std::to_string(reduce_rank) + "_eps_" +
                    std::to_string(eps) + "_bs_" + std::to_string(block_size_x);
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
     std::replace(kernel_name.begin(), kernel_name.end(), '.', '_');
@@ -2575,7 +2568,7 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(
-            writer, kernel_name, args, dtype.c_type_string(), out_rank, reduce_rank);
+            writer, kernel_name, args, dtype.c_type_string(), non_reduce_rank, reduce_rank, block_size_x);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
@@ -2615,7 +2608,7 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_one_output(const element::Type
     size_t rank = result_shape.size();
     NVShape reduce_axis{0, 2, 3};
     size_t reduce_rank = reduce_axis.size();
-    size_t out_rank = rank - reduce_rank;
+    size_t non_reduce_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
     std::string kernel_name = "batchnorm_one_output_" + dtype.c_type_string();
     kernel_name += "_ri_" + std::to_string(result_shape.size()) + "_eps_" + std::to_string(eps);
@@ -2671,7 +2664,7 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_one_output(const element::Type
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
         runtime::gpu::CudaKernelBuilder::get_batchnorm_one_output_op(
-            writer, kernel_name, args, dtype.c_type_string(), out_rank);
+            writer, kernel_name, args, dtype.c_type_string(), non_reduce_rank);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
