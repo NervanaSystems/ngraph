@@ -122,7 +122,9 @@ namespace ngraph
                         else
                         {
                             m_map["seq_lengths"] = common::make_constant_node<std::int32_t>(
-                                element::i32, {batch_size}, {m_map["X"]->get_shape().at(0)});
+                                element::i32,
+                                {batch_size},
+                                {static_cast<std::int32_t>(m_map["X"]->get_shape().at(0))});
                         }
                         // The initial value of the hidden. Shape [num_directions, batch_size, hidden_size]
                         if (ng_inputs.size() >= 6)
