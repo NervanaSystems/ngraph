@@ -160,12 +160,12 @@ namespace ngraph
                                        const double eps);
 
                 size_t build_batchnorm_with_stats(const element::Type dtype,
-                                       NVShape result_shape,
-                                       const double eps);
+                                                  NVShape result_shape,
+                                                  const double eps);
 
-                                       size_t build_batchnorm_one_output(const element::Type dtype,
-                                       NVShape result_shape,
-                                       const double eps);
+                size_t build_batchnorm_one_output(const element::Type dtype,
+                                                  NVShape result_shape,
+                                                  const double eps);
 
                 size_t build_broadcast(const std::array<std::string, 2>& dtypes,
                                        NVShape result_shape,
@@ -249,6 +249,11 @@ namespace ngraph
                                                   uint32_t block_size_x,
                                                   const char* op,
                                                   const char* kernel);
+
+                void simplify_reduce(NVShape in,
+                                     NVShape reduce_axis,
+                                     NVShape& simplified_shape,
+                                     NVShape& simplified_reduce_axis);
                 GPUPrimitiveEmitter* m_primitive_emitter;
                 GPURuntimeContext* m_ctx;
             };

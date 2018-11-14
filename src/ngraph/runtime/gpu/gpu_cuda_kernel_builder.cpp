@@ -670,9 +670,9 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_op(codegen::CodeWriter& writ
                 writer.block_begin();
                 {
                     writer << "input_i = in2[reduce_idx] - r_mean;\n";
-                    writer << "out3[reduce_idx] = input_i;\n";
+                    //writer << "out3[reduce_idx] = input_i;\n";
                     writer << "input_i = input_i * inv_sqrt_var;\n";
-                    writer << "out4[reduce_idx] = input_i;\n";
+                    //writer << "out4[reduce_idx] = input_i;\n";
                     writer << "out0[reduce_idx] = input_i * gamma + beta;\n";
                     writer << "reduce_idx += step;\n";
                 }
@@ -691,11 +691,11 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_op(codegen::CodeWriter& writ
 }
 
 void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeWriter& writer,
-                                                       const std::string& name,
-                                                       runtime::gpu::GPUKernelArgs& args,
-                                                       const std::string& data_type,
-                                                       size_t out_rank,
-                                                       size_t reduce_rank)
+                                                                  const std::string& name,
+                                                                  runtime::gpu::GPUKernelArgs& args,
+                                                                  const std::string& data_type,
+                                                                  size_t out_rank,
+                                                                  size_t reduce_rank)
 {
     writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
@@ -844,7 +844,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
             }
             writer << "r_var = r_sum / static_cast<float>(reduce_count);\n";
             writer << "inv_sqrt_var = 1.0 / sqrtf(r_var + eps);\n";
-            writer << "out4[tid] = r_var;\n";
+            writer << "out4[tid] = inv_sqrt_var;\n";
             writer << "out2[tid] = r_var * factor + out2[tid] * (1.0 - factor);\n";
             writer.block_end();
 
@@ -903,10 +903,10 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
 }
 
 void runtime::gpu::CudaKernelBuilder::get_batchnorm_one_output_op(codegen::CodeWriter& writer,
-                                                       const std::string& name,
-                                                       runtime::gpu::GPUKernelArgs& args,
-                                                       const std::string& data_type,
-                                                       size_t out_rank)
+                                                                  const std::string& name,
+                                                                  runtime::gpu::GPUKernelArgs& args,
+                                                                  const std::string& data_type,
+                                                                  size_t out_rank)
 {
     writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
@@ -916,13 +916,15 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_one_output_op(codegen::CodeW
         writer << "if (tid < nthreads)\n";
         writer.block_begin();
         {
-            collective_coordinate_transform_helper(writer, "tid", "input_strides", "non_reduce_strides", "out_index", out_rank);
+            collective_coordinate_transform_helper(
+                writer, "tid", "input_strides", "non_reduce_strides", "out_index", out_rank);
             writer << data_type << " gamma = in0[out_index];\n";
             writer << data_type << " beta = in1[out_index];\n";
             writer << data_type << " input = in2[tid];\n";
             writer << data_type << " mean = in3[out_index];\n";
             writer << data_type << " var = in4[out_index];\n";
-            writer << data_type << " normalized = (input - mean) / sqrtf(var + eps) * gamma + beta;\n";
+            writer << data_type
+                   << " normalized = (input - mean) / sqrtf(var + eps) * gamma + beta;\n";
             writer << "out0[tid] = normalized;\n";
         }
         writer.block_end();
@@ -2334,7 +2336,7 @@ std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_hel
     writer << "int " << out_index << " = 0;\n";
     for (size_t i = 0; i < rank; i++)
     {
-        writer << out_index <<" += " << out_coordinates << i << " * " << out_strides << i << ";\n";
+        writer << out_index << " += " << out_coordinates << i << " * " << out_strides << i << ";\n";
     }
 
     return out_index;
