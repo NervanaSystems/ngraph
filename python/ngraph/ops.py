@@ -913,13 +913,13 @@ def reverse(node, reversed_axes, name=None):  # type: (Node, List[int], str) -> 
 
 
 @nameable_op
-def batch_norm(data,            # type: Node
+def batch_norm(eps=1e-5,        # type: float
                gamma,           # type: Node
                beta,            # type: Node
+               data,            # type: Node
                mean=None,       # type: Node
                variance=None,   # type: Node
                name=None,       # type: str
-               eps=1e-5,        # type: float
                ):
     # type: (...) -> Node
     """Return batch normalization node."""
