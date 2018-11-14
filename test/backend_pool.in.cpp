@@ -1245,14 +1245,19 @@ NGRAPH_TEST(${BACKEND_NAME}, maxpool_backprop_gpu_bug)
 
     const size_t num_elements = 3 * 1024 + 1; // change 1 to 0 and GPU will pass
     auto ceil_div = [](size_t x, size_t y) { return 1 + ((x - 1) / y); };
-    const size_t num_pooled_elements = ceil_div(num_elements + padding_below.back() + padding_above.back() - window_shape.back() + 1, move_strides.back());
+    const size_t num_pooled_elements = ceil_div(num_elements + padding_below.back() +
+                                                    padding_above.back() - window_shape.back() + 1,
+                                                move_strides.back());
     Shape shape_x{1, 1, 1, num_elements};
     Shape shape_y{1, 1, 1, num_pooled_elements};
 
     auto x = make_shared<op::Parameter>(element::f32, shape_x);
     auto dy = make_shared<op::Parameter>(element::f32, shape_y);
 
-    auto bprop = make_shared<Function>(make_shared<op::MaxPoolBackprop>(x, dy, window_shape, move_strides, padding_below, padding_above), op::ParameterVector{x, dy});
+    auto bprop =
+        make_shared<Function>(make_shared<op::MaxPoolBackprop>(
+                                  x, dy, window_shape, move_strides, padding_below, padding_above),
+                              op::ParameterVector{x, dy});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
