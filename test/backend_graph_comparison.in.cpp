@@ -243,8 +243,8 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
         throw ngraph::ngraph_error(
             "Number of backend runtime results and allocated results don't match");
     }
-    ref->call_with_validate(ref_func, ref_results, ref_args);
-    backend->call_with_validate(bk_func, bk_results, bk_args);
+    ref->call_with_validate(ref->compile(ref_func), ref_results, ref_args);
+    backend->call_with_validate(backend->compile(bk_func), bk_results, bk_args);
 
     compare_results(new_results, ref_results, bk_results);
 }
