@@ -178,7 +178,7 @@ namespace ngraph
                         size_t quantize_index =
                             mkldnn_emitter->build_quantize_reorder(input_desc, result_desc, scales);
                         auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
-                        auto functor = [&, input_desc, result_desc, scales_size](
+                        auto functor = [&, input_desc, result_desc, scales_size, quantize_index](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             // Create MKLDNN reorder primitive during the first iteration.
                             // Assumes the scales dont change for the duration of the graph

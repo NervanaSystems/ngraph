@@ -32,7 +32,6 @@ namespace ngraph
                     set_memory_ptr(CPURuntimeContext* ctx, size_t primitive_index, void* ptr);
                 extern "C" void mkldnn_invoke_primitive(CPURuntimeContext* ctx,
                                                         size_t primitive_index);
-                extern "C" void mkldnn_submit(mkldnn::primitive prim);
             }
         }
     }
