@@ -37,7 +37,6 @@ namespace ngraph
                 // 2.5 -> 3
                 // -3.5 -> -4
                 ROUND_NEAREST_TOWARD_INFINITY,
-                HALF_AWAY_FROM_ZERO, // TF mode for backward compatability
 
                 // round to nearest integer
                 // in case of two equidistant integers round toward zero e.g.
