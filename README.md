@@ -23,7 +23,7 @@ workloads on CPU for inference, please refer to the links below.
 |----------------------------|----------------------------------------|-----------------------------------
 | TensorFlow* 1.12           | [Pip package] or [Build from source]   | 17 [Validated workloads]
 | MXNet* 1.4                 | [Enable the module] or [Source compile]| 17 [Validated workloads]   
-| ONNX 1.3                   | [Pip package] or [Build from source]   | 13 [Functional] workloads with DenseNet-121, Inception-v1, ResNet-50, Inception-v2, ShuffleNet, SqueezeNet, VGG-19, and 7 more   
+| ONNX 1.3                   | [Pip package]                          | 13 [Functional] workloads with DenseNet-121, Inception-v1, ResNet-50, Inception-v2, ShuffleNet, SqueezeNet, VGG-19, and 7 more   
 
 Frameworks using nGraph Compiler stack to execute workloads have shown 
 **3X** to **45X** performance boost when compared to native framework 
@@ -55,15 +55,15 @@ section.
 
 
 While the ecosystem shown above is all functioning, we have validated 
-performance for deep learning inference on CPU processors such as Intel® Xeon®. 
-Please refer to the [Beta release notes] to learn more. The Gold release 
-is targeted for April 2019; it will feature broader workload coverage, 
-including quantized graphs, and more detail on our advanced support for 
-``int8``. 
+performance metrics for deep learning inference on CPU processors including 
+as Intel® Xeon®. Please refer to the [Beta release notes] to learn more. 
+The Gold release is targeted for April 2019; it will feature broader workload 
+coverage, including support for quantized graphs, and more detail on our 
+advanced support for ``int8``. 
 
 Our documentation has extensive information about how to use nGraph Compiler 
 stack to create an nGraph computational graph, integrate custom frameworks, 
-and to interact with supported backends. If you wish to contribute to the 
+and interact with supported backends. If you wish to contribute to the 
 project, please don't hesitate to ask questions in [GitHub issues] after 
 reviewing our contribution guide below. 
 
