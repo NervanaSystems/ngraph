@@ -94,6 +94,14 @@ namespace ngraph
                             const Shape& padding_below,
                             const Shape& padding_above);
 
+            MaxPoolBackprop(const std::shared_ptr<Node>& arg_forward,
+                            const std::shared_ptr<Node>& delta,
+                            const std::shared_ptr<Node>& result_forward,
+                            const Shape& window_shape,
+                            const Strides& window_movement_strides,
+                            const Shape& padding_below,
+                            const Shape& padding_above);
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
