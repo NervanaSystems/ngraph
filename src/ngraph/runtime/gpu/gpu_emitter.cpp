@@ -270,7 +270,7 @@ void runtime::gpu::GPU_Emitter::emit_AvgPool(EMIT_ARGS)
                                       : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
 
             index = cudnn_emitter->build_pooling(cudnn_avg_type,
-                                                 out[0].get_type(),
+                                                 out[0].get_element_type(),
                                                  CUDNNEmitter::Prop::Forward,
                                                  input_shape,
                                                  result_shape,
@@ -308,7 +308,7 @@ void runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
                                       : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
 
             auto index = cudnn_emitter->build_pooling(cudnn_avg_type,
-                                                      out[0].get_type(),
+                                                      out[0].get_element_type(),
                                                       CUDNNEmitter::Prop::Backward,
                                                       output_shape,
                                                       delta_shape,
@@ -799,17 +799,19 @@ void runtime::gpu::GPU_Emitter::emit_MaxPoolBackprop(EMIT_ARGS)
 
         auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
 
+        bool needs_fprop = (args.size() != 3);
         if (fp_input_shape.size() >= 4)
         {
             auto index = cudnn_emitter->build_pooling(CUDNN_POOLING_MAX,
-                                                      out[0].get_type(),
+                                                      out[0].get_element_type(),
                                                       CUDNNEmitter::Prop::Backward,
                                                       fp_input_shape,
                                                       fp_output_shape,
                                                       mpb->get_window_movement_strides(),
                                                       mpb->get_window_shape(),
                                                       mpb->get_padding_below(),
-                                                      mpb->get_padding_above());
+                                                      mpb->get_padding_above(),
+                                                      needs_fprop);
 
             writer << "void* input[] = {" << node_names(args) << "};\n";
             writer << "void* output[] = {" << node_names(out) << "};\n";
