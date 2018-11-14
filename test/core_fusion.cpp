@@ -120,12 +120,12 @@ TEST(core_fusion, sparsity_opt_56x56)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::CoreFusion>();
     auto params = ParameterVector{data_stride3,
-                                      weights_stride3,
-                                      param_broadcast_w3,
-                                      weights_stride1,
-                                      param_broadcast_w1,
-                                      other_arg,
-                                      weights_conv_s2};
+                                  weights_stride3,
+                                  param_broadcast_w3,
+                                  weights_stride1,
+                                  param_broadcast_w1,
+                                  other_arg,
+                                  weights_conv_s2};
     auto func = make_shared<Function>(NodeVector{conv_s2_1, conv_s2_2}, params);
     pass_manager.run_passes(func);
     auto results = func->get_results();

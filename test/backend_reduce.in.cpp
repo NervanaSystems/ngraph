@@ -300,8 +300,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_3d_to_vector)
     // First, the reduction function (f(x:float32[],y:float32[]) = x*y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(make_shared<op::Multiply>(f_A, f_B), ParameterVector{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Multiply>(f_A, f_B), ParameterVector{f_A, f_B});
 
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);

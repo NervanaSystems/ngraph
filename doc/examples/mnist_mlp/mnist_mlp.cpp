@@ -227,10 +227,9 @@ int main(int argc, const char* argv[])
     // Plain inference
     // X, W0, b0, W1, b1 -> softmax
     NodeMap inference_node_map;
-    auto inference_function =
-        clone_function(Function(NodeVector{softmax},
-                                ParameterVector{X, W0, b0, W1, b1}),
-                       inference_node_map);
+    auto inference_function = clone_function(
+        Function(NodeVector{softmax}, ParameterVector{X, W0, b0, W1, b1}),
+        inference_node_map);
 
     set_scalar(t_learning_rate, .03f);
 

@@ -384,14 +384,14 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
 
     auto f = make_shared<Function>(NodeVector{ht_0, ct_0},
                                    ParameterVector{input_xt,
-                                                       weights_i2h,
-                                                       weights_h2h,
-                                                       bias_i2h,
-                                                       bias_h2h,
-                                                       weights_i2h_0,
-                                                       weights_h2h_0,
-                                                       bias_i2h_0,
-                                                       bias_h2h_0});
+                                                   weights_i2h,
+                                                   weights_h2h,
+                                                   bias_i2h,
+                                                   bias_h2h,
+                                                   weights_i2h_0,
+                                                   weights_h2h_0,
+                                                   bias_i2h_0,
+                                                   bias_h2h_0});
 
     auto backend = runtime::Backend::create("GPU");
 

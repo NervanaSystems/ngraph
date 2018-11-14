@@ -63,8 +63,7 @@ TEST(nop_elimination, eliminate_convert)
     Shape shape{};
     auto type = element::f32;
     auto A = make_shared<op::Parameter>(type, shape);
-    auto f =
-        make_shared<Function>(make_shared<op::Convert>(A, element::f32), ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Convert>(A, element::f32), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
@@ -91,8 +90,8 @@ TEST(nop_elimination, eliminate_broadcast)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}),
-                                   ParameterVector{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();

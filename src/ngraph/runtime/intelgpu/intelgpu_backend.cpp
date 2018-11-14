@@ -75,7 +75,6 @@
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
-#include "ngraph/parameter_vector.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -83,6 +82,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/parameter_vector.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

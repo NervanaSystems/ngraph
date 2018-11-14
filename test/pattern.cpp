@@ -55,8 +55,7 @@ std::shared_ptr<Node> create_reduction(const std::shared_ptr<Node>& node,
     const auto& et = node->get_element_type();
     auto f_A = std::make_shared<op::Parameter>(et, Shape{});
     auto f_B = std::make_shared<op::Parameter>(et, Shape{});
-    auto f =
-        std::make_shared<Function>(std::make_shared<T>(f_A, f_B), ParameterVector{f_A, f_B});
+    auto f = std::make_shared<Function>(std::make_shared<T>(f_A, f_B), ParameterVector{f_A, f_B});
 
     auto init = std::make_shared<op::Constant>(et, Shape{}, std::vector<std::string>({init_val}));
     return std::make_shared<op::Reduce>(node, init, f, reduction_axes);

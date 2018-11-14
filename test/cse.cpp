@@ -151,8 +151,8 @@ TEST(CSE, abs_add_reshape_broadcast)
         auto reshape2 = std::make_shared<op::Reshape>(add2, AxisVector{0}, Shape{1, 1});
         auto broadcast1 = std::make_shared<op::Broadcast>(reshape1, Shape{1, 1, 3}, AxisSet{2});
         auto broadcast2 = std::make_shared<op::Broadcast>(reshape2, Shape{1, 1, 3}, AxisSet{2});
-        auto f = std::make_shared<Function>(NodeVector{broadcast1, broadcast2},
-                                            ParameterVector{A, B});
+        auto f =
+            std::make_shared<Function>(NodeVector{broadcast1, broadcast2}, ParameterVector{A, B});
         pass::Manager pass_manager;
 
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -163,8 +163,7 @@ TEST(CSE, abs_add_reshape_broadcast)
         // fail case
         auto reshape1 = std::make_shared<op::Reshape>(add1, AxisVector{0}, Shape{1});
         auto reshape2 = std::make_shared<op::Reshape>(add2, AxisVector{0}, Shape{1, 1});
-        auto f =
-            std::make_shared<Function>(NodeVector{reshape1, reshape2}, ParameterVector{A, B});
+        auto f = std::make_shared<Function>(NodeVector{reshape1, reshape2}, ParameterVector{A, B});
         pass::Manager pass_manager;
 
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -175,8 +174,8 @@ TEST(CSE, abs_add_reshape_broadcast)
         // fail case
         auto broadcast1 = std::make_shared<op::Broadcast>(add1, Shape{1, 2}, AxisSet{1});
         auto broadcast2 = std::make_shared<op::Broadcast>(add2, Shape{1, 1, 2}, AxisSet{1, 2});
-        auto f = std::make_shared<Function>(NodeVector{broadcast1, broadcast2},
-                                            ParameterVector{A, B});
+        auto f =
+            std::make_shared<Function>(NodeVector{broadcast1, broadcast2}, ParameterVector{A, B});
         pass::Manager pass_manager;
 
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();

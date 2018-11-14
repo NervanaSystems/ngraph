@@ -371,8 +371,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_to_scalar)
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f =
-        make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2}), ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -414,8 +413,8 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_5d_to_scalar)
     Shape shape_a{3, 3, 3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2, 3, 4}),
-                                   ParameterVector{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0, 1, 2, 3, 4}), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -441,8 +440,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
 
     Shape shape_rt{10};
-    auto f =
-        make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1, 2, 3}), ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1, 2, 3}), ParameterVector{A});
 
     test::Uniform<float> rng(1000.0f, 1000.1f, 2112);
     vector<vector<float>> args;

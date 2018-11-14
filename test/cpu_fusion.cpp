@@ -868,8 +868,8 @@ TEST(cpu_fusion, conv_bias_relu_n2c1h2w2_2)
         auto bias = std::make_shared<op::Parameter>(element::f32, shape_bias);
         auto conv = std::make_shared<op::Convolution>(A, weights, Strides{2, 2}, Strides{1, 1});
         auto conv_bias_relu = std::make_shared<op::ConvolutionBias>(conv, bias, true);
-        auto f = make_shared<Function>(NodeVector{conv_bias_relu},
-                                       ParameterVector{A, weights, bias});
+        auto f =
+            make_shared<Function>(NodeVector{conv_bias_relu}, ParameterVector{A, weights, bias});
         return f;
     };
 
