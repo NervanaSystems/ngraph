@@ -376,7 +376,7 @@ shared_ptr<runtime::Tensor> runtime::intelgpu::IntelGPUBackend::create_tensor(
         element_type, shape, *ocl_engine, memory_pointer);
 }
 
-Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 {
     FunctionInstance& instance = ocl_networks[func];
     if (instance.ocl_network != nullptr)
@@ -911,7 +911,7 @@ Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             const shared_ptr<op::Reduce> red_op = static_pointer_cast<op::Reduce>(op);
             const AxisSet& axis = red_op->get_reduction_axes();
-            vector<shared_ptr<Function>> func = red_op->get_functions();
+            vector<shared_ptr<Function>> f = red_op->get_functions();
 
             // Empty axis is not a case for do_equal_propagation()
             do_reduce_func_call(topology,
@@ -923,7 +923,7 @@ Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                 get_output_shape(op),
                                 get_output_type(op),
                                 axis,
-                                func);
+                                f);
             break;
         }
         case OP_TYPEID::Abs:

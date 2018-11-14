@@ -87,12 +87,12 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 {
     validate_call(function, outputs, inputs);
 
-    auto it = m_function_map.find(function);
-    if (it == m_function_map.end())
+    auto fit = m_function_map.find(function);
+    if (fit == m_function_map.end())
     {
         throw runtime_error("compile() must be called before call().");
     }
-    FunctionInstance& instance = it->second;
+    FunctionInstance& instance = fit->second;
 
     // convert inputs to HostTensor
     vector<void*> func_inputs;
