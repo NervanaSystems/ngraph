@@ -478,7 +478,7 @@ TEST(cpu_test, reshape_layout_optimizations7)
     EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 0);
 }
 
-TEST(cpu_test, collapse_dims1)
+TEST(cpu_test, DISABLED_collapse_dims1)
 {
     // Expand multiple dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {

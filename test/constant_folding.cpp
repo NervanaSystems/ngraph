@@ -265,7 +265,7 @@ TEST(constant_folding, const_quantize)
     auto constant = op::Constant::create(element::f32, input_shape, values_in);
     auto scale = op::Constant::create(element::f32, scale_offset_shape, {2});
     auto offset = op::Constant::create(quant_type, scale_offset_shape, {1});
-    auto mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
     auto quantize =
         make_shared<op::Quantize>(constant, scale, offset, output_type, quantization_axes, mode);
     auto f = make_shared<Function>(quantize, ParameterVector{});
