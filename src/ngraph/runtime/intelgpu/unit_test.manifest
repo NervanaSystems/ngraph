@@ -61,6 +61,7 @@ reverse_sequence_n4d2c3h2w2
 select_and_scatter_3d_without_overlap
 select_and_scatter_with_overlap
 select_and_scatter_without_overlap
+softmax_axis_3d_double
 topk_1d_max_all
 topk_1d_max_one
 topk_1d_max_partial
@@ -114,3 +115,9 @@ zero_sized_sqrt
 zero_sized_subtract
 zero_sized_tan
 zero_sized_tanh
+shape_of_scalar
+shape_of_vector
+shape_of_matrix
+shape_of_5d
+sum_stable_acc
+

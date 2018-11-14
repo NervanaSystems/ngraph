@@ -97,6 +97,7 @@ Not currently a comprehensive list.
    * :doc:`quantize`
    * :doc:`relu`
    * :doc:`result`
+   * :doc:`shape_of`
    * :doc:`sigmoid`
    * :doc:`sign`
    * :doc:`sin`
@@ -163,6 +164,7 @@ Not currently a comprehensive list.
    quantize.rst
    relu.rst
    result.rst
+   shape_of.rst
    sigmoid.rst
    sign.rst
    sin.rst

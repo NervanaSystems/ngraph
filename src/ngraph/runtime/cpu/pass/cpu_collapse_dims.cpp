@@ -42,14 +42,13 @@ struct CollapsedShape
 // Fold and collapse axes of shape.
 // Contiguous axes that are not being operated on can be collapsed.
 // Contiguous axes that are being operated on are collapsed optionally.
-// Skip size 1 dimensions.
 // E.g.,
 // Shape{3, 3, 2}, AxisSet{0, 1} -> Shape{9, 2}, AxisSet{0}
 // Shape{2, 4, 6, 6}, AxisSet{2, 3} -> Shape{8, 36}, AxisSet{1}
 static void collapse_dims(std::vector<size_t>& shape,
                           std::set<size_t> operated_axes,
                           struct CollapsedShape& cshape,
-                          bool collapse_operated_axes)
+                          bool skip_unit_size = true)
 {
     size_t collapse_size = 1;
     bool operated_axes_run = false;
@@ -58,11 +57,10 @@ static void collapse_dims(std::vector<size_t>& shape,
     for (int output_idx = static_cast<int>(shape.size()) - 1; output_idx >= 0; output_idx--)
     {
         auto is_operated_axis = operated_axes.count(output_idx) == 1;
-        auto end_run = (operated_axes_run != is_operated_axis) ||
-                       (is_operated_axis && !collapse_operated_axes);
+        auto end_run = (operated_axes_run != is_operated_axis);
         if (collapsing && end_run)
         {
-            if (collapse_size != 1)
+            if (collapse_size != 1 || !skip_unit_size)
             {
                 cshape.fshape.push_back(collapse_size);
                 fshape_operated_axis.push_back(operated_axes_run);
@@ -75,7 +73,7 @@ static void collapse_dims(std::vector<size_t>& shape,
         collapsing = true;
     }
     // Last run
-    if (collapse_size != 1)
+    if (collapse_size != 1 || !skip_unit_size)
     {
         cshape.fshape.push_back(collapse_size);
         fshape_operated_axis.push_back(operated_axes_run);
@@ -106,7 +104,7 @@ static bool collapse_broadcast(std::shared_ptr<Node> n)
 
     struct CollapsedShape cshape;
 
-    collapse_dims(output_shape, operated_axes, cshape, true);
+    collapse_dims(output_shape, operated_axes, cshape);
 
     if (cshape.axis_set.size() == 0)
     {
@@ -155,7 +153,7 @@ static bool collapse_reduction(std::shared_ptr<Node> n)
 
     struct CollapsedShape cshape;
 
-    collapse_dims(input_shape, operated_axes, cshape, true);
+    collapse_dims(input_shape, operated_axes, cshape);
 
     if (cshape.axis_set.size() == 0)
     {
@@ -210,8 +208,8 @@ static bool collapse_dot(std::shared_ptr<Node> n)
     }
 
     struct CollapsedShape cshape_A, cshape_B;
-    collapse_dims(A_shape, operated_axes_A, cshape_A, true);
-    collapse_dims(B_shape, operated_axes_B, cshape_B, true);
+    collapse_dims(A_shape, operated_axes_A, cshape_A, false);
+    collapse_dims(B_shape, operated_axes_B, cshape_B, false);
 
     if (A_shape != cshape_A.fshape || B_shape != cshape_B.fshape)
     {
