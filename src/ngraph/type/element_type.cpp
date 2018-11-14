@@ -28,7 +28,7 @@ const element::Type element::f32(32, true, true, false, "float");
 const element::Type element::f64(64, true, true, false, "double");
 const element::Type element::i8(8, false, true, true, "int8_t");
 const element::Type element::i16(16, false, true, false, "int16_t");
-const element::Type element::i32(32, false, true, false, "int32_t");
+const element::Type element::i32(32, false, true, true, "int32_t");
 const element::Type element::i64(64, false, true, false, "int64_t");
 const element::Type element::u8(8, false, false, true, "uint8_t");
 const element::Type element::u16(16, false, false, false, "uint16_t");
@@ -190,6 +190,11 @@ std::ostream& element::operator<<(std::ostream& out, const element::Type& obj)
     out << "element::Type{" << obj.m_bitwidth << ", " << obj.m_is_real << ", " << obj.m_is_signed
         << ", " << obj.m_is_quantized << ", \"" << obj.m_cname << "\"}";
     return out;
+}
+
+bool element::Type::compatible(element::Type t) const
+{
+    return (is_dynamic() || t.is_dynamic() || *this == t);
 }
 
 bool element::Type::merge(element::Type& dst, const element::Type& t1, const element::Type& t2)

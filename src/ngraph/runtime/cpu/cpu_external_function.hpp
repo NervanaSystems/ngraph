@@ -129,10 +129,7 @@ namespace ngraph
                 // Temporary Memory Pool alignment
                 static constexpr size_t s_memory_pool_alignment = 4096;
 
-                std::vector<std::function<void(CPURuntimeContext*)>>& get_functors()
-                {
-                    return functors;
-                }
+                std::vector<CPUKernelFunctor>& get_functors() { return functors; }
                 std::unordered_map<std::string, void*>& get_tensor_data() { return tensor_data; }
                 void*& get_tensor_data(const std::string& name);
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>&
@@ -208,6 +205,10 @@ namespace ngraph
 
                 // For a chain of concat ops, propagate memory pool offsets
                 void propagate_in_place_concat(std::shared_ptr<ngraph::op::Concat> concat);
+
+                // Find in-place slice ops and set appropriate memory pool offset for its output
+                void process_in_place_slice(std::list<std::shared_ptr<Node>> nodes);
+
                 bool computes_result(Node* node);
                 void release_function() { m_function = nullptr; }
 #if !defined(NGRAPH_DEX_ONLY)
@@ -265,7 +266,7 @@ namespace ngraph
 
                 std::string m_function_name;
 
-                std::vector<std::function<void(CPURuntimeContext*)>> functors;
+                std::vector<CPUKernelFunctor> functors;
                 std::vector<std::string> op_names;
                 std::vector<std::function<bool(CPURuntimeContext*)>> enables;
                 std::list<std::pair<std::function<bool(CPURuntimeContext*)>, std::string>>

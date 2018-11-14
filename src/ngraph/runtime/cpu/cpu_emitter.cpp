@@ -99,6 +99,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -181,9 +182,9 @@ namespace ngraph
                     auto input1_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                        input0_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+                        input0_data_desc, runtime::cpu::executor::global_cpu_engine));
                     inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                        input1_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+                        input1_data_desc, runtime::cpu::executor::global_cpu_engine));
 
                     size_t add_index = 0;
                     add_index = mkldnn_emitter->build_elementwise_add(
@@ -1726,7 +1727,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(reshape->get_input_order()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ",  0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 4 && out[0].get_shape().size() == 4)
@@ -1736,7 +1737,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(reshape->get_input_order()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else
                 {
@@ -2009,6 +2010,32 @@ namespace ngraph
             {
                 const ngraph::op::Slice* slice = static_cast<const ngraph::op::Slice*>(node);
 
+                if (auto op_annotations = slice->get_op_annotations())
+                {
+                    auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                    if (in_place_oi_pairs.size() > 0)
+                    {
+                        auto arg_shape = args[0].get_shape();
+                        auto lower_bounds = slice->get_lower_bounds();
+                        auto start = 0, accumulated = 1;
+                        for (int i = arg_shape.size() - 1; i >= 0; i--)
+                        {
+                            start += lower_bounds[i] * accumulated;
+                            accumulated *= arg_shape[i];
+                        }
+                        writer << "if (" << out[0].get_name() << " < " << args[0].get_name()
+                               << " || " << out[0].get_name() << " >= " << args[0].get_name()
+                               << " + " << args[0].get_size() * out[0].get_element_type().size()
+                               << ")\n";
+                        writer.block_begin();
+                        writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name()
+                               << " + " << start * out[0].get_element_type().size() << ", "
+                               << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                        writer.block_end();
+                        return;
+                    }
+                }
+
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto out_shape = out[0].get_shape();
@@ -2167,7 +2194,7 @@ namespace ngraph
                            << ", " << out[0].get_name() << ", "
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 2 && sum->get_reduction_axes().size() == 2)
@@ -2176,7 +2203,7 @@ namespace ngraph
                            << ", " << out[0].get_name() << ", "
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 2 && sum->get_reduction_axes().size() == 1)
@@ -2186,7 +2213,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}, "
                            << "{" << join(sum->get_reduction_axes()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 4 && sum->get_reduction_axes().size() == 2)
@@ -2196,7 +2223,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}, "
                            << "{" << join(sum->get_reduction_axes()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 4 && sum->get_reduction_axes().size() == 4)
@@ -3587,7 +3614,7 @@ namespace ngraph
                            << "                            {" << join(pad->get_padding_below())
                            << "},\n"
                            << "                            {" << join(pad->get_padding_above())
-                           << "});\n";
+                           << "}, 0);\n";
                 }
                 else
                 {
@@ -3888,7 +3915,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}, "
                            << "{" << join(max->get_reduction_axes()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else
                 {

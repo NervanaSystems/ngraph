@@ -94,6 +94,19 @@
     else                                                                                           \
         throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);
 
+#define SELECT_RANK2(KV, IT, OT, R, K)                                                             \
+    switch (R)                                                                                     \
+    {                                                                                              \
+    case 1: KV = K<IT, OT, 1>; break;                                                              \
+    case 2: KV = K<IT, OT, 2>; break;                                                              \
+    case 3: KV = K<IT, OT, 3>; break;                                                              \
+    case 4: KV = K<IT, OT, 4>; break;                                                              \
+    case 5: KV = K<IT, OT, 5>; break;                                                              \
+    case 6: KV = K<IT, OT, 6>; break;                                                              \
+    case 7: KV = K<IT, OT, 7>; break;                                                              \
+    default: throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);      \
+    }
+
 // Per-type and rank kernel macro
 #define SELECT_KERNEL_BY_RANK(KV, ET, R, K)                                                        \
     if (ET == element::boolean)                                                                    \
@@ -190,7 +203,7 @@
 
 #define BUILD_UNARY_ELEMWISE_FUNCTOR(OP)                                                           \
     auto& functors = external_function->get_functors();                                            \
-    std::function<void(void*, void*, size_t)> kernel;                                              \
+    std::function<void(void*, void*, size_t, int)> kernel;                                         \
                                                                                                    \
     SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                         \
                                                                                                    \
@@ -198,14 +211,14 @@
     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());                    \
     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());                     \
                                                                                                    \
-    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {                            \
-        kernel(arg0_tensor, out0_tensor, element_count);                                           \
+    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx, CPUExecutionContext* ectx) { \
+        kernel(arg0_tensor, out0_tensor, element_count, ectx->arena);                              \
     };                                                                                             \
     functors.emplace_back(functor);
 
 #define BUILD_BINARY_ELEMWISE_FUNCTOR(OP)                                                          \
     auto& functors = external_function->get_functors();                                            \
-    std::function<void(void*, void*, void*, size_t)> kernel;                                       \
+    std::function<void(void*, void*, void*, size_t, int)> kernel;                                  \
                                                                                                    \
     SELECT_KERNEL(kernel, args[0].get_element_type(), OP);                                         \
                                                                                                    \
@@ -214,8 +227,8 @@
     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());                    \
     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());                     \
                                                                                                    \
-    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx) {                            \
-        kernel(arg0_tensor, arg1_tensor, out0_tensor, element_count);                              \
+    auto functor = [&, kernel, element_count](CPURuntimeContext* ctx, CPUExecutionContext* ectx) { \
+        kernel(arg0_tensor, arg1_tensor, out0_tensor, element_count, ectx->arena);                 \
     };                                                                                             \
     functors.emplace_back(functor);
 

@@ -23,6 +23,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
@@ -49,7 +50,7 @@ static runtime::Backend* hybrid1_creator(const char* config)
     return new TestBackend(backend_list);
 }
 
-TEST(DISABLED_HYBRID, abc)
+TEST(HYBRID, abc)
 {
     const string backend_name = "HYBRID1";
     runtime::BackendManager::register_backend(backend_name, hybrid1_creator);

@@ -48,6 +48,37 @@ namespace ngraph
                 auto lower_bounds = slice->get_lower_bounds();
                 auto upper_bounds = slice->get_upper_bounds();
 
+                if (auto op_annotations = slice->get_op_annotations())
+                {
+                    auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                    if (in_place_oi_pairs.size() > 0)
+                    {
+                        auto element_size = slice->get_input_element_type(0).size();
+                        auto start = 0, accumulated = 1;
+                        for (int i = arg_shape.size() - 1; i >= 0; i--)
+                        {
+                            start += lower_bounds[i] * accumulated;
+                            accumulated *= arg_shape[i];
+                        }
+                        auto out_size = shape_size(out_shape) * element_size;
+                        auto arg_size = shape_size(arg_shape) * element_size;
+                        auto offset = start * element_size;
+
+                        auto functor = [&, out_size, arg_size, offset](CPURuntimeContext* ctx,
+                                                                       CPUExecutionContext* ectx) {
+                            if (out_tensor < arg_tensor ||
+                                out_tensor >= reinterpret_cast<char*>(arg_tensor) + arg_size)
+                            {
+                                memcpy(out_tensor,
+                                       reinterpret_cast<char*>(arg_tensor) + offset,
+                                       out_size);
+                            }
+                        };
+                        functors.emplace_back(functor);
+                        return;
+                    }
+                }
+
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
@@ -58,7 +89,8 @@ namespace ngraph
                         input_desc, result_desc, lower_bounds, out_shape);
                     auto& deps = mkldnn_emitter->get_primitive_deps(slice_index);
 
-                    auto functor = [&, slice_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, slice_index](CPURuntimeContext* ctx,
+                                                    CPUExecutionContext* ectx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, slice_index);
@@ -80,14 +112,15 @@ namespace ngraph
 
                         auto functor =
                             [&, kernel, arg_shape, out_shape, lower_bounds, upper_bounds, strides](
-                                CPURuntimeContext* ctx) {
+                                CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                                 kernel(arg_tensor,
                                        out_tensor,
                                        arg_shape,
                                        out_shape,
                                        lower_bounds,
                                        upper_bounds,
-                                       strides);
+                                       strides,
+                                       ectx->arena);
                             };
                         functors.emplace_back(functor);
                     }
@@ -101,8 +134,13 @@ namespace ngraph
                                               runtime::cpu::kernel::slice);
 
                         auto functor = [&, kernel, arg_shape, out_shape, lower_bounds](
-                            CPURuntimeContext* ctx) {
-                            kernel(arg_tensor, out_tensor, arg_shape, out_shape, lower_bounds);
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            kernel(arg_tensor,
+                                   out_tensor,
+                                   arg_shape,
+                                   out_shape,
+                                   lower_bounds,
+                                   ectx->arena);
                         };
                         functors.emplace_back(functor);
                     }

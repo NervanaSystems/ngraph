@@ -196,6 +196,11 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
     size_t workspace_size = 0;
     CUDNN_SAFE_CALL(cudnnGetReductionWorkspaceSize(
         *m_ctx->cudnn_handle, desc, input_desc, output_desc, &workspace_size));
+    size_t input_buffer_size = shape_size(input_shape) * input_type.size();
+    if (workspace_size < input_buffer_size)
+    {
+        workspace_size = input_buffer_size;
+    }
     size_t workspace_idx = allocator.reserve_workspace(workspace_size);
 
     void* alpha = m_host_parameters.allocate_by_datatype(data_type, 1.0);
@@ -529,12 +534,10 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
         idx_workspace = allocator.reserve_workspace(temp_size, true);
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_index = cuda_emitter->build_pad({{args[0].get_element_type().c_type_string(),
-                                              out[0].get_element_type().c_type_string()}},
-                                            input_shape,
-                                            input_shape_padded,
-                                            padding_below,
-                                            padding_interior);
+        std::vector<std::string> dtypes = {args[0].get_element_type().c_type_string(),
+                                           out[0].get_element_type().c_type_string()};
+        pad_index = cuda_emitter->build_pad(
+            dtypes, input_shape, input_shape_padded, padding_below, padding_interior);
 
         // asymetric padding has been applied, zero out padding vectors to
         // ensure cudnn does not assume padding
@@ -653,11 +656,9 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
         idx_workspace = allocator.reserve_workspace(temp_size, true);
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_index = cuda_emitter->build_pad({{input_type, output_type}},
-                                            output_shape,
-                                            output_shape_padded,
-                                            padding_below,
-                                            padding_interior);
+        std::vector<std::string> dtypes = {input_type, output_type};
+        pad_index = cuda_emitter->build_pad(
+            dtypes, output_shape, output_shape_padded, padding_below, padding_interior);
 
         slice_index = cuda_emitter->build_slice({{input_type, output_type}},
                                                 output_shape_padded,
@@ -772,11 +773,9 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
         idx_workspace = allocator.reserve_workspace(temp_size, true);
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_index = cuda_emitter->build_pad({{input_type, output_type}},
-                                            input_shape_0,
-                                            input_shape_padded,
-                                            padding_below,
-                                            padding_interior);
+        std::vector<std::string> dtypes = {input_type, output_type};
+        pad_index = cuda_emitter->build_pad(
+            dtypes, input_shape_0, input_shape_padded, padding_below, padding_interior);
 
         // asymetric padding has been applied, zero out padding vectors to
         // ensure cudnn does not assume padding
@@ -865,11 +864,9 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
                                                    padded_size * args[0].get_element_type().size());
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        pad_index = cuda_emitter->build_pad({{input_type, output_type}},
-                                            input_shape,
-                                            input_shape_padded,
-                                            padding_below,
-                                            padding_interior);
+        std::vector<std::string> dtypes = {input_type, output_type};
+        pad_index = cuda_emitter->build_pad(
+            dtypes, input_shape, input_shape_padded, padding_below, padding_interior);
 
         // asymetric padding has been applied, zero out padding vectors to
         // ensure cuDNN does not assume padding during pooling
@@ -1875,74 +1872,6 @@ size_t runtime::gpu::CUDNNEmitter::build_lrn(const std::string& dtype,
 
     primitive_index = this->m_primitive_emitter->register_primitive(lrn, hash);
     return primitive_index;
-}
-
-size_t runtime::gpu::CUDNNEmitter::build_softmax(const cudnnSoftmaxAlgorithm_t& algorithm,
-                                                 const cudnnSoftmaxMode_t& mode,
-                                                 const std::string& dtype,
-                                                 const Prop& direction,
-                                                 const Shape& tensor_shape)
-{
-    // construct hash to determine if kernel needs to be emitted
-    // or if it already exists in the primitive list
-    std::stringstream ss;
-    ss << "softmax_op_" << mode << "_dtype_" << dtype << "_alg" << algorithm << "_dir"
-       << static_cast<int>(direction) << "_s" << join(tensor_shape, "_");
-    std::string hash = ss.str();
-
-    // check if the requested kernel is already an inserted primitive
-    size_t primitive_index = m_primitive_emitter->lookup(hash);
-    if (primitive_index != std::numeric_limits<size_t>::max())
-    {
-        return primitive_index;
-    }
-
-    cudnnDataType_t data_type = get_cudnn_datatype(dtype);
-    cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
-    auto& tensor_desc = tensor_descriptor_from_shape(tensor_shape, data_type, tensor_format);
-    void* alpha = m_host_parameters.allocate_by_datatype(data_type, 1.0);
-    void* beta = m_host_parameters.allocate_by_datatype(data_type, 0);
-    std::unique_ptr<runtime::gpu::primitive> softmax;
-    switch (direction)
-    {
-    case Prop::Forward:
-    case Prop::Inference:
-    {
-        softmax.reset(new gpu::primitive{[=, &tensor_desc](void** inputs, void** outputs) {
-            CUDNN_SAFE_CALL(cudnnSoftmaxForward(*m_ctx->cudnn_handle,
-                                                algorithm,
-                                                mode,
-                                                alpha,
-                                                tensor_desc,
-                                                inputs[0],
-                                                beta,
-                                                tensor_desc,
-                                                outputs[0]));
-            debug_sync();
-        }});
-        break;
-    }
-    case Prop::Backward:
-    {
-        softmax.reset(new gpu::primitive{[=, &tensor_desc](void** inputs, void** outputs) {
-            CUDNN_SAFE_CALL(cudnnSoftmaxBackward(*m_ctx->cudnn_handle,
-                                                 algorithm,
-                                                 mode,
-                                                 alpha,
-                                                 tensor_desc,
-                                                 inputs[0],
-                                                 tensor_desc,
-                                                 inputs[1],
-                                                 beta,
-                                                 tensor_desc,
-                                                 outputs[0]));
-            debug_sync();
-        }});
-        break;
-    }
-    }
-
-    return this->m_primitive_emitter->register_primitive(softmax, hash);
 }
 
 void runtime::gpu::CUDNNEmitter::sync()

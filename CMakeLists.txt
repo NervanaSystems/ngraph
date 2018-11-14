@@ -20,8 +20,8 @@ include(cmake/Modules/git_tags.cmake)
 
 NGRAPH_GET_VERSION_LABEL()
 
-string(REGEX MATCH "([0-9]+)\.([0-9]+)\.([0-9]+)" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
-string(REGEX MATCH "([0-9]+)\.([0-9]+)" NGRAPH_API_VERSION "${NGRAPH_VERSION_LABEL}")
+string(REGEX MATCH "([0-9?]+)\.([0-9?]+)\.([0-9?]+)" NGRAPH_VERSION_SHORT "${NGRAPH_VERSION_LABEL}")
+string(REGEX MATCH "([0-9?]+)\.([0-9?]+)" NGRAPH_API_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REGEX MATCH "[^v](.*)" NGRAPH_VERSION "${NGRAPH_VERSION_LABEL}")
 string(REPLACE "." ";" NGRAPH_VERSION_PARTS "${NGRAPH_VERSION_SHORT}")
 list(GET NGRAPH_VERSION_PARTS 0 NGRAPH_VERSION_MAJOR)
@@ -64,7 +64,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
         message(FATAL_ERROR "Apple Clang version must be at least ${APPLE_CLANG_MIN_VERSION}!")
     endif()
 else()
-    message(WARNING "You are using an unsupported compiler. Compilation has only been tested with Clang (${CLANG_MIN_VERSION} and up), Apple Clang (${APPLE_CLANG_MIN_VERSION} and up), and GCC (${GCC_MIN_VERSION} and up).")
+    message(WARNING "You are using an unsupported compiler.")
 endif()
 
 # Prevent Eigen from using any LGPL3 code
@@ -72,6 +72,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY -DTBB_USE_THREADING_TO
 
 if($ENV{NGRAPH_USE_PREBUILT_LLVM})
     set(NGRAPH_USE_PREBUILT_LLVM TRUE)
+endif()
+
+if (DEFINED NGRAPH_USE_CXX_ABI AND NGRAPH_USE_PREBUILT_LLVM)
+    message(FATAL_ERROR "Unable to use NGRAPH_USE_PREBUILT_LLVM with NGRAPH_USE_CXX_ABI")
 endif()
 
 # These variables are undocumented but useful.
@@ -93,11 +97,30 @@ option(NGRAPH_INTELGPU_ENABLE "Control the building of the Intel GPU backend wit
 option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
 option(NGRAPH_HYBRID_ENABLE "Control the building of the HYBRID backend" FALSE)
+option(NGRAPH_NOP_ENABLE "Control the building of the NOP backend" TRUE)
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
+
+message(STATUS "NGRAPH_UNIT_TEST_ENABLE:      ${NGRAPH_UNIT_TEST_ENABLE}")
+message(STATUS "NGRAPH_TOOLS_ENABLE:          ${NGRAPH_TOOLS_ENABLE}")
+message(STATUS "NGRAPH_CPU_ENABLE:            ${NGRAPH_CPU_ENABLE}")
+message(STATUS "NGRAPH_INTELGPU_ENABLE:       ${NGRAPH_INTELGPU_ENABLE}")
+message(STATUS "NGRAPH_GPU_ENABLE:            ${NGRAPH_GPU_ENABLE}")
+message(STATUS "NGRAPH_INTERPRETER_ENABLE:    ${NGRAPH_INTERPRETER_ENABLE}")
+message(STATUS "NGRAPH_HYBRID_ENABLE:         ${NGRAPH_HYBRID_ENABLE}")
+message(STATUS "NGRAPH_NOP_ENABLE:            ${NGRAPH_NOP_ENABLE}")
+message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:    ${NGRAPH_DISTRIBUTED_ENABLE}")
+message(STATUS "NGRAPH_DEBUG_ENABLE:          ${NGRAPH_DEBUG_ENABLE}")
+message(STATUS "NGRAPH_ONNX_IMPORT_ENABLE:    ${NGRAPH_ONNX_IMPORT_ENABLE}")
+message(STATUS "NGRAPH_DEX_ONLY:              ${NGRAPH_DEX_ONLY}")
+message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:  ${NGRAPH_CODE_COVERAGE_ENABLE}")
+
+if (NGRAPH_HYBRID_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_HYBRID_ENABLE")
+endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
@@ -129,7 +152,11 @@ set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
 set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}")
 set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
-set(CMAKE_INSTALL_RPATH "$ORIGIN")
+if (DEFINED NGRAPH_RPATH)
+    set(CMAKE_INSTALL_RPATH "$ORIGIN:${NGRAPH_RPATH}")
+else()
+    set(CMAKE_INSTALL_RPATH "$ORIGIN")
+endif()
 
 #-----------------------------------------------------------------------------------------------
 # Compiler-specific logic...
@@ -147,7 +174,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (DEFINED NGRAPH_USE_CXX_ABI)
         message( STATUS "nGraph using CXX11 ABI: " ${NGRAPH_USE_CXX_ABI} )
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
-    endif()    
+    endif()
 endif()
 
 ngraph_var(NGRAPH_WARNINGS_AS_ERRORS DEFAULT "OFF")
@@ -204,7 +231,7 @@ if(WIN32)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")	
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
 endif()
 
 if (NGRAPH_PLAIDML_ENABLE)
