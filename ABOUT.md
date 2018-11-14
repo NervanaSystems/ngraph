@@ -1,5 +1,5 @@
-Architecture, Features, FAQs
-============================
+About nGraph Compiler stack
+===========================
 
 nGraph Compiler stack architecture
 ----------------------------------
@@ -9,13 +9,16 @@ that the stack diagram is simplified to show how nGraph executes deep
 learning workloads with two hardware backends; however, many other 
 deep learning frameworks and backends currently are functioning.
 
-![](../graphics/stackngrknl.png)
+![](doc/sphinx/source/graphics/stackngrknl.png)
+
+<alt="Simplified view of nGraph Compiler stack" width="733" />
+
 
 Starting from the top of the diagram, we present a simplified view of 
 how the nGraph Intermediate Representation (IR) can receive a graph
 from a framework such as TensorFlow\* or MXNet\* when there is a 
 corresponding "Bridge" or import method, such as from NNVM or via 
-[ONNX](http://onnx.ai). Once the nGraph ../ops/index can begin 
+[ONNX](http://onnx.ai). Once the nGraph Core ops can begin 
 parsing the graph as a computation graph, they can pattern-match 
 subgraphs for device-specific optimizations; these are then 
 encapsulated. This encapsulation is represented on the diagram as 
@@ -89,7 +92,10 @@ of device-specific and non-device-specific optimization :
 Current nGraph Compiler full stack
 ----------------------------------
 
-![](../graphics/full-ngstck.png)
+![](doc/sphinx/source/graphics/full-ngstck.png)
+
+<alt="Full view of nGraph Compiler stack" width="733" />
+
 
 
 In addition to IA and NNP transformers, nGraph Compiler stack has transformers

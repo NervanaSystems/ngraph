@@ -27,7 +27,7 @@ For a more detailed dive into how custom bridge code can be implemented, see our
 documentation on [Working with other frameworks]. To learn how TensorFlow and MXNet 
 currently make use of custom bridge code, see [Integrate supported frameworks].
 
-![](../graphics/bridge-to-graph-compiler.png) 
+![](doc/sphinx/source/graphics/bridge-to-graph-compiler.png) 
 
 <alt="JiT Compiling for computation" width="733" />
 
