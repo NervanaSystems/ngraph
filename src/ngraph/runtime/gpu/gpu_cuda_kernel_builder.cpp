@@ -690,6 +690,35 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_op(codegen::CodeWriter& writ
     return;
 }
 
+void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeWriter& writer,
+                                                       const std::string& name,
+                                                       runtime::gpu::GPUKernelArgs& args,
+                                                       const std::string& data_type,
+                                                       size_t out_rank,
+                                                       size_t reduce_rank)
+{
+    writer << runtime::gpu::nvrtc::helpers();
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
+    writer.block_begin();
+    {
+        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
+        writer << "if (tid < nthreads)\n";
+        writer.block_begin();
+        {
+            collective_coordinate_transform_helper(writer, "tid", "input_strides", "non_reduce_strides", "out_index", out_rank);
+            writer << data_type << " gamma = in0[out_index];\n";
+            writer << data_type << " beta = in1[out_index];\n";
+            writer << data_type << " input = in2[tid];\n";
+            writer << data_type << " mean = in3[out_index];\n";
+            writer << data_type << " var = in4[out_index];\n";
+            writer << data_type << " normalized = (input - mean) / sqrtf(var + eps) * gamma + beta;\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+    return;
+}
+
 //each thread calculate the whole reduction of one output
 void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
     codegen::CodeWriter& writer,

@@ -2367,6 +2367,100 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm(const element::Type dtype,
     return this->m_primitive_emitter->register_primitive(softmax, hash);
 }
 
+size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type dtype,
+                                                  NVShape result_shape,
+                                                  const double eps)
+{
+    size_t rank = result_shape.size();
+    NVShape reduce_axis{0,2,3};
+    size_t reduce_rank = reduce_axis.size();
+    size_t out_rank = rank - reduce_rank;
+    // assumes NC{d1,...,dn} format
+    std::string kernel_name = "batchnorm_with_stats" + dtype.c_type_string();
+    kernel_name += "_ri_" + std::to_string(result_shape.size()) + "_eps_" + std::to_string(eps);
+    std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
+    std::replace(kernel_name.begin(), kernel_name.end(), '.', '_');
+
+    std::stringstream ss;
+    ss << kernel_name << "_s_" << join(result_shape, "_") << "_axis_" << join(reduce_axis, "_");
+    auto hash = ss.str();
+    NGRAPH_INFO << hash;
+    // check if the requested kernel is already an inserted primitive
+    size_t primitive_index = m_primitive_emitter->lookup(hash);
+    if (primitive_index != std::numeric_limits<size_t>::max())
+    {
+        return primitive_index;
+    }
+
+    NVShape non_reduce_shape = result_shape;
+    for (auto a : reduce_axis)
+    {
+        non_reduce_shape[a] = 1;
+    }
+    NVShape non_reduce_strides = row_major_strides(non_reduce_shape);
+    for (auto a : reduce_axis)
+    {
+        non_reduce_strides[a] = 0;
+    }
+
+    NVShape input_strides = row_major_strides(result_shape);
+    uint32_t nthreads = static_cast<uint32_t>(shape_size(result_shape));
+
+    // TODO: currently we set it to 64, will add tuning method later
+    uint32_t block_size_x = 64;
+    uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
+    auto args = m_primitive_emitter->add_kernel_args();
+    args.add_placeholder(dtype.c_type_string(), "in0")
+        .add_placeholder(dtype.c_type_string(), "in1")
+        .add_placeholder(dtype.c_type_string(), "in2")
+        .add_placeholder(dtype.c_type_string(), "in3")
+        .add_placeholder(dtype.c_type_string(), "in4")
+        .add_placeholder(dtype.c_type_string(), "out0")
+        .add("input_strides", input_strides)
+        .add("non_reduce_strides", non_reduce_strides)
+        .add("eps", eps)
+        .add("nthreads", nthreads);
+
+    // if the kernel has not been compiled, build it
+    auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
+    if (compiled_kernel == nullptr)
+    {
+        codegen::CodeWriter writer;
+        CudaKernelBuilder::add_pod_typedefs(writer);
+        runtime::gpu::CudaKernelBuilder::get_batchnorm_op(
+            writer, kernel_name, args, dtype.c_type_string(), out_rank);
+        compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
+    }
+
+    std::unique_ptr<gpu::primitive> softmax(
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void* param_out3 = runtime::gpu::invoke_memory_primitive(m_ctx, idx_out3);
+            void* param_out4 = runtime::gpu::invoke_memory_primitive(m_ctx, idx_out4);
+            void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                   .resolve_placeholder(1, &inputs[1])
+                                   .resolve_placeholder(2, &inputs[2])
+                                   .resolve_placeholder(3, &inputs[3])
+                                   .resolve_placeholder(4, &inputs[4])
+                                   .resolve_placeholder(5, &outputs[0])
+                                   .get_argument_list();
+
+            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                          aligned_grid_size_x,
+                                          1,
+                                          1,
+                                          block_size_x,
+                                          1,
+                                          1,
+                                          0,
+                                          nullptr,
+                                          args_list,
+                                          nullptr));
+            debug_sync();
+        }});
+
+    return this->m_primitive_emitter->register_primitive(softmax, hash);
+}
+
 size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 2>& dtypes,
                                                   NVShape result_shape,
                                                   const std::set<size_t>& reduce_axes)
