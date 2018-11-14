@@ -16,30 +16,24 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
-
-#include "ngraph/op/util/op_annotations.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace op
     {
-        namespace cpu
+        /// \brief Operation that returns the shape of its input argument as a tensor.
+        class ShapeOf : public Op
         {
-            /// \brief Annotations added to graph ops by CPU backend passes
-            class CPUOpAnnotations : public ngraph::op::util::OpAnnotations
-            {
-            public:
-                CPUOpAnnotations() {}
-                bool is_mkldnn_op() { return m_mkldnn_op; }
-                void set_mkldnn_op(bool val) { m_mkldnn_op = val; }
-            private:
-                bool m_mkldnn_op = false;
-            };
+        public:
+            /// \brief Constructs a shape-of operation.
+            ShapeOf(const std::shared_ptr<Node>& arg);
 
-            std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)>
-                get_annotations_factory();
-        }
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+        protected:
+            void validate_and_infer_types() override;
+        };
     }
 }

@@ -14,32 +14,24 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/op/experimental/shape_of.hpp"
 
-#include <functional>
-#include <memory>
+using namespace std;
+using namespace ngraph;
 
-#include "ngraph/op/util/op_annotations.hpp"
-
-namespace ngraph
+op::ShapeOf::ShapeOf(const shared_ptr<Node>& arg)
+    : Op("ShapeOf", check_single_output_args({arg}))
 {
-    namespace runtime
-    {
-        namespace cpu
-        {
-            /// \brief Annotations added to graph ops by CPU backend passes
-            class CPUOpAnnotations : public ngraph::op::util::OpAnnotations
-            {
-            public:
-                CPUOpAnnotations() {}
-                bool is_mkldnn_op() { return m_mkldnn_op; }
-                void set_mkldnn_op(bool val) { m_mkldnn_op = val; }
-            private:
-                bool m_mkldnn_op = false;
-            };
+    constructor_validate_and_infer_types();
+}
 
-            std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)>
-                get_annotations_factory();
-        }
-    }
+void op::ShapeOf::validate_and_infer_types()
+{
+    set_output_type(0, element::u64, PartialShape{get_input_partial_shape(0).rank()});
+}
+
+shared_ptr<Node> op::ShapeOf::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<ShapeOf>(new_args.at(0));
 }

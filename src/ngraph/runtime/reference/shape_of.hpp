@@ -16,30 +16,21 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
-
-#include "ngraph/op/util/op_annotations.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace cpu
+        namespace reference
         {
-            /// \brief Annotations added to graph ops by CPU backend passes
-            class CPUOpAnnotations : public ngraph::op::util::OpAnnotations
+            inline void shape_of(const Shape& arg_shape, uint64_t* out)
             {
-            public:
-                CPUOpAnnotations() {}
-                bool is_mkldnn_op() { return m_mkldnn_op; }
-                void set_mkldnn_op(bool val) { m_mkldnn_op = val; }
-            private:
-                bool m_mkldnn_op = false;
-            };
-
-            std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)>
-                get_annotations_factory();
+                for (size_t i = 0; i < arg_shape.size(); i++)
+                {
+                    out[i] = static_cast<uint64_t>(arg_shape[i]);
+                }
+            }
         }
     }
 }
