@@ -260,7 +260,7 @@ namespace ngraph
                         //
                         // Xt_W    - Input sequence multiplied by weights tensor at current time
                         //           step.
-                        // Ht_W    - Hidden state multiplied by weights tensor at current time step.
+                        // Ht_R    - Hidden state multiplied by weights tensor at current time step.
 
                         NodeVector p_iof = reshape::split(m_input_map["P"], 3);
                         NgraphNodePtr p_i = p_iof.at(0);
@@ -271,7 +271,7 @@ namespace ngraph
                         NodeVector h_list;
 
                         NodeVector b_W_R = reshape::split(m_input_map["B"], 2);
-                        NgraphNodePtr bias = add(b_W_R.at(0), b_W_R.at(1));
+                        NgraphNodePtr bias = b_W_R.at(0) + b_W_R.at(1);
                         NodeVector in_seqs =
                             reshape::split(m_input_map["X"], m_input_map["X"]->get_shape().at(0));
                         for (auto& in_x : in_seqs)
@@ -288,11 +288,11 @@ namespace ngraph
                             // Xt*(W^T) -- for [iofc] gates.
                             auto Xt_W = std::make_shared<ngraph::op::Dot>(
                                 in_x, reshape::transpose(m_input_map["W"]));
-                            // Ht-1*(R^T)  -- for [ifc] gates.
-                            auto Ht_W = std::make_shared<ngraph::op::Dot>(
+                            // Ht-1*(R^T)  -- for [iofc] gates.
+                            auto Ht_R = std::make_shared<ngraph::op::Dot>(
                                 H_t, reshape::transpose(m_input_map["R"]));
-                            // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [ifc] gates.
-                            auto gates = add(Xt_W, add(Ht_W, bias));
+                            // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [iofc] gates.
+                            auto gates = add(Xt_W, add(Ht_R, bias));
 
                             NodeVector split_gates = reshape::split(gates, 4, -1);
                             // Xt*(Wi^T) + Ht-1*(Ri^T) + Wbi + Rbi
