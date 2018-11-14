@@ -47,8 +47,7 @@ namespace ngraph
                                   scale[scale_offset_transform.index(scale_offset_coord)];
 
                     // round
-                    if (round_mode == op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY ||
-                        round_mode == op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO)
+                    if (round_mode == op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY)
                     {
                         auto abs_qvalue = std::fabs(qvalue);
                         auto abs_qvalue_toward_inf = std::floor(abs_qvalue + 0.5);
