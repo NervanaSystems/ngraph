@@ -1,43 +1,91 @@
+# nGraph Compiler Stack Beta
+
 [![Build Status][build-status-badge]][build-status] [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph/blob/master/LICENSE)
 
-![nGraph Compiler Stack][ngraph-compiler-stack-readme]
-
-<div align="center">
+<div align="left">
   <h3>
     <a href="https://ngraph.nervanasys.com/docs/latest/project/about.html">
-      Architecture and Features</a><span> | </span>
+      Architecture and features</a> | <a href="#Ecosystem" >nGraph ecosystem</a><span> </span> <span> | </span> 
     <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">
-      Release Notes</a><span> | </span>
+      Beta release notes</a><span> | </span> <br />
     <a href="https://ngraph.nervanasys.com/docs/latest">Documentation</a><span> | </span>
-    <a href="#Ecosystem" >nGraph Ecosystem</a><span> | </span>
-    <a href="#Quick-start" >Quick start</a><span> | </span>
-    <a href="#How-to-contribute" >How to Contribute</a>
+    <a href="#How-to-contribute" >How to contribute</a>
  </h3>
 </div>
-
-# nGraph Compiler Stack Beta (1.0) 
 
 ## Quick start
 
 
+To begin using nGraph with popular frameworks to accelerate deep learning 
+workloads on CPU for inference, please refer to the links below. 
+
 |  Framework / Version       | Installation guide                     | Notes  
 |----------------------------|----------------------------------------|-----------------------------------
 | TensorFlow* 1.12           | [Pip package] or [Build from source]   | 17 [Validated workloads]
-| MXNet* 1.4                 | [Enable the module] or [Source compile]| 17 [Validated workloads] 
-| PaddlePaddle* Fluid        | Coming soon                            | To be determined  
+| MXNet* 1.4                 | [Enable the module] or [Source compile]| 17 [Validated workloads]   
 | ONNX 1.3                   | [Pip package] or [Build from source]   | 13 [Functional] workloads with DenseNet-121, Inception-v1, ResNet-50, Inception-v2, ShuffleNet, SqueezeNet, VGG-19, and 7 more   
 
-Frameworks using nGraph Compiler stack to execute workloads have shown **3X** to 
-**45X** performance boost when compared to native framework implementations. 
-We've also seen performance boosts running workloads that are not included on 
-the list of [Validated workloads], thanks to our powerful subgraph pattern 
-matching and thanks to the collaborative efforts we've put into the DL community, 
-such as with [nGraph-ONNX adaptable] APIs and [nGraph for PyTorch developers].
+Frameworks using nGraph Compiler stack to execute workloads have shown 
+**3X** to **45X** performance boost when compared to native framework 
+implementations. We've also seen performance boosts running workloads that 
+are not included on the list of [Validated workloads], thanks to our 
+powerful subgraph pattern matching and thanks to the collaborative efforts 
+we've put into the DL community, such as with [nGraph-ONNX adaptable] APIs 
+and [nGraph for PyTorch developers].
 
-Additional work is also being done via [PlaidML] which will feature running compute 
-for Deep Learning with GPU accleration and support for MacOS. See our [Architecture and features]
-for what the stack looks like today and watch our [Release Notes] for recent 
-changes.
+Additional work is also being done via [PlaidML] which will feature running 
+compute for Deep Learning with GPU accleration and support for MacOS. See our 
+[Architecture and features] for what the stack looks like today and watch our 
+[Release Notes] for recent changes.
+
+
+## What is nGraph Compiler? 
+
+nGraph Compiler aims to accelerate developing and deploying AI workloads 
+using any deep learning framework with a variety of hardware targets. 
+We strongly believe in providing freedom, performance, and ease-of-use to AI 
+developers. 
+
+The diagram below shows what deep learning frameworks and hardware targets
+we support. More details on these current and future plans are in the ecosystem
+section. 
+
+
+![nGraph ecosystem][ngraph-ecosystem]
+
+
+While the ecosystem shown above is all functioning, we have validated 
+performance for deep learning inference on CPU processors such as Intel® Xeon®. 
+Please refer to the [Beta release notes] to learn more. The Gold release 
+is targeted for April 2019; it will feature broader workload coverage, 
+including quantized graphs, and more detail on our advanced support for 
+``int8``. 
+
+Our documentation has extensive information about how to use nGraph Compiler 
+stack to create an nGraph computational graph, integrate custom frameworks, 
+and to interact with supported backends. If you wish to contribute to the 
+project, please don't hesitate to ask questions in [GitHub issues] after 
+reviewing our contribution guide below. 
+
+
+## How to contribute
+
+We welcome community contributions to nGraph. If you have an idea how
+to improve it:
+
+* See the [contrib guide] for code formatting and style guidelines.
+* Share your proposal via [GitHub issues].
+* Ensure you can build the product and run all the examples with your patch.
+* In the case of a larger feature, create a test.
+* Submit a [pull request].
+* Make sure your PR passes all CI tests. Note: our [Travis-CI][build-status] service
+  runs only on a CPU backend on Linux. We will run additional tests
+  in other environments.
+* We will review your contribution and, if any additional fixes or
+  modifications are necessary, may provide feedback to guide you. When
+  accepted, your pull request will be merged to the repository.
+
+![nGraph Compiler Stack][ngraph-compiler-stack-readme]
 
 | Backend                                       | current support   | future support |
 |-----------------------------------------------|-------------------|----------------|
@@ -50,54 +98,6 @@ changes.
 | Field Programmable Gate Arrays (FPGA)         | no                | yes            |
 
 
-## Ecosystem
-
-![nGraph ecosystem][ngraph-ecosystem]
-
-The **nGraph Compiler** is Intel's graph compiler for Artificial Neural Networks. 
-Documentation in this repo describes how you can program any framework 
-to run training and inference computations on a variety of Backends including 
-Intel® Architecture Processors (CPUs), Intel® Nervana™ Neural Network Processors 
-(NNPs), cuDNN-compatible graphics cards (GPUs), custom VPUs like Movidius, and
-many others. The default CPU Backend also provides an interactive *Interpreter* 
-mode that can be used to zero in on a DL model and create custom nGraph 
-optimizations that can be used to further accelerate training or inference, in 
-whatever scenario you need. nGraph provides both a C++ API for framework 
-developers and a Python API which can run inference on models imported from 
-ONNX. 
-
-
-## Documentation
-
-See our [build the Library] docs for how to get started.
-
-For this early release, we provide [framework integration guides] to
-compile MXNet and TensorFlow-based projects. If you already have a
-trained model, we've put together a getting started guide for
-[how to import] a deep learning model and start working with the nGraph
-APIs.
-
-## Support
-
-Please submit your questions, feature requests and bug reports via
-[GitHub issues].
-
-## How to contribute
-
-We welcome community contributions to nGraph. If you have an idea for improving 
-it:
-
-* See the [contrib guide] for code formatting and style guidelines.
-* Share your proposal via [GitHub issues].
-* Ensure you can build the product and run all the examples with your patch.
-* In the case of a larger feature, create a test.
-* Submit a [pull request].
-* Make sure your PR passes all CI tests. Note: our [Travis-CI][build-status] 
-  service runs only on a CPU backend on Linux. We will run additional tests
-  in other environments.
-* We will review your contribution and, if any additional fixes or
-  modifications are necessary, may provide feedback to guide you. When
-  accepted, your pull request will be merged to the repository.
 
 [Architecture and features]:https://ngraph.nervanasys.com/docs/latest/project/about.html
 [Documentation]: https://ngraph.nervanasys.com/docs/latest
