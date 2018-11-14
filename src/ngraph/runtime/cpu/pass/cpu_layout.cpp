@@ -33,6 +33,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
+#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
@@ -1791,44 +1792,65 @@ namespace ngraph
                     }
                 }
 
+                template <typename T>
+                void ConcatLayout(std::shared_ptr<ngraph::Node> node,
+                                  vector<memory::desc>& i_mds,
+                                  vector<memory::desc>& o_mds)
+                {
+                    auto concat = static_cast<const T*>(node.get());
+                    size_t concat_dim = concat->get_concatenation_axis();
+                    auto result_desc = mkldnn_utils::create_default_mkldnn_md(
+                        node.get(), 0, true, memory::format::any);
+                    std::vector<mkldnn::memory::primitive_desc> inputs_pd;
+                    for (size_t i = 0; i < node->get_input_size(); i++)
+                    {
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), i);
+                        inputs_pd.push_back(
+                            mkldnn::memory::primitive_desc(input_md, executor::global_cpu_engine));
+                    }
+                    try
+                    {
+                        auto prim_desc = concat::primitive_desc(
+                            result_desc, static_cast<int>(concat_dim), inputs_pd);
+                        for (size_t i = 0; i < node->get_input_size(); i++)
+                        {
+                            i_mds.push_back(inputs_pd[i].desc());
+                        }
+                        o_mds.push_back(prim_desc.dst_primitive_desc().desc());
+                    }
+                    catch (const mkldnn::error& e)
+                    {
+                        throw ngraph_error(e.message);
+                    }
+                }
+
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Concat)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        auto concat = static_cast<const ngraph::op::Concat*>(node.get());
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        ConcatLayout<ngraph::op::Concat>(node, i_mds, o_mds);
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
 
-                        size_t concat_dim = concat->get_concatenation_axis();
-                        auto result_desc = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 0, true, memory::format::any);
-
-                        std::vector<mkldnn::memory::primitive_desc> inputs_pd;
-
-                        for (size_t i = 0; i < node->get_input_size(); i++)
-                        {
-                            auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), i);
-                            inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                                input_md, executor::global_cpu_engine));
-                        }
-                        try
-                        {
-                            auto prim_desc = concat::primitive_desc(
-                                result_desc, static_cast<int>(concat_dim), inputs_pd);
-
-                            vector<memory::desc> i_mds;
-                            vector<memory::desc> o_mds;
-                            for (size_t i = 0; i < node->get_input_size(); i++)
-                            {
-                                i_mds.push_back(inputs_pd[i].desc());
-                            }
-                            o_mds.push_back(prim_desc.dst_primitive_desc().desc());
-                            node = insert_input_conversions(external_function, node, i_mds);
-                            set_output_layouts(node, o_mds);
-                        }
-                        catch (const mkldnn::error& e)
-                        {
-                            throw ngraph_error(e.message);
-                        }
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConcat)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        ConcatLayout<ngraph::op::QuantizedConcat>(node, i_mds, o_mds);
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
                     }
                     else
                     {
@@ -1974,6 +1996,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBias>},
     {TI(ngraph::op::GroupConvolutionBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolutionBias>},
+    {TI(ngraph::op::QuantizedConcat),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConcat>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
