@@ -41,17 +41,24 @@ namespace ngraph
                                              const std::string& data_type,
                                              size_t out_rank,
                                              size_t reduce_rank);
-                static void get_batchnorm_with_stats_op(codegen::CodeWriter& writer,
-                                                        const std::string& name,
-                                                        runtime::gpu::GPUKernelArgs& args,
-                                                        const std::string& data_type,
-                                                        size_t out_rank,
-                                                        size_t reduce_rank);
+                // static void get_batchnorm_with_stats_op(codegen::CodeWriter& writer,
+                //                                         const std::string& name,
+                //                                         runtime::gpu::GPUKernelArgs& args,
+                //                                         const std::string& data_type,
+                //                                         size_t out_rank,
+                //                                         size_t reduce_rank);
                 static void get_batchnorm_one_output_op(codegen::CodeWriter& writer,
                                                         const std::string& name,
                                                         runtime::gpu::GPUKernelArgs& args,
                                                         const std::string& data_type,
                                                         size_t out_rank);
+                static void get_batchnorm_with_stats_op(codegen::CodeWriter& writer,
+                            const std::string& name,
+                            runtime::gpu::GPUKernelArgs& args,
+                            const std::string& data_type,
+                            size_t non_reduce_rank,
+                            size_t reduce_rank,
+                            size_t block_size_x);
 
                 static void get_elementwise_op(codegen::CodeWriter& writer,
                                                const std::string& name,

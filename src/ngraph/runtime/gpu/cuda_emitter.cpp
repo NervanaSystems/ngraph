@@ -2368,6 +2368,137 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm(const element::Type dtype,
     return this->m_primitive_emitter->register_primitive(softmax, hash);
 }
 
+// size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type dtype,
+//                                                              NVShape result_shape,
+//                                                              const double eps)
+// {
+//     NVShape reduce_axis{0, 2, 3};
+//     NVShape simplified_reduce_axis;
+//     NVShape simplified_result_shape;
+//     simplify_reduce(result_shape, reduce_axis, simplified_result_shape, simplified_reduce_axis);
+
+//     //test, switch
+// //    uint32_t tmp = simplified_result_shape.back();
+//  //   simplified_result_shape.back() = simplified_result_shape[1];
+//   //  simplified_result_shape[1] = tmp;
+//    // simplified_reduce_axis.back() = 1;
+
+//     size_t rank = simplified_result_shape.size();
+//     size_t reduce_rank = simplified_reduce_axis.size();
+//     size_t out_rank = rank - reduce_rank;
+//     // assumes NC{d1,...,dn} format
+//     std::string kernel_name = "batchnorm_with_stats_" + dtype.c_type_string();
+//     kernel_name += "_ri_" + std::to_string(rank) + "_rr_" + std::to_string(reduce_rank) + "_eps_" +
+//                    std::to_string(eps);
+//     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
+//     std::replace(kernel_name.begin(), kernel_name.end(), '.', '_');
+
+//     std::stringstream ss;
+//     ss << kernel_name << "_s_" << join(simplified_result_shape, "_") << "_axis_"
+//        << join(simplified_reduce_axis, "_");
+//     auto hash = ss.str();
+//     NGRAPH_INFO << hash;
+//     // check if the requested kernel is already an inserted primitive
+//     size_t primitive_index = m_primitive_emitter->lookup(hash);
+//     if (primitive_index != std::numeric_limits<size_t>::max())
+//     {
+//         return primitive_index;
+//     }
+
+//     NVShape reduce_flag(rank, 0);
+//     for (auto a : simplified_reduce_axis)
+//     {
+//         reduce_flag[a] = 1;
+//     }
+//     NVShape output_shape;
+//     NVShape non_reduce_strides;
+//     NVShape reduce_shape;
+//     NVShape reduce_strides;
+//     NVShape input_strides = row_major_strides(simplified_result_shape);
+//     for (int i = 0; i < rank; i++)
+//     {
+//         if (reduce_flag[i] != 0)
+//         {
+//             reduce_shape.push_back(simplified_result_shape[i]);
+//             reduce_strides.push_back(input_strides[i]);
+//         }
+//         else
+//         {
+//             non_reduce_strides.push_back(input_strides[i]);
+//             output_shape.push_back(simplified_result_shape[i]);
+//         }
+//     }
+//     NVShape output_strides = row_major_strides(output_shape);
+//     uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
+//     uint32_t reduce_count = static_cast<uint32_t>(shape_size(reduce_shape));
+
+//     // TODO: currently we set it to 64, will add tuning method later
+//     uint32_t block_size_x = 64;
+//     if (reduce_flag.back() == 1)
+//     {
+//         block_size_x = 4;
+//     }
+//     // running factor
+//     float factor = 1.0;
+//     uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
+//     auto args = m_primitive_emitter->add_kernel_args();
+//     args.add_placeholder(dtype.c_type_string(), "in0")
+//         .add_placeholder(dtype.c_type_string(), "in1")
+//         .add_placeholder(dtype.c_type_string(), "in2")
+//         .add_placeholder(dtype.c_type_string(), "out0")
+//         .add_placeholder(dtype.c_type_string(), "out1")
+//         .add_placeholder(dtype.c_type_string(), "out2")
+//         .add_placeholder(dtype.c_type_string(), "out3")
+//         .add_placeholder(dtype.c_type_string(), "out4")
+//         .add("out_strides", output_strides)
+//         .add("non_reduce_strides", non_reduce_strides)
+//         .add("reduce_shape", reduce_shape)
+//         .add("reduce_strides", reduce_strides)
+//         .add("eps", eps)
+//         .add("factor", factor)
+//         .add("reduce_count", reduce_count)
+//         .add("nthreads", nthreads);
+
+//     // if the kernel has not been compiled, build it
+//     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
+//     if (compiled_kernel == nullptr)
+//     {
+//         codegen::CodeWriter writer;
+//         CudaKernelBuilder::add_pod_typedefs(writer);
+//         runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(
+//             writer, kernel_name, args, dtype.c_type_string(), out_rank, reduce_rank);
+//         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
+//     }
+
+//     std::unique_ptr<gpu::primitive> softmax(
+//         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+//             void** args_list = args.resolve_placeholder(0, &inputs[0])
+//                                    .resolve_placeholder(1, &inputs[1])
+//                                    .resolve_placeholder(2, &inputs[2])
+//                                    .resolve_placeholder(3, &outputs[0])
+//                                    .resolve_placeholder(4, &outputs[1])
+//                                    .resolve_placeholder(5, &outputs[2])
+//                                    .resolve_placeholder(6, &outputs[3])
+//                                    .resolve_placeholder(7, &outputs[4])
+//                                    .get_argument_list();
+
+//             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+//                                           aligned_grid_size_x,
+//                                           1,
+//                                           1,
+//                                           block_size_x,
+//                                           1,
+//                                           1,
+//                                           0,
+//                                           nullptr,
+//                                           args_list,
+//                                           nullptr));
+//             debug_sync();
+//         }});
+
+//     return this->m_primitive_emitter->register_primitive(softmax, hash);
+// }
+
 size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type dtype,
                                                              NVShape result_shape,
                                                              const double eps)
@@ -2383,13 +2514,15 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type
   //  simplified_result_shape[1] = tmp;
    // simplified_reduce_axis.back() = 1;
 
+    // TODO: currently we set it to 64, will add tuning method later
+    uint32_t block_size_x = 64;
     size_t rank = simplified_result_shape.size();
     size_t reduce_rank = simplified_reduce_axis.size();
     size_t out_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
     std::string kernel_name = "batchnorm_with_stats_" + dtype.c_type_string();
     kernel_name += "_ri_" + std::to_string(rank) + "_rr_" + std::to_string(reduce_rank) + "_eps_" +
-                   std::to_string(eps);
+                   std::to_string(eps) + "_bs_" + std::to_string(block_size_x);
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
     std::replace(kernel_name.begin(), kernel_name.end(), '.', '_');
 
@@ -2405,42 +2538,19 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type
         return primitive_index;
     }
 
-    NVShape reduce_flag(rank, 0);
-    for (auto a : simplified_reduce_axis)
-    {
-        reduce_flag[a] = 1;
-    }
-    NVShape output_shape;
+    NVShape non_reduce_shape;
     NVShape non_reduce_strides;
+    NVsahpe non_reduce_strides_in_input;
     NVShape reduce_shape;
     NVShape reduce_strides;
-    NVShape input_strides = row_major_strides(simplified_result_shape);
-    for (int i = 0; i < rank; i++)
-    {
-        if (reduce_flag[i] != 0)
-        {
-            reduce_shape.push_back(simplified_result_shape[i]);
-            reduce_strides.push_back(input_strides[i]);
-        }
-        else
-        {
-            non_reduce_strides.push_back(input_strides[i]);
-            output_shape.push_back(simplified_result_shape[i]);
-        }
-    }
-    NVShape output_strides = row_major_strides(output_shape);
-    uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
+    NVShape reduce_strides_in_input;
+    get_reduce_strides(simplified_result_shape, simplified_reduce_axis, non_reduce_shape, non_reduce_strides, non_reduce_strides_in_input, reduce_shape, reduce_strides, reduce_strides_in_input);
+
+    uint32_t aligned_grid_size_x = static_cast<uint32_t>(shape_size(non_reduce_shape));
     uint32_t reduce_count = static_cast<uint32_t>(shape_size(reduce_shape));
 
-    // TODO: currently we set it to 64, will add tuning method later
-    uint32_t block_size_x = 64;
-    if (reduce_flag.back() == 1)
-    {
-        block_size_x = 4;
-    }
     // running factor
     float factor = 1.0;
-    uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
     auto args = m_primitive_emitter->add_kernel_args();
     args.add_placeholder(dtype.c_type_string(), "in0")
         .add_placeholder(dtype.c_type_string(), "in1")
@@ -2450,14 +2560,13 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type
         .add_placeholder(dtype.c_type_string(), "out2")
         .add_placeholder(dtype.c_type_string(), "out3")
         .add_placeholder(dtype.c_type_string(), "out4")
-        .add("out_strides", output_strides)
         .add("non_reduce_strides", non_reduce_strides)
-        .add("reduce_shape", reduce_shape)
+        .add("non_reduce_strides_in_input", non_reduce_strides_in_input)
         .add("reduce_strides", reduce_strides)
+        .add("reduce_strides_in_input", reduce_strides_in_input)
         .add("eps", eps)
         .add("factor", factor)
-        .add("reduce_count", reduce_count)
-        .add("nthreads", nthreads);
+        .add("reduce_count", reduce_count);
 
     // if the kernel has not been compiled, build it
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
@@ -2498,6 +2607,7 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type
 
     return this->m_primitive_emitter->register_primitive(softmax, hash);
 }
+
 size_t runtime::gpu::CUDAEmitter::build_batchnorm_one_output(const element::Type dtype,
                                                              NVShape result_shape,
                                                              const double eps)
@@ -3219,6 +3329,32 @@ void runtime::gpu::CUDAEmitter::simplify_reduce(NVShape in,
     }
     NGRAPH_INFO << "simplified shape" << join(simplified_shape);
     NGRAPH_INFO << "simplified reduce_axis" << join(simplified_reduce_axis);
+}
+
+void runtime::gpu::CUDAEmitter::get_reduce_strides(NVShape input_shape, NVShape reduce_axis,  NVShape& reduce_shape, NVShape& non_reduce_strides, NVShape& non_reduce_strides_in_input, NVShape& reduce_shape, NVShape& reduce_strides, NVShape& reduce_strides_in_input)
+{
+    size_t rank = input_shape.size();
+    NVShape reduce_flag(rank, 0);
+    for (auto a : reduce_axis)
+    {
+        reduce_flag[a] = 1;
+    }
+    NVShape input_strides = row_major_strides(input_shape);
+    for (int i = 0; i < rank; i++)
+    {
+        if (reduce_flag[i] != 0)
+        {
+            reduce_shape.push_back(input_shape[i]);
+            reduce_strides_in_input.push_back(input_strides[i]);
+        }
+        else
+        {
+            non_reduce_shape.push_back(input_shape[i]);
+            non_reduce_strides_in_input.push_back(input_strides[i]);
+        }
+    }
+    reduce_strides = row_major_strides(reduce_shape);
+    non_reduce_strides = row_major_strides(non_reduce_shape);
 }
 
 uint32_t runtime::gpu::CUDAEmitter::align_to_block_size(uint32_t threads, uint32_t block_size)
