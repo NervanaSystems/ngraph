@@ -47,6 +47,11 @@ namespace ngraph
                                              const std::string& data_type,
                                              size_t out_rank,
                                              size_t reduce_rank);
+                static void get_batchnorm_one_output_op(codegen::CodeWriter& writer,
+                                             const std::string& name,
+                                             runtime::gpu::GPUKernelArgs& args,
+                                             const std::string& data_type,
+                                             size_t out_rank);
                                                 
 
                 static void get_elementwise_op(codegen::CodeWriter& writer,

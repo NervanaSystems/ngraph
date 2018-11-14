@@ -413,6 +413,7 @@ void runtime::gpu::GPU_Emitter::emit_BatchNormTrainingWithStats(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_BatchNormTrainingBackprop(EMIT_ARGS)
 {
+    NGRAPH_INFO << "emit_BatchNormTrainingBackprop";
     const ngraph::op::BatchNormTrainingBackprop* batchnorm =
         static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
 

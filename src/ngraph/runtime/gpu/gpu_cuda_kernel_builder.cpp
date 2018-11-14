@@ -705,6 +705,217 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
         writer << "if (tid < nthreads)\n";
         writer.block_begin();
         {
+            writer << data_type << " gamma = in0[tid];\n";
+            writer << data_type << " beta = in1[tid];\n";
+            if (out_rank > 0)
+            {
+                writer << "uint32_t dim_idx_generator = tid;\n";
+            }
+            writer << "uint32_t in_idx = 0;\n";
+
+            // loop through all reduction axis
+            for (int64_t i = 0; i < static_cast<int64_t>(out_rank); i++)
+            {
+                writer << "in_idx += (dim_idx_generator / out_strides" << i
+                       << ") * non_reduce_strides" << i << ";\n";
+                writer << "dim_idx_generator %= out_strides" << i << ";\n";
+            }
+            int64_t last_r_idx = static_cast<int64_t>(reduce_rank) - 1;
+
+            //find mean
+            //exp and sum , https://en.wikipedia.org/wiki/Kahan_summation_algorithm
+            writer << data_type << " input_i;\n";
+            writer << data_type << " r_sum = 0;\n";
+            writer << data_type << " r_mean = 0;\n";
+            writer << data_type << " c = 0;\n";
+            writer << data_type << " y;\n";
+            writer << data_type << " t;\n";
+            writer.block_begin();
+            for (int64_t j = 0; j < last_r_idx; j++)
+            {
+                writer << "for(int idx" << j << " = 0; idx" << j << "< reduce_shape" << j << "; idx"
+                       << j << "++)\n";
+                writer.block_begin();
+            }
+            {
+                writer << "uint32_t reduce_idx = in_idx;\n";
+                for (int64_t j = 0; j < last_r_idx; j++)
+                {
+                    writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
+                }
+                writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
+                writer << "int idx" << last_r_idx << " = 0;\n";
+                // unroll last reduction axis
+                uint32_t unroll_num = 8;
+                writer << "for(; idx" << last_r_idx << " + " << unroll_num << " - 1 < reduce_shape"
+                       << last_r_idx << "; idx" << last_r_idx << " += " << unroll_num << ")\n";
+                writer.block_begin();
+                {
+                    for (int k = 0; k < unroll_num; k++)
+                    {
+                        writer << "input_i = in2[reduce_idx];\n";
+                        writer << "y = input_i - c;\n";
+                        writer << "t = r_sum + y;\n";
+                        writer << "c = (t - r_sum) - y;\n";
+                        writer << "r_sum = t;\n";
+                        writer << "reduce_idx += step;\n";
+                    }
+                }
+                writer.block_end();
+                writer << "for(; idx" << last_r_idx << " < reduce_shape" << last_r_idx << "; idx"
+                       << last_r_idx << "++)\n";
+                writer.block_begin();
+                {
+                    writer << "input_i = in2[reduce_idx];\n";
+                    writer << "y = input_i - c;\n";
+                    writer << "t = r_sum + y;\n";
+                    writer << "c = (t - r_sum) - y;\n";
+                    writer << "r_sum = t;\n";
+                    writer << "reduce_idx += step;\n";
+                }
+                writer.block_end();
+            }
+            for (int64_t j = 0; j < last_r_idx; j++)
+            {
+                writer.block_end();
+            }
+            writer << " r_mean = r_sum / static_cast<float>(reduce_count);\n";
+            writer << " out3[tid] = r_mean;\n";
+            writer << " out1[tid] = r_mean * factor + out1[tid] * (1.0 - factor);\n";
+            writer.block_end();
+
+            //variance
+            writer << "r_sum = 0;\n";
+            writer << data_type << " r_var = 0;\n";
+            writer << data_type << " inv_sqrt_var = 0;\n";
+            writer << "c = 0;\n";
+            writer.block_begin();
+            for (int64_t j = 0; j < last_r_idx; j++)
+            {
+                writer << "for(int idx" << j << " = 0; idx" << j << "< reduce_shape" << j << "; idx"
+                       << j << "++)\n";
+                writer.block_begin();
+            }
+            {
+                writer << "uint32_t reduce_idx = in_idx;\n";
+                for (int64_t j = 0; j < last_r_idx; j++)
+                {
+                    writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
+                }
+                writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
+                writer << "int idx" << last_r_idx << " = 0;\n";
+                // unroll last reduction axis
+                uint32_t unroll_num = 8;
+                writer << "for(; idx" << last_r_idx << " + " << unroll_num << " - 1 < reduce_shape"
+                       << last_r_idx << "; idx" << last_r_idx << " += " << unroll_num << ")\n";
+                writer.block_begin();
+                {
+                    for (int k = 0; k < unroll_num; k++)
+                    {
+                        writer << "input_i = in2[reduce_idx] - r_mean;\n";
+                        //writer << "out3[reduce_idx] = input_i;\n";
+                        writer << "input_i = input_i * input_i;\n";
+                        writer << "y = input_i - c;\n";
+                        writer << "t = r_sum + y;\n";
+                        writer << "c = (t - r_sum) - y;\n";
+                        writer << "r_sum = t;\n";
+                        writer << "reduce_idx += step;\n";
+                    }
+                }
+                writer.block_end();
+                writer << "for(; idx" << last_r_idx << " < reduce_shape" << last_r_idx << "; idx"
+                       << last_r_idx << "++)\n";
+                writer.block_begin();
+                {
+                    writer << "input_i = in2[reduce_idx] - r_mean;\n";
+                    //writer << "out3[reduce_idx] = input_i;\n";
+                    writer << "input_i = input_i * input_i;\n";
+                    writer << "y = input_i - c;\n";
+                    writer << "t = r_sum + y;\n";
+                    writer << "c = (t - r_sum) - y;\n";
+                    writer << "r_sum = t;\n";
+                    writer << "reduce_idx += step;\n";
+                }
+                writer.block_end();
+            }
+            for (int64_t j = 0; j < last_r_idx; j++)
+            {
+                writer.block_end();
+            }
+            writer << "r_var = r_sum / static_cast<float>(reduce_count);\n";
+            writer << "inv_sqrt_var = 1.0 / sqrtf(r_var + eps);\n";
+            writer << "out4[tid] = r_var;\n";
+            writer << "out2[tid] = r_var * factor + out2[tid] * (1.0 - factor);\n";
+            writer.block_end();
+
+            //normalize
+            writer.block_begin();
+            for (int64_t j = 0; j < last_r_idx; j++)
+            {
+                writer << "for(int idx" << j << " = 0; idx" << j << "< reduce_shape" << j << "; idx"
+                       << j << "++)\n";
+                writer.block_begin();
+            }
+            {
+                writer << "uint32_t reduce_idx = in_idx;\n";
+                for (int64_t j = 0; j < last_r_idx; j++)
+                {
+                    writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
+                }
+                writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
+                writer << "int idx" << last_r_idx << " = 0;\n";
+                // unroll last reduction axis
+                uint32_t unroll_num = 8;
+                writer << "for(; idx" << last_r_idx << " + " << unroll_num << " - 1 < reduce_shape"
+                       << last_r_idx << "; idx" << last_r_idx << " += " << unroll_num << ")\n";
+                writer.block_begin();
+                {
+                    for (int k = 0; k < unroll_num; k++)
+                    {
+                        writer << "input_i = in2[reduce_idx] - r_mean;\n";
+                        writer << "input_i = input_i * inv_sqrt_var;\n";
+                        writer << "out0[reduce_idx] = input_i * gamma + beta;\n";
+                        writer << "reduce_idx += step;\n";
+                    }
+                }
+                writer.block_end();
+                writer << "for(; idx" << last_r_idx << " < reduce_shape" << last_r_idx << "; idx"
+                       << last_r_idx << "++)\n";
+                writer.block_begin();
+                {
+                    writer << "input_i = in2[reduce_idx] - r_mean;\n";
+                    writer << "input_i = input_i * inv_sqrt_var;\n";
+                    writer << "out0[reduce_idx] = input_i * gamma + beta;\n";
+                    writer << "reduce_idx += step;\n";
+                }
+                writer.block_end();
+            }
+            for (int64_t j = 0; j < last_r_idx; j++)
+            {
+                writer.block_end();
+            }
+            writer.block_end();
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+    return;
+}
+
+void runtime::gpu::CudaKernelBuilder::get_batchnorm_one_output_op(codegen::CodeWriter& writer,
+                                                       const std::string& name,
+                                                       runtime::gpu::GPUKernelArgs& args,
+                                                       const std::string& data_type,
+                                                       size_t out_rank)
+{
+    writer << runtime::gpu::nvrtc::helpers();
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
+    writer.block_begin();
+    {
+        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
+        writer << "if (tid < nthreads)\n";
+        writer.block_begin();
+        {
             collective_coordinate_transform_helper(writer, "tid", "input_strides", "non_reduce_strides", "out_index", out_rank);
             writer << data_type << " gamma = in0[out_index];\n";
             writer << data_type << " beta = in1[out_index];\n";
@@ -712,6 +923,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
             writer << data_type << " mean = in3[out_index];\n";
             writer << data_type << " var = in4[out_index];\n";
             writer << data_type << " normalized = (input - mean) / sqrtf(var + eps) * gamma + beta;\n";
+            writer << "out0[tid] = normalized;\n";
         }
         writer.block_end();
     }
@@ -2122,7 +2334,7 @@ std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_hel
     writer << "int " << out_index << " = 0;\n";
     for (size_t i = 0; i < rank; i++)
     {
-        writer << "out_idx += " << out_coordinates << i << " * " << out_strides << i << ";\n";
+        writer << out_index <<" += " << out_coordinates << i << " * " << out_strides << i << ";\n";
     }
 
     return out_index;
