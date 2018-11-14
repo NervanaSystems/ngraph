@@ -32,7 +32,7 @@ void regclass_pyngraph_op_BatchNormTraining(py::module m)
         "ngraph.impl.op.BatchNormTraining wraps ngraph::op::BatchNormTraining";
     batch_norm_training.def(py::init<const std::shared_ptr<ngraph::Node>&,
                                      const std::shared_ptr<ngraph::Node>&,
-                                     const std::shared_ptr<ngraph::Node>&, 
+                                     const std::shared_ptr<ngraph::Node>&,
                                      double>());
 }
 
