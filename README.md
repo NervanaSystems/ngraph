@@ -2,40 +2,41 @@
 
 [![Build Status][build-status-badge]][build-status] [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph/blob/master/LICENSE)
 
-<div align="center">
+<div align="left">
   <h3>
     <a href="https://ngraph.nervanasys.com/docs/latest/project/about.html">
-      Architecture and Features</a><span> | </span>
+      Architecture and features</a> | <a href="#Ecosystem" >nGraph ecosystem</a><span> </span> <span> | </span> 
     <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">
-      Release Notes</a><span> | </span>
+      Beta release notes</a><span> | </span>
     <a href="https://ngraph.nervanasys.com/docs/latest">Documentation</a><span> | </span>
-    <a href="#Ecosystem" >nGraph Ecosystem</a><span> | </span>
-    <a href="#Quick-start" >Quick start</a><span> | </span>
-    <a href="#How-to-contribute" >How to Contribute</a>
+    <a href="#How-to-contribute" >How to contribute</a>
  </h3>
 </div>
 
 ## Quick start
 
 
+To begin using nGraph with popular frameworks to accelerate deep learning 
+workloads on CPU for inference, please refer to the links below. 
+
 |  Framework / Version       | Installation guide                     | Notes  
 |----------------------------|----------------------------------------|-----------------------------------
 | TensorFlow* 1.12           | [Pip package] or [Build from source]   | 17 [Validated workloads]
-| MXNet* 1.4                 | [Enable the module] or [Source compile]| 17 [Validated workloads] 
-| PaddlePaddle* Fluid        | Coming soon                            | To be determined  
+| MXNet* 1.4                 | [Enable the module] or [Source compile]| 17 [Validated workloads]   
 | ONNX 1.3                   | [Pip package] or [Build from source]   | 13 [Functional] workloads with DenseNet-121, Inception-v1, ResNet-50, Inception-v2, ShuffleNet, SqueezeNet, VGG-19, and 7 more   
 
-Frameworks using nGraph Compiler stack to execute workloads have shown **3X** to 
-**45X** performance boost when compared to native framework implementations. 
-We've also seen performance boosts running workloads that are not included on 
-the list of [Validated workloads], thanks to our powerful subgraph pattern 
-matching and thanks to the collaborative efforts we've put into the DL community, 
-such as with [nGraph-ONNX adaptable] APIs and [nGraph for PyTorch developers].
+Frameworks using nGraph Compiler stack to execute workloads have shown 
+**3X** to **45X** performance boost when compared to native framework 
+implementations. We've also seen performance boosts running workloads that 
+are not included on the list of [Validated workloads], thanks to our 
+powerful subgraph pattern matching and thanks to the collaborative efforts 
+we've put into the DL community, such as with [nGraph-ONNX adaptable] APIs 
+and [nGraph for PyTorch developers].
 
-Additional work is also being done via [PlaidML] which will feature running compute 
-for Deep Learning with GPU accleration and support for MacOS. See our [Architecture and features]
-for what the stack looks like today and watch our [Release Notes] for recent 
-changes.
+Additional work is also being done via [PlaidML] which will feature running 
+compute for Deep Learning with GPU accleration and support for MacOS. See our 
+[Architecture and features] for what the stack looks like today and watch our 
+[Release Notes] for recent changes.
 
 | Backend                                       | current support   | future support |
 |-----------------------------------------------|-------------------|----------------|
