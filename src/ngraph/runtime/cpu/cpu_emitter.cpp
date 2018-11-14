@@ -2010,6 +2010,32 @@ namespace ngraph
             {
                 const ngraph::op::Slice* slice = static_cast<const ngraph::op::Slice*>(node);
 
+                if (auto op_annotations = slice->get_op_annotations())
+                {
+                    auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                    if (in_place_oi_pairs.size() > 0)
+                    {
+                        auto arg_shape = args[0].get_shape();
+                        auto lower_bounds = slice->get_lower_bounds();
+                        auto start = 0, accumulated = 1;
+                        for (int i = arg_shape.size() - 1; i >= 0; i--)
+                        {
+                            start += lower_bounds[i] * accumulated;
+                            accumulated *= arg_shape[i];
+                        }
+                        writer << "if (" << out[0].get_name() << " < " << args[0].get_name()
+                               << " || " << out[0].get_name() << " >= " << args[0].get_name()
+                               << " + " << args[0].get_size() * out[0].get_element_type().size()
+                               << ")\n";
+                        writer.block_begin();
+                        writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name()
+                               << " + " << start * out[0].get_element_type().size() << ", "
+                               << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                        writer.block_end();
+                        return;
+                    }
+                }
+
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto out_shape = out[0].get_shape();

@@ -45,6 +45,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
     , m_target_padding_below(target_padding_below)
     , m_target_padding_above(target_padding_above)
     , m_target_dilation_strides(target_dilation_strides)
+    , m_end_iterator(Shape(), true)
 {
     m_n_axes = source_shape.size();
 

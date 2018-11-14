@@ -120,7 +120,7 @@ namespace ngraph
                     ::testing::internal::CodeLocation(__FILE__, __LINE__))                         \
                 ->AddTestPattern(                                                                  \
                     #backend_name "/" #test_case_name,                                             \
-                    ::ngraph::prepend_disabled(#test_case_name, #test_name, s_manifest).c_str(),   \
+                    ::ngraph::prepend_disabled(#backend_name, #test_name, s_manifest).c_str(),     \
                     new ::testing::internal::TestMetaFactory<NGRAPH_GTEST_TEST_CLASS_NAME_(        \
                         backend_name, test_case_name, test_name)>());                              \
             return 0;                                                                              \
