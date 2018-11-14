@@ -77,6 +77,41 @@ namespace ngraph
                 std::map<element::Type, const std::string>& get_mkldnn_data_type_string_map();
                 std::map<mkldnn::memory::format, const std::string>& get_mkldnn_format_string_map();
                 std::set<mkldnn::memory::format>& get_filter_formats();
+
+                template <typename T>
+                bool can_use_mkldnn_conv(ngraph::Node* node)
+                {
+                    auto convolution = static_cast<const T*>(node);
+                    auto arg0_rank = node->get_input_shape(0).size();
+
+                    for (size_t s : convolution->get_data_dilation_strides())
+                    {
+                        if (s != 1)
+                            return false;
+                    }
+                    if (arg0_rank != 4 && arg0_rank != 5)
+                    {
+                        return false;
+                    }
+                    if (node->get_input_element_type(0) != element::f32)
+                    {
+                        return false;
+                    }
+                    // Temporarily disable MKLDNN for large paddings due to
+                    // a bug in v0.16 - MKFDNN-982
+                    for (auto s : convolution->get_padding_below())
+                    {
+                        if (s >= 7)
+                            return false;
+                    }
+                    for (auto s : convolution->get_padding_above())
+                    {
+                        if (s >= 7)
+                            return false;
+                    }
+
+                    return true;
+                }
             }
         }
     }

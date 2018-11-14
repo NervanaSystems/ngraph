@@ -53,6 +53,10 @@ Glossary
       In the context of a function graph, a "parameter" refers to what
       "stands in" for an argument in an ``op`` definition.
 
+   quantization
+
+      Quantization refers to the conversion of numerical data into a lower-precision representation. Quantization is often used in deep learning to reduce the time and energy needed to perform computations by reducing the size of data transfers and the number of steps needed to perform a computation. This improvement in speed and energy usage comes at a cost in terms of numerical accuracy, but deep learning models are often able to function well in spite of this reduced accuracy. 
+
    result
 
       In the context of a function graph, the term "result" refers to
@@ -103,6 +107,9 @@ Glossary
 
       Tensors are maps from *coordinates* to scalar values, all of the
       same type, called the *element type* of the tensor.
+
+      .. figure:: graphics/descriptor-of-tensor.png
+         :width: 559px
 
    
    Tensorview 

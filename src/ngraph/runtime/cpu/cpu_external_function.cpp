@@ -128,6 +128,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/propagate_cacheability.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
@@ -137,6 +138,7 @@
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
@@ -409,6 +411,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, node_function_map, common_function_string);
     pass_manager.register_pass<ngraph::pass::Liveness>();
+    pass_manager.register_pass<ngraph::pass::PropagateCacheability>(
+        runtime::cpu::get_annotations_factory());
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function);
 
@@ -633,6 +637,9 @@ using namespace ngraph::runtime;
                 }
             }
         }
+
+        // In place slice optimization
+        process_in_place_slice(ordered_ops);
 
         // In place concatenation optimization
         process_in_place_concat(ordered_ops);
@@ -1038,7 +1045,6 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
@@ -1086,7 +1092,7 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_input(
         for (auto input : it->get_inputs())
         {
             auto c_op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node());
-            if (!c_op || c_op->is_output())
+            if (!c_op || c_op->is_output() || dynamic_pointer_cast<ngraph::op::Slice>(c_op))
             {
                 continue;
             }
@@ -1180,7 +1186,7 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
     {
         propagate_further = false;
         auto arg = std::dynamic_pointer_cast<ngraph::op::Op>(it->get_node());
-        if (!arg)
+        if (!arg || std::dynamic_pointer_cast<ngraph::op::Slice>(it->get_node()))
         {
             break;
         }
@@ -1317,6 +1323,46 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_concat(
     }
 }
 
+//slice
+void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
+    std::list<std::shared_ptr<Node>> nodes)
+{
+    for (shared_ptr<Node>& node : nodes)
+    {
+        if (auto slice = std::dynamic_pointer_cast<ngraph::op::Slice>(node))
+        {
+            if (auto op_annotations = slice->get_op_annotations())
+            {
+                auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                if (in_place_oi_pairs.size() > 0)
+                {
+                    auto arg = slice->get_argument(0);
+                    auto input = slice->get_input_from(arg);
+                    auto index = input->get_output().get_index();
+                    auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
+                    auto input_tensor = &input_node->get_output_tensor(index);
+                    auto offset = input_tensor->get_pool_offset();
+                    auto lower_bounds = slice->get_lower_bounds();
+                    auto start = 0, accumulated = 1;
+                    auto in_shape = slice->get_input_shape(0);
+                    for (int i = in_shape.size() - 1; i >= 0; i--)
+                    {
+                        start += lower_bounds[i] * accumulated;
+                        accumulated *= in_shape[i];
+                    }
+                    offset += node->get_element_type().size() * start;
+                    auto output_tensor = &slice->get_output_tensor();
+                    auto old_offset = output_tensor->get_pool_offset();
+
+                    output_tensor->set_pool_offset(offset);
+                    NGRAPH_DEBUG << "cpu_external_function: change offset, old offset is "
+                                 << old_offset << ", new offset is " << offset << std::endl;
+                }
+            }
+        }
+    }
+}
+
 void runtime::cpu::CPU_ExternalFunction::build()
 {
     if (m_is_built)
@@ -1338,6 +1384,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
     ngraph::pass::Manager pass_manager;
     register_common_passes(pass_manager);
     pass_manager.register_pass<ngraph::pass::Liveness>();
+    pass_manager.register_pass<ngraph::pass::PropagateCacheability>(
+        runtime::cpu::get_annotations_factory());
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function, false);
 
@@ -1378,6 +1426,9 @@ void runtime::cpu::CPU_ExternalFunction::build()
     }
 
     // Build executor
+
+    // In place slice optimization
+    process_in_place_slice(m_function->get_ordered_ops());
 
     // In place concatenation optimization
     process_in_place_concat(m_function->get_ordered_ops());
