@@ -28,16 +28,19 @@ void op::Embedding::validate_and_infer_types()
 
     PartialShape result_shape;
 
-    if (arg0_shape.rank().is_static() && arg1_shape.rank().is_static())
+    if (arg0_shape.rank().is_static())
     {
-        NODE_VALIDATION_ASSERT(this, static_cast<size_t>(arg1_shape.rank()) == 2)
+        NODE_VALIDATION_ASSERT(
+            this, arg1_shape.rank().is_dynamic() || static_cast<size_t>(arg1_shape.rank()) == 2)
             << "weights are expected to be a matrix";
         std::vector<Dimension> result_dims(static_cast<size_t>(arg0_shape.rank()) + 1);
         for (size_t i = 0; i < static_cast<size_t>(arg0_shape.rank()); i++)
         {
             result_dims[i] = arg0_shape[i];
         }
-        result_dims[result_dims.size() - 1] = arg1_shape[1];
+
+        result_dims[result_dims.size() - 1] =
+            arg1_shape.rank().is_static() ? arg1_shape[1] : Dimension::dynamic();
         result_shape = PartialShape(result_dims);
     }
     else
