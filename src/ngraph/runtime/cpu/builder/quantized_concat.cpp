@@ -34,7 +34,6 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto concat = static_cast<const ngraph::op::QuantizedConcat*>(node);
                     auto& functors = external_function->get_functors();
                     vector<reference_wrapper<void*>> arg_tensors;
                     for (auto& arg : args)

@@ -256,12 +256,16 @@ namespace ngraph
                 // we have the check here.
                 auto mins = min_const_op->get_vector<float>();
                 auto maxes = max_const_op->get_vector<float>();
-                auto min_val = mins[0];
-                auto max_val = maxes[0];
+                if (mins.size() != maxes.size())
+                {
+                    throw ngraph_error("Mins and Maxes vectors must be of same length");
+                }
+                float min_val = mins[0];
+                float max_val = maxes[0];
                 for (size_t i = 1; i < mins.size(); i++)
                 {
-                    auto local_min = mins[i];
-                    auto local_max = maxes[i];
+                    float local_min = mins[i];
+                    float local_max = maxes[i];
                     if (local_min != min_val)
                     {
                         throw ngraph_error("All tensors must have same ranges. Mins must be same");
