@@ -171,7 +171,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
         auto tensor = backend->create_tensor(param->get_element_type(), param->get_shape());
         auto tensor_data =
             make_shared<runtime::HostTensor>(param->get_element_type(), param->get_shape());
-        random_init(tensor);
+        random_init(tensor_data);
         args.push_back(tensor);
         arg_data.push_back(tensor_data);
         args_cacheable.push_back(param->get_cacheable());
