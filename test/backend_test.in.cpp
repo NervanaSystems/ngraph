@@ -5390,7 +5390,6 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp_uint8)
 
     op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
 
-    auto min = std::numeric_limits<uint8_t>::min();
     auto max = std::numeric_limits<uint8_t>::max();
 
     auto X = make_shared<op::Parameter>(input_type, input_shape);
