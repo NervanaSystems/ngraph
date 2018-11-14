@@ -110,7 +110,7 @@ bool runtime::cpu::CPU_Backend::call(shared_ptr<Function> func,
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
     {
-        rc = compile(func) != nullptr;
+        throw runtime_error("compile() must be called before call().");
     }
 
     instance.m_call_frame->call(outputs, inputs);
