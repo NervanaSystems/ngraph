@@ -72,14 +72,14 @@ if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
         backend_debug_api.cpp
         builder.cpp
-        backend_api.cpp
-        hybrid_backend.cpp
-        hybrid_utils.cpp)
+        backend_api.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
 if (NGRAPH_HYBRID_ENABLE)
-    set(SRC ${SRC} hybrid_backend.cpp)
+    list(APPEND SRC
+        hybrid_backend.cpp
+        hybrid_utils.cpp)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
@@ -137,9 +137,6 @@ set(MULTI_TEST_SRC
 )
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND MULTI_TEST_SRC distributed.in.cpp)
-endif()
-if (NGRAPH_CPU_ENABLE)
-    list(APPEND MULTI_TEST_SRC backend_graph_comparison.in.cpp)
 endif()
 
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})

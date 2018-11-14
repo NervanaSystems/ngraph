@@ -1566,10 +1566,7 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     FunctionInstance& instance = ocl_networks[func];
     if (instance.ocl_network == nullptr)
     {
-        if (!compile(func))
-        {
-            return false;
-        }
+        throw runtime_error("compile() must be called before call().");
     }
 
     if (m_profile_enable)

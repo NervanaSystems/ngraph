@@ -155,7 +155,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_row)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     vector<float> expected{11, 30, 38, 111};
     EXPECT_EQ(read_vector<float>(result), expected);
 }
@@ -186,7 +186,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_column)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     vector<float> expected{11, 29, 39, 111};
     EXPECT_EQ(read_vector<float>(result), expected);
 }
@@ -221,7 +221,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_matrix)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     vector<float> expected{10, 28, 37, 109};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -253,7 +253,7 @@ TEST(cpu_fusion, gemm_cpu_no_bias)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     vector<float> expected{9, 27, 36, 108};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -633,8 +633,9 @@ TEST(cpu_fusion, conv_bias_fprop_n1c1h3w3)
     auto f = make_shared<Function>(
         convolution_bias, op::ParameterVector{conv_test.data, conv_test.weights, conv_test.bias});
 
-    backend->call_with_validate(
-        f, {conv_test.result_val}, {conv_test.data_val, conv_test.weights_val, conv_test.bias_val});
+    backend->call_with_validate(backend->compile(f),
+                                {conv_test.result_val},
+                                {conv_test.data_val, conv_test.weights_val, conv_test.bias_val});
     auto result_vec = read_vector<float>(conv_test.result_val);
 
     EXPECT_TRUE(
@@ -664,7 +665,7 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
         NodeVector{d_data, d_weights, d_bias},
         op::ParameterVector{conv_test.data, conv_test.weights, conv_test.bias, conv_test.delta});
     backend->call_with_validate(
-        df,
+        backend->compile(df),
         {conv_test.d_data_val, conv_test.d_weights_val, conv_test.d_bias_val},
         {conv_test.data_val, conv_test.weights_val, conv_test.bias_val, conv_test.delta_val});
 
@@ -766,7 +767,7 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
     auto result_mean_bnr = backend->create_tensor(element::f32, mean_shape);
     auto result_variance_bnr = backend->create_tensor(element::f32, var_shape);
 
-    backend->call_with_validate(f,
+    backend->call_with_validate(backend->compile(f),
                                 {bn_output,
                                  result_mean,
                                  result_variance,
@@ -1248,7 +1249,8 @@ std::vector<shared_ptr<runtime::Tensor>> rnn_matrix_fusion_eval(const size_t tim
     copy_data(data_tensor, data_val);
     copy_data(weights_tensor, weights_val);
     copy_data(bias_tensor, bias_val);
-    backend->call_with_validate(func, result_tensors, {data_tensor, weights_tensor, bias_tensor});
+    backend->call_with_validate(
+        backend->compile(func), result_tensors, {data_tensor, weights_tensor, bias_tensor});
     return result_tensors;
 }
 
@@ -1442,7 +1444,7 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
         pass_manager.run_passes(df);
     }
 
-    backend->call_with_validate(df, {output}, {input, ep});
+    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
@@ -1464,7 +1466,7 @@ TEST(cpu_fusion, loop_kernel_one_input_one_output)
     copy_data(a, dataA);
     vector<int> expected{-1, -4, -1, -4};
 
-    backend->call_with_validate(f, {result}, {a});
+    backend->call_with_validate(backend->compile(f), {result}, {a});
 
     EXPECT_EQ(read_vector<int>(result), expected);
 }
@@ -1491,7 +1493,7 @@ TEST(cpu_fusion, loop_kernel_embedded_graph)
     vector<int> dataB{1, 2, 3, 4};
     copy_data(b, dataB);
     vector<int> expected{-2, -6, -4, -8};
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ(read_vector<int>(result), expected);
 }
 
@@ -1516,7 +1518,7 @@ TEST(cpu_fusion, loop_kernel_two_inputs_one_output)
     copy_data(b, dataB);
     vector<int> expected{2, 6, 4, 8};
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
 
     EXPECT_EQ(read_vector<int>(result), expected);
 }
@@ -1568,7 +1570,7 @@ TEST(cpu_fusion, loop_kernel_multiple_outputs)
     copy_data(c, dataC);
     copy_data(d, dataD);
 
-    backend->call_with_validate(f, {r1, r2, r3}, {a, b, c, d});
+    backend->call_with_validate(backend->compile(f), {r1, r2, r3}, {a, b, c, d});
 
     vector<int> expected1{5, 11, 5, 17};
     vector<int> expected2{2, 7, 5, 14};
@@ -1630,8 +1632,8 @@ TEST(cpu_fusion, loop_kernel_copy_with_new_args)
     copy_data(c, dataC);
     copy_data(d, dataD);
 
-    backend->call_with_validate(f, {r1, r2, r3}, {a, b, c, d});
-    backend->call_with_validate(copy_f, {copy_r1, copy_r2, copy_r3}, {a, b, c, d});
+    backend->call_with_validate(backend->compile(f), {r1, r2, r3}, {a, b, c, d});
+    backend->call_with_validate(backend->compile(copy_f), {copy_r1, copy_r2, copy_r3}, {a, b, c, d});
 
     EXPECT_EQ(read_vector<int>(r1), read_vector<int>(copy_r1));
     EXPECT_EQ(read_vector<int>(r2), read_vector<int>(copy_r2));
@@ -2066,7 +2068,7 @@ TEST(cpu_fusion, group_convolution)
     auto upper_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
         backend->create_tensor(element::f32, shape_ur, erv.data() + erv.size() / 2));
     backend->call_with_validate(
-        f, {group_result, lower_result, upper_result}, {a_, b_, c_, d_, e_, f_});
+        backend->compile(f), {group_result, lower_result, upper_result}, {a_, b_, c_, d_, e_, f_});
     ASSERT_EQ(rv, erv);
 }
 
@@ -2129,7 +2131,7 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     copy_data(biases_t, vector<float>(400, 1));
 
     backend->call_with_validate(
-        func,
+        backend->compile(func),
         {result_ht, result_ct},
         {src_layer_t, src_iter_t, weights_layer_t, weights_iter_t, biases_t});
     vector<float> expected_ht(10 * 100, 0.964028f);
@@ -2218,7 +2220,7 @@ static std::shared_ptr<Function> make_function(const std::string& file_name)
     return func;
 }
 
-TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
+TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
     auto cpu_f = make_function(file_name);
@@ -2240,7 +2242,7 @@ TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
     }
 }
 
-TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
+TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
@@ -2262,7 +2264,7 @@ TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
     }
 }
 
-TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
+TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
@@ -2514,7 +2516,7 @@ void sigmoid_multiply_fusion_forward_compute(runtime::Backend* backend,
 
     auto mul_node = input_0_node * input_1_node;
     auto func = make_shared<Function>(mul_node, input_params);
-    backend->call_with_validate(func, {result_tensor}, input_tensors);
+    backend->call_with_validate(backend->compile(func), {result_tensor}, input_tensors);
     EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
 }
 
@@ -2708,7 +2710,8 @@ void sigmoid_multiply_fusion_backward_compute(runtime::Backend* backend,
     auto d_input_0 = adjoints.backprop_node(input_0_adjoint);
     auto d_input_1 = adjoints.backprop_node(input_1_adjoint);
     auto df = make_shared<Function>(NodeVector{d_input_0, d_input_1}, back_params);
-    backend->call_with_validate(df, {d_input_0_tensor, d_input_1_tensor}, input_tensors);
+    backend->call_with_validate(
+        backend->compile(df), {d_input_0_tensor, d_input_1_tensor}, input_tensors);
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
 }
@@ -2960,7 +2963,7 @@ TEST(cpu_fusion, fuse_rnn_across_layer)
     EXPECT_EQ(ref_rnn_count, rnn_count);
 }
 
-TEST(DISABLED_cpu_fusion, fuse_rnn_across_2layer_1timestep)
+TEST(cpu_fusion, fuse_rnn_across_2layer_1timestep)
 {
     const std::string file_name("mxnet/2rnn_layer_1timestep.json");
     auto cpu_f = make_function(file_name);

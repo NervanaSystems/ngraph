@@ -113,8 +113,9 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
     copy_data(state_iter_t, vector<float>(1000, 1));
     copy_data(params_t, vector<float>(shape_size(params->get_shape()), 1));
 
-    backend->call_with_validate(
-        func, {result_ht, result_ct}, {src_layer_t, src_iter_t, params_t, state_iter_t});
+    backend->call_with_validate(backend->compile(func),
+                                {result_ht, result_ct},
+                                {src_layer_t, src_iter_t, params_t, state_iter_t});
     vector<float> expected_ht(10 * 100, 0.964028f);
     vector<float> expected_ct;
     for (size_t i = 0; i < 10 * 100; i++)
@@ -271,7 +272,7 @@ TEST(gpu_fusion, lstm_analytic)
     std::shared_ptr<runtime::Tensor> result_ct =
         backend->create_tensor(element::f32, ct->get_shape());
 
-    backend->call_with_validate(f,
+    backend->call_with_validate(backend->compile(f),
                                 {result_ht, result_ct},
                                 {input_xt_t, weights_i2h_t, weights_h2h_t, bias_i2h_t, bias_h2h_t});
 
@@ -410,7 +411,7 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     std::shared_ptr<runtime::Tensor> result_ct =
         backend->create_tensor(element::f32, ct->get_shape());
 
-    backend->call_with_validate(f, {result_ht, result_ct}, arg_tensors);
+    backend->call_with_validate(backend->compile(f), {result_ht, result_ct}, arg_tensors);
     //EXPECT_EQ(1, count_ops_of_type<op::gpu::Rnn>(f));
 
     auto sig = [](float x) { return 1.0f / (1.0f + std::exp(-x)); };
@@ -448,7 +449,7 @@ TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_1lstm_cell)
     }
 }
 
-TEST(DISABLED_gpu_fusion, rnn_fusion_inter_vs_gpu_1rnn_layer_3lstm_cell)
+TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_1rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
     auto gpu_f = make_function(file_name);

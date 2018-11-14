@@ -108,12 +108,11 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
 {
     // Get FunctionInstance
     bool rc = true;
-    compile(func);
 
     auto it = m_function_map.find(func);
     if (it == m_function_map.end())
     {
-        throw runtime_error("Unable to compile hybrid backend");
+        throw runtime_error("compile() must be called before call().");
     }
     FunctionInstance& instance = it->second;
 

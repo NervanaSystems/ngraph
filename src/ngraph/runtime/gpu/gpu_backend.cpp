@@ -159,7 +159,7 @@ bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
     {
-        compile(func);
+        throw runtime_error("compile() must be called before call().");
     }
 
     // ensure the GPURuntimeContext primitive pointers are valid
