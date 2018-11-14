@@ -41,40 +41,32 @@ compute for Deep Learning with GPU accleration and support for MacOS. See our
 
 ## What is nGraph Compiler? 
 
+nGraph Compiler aims to accelerate developing and deploying AI workloads 
+using any deep learning framework with a variety of hardware targets. 
+We strongly believe in providing freedom, performance, and ease-of-use to AI 
+developers. 
 
+The diagram below shows what deep learning frameworks and hardware targets
+we support. More details on these current and future plans are in the ecosystem
+section. 
 
-
-## Ecosystem
 
 ![nGraph ecosystem][ngraph-ecosystem]
 
-The **nGraph Compiler** is Intel's graph compiler for Artificial Neural Networks. 
-Documentation in this repo describes how you can program any framework 
-to run training and inference computations on a variety of Backends including 
-Intel® Architecture Processors (CPUs), Intel® Nervana™ Neural Network Processors 
-(NNPs), cuDNN-compatible graphics cards (GPUs), custom VPUs like Movidius, and
-many others. The default CPU Backend also provides an interactive *Interpreter* 
-mode that can be used to zero in on a DL model and create custom nGraph 
-optimizations that can be used to further accelerate training or inference, in 
-whatever scenario you need. nGraph provides both a C++ API for framework 
-developers and a Python API which can run inference on models imported from 
-ONNX. 
 
+While the ecosystem shown above is all functioning, we have validated 
+performance for deep learning inference on CPU processors such as Intel® Xeon®. 
+Please refer to the [Beta release notes] to learn more. The Gold release 
+is targeted for April 2019; it will feature broader workload coverage, 
+including quantized graphs, and more detail on our advanced support for 
+``int8``. 
 
-## Documentation
+Our documentation has extensive information about how to use nGraph Compiler 
+stack to create an nGraph computational graph, integrate custom frameworks, 
+and to interact with supported backends. If you wish to contribute to the 
+project, please don't hesitate to ask questions in [GitHub issues] after 
+reviewing our contribution guide below. 
 
-See our [build the Library] docs for how to get started.
-
-For this early release, we provide [framework integration guides] to
-compile MXNet and TensorFlow-based projects. If you already have a
-trained model, we've put together a getting started guide for
-[how to import] a deep learning model and start working with the nGraph
-APIs.
-
-## Support
-
-Please submit your questions, feature requests and bug reports via
-[GitHub issues].
 
 ## How to contribute
 
