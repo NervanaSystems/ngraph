@@ -913,7 +913,7 @@ def reverse(node, reversed_axes, name=None):  # type: (Node, List[int], str) -> 
 
 
 @nameable_op
-def batch_norm(eps=1e-5,        # type: float
+def batch_norm(eps,             # type: float
                gamma,           # type: Node
                beta,            # type: Node
                data,            # type: Node
