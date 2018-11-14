@@ -633,9 +633,8 @@ TEST(cpu_fusion, conv_bias_fprop_n1c1h3w3)
     auto f = make_shared<Function>(
         convolution_bias, op::ParameterVector{conv_test.data, conv_test.weights, conv_test.bias});
 
-    backend->call_with_validate(backend->compile(f),
-                                {conv_test.result_val},
-                                {conv_test.data_val, conv_test.weights_val, conv_test.bias_val});
+    backend->call_with_validate(
+        backend->compile(f), {conv_test.result_val}, {conv_test.data_val, conv_test.weights_val, conv_test.bias_val});
     auto result_vec = read_vector<float>(conv_test.result_val);
 
     EXPECT_TRUE(
@@ -1249,8 +1248,7 @@ std::vector<shared_ptr<runtime::Tensor>> rnn_matrix_fusion_eval(const size_t tim
     copy_data(data_tensor, data_val);
     copy_data(weights_tensor, weights_val);
     copy_data(bias_tensor, bias_val);
-    backend->call_with_validate(
-        backend->compile(func), result_tensors, {data_tensor, weights_tensor, bias_tensor});
+    backend->call_with_validate(backend->compile(func), result_tensors, {data_tensor, weights_tensor, bias_tensor});
     return result_tensors;
 }
 
@@ -2220,7 +2218,7 @@ static std::shared_ptr<Function> make_function(const std::string& file_name)
     return func;
 }
 
-TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
+TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
     auto cpu_f = make_function(file_name);
@@ -2242,7 +2240,7 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
     }
 }
 
-TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
+TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
@@ -2264,7 +2262,7 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
     }
 }
 
-TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
+TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
@@ -2710,8 +2708,7 @@ void sigmoid_multiply_fusion_backward_compute(runtime::Backend* backend,
     auto d_input_0 = adjoints.backprop_node(input_0_adjoint);
     auto d_input_1 = adjoints.backprop_node(input_1_adjoint);
     auto df = make_shared<Function>(NodeVector{d_input_0, d_input_1}, back_params);
-    backend->call_with_validate(
-        backend->compile(df), {d_input_0_tensor, d_input_1_tensor}, input_tensors);
+    backend->call_with_validate(backend->compile(df), {d_input_0_tensor, d_input_1_tensor}, input_tensors);
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
 }
@@ -2963,7 +2960,7 @@ TEST(cpu_fusion, fuse_rnn_across_layer)
     EXPECT_EQ(ref_rnn_count, rnn_count);
 }
 
-TEST(cpu_fusion, fuse_rnn_across_2layer_1timestep)
+TEST(DISABLED_cpu_fusion, fuse_rnn_across_2layer_1timestep)
 {
     const std::string file_name("mxnet/2rnn_layer_1timestep.json");
     auto cpu_f = make_function(file_name);

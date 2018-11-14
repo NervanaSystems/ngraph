@@ -1005,13 +1005,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_power)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
 
-    auto x0 = rng_neg.initialize(backend->create_tensor<float>(shape));
-    auto x1 = rng_pos.initialize(backend->create_tensor<float>(shape));
-
-    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
-
-    x0 = rng_pos.initialize(backend->create_tensor<float>(shape));
-    x1 = rng_neg.initialize(backend->create_tensor<float>(shape));
+    auto x0 = rng_pos.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng_neg.initialize(backend->create_tensor<float>(shape));
 
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 

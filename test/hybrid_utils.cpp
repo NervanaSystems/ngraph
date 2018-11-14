@@ -44,54 +44,69 @@ shared_ptr<runtime::Tensor> TestBackend::create_tensor(const element::Type& elem
     return m_backend_list[0]->create_tensor(element_type, shape, memory_pointer);
 }
 
-runtime::Handle TestBackend::compile(const shared_ptr<Function>& func)
+bool TestBackend::compile(shared_ptr<Function> func)
 {
-    // Clone function
-    auto instance = make_shared<FunctionInstance>();
-    m_instances.push_back(instance);
-    instance->m_function = clone_function(*func);
-
-    // Run placement pass
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::AssignPlacement>(m_backend_list);
-    pass_manager.run_passes(instance->m_function);
-
-    // Split function to sub_functions
-    tie(instance->m_sub_functions, instance->m_map_parameter_to_result) =
-        split_function_by_placement_size(instance->m_function);
-
-    // Compile subfunctions in corresponding backends
-    for (shared_ptr<Function>& sub_function : instance->m_sub_functions)
+    if (m_function_map.find(func) == m_function_map.end())
     {
-        size_t placement = get_colocated_function_placement_size(sub_function);
-        auto backend = m_backend_list[(placement - 1)]; // (placement-1) as 0 is default placement
-        backend->compile(sub_function);
+        // Clone function
+        FunctionInstance instance;
+        instance.m_function = clone_function(*func);
+
+        // Run placement pass
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::AssignPlacement>(m_backend_list);
+        pass_manager.run_passes(instance.m_function);
+
+        // Split function to sub_functions
+        tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
+            split_function_by_placement_size(instance.m_function);
+        m_function_map.insert({func, instance});
+
+        // Compile subfunctions in corresponding backends
+        for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
+        {
+            size_t placement = get_colocated_function_placement_size(sub_function);
+            auto backend =
+                m_backend_list[(placement - 1)]; // (placement-1) as 0 is default placement
+            backend->compile(sub_function);
+        }
     }
 
-    return instance.get();
+    return true;
 }
 
-bool TestBackend::call(runtime::Handle handle,
+bool TestBackend::call(shared_ptr<Function> func,
                        const vector<shared_ptr<runtime::Tensor>>& outputs,
                        const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     // Get FunctionInstance
     bool rc = true;
-    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    auto it = m_function_map.find(func);
+    if (it == m_function_map.end())
+    {
+        compile(func);
+        it = m_function_map.find(func);
+    }
+
+    if (it == m_function_map.end())
+    {
+        throw runtime_error("Error constructing backend.");
+    }
+    FunctionInstance& instance = it->second;
 
     // Parameter and result node in sub_function maps to one Tensor
     unordered_map<shared_ptr<Node>, shared_ptr<runtime::Tensor>> map_node_to_tensor_view;
     for (size_t i = 0; i < inputs.size(); ++i)
     {
-        map_node_to_tensor_view[instance->m_function->get_parameters()[i]] = inputs[i];
+        map_node_to_tensor_view[instance.m_function->get_parameters()[i]] = inputs[i];
     }
     for (size_t i = 0; i < outputs.size(); ++i)
     {
-        map_node_to_tensor_view[instance->m_function->get_results()[i]] = outputs[i];
+        map_node_to_tensor_view[instance.m_function->get_results()[i]] = outputs[i];
     }
 
     // Call subfunctions
-    for (shared_ptr<Function>& sub_function : instance->m_sub_functions)
+    for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
     {
         // Init backend
         size_t placement = get_colocated_function_placement_size(sub_function);
@@ -107,7 +122,7 @@ bool TestBackend::call(runtime::Handle handle,
             }
             else
             {
-                auto result_node = instance->m_map_parameter_to_result.at(parameter_node);
+                auto result_node = instance.m_map_parameter_to_result.at(parameter_node);
                 auto result_tv = map_node_to_tensor_view.at(result_node);
                 auto parameter_tv = backend->create_tensor(parameter_node->get_element_type(),
                                                            parameter_node->get_shape());
