@@ -2267,11 +2267,11 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Embedding)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::EmbeddingLookup)
             {
                 writer.block_begin();
-                const ngraph::op::Embedding* embed =
-                    static_cast<const ngraph::op::Embedding*>(node);
+                const ngraph::op::EmbeddingLookup* embed =
+                    static_cast<const ngraph::op::EmbeddingLookup*>(node);
                 auto index_type_name = embed->get_argument(0)->get_element_type().c_type_string();
                 auto type_name = embed->get_element_type().c_type_string();
                 auto element_count = shape_size(embed->get_argument(0)->get_shape());

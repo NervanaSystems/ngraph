@@ -687,9 +687,9 @@ private:
                            dot->get_reduction_axes_count());
             break;
         }
-        case OP_TYPEID::Embedding:
+        case OP_TYPEID::EmbeddingLookup:
         {
-            const op::Embedding* embed = static_cast<const op::Embedding*>(&node);
+            const op::EmbeddingLookup* embed = static_cast<const op::EmbeddingLookup*>(&node);
             auto type = embed->get_argument(0)->get_element_type();
             size_t element_count = shape_size(embed->get_argument(0)->get_shape());
 
@@ -728,7 +728,7 @@ private:
             else
             {
                 throw ngraph_error(std::string("Unsupported index type ") + type.c_type_string() +
-                                   std::string("in Embedding"));
+                                   std::string("in EmbeddingLookup"));
             }
             break;
         }

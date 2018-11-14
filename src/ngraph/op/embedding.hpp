@@ -25,15 +25,19 @@ namespace ngraph
     namespace op
     {
         // \brief Returns embeddings for given indices
-        class Embedding : public Op
+        class EmbeddingLookup : public Op
         {
         public:
-            /// \brief Constructs a Embedding operation.
+            /// \brief Constructs a EmbeddingLookup operation.
             ///
-            /// \param data The input token indices
-            /// \param weights Embedding dictionary
-            Embedding(const std::shared_ptr<Node>& data, const std::shared_ptr<Node>& weights)
-                : Op("Embedding", check_single_output_args({data, weights}))
+            /// EmbeddingLookup constructs an output tensor by replacing every index in a given input tensor
+            /// with a row (from the weights matrix) at that index
+            ///
+            /// \param data The input indices for tokens to be translated into embeddings
+            /// \param weights is a dense matrix [N,M] where each row 0..N
+            /// corresponds to an embedding (i.e. typically, a vector of real numbers) of length M
+            EmbeddingLookup(const std::shared_ptr<Node>& data, const std::shared_ptr<Node>& weights)
+                : Op("EmbeddingLookup", check_single_output_args({data, weights}))
             {
                 constructor_validate_and_infer_types();
             }

@@ -632,9 +632,9 @@ void runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
     writer.block_end();
 }
 
-void runtime::gpu::GPU_Emitter::emit_Embedding(EMIT_ARGS)
+void runtime::gpu::GPU_Emitter::emit_EmbeddingLookup(EMIT_ARGS)
 {
-    throw ngraph_error("Embedding is not yet implemented for NVIDIA GPU");
+    throw ngraph_error("EmbeddingLookup is not yet implemented for NVIDIA GPU");
 }
 
 void runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)

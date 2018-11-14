@@ -288,7 +288,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Sign), &runtime::cpu::CPU_Emitter::emit<op::Sign>},
     {TI(ngraph::op::Slice), &runtime::cpu::CPU_Emitter::emit<op::Slice>},
     {TI(ngraph::op::Sum), &runtime::cpu::CPU_Emitter::emit<op::Sum>},
-    {TI(ngraph::op::Embedding), &runtime::cpu::CPU_Emitter::emit<op::Embedding>},
+    {TI(ngraph::op::EmbeddingLookup), &runtime::cpu::CPU_Emitter::emit<op::EmbeddingLookup>},
     {TI(ngraph::op::Exp), &runtime::cpu::CPU_Emitter::emit<op::Exp>},
     {TI(ngraph::op::Sin), &runtime::cpu::CPU_Emitter::emit<op::Sin>},
     {TI(ngraph::op::Sinh), &runtime::cpu::CPU_Emitter::emit<op::Sinh>},

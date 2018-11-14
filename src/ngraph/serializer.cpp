@@ -712,9 +712,9 @@ static shared_ptr<ngraph::Function>
                 }
                 break;
             }
-            case OP_TYPEID::Embedding:
+            case OP_TYPEID::EmbeddingLookup:
             {
-                node = make_shared<op::Embedding>(args[0], args[1]);
+                node = make_shared<op::EmbeddingLookup>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::Equal:
@@ -1372,7 +1372,7 @@ static json write(const Node& n, bool binary_constant_data)
         node["reduction_axes_count"] = tmp->get_reduction_axes_count();
         break;
     }
-    case OP_TYPEID::Embedding: { break;
+    case OP_TYPEID::EmbeddingLookup: { break;
     }
     case OP_TYPEID::Equal: { break;
     }

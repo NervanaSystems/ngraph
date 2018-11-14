@@ -30,13 +30,11 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Embedding)
+            void Builder::BUILDER_DECL(ngraph::op::EmbeddingLookup)
             {
                 auto& functors = external_function->get_functors();
                 auto& tensor_data = external_function->get_tensor_data();
 
-                const ngraph::op::Embedding* embed =
-                    static_cast<const ngraph::op::Embedding*>(node);
                 CPUKernelFunctor functor;
 
                 auto& arg0_tensor = tensor_data[args[0].get_name()];
@@ -82,7 +80,8 @@ namespace ngraph
                     }
                     else
                     {
-                        throw ngraph_error("Unsupported index type in CPU Builder for Embedding");
+                        throw ngraph_error(
+                            "Unsupported index type in CPU Builder for EmbeddingLookup");
                     }
                 }
                 else if (element_type == element::i32)
@@ -115,7 +114,8 @@ namespace ngraph
                     }
                     else
                     {
-                        throw ngraph_error("Unsupported index type in CPU Builder for Embedding");
+                        throw ngraph_error(
+                            "Unsupported index type in CPU Builder for EmbeddingLookup");
                     }
                 }
                 else
@@ -126,7 +126,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(Embedding);
+            REGISTER_OP_BUILDER(EmbeddingLookup);
         }
     }
 }

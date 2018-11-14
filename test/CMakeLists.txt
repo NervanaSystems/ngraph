@@ -124,7 +124,7 @@ set(MULTI_TEST_SRC
     backend_broadcast.in.cpp
     backend_comparison.in.cpp
     backend_dot.in.cpp
-    backend_embedding.in.cpp
+    backend_embedding_lookup.in.cpp
     backend_one_hot.in.cpp
     backend_pool.in.cpp
     backend_reduce.in.cpp
