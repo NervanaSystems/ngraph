@@ -1534,10 +1534,11 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
     // construct hash to determine if kernel needs to be emitted
     // or if it already exists in the primitive list
     std::stringstream ss;
-    ss << "pool_op" << pool_op << "dtype_" << dtype.c_type_string() << "_dir" << static_cast<int>(direction) << "_i"
-       << join(input_shape, "_") << "_o" << join(output_shape, "_") << "_ws"
-       << join(window_shape, "_") << "_wst" << join(window_strides, "_") << "_pb"
-       << join(padding_below, "_") << "_pb" << join(padding_above, "_");
+    ss << "pool_op" << pool_op << "dtype_" << dtype.c_type_string() << "_dir"
+       << static_cast<int>(direction) << "_i" << join(input_shape, "_") << "_o"
+       << join(output_shape, "_") << "_ws" << join(window_shape, "_") << "_wst"
+       << join(window_strides, "_") << "_pb" << join(padding_below, "_") << "_pb"
+       << join(padding_above, "_");
     std::string hash = ss.str();
 
     // check if the requested kernel is already an inserted primitive
@@ -1628,61 +1629,60 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
             auto workspace_size_in_bytes = shape_size(output_shape) * dtype.size();
             size_t workspace_idx = allocator.reserve_workspace(workspace_size_in_bytes);
 
+            pool.reset(new gpu::primitive{[=, &desc, &input_desc, &output_desc](void** inputs,
+                                                                                void** outputs) {
+                void* pooling_output = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
+                CUDNN_SAFE_CALL(cudnnPoolingForward(*m_ctx->cudnn_handle,
+                                                    desc,
+                                                    alpha,
+                                                    input_desc,
+                                                    inputs[0],
+                                                    beta,
+                                                    output_desc,
+                                                    pooling_output));
+                debug_sync();
 
-            pool.reset(new gpu::primitive{
-                    [=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
-                        void* pooling_output = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
-                        CUDNN_SAFE_CALL(cudnnPoolingForward(*m_ctx->cudnn_handle,
-                                                            desc,
-                                                            alpha,
-                                                            input_desc,
-                                                            inputs[0],
-                                                            beta,
-                                                            output_desc,
-                                                            pooling_output));
-                        debug_sync();
-
-                        CUDNN_SAFE_CALL(cudnnPoolingBackward(*m_ctx->cudnn_handle,
-                                                             desc,
-                                                             alpha,
-                                                             // output (wrt maxpool) tensor
-                                                             output_desc,
-                                                             pooling_output,
-                                                             // adjoint of output
-                                                             output_desc,
-                                                             inputs[1],
-                                                             // input (wrt maxpool) tensor
-                                                             input_desc,
-                                                             inputs[0],
-                                                             beta,
-                                                             // adjoint of input
-                                                             input_desc,
-                                                             outputs[0]));
-                        debug_sync();
-                    }});
+                CUDNN_SAFE_CALL(cudnnPoolingBackward(*m_ctx->cudnn_handle,
+                                                     desc,
+                                                     alpha,
+                                                     // output (wrt maxpool) tensor
+                                                     output_desc,
+                                                     pooling_output,
+                                                     // adjoint of output
+                                                     output_desc,
+                                                     inputs[1],
+                                                     // input (wrt maxpool) tensor
+                                                     input_desc,
+                                                     inputs[0],
+                                                     beta,
+                                                     // adjoint of input
+                                                     input_desc,
+                                                     outputs[0]));
+                debug_sync();
+            }});
         }
         else
         {
             pool.reset(new gpu::primitive{
-                    [=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
-                        CUDNN_SAFE_CALL(cudnnPoolingBackward(*m_ctx->cudnn_handle,
-                                                             desc,
-                                                             alpha,
-                                                             // output (wrt maxpool) tensor
-                                                             output_desc,
-                                                             inputs[2],
-                                                             // adjoint of output
-                                                             output_desc,
-                                                             inputs[1],
-                                                             // input (wrt maxpool) tensor
-                                                             input_desc,
-                                                             inputs[0],
-                                                             beta,
-                                                             // adjoint of input
-                                                             input_desc,
-                                                             outputs[0]));
-                        debug_sync();
-                    }});
+                [=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
+                    CUDNN_SAFE_CALL(cudnnPoolingBackward(*m_ctx->cudnn_handle,
+                                                         desc,
+                                                         alpha,
+                                                         // output (wrt maxpool) tensor
+                                                         output_desc,
+                                                         inputs[2],
+                                                         // adjoint of output
+                                                         output_desc,
+                                                         inputs[1],
+                                                         // input (wrt maxpool) tensor
+                                                         input_desc,
+                                                         inputs[0],
+                                                         beta,
+                                                         // adjoint of input
+                                                         input_desc,
+                                                         outputs[0]));
+                    debug_sync();
+                }});
         }
 
         break;
