@@ -376,12 +376,12 @@ shared_ptr<runtime::Tensor> runtime::intelgpu::IntelGPUBackend::create_tensor(
         element_type, shape, *ocl_engine, memory_pointer);
 }
 
-bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
+Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 {
     FunctionInstance& instance = ocl_networks[func];
     if (instance.ocl_network != nullptr)
     {
-        return true;
+        return func;
     }
 
     vector<cldnn::primitive_id> function_output_names;
@@ -1544,7 +1544,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     instance.ocl_network =
         make_shared<cldnn::network>(*ocl_engine, topology, network_build_options);
 
-    return true;
+    return func;
 }
 
 bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
@@ -1562,7 +1562,6 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
         mem_before_call = get_max_memory_rss();
         timer_compile.start();
     }
-    validate_call(func, outputs, inputs);
 
     FunctionInstance& instance = ocl_networks[func];
     if (instance.ocl_network == nullptr)

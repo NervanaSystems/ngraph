@@ -65,7 +65,7 @@ shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
     return it->second->create_tensor(element_type, shape, memory_pointer);
 }
 
-bool runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
 {
     if (m_function_map.find(func) == m_function_map.end())
     {
@@ -99,7 +99,7 @@ bool runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
         }
     }
 
-    return true;
+    return func;
 }
 
 bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,

@@ -119,7 +119,7 @@ shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
     return make_shared<runtime::gpu::GPUTensor>(element_type, shape, memory_pointer);
 }
 
-bool runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
 {
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
@@ -131,7 +131,7 @@ bool runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
         instance.m_inputs.resize(func->get_parameters().size());
         instance.m_outputs.resize(func->get_output_size());
     }
-    return true;
+    return func;
 }
 
 void runtime::gpu::GPU_Backend::initialize_io(void** target,
@@ -156,14 +156,10 @@ bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
                                      const vector<shared_ptr<runtime::Tensor>>& outputs,
                                      const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    bool rc = true;
-
-    validate_call(func, outputs, inputs);
-
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
     {
-        rc = compile(func);
+        compile(func);
     }
 
     // ensure the GPURuntimeContext primitive pointers are valid
@@ -176,7 +172,7 @@ bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
     auto ctx = m_context->m_runtime_context.get();
     instance.m_compiled_function(instance.m_inputs.data(), instance.m_outputs.data(), ctx);
 
-    return rc;
+    return true;
 }
 
 void runtime::gpu::GPU_Backend::remove_compiled_function(shared_ptr<Function> func)

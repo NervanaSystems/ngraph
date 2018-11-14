@@ -44,7 +44,7 @@ shared_ptr<runtime::Tensor> TestBackend::create_tensor(const element::Type& elem
     return m_backend_list[0]->create_tensor(element_type, shape, memory_pointer);
 }
 
-bool TestBackend::compile(shared_ptr<Function> func)
+std::shared_ptr<ngraph::Function> TestBackend::compile(shared_ptr<Function> func)
 {
     if (m_function_map.find(func) == m_function_map.end())
     {
@@ -72,7 +72,7 @@ bool TestBackend::compile(shared_ptr<Function> func)
         }
     }
 
-    return true;
+    return func;
 }
 
 bool TestBackend::call(shared_ptr<Function> func,
@@ -177,7 +177,7 @@ shared_ptr<runtime::Tensor> BackendWrapper::create_tensor(const element::Type& e
     return m_backend->create_tensor(element_type, shape, memory_pointer);
 }
 
-bool BackendWrapper::compile(shared_ptr<Function> func)
+std::shared_ptr<ngraph::Function> BackendWrapper::compile(shared_ptr<Function> func)
 {
     return m_backend->compile(func);
 }

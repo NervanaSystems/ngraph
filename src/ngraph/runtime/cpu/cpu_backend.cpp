@@ -72,7 +72,7 @@ shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(
     return make_shared<runtime::cpu::CPUTensorView>(element_type, shape, memory_pointer);
 }
 
-bool runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
 {
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
@@ -82,22 +82,20 @@ bool runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
     }
-    return true;
+    return func;
 }
 
 std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     runtime::cpu::CPU_Backend::get_call_frame(std::shared_ptr<Function> func)
 {
-    bool rc = true;
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
     {
-        rc = compile(func);
-    }
-
-    if (!rc)
-    {
-        throw ngraph_error("couldn't compile a function");
+        auto rc = compile(func);
+        if (!rc)
+        {
+            throw ngraph_error("couldn't compile a function");
+        }
     }
 
     return instance.m_call_frame;
@@ -112,7 +110,7 @@ bool runtime::cpu::CPU_Backend::call(shared_ptr<Function> func,
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
     {
-        rc = compile(func);
+        rc = compile(func) != nullptr;
     }
 
     instance.m_call_frame->call(outputs, inputs);

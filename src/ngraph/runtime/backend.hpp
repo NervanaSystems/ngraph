@@ -30,6 +30,7 @@ namespace ngraph
         class ExternalFunction;
         class Tensor;
         class Backend;
+       using Handle = std::shared_ptr<Function>;
     }
 }
 
@@ -79,8 +80,8 @@ public:
 
     /// \brief Compiles a Function.
     /// \param func The function to compile
-    /// \returns true if compile is successful, false otherwise
-    virtual bool compile(std::shared_ptr<Function> func) = 0;
+    /// \returns compiled function or nullptr on failure
+    virtual Handle compile(std::shared_ptr<Function> func) = 0;
 
     /// \brief Executes a single iteration of a Function. If func is not compiled the call will
     ///     compile it.
