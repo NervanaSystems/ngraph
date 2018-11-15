@@ -452,6 +452,26 @@ void op::ConvolutionBackpropData::validate_and_infer_types()
     {
         m_window_movement_strides_backward.push_back(m_data_dilation_strides_forward[i]);
         m_window_dilation_strides_backward.push_back(m_window_dilation_strides_forward[i]);
+	
+	if(filters_shape.size() == 4 && filters_shape[2] == 1 && filters_shape[3] == 1)
+	{
+        
+		CoordinateDiff padding_value(2,0);
+		Strides dilation_value(2,1);
+		m_padding_below_backward = padding_value;
+		m_padding_above_backward = padding_value;
+        	m_data_dilation_strides_backward = dilation_value;
+	}
+	else if(filters_shape.size() == 4 && filters_shape[2] == 3 && filters_shape[3] == 3)
+	{
+		CoordinateDiff padding_value(2,1);
+		Strides dilation_value(2,1);
+		m_padding_below_backward = padding_value;
+		m_padding_above_backward = padding_value;
+        	m_data_dilation_strides_backward = dilation_value;
+	}
+	else
+	{
         m_padding_below_backward.push_back((filters_shape[i + 2] - 1) *
                                                m_window_dilation_strides_forward[i] -
                                            m_padding_below_forward[i]);
@@ -464,6 +484,7 @@ void op::ConvolutionBackpropData::validate_and_infer_types()
              m_window_movement_strides_forward[i]) -
             m_padding_above_forward[i]);
         m_data_dilation_strides_backward.push_back(m_window_movement_strides_forward[i]);
+	}
     }
 
     Shape inferred_convolution_output_shape =
@@ -482,6 +503,21 @@ void op::ConvolutionBackpropData::validate_and_infer_types()
                                              0,
                                              1);
 
+	if(filters_shape.size() == 4 && filters_shape[2] == 1 && filters_shape[3] == 1)
+	{
+	
+        	inferred_convolution_output_shape = m_data_batch_shape;
+	}
+	else if(filters_shape.size() == 4 && filters_shape[2] == 3 && filters_shape[3] == 3)
+	{
+		if(output_delta_shape[2]== m_data_batch_shape[2] && output_delta_shape[3]== m_data_batch_shape[3])
+		{
+		CoordinateDiff padding_value(2,0);
+		m_padding_below_backward = padding_value;
+		m_padding_above_backward = padding_value;
+		}
+        	inferred_convolution_output_shape = m_data_batch_shape;
+	}
     NODE_VALIDATION_ASSERT(this, inferred_convolution_output_shape == m_data_batch_shape)
         << "Specified data batch shape does not match the inferred data batch shape "
         << "(specified shape: " << m_data_batch_shape
@@ -619,6 +655,27 @@ void op::ConvolutionBackpropFilters::validate_and_infer_types()
     {
         m_window_movement_strides_backward.push_back(m_window_dilation_strides_forward[i]);
         m_window_dilation_strides_backward.push_back(m_window_movement_strides_forward[i]);
+	/*
+	if(data_batch_shape.size() == 4 && data_batch_shape[2] == 1 && data_batch_shape[3] == 1)
+	{
+		CoordinateDiff padding_value(2,0);
+		Strides dilation_value(2,1);
+		m_padding_below_backward = padding_value;
+		m_padding_above_backward = padding_value;
+        	m_data_dilation_strides_backward = dilation_value;
+	}
+	*/
+	if(m_filters_shape.size() == 4 && m_filters_shape[2] == 3 && m_filters_shape[3] == 3)
+	{
+        	//m_window_movement_strides_backward = m_window_movement_strides_forward;
+		CoordinateDiff padding_value(2,1);
+		Strides dilation_value(2,1);
+		m_padding_below_backward = padding_value;
+		m_padding_above_backward = padding_value;
+        	m_data_dilation_strides_backward = dilation_value;
+	}
+	else
+	{
         m_padding_below_backward.push_back(m_padding_below_forward[i]);
         m_padding_above_backward.push_back(
             m_padding_above_forward[i] -
@@ -628,6 +685,7 @@ void op::ConvolutionBackpropFilters::validate_and_infer_types()
              (m_filters_shape[i + 2] - 1) * m_window_dilation_strides_forward[i]) %
                 m_window_movement_strides_forward[i]);
         m_data_dilation_strides_backward.push_back(m_data_dilation_strides_forward[i]);
+	}
     }
 
     Shape inferred_convolution_output_shape =
@@ -646,6 +704,16 @@ void op::ConvolutionBackpropFilters::validate_and_infer_types()
                                              1,
                                              0);
 
+	if(m_filters_shape.size() == 4 && m_filters_shape[2] == 3 && m_filters_shape[3] == 3)
+	{
+		if(data_batch_shape == output_delta_shape) 
+		{
+		CoordinateDiff padding_value(2,0);
+		m_padding_below_backward = padding_value;
+		m_padding_above_backward = padding_value;
+		}
+		inferred_convolution_output_shape = m_filters_shape;
+	}
     NODE_VALIDATION_ASSERT(this, inferred_convolution_output_shape == m_filters_shape)
         << "Specified filters shape does not match the inferred filters shape "
         << "(specified shape: " << m_filters_shape
