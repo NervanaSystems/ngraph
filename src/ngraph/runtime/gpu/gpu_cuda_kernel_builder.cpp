@@ -930,14 +930,6 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
                                                "non_reduce_input_index",
                                                non_reduce_rank,
                                                true);
-        /*
-        collective_coordinate_transform_helper(writer,
-                                               "non_reduce_idx",
-                                               "non_reduce_strides",
-                                               "non_reduce_strides_in_input",
-                                               "non_reduce_input_index",
-                                               non_reduce_rank);
-*/
         writer << "uint32_t tid = threadIdx.x;\n";
         writer << "uint32_t reduce_idx = tid;\n";
         writer << data_type << " r_sum = 0;\n";
@@ -958,7 +950,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
                                                    true);
             writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
             writer << "input_i = in2[input_idx];\n";
-            writer << "sdata[block_size + reduce_idx] = input_i;\n";
+            writer << "sdata[blocksize + reduce_idx] = input_i;\n";
             writer << "r_sum += input_i;\n";
             writer << "reduce_idx += blocksize;\n";
         }
@@ -1044,7 +1036,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
         writer << "while (reduce_idx < reduce_count && reduce_idx < max_data_count)\n";
         writer.block_begin();
         {
-            writer << "input_i = sdata[block_size + reduce_idx] - r_mean;\n";
+            writer << "input_i = sdata[blocksize + reduce_idx] - r_mean;\n";
             writer << "input_i = input_i * input_i;\n";
             writer << "r_sum += input_i;\n";
             writer << "reduce_idx += blocksize;\n";
@@ -1131,7 +1123,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
         writer << "while (reduce_idx < reduce_count && reduce_idx < max_data_count)\n";
         writer.block_begin();
         {
-                        collective_coordinate_transform_helper(writer,
+            collective_coordinate_transform_helper(writer,
                                                    "reduce_idx",
                                                    "reduce_strides",
                                                    "reduce_strides_magic",
@@ -1142,7 +1134,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
                                                    reduce_rank,
                                                    true);
             writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
-            writer << "input_i = sdata[block_size + reduce_idx] - r_mean;\n";
+            writer << "input_i = sdata[blocksize + reduce_idx] - r_mean;\n";
             writer << "input_i = input_i * inv_sqrt_var;\n";
             writer << "out0[input_idx] = input_i * gamma + beta;\n";
             writer << "reduce_idx += blocksize;\n";
