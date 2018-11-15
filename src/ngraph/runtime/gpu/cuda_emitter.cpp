@@ -2547,6 +2547,14 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type
                        reduce_strides,
                        reduce_strides_in_input);
 
+    std::vector<int> reduce_strides_magic;
+    std::vector<int> reduce_strides_shift;
+    std::vector<int> non_reduce_strides_magic;
+    std::vector<int> non_reduce_strides_shift;
+
+    div_to_mul(reduce_strides, reduce_strides_magic, reduce_strides_shift);
+    div_to_mul(non_reduce_strides, non_reduce_strides_magic, non_reduce_strides_shift);
+
     uint32_t aligned_grid_size_x = static_cast<uint32_t>(shape_size(non_reduce_shape));
     uint32_t reduce_count = static_cast<uint32_t>(shape_size(reduce_shape));
 
@@ -2558,6 +2566,7 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type
     uint32_t shared_data_bytes = prop.sharedMemPerBlock;
     uint32_t shared_data_count = shared_data_bytes / dtype.size();
 
+    NGRAPH_INFO << "non reduce" << join(non_reduce_strides);
     // running factor
     float factor = 1.0;
     auto args = m_primitive_emitter->add_kernel_args();
@@ -2570,8 +2579,12 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type
         .add_placeholder(dtype.c_type_string(), "out3")
         .add_placeholder(dtype.c_type_string(), "out4")
         .add("non_reduce_strides", non_reduce_strides)
+        .add("non_reduce_strides_magic", non_reduce_strides_magic)
+        .add("non_reduce_strides_shift", non_reduce_strides_shift)
         .add("non_reduce_strides_in_input", non_reduce_strides_in_input)
         .add("reduce_strides", reduce_strides)
+        .add("reduce_strides_magic", reduce_strides_magic)
+        .add("reduce_strides_shift", reduce_strides_shift)
         .add("reduce_strides_in_input", reduce_strides_in_input)
         .add("eps", eps)
         .add("factor", factor)
@@ -3387,6 +3400,20 @@ uint32_t runtime::gpu::CUDAEmitter::align_to_block_size(uint32_t threads, uint32
     }
     uint32_t r = (threads + block_size - 1) / block_size;
     return r;
+}
+
+void runtime::gpu::CUDAEmitter::div_to_mul(const NVShape& shape,
+                                           std::vector<int>& magic,
+                                           std::vector<int>& shift)
+{
+    for (int i = 0; i < shape.size(); i++)
+    {
+        int _magic;
+        int _shift;
+        std::tie(_magic, _shift) = idiv_magic_u64(shape[i]);
+        magic.push_back(_magic);
+        shift.push_back(_shift);
+    }
 }
 
 void runtime::gpu::CUDAEmitter::sync()

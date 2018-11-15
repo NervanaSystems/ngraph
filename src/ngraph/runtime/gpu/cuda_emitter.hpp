@@ -263,6 +263,9 @@ namespace ngraph
                                         NVShape& reduce_shape,
                                         NVShape& reduce_strides,
                                         NVShape& reduce_strides_in_input);
+                void div_to_mul(const NVShape& shape,
+                                std::vector<int>& magic,
+                                std::vector<int>& shift);
 
                 GPUPrimitiveEmitter* m_primitive_emitter;
                 GPURuntimeContext* m_ctx;

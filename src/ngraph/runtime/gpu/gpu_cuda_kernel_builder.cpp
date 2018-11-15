@@ -922,9 +922,21 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
         collective_coordinate_transform_helper(writer,
                                                "non_reduce_idx",
                                                "non_reduce_strides",
+                                               "non_reduce_strides_magic",
+                                               "non_reduce_strides_shift",
+                                               "non_reduce_strides_in_input",
+                                               "non_reduce_coordinate",
+                                               "non_reduce_input_index",
+                                               non_reduce_rank,
+                                               true);
+        /*
+        collective_coordinate_transform_helper(writer,
+                                               "non_reduce_idx",
+                                               "non_reduce_strides",
                                                "non_reduce_strides_in_input",
                                                "non_reduce_input_index",
                                                non_reduce_rank);
+*/
         writer << "uint32_t tid = threadIdx.x;\n";
         writer << "uint32_t reduce_idx = tid;\n";
         writer << data_type << " r_sum = 0;\n";
@@ -936,9 +948,21 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
             collective_coordinate_transform_helper(writer,
                                                    "reduce_idx",
                                                    "reduce_strides",
+                                                   "reduce_strides_magic",
+                                                   "reduce_strides_shift",
+                                                   "reduce_strides_in_input",
+                                                   "coordinate",
+                                                   "reduce_input_index",
+                                                   reduce_rank,
+                                                   true);
+            /*
+            collective_coordinate_transform_helper(writer,
+                                                   "reduce_idx",
+                                                   "reduce_strides",
                                                    "reduce_strides_in_input",
                                                    "reduce_input_index",
                                                    reduce_rank);
+*/
             writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
             writer << "input_i = in2[input_idx];\n";
             writer << "r_sum += input_i;\n";
@@ -1010,9 +1034,21 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
             collective_coordinate_transform_helper(writer,
                                                    "reduce_idx",
                                                    "reduce_strides",
+                                                   "reduce_strides_magic",
+                                                   "reduce_strides_shift",
+                                                   "reduce_strides_in_input",
+                                                   "coordinate",
+                                                   "reduce_input_index",
+                                                   reduce_rank,
+                                                   true);
+            /*
+            collective_coordinate_transform_helper(writer,
+                                                   "reduce_idx",
+                                                   "reduce_strides",
                                                    "reduce_strides_in_input",
                                                    "reduce_input_index",
                                                    reduce_rank);
+*/
             writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
             writer << "input_i = in2[input_idx] - r_mean;\n";
             writer << "input_i = input_i * input_i;\n";
@@ -1069,7 +1105,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
             writer << "inv_sqrt_var = 1.0 / sqrtf(r_var + eps);\n";
             writer << "sdata[0] = inv_sqrt_var;\n";
             writer << " out4[non_reduce_idx] = inv_sqrt_var;\n";
-            writer << " out2[non_reduce_idx] = r_var * factor + out1[non_reduce_idx] * (1.0 - "
+            writer << " out2[non_reduce_idx] = r_var * factor + out2[non_reduce_idx] * (1.0 - "
                       "factor);\n";
         }
         writer.block_end();
@@ -1083,9 +1119,21 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
             collective_coordinate_transform_helper(writer,
                                                    "reduce_idx",
                                                    "reduce_strides",
+                                                   "reduce_strides_magic",
+                                                   "reduce_strides_shift",
+                                                   "reduce_strides_in_input",
+                                                   "coordinate",
+                                                   "reduce_input_index",
+                                                   reduce_rank,
+                                                   true);
+            /*
+            collective_coordinate_transform_helper(writer,
+                                                   "reduce_idx",
+                                                   "reduce_strides",
                                                    "reduce_strides_in_input",
                                                    "reduce_input_index",
                                                    reduce_rank);
+*/
             writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
             writer << "input_i = in2[input_idx] - r_mean;\n";
             writer << "input_i = input_i * inv_sqrt_var;\n";
@@ -2564,6 +2612,10 @@ void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::C
     //  product = product % stride[0]
     //  d1 = product/stride[1]
     //  ...
+    if (rank == 0)
+    {
+        return;
+    }
     writer << "uint32_t coordinate_product = " << i_coord_product << ";\n";
     for (size_t i = 0; i < rank; i++)
     {
@@ -2577,6 +2629,40 @@ void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::C
                << i_stride_shift << brace_open << i << brace_close << ");\n";
     }
 }
+
+void runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
+    codegen::CodeWriter& writer,
+    std::string i_thread_index,
+    std::string i_strides,
+    std::string i_stride_magic,
+    std::string i_stride_shift,
+    std::string i_reduced_strides,
+    std::string o_coordinates,
+    std::string reduced_idx,
+    size_t rank,
+    bool register_arguments)
+{
+    coordinate_transform_to_multi_d(writer,
+                                    i_strides,
+                                    i_stride_magic,
+                                    i_stride_shift,
+                                    i_thread_index,
+                                    o_coordinates,
+                                    rank,
+                                    register_arguments);
+
+    std::string brace_open = (register_arguments) ? "" : "[";
+    std::string brace_close = (register_arguments) ? "" : "]";
+
+    // index into reduced tensor from coordinates of non-reduced tensor
+    writer << "uint32_t " << reduced_idx << " = 0;\n";
+    for (size_t i = 0; i < rank; i++)
+    {
+        writer << reduced_idx << " += " << o_coordinates << i << " * " << i_reduced_strides
+               << brace_open << i << brace_close << ";\n";
+    }
+}
+
 std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
     codegen::CodeWriter& writer,
     std::string i_thread_index,
