@@ -1537,8 +1537,12 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
     ss << "pool_op" << pool_op << "dtype_" << dtype.c_type_string() << "_dir"
        << static_cast<int>(direction) << "_i" << join(input_shape, "_") << "_o"
        << join(output_shape, "_") << "_ws" << join(window_shape, "_") << "_wst"
-       << join(window_strides, "_") << "_pb" << join(padding_below, "_") << "_pb"
+       << join(window_strides, "_") << "_pb" << join(padding_below, "_") << "_pa"
        << join(padding_above, "_");
+    if (bprop_needs_pooling)
+    {
+        ss << "_fprop_bprop";
+    }
     std::string hash = ss.str();
 
     // check if the requested kernel is already an inserted primitive
