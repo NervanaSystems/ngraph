@@ -47,7 +47,7 @@ namespace ngraph
             }
 
             const std::string& get_type() const { return m_type; }
-            bool compile(const std::shared_ptr<Function>& function) const
+            runtime::Handle compile(const std::shared_ptr<Function>& function) const
             {
                 return get().compile(function);
             }
