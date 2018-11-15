@@ -34,9 +34,9 @@ if (NGRAPH_INTELGPU_ENABLE)
     target_link_libraries(intelgpu_backend PUBLIC ngraph)
     set_target_properties(intelgpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
-    find_package(CLDNN REQUIRED)
-    target_include_directories(intelgpu_backend SYSTEM PUBLIC ${CLDNN_INCLUDE_DIRS})
-    target_link_libraries(intelgpu_backend PUBLIC ${CLDNN_LIBRARIES})
+    # find_package(CLDNN REQUIRED)
+    # target_include_directories(intelgpu_backend SYSTEM PUBLIC ${CLDNN_INCLUDE_DIRS})
+    target_link_libraries(intelgpu_backend PUBLIC libcldnn)
 
     install(TARGETS intelgpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

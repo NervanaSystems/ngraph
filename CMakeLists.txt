@@ -283,6 +283,7 @@ include(cmake/external_gtest.cmake)
 include(cmake/external_json.cmake)
 include(cmake/external_eigen.cmake)
 include(cmake/external_mkldnn.cmake)
+include(cmake/external_cldnn.cmake)
 
 if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
     include(cmake/external_llvm_prebuilt.cmake)
