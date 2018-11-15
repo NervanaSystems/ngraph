@@ -16,30 +16,37 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
-
-#include "ngraph/op/util/op_annotations.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pass
     {
-        namespace cpu
-        {
-            /// \brief Annotations added to graph ops by CPU backend passes
-            class CPUOpAnnotations : public ngraph::op::util::OpAnnotations
-            {
-            public:
-                CPUOpAnnotations() {}
-                bool is_mkldnn_op() { return m_mkldnn_op; }
-                void set_mkldnn_op(bool val) { m_mkldnn_op = val; }
-            private:
-                bool m_mkldnn_op = false;
-            };
-
-            std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)>
-                get_annotations_factory();
-        }
+        class PropagateCacheability;
     }
 }
+
+class ngraph::pass::PropagateCacheability : public FunctionPass
+{
+public:
+    PropagateCacheability()
+        : FunctionPass()
+    {
+    }
+
+    PropagateCacheability(
+        std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)> func)
+        : FunctionPass()
+        , op_annotations_factory(func)
+    {
+    }
+
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
+
+private:
+    std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)> op_annotations_factory =
+        []() -> std::shared_ptr<ngraph::op::util::OpAnnotations> {
+        auto op_annotations = std::make_shared<ngraph::op::util::OpAnnotations>();
+        return op_annotations;
+    };
+};
