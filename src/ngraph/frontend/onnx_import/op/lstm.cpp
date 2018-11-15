@@ -49,15 +49,15 @@ namespace ngraph
         {
             namespace
             {
-                using NgraphNodePtr = std::shared_ptr<ngraph::Node>;
-
-                NgraphNodePtr add(const NgraphNodePtr& lhs, const NgraphNodePtr& rhs)
+                std::shared_ptr<ngraph::Node> add(const std::shared_ptr<ngraph::Node>& lhs,
+                                                  const std::shared_ptr<ngraph::Node>& rhs)
                 {
                     auto args = numpy_style_broadcast_for_binary_operation(lhs, rhs);
                     return {std::make_shared<ngraph::op::Add>(args.at(0), args.at(1))};
                 }
 
-                NgraphNodePtr mul(const NgraphNodePtr& lhs, const NgraphNodePtr& rhs)
+                std::shared_ptr<ngraph::Node> mul(const std::shared_ptr<ngraph::Node>& lhs,
+                                                  const std::shared_ptr<ngraph::Node>& rhs)
                 {
                     auto args = numpy_style_broadcast_for_binary_operation(lhs, rhs);
                     return {std::make_shared<ngraph::op::Multiply>(args.at(0), args.at(1))};
@@ -65,12 +65,12 @@ namespace ngraph
 
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ACTIVATION FUNCTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-                NgraphNodePtr Sigmoid(const NgraphNodePtr& arg)
+                std::shared_ptr<ngraph::Node> Sigmoid(const std::shared_ptr<ngraph::Node>& arg)
                 {
                     return std::make_shared<ngraph::op::Sigmoid>(arg);
                 }
 
-                NgraphNodePtr Tanh(const NgraphNodePtr& arg)
+                std::shared_ptr<ngraph::Node> Tanh(const std::shared_ptr<ngraph::Node>& arg)
                 {
                     return std::make_shared<ngraph::op::Tanh>(arg);
                 }
@@ -79,7 +79,7 @@ namespace ngraph
 
                 struct LSTMNgInputMap
                 {
-                    using iterator = std::map<std::string, NgraphNodePtr>::iterator;
+                    using iterator = std::map<std::string, std::shared_ptr<ngraph::Node>>::iterator;
 
                     explicit LSTMNgInputMap(const Node& node)
                     {
@@ -158,10 +158,10 @@ namespace ngraph
                         }
                     }
 
-                    NgraphNodePtr& operator[](const std::string& key) { return m_map[key]; }
+                    std::shared_ptr<ngraph::Node>& operator[](const std::string& key) { return m_map[key]; }
                     iterator begin() { return m_map.begin(); }
                     iterator end() { return m_map.end(); }
-                    std::map<std::string, NgraphNodePtr> m_map;
+                    std::map<std::string, std::shared_ptr<ngraph::Node>> m_map;
                 };
 
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ATTRIBUTES PARSING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -173,7 +173,8 @@ namespace ngraph
                     LSTM_DIRECTION_BIDIRECTIONAL
                 };
 
-                using ActivationFunc = std::function<NgraphNodePtr(const NgraphNodePtr&)>;
+                using ActivationFunc = std::function<std::shared_ptr<ngraph::Node>(
+                    const std::shared_ptr<ngraph::Node>&)>;
                 using ActivationFuncsMap = std::unordered_map<std::string, ActivationFunc>;
 
                 struct LSTMAttributes
@@ -263,15 +264,15 @@ namespace ngraph
                         // Ht_R    - Hidden state multiplied by weights tensor at current time step.
 
                         NodeVector p_iof = reshape::split(m_input_map["P"], 3);
-                        NgraphNodePtr p_i = p_iof.at(0);
-                        NgraphNodePtr p_o = p_iof.at(1);
-                        NgraphNodePtr p_f = p_iof.at(2);
-                        NgraphNodePtr H_t = m_input_map["init_H"];
-                        NgraphNodePtr C_t = m_input_map["init_C"];
+                        std::shared_ptr<ngraph::Node> p_i = p_iof.at(0);
+                        std::shared_ptr<ngraph::Node> p_o = p_iof.at(1);
+                        std::shared_ptr<ngraph::Node> p_f = p_iof.at(2);
+                        std::shared_ptr<ngraph::Node> H_t = m_input_map["init_H"];
+                        std::shared_ptr<ngraph::Node> C_t = m_input_map["init_C"];
                         NodeVector h_list;
 
                         NodeVector b_W_R = reshape::split(m_input_map["B"], 2);
-                        NgraphNodePtr bias = b_W_R.at(0) + b_W_R.at(1);
+                        std::shared_ptr<ngraph::Node> bias = b_W_R.at(0) + b_W_R.at(1);
                         NodeVector in_seqs =
                             reshape::split(m_input_map["X"], m_input_map["X"]->get_shape().at(0));
                         for (auto& in_x : in_seqs)
@@ -325,7 +326,8 @@ namespace ngraph
                         {
                             exp_h_list.push_back(reshape::add_empty_axes(ht));
                         }
-                        NgraphNodePtr Y{std::make_shared<ngraph::op::Concat>(exp_h_list, 0)};
+                        std::shared_ptr<ngraph::Node> Y{
+                            std::make_shared<ngraph::op::Concat>(exp_h_list, 0)};
 
                         // Expand Y so that it has expected shape:
                         // [seq_length, num_directions, batch_size, hidden_size]
