@@ -917,7 +917,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
         writer << "extern __shared__ " << data_type << " sdata[];\n";
         writer << "uint32_t non_reduce_idx = blockIdx.x;\n";
         writer << "uint32_t blocksize = blockDim.x;\n";
-        writer << "uint32_t max_data_count = shared_data_count - blocksize;\n"
+        writer << "uint32_t max_data_count = shared_data_count - blocksize;\n";
         writer << data_type << " gamma = in0[non_reduce_idx];\n";
         writer << data_type << " beta = in1[non_reduce_idx];\n";
         collective_coordinate_transform_helper(writer,
@@ -958,7 +958,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
                                                    true);
             writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
             writer << "input_i = in2[input_idx];\n";
-            writer << "sdata[block_size + reduce_idx] = input_i;\n"
+            writer << "sdata[block_size + reduce_idx] = input_i;\n";
             writer << "r_sum += input_i;\n";
             writer << "reduce_idx += blocksize;\n";
         }
