@@ -53,12 +53,12 @@ namespace ngraph
                                                         const std::string& data_type,
                                                         size_t out_rank);
                 static void get_batchnorm_with_stats_op(codegen::CodeWriter& writer,
-                            const std::string& name,
-                            runtime::gpu::GPUKernelArgs& args,
-                            const std::string& data_type,
-                            size_t non_reduce_rank,
-                            size_t reduce_rank,
-                            size_t block_size_x);
+                                                        const std::string& name,
+                                                        runtime::gpu::GPUKernelArgs& args,
+                                                        const std::string& data_type,
+                                                        size_t non_reduce_rank,
+                                                        size_t reduce_rank,
+                                                        size_t block_size_x);
 
                 static void get_elementwise_op(codegen::CodeWriter& writer,
                                                const std::string& name,
@@ -232,13 +232,12 @@ namespace ngraph
                                                            std::string o_coordinates,
                                                            size_t rank,
                                                            bool register_arguments = false);
-                static std::string
-                    collective_coordinate_transform_helper(codegen::CodeWriter& writer,
-                                                           std::string in_index,
-                                                           std::string in_strides,
-                                                           std::string out_strides,
-                                                           std::string out_index,
-                                                           size_t rank);
+                static void collective_coordinate_transform_helper(codegen::CodeWriter& writer,
+                                                                   std::string in_index,
+                                                                   std::string in_strides,
+                                                                   std::string out_strides,
+                                                                   std::string out_index,
+                                                                   size_t rank);
 
                 static void coordinate_transform_to_multi_d(codegen::CodeWriter& writer,
                                                             std::string i_strides,

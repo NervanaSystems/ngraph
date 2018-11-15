@@ -391,8 +391,9 @@ void runtime::gpu::GPU_Emitter::emit_BatchNormTraining(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_BatchNormTrainingWithStats(EMIT_ARGS)
 {
-    // ::emit_BatchNorm<ngraph::op::gpu::BatchNormTrainingWithStats>(
-    //     external_function, writer, node, args, out, CUDNNEmitter::Prop::Forward, true);
+    //     ::emit_BatchNorm<ngraph::op::gpu::BatchNormTrainingWithStats>(
+    //         external_function, writer, node, args, out, CUDNNEmitter::Prop::Forward, true);
+
     const auto batchnorm = static_cast<const ngraph::op::BatchNormTraining*>(node);
 
     NGRAPH_INFO << join(out[0].get_shape());

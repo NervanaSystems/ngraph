@@ -2509,20 +2509,21 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type
     simplify_reduce(result_shape, reduce_axis, simplified_result_shape, simplified_reduce_axis);
 
     // TODO: currently we set it to 64, will add tuning method later
-    uint32_t block_size_x = 64;
+    uint32_t block_size_x = 1024;
     size_t rank = simplified_result_shape.size();
     size_t reduce_rank = simplified_reduce_axis.size();
     size_t non_reduce_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
-    std::string kernel_name = "batchnorm_with_stats_" + dtype.c_type_string() + "_ri_" + std::to_string(rank) + "_rr_" + std::to_string(reduce_rank) + "_eps_" +
-                   std::to_string(eps) + "_bs_" + std::to_string(block_size_x);
+    std::string kernel_name = "batchnorm_with_stats_" + dtype.c_type_string() + "_ri_" +
+                              std::to_string(rank) + "_rr_" + std::to_string(reduce_rank) + "_bs_" +
+                              std::to_string(block_size_x);
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
-    std::replace(kernel_name.begin(), kernel_name.end(), '.', '_');
 
     std::stringstream ss;
     ss << kernel_name << "_s_" << join(simplified_result_shape, "_") << "_axis_"
-       << join(simplified_reduce_axis, "_");
+       << join(simplified_reduce_axis, "_") << +"_eps_" << eps;
     auto hash = ss.str();
+    std::replace(hash.begin(), hash.end(), '.', '_');
     NGRAPH_INFO << hash;
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
@@ -2533,14 +2534,29 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type
 
     NVShape non_reduce_shape;
     NVShape non_reduce_strides;
-    NVsahpe non_reduce_strides_in_input;
+    NVShape non_reduce_strides_in_input;
     NVShape reduce_shape;
     NVShape reduce_strides;
     NVShape reduce_strides_in_input;
-    get_reduce_strides(simplified_result_shape, simplified_reduce_axis, non_reduce_shape, non_reduce_strides, non_reduce_strides_in_input, reduce_shape, reduce_strides, reduce_strides_in_input);
+    get_reduce_strides(simplified_result_shape,
+                       simplified_reduce_axis,
+                       non_reduce_shape,
+                       non_reduce_strides,
+                       non_reduce_strides_in_input,
+                       reduce_shape,
+                       reduce_strides,
+                       reduce_strides_in_input);
 
     uint32_t aligned_grid_size_x = static_cast<uint32_t>(shape_size(non_reduce_shape));
     uint32_t reduce_count = static_cast<uint32_t>(shape_size(reduce_shape));
+
+    // Use shared mem allowed per block
+    int device_num = 0;
+    CUDA_RT_SAFE_CALL(cudaGetDevice(&device_num));
+    cudaDeviceProp prop;
+    CUDA_RT_SAFE_CALL(cudaGetDeviceProperties(&prop, device_num));
+    uint32_t shared_data_bytes = prop.sharedMemPerBlock;
+    uint32_t shared_data_count = shared_data_bytes / dtype.size();
 
     // running factor
     float factor = 1.0;
@@ -2559,7 +2575,8 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type
         .add("reduce_strides_in_input", reduce_strides_in_input)
         .add("eps", eps)
         .add("factor", factor)
-        .add("reduce_count", reduce_count);
+        .add("reduce_count", reduce_count)
+        .add("shared_data_count", shared_data_count);
 
     // if the kernel has not been compiled, build it
     auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
@@ -2567,8 +2584,13 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type
     {
         codegen::CodeWriter writer;
         CudaKernelBuilder::add_pod_typedefs(writer);
-        runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(
-            writer, kernel_name, args, dtype.c_type_string(), non_reduce_rank, reduce_rank, block_size_x);
+        runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(writer,
+                                                                     kernel_name,
+                                                                     args,
+                                                                     dtype.c_type_string(),
+                                                                     non_reduce_rank,
+                                                                     reduce_rank,
+                                                                     block_size_x);
         compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
     }
 
@@ -2591,7 +2613,7 @@ size_t runtime::gpu::CUDAEmitter::build_batchnorm_with_stats(const element::Type
                                           block_size_x,
                                           1,
                                           1,
-                                          0,
+                                          shared_data_bytes,
                                           nullptr,
                                           args_list,
                                           nullptr));
@@ -3324,7 +3346,14 @@ void runtime::gpu::CUDAEmitter::simplify_reduce(NVShape in,
     NGRAPH_INFO << "simplified reduce_axis" << join(simplified_reduce_axis);
 }
 
-void runtime::gpu::CUDAEmitter::get_reduce_strides(NVShape input_shape, NVShape reduce_axis,  NVShape& reduce_shape, NVShape& non_reduce_strides, NVShape& non_reduce_strides_in_input, NVShape& reduce_shape, NVShape& reduce_strides, NVShape& reduce_strides_in_input)
+void runtime::gpu::CUDAEmitter::get_reduce_strides(NVShape input_shape,
+                                                   NVShape reduce_axis,
+                                                   NVShape& non_reduce_shape,
+                                                   NVShape& non_reduce_strides,
+                                                   NVShape& non_reduce_strides_in_input,
+                                                   NVShape& reduce_shape,
+                                                   NVShape& reduce_strides,
+                                                   NVShape& reduce_strides_in_input)
 {
     size_t rank = input_shape.size();
     NVShape reduce_flag(rank, 0);

@@ -255,7 +255,14 @@ namespace ngraph
                                      NVShape& simplified_shape,
                                      NVShape& simplified_reduce_axis);
 
-                void get_reduce_strides(NVShape input_shape, NVShape reduce_axis,  NVShape& reduce_shape, NVShape& non_reduce_strides, NVShape& non_reduce_strides_in_input, NVShape& reduce_shape, NVShape& reduce_strides, NVShape& reduce_strides_in_input)
+                void get_reduce_strides(NVShape input_shape,
+                                        NVShape reduce_axis,
+                                        NVShape& non_reduce_shape,
+                                        NVShape& non_reduce_strides,
+                                        NVShape& non_reduce_strides_in_input,
+                                        NVShape& reduce_shape,
+                                        NVShape& reduce_strides,
+                                        NVShape& reduce_strides_in_input);
 
                 GPUPrimitiveEmitter* m_primitive_emitter;
                 GPURuntimeContext* m_ctx;

@@ -914,11 +914,17 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
+        writer << "extern __shared__ " << data_type << " sdata[];\n";
         writer << "uint32_t non_reduce_idx = blockIdx.x;\n";
+        writer << "uint32_t blocksize = blockDim.x;\n";
         writer << data_type << " gamma = in0[non_reduce_idx];\n";
         writer << data_type << " beta = in1[non_reduce_idx];\n";
-        collective_coordinate_transform_helper(
-                writer, "non_reduce_idx", "non_reduce_strides", "non_reduce_strides_in_input", "non_reduce_inpu_index", non_reduce_rank);
+        collective_coordinate_transform_helper(writer,
+                                               "non_reduce_idx",
+                                               "non_reduce_strides",
+                                               "non_reduce_strides_in_input",
+                                               "non_reduce_input_index",
+                                               non_reduce_rank);
         writer << "uint32_t tid = threadIdx.x;\n";
         writer << "uint32_t reduce_idx = tid;\n";
         writer << data_type << " r_sum = 0;\n";
@@ -927,12 +933,16 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
         writer << "while (reduce_idx < reduce_count)\n";
         writer.block_begin();
         {
-            collective_coordinate_transform_helper(
-                writer, "reduce_idx", "reduce_strides", "reduce_strides_in_input", "reduce_input_index", reduce_rank);
-            writer << data_type << " input_idx = reduce_input_idx + non_reduce_input_idx;\n";
+            collective_coordinate_transform_helper(writer,
+                                                   "reduce_idx",
+                                                   "reduce_strides",
+                                                   "reduce_strides_in_input",
+                                                   "reduce_input_index",
+                                                   reduce_rank);
+            writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
             writer << "input_i = in2[input_idx];\n";
             writer << "r_sum += input_i;\n";
-            writer << "reduce_idx += blockDim.x;\n";
+            writer << "reduce_idx += blocksize;\n";
         }
         writer.block_end();
         //reduction sum
@@ -941,7 +951,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
         {
             if (block_size_x > i)
             {
-                writer << "r_sum += __shfl_down_sync(0xffffffff, r_sum, " << i << ", 32));\n";
+                writer << "r_sum += __shfl_down_sync(0xffffffff, r_sum, " << i << ", 32);\n";
             }
         }
 
@@ -970,7 +980,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
             {
                 if (warp_size > i)
                 {
-                    writer << "r_sum += __shfl_down_sync(0xffffffff, r_sum, " << i << ", 32));\n";
+                    writer << "r_sum += __shfl_down_sync(0xffffffff, r_sum, " << i << ", 32);\n";
                 }
             }
         }
@@ -983,15 +993,12 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
             writer << "r_mean = r_sum / static_cast<" << data_type << ">(reduce_count);\n";
             writer << "sdata[0] = r_mean;\n";
             writer << " out3[non_reduce_idx] = r_mean;\n";
-            writer << " out1[non_reduce_idx] = r_mean * factor + out1[non_reduce_idx] * (1.0 - factor);\n";
+            writer << " out1[non_reduce_idx] = r_mean * factor + out1[non_reduce_idx] * (1.0 - "
+                      "factor);\n";
         }
         writer.block_end();
-        if (block_size_x > 32)
-        {
-            writer << "__syncthreads();\n";
-        }
-        writer << data_type << " r_mean = sdata[0];\n";
-
+        writer << "__syncthreads();\n";
+        writer << "r_mean = sdata[0];\n";
 
         //calculate variance
         writer << "r_sum = 0;\n";
@@ -1000,30 +1007,32 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
         writer << "while (reduce_idx < reduce_count)\n";
         writer.block_begin();
         {
-            collective_coordinate_transform_helper(
-                writer, "reduce_idx", "reduce_strides", "reduce_strides_in_input", "reduce_input_index", reduce_rank);
-            writer << data_type << " input_idx = reduce_input_idx + non_reduce_input_idx;\n";
+            collective_coordinate_transform_helper(writer,
+                                                   "reduce_idx",
+                                                   "reduce_strides",
+                                                   "reduce_strides_in_input",
+                                                   "reduce_input_index",
+                                                   reduce_rank);
+            writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
             writer << "input_i = in2[input_idx] - r_mean;\n";
             writer << "input_i = input_i * input_i;\n";
             writer << "r_sum += input_i;\n";
-            writer << "reduce_idx += blockDim.x;\n";
+            writer << "reduce_idx += blocksize;\n";
         }
         writer.block_end();
 
-       //reduction sum
+        //reduction sum
         //accumulate 32 threads for each warp
         for (int i = 16; i >= 1; i >>= 1)
         {
             if (block_size_x > i)
             {
-                writer << "r_sum += __shfl_down_sync(0xffffffff, r_sum, " << i << ", 32));\n";
+                writer << "r_sum += __shfl_down_sync(0xffffffff, r_sum, " << i << ", 32);\n";
             }
         }
 
         if (block_size_x > 32)
         {
-            writer << "uint32_t lane_idx = threadIdx.x & 0x1f; \n";
-            writer << "uint32_t warp_idx = threadIdx.x >> 5; \n";
             writer << "if(lane_idx == 0)\n";
             writer.block_begin();
             {
@@ -1045,7 +1054,7 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
             {
                 if (warp_size > i)
                 {
-                    writer << "r_sum += __shfl_down_sync(0xffffffff, r_sum, " << i << ", 32));\n";
+                    writer << "r_sum += __shfl_down_sync(0xffffffff, r_sum, " << i << ", 32);\n";
                 }
             }
         }
@@ -1060,26 +1069,28 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
             writer << "inv_sqrt_var = 1.0 / sqrtf(r_var + eps);\n";
             writer << "sdata[0] = inv_sqrt_var;\n";
             writer << " out4[non_reduce_idx] = inv_sqrt_var;\n";
-            writer << " out2[non_reduce_idx] = r_var * factor + out1[non_reduce_idx] * (1.0 - factor);\n";
+            writer << " out2[non_reduce_idx] = r_var * factor + out1[non_reduce_idx] * (1.0 - "
+                      "factor);\n";
         }
         writer.block_end();
-        if (block_size_x > 32)
-        {
-            writer << "__syncthreads();\n";
-        }
+        writer << "__syncthreads();\n";
         writer << "inv_sqrt_var = sdata[0];\n";
 
         writer << "reduce_idx = tid;\n";
         writer << "while (reduce_idx < reduce_count)\n";
         writer.block_begin();
         {
-            collective_coordinate_transform_helper(
-                writer, "reduce_idx", "reduce_strides", "reduce_strides_in_input", "reduce_input_index", reduce_rank);
-            writer << data_type << " input_idx = reduce_input_idx + non_reduce_input_idx;\n";
+            collective_coordinate_transform_helper(writer,
+                                                   "reduce_idx",
+                                                   "reduce_strides",
+                                                   "reduce_strides_in_input",
+                                                   "reduce_input_index",
+                                                   reduce_rank);
+            writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
             writer << "input_i = in2[input_idx] - r_mean;\n";
             writer << "input_i = input_i * inv_sqrt_var;\n";
             writer << "out0[reduce_idx] = input_i * gamma + beta;\n";
-            writer << "reduce_idx += blockDim.x;\n";
+            writer << "reduce_idx += blocksize;\n";
         }
         writer.block_end();
     }
@@ -2493,20 +2504,24 @@ void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::C
     //  product = product % stride[0]
     //  d1 = product/stride[1]
     //  ...
-    writer << "int coordinate_product = " << in_index << ";\n";
+    if (rank == 0)
+    {
+        return;
+    }
+    writer << "uint32_t temp_coordinate_product = " << in_index << ";\n";
     for (size_t i = 0; i < rank; i++)
     {
-        writer << "int " << out_coordinates << i << " = coordinate_product / " << in_strides << i
-               << ";\n";
+        writer << "uint32_t " << out_coordinates << i << " = temp_coordinate_product / "
+               << in_strides << i << ";\n";
         if (i != rank - 1)
         {
-            writer << "coordinate_product -=" << out_coordinates << i << " * " << in_strides << i
-                   << ");\n";
+            writer << "temp_coordinate_product -=" << out_coordinates << i << " * " << in_strides
+                   << i << ";\n";
         }
     }
 }
 
-std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
+void runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
     codegen::CodeWriter& writer,
     std::string in_index,
     std::string in_strides,
@@ -2518,13 +2533,14 @@ std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_hel
     coordinate_transform_to_multi_d(writer, in_index, in_strides, out_coordinates, rank);
 
     // index into reduced tensor from coordinates of non-reduced tensor
-    writer << "int " << out_index << " = 0;\n";
+    writer << "uint32_t " << out_index << " = 0;\n";
+
     for (size_t i = 0; i < rank; i++)
     {
         writer << out_index << " += " << out_coordinates << i << " * " << out_strides << i << ";\n";
     }
 
-    return out_index;
+    return;
 }
 
 void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::CodeWriter& writer,
@@ -2548,7 +2564,7 @@ void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::C
     //  product = product % stride[0]
     //  d1 = product/stride[1]
     //  ...
-    writer << "int coordinate_product = " << i_coord_product << ";\n";
+    writer << "uint32_t coordinate_product = " << i_coord_product << ";\n";
     for (size_t i = 0; i < rank; i++)
     {
         if (i != 0)
@@ -2556,7 +2572,7 @@ void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::C
             writer << "coordinate_product -= (" << o_coordinates << i - 1 << " * " << i_strides
                    << brace_open << i - 1 << brace_close << ");\n";
         }
-        writer << "int " << o_coordinates << i << " = division_by_invariant_multiplication("
+        writer << "uint32_t " << o_coordinates << i << " = division_by_invariant_multiplication("
                << "coordinate_product, " << i_stride_magic << brace_open << i << brace_close << ", "
                << i_stride_shift << brace_open << i << brace_close << ");\n";
     }
