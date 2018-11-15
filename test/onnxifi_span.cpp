@@ -14,32 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <gtest/gtest.h>
+#include <vector>
 
-#include <functional>
-#include <memory>
+#include "ngraph/frontend/onnxifi/span.hpp"
 
-#include "ngraph/op/util/op_annotations.hpp"
-
-namespace ngraph
+TEST(onnxifi, span)
 {
-    namespace runtime
-    {
-        namespace cpu
-        {
-            /// \brief Annotations added to graph ops by CPU backend passes
-            class CPUOpAnnotations : public ngraph::op::util::OpAnnotations
-            {
-            public:
-                CPUOpAnnotations() {}
-                bool is_mkldnn_op() { return m_mkldnn_op; }
-                void set_mkldnn_op(bool val) { m_mkldnn_op = val; }
-            private:
-                bool m_mkldnn_op = false;
-            };
+    using namespace ngraph::onnxifi;
 
-            std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)>
-                get_annotations_factory();
-        }
+    std::vector<float> floats{0.f, 0.25f, 0.5f, 1.f, 2.f, 3.f, 4.f, 5.5f};
+    char* buffer{reinterpret_cast<char*>(floats.data())};
+    Span<float> span{buffer, floats.size()};
+    for (std::size_t index{0}; index < span.size(); ++index)
+    {
+        EXPECT_EQ(span.at(index), floats.at(index));
     }
 }
