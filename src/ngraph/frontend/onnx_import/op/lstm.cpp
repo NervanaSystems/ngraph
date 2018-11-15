@@ -65,12 +65,12 @@ namespace ngraph
 
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ACTIVATION FUNCTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-                std::shared_ptr<ngraph::Node> Sigmoid(const std::shared_ptr<ngraph::Node>& arg)
+                std::shared_ptr<ngraph::Node> sigmoid(const std::shared_ptr<ngraph::Node>& arg)
                 {
                     return std::make_shared<ngraph::op::Sigmoid>(arg);
                 }
 
-                std::shared_ptr<ngraph::Node> Tanh(const std::shared_ptr<ngraph::Node>& arg)
+                std::shared_ptr<ngraph::Node> tanh(const std::shared_ptr<ngraph::Node>& arg)
                 {
                     return std::make_shared<ngraph::op::Tanh>(arg);
                 }
@@ -79,13 +79,16 @@ namespace ngraph
 
                 struct LSTMNgInputMap
                 {
-                    using iterator = std::map<std::string, std::shared_ptr<ngraph::Node>>::iterator;
+                    using container_type = std::map<std::string, std::shared_ptr<ngraph::Node>>;
+                    using iterator = typename container_type::iterator;
 
                     explicit LSTMNgInputMap(const Node& node)
                     {
                         const auto& ng_inputs = node.get_ng_inputs();
-                        const std::size_t gates_count{4};
-                        const std::size_t peepholes_count{3};
+                        // We have input, output, forget and cell gates
+                        constexpr std::size_t gates_count{4};
+                        // Peepholes add additional connections to input, output and forget gates.
+                        constexpr std::size_t peepholes_count{3};
 
                         // ----- Mandatory inputs ------
                         // Packed input sequences. Shape: [seq_length, batch_size, input_size]
@@ -158,7 +161,10 @@ namespace ngraph
                         }
                     }
 
-                    std::shared_ptr<ngraph::Node>& operator[](const std::string& key) { return m_map[key]; }
+                    std::shared_ptr<ngraph::Node>& at(const std::string& key)
+                    {
+                        return m_map.at(key);
+                    }
                     iterator begin() { return m_map.begin(); }
                     iterator end() { return m_map.end(); }
                     std::map<std::string, std::shared_ptr<ngraph::Node>> m_map;
@@ -173,186 +179,17 @@ namespace ngraph
                     LSTM_DIRECTION_BIDIRECTIONAL
                 };
 
-                using ActivationFunc = std::function<std::shared_ptr<ngraph::Node>(
-                    const std::shared_ptr<ngraph::Node>&)>;
-                using ActivationFuncsMap = std::unordered_map<std::string, ActivationFunc>;
-
                 struct LSTMAttributes
                 {
                     explicit LSTMAttributes(const Node& node)
                     {
                         // ---- Required -----
                         m_hidden_size = node.get_attribute_value<std::int64_t>("hidden_size");
-
-                        // Register available activation functions.
-                        m_activation_funcs.emplace("Sigmoid",
-                                                   std::bind(Sigmoid, std::placeholders::_1));
-                        m_activation_funcs.emplace("Tanh", std::bind(Tanh, std::placeholders::_1));
                     }
 
-                    ActivationFuncsMap m_activation_funcs{};
                     // Currently only LSTM_DIRECTION_FORWARD is supported.
                     LSTMDirection m_direction{LSTMDirection::LSTM_DIRECTION_FORWARD};
                     std::int64_t m_hidden_size{0};
-                };
-
-                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LSTM NODE CLASS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-                class LSTMNode
-                {
-                public:
-                    explicit LSTMNode(const Node& node)
-                        : m_input_map{node}
-                        , m_attributes{node}
-                        , m_activ_func_f{m_attributes.m_activation_funcs["Sigmoid"]}
-                        , m_activ_func_g{m_attributes.m_activation_funcs["Tanh"]}
-                        , m_activ_func_h{m_attributes.m_activation_funcs["Tanh"]}
-                    {
-                        if (m_attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
-                        {
-                            // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
-                            for (auto& ng_in : m_input_map)
-                            {
-                                if (ng_in.first != "X" && ng_in.first != "seq_lengths")
-                                {
-                                    ASSERT_VALID_ARGUMENT(node,
-                                                          ng_in.second->get_shape().at(0) == 1)
-                                        << "Input: { " << ng_in.first
-                                        << " } first axis has size different "
-                                           "from 1, while direction attribute set to 'forward'.";
-                                    ng_in.second = reshape::squeeze(ng_in.second);
-                                }
-                            }
-                        }
-                    }
-
-                    ~LSTMNode() {}
-                    NodeVector run()
-                    {
-                        // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
-                        // The names used below are analogous to the one used in ONNX documentation.
-                        //
-                        // ------ INPUTS ------
-                        // X - The input tensor. [seq_length, batch_size, input_size]
-                        // W - The weight tensor. [num_directions, 4*hidden_size, input_size]
-                        // R - The recurrence weight tensor. [num_directions, 4*hidden_size, hidden_size]
-                        // B - The bias tensor for input gate. [num_directions, 8*hidden_size]
-                        // P - The weight tensor forr peepholes. [num_directions, 3*hidde_size]
-                        // ------ ACRONYMS ------
-                        // i - input gate
-                        // o - output gate
-                        // f - forget gate
-                        // c - cell gate
-                        // t - time step (t-1 means previous time step)
-                        // ------ VARIABLE NAMES ------
-                        // W       - W parameter weight matrix for input, output, forget, and
-                        //           cell gates.
-                        // R       - R recurrence weight matrix for input, output, forget, and
-                        //           cell gates.
-                        // Wb      - W bias vectors for input, output, forget, and cell gates.
-                        // Rb      - R bias vectors for input, output, forget, and cell gates.
-                        // b_W_R   - Bias vectors for input, output, forget, and cell gates.
-                        //           Concatenation of `[Wb, Rb]`.
-                        // p_[iof] - P peephole weight vector for respectively: input, output,
-                        //           and forget gates.
-                        // H_t     - Hidden state vector at current time step.
-                        // C_t     - Cell state vector at current time step.
-                        // h_list  - The list of hidden states at all processed time steps.
-                        //
-                        // Xt_W    - Input sequence multiplied by weights tensor at current time
-                        //           step.
-                        // Ht_R    - Hidden state multiplied by weights tensor at current time step.
-
-                        NodeVector p_iof = reshape::split(m_input_map["P"], 3);
-                        std::shared_ptr<ngraph::Node> p_i = p_iof.at(0);
-                        std::shared_ptr<ngraph::Node> p_o = p_iof.at(1);
-                        std::shared_ptr<ngraph::Node> p_f = p_iof.at(2);
-                        std::shared_ptr<ngraph::Node> H_t = m_input_map["init_H"];
-                        std::shared_ptr<ngraph::Node> C_t = m_input_map["init_C"];
-                        NodeVector h_list;
-
-                        NodeVector b_W_R = reshape::split(m_input_map["B"], 2);
-                        std::shared_ptr<ngraph::Node> bias = b_W_R.at(0) + b_W_R.at(1);
-                        NodeVector in_seqs =
-                            reshape::split(m_input_map["X"], m_input_map["X"]->get_shape().at(0));
-                        for (auto& in_x : in_seqs)
-                        {
-                            // remove first empty dim, after above split.
-                            in_x = reshape::squeeze(in_x);
-                        }
-
-                        for (const auto& in_x : in_seqs)
-                        {
-                            // (.) - Denotes element-wise multiplication.
-                            // *   - Denotes dot product.
-
-                            // Xt*(W^T) -- for [iofc] gates.
-                            auto Xt_W = std::make_shared<ngraph::op::Dot>(
-                                in_x, reshape::transpose(m_input_map["W"]));
-                            // Ht-1*(R^T)  -- for [iofc] gates.
-                            auto Ht_R = std::make_shared<ngraph::op::Dot>(
-                                H_t, reshape::transpose(m_input_map["R"]));
-                            // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [iofc] gates.
-                            auto gates = add(Xt_W, add(Ht_R, bias));
-
-                            NodeVector split_gates = reshape::split(gates, 4, -1);
-                            // Xt*(Wi^T) + Ht-1*(Ri^T) + Wbi + Rbi
-                            auto i = split_gates.at(0);
-                            // Xt*(Wo^T) + Ht-1*(Ro^T) + Wbo + Rbo
-                            auto o = split_gates.at(1);
-                            // Xt*(Wf^T) + Ht-1*(Rf^T) + Wbf + Rbf
-                            auto f = split_gates.at(2);
-                            // Xt*(Wc^T) + Ht-1*(Rc^T) + Wbc + Rbc
-                            auto c = split_gates.at(3);
-
-                            // f(Xt*(Wi^T) + Ht-1*(Ri^T) + Pi (.) Ct-1 + Wbi + Rbi)
-                            i = m_activ_func_f(add(i, mul(p_i, C_t)));
-                            // f(Xt*(Wf^T) + Ht-1*(Rf^T) + Pf (.) Ct-1 + Wbf + Rbf)
-                            f = m_activ_func_f(add(f, mul(p_f, C_t)));
-                            // ft (.) Ct-1 + it (.) ct
-                            auto C = add(mul(f, C_t), mul(i, m_activ_func_g(c)));
-                            // f(Xt*(Wo^T) + Ht-1*(Ro^T) + Po (.) Ct + Wbo + Rbo)
-                            o = m_activ_func_f(add(o, mul(p_o, C)));
-                            // ot (.) h(Ct)
-                            auto H = mul(o, m_activ_func_h(C));
-                            h_list.push_back(H);
-                            H_t = H;
-                            C_t = C;
-                        }
-                        // The tensor that concats all the intermediate output values of the hidden.
-                        // It has shape [seq_length, batch_size, hidden_size]
-                        NodeVector exp_h_list;
-                        for (const auto& ht : h_list)
-                        {
-                            exp_h_list.push_back(reshape::add_empty_axes(ht));
-                        }
-                        std::shared_ptr<ngraph::Node> Y{
-                            std::make_shared<ngraph::op::Concat>(exp_h_list, 0)};
-
-                        // Expand Y so that it has expected shape:
-                        // [seq_length, num_directions, batch_size, hidden_size]
-                        if (m_attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
-                        {
-                            Shape shape{Y->get_shape()};
-                            shape.insert(std::next(std::begin(shape)), 1);
-                            Y = std::make_shared<ngraph::op::Reshape>(
-                                Y, reshape::get_default_axis_vector(Y->get_shape().size()), shape);
-                        }
-                        return {Y, exp_h_list.back()};
-                    }
-
-                private:
-                    LSTMNgInputMap m_input_map;
-                    LSTMAttributes m_attributes;
-
-                    const ActivationFunc& m_activ_func_f;
-                    const ActivationFunc& m_activ_func_g;
-                    const ActivationFunc& m_activ_func_h;
-
-                    // input, output, cell, forget
-                    const std::size_t m_gates_count{4};
-                    // input, output, forget
-                    const std::size_t m_peepholes_count{3};
                 };
 
             } // anonymous namespace
@@ -361,8 +198,133 @@ namespace ngraph
             {
                 NodeVector lstm(const Node& node)
                 {
-                    LSTMNode lstm{node};
-                    return lstm.run();
+                    LSTMNgInputMap input_map{node};
+                    LSTMAttributes attributes{node};
+
+                    if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
+                    {
+                        // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
+                        for (auto& ng_in : input_map)
+                        {
+                            if (ng_in.first != "X" && ng_in.first != "seq_lengths")
+                            {
+                                ASSERT_VALID_ARGUMENT(node,
+                                                      ng_in.second->get_shape().at(0) == 1)
+                                    << "Input: { " << ng_in.first
+                                    << " } first axis has size different "
+                                       "from 1, while direction attribute set to 'forward'.";
+                                ng_in.second = reshape::squeeze(ng_in.second);
+                            }
+                        }
+                    }
+
+                    // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
+                    // The names used below are analogous to the one used in ONNX documentation.
+                    //
+                    // ------ INPUTS ------
+                    // X - The input tensor. [seq_length, batch_size, input_size]
+                    // W - The weight tensor. [num_directions, 4*hidden_size, input_size]
+                    // R - The recurrence weight tensor. [num_directions, 4*hidden_size, hidden_size]
+                    // B - The bias tensor for input gate. [num_directions, 8*hidden_size]
+                    // P - The weight tensor forr peepholes. [num_directions, 3*hidde_size]
+                    // ------ ACRONYMS ------
+                    // i - input gate
+                    // o - output gate
+                    // f - forget gate
+                    // c - cell gate
+                    // t - time step (t-1 means previous time step)
+                    // ------ VARIABLE NAMES ------
+                    // W       - W parameter weight matrix for input, output, forget, and
+                    //           cell gates.
+                    // R       - R recurrence weight matrix for input, output, forget, and
+                    //           cell gates.
+                    // Wb      - W bias vectors for input, output, forget, and cell gates.
+                    // Rb      - R bias vectors for input, output, forget, and cell gates.
+                    // b_W_R   - Bias vectors for input, output, forget, and cell gates.
+                    //           Concatenation of `[Wb, Rb]`.
+                    // p_[iof] - P peephole weight vector for respectively: input, output,
+                    //           and forget gates.
+                    // H_t     - Hidden state vector at current time step.
+                    // C_t     - Cell state vector at current time step.
+                    // h_list  - The list of hidden states at all processed time steps.
+                    //
+                    // Xt_W    - Input sequence multiplied by weights tensor at current time
+                    //           step.
+                    // Ht_R    - Hidden state multiplied by weights tensor at current time step.
+
+                    NodeVector p_iof = reshape::split(input_map.at("P"), 3);
+                    const auto& p_i = p_iof.at(0);
+                    const auto& p_o = p_iof.at(1);
+                    const auto& p_f = p_iof.at(2);
+                    std::shared_ptr<ngraph::Node> H_t{input_map.at("init_H")};
+                    std::shared_ptr<ngraph::Node> C_t{input_map.at("init_C")};
+                    NodeVector h_list;
+
+                    NodeVector b_W_R = reshape::split(input_map.at("B"), 2);
+                    std::shared_ptr<ngraph::Node> bias = b_W_R.at(0) + b_W_R.at(1);
+                    NodeVector in_seqs =
+                        reshape::split(input_map.at("X"), input_map.at("X")->get_shape().at(0));
+                    for (auto& in_x : in_seqs)
+                    {
+                        // remove first empty dim, after above split.
+                        in_x = reshape::squeeze(in_x);
+                    }
+
+                    for (const auto& in_x : in_seqs)
+                    {
+                        // (.) - Denotes element-wise multiplication.
+                        // *   - Denotes dot product.
+
+                        // Xt*(W^T) -- for [iofc] gates.
+                        auto Xt_W = std::make_shared<ngraph::op::Dot>(
+                            in_x, reshape::transpose(input_map.at("W")));
+                        // Ht-1*(R^T)  -- for [iofc] gates.
+                        auto Ht_R = std::make_shared<ngraph::op::Dot>(
+                            H_t, reshape::transpose(input_map.at("R")));
+                        // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [iofc] gates.
+                        auto gates = add(Xt_W, add(Ht_R, bias));
+
+                        NodeVector split_gates = reshape::split(gates, 4, -1);
+                        auto i = split_gates.at(0);
+                        auto o = split_gates.at(1);
+                        auto f = split_gates.at(2);
+                        auto c = split_gates.at(3);
+
+                        // f(Xt*(Wi^T) + Ht-1*(Ri^T) + Pi (.) Ct-1 + Wbi + Rbi)
+                        i = sigmoid(add(i, mul(p_i, C_t)));
+                        // f(Xt*(Wf^T) + Ht-1*(Rf^T) + Pf (.) Ct-1 + Wbf + Rbf)
+                        f = sigmoid(add(f, mul(p_f, C_t)));
+                        // ft (.) Ct-1 + it (.) ct
+                        auto C = add(mul(f, C_t), mul(i, tanh(c)));
+                        // f(Xt*(Wo^T) + Ht-1*(Ro^T) + Po (.) Ct + Wbo + Rbo)
+                        o = sigmoid(add(o, mul(p_o, C)));
+                        // ot (.) h(Ct)
+                        auto H = mul(o, tanh(C));
+                        h_list.push_back(H);
+                        H_t = H;
+                        C_t = C;
+                    }
+                    // The tensor that concats all the intermediate output values of the hidden.
+                    // It has shape [seq_length, batch_size, hidden_size]
+                    NodeVector exp_h_list;
+                    for (const auto& ht : h_list)
+                    {
+                        // Expand tensors with empty outermost dim, so we can later concatenate them.
+                        exp_h_list.push_back(reshape::add_empty_axes(ht));
+                    }
+                    std::shared_ptr<ngraph::Node> Y{
+                        std::make_shared<ngraph::op::Concat>(exp_h_list, 0)};
+
+                    // Expand Y so that it has expected shape:
+                    // [seq_length, num_directions, batch_size, hidden_size]
+                    if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD)
+                    {
+                        Shape shape{Y->get_shape()};
+                        shape.insert(std::next(std::begin(shape)), 1);
+                        Y = std::make_shared<ngraph::op::Reshape>(
+                            Y, reshape::get_default_axis_vector(Y->get_shape().size()), shape);
+                    }
+                    return {Y, exp_h_list.back()};
                 }
             } // namespace set_1
 

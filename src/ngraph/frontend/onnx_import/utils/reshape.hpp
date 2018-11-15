@@ -150,7 +150,7 @@ namespace ngraph
             /// \return     The vector containing multiple nodes we split input node into.
             ///
             NodeVector split(const std::shared_ptr<ngraph::Node>& node,
-                             std::vector<std::size_t> length_parts,
+                             const std::vector<std::size_t>& length_parts,
                              std::size_t axis = 0);
 
             /// \brief      Split node on specified axis into multiple parts.

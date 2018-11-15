@@ -35,20 +35,17 @@ namespace ngraph
     {
         namespace reshape
         {
-            namespace detail
+            namespace
             {
-                template <typename T>
-                inline T get_valid_array_index(T left, T right)
+                inline std::size_t get_valid_array_index(std::size_t idx, std::size_t axis_size)
                 {
-                    return (left >= 0) ? std::min(left, right)
-                                       : std::max(static_cast<T>(0), right + left);
+                    return std::min(idx, axis_size);
                 }
 
-                inline std::shared_ptr<op::Slice>
-                    make_ng_slice(const std::shared_ptr<ngraph::Node>& node,
-                                  std::vector<std::size_t> axes,
-                                  std::vector<std::size_t> starts,
-                                  std::vector<std::size_t> ends)
+                std::shared_ptr<op::Slice> make_ng_slice(const std::shared_ptr<ngraph::Node>& node,
+                                                         const std::vector<std::size_t>& axes,
+                                                         const std::vector<std::size_t>& starts,
+                                                         const std::vector<std::size_t>& ends)
                 {
                     std::vector<std::size_t> upper_bounds{node->get_shape()};
                     std::vector<std::size_t> lower_bounds(upper_bounds.size());
@@ -63,7 +60,7 @@ namespace ngraph
                     return std::make_shared<op::Slice>(node, lower_bounds, upper_bounds);
                 }
 
-            } // namespace detail
+            } // namespace anonymous
 
             std::shared_ptr<ngraph::Node> flatten(const std::shared_ptr<ngraph::Node>& node,
                                                   int axis)
@@ -241,7 +238,7 @@ namespace ngraph
             }
 
             NodeVector split(const std::shared_ptr<ngraph::Node>& node,
-                             std::vector<std::size_t> length_parts,
+                             const std::vector<std::size_t>& length_parts,
                              std::size_t axis)
             {
                 std::size_t start_index{0};
@@ -249,15 +246,15 @@ namespace ngraph
                 for (const auto& length_part : length_parts)
                 {
                     std::size_t end_index{start_index + length_part};
-                    outputs.push_back(
-                        detail::make_ng_slice(node, {axis}, {start_index}, {end_index}));
+                    outputs.push_back(make_ng_slice(node, {axis}, {start_index}, {end_index}));
                     start_index = end_index;
                 }
                 return outputs;
             }
 
-            NodeVector
-                split(const std::shared_ptr<ngraph::Node>& node, std::size_t split_parts, int axis)
+            NodeVector split(const std::shared_ptr<ngraph::Node>& node,
+                             std::size_t split_parts,
+                             int axis)
             {
                 std::size_t axis_to_split{static_cast<std::size_t>(axis)};
                 if (axis < 0)
