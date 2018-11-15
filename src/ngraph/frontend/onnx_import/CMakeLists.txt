@@ -114,6 +114,8 @@ add_library(onnx_import STATIC
         op/shape.cpp
         op/sigmoid.hpp
         op/sin.hpp
+        op/size.cpp
+        op/size.hpp
         op/slice.cpp
         op/slice.hpp
         op/softmax.cpp
