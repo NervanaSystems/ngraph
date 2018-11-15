@@ -24,6 +24,7 @@ set(SRC
     cpu_external_function.cpp
     cpu_kernels.cpp
     cpu_layout_descriptor.cpp
+    cpu_op_annotations.cpp
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
@@ -169,7 +170,8 @@ if (NGRAPH_CPU_ENABLE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_HALIDE")
         ExternalProject_Get_Property(ext_halide BINARY_DIR)
         target_include_directories(cpu_backend SYSTEM PRIVATE ${BINARY_DIR}/include)
-        target_link_libraries(cpu_backend PRIVATE ${BINARY_DIR}/lib/libHalide.so)
+        target_link_libraries(cpu_backend PRIVATE ${BINARY_DIR}/lib/libHalide.a libhalidellvm)
+        add_dependencies(cpu_backend ext_halide)
     endif()
 
     if(OPENMP_FOUND)
@@ -202,7 +204,7 @@ if (NGRAPH_CPU_ENABLE)
         # CPU backend picking up the wrong version or even multiple versions of the
         # third-party library. -Bsymbolic-functions tells the linker to prefer the internal
         # version inside cpu_backend over what is available through the global symbol table
-        set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions")
+        set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
     endif()
 
     install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
