@@ -321,7 +321,7 @@ void runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
             // the forward pass but does not use them. It also behaves differently
             // for max pool vs avg pool. The repetition of args below is to address
             // this interface in a way that supports both max and avg pooling
-            writer << "void* input[] = {" << node_names(args, {0, 0}) << "};\n";
+            writer << "void* input[] = {" << node_names(args, {0, 0, 0}) << "};\n";
             writer << "void* output[] = {" << node_names(out) << "};\n";
             writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
         }
