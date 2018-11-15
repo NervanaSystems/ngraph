@@ -11,18 +11,16 @@ deep learning frameworks and backends currently are functioning.
 
 ![](doc/sphinx/source/graphics/stackngrknl.png)
 
-<alt="Simplified view of nGraph Compiler stack" width="733" />
-
 
 Starting from the top of the diagram, we present a simplified view of 
-how the nGraph Intermediate Representation (IR) can receive a graph
-from a framework such as TensorFlow\* or MXNet\* when there is a 
-corresponding "Bridge" or import method, such as from NNVM or via 
-[ONNX](http://onnx.ai). Once the nGraph Core ops can begin 
-parsing the graph as a computation graph, they can pattern-match 
-subgraphs for device-specific optimizations; these are then 
-encapsulated. This encapsulation is represented on the diagram as 
-the colored background between the `ngraph` kernel(s) and the the 
+the nGraph Intermediate Representation (IR). The nGraph IR is a format 
+which works with a framework such as TensorFlow\* or MXNet\* when there 
+is a corresponding "Bridge" or import method, such as from NNVM or via 
+[ONNX](http://onnx.ai). Once the nGraph IR can begin using nGraph's 
+Core ops, components lower in the stack can begin parsing and 
+pattern-matching subgraphs for device-specific optimizations; these 
+are then encapsulated. This encapsulation is represented on the diagram 
+as the colored background between the `ngraph` kernel(s) and the the 
 stack above.
 
 Note that everything at or below the "Kernel APIs" and "Subgraph 
@@ -70,9 +68,11 @@ and we plan to expand the nodes to 256 in Q4 ‘18. Additionally, we
 are testing model parallelism in addition to data parallelism.
 
 In this Beta release, nGraph via Bridge code supports only Just In 
-Time (JiT) compilation; the nGraph ONNX companion tool supports 
-dynamic graphs and will add additional support for Ahead of Time 
-compilation in the official release.
+Time (JiT) compilation; the ONNX importer does not support anything 
+that nGraph cannot support. While nGraph currently has very limited 
+support for dynamic graphs, it is possible to get dynamic graphs 
+working. Future releases will add better support and use case 
+examples for such things as Ahead of Time compilation.
 
 Features
 --------
@@ -81,21 +81,27 @@ The nGraph (IR) Intermediate Representation contains a combination
 of device-specific and non-device-specific optimization :
 
 -   **Fusion** -- Fuse multiple ops to to decrease memory usage.
--   **Data layout abstraction** -- Make abstraction easier and faster with nGraph translating element order to work best for a given or available device.
--   **Data reuse** -- Save results and reuse for subgraphs with the same input.
--   **Graph scheduling** -- Run similar subgraphs in parallel via multi-threading.
--   **Graph partitioning** -- Partition subgraphs to run on different devices to speed up computation; make better use of spare CPU cycles with nGraph.
--   **Memory management** -- Prevent peak memory usage by intercepting a graph with or by a "saved checkpoint," and to enable data auditing.
--   **Data layout abstraction** -- Make abstraction easier and faster with nGraph translating element order to work best for whatever given or available device.
+-   **Data layout abstraction** -- Make abstraction easier and faster 
+    with nGraph translating element order to work best for a given or 
+    available device.
+-   **Data reuse** -- Save results and reuse for subgraphs with the 
+    same input.
+-   **Graph scheduling** -- Run similar subgraphs in parallel via 
+    multi-threading.
+-   **Graph partitioning** -- Partition subgraphs to run on different 
+    devices to speed up computation; make better use of spare CPU cycles 
+    with nGraph.
+-   **Memory management** -- Prevent peak memory usage by intercepting 
+    a graph with or by a "saved checkpoint," and to enable data auditing.
+-   **Data layout abstraction** -- Make abstraction easier and faster 
+    with nGraph translating element order to work best for whatever given 
+    or available device.
 
 
 Current nGraph Compiler full stack
 ----------------------------------
 
 ![](doc/sphinx/source/graphics/full-ngstck.png)
-
-<alt="Full view of nGraph Compiler stack" width="733" />
-
 
 
 In addition to IA and NNP transformers, nGraph Compiler stack has transformers
