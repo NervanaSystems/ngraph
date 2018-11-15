@@ -56,6 +56,8 @@ quantize_ROUND_TOWARD_INFINITY
 quantize_ROUND_TOWARD_ZERO
 quantize_ROUND_UP
 quantize_ROUND_DOWN
+# maxpool bug which requires maxpool backprop op change to fix
+maxpool_bprop_larger_than_cache
 shape_of_scalar
 shape_of_vector
 shape_of_matrix

@@ -31,6 +31,7 @@ dot_4d_5d_multi_axis_more
 generate_mask
 function_call
 max_pool_3d
+maxpool_bprop_larger_than_cache
 numeric_double_inf
 numeric_double_nan
 quantize
