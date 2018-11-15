@@ -20,7 +20,9 @@ add_library(onnxifi-ngraph SHARED
     backend_manager.hpp
     backend_manager.cpp
     exceptions.hpp
-    span.hpp)
+    span.hpp
+    tensor.hpp
+    tensor.cpp)
 
 target_link_libraries(onnxifi-ngraph PRIVATE ngraph)
 
