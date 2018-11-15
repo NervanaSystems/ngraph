@@ -208,8 +208,7 @@ namespace ngraph
                         {
                             if (ng_in.first != "X" && ng_in.first != "seq_lengths")
                             {
-                                ASSERT_VALID_ARGUMENT(node,
-                                                      ng_in.second->get_shape().at(0) == 1)
+                                ASSERT_VALID_ARGUMENT(node, ng_in.second->get_shape().at(0) == 1)
                                     << "Input: { " << ng_in.first
                                     << " } first axis has size different "
                                        "from 1, while direction attribute set to 'forward'.";

@@ -252,9 +252,8 @@ namespace ngraph
                 return outputs;
             }
 
-            NodeVector split(const std::shared_ptr<ngraph::Node>& node,
-                             std::size_t split_parts,
-                             int axis)
+            NodeVector
+                split(const std::shared_ptr<ngraph::Node>& node, std::size_t split_parts, int axis)
             {
                 std::size_t axis_to_split{static_cast<std::size_t>(axis)};
                 if (axis < 0)
