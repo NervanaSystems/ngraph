@@ -170,3 +170,75 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
     auto m = make_shared<pattern::Matcher>(cvt_lt, callback);
     this->add_matcher(m);
 }
+
+// Reshape(transpose) + ConvertLayout
+// to
+// ConvertLayout + Reshape(transpose)
+void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
+    construct_reshape_convertLayout_fusion()
+{
+    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
+    auto reshape =
+        std::make_shared<ngraph::op::Reshape>(input, AxisVector{0, 1, 2, 3}, Shape{1, 1, 1, 1});
+    auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(
+        *reshape->get_outputs().at(0).get_tensor_ptr().get());
+    auto cvt_lt = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape, lt_desc);
+
+    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_reshape_converLayout against "
+                     << m.get_match_root()->get_name();
+
+        auto m_cvt_lt = static_pointer_cast<runtime::cpu::op::ConvertLayout>(m.get_match_root());
+        auto m_reshape = static_pointer_cast<ngraph::op::Reshape>(m_cvt_lt->get_argument(0));
+
+        if (m_reshape->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "ReshapeConvertLayout: Reshape has multiple users";
+            return false;
+        }
+
+        if (!m_reshape->get_is_transpose())
+        {
+            NGRAPH_DEBUG << "ReshapeConvertLayout: Reshape is not a transpose";
+            return false;
+        }
+
+        auto cvt_lt_md = runtime::cpu::mkldnn_utils::get_output_mkldnn_md(m_cvt_lt.get(), 0);
+        auto reshape_order = m_reshape->get_input_order();
+        auto inverse_order = [&]() {
+            AxisVector inverse;
+            for (int i = 0; i < reshape_order.size(); i++)
+            {
+                inverse.push_back(std::find(reshape_order.begin(), reshape_order.end(), i) -
+                                  reshape_order.begin());
+            }
+            return inverse;
+        }();
+        std::cout << reshape_order << inverse_order << std::endl;
+        auto new_cvt_lt_md =
+            runtime::cpu::mkldnn_utils::rotate_blocked_md(cvt_lt_md, inverse_order);
+        auto rotated_lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(
+            *m_reshape->get_argument(0)->get_output_tensor_ptr(0));
+        rotated_lt_desc->set_mkldnn_md(new_cvt_lt_md);
+        auto new_cvt_lt = std::make_shared<runtime::cpu::op::ConvertLayout>(
+            m_reshape->get_argument(0), 0, rotated_lt_desc);
+        auto new_reshape =
+            std::make_shared<ngraph::op::Reshape>(new_cvt_lt, inverse_order, m_cvt_lt->get_shape());
+
+        auto new_reshape_tensor = new_reshape->get_output_tensor_ptr(0);
+        auto new_reshape_layout =
+            std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*new_reshape_tensor);
+        new_reshape_layout->set_mkldnn_md(cvt_lt_md);
+        new_reshape->get_output_tensor_ptr(0)->set_tensor_layout(new_reshape_layout);
+
+        new_reshape->set_op_annotations(m_reshape->get_op_annotations());
+        new_cvt_lt->set_op_annotations(m_cvt_lt->get_op_annotations());
+
+        ngraph::replace_node(m_cvt_lt, new_reshape);
+
+        return true;
+    };
+
+    auto m = make_shared<pattern::Matcher>(cvt_lt, callback);
+    this->add_matcher(m);
+}
