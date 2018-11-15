@@ -1790,10 +1790,9 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar(const std::vector<std::
     uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
     uint32_t n = nthreads;
     uint32_t block_size_x = 1;
-    while (n > 1)
+    while ((block_size_x << 1) <= n)
     {
         block_size_x <<= 1;
-        n >>= 1;
     }
     block_size_x = fmin(512, block_size_x);
     uint32_t shared_data_bytes = block_size_x * static_cast<uint32_t>(data_bytes);
@@ -2804,4 +2803,141 @@ void runtime::gpu::CUDAEmitter::debug_sync()
     CUDA_SAFE_CALL(cuCtxSynchronize());
 #endif
     return;
+}
+
+void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
+                                                NVShape reduce_axis,
+                                                NVShape& simplified_shape,
+                                                NVShape& simplified_reduce_axis)
+{
+    //join adjacent reduce axis
+    int32_t rank = in.size();
+    //sort the axis incase it's not sorted.
+    std::sort(reduce_axis.begin(), reduce_axis.end());
+    //clear simplified_shape and axis
+    simplified_shape.clear();
+    simplified_reduce_axis.clear();
+    NVShape combined_reduce_axis;
+    NVShape adj_map(rank, 0);
+    size_t combined_axis_count = 0;
+    NGRAPH_INFO << "shape " << join(in);
+    NGRAPH_INFO << "reduce_axis" << join(reduce_axis);
+    for (int32_t i = 0; i < static_cast<int32_t>(reduce_axis[0]) - 1; i++)
+    {
+        adj_map[i] = 1;
+    }
+    for (int32_t i = 0; i < reduce_axis.size() - 1; i++)
+    {
+        if (static_cast<int32_t>(reduce_axis[i + 1]) - static_cast<int32_t>(reduce_axis[i]) == 1)
+        {
+            adj_map[reduce_axis[i]] = 1;
+            combined_axis_count++;
+            if (i + 1 == reduce_axis.size() - 1)
+            {
+                combined_reduce_axis.push_back(reduce_axis[i + 1] - combined_axis_count);
+            }
+        }
+        else
+        {
+            combined_reduce_axis.push_back(reduce_axis[i] - combined_axis_count);
+            for (int32_t j = static_cast<int32_t>(reduce_axis[i]) + 1;
+                 j < static_cast<int32_t>(reduce_axis[i + 1]) - 1;
+                 j++)
+            {
+                adj_map[j] = 1;
+            }
+        }
+    }
+    for (int32_t i = static_cast<int32_t>(reduce_axis.back()) + 1; i < rank - 1; i++)
+    {
+        adj_map[i] = 1;
+    }
+
+    NGRAPH_INFO << "combined reduce_axis" << join(combined_reduce_axis);
+    NVShape combined_shape;
+    size_t shape_i = 1;
+    for (int i = 0; i < rank; i++)
+    {
+        if (adj_map[i] == 1)
+        {
+            shape_i *= in[i];
+        }
+        else
+        {
+            combined_shape.push_back(shape_i * in[i]);
+            shape_i = 1;
+        }
+    }
+
+    //eleminate dimenson size = 1, update shape and reduce axis
+    size_t reduce_idx = 0;
+    size_t eliminated_axis_count = 0;
+    for (int32_t i = 0; i < combined_shape.size(); i++)
+    {
+        if (combined_shape[i] == 1)
+        {
+            eliminated_axis_count++;
+        }
+        else
+        {
+            simplified_shape.push_back(combined_shape[i]);
+            if (i == combined_reduce_axis[reduce_idx])
+            {
+                simplified_reduce_axis.push_back(i - eliminated_axis_count);
+            }
+        }
+        if (i == combined_reduce_axis[reduce_idx])
+        {
+            reduce_idx++;
+        }
+    }
+    NGRAPH_INFO << "simplified shape" << join(simplified_shape);
+    NGRAPH_INFO << "simplified reduce_axis" << join(simplified_reduce_axis);
+}
+
+void runtime::gpu::CUDAEmitter::get_reduce_strides(NVShape input_shape,
+                                                   NVShape reduce_axis,
+                                                   NVShape& non_reduce_shape,
+                                                   NVShape& non_reduce_strides,
+                                                   NVShape& non_reduce_strides_in_input,
+                                                   NVShape& reduce_shape,
+                                                   NVShape& reduce_strides,
+                                                   NVShape& reduce_strides_in_input)
+{
+    size_t rank = input_shape.size();
+    NVShape reduce_flag(rank, 0);
+    for (auto a : reduce_axis)
+    {
+        reduce_flag[a] = 1;
+    }
+    NVShape input_strides = row_major_strides(input_shape);
+    for (int i = 0; i < rank; i++)
+    {
+        if (reduce_flag[i] != 0)
+        {
+            reduce_shape.push_back(input_shape[i]);
+            reduce_strides_in_input.push_back(input_strides[i]);
+        }
+        else
+        {
+            non_reduce_shape.push_back(input_shape[i]);
+            non_reduce_strides_in_input.push_back(input_strides[i]);
+        }
+    }
+    reduce_strides = row_major_strides(reduce_shape);
+    non_reduce_strides = row_major_strides(non_reduce_shape);
+}
+
+void runtime::gpu::CUDAEmitter::div_to_mul(const NVShape& shape,
+                                           std::vector<int>& magic,
+                                           std::vector<int>& shift)
+{
+    for (int i = 0; i < shape.size(); i++)
+    {
+        int _magic;
+        int _shift;
+        std::tie(_magic, _shift) = idiv_magic_u64(shape[i]);
+        magic.push_back(_magic);
+        shift.push_back(_shift);
+    }
 }

@@ -237,6 +237,22 @@ namespace ngraph
                                                   uint32_t block_size_x,
                                                   const char* op,
                                                   const char* kernel);
+                void simplify_reduce_shape(NVShape in,
+                                     NVShape reduce_axis,
+                                     NVShape& simplified_shape,
+                                     NVShape& simplified_reduce_axis);
+
+                void get_reduce_strides(NVShape input_shape,
+                                        NVShape reduce_axis,
+                                        NVShape& non_reduce_shape,
+                                        NVShape& non_reduce_strides,
+                                        NVShape& non_reduce_strides_in_input,
+                                        NVShape& reduce_shape,
+                                        NVShape& reduce_strides,
+                                        NVShape& reduce_strides_in_input);
+                void div_to_mul(const NVShape& shape,
+                                std::vector<int>& magic,
+                                std::vector<int>& shift);
                 GPUPrimitiveEmitter* m_primitive_emitter;
                 GPURuntimeContext* m_ctx;
             };
