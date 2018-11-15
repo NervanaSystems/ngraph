@@ -32,7 +32,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set(COMPILE_FLAGS "${COMPILE_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
     endif()    
 endif()
-message(STATUS "************************** COMPILE_FLAGS ${COMPILE_FLAGS}")
 
 ExternalProject_Add(
     ext_cldnn
@@ -53,9 +52,6 @@ ExternalProject_Add(
 #------------------------------------------------------------------------------
 
 ExternalProject_Get_Property(ext_cldnn SOURCE_DIR BINARY_DIR)
-message(STATUS "************************** BINARY_DIR ${BINARY_DIR}")
-message(STATUS "************************** SOURCE_DIR ${SOURCE_DIR}")
-message(STATUS "xxxxxxxxxxxxxxxxxxxxxxxxxx ${SOURCE_DIR}/build/out/Linux64/Release")
 
 add_library(libcldnn INTERFACE)
 add_dependencies(libcldnn ext_cldnn)
