@@ -18,12 +18,12 @@ backwards_tanh
 batch_norm_one_output
 batch_norm_three_outputs
 dequantize
+dequantize_zero_offset
 dequantize_axes
 dequantize_int8
 dequantize_int8_zero_offset
 dequantize_int32
 dequantize_int32_zero_offset
-dequantize_zero_offset
 divide_by_zero_int32
 dot_3d_multi_axis
 dot_4d_5d_multi_axis
@@ -43,8 +43,8 @@ quantize_int32_zero_offset
 quantize_clamp_uint8
 quantize_clamp_int8
 quantize_clamp_int32
-quantize_ROUND_TOWARD_INFINITY
 quantize_ROUND_NEAREST_TOWARD_ZERO
+quantize_ROUND_NEAREST_TOWARD_INFINITY
 quantize_ROUND_NEAREST_UPWARD
 quantize_ROUND_NEAREST_DOWNWARD
 quantize_ROUND_NEAREST_TOWARD_EVEN
