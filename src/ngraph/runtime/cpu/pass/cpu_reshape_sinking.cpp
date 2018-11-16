@@ -167,11 +167,11 @@ void swim(descriptor::Input* input, std::shared_ptr<op::Reshape> reshape)
         {
             auto old_broadcast = std::static_pointer_cast<op::Broadcast>(n);
             auto broadcast_axes = old_broadcast->get_broadcast_axes();
-            auto reshape = csw.reshape;
+            auto broadcast_reshape = csw.reshape;
             bool in_order = true;
             AxisSet new_broadcast_axes;
             std::vector<size_t> new_source_axes;
-            auto input_order = reshape->get_input_order();
+            auto input_order = broadcast_reshape->get_input_order();
             for (size_t i = 0; i < input_order.size(); i++)
             {
                 if (broadcast_axes.count(input_order.at(i)) != 0)
@@ -212,7 +212,7 @@ void swim(descriptor::Input* input, std::shared_ptr<op::Reshape> reshape)
             }
 
             auto new_broadcast = std::make_shared<op::Broadcast>(
-                broadcast_input, csw.reshape->get_shape(), new_broadcast_axes);
+                broadcast_input, broadcast_reshape->get_shape(), new_broadcast_axes);
             csw.input->replace_output(new_broadcast->get_outputs().at(0));
         }
         //TODO: Add cases to push through Reshape and BinaryElementwiseArithmetic
