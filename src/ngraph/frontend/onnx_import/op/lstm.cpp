@@ -182,14 +182,14 @@ namespace ngraph
                 struct LSTMAttributes
                 {
                     explicit LSTMAttributes(const Node& node)
+                     : m_hidden_size{node.get_attribute_value<std::int64_t>("hidden_size")}
+                     , m_direction{LSTMDirection::LSTM_DIRECTION_FORWARD}
                     {
-                        // ---- Required -----
-                        m_hidden_size = node.get_attribute_value<std::int64_t>("hidden_size");
                     }
 
                     // Currently only LSTM_DIRECTION_FORWARD is supported.
-                    LSTMDirection m_direction{LSTMDirection::LSTM_DIRECTION_FORWARD};
-                    std::int64_t m_hidden_size{0};
+                    LSTMDirection m_direction;
+                    std::int64_t m_hidden_size;
                 };
 
             } // anonymous namespace
