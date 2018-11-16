@@ -506,7 +506,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                                                    non_reduce_rank,
                                                    true);
             writer << "uint32_t input_idx = non_reduce_input_index;\n";
-            writer << data_types[1] << " r;\n";
+            writer << data_types[1] << " r = 0;\n";
             if (stable_sum)
             {
                 writer << data_types[1] << " c = 0;\n";
@@ -514,7 +514,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                 writer << data_types[1] << " t;\n";
             }
             writer << data_types[1] << " input_i;\n";
-            writer << "r = in1[0];\n";
+            //writer << "r = in1[0];\n";
             for(uint32_t i = 0; i < reduce_rank; i++)
             {
                writer << "for(uint32_t reduce_coordinate_" << i << " = 0; reduce_coordinate_" << i << " < reduce_shape" << i << ";  reduce_coordinate_" << i << "++)\n";
@@ -647,7 +647,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
         {
             for (int i = 0; i < unroll_num; i++)
             {
-                writer << "input_i = in[in_idx]);\n";
+                writer << "input_i = in[in_idx];\n";
                 if (stable_sum)
                 {
                     writer << "y = input_i - c;\n";
@@ -666,7 +666,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
         writer << "while(in_idx < nthreads)\n";
         writer.block_begin();
         {
-            writer << "input_i = in[in_idx]);\n";
+            writer << "input_i = in[in_idx];\n";
             if (stable_sum)
             {
                 writer << "y = input_i - c;\n";
