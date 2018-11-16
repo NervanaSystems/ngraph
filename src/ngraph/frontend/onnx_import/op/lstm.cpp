@@ -182,8 +182,8 @@ namespace ngraph
                 struct LSTMAttributes
                 {
                     explicit LSTMAttributes(const Node& node)
-                     : m_hidden_size{node.get_attribute_value<std::int64_t>("hidden_size")}
-                     , m_direction{LSTMDirection::LSTM_DIRECTION_FORWARD}
+                        : m_hidden_size{node.get_attribute_value<std::int64_t>("hidden_size")}
+                        , m_direction{LSTMDirection::LSTM_DIRECTION_FORWARD}
                     {
                     }
 
