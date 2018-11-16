@@ -41,7 +41,7 @@ namespace ngraph
                 /// auto label = std::make_shared<pattern::op::Label>(element::f32, Shape{2,2} , nullptr, NodeVector{add});
                 /// \endcode
                 Label(const element::Type& type,
-                      const Shape s,
+                      const PartialShape& s,
                       Predicate pred = nullptr,
                       const NodeVector& wrapped_nodes = NodeVector{})
                     : Pattern("Label", wrapped_nodes, pred)
@@ -61,7 +61,10 @@ namespace ngraph
                 Label(std::shared_ptr<Node> node,
                       Predicate pred = nullptr,
                       const NodeVector& wrapped_nodes = NodeVector{})
-                    : Label(node->get_element_type(), node->get_shape(), pred, wrapped_nodes)
+                    : Label(node->get_element_type(),
+                            node->get_output_partial_shape(0),
+                            pred,
+                            wrapped_nodes)
                 {
                 }
             };

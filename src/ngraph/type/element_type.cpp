@@ -28,7 +28,7 @@ const element::Type element::f32(32, true, true, false, "float");
 const element::Type element::f64(64, true, true, false, "double");
 const element::Type element::i8(8, false, true, true, "int8_t");
 const element::Type element::i16(16, false, true, false, "int16_t");
-const element::Type element::i32(32, false, true, false, "int32_t");
+const element::Type element::i32(32, false, true, true, "int32_t");
 const element::Type element::i64(64, false, true, false, "int64_t");
 const element::Type element::u8(8, false, false, true, "uint8_t");
 const element::Type element::u16(16, false, false, false, "uint16_t");

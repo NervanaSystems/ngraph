@@ -37,7 +37,7 @@ namespace ngraph
             }
 
             template <typename T>
-            void sigmoid_backprop(const T* arg, T* delta_arg, T* out, size_t count)
+            void sigmoid_backprop(const T* arg, const T* delta_arg, T* out, size_t count)
             {
                 T exp_value;
                 T func_x;
