@@ -483,7 +483,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
     runtime::gpu::GPUKernelArgs& args,
     const std::vector<std::string>& data_types,
     const std::string& reduce_op,
-    size_t out_rank,
+    size_t non_reduce_rank,
     size_t reduce_rank)
 {
     writer << runtime::gpu::nvrtc::helpers();
@@ -494,69 +494,55 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
         writer << "if (tid < nthreads)\n";
         writer.block_begin();
         {
-            if (out_rank > 0)
+            collective_coordinate_transform_helper(writer,
+                                               "tid",
+                                               "non_reduce_strides",
+                                               "non_reduce_strides_magic",
+                                               "non_reduce_strides_shift",
+                                               "non_reduce_strides_in_input",
+                                               "non_reduce_coordinate",
+                                               "non_reduce_input_index",
+                                               non_reduce_rank,
+                                               true);
+            writer << "uint32_t reduce_idx = 0;\n";
+            writer << data_types[1] << " r;\n";
+            writer << data_types[1] << " input_i;\n";
+            writer.block_begin();
             {
-                writer << "uint32_t dim_idx_generator = tid;\n";
+                collective_coordinate_transform_helper(writer,
+                                                    "reduce_idx",
+                                                    "reduce_strides",
+                                                    "reduce_strides_magic",
+                                                    "reduce_strides_shift",
+                                                    "reduce_strides_in_input",
+                                                    "reduce_coordinate",
+                                                    "reduce_input_index",
+                                                    reduce_rank,
+                                                    true);
+                writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
+                writer << "r = in[input_idx];\n";
+                writer << "reduce_idx += 1;\n";
             }
-            writer << "uint32_t in_idx = 0;\n";
-
-            // loop through all reduction axis
-            for (int64_t i = 0; i < static_cast<int64_t>(out_rank); i++)
+            writer.block_end();
+            writer << "while (reduce_idx < reduce_count)\n";
+            writer.block_begin();
             {
-                writer << "in_idx += (dim_idx_generator / out_strides" << i
-                       << ") * non_reduce_strides" << i << ";\n";
-                writer << "dim_idx_generator %= out_strides" << i << ";\n";
+                collective_coordinate_transform_helper(writer,
+                                                    "reduce_idx",
+                                                    "reduce_strides",
+                                                    "reduce_strides_magic",
+                                                    "reduce_strides_shift",
+                                                    "reduce_strides_in_input",
+                                                    "reduce_coordinate",
+                                                    "reduce_input_index",
+                                                    reduce_rank,
+                                                    true);
+                writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
+                writer << "input_i = in[input_idx];\n";
+                writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
+                writer << "reduce_idx += 1;\n";
             }
-            writer << "uint32_t init_in_idx = in_idx;\n";
-            writer << data_types[1] << " r = in[init_in_idx];\n";
-            int64_t last_r_idx = static_cast<int64_t>(reduce_rank) - 1;
-            for (int64_t j = 0; j < last_r_idx; j++)
-            {
-                writer << "for(int idx" << j << " = 0; idx" << j << "< reduce_shape" << j << "; idx"
-                       << j << "++)\n";
-                writer.block_begin();
-            }
-            {
-                writer << "uint32_t reduce_idx = in_idx;\n";
-                for (int64_t j = 0; j < last_r_idx; j++)
-                {
-                    writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
-                }
-                writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
-                writer << "if(reduce_idx != init_in_idx)\n";
-                writer.block_begin();
-                {
-                    writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
-                }
-                writer.block_end();
-                writer << "reduce_idx += step;\n";
-                writer << "int idx" << last_r_idx << " = 1;\n";
-                // unroll last reduction axis
-                uint32_t unroll_num = 8;
-                writer << "for(; idx" << last_r_idx << " + " << unroll_num << " - 1 < reduce_shape"
-                       << last_r_idx << "; idx" << last_r_idx << " += " << unroll_num << ")\n";
-                writer.block_begin();
-                {
-                    for (int k = 0; k < unroll_num; k++)
-                    {
-                        writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
-                        writer << "reduce_idx += step;\n";
-                    }
-                }
-                writer.block_end();
-                writer << "for(; idx" << last_r_idx << " < reduce_shape" << last_r_idx << "; idx"
-                       << last_r_idx << "++)\n";
-                writer.block_begin();
-                {
-                    writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
-                    writer << "reduce_idx += step;\n";
-                }
-                writer.block_end();
-            }
-            for (int64_t j = 0; j < last_r_idx; j++)
-            {
-                writer.block_end();
-            }
+            writer.block_end();
             writer << "out[tid] = r;\n";
         }
         writer.block_end();

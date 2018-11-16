@@ -83,7 +83,7 @@ namespace ngraph
                                                 runtime::gpu::GPUKernelArgs& args,
                                                 const std::vector<std::string>& data_types,
                                                 const std::string& reduce_op,
-                                                size_t out_rank,
+                                                size_t non_reduce_rank,
                                                 size_t reduce_rank);
 
                 static void get_topk(codegen::CodeWriter& writer,
