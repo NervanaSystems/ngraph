@@ -1682,12 +1682,13 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
     size_t non_reduce_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
     std::string kernel_name = "reduce_nd_" + join(dtypes, "_") + "_" + op;
-    kernel_name +=
-        "_ri_" + std::to_string(simplified_input_shape.size()) + "_rr_" + std::to_string(simplified_reduce_axis.size());
+    kernel_name += "_ri_" + std::to_string(simplified_input_shape.size()) + "_rr_" +
+                   std::to_string(simplified_reduce_axis.size());
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
     std::stringstream ss;
-    ss << kernel_name << "_s_" << join(simplified_input_shape, "_") << "_axis_" << join(simplified_reduce_axis, "_");
+    ss << kernel_name << "_s_" << join(simplified_input_shape, "_") << "_axis_"
+       << join(simplified_reduce_axis, "_");
     auto hash = ss.str();
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
@@ -1948,7 +1949,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
     std::stringstream ss;
-    ss << kernel_name << "_s_" << join(simplified_input_shape, "_") << "_axis_" << join(simplified_reduce_axis, "_");
+    ss << kernel_name << "_s_" << join(simplified_input_shape, "_") << "_axis_"
+       << join(simplified_reduce_axis, "_");
     auto hash = ss.str();
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
@@ -1964,7 +1966,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     //call reduce_to_nd
     if (non_reduce_rank != 0)
     {
-        size_t reduce_idx = build_reduce_to_nd(dtypes, simplified_input_shape, simplified_reduce_axis, op, kernel);
+        size_t reduce_idx =
+            build_reduce_to_nd(dtypes, simplified_input_shape, simplified_reduce_axis, op, kernel);
 
         std::unique_ptr<gpu::primitive> reduce(
             new gpu::primitive{[=](void** inputs, void** outputs) mutable {
@@ -2827,9 +2830,9 @@ void runtime::gpu::CUDAEmitter::debug_sync()
 }
 
 void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
-                                                NVShape reduce_axis,
-                                                NVShape& simplified_shape,
-                                                NVShape& simplified_reduce_axis)
+                                                      NVShape reduce_axis,
+                                                      NVShape& simplified_shape,
+                                                      NVShape& simplified_reduce_axis)
 {
     //join adjacent reduce axis
     int32_t rank = in.size();
@@ -2846,6 +2849,7 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
     for (int32_t i = 0; i < static_cast<int32_t>(reduce_axis[0]) - 1; i++)
     {
         adj_map[i] = 1;
+        combined_axis_count++;
     }
     for (int32_t i = 0; i < reduce_axis.size() - 1; i++)
     {
@@ -2853,10 +2857,6 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
         {
             adj_map[reduce_axis[i]] = 1;
             combined_axis_count++;
-            if (i + 1 == reduce_axis.size() - 1)
-            {
-                combined_reduce_axis.push_back(reduce_axis[i + 1] - combined_axis_count);
-            }
         }
         else
         {
@@ -2866,9 +2866,11 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
                  j++)
             {
                 adj_map[j] = 1;
+                combined_axis_count++;
             }
         }
     }
+    combined_reduce_axis.push_back(reduce_axis.back() - combined_axis_count);
     for (int32_t i = static_cast<int32_t>(reduce_axis.back()) + 1; i < rank - 1; i++)
     {
         adj_map[i] = 1;
@@ -2890,6 +2892,7 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
         }
     }
 
+    NGRAPH_INFO << "combined shape" << join(combined_shape);
     //eleminate dimenson size = 1, update shape and reduce axis
     size_t reduce_idx = 0;
     size_t eliminated_axis_count = 0;
@@ -2907,7 +2910,7 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
                 simplified_reduce_axis.push_back(i - eliminated_axis_count);
             }
         }
-        if (i == combined_reduce_axis[reduce_idx])
+        if (i == combined_reduce_axis[reduce_idx] && reduce_idx < combined_reduce_axis.size() - 1)
         {
             reduce_idx++;
         }

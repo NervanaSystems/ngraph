@@ -216,15 +216,15 @@ namespace ngraph
                                                             size_t rank,
                                                             bool register_arguments = false);
                 static void collective_coordinate_transform_helper(codegen::CodeWriter& writer,
-                                                    std::string i_thread_index,
-                                                    std::string i_strides,
-                                                    std::string i_stride_magic,
-                                                    std::string i_stride_shift,
-                                                    std::string i_reduced_strides,
-                                                    std::string o_coordinates,
-                                                    std::string reduced_idx,
-                                                    size_t rank,
-                                                    bool register_arguments = true);
+                                                                   std::string i_thread_index,
+                                                                   std::string i_strides,
+                                                                   std::string i_stride_magic,
+                                                                   std::string i_stride_shift,
+                                                                   std::string i_reduced_strides,
+                                                                   std::string o_coordinates,
+                                                                   std::string reduced_idx,
+                                                                   size_t rank,
+                                                                   bool register_arguments = true);
             };
         }
     }

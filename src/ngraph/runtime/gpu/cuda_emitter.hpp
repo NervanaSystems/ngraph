@@ -238,9 +238,9 @@ namespace ngraph
                                                   const char* op,
                                                   const char* kernel);
                 void simplify_reduce_shape(NVShape in,
-                                     NVShape reduce_axis,
-                                     NVShape& simplified_shape,
-                                     NVShape& simplified_reduce_axis);
+                                           NVShape reduce_axis,
+                                           NVShape& simplified_shape,
+                                           NVShape& simplified_reduce_axis);
 
                 void get_reduce_strides(NVShape input_shape,
                                         NVShape reduce_axis,

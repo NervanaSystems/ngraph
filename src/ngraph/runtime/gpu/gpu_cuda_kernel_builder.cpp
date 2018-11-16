@@ -496,62 +496,62 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
         writer.block_begin();
         {
             collective_coordinate_transform_helper(writer,
-                                               "tid",
-                                               "non_reduce_strides",
-                                               "non_reduce_strides_magic",
-                                               "non_reduce_strides_shift",
-                                               "non_reduce_strides_in_input",
-                                               "non_reduce_coordinate",
-                                               "non_reduce_input_index",
-                                               non_reduce_rank,
-                                               true);
+                                                   "tid",
+                                                   "non_reduce_strides",
+                                                   "non_reduce_strides_magic",
+                                                   "non_reduce_strides_shift",
+                                                   "non_reduce_strides_in_input",
+                                                   "non_reduce_coordinate",
+                                                   "non_reduce_input_index",
+                                                   non_reduce_rank,
+                                                   true);
             writer << "uint32_t reduce_idx = 0;\n";
             writer << data_types[1] << " r;\n";
-            writer << data_types[1] << " input_i;\n";
-            writer.block_begin();
-            {
-                collective_coordinate_transform_helper(writer,
-                                                    "reduce_idx",
-                                                    "reduce_strides",
-                                                    "reduce_strides_magic",
-                                                    "reduce_strides_shift",
-                                                    "reduce_strides_in_input",
-                                                    "reduce_coordinate",
-                                                    "reduce_input_index",
-                                                    reduce_rank,
-                                                    true);
-                writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
-                writer << "r = in[input_idx];\n";
-                writer << "reduce_idx += 1;\n";
-            }
-            if(stable_sum)
+            if (stable_sum)
             {
                 writer << data_types[1] << " c = 0;\n";
                 writer << data_types[1] << " y;\n";
                 writer << data_types[1] << " t;\n";
+            }
+            writer << data_types[1] << " input_i;\n";
+            writer.block_begin();
+            {
+                collective_coordinate_transform_helper(writer,
+                                                       "reduce_idx",
+                                                       "reduce_strides",
+                                                       "reduce_strides_magic",
+                                                       "reduce_strides_shift",
+                                                       "reduce_strides_in_input",
+                                                       "reduce_coordinate",
+                                                       "reduce_input_index",
+                                                       reduce_rank,
+                                                       true);
+                writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
+                writer << "r = in[input_idx];\n";
+                writer << "reduce_idx += 1;\n";
             }
             writer.block_end();
             writer << "while (reduce_idx < reduce_count)\n";
             writer.block_begin();
             {
                 collective_coordinate_transform_helper(writer,
-                                                    "reduce_idx",
-                                                    "reduce_strides",
-                                                    "reduce_strides_magic",
-                                                    "reduce_strides_shift",
-                                                    "reduce_strides_in_input",
-                                                    "reduce_coordinate",
-                                                    "reduce_input_index",
-                                                    reduce_rank,
-                                                    true);
+                                                       "reduce_idx",
+                                                       "reduce_strides",
+                                                       "reduce_strides_magic",
+                                                       "reduce_strides_shift",
+                                                       "reduce_strides_in_input",
+                                                       "reduce_coordinate",
+                                                       "reduce_input_index",
+                                                       reduce_rank,
+                                                       true);
                 writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
                 writer << "input_i = in[input_idx];\n";
-                if(stable_sum)
+                if (stable_sum)
                 {
-                        writer << "y = input_i - c;\n";
-                        writer << "t = r + y;\n";
-                        writer << "c = (t - r) - y;\n";
-                        writer << "r = t;\n";
+                    writer << "y = input_i - c;\n";
+                    writer << "t = r + y;\n";
+                    writer << "c = (t - r) - y;\n";
+                    writer << "r = t;\n";
                 }
                 else
                 {
