@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <unordered_map>
+#include <map>
 
 namespace ngraph
 {
@@ -30,10 +30,10 @@ class ngraph::pass::PassConfig
 {
 public:
     PassConfig();
-    const std::unordered_map<std::string, bool>& get_enables() { return m_enables; }
+    const std::map<std::string, bool>& get_enables() { return m_enables; }
     void set_pass_enable(std::string name, bool enable);
     bool get_pass_enable(std::string name);
 
 private:
-    std::unordered_map<std::string, bool> m_enables;
+    std::map<std::string, bool> m_enables;
 };
