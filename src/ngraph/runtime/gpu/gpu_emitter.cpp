@@ -845,8 +845,28 @@ void runtime::gpu::GPU_Emitter::emit_Min(EMIT_ARGS)
     }
 
     const ngraph::op::Min* min = static_cast<const ngraph::op::Min*>(node);
-    auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
-    auto index = cudnn_emitter->build_primitive(min);
+
+    size_t index;
+    if (args[0].get_element_type() == element::i32)
+    {
+        auto axes_set = min->get_reduction_axes();
+        ngraph::AxisVector axes_vec;
+        for (auto a : axes_set)
+        {
+            axes_vec.push_back(a);
+        }
+        vector<string> dtypes;
+        dtypes.push_back(args[0].get_type());
+        dtypes.push_back(out[0].get_type());
+        auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
+        index = cuda_emitter->build_reduce<ngraph::op::Min>(
+            dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
+    }
+    else
+    {
+        auto& cudnn_emitter = external_function->get_primitive_emitter()->get_cudnn_emitter();
+        index = cudnn_emitter->build_primitive(min);
+    }
 
     writer.block_begin();
     writer << "void* input[] = {" << node_names(args) << "};\n";
