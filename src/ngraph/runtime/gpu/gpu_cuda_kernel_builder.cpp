@@ -505,7 +505,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                                                    "non_reduce_input_index",
                                                    non_reduce_rank,
                                                    true);
-            writer << "uint32_t reduce_idx = 0;\n";
+            writer << "uint32_t input_idx = non_reduce_input_index;\n";
             writer << data_types[1] << " r;\n";
             if (stable_sum)
             {
@@ -514,21 +514,61 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                 writer << data_types[1] << " t;\n";
             }
             writer << data_types[1] << " input_i;\n";
+            writer << "r = in1[0];\n";
+            for(uint32_t i = 0; i < reduce_rank; i++)
+            {
+               writer << "for(uint32_t reduce_coordinate_" << i << " = 0; reduce_coordinate_" << i << " < reduce_shape" << i << ";  reduce_coordinate_" << i << "++)\n";
+               writer.block_begin();
+            }
+                writer << "input_i = in[input_idx];\n";
+                if (stable_sum)
+                {
+                    writer << "y = input_i - c;\n";
+                    writer << "t = r + y;\n";
+                    writer << "c = (t - r) - y;\n";
+                    writer << "r = t;\n";
+                }
+                else
+                {
+                    writer << "r = " << reduce_op << "(r , input_i);\n";
+                }
+            for(int32_t i = static_cast<int32_t>(reduce_rank - 1); i >=0 ; i--)
+            {
+               writer << "input_idx += " << "reduce_strides_in_input" << i << ";\n";  
+               writer.block_end();
+               writer << "input_idx -= " << "reduce_strides_in_input" << i << " * reduce_shape" << i << ";\n";  
+            }
+/*
+            writer << "while (reduce_idx + 7 < reduce_count)\n";
             writer.block_begin();
             {
+                for(int i = 0; i < 8; i++)
+                { 
                 collective_coordinate_transform_helper(writer,
                                                        "reduce_idx",
                                                        "reduce_strides",
                                                        "reduce_strides_magic",
                                                        "reduce_strides_shift",
                                                        "reduce_strides_in_input",
-                                                       "reduce_coordinate",
-                                                       "reduce_input_index",
+                                                       "reduce_coordinate" + std::to_string(i) + "_",
+                                                       "reduce_input_index_" + std::to_string(i),
                                                        reduce_rank,
                                                        true);
-                writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
-                writer << "r = in[input_idx];\n";
+                writer << "input_idx = reduce_input_index_" << std::to_string(i) << " + non_reduce_input_index;\n";
+                writer << "input_i = in[input_idx];\n";
+                if (stable_sum)
+                {
+                    writer << "y = input_i - c;\n";
+                    writer << "t = r + y;\n";
+                    writer << "c = (t - r) - y;\n";
+                    writer << "r = t;\n";
+                }
+                else
+                {
+                    writer << "r = " << reduce_op << "(r , input_i);\n";
+                }
                 writer << "reduce_idx += 1;\n";
+                }
             }
             writer.block_end();
             writer << "while (reduce_idx < reduce_count)\n";
@@ -544,7 +584,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                                                        "reduce_input_index",
                                                        reduce_rank,
                                                        true);
-                writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
+                writer << "input_idx = reduce_input_index + non_reduce_input_index;\n";
                 writer << "input_i = in[input_idx];\n";
                 if (stable_sum)
                 {
@@ -560,6 +600,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                 writer << "reduce_idx += 1;\n";
             }
             writer.block_end();
+*/
             writer << "out[tid] = r;\n";
         }
         writer.block_end();
@@ -729,7 +770,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
         {
             for (int i = 0; i < unroll_num; i++)
             {
-                writer << "input_i = in[in_idx]);\n";
+                writer << "input_i = in[in_idx];\n";
                 if (stable_sum)
                 {
                     writer << "y = input_i - c;\n";
@@ -748,7 +789,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
         writer << "while(in_idx < nthreads)\n";
         writer.block_begin();
         {
-            writer << "input_i = in[in_idx]);\n";
+            writer << "input_i = in[in_idx];\n";
             if (stable_sum)
             {
                 writer << "y = input_i - c;\n";
@@ -1920,16 +1961,16 @@ void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::C
     //  product = product % stride[0]
     //  d1 = product/stride[1]
     //  ...
-    writer << "int coordinate_product = " << i_coord_product << ";\n";
+    writer << "int " << o_coordinates << "product = " << i_coord_product << ";\n";
     for (size_t i = 0; i < rank; i++)
     {
         if (i != 0)
         {
-            writer << "coordinate_product -= (" << o_coordinates << i - 1 << " * " << i_strides
+            writer << o_coordinates << "product -= (" << o_coordinates << i - 1 << " * " << i_strides
                    << brace_open << i - 1 << brace_close << ");\n";
         }
         writer << "int " << o_coordinates << i << " = division_by_invariant_multiplication("
-               << "coordinate_product, " << i_stride_magic << brace_open << i << brace_close << ", "
+               << o_coordinates << "product, " << i_stride_magic << brace_open << i << brace_close << ", "
                << i_stride_shift << brace_open << i << brace_close << ");\n";
     }
 }

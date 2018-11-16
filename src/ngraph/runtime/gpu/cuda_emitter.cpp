@@ -1690,6 +1690,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
     ss << kernel_name << "_s_" << join(simplified_input_shape, "_") << "_axis_"
        << join(simplified_reduce_axis, "_");
     auto hash = ss.str();
+    NGRAPH_INFO << hash;
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
@@ -1733,11 +1734,13 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
     uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
     auto args = m_primitive_emitter->add_kernel_args();
     args.add_placeholder(dtypes[0], "in")
+        .add_placeholder(dtypes[0], "in1")
         .add_placeholder(dtypes[1], "out")
         .add("non_reduce_strides", non_reduce_strides)
         .add("non_reduce_strides_magic", non_reduce_strides_magic)
         .add("non_reduce_strides_shift", non_reduce_strides_shift)
         .add("non_reduce_strides_in_input", non_reduce_strides_in_input)
+        .add("reduce_shape", reduce_shape)
         .add("reduce_strides", reduce_strides)
         .add("reduce_strides_magic", reduce_strides_magic)
         .add("reduce_strides_shift", reduce_strides_shift)
@@ -1764,7 +1767,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
     std::unique_ptr<gpu::primitive> reduce(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
             void** args_list = args.resolve_placeholder(0, &inputs[0])
-                                   .resolve_placeholder(1, &outputs[0])
+                                   .resolve_placeholder(1, &inputs[1])
+                                   .resolve_placeholder(2, &outputs[0])
                                    .get_argument_list();
 
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
@@ -1952,6 +1956,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     ss << kernel_name << "_s_" << join(simplified_input_shape, "_") << "_axis_"
        << join(simplified_reduce_axis, "_");
     auto hash = ss.str();
+    NGRAPH_INFO << hash;
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
