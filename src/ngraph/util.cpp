@@ -498,25 +498,3 @@ AxisVector ngraph::get_permutation_to_default_order(const AxisVector& axis_order
     }
     return out;
 }
-
-void ngraph::get_pass_enables(std::unordered_map<std::string, bool>& enables)
-{
-    const char* env_str = std::getenv("NGRAPH_PASS_ENABLES");
-    if (env_str)
-    {
-        std::stringstream ss;
-        ss << env_str;
-        while (ss.good())
-        {
-            std::string substr;
-            std::getline(ss, substr, ';');
-            auto split_str = split(substr, ':', false);
-            switch (split_str.size())
-            {
-            case 1: enables.emplace(split_str[0], true); break;
-            case 2: enables.emplace(split_str[0], parse_string<bool>(split_str[1])); break;
-            default: throw ngraph_error("Unexpected string in get_pass_enables: " + substr);
-            }
-        }
-    }
-}

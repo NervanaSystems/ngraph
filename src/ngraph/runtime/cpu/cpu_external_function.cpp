@@ -129,6 +129,7 @@
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/propagate_cacheability.hpp"
+#include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
@@ -1056,8 +1057,7 @@ using namespace ngraph::runtime;
 
 void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Manager& pass_manager)
 {
-    std::unordered_map<string, bool> pass_map;
-    ngraph::get_pass_enables(pass_map);
+    auto pass_map = pass_manager.get_pass_config().get_enables();
 
     REGISTER_KNOBBED_PASS("LikeReplacement", true, ngraph::pass::LikeReplacement);
     REGISTER_KNOBBED_PASS("NopElimination", true, ngraph::pass::NopElimination);
@@ -1070,6 +1070,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     REGISTER_KNOBBED_PASS("CPURnnMatFusion", true, runtime::cpu::pass::CPURnnMatFusion);
     REGISTER_KNOBBED_PASS("CPUBatchFusion", true, runtime::cpu::pass::CPUBatchFusion);
     REGISTER_KNOBBED_PASS("CPUReshapeSinking", false, runtime::cpu::pass::CPUReshapeSinking);
+    REGISTER_KNOBBED_PASS("ReshapeElimination", false, ngraph::pass::ReshapeElimination);
     REGISTER_KNOBBED_PASS("CoreFusion", true, ngraph::pass::CoreFusion);
     REGISTER_KNOBBED_PASS("CPUFusion", true, runtime::cpu::pass::CPUFusion);
     REGISTER_KNOBBED_PASS("CPUHorizontalFusion", true, runtime::cpu::pass::CPUHorizontalFusion);
