@@ -33,21 +33,22 @@ namespace ngraph
             class GPU_Emitter
             {
             public:
-                static std::function<void(EMIT_ARGS)> get_emit_function(const Node& node);
+                static std::function<std::string(EMIT_ARGS)> get_emit_function(const Node& node);
 
 // This defines a collection of function declarations like this
-// static void emit_Abs(EMIT_ARGS);
-// static void emit_Acos(EMIT_ARGS);
-#define NGRAPH_OP(a, b) static void emit_##a(EMIT_ARGS);
+// static std::string emit_Abs(EMIT_ARGS);
+// static std::string emit_Acos(EMIT_ARGS);
+#define NGRAPH_OP(a, b) static std::string emit_##a(EMIT_ARGS);
 #include "ngraph/runtime/gpu/op/op_tbl.hpp"
 #undef NGRAPH_OP
 
                 template <typename T>
-                static void emit_elementwise(EMIT_ARGS)
+                static std::string emit_elementwise(EMIT_ARGS)
                 {
                     if (out[0].get_size() == 0)
                     {
-                        return;
+                        // return;
+                        return"";
                     }
                     else if (out.size() > 1)
                     {
@@ -57,27 +58,21 @@ namespace ngraph
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
 
-                    writer.block_begin();
+                    std::vector<std::string> dtypes;
+                    for (auto& arg : args)
                     {
-                        std::vector<std::string> dtypes;
-                        for (auto& arg : args)
-                        {
-                            dtypes.push_back(arg.get_type());
-                        }
-                        dtypes.push_back(out[0].get_type());
-                        auto ew_index =
-                            cuda_emitter->build_elementwise<T>(dtypes, out[0].get_shape());
-                        writer << "void* input[] = {" << node_names(args) << "};\n";
-                        writer << "void* output[] = {" << node_names(out) << "};\n";
-                        writer << "gpu::invoke_primitive(ctx, " << ew_index
-                               << ", input, output);\n";
+                        dtypes.push_back(arg.get_type());
                     }
-                    writer.block_end();
+                    dtypes.push_back(out[0].get_type());
+                    auto ew_index =
+                        cuda_emitter->build_elementwise<T>(dtypes, out[0].get_shape());
+
+                    return external_function->add_to_runtime(ew_index, args, out);
                 }
 
-                static void emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t);
-                static void emit_Sum_0(EMIT_ARGS);
-                static void emit_Sum_1(EMIT_ARGS);
+                static std::string emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t);
+                static std::string emit_Sum_0(EMIT_ARGS);
+                static std::string emit_Sum_1(EMIT_ARGS);
 
                 /// \brief Create a list of node names for each arg in args
                 /// \param args list of tensor arguments
