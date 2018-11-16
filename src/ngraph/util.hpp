@@ -24,7 +24,6 @@
 #include <memory>
 #include <sstream>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "ngraph/axis_vector.hpp"
