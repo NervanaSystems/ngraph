@@ -131,4 +131,7 @@ shape_of_vector
 shape_of_matrix
 shape_of_5d
 sum_stable_acc
-
+product_2d_to_scalar_int
+product_to_scalar_int
+max_matrix_rows_zero_int
+max_3d_to_scalar_double
