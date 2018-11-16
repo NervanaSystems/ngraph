@@ -133,7 +133,6 @@ namespace ngraph
                     }
 
                     auto bias = inputs.at(2);
-                    const Shape& new_shape = conv_node->get_shape();
 
                     return {std::make_shared<ngraph::op::Add>(
                         conv_node, make_broadcast_node(bias, conv_node->get_shape(), 1))};
