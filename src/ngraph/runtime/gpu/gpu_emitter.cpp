@@ -480,7 +480,9 @@ void runtime::gpu::GPU_Emitter::emit_Concat(EMIT_ARGS)
     writer.block_end();
 }
 
-void runtime::gpu::GPU_Emitter::emit_Constant(EMIT_ARGS) {}
+void runtime::gpu::GPU_Emitter::emit_Constant(EMIT_ARGS)
+{
+}
 
 void runtime::gpu::GPU_Emitter::emit_Convert(EMIT_ARGS)
 {
@@ -734,18 +736,38 @@ void runtime::gpu::GPU_Emitter::emit_Max(EMIT_ARGS)
     size_t index;
     if (args[0].get_element_type() == element::i32)
     {
-        auto axes_set = max->get_reduction_axes();
-        ngraph::AxisVector axes_vec;
-        for (auto a : axes_set)
+        // one of args0 axes has zero size, zero output, use args1 value
+        if (args[0].get_size() == 0)
         {
-            axes_vec.push_back(a);
+            writer << out[0].get_type()
+                   << " init_value = " << TypeInfo::Get(args[0].get_type())->min() << ";\n";
+            writer << "vector<" << out[0].get_type() << "> temp(" << out[0].get_size()
+                   << ", init_value);\n";
+            writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
+                   << ", (void*)temp.data(), " << out[0].get_size() << " * "
+                   << out[0].get_element_type().size() << ");\n";
+            return;
         }
-        vector<string> dtypes;
-        dtypes.push_back(args[0].get_type());
-        dtypes.push_back(out[0].get_type());
-        auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
-        index = cuda_emitter->build_reduce<ngraph::op::Max>(
-            dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
+        else if (args[0].get_size() == out[0].get_size())
+        {
+            kernel::emit_memcpyDtD(writer, out[0], args[0]);
+            return;
+        }
+        else
+        {
+            auto axes_set = max->get_reduction_axes();
+            ngraph::AxisVector axes_vec;
+            for (auto a : axes_set)
+            {
+                axes_vec.push_back(a);
+            }
+            vector<string> dtypes;
+            dtypes.push_back(args[0].get_type());
+            dtypes.push_back(out[0].get_type());
+            auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
+            index = cuda_emitter->build_reduce<ngraph::op::Max>(
+                dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
+        }
     }
     else
     {
@@ -849,18 +871,38 @@ void runtime::gpu::GPU_Emitter::emit_Min(EMIT_ARGS)
     size_t index;
     if (args[0].get_element_type() == element::i32)
     {
-        auto axes_set = min->get_reduction_axes();
-        ngraph::AxisVector axes_vec;
-        for (auto a : axes_set)
+        // one of args0 axes has zero size, zero output, use args1 value
+        if (args[0].get_size() == 0)
         {
-            axes_vec.push_back(a);
+            writer << out[0].get_type()
+                   << " init_value = " << TypeInfo::Get(args[0].get_type())->max() << ";\n";
+            writer << "vector<" << out[0].get_type() << "> temp(" << out[0].get_size()
+                   << ", init_value);\n";
+            writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
+                   << ", (void*)temp.data(), " << out[0].get_size() << " * "
+                   << out[0].get_element_type().size() << ");\n";
+            return;
         }
-        vector<string> dtypes;
-        dtypes.push_back(args[0].get_type());
-        dtypes.push_back(out[0].get_type());
-        auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
-        index = cuda_emitter->build_reduce<ngraph::op::Min>(
-            dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
+        else if (args[0].get_size() == out[0].get_size())
+        {
+            kernel::emit_memcpyDtD(writer, out[0], args[0]);
+            return;
+        }
+        else
+        {
+            auto axes_set = min->get_reduction_axes();
+            ngraph::AxisVector axes_vec;
+            for (auto a : axes_set)
+            {
+                axes_vec.push_back(a);
+            }
+            vector<string> dtypes;
+            dtypes.push_back(args[0].get_type());
+            dtypes.push_back(out[0].get_type());
+            auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
+            index = cuda_emitter->build_reduce<ngraph::op::Min>(
+                dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
+        }
     }
     else
     {
@@ -961,7 +1003,9 @@ void runtime::gpu::GPU_Emitter::emit_Pad(EMIT_ARGS)
     writer.block_end();
 }
 
-void runtime::gpu::GPU_Emitter::emit_Parameter(EMIT_ARGS) {}
+void runtime::gpu::GPU_Emitter::emit_Parameter(EMIT_ARGS)
+{
+}
 
 void runtime::gpu::GPU_Emitter::emit_Power(EMIT_ARGS)
 {
