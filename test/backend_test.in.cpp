@@ -4486,7 +4486,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b1c2h2w2)
     vector<float> expected_variance{0.00472505f, 0.0361782f};
 
     backend->call_with_validate(
-        f, {bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
+        backend->compile(f), {bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
 
     EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output), 1e-5f, 1e-6f));
     EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean), 1e-5f, 1e-6f));
@@ -4540,7 +4540,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
     vector<float> expected_mean{0.583388f, 0.619252f};
     vector<float> expected_variance{0.0119972f, 0.0282681f};
     backend->call_with_validate(
-        f, {bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
+        backend->compile(f), {bn_output, result_mean, result_variance}, {_input, _gamma, _beta});
 
     EXPECT_TRUE(test::all_close(expected_result, read_vector<float>(bn_output)));
     EXPECT_TRUE(test::all_close(expected_mean, read_vector<float>(result_mean)));
@@ -4621,8 +4621,9 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_bprop_n4c3h2w2)
     shared_ptr<runtime::Tensor> _dgamma = backend->create_tensor(element::f32, gamma_shape);
     shared_ptr<runtime::Tensor> _dbeta = backend->create_tensor(element::f32, beta_shape);
 
-    backend->call_with_validate(
-        df, {_dinput, _dgamma, _dbeta}, {_mean, _var, _input, _gamma, _beta, _delta});
+    backend->call_with_validate(backend->compile(df),
+                                {_dinput, _dgamma, _dbeta},
+                                {_mean, _var, _input, _gamma, _beta, _delta});
 
     vector<float> expected_input{
         8.17051607e-06f,  4.77576657e-06f,  1.02257760e-05f,  1.20387525e-06f,  -1.73868522e-06f,
