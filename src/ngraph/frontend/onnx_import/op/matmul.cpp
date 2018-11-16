@@ -20,19 +20,21 @@
 #include <vector>
 
 #include "ngraph/coordinate.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/shape.hpp"
 
+#include "exceptions.hpp"
 #include "matmul.hpp"
 #include "utils/broadcasting.hpp"
 #include "utils/reshape.hpp"
 
-/// \brief      Slice the sub matrix from 3D input tensor.
+/// \brief      Slice the sub matrix from the input tensor.
 ///
-/// \param[in]  node  The input tensor. Must be 3D.
+/// \param[in]  node  The input tensor. Must be at most of rank 3.
 /// \param[in]  idx   The index on the first axis, at which to slice sub-matrix.
 ///
 /// \return     The node representing sub matrix.
@@ -41,6 +43,10 @@ static std::shared_ptr<ngraph::Node> get_sub_matrix(const std::shared_ptr<ngraph
                                                     std::size_t idx)
 {
     const ngraph::Shape& shape{node->get_shape()};
+    if (shape.size() < 3)
+    {
+        return node;
+    }
     // Below bounds defines the sub_matrix through ranges for each input node axis.
     ngraph::Coordinate lower_bounds(shape.size());
     ngraph::Coordinate upper_bounds = shape;
@@ -71,24 +77,35 @@ namespace ngraph
                     std::size_t left_rank{left->get_shape().size()};
                     std::size_t right_rank{right->get_shape().size()};
 
-                    // First (easy) case:
-                    // Multiply two tensors where one of them or both has rank lower equal 2.
-                    // This is already internally handled by Ngraph Dot operator.
-                    if (left_rank <= 2 || right_rank <= 2)
+                    if (left_rank == 0 || right_rank == 0)
+                    {
+                        NGRAPH_WARN
+                            << (node) << " "
+                            << "ONNX standard doesn't allow scalar operands, however nGraph "
+                               "accepts them. Consider use of element-wise multiplication instead "
+                               "to conform with ONNX standard.";
+                    }
+
+                    // First (easy) case that is already internally handled by Ngraph Dot operator.
+                    // Multiply two tensors where both of them has rank lower equal 2.
+                    if (left_rank <= 2 && right_rank <= 2)
                     {
                         return {
                             std::make_shared<ngraph::op::Dot>(ng_inputs.at(0), ng_inputs.at(1))};
                     }
 
                     // Second case:
-                    // Multiply two tensors where each of them is rank greater equal 3.
+                    // Multiply two tensors where at least one of them is rank greater equal 3.
 
-                    // Broadcast input arguments.
-                    const NodeVector& broadcasted_nodes =
-                        numpy_style_broadcast_for_matmul_operation(left, right);
+                    // Broadcast input arguments only if both of them are not vectors.
+                    if (left_rank > 1 && right_rank > 1)
+                    {
+                        const NodeVector& broadcasted_nodes =
+                            numpy_style_broadcast_for_matmul_operation(left, right);
 
-                    left = broadcasted_nodes.at(0);
-                    right = broadcasted_nodes.at(1);
+                        left = broadcasted_nodes.at(0);
+                        right = broadcasted_nodes.at(1);
+                    }
                     const auto& left_shape = left->get_shape();
                     const auto& right_shape = right->get_shape();
 
@@ -97,11 +114,20 @@ namespace ngraph
                     if (left_shape.size() > 3)
                     {
                         left = reshape::collapse(left, 0, left_shape.size() - 3);
+                    }
+                    if (right_shape.size() > 3)
+                    {
                         right = reshape::collapse(right, 0, right_shape.size() - 3);
                     }
 
                     // Perform multiple small dot products
                     std::size_t groups = left->get_shape().at(0);
+                    // If we haven't broadcast earlier this means that one of the inputs is a vector,
+                    // thus the number of groups is defined by the shape of the bigger tensor.
+                    if (right->get_shape().size() > left->get_shape().size())
+                    {
+                        groups = right->get_shape().at(0);
+                    }
                     NodeVector small_dots(groups);
 
                     for (std::size_t g = 0; g < groups; ++g)
@@ -119,7 +145,7 @@ namespace ngraph
                     // Concatenate sub_dots on groups axis.
                     auto result = std::make_shared<ngraph::op::Concat>(small_dots, 0);
 
-                    if (left_shape.size() <= 3)
+                    if (left_shape.size() <= 3 && right_shape.size() <= 3)
                     {
                         return {result};
                     }
