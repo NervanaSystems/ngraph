@@ -21,6 +21,7 @@
 
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
@@ -390,7 +391,10 @@ NodeVector Node::get_users() const
     {
         for (auto input : get_output_inputs(i))
         {
-            result.push_back(input->get_node());
+            if (is_used(input->get_node().get()))
+            {
+                result.push_back(input->get_node());
+            }
         }
     }
 
