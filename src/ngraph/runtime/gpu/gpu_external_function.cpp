@@ -122,18 +122,7 @@
 using namespace std;
 using namespace ngraph;
 
-static const string s_output_dir = "gpu_codegen";
 static std::mutex s_compilation;
-
-class GPUStaticInitializers
-{
-public:
-    GPUStaticInitializers()
-    {
-        file_util::remove_directory(s_output_dir);
-        file_util::make_directory(s_output_dir);
-    }
-};
 
 static string emit_string_array(const vector<string>& s, size_t max_line_length)
 {
@@ -167,8 +156,6 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
     return ss.str();
 }
 
-static GPUStaticInitializers s_static_initializers;
-
 void runtime::gpu::GPU_ExternalFunction::emit_op(GPU_ExternalFunction* external_function,
                                                  codegen::CodeWriter& writer,
                                                  const ngraph::Node* node,
@@ -179,16 +166,10 @@ void runtime::gpu::GPU_ExternalFunction::emit_op(GPU_ExternalFunction* external_
     emit_function(external_function, writer, node, args, out);
 };
 
-const size_t runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction::s_memory_pool_alignment = 64;
-
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function,
     std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
-    : m_compiled_function(nullptr)
-    , m_function(function)
-    , m_emit_timing(false)
-    , m_is_compiled(false)
-    , m_shared_context(shared_context)
+    : GPU_ExternalFunctionBase(function, shared_context)
 {
 }
 
@@ -714,46 +695,6 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
     return rc;
 }
 
-string runtime::gpu::GPU_ExternalFunction::strip_comments(const string& s) const
-{
-    stringstream out;
-    for (size_t i = 0; i < s.size(); i++)
-    {
-        if (i < s.size() - 2)
-        {
-            if (s[i] == '/' && s[i + 1] == '/')
-            {
-                // line comment
-                i += 2;
-                while (s[i] != '\n')
-                {
-                    i++;
-                }
-                out << '\n';
-            }
-            else if (s[i] == '/' && s[i + 1] == '*')
-            {
-                // multi-line comment
-                i += 2;
-                while (!(s[i] == '*' && s[i + 1] == '/'))
-                {
-                    i++;
-                }
-                i++;
-            }
-            else
-            {
-                out << s[i];
-            }
-        }
-        else
-        {
-            out << s[i];
-        }
-    }
-    return out.str();
-}
-
 void runtime::gpu::GPU_ExternalFunction::propagate_in_place_input(
     ngraph::descriptor::Output* output, std::string input_name)
 {
@@ -834,4 +775,67 @@ void runtime::gpu::GPU_ExternalFunction::propagate_in_place_output(
             }
         }
     } while (propagate_further);
+}
+
+string runtime::gpu::GPU_ExternalFunction::strip_comments(const string& s) const
+{
+    stringstream out;
+    for (size_t i = 0; i < s.size(); i++)
+    {
+        if (i < s.size() - 2)
+        {
+            if (s[i] == '/' && s[i + 1] == '/')
+            {
+                // line comment
+                i += 2;
+                while (s[i] != '\n')
+                {
+                    i++;
+                }
+                out << '\n';
+            }
+            else if (s[i] == '/' && s[i + 1] == '*')
+            {
+                // multi-line comment
+                i += 2;
+                while (!(s[i] == '*' && s[i + 1] == '/'))
+                {
+                    i++;
+                }
+                i++;
+            }
+            else
+            {
+                out << s[i];
+            }
+        }
+        else
+        {
+            out << s[i];
+        }
+    }
+    return out.str();
+}
+
+void runtime::gpu::GPU_ExternalFunction::get_performance_data(std::vector<runtime::PerformanceCounter>& rc) const
+{
+    auto* engine = this->m_execution_engine.get();
+    if (engine)
+    {
+        auto get_count = engine->find_function<size_t()>("get_debug_timer_count");
+        auto get_name = engine->find_function<const char*(size_t)>("get_debug_timer_name");
+        auto get_microseconds =
+            engine->find_function<size_t(size_t)>("get_debug_timer_microseconds");
+        auto get_call_count =
+            engine->find_function<size_t(size_t)>("get_debug_timer_call_count");
+
+        if (get_count && get_name && get_microseconds && get_call_count)
+        {
+            size_t count = get_count();
+            for (size_t i = 0; i < count; i++)
+            {
+                rc.push_back({get_name(i), get_microseconds(i), get_call_count(i)});
+            }
+        }
+    }
 }
