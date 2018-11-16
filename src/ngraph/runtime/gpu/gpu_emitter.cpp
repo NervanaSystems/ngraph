@@ -480,7 +480,9 @@ void runtime::gpu::GPU_Emitter::emit_Concat(EMIT_ARGS)
     writer.block_end();
 }
 
-void runtime::gpu::GPU_Emitter::emit_Constant(EMIT_ARGS) {}
+void runtime::gpu::GPU_Emitter::emit_Constant(EMIT_ARGS)
+{
+}
 
 void runtime::gpu::GPU_Emitter::emit_Convert(EMIT_ARGS)
 {
@@ -737,12 +739,13 @@ void runtime::gpu::GPU_Emitter::emit_Max(EMIT_ARGS)
         // one of args0 axes has zero size, zero output, use args1 value
         if (args[0].get_size() == 0)
         {
-            writer << out[0].get_type() << " init_value = " << TypeInfo::Get(args[0].get_type())->lowest() << ";\n";
+            writer << out[0].get_type()
+                   << " init_value = " << TypeInfo::Get(args[0].get_type())->min() << ";\n";
             writer << "vector<" << out[0].get_type() << "> temp(" << out[0].get_size()
-                    << ", init_value);\n";
+                   << ", init_value);\n";
             writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
-                    << ", (void*)temp.data(), " << out[0].get_size() << " * "
-                    << out[0].get_element_type().size() << ");\n";
+                   << ", (void*)temp.data(), " << out[0].get_size() << " * "
+                   << out[0].get_element_type().size() << ");\n";
             return;
         }
         else if (args[0].get_size() == out[0].get_size())
@@ -871,12 +874,13 @@ void runtime::gpu::GPU_Emitter::emit_Min(EMIT_ARGS)
         // one of args0 axes has zero size, zero output, use args1 value
         if (args[0].get_size() == 0)
         {
-            writer << out[0].get_type() << " init_value = " << TypeInfo::Get(args[0].get_type())->max() << ";\n";
+            writer << out[0].get_type()
+                   << " init_value = " << TypeInfo::Get(args[0].get_type())->max() << ";\n";
             writer << "vector<" << out[0].get_type() << "> temp(" << out[0].get_size()
-                    << ", init_value);\n";
+                   << ", init_value);\n";
             writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
-                    << ", (void*)temp.data(), " << out[0].get_size() << " * "
-                    << out[0].get_element_type().size() << ");\n";
+                   << ", (void*)temp.data(), " << out[0].get_size() << " * "
+                   << out[0].get_element_type().size() << ");\n";
             return;
         }
         else if (args[0].get_size() == out[0].get_size())
@@ -999,7 +1003,9 @@ void runtime::gpu::GPU_Emitter::emit_Pad(EMIT_ARGS)
     writer.block_end();
 }
 
-void runtime::gpu::GPU_Emitter::emit_Parameter(EMIT_ARGS) {}
+void runtime::gpu::GPU_Emitter::emit_Parameter(EMIT_ARGS)
+{
+}
 
 void runtime::gpu::GPU_Emitter::emit_Power(EMIT_ARGS)
 {
