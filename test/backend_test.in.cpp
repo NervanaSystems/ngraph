@@ -3463,9 +3463,6 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_zero_int)
 
     backend->call_with_validate(f, {result}, {a});
     EXPECT_EQ((vector<int32_t>{minval, minval, minval}), read_vector<int32_t>(result));
-
-    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
-    // input tensors, so let's do this too.
     EXPECT_EQ((vector<int32_t>{}), read_vector<int32_t>(a));
 }
 
@@ -3720,7 +3717,6 @@ NGRAPH_TEST(${BACKEND_NAME}, min_trivial_5d)
               read_vector<float>(result));
 }
 
-/* Uncomment after resolving cuda reduce
 NGRAPH_TEST(${BACKEND_NAME}, min_trivial_5d_int)
 {
     Shape shape{2, 2, 2, 2, 2};
@@ -3732,14 +3728,14 @@ NGRAPH_TEST(${BACKEND_NAME}, min_trivial_5d_int)
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i32, shape);
     copy_data(a, vector<int32_t>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+                                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
     auto result = backend->create_tensor(element::i32, shape);
 
     backend->call_with_validate(f, {result}, {a});
     EXPECT_EQ((vector<int32_t>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
               read_vector<int32_t>(result));
-}*/
+}
 
 NGRAPH_TEST(${BACKEND_NAME}, min_to_scalar)
 {
