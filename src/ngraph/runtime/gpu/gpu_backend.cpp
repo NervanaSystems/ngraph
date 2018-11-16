@@ -204,25 +204,7 @@ vector<runtime::PerformanceCounter>
         const FunctionInstance& instance = it->second;
         if (instance.m_external_function != nullptr)
         {
-            auto* engine = instance.m_external_function->m_execution_engine.get();
-            if (engine)
-            {
-                auto get_count = engine->find_function<size_t()>("get_debug_timer_count");
-                auto get_name = engine->find_function<const char*(size_t)>("get_debug_timer_name");
-                auto get_microseconds =
-                    engine->find_function<size_t(size_t)>("get_debug_timer_microseconds");
-                auto get_call_count =
-                    engine->find_function<size_t(size_t)>("get_debug_timer_call_count");
-
-                if (get_count && get_name && get_microseconds && get_call_count)
-                {
-                    size_t count = get_count();
-                    for (size_t i = 0; i < count; i++)
-                    {
-                        rc.push_back({get_name(i), get_microseconds(i), get_call_count(i)});
-                    }
-                }
-            }
+            instance.m_external_function->get_performance_data(rc);
         }
     }
     return rc;
