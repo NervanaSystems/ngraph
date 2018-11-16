@@ -17,7 +17,6 @@
 cmake_minimum_required (VERSION 3.1)
 
 include(cmake/Modules/git_tags.cmake)
-include(cmake/Modules/sdl.cmake)
 
 NGRAPH_GET_VERSION_LABEL()
 
