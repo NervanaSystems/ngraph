@@ -4965,7 +4965,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_zero_offset)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5172,7 +5172,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_int8_zero_offset)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5205,7 +5205,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int8_zero_offset)
     auto scale = op::Constant::create(output_type, scale_offset_shape, {2});
     auto offset = op::Constant::create(input_type, scale_offset_shape, {0});
     auto dequantize = make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
-    auto f = make_shared<Function>(dequantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(dequantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5274,7 +5274,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int32)
     auto scale = op::Constant::create(output_type, scale_offset_shape, {2});
     auto offset = op::Constant::create(input_type, scale_offset_shape, {1});
     auto dequantize = make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
-    auto f = make_shared<Function>(dequantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(dequantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5310,7 +5310,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_int32_zero_offset)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5343,7 +5343,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize_int32_zero_offset)
     auto scale = op::Constant::create(output_type, scale_offset_shape, {2});
     auto offset = op::Constant::create(input_type, scale_offset_shape, {0});
     auto dequantize = make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
-    auto f = make_shared<Function>(dequantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(dequantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5381,7 +5381,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp_uint8)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5416,7 +5416,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp_int8)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5452,7 +5452,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_clamp_int32)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);
@@ -5518,7 +5518,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_NEAREST_TOWARD_INFINITY)
     auto offset = op::Constant::create(output_type, scale_offset_shape, {0});
     auto quantize =
         make_shared<op::Quantize>(X, scale, offset, output_type, quantization_axes, round_mode);
-    auto f = make_shared<Function>(quantize, op::ParameterVector{X});
+    auto f = make_shared<Function>(quantize, ParameterVector{X});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto x = backend->create_tensor(input_type, input_shape);

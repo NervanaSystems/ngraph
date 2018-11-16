@@ -1272,7 +1272,7 @@ NGRAPH_TEST(${BACKEND_NAME}, maxpool_bprop_larger_than_cache)
     auto bprop =
         make_shared<Function>(make_shared<op::MaxPoolBackprop>(
                                   x, dy, window_shape, move_strides, padding_below, padding_above),
-                              op::ParameterVector{x, dy});
+                              ParameterVector{x, dy});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
