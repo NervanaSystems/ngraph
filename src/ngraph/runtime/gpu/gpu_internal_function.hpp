@@ -22,9 +22,6 @@
 #include <typeinfo>
 #include <unordered_map>
 
-#include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/codegen/compiler.hpp"
-#include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
@@ -45,12 +42,12 @@ namespace ngraph
             class GPU_Emitter;
             struct GPURuntimeContext;
 
-            class GPU_ExternalFunction : public GPU_CompiledFunction
+            class GPU_InternalFunction : public GPU_CompiledFunction
             {
             public:
-                GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                GPU_InternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
-                virtual ~GPU_ExternalFunction();
+                virtual ~GPU_InternalFunction();
 
                 virtual std::string add_to_runtime(size_t primitive_index,
                                             const std::vector<runtime::gpu::GPUTensorWrapper>& args,
@@ -58,29 +55,6 @@ namespace ngraph
                 virtual void compile() override;
                 virtual void get_performance_data(std::vector<runtime::PerformanceCounter>& rc) const override;
             private:
-                /// \brief Create a list of node names for each arg in args
-                /// \param args list of tensor arguments
-                /// \param arg_indexes a list of indexes into args for which args to include in
-                ///    the output list, so {1, 2} will include args 1 and 2 and skip 0.
-                /// \ return returns a string containing "arg0_name, arg1_name, etc."
-                std::string node_names(const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                       std::initializer_list<int> arg_indexes = {});
-
-                void emit_header();
-                void emit_timer_functions();
-                void emit_constant_declarations();
-                void emit_function_declarations();
-                void emit_functions();
-                void emit_debug_function_entry(Node* node);
-                void emit_debug_function_exit(Node* node);
-                void emit_temp_mem_pool_allocation(std::shared_ptr<Function> current_function);
-                void store_emitted_functions(const std::string& code);
-                std::string emit_op(EMIT_ARGS);
-                std::string emit_op_as_function(const Node& node, const std::string& function_name);
-                std::string strip_comments(const std::string& s) const;
-
-                static const std::string& get_pch_header_source();
-                static const std::string& get_header_source();
 
                 // For non-destructive passthrough kernels, propagate function
                 // input buffers to internal ops
@@ -90,9 +64,6 @@ namespace ngraph
                 // internal ops
                 virtual void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
                                                        std::string output_name) override;
-                codegen::CodeWriter m_writer;
-                std::unique_ptr<codegen::Compiler> m_compiler;
-                std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 std::map<std::string, size_t> m_name_index_map;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
                 std::unordered_map<Node*, Node*> m_node_function_map;

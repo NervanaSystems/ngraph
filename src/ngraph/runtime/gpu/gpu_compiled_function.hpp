@@ -49,14 +49,14 @@ namespace ngraph
             class GPU_Emitter;
             struct GPURuntimeContext;
 
-            class GPU_ExternalFunctionBase
+            class GPU_CompiledFunction
             {
                 friend class GPU_Backend;
 
             public:
-                GPU_ExternalFunctionBase(const std::shared_ptr<ngraph::Function>& function,
+                GPU_CompiledFunction(const std::shared_ptr<ngraph::Function>& function,
                                          std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
-                virtual ~GPU_ExternalFunctionBase();
+                virtual ~GPU_CompiledFunction();
 
                 std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
                 const std::unique_ptr<GPUPrimitiveEmitter>& get_primitive_emitter() const

@@ -31,12 +31,12 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_external_function_base.hpp"
+#include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-const std::string runtime::gpu::GPU_ExternalFunctionBase::s_output_dir = "gpu_codegen";
+const std::string runtime::gpu::GPU_CompiledFunction::s_output_dir = "gpu_codegen";
 // static std::mutex s_compilation;
 
 class GPUStaticInitializers
@@ -44,16 +44,16 @@ class GPUStaticInitializers
 public:
     GPUStaticInitializers()
     {
-        file_util::remove_directory(runtime::gpu::GPU_ExternalFunctionBase::s_output_dir);
-        file_util::make_directory(runtime::gpu::GPU_ExternalFunctionBase::s_output_dir);
+        file_util::remove_directory(runtime::gpu::GPU_CompiledFunction::s_output_dir);
+        file_util::make_directory(runtime::gpu::GPU_CompiledFunction::s_output_dir);
     }
 };
 
 static GPUStaticInitializers s_static_initializers;
 
-const size_t runtime::gpu::GPU_ExternalFunctionBase::GPU_ExternalFunctionBase::s_memory_pool_alignment = 64;
+const size_t runtime::gpu::GPU_CompiledFunction::GPU_CompiledFunction::s_memory_pool_alignment = 64;
 
-runtime::gpu::GPU_ExternalFunctionBase::GPU_ExternalFunctionBase(
+runtime::gpu::GPU_CompiledFunction::GPU_CompiledFunction(
     const shared_ptr<ngraph::Function>& function,
     std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
     : m_compiled_function(nullptr)
@@ -64,11 +64,11 @@ runtime::gpu::GPU_ExternalFunctionBase::GPU_ExternalFunctionBase(
 {
 }
 
-runtime::gpu::GPU_ExternalFunctionBase::~GPU_ExternalFunctionBase()
+runtime::gpu::GPU_CompiledFunction::~GPU_CompiledFunction()
 {
 }
 
-// void runtime::gpu::GPU_ExternalFunctionBase::compile()
+// void runtime::gpu::GPU_CompiledFunction::compile()
 // {
 //     if (m_is_compiled)
 //     {
@@ -100,7 +100,7 @@ runtime::gpu::GPU_ExternalFunctionBase::~GPU_ExternalFunctionBase()
 //     pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(
 //         *allocator, m_tensor_memory_buffers);
 //     std::string common_function_string;
-//     auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunctionBase::emit_op_as_function,
+//     auto femitter = bind(&ngraph::runtime::gpu::GPU_CompiledFunction::emit_op_as_function,
 //                          this,
 //                          placeholders::_1,
 //                          placeholders::_2);
