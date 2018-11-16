@@ -486,6 +486,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
     size_t non_reduce_rank,
     size_t reduce_rank)
 {
+    bool stable_sum = ((reduce_op == "add") && (data_types[1] == "float"));
     writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -523,6 +524,12 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                 writer << "r = in[input_idx];\n";
                 writer << "reduce_idx += 1;\n";
             }
+            if(stable_sum)
+            {
+                writer << data_types[1] << " c = 0;\n";
+                writer << data_types[1] << " y;\n";
+                writer << data_types[1] << " t;\n";
+            }
             writer.block_end();
             writer << "while (reduce_idx < reduce_count)\n";
             writer.block_begin();
@@ -539,7 +546,17 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                                                     true);
                 writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
                 writer << "input_i = in[input_idx];\n";
-                writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
+                if(stable_sum)
+                {
+                        writer << "y = input_i - c;\n";
+                        writer << "t = r + y;\n";
+                        writer << "c = (t - r) - y;\n";
+                        writer << "r = t;\n";
+                }
+                else
+                {
+                    writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
+                }
                 writer << "reduce_idx += 1;\n";
             }
             writer.block_end();
@@ -1855,6 +1872,40 @@ void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::C
                << i_stride_shift << brace_open << i << brace_close << ");\n";
     }
 }
+
+void runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
+    codegen::CodeWriter& writer,
+    std::string i_thread_index,
+    std::string i_strides,
+    std::string i_stride_magic,
+    std::string i_stride_shift,
+    std::string i_reduced_strides,
+    std::string o_coordinates,
+    std::string reduced_idx,
+    size_t rank,
+    bool register_arguments)
+{
+    coordinate_transform_to_multi_d(writer,
+                                    i_strides,
+                                    i_stride_magic,
+                                    i_stride_shift,
+                                    i_thread_index,
+                                    o_coordinates,
+                                    rank,
+                                    register_arguments);
+
+    std::string brace_open = (register_arguments) ? "" : "[";
+    std::string brace_close = (register_arguments) ? "" : "]";
+
+    // index into reduced tensor from coordinates of non-reduced tensor
+    writer << "uint32_t " << reduced_idx << " = 0;\n";
+    for (size_t i = 0; i < rank; i++)
+    {
+        writer << reduced_idx << " += " << o_coordinates << i << " * " << i_reduced_strides
+               << brace_open << i << brace_close << ";\n";
+    }
+}
+
 std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
     codegen::CodeWriter& writer,
     std::string i_thread_index,
