@@ -1564,7 +1564,7 @@ void runtime::gpu::GPU_Emitter::emit_Subtract(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Sum(EMIT_ARGS)
 {
-    runtime::gpu::GPU_Emitter::emit_Sum_1(external_function, writer, node, args, out);
+    runtime::gpu::GPU_Emitter::emit_Sum_0(external_function, writer, node, args, out);
 }
 
 void runtime::gpu::GPU_Emitter::emit_Sum_0(EMIT_ARGS)

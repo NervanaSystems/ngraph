@@ -1676,7 +1676,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
     NVShape simplified_reduce_axis;
     NVShape simplified_input_shape;
     // simplified_reduce_axis will not be empty, since we checked if input size is same as output size in gpu_emitter
-    simplify_reduce(input_shape, reduce_axis, simplified_input_shape, simplified_reduce_axis);
+    simplify_reduce_shape(input_shape, reduce_axis, simplified_input_shape, simplified_reduce_axis);
     size_t rank = simplified_input_shape.size();
     size_t reduce_rank = simplified_reduce_axis.size();
     size_t non_reduce_rank = rank - reduce_rank;
@@ -1933,9 +1933,9 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     NVShape simplified_reduce_axis;
     NVShape simplified_input_shape;
     // simplified_reduce_axis will not be empty, since we checked if input size is same as output size in gpu_emitter
-    simplify_reduce(input_shape, reduce_axis, simplified_input_shape, simplified_reduce_axis);
+    simplify_reduce_shape(input_shape, reduce_axis, simplified_input_shape, simplified_reduce_axis);
 
-    size_t rank = isimplified_nput_shape.size();
+    size_t rank = simplified_input_shape.size();
     size_t reduce_rank = simplified_reduce_axis.size();
     size_t non_reduce_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format

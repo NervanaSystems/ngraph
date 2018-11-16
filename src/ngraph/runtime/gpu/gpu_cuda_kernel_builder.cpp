@@ -555,7 +555,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                 }
                 else
                 {
-                    writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
+                    writer << "r = " << reduce_op << "(r , input_i);\n";
                 }
                 writer << "reduce_idx += 1;\n";
             }
