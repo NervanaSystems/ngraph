@@ -30,7 +30,6 @@ class ngraph::pass::PassConfig
 {
 public:
     PassConfig();
-    PassConfig(const PassConfig& pass_config) { m_enables = pass_config.m_enables; }
     const std::unordered_map<std::string, bool>& get_enables() { return m_enables; }
     void set_pass_enable(std::string name, bool enable);
     bool get_pass_enable(std::string name);
