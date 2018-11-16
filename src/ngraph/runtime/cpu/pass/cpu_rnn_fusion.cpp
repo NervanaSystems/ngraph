@@ -579,7 +579,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             // now get the GOE0 which is the first output of lstm (ht)
             for (auto& goes : lstm_nodes[index]->get_outputs().at(0).get_inputs())
             {
-                auto goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(goes->get_node());
+                auto goe_node = std::static_pointer_cast<op::GetOutputElement>(goes->get_node());
 
                 // if their is no GOE followed by the Lstm, their might be pattern match error
                 // we will return safely

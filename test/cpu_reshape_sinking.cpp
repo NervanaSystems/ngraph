@@ -59,7 +59,7 @@ TEST(cpu_reshape_sinking, edge_splitting)
     auto absn = make_shared<op::Abs>(reshape);
     auto absn2 = make_shared<op::Abs>(absn);
     auto sum = make_shared<op::Sum>(reshape, AxisSet{0, 1, 2, 3});
-    auto func = make_shared<Function>(NodeVector{absn2, sum}, op::ParameterVector{a});
+    auto func = make_shared<Function>(NodeVector{absn2, sum}, ParameterVector{a});
     pass::Manager pass_manager;
     //size_t before_count = count_ops_of_type<op::Reshape>(func);
     pass_manager.register_pass<pass::VisualizeTree>("before.pdf");

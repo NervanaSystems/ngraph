@@ -24,6 +24,7 @@ set(SRC
     cpu_external_function.cpp
     cpu_kernels.cpp
     cpu_layout_descriptor.cpp
+    cpu_op_annotations.cpp
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
