@@ -17,10 +17,10 @@
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
-#include "ngraph/runtime/gpu/gpu_external_function.hpp"
+#include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
 
 #define LAYOUT_DECL(op_type)                                                                       \
-    layout<op_type>(ngraph::runtime::gpu::GPU_ExternalFunction * external_function,                \
+    layout<op_type>(ngraph::runtime::gpu::GPU_CompiledFunction* compiled_function,                \
                     std::shared_ptr<ngraph::Node> node)
 
 namespace ngraph
@@ -32,15 +32,15 @@ namespace ngraph
             namespace pass
             {
                 using LayoutFunction =
-                    std::function<void(GPU_ExternalFunction*, std::shared_ptr<ngraph::Node>)>;
+                    std::function<void(GPU_CompiledFunction*, std::shared_ptr<ngraph::Node>)>;
 
                 using LayoutOpMap = std::unordered_map<std::type_index, LayoutFunction>;
 
                 class GPULayout : public ngraph::pass::CallGraphPass
                 {
                 public:
-                    GPULayout(GPU_ExternalFunction* external_function)
-                        : m_external_function(external_function)
+                    GPULayout(GPU_CompiledFunction* compiled_function)
+                        : m_compiled_function(compiled_function)
                     {
                     }
                     virtual bool
@@ -48,11 +48,11 @@ namespace ngraph
 
                     template <typename OP>
                     static void
-                        layout(ngraph::runtime::gpu::GPU_ExternalFunction* external_function,
+                        layout(ngraph::runtime::gpu::GPU_CompiledFunction* compiled_function,
                                std::shared_ptr<ngraph::Node> node);
 
                 private:
-                    GPU_ExternalFunction* m_external_function;
+                    GPU_CompiledFunction* m_compiled_function;
                 };
 
                 NodeVector insert_new_reshape_after(NodeVector& parents,
