@@ -64,7 +64,7 @@ set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND SRC onnx_import.cpp)
     if (NGRAPH_ONNXIFI_ENABLE)
-        list(APPEND SRC onnxifi.cpp)
+        list(APPEND SRC onnxifi.cpp onnxifi_span.cpp)
     endif()
 endif()
 
@@ -137,6 +137,9 @@ set(MULTI_TEST_SRC
 )
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND MULTI_TEST_SRC distributed.in.cpp)
+endif()
+if (NGRAPH_CPU_ENABLE)
+    list(APPEND MULTI_TEST_SRC backend_graph_comparison.in.cpp)
 endif()
 
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})

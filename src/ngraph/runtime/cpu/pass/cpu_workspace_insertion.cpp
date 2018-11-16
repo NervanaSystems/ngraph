@@ -94,13 +94,13 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::run_on_function(std::shared_ptr<
 
 bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
 {
-    auto data = std::dynamic_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(0));
-    auto delta = std::dynamic_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(1));
+    auto data = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(0));
+    auto delta = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(1));
     NGRAPH_DEBUG << "In a callback for construct_max_pool_with_indices against "
                  << m.get_match_root()->get_name();
 
     auto pattern_map = m.get_pattern_map();
-    auto m_max_pool_bprop = std::dynamic_pointer_cast<op::MaxPoolBackprop>(m.get_match_root());
+    auto m_max_pool_bprop = std::static_pointer_cast<op::MaxPoolBackprop>(m.get_match_root());
 
     if (m_max_pool_bprop->get_shape().size() != 4 ||
         m_max_pool_bprop->get_window_shape().size() != 2 ||
