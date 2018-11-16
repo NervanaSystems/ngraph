@@ -14,11 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <algorithm>
-#include <cstddef>
+#include <cstdint>
+#include <iterator>
 #include <memory>
 #include <vector>
 
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/frontend/onnx_import/op/conv_transpose.hpp"
 #include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
@@ -56,12 +57,12 @@ namespace ngraph
                     ngraph::CoordinateDiff padding_above = paddings.second;
 
                     Strides data_dilation_strides(num_spatial_dims, 1);
-                    std::vector<int64_t> output_shape{
-                        node.get_attribute_value<std::vector<int64_t>>("output_shape", {})};
+                    std::vector<std::int64_t> output_shape{
+                        node.get_attribute_value<std::vector<std::int64_t>>("output_shape", {})};
 
-                    std::vector<int64_t> output_padding{
-                        node.get_attribute_value<std::vector<int64_t>>(
-                            "output_padding", std::vector<int64_t>(num_spatial_dims, 0))};
+                    std::vector<std::int64_t> output_padding{
+                        node.get_attribute_value<std::vector<std::int64_t>>(
+                            "output_padding", std::vector<std::int64_t>(num_spatial_dims, 0))};
 
                     Shape data_batch_shape(data_shape.size(), 1);
                     data_batch_shape[0] = data_shape[0];
@@ -95,14 +96,15 @@ namespace ngraph
                         for (int i = 0; i < num_spatial_dims && output_shape.empty(); ++i)
                         {
                             // Calculating spatial dims of data output shape for ngraph conv backprop op
-                            // | s(ds-1) + d(fs-1) - pb - pa |
+                            // | s(ds-1) + d(ws-1) - pb - pa |
                             // | --------------------------- | + 1 + op
                             // | _           dds           _ |
                             //
                             // d - dilation
                             // ds - data shape
                             // dds - data dilation strides
-                            // op - putput padding
+                            // op - output padding
+                            // pa - padding above
                             // pb - padding below
                             // s - strides
                             // ws - weights shape
@@ -133,9 +135,8 @@ namespace ngraph
                     auto bias = inputs.at(2);
                     const Shape& new_shape = conv_node->get_shape();
 
-                    auto broadcasted_bias = std::make_shared<ngraph::op::Broadcast>(
-                        bias, new_shape, calculate_broadcast_axes(new_shape, bias->get_shape(), 1));
-                    return {std::make_shared<ngraph::op::Add>(conv_node, broadcasted_bias)};
+                    return {std::make_shared<ngraph::op::Add>(
+                        conv_node, make_broadcast_node(bias, conv_node->get_shape(), 1))};
                 }
 
             } // namespace set_1

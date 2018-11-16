@@ -28,7 +28,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                /// \brief Performs ONNX Conv operation.
+                /// \brief Performs ONNX Transposed Convolution operation.
                 ///
                 /// \param node   The ONNX node object representing this operation.
                 ///
