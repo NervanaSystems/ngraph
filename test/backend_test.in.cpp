@@ -3228,6 +3228,48 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
     EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, product_2d_to_scalar_int)
+{
+    Shape shape_a{3, 3};
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    Shape shape_rt{};
+    auto f =
+        make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape_a);
+    copy_data(a, vector<int32_t>{1, 2, 3, 4, 5, 6, 7, 8, 9});
+    auto result = backend->create_tensor(element::i32, shape_rt);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_TRUE(test::all_close(vector<int32_t>{1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9},
+                                read_vector<int32_t>(result)));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, product_to_scalar_int)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape);
+    copy_data(a, vector<int32_t>{1, 2, 3, 4});
+    auto result = backend->create_tensor(element::i32, Shape{});
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<int32_t>{24}), read_vector<int32_t>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<int32_t>{1, 2, 3, 4}), read_vector<int32_t>(a));
+}
+
 // Trivial case with no reduced axes.
 NGRAPH_TEST(${BACKEND_NAME}, max_trivial)
 {
@@ -3266,6 +3308,27 @@ NGRAPH_TEST(${BACKEND_NAME}, max_trivial_5d)
                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
               read_vector<float>(result));
 }
+
+/* To uncomment when cuda_reduce gets fixed
+NGRAPH_TEST(${BACKEND_NAME}, max_trivial_5d_int)
+{
+    Shape shape{2, 2, 2, 2, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape);
+    copy_data(a, vector<int32_t>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+    auto result = backend->create_tensor(element::i32, shape);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<int32_t>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}),
+              read_vector<int32_t>(result));
+}*/
 
 NGRAPH_TEST(${BACKEND_NAME}, max_to_scalar)
 {
@@ -3332,6 +3395,28 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_int)
+{
+    Shape shape_a{3, 2};
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    Shape shape_rt{3};
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape_a);
+    copy_data(a, vector<int32_t>{1, 2, 3, 4, 5, 6});
+    auto result = backend->create_tensor(element::i32, shape_rt);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<int32_t>{2, 4, 6}), read_vector<int32_t>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<int32_t>{1, 2, 3, 4, 5, 6}), read_vector<int32_t>(a));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_zero)
 {
     Shape shape_a{3, 0};
@@ -3357,6 +3442,33 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_zero)
     // input tensors, so let's do this too.
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
+
+/* Uncomment after resolving failure
+NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_zero_int)
+{
+    Shape shape_a{3, 0};
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    Shape shape_rt{3};
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{1}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape_a);
+    copy_data(a, vector<int32_t>{});
+    auto result = backend->create_tensor(element::i32, shape_rt);
+    copy_data(result, vector<int32_t>({3, 3, 3}));
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<int32_t>{-std::numeric_limits<int32_t>::infinity(),
+                             -std::numeric_limits<int32_t>::infinity(),
+                             -std::numeric_limits<int32_t>::infinity()}),
+              read_vector<int32_t>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<int32_t>{}), read_vector<int32_t>(a));
+}*/
 
 NGRAPH_TEST(${BACKEND_NAME}, max_matrix_cols_zero)
 {
@@ -3505,6 +3617,46 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar)
 
     backend->call_with_validate(f, {result}, {a});
     EXPECT_EQ((vector<float>{14.0f}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar_int)
+{
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    Shape shape_rt{};
+    auto f =
+        make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1, 2}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape_a);
+    copy_data(a, vector<int32_t>{1,  2,  3,  4,  5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+                                 13, 12, 11, 10, 9, 8, 7, 6, 5, 4,  3,  2,  1});
+    auto result = backend->create_tensor(element::i32, shape_rt);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<int32_t>{14}), read_vector<int32_t>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar_double)
+{
+    Shape shape_a{3, 3, 3};
+    auto A = make_shared<op::Parameter>(element::f64, shape_a);
+    Shape shape_rt{};
+    auto f =
+        make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1, 2}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f64, shape_a);
+    copy_data(a, vector<double>{1,  2,  3,  4,  5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+                                13, 12, 11, 10, 9, 8, 7, 6, 5, 4,  3,  2,  1});
+    auto result = backend->create_tensor(element::f64, shape_rt);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<double>{14}), read_vector<double>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_3d_eliminate_zero_dim)
