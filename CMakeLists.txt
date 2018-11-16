@@ -17,6 +17,7 @@
 cmake_minimum_required (VERSION 3.1)
 
 include(cmake/Modules/git_tags.cmake)
+include(cmake/Modules/sdl.cmake)
 
 NGRAPH_GET_VERSION_LABEL()
 
@@ -168,6 +169,8 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     include( cmake/clang_4_0_flags.cmake )
 endif()
 
+include(cmake/sdl.cmake)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -203,26 +206,6 @@ if (DEFINED NGRAPH_TUNE_ARCH)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=${NGRAPH_TUNE_ARCH}")
 endif()
 
-# flags required for SDL-3
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -fPIE -D_FORTIFY_SOURCE=2")
-if (NOT WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wformat -Wformat-security")
-endif()
-if (APPLE)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -bind_at_load")
-    set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} -bind_at_load")
-else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now")
-endif()
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector")
-    else()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector-strong")
-    endif()
-endif()
-
 if (NGRAPH_USE_GOLD)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=gold")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
@@ -247,6 +230,8 @@ endif()
 add_custom_target(style-check
     COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
 )
+
+
 
 #-----------------------------------------------------------------------------------------------
 # enable or disable output from NGRAPH_DEBUG statements
@@ -304,7 +289,7 @@ endif()
 add_definitions(-DPROJECT_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")
-message(STATUS "Link Flags: ${CMAKE_EXE_LINKER_FLAGS}")
+message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 add_subdirectory(src)
 
 if (NGRAPH_UNIT_TEST_ENABLE)
