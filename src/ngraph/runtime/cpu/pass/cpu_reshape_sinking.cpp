@@ -196,11 +196,11 @@ void swim(descriptor::Input* input, std::shared_ptr<op::Reshape> reshape)
                 std::map<size_t, size_t> old_new_source_axes;
                 for (size_t i = 0; new_source_axes_sorted.size(); i++)
                 {
-                    old_new_source_axes.insert({new_source_axes_sorted.at(i), i});
+                    old_new_source_axes.insert({new_source_axes.at(i), i});
                 }
 
                 AxisVector new_source_axis_order;
-                for (auto axis : new_source_axes)
+                for (auto axis : new_source_axes_sorted)
                 {
                     new_source_axis_order.push_back(old_new_source_axes.at(axis));
                 }
