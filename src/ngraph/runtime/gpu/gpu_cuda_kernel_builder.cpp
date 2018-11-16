@@ -594,12 +594,12 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
         writer << "in_idx += step;\n";
         writer.block_end();
         //accumulate reduction to blockDim.x threads
-                    if(stable_sum)
-            {
-                writer << data_types[1] << " c = 0;\n";
-                writer << data_types[1] << " y;\n";
-                writer << data_types[1] << " t;\n";
-            }
+        if (stable_sum)
+        {
+            writer << data_types[1] << " c = 0;\n";
+            writer << data_types[1] << " y;\n";
+            writer << data_types[1] << " t;\n";
+        }
         uint32_t unroll_num = 8;
         writer << "while(in_idx + (step * " << unroll_num - 1 << ") < nthreads)\n";
         writer.block_begin();
@@ -607,12 +607,12 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
             for (int i = 0; i < unroll_num; i++)
             {
                 writer << "input_i = in[in_idx]);\n";
-                                if(stable_sum)
+                if (stable_sum)
                 {
-                        writer << "y = input_i - c;\n";
-                        writer << "t = r + y;\n";
-                        writer << "c = (t - r) - y;\n";
-                        writer << "r = t;\n";
+                    writer << "y = input_i - c;\n";
+                    writer << "t = r + y;\n";
+                    writer << "c = (t - r) - y;\n";
+                    writer << "r = t;\n";
                 }
                 else
                 {
@@ -625,19 +625,19 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
         writer << "while(in_idx < nthreads)\n";
         writer.block_begin();
         {
-                            writer << "input_i = in[in_idx]);\n";
-                                if(stable_sum)
-                {
-                        writer << "y = input_i - c;\n";
-                        writer << "t = r + y;\n";
-                        writer << "c = (t - r) - y;\n";
-                        writer << "r = t;\n";
-                }
-                else
-                {
-                    writer << "r = " << reduce_op << "(r , input_i);\n";
-                }
-                writer << "in_idx += step;\n";
+            writer << "input_i = in[in_idx]);\n";
+            if (stable_sum)
+            {
+                writer << "y = input_i - c;\n";
+                writer << "t = r + y;\n";
+                writer << "c = (t - r) - y;\n";
+                writer << "r = t;\n";
+            }
+            else
+            {
+                writer << "r = " << reduce_op << "(r , input_i);\n";
+            }
+            writer << "in_idx += step;\n";
             writer << "in_idx += step;\n";
         }
         writer.block_end();
@@ -717,25 +717,25 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
         writer << "in_idx += step;\n";
         writer.block_end();
         //accumulate reduction to step threads
-                    if(stable_sum)
-            {
-                writer << data_types[1] << " c = 0;\n";
-                writer << data_types[1] << " y;\n";
-                writer << data_types[1] << " t;\n";
-            }
+        if (stable_sum)
+        {
+            writer << data_types[1] << " c = 0;\n";
+            writer << data_types[1] << " y;\n";
+            writer << data_types[1] << " t;\n";
+        }
         uint32_t unroll_num = 8;
         writer << "while(in_idx + (step * " << unroll_num - 1 << ") < nthreads)\n";
         writer.block_begin();
         {
             for (int i = 0; i < unroll_num; i++)
             {
-                                writer << "input_i = in[in_idx]);\n";
-                                if(stable_sum)
+                writer << "input_i = in[in_idx]);\n";
+                if (stable_sum)
                 {
-                        writer << "y = input_i - c;\n";
-                        writer << "t = r + y;\n";
-                        writer << "c = (t - r) - y;\n";
-                        writer << "r = t;\n";
+                    writer << "y = input_i - c;\n";
+                    writer << "t = r + y;\n";
+                    writer << "c = (t - r) - y;\n";
+                    writer << "r = t;\n";
                 }
                 else
                 {
@@ -748,19 +748,19 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
         writer << "while(in_idx < nthreads)\n";
         writer.block_begin();
         {
-                            writer << "input_i = in[in_idx]);\n";
-                                if(stable_sum)
-                {
-                        writer << "y = input_i - c;\n";
-                        writer << "t = r + y;\n";
-                        writer << "c = (t - r) - y;\n";
-                        writer << "r = t;\n";
-                }
-                else
-                {
-                    writer << "r = " << reduce_op << "(r , input_i);\n";
-                }
-                writer << "in_idx += step;\n";
+            writer << "input_i = in[in_idx]);\n";
+            if (stable_sum)
+            {
+                writer << "y = input_i - c;\n";
+                writer << "t = r + y;\n";
+                writer << "c = (t - r) - y;\n";
+                writer << "r = t;\n";
+            }
+            else
+            {
+                writer << "r = " << reduce_op << "(r , input_i);\n";
+            }
+            writer << "in_idx += step;\n";
         }
         writer.block_end();
         writer << "out[tid] = r;\n";
