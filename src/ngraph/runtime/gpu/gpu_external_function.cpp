@@ -156,14 +156,13 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
     return ss.str();
 }
 
-void runtime::gpu::GPU_ExternalFunction::emit_op(GPU_ExternalFunction* external_function,
-                                                 codegen::CodeWriter& writer,
-                                                 const ngraph::Node* node,
-                                                 const std::vector<GPUTensorWrapper>& args,
-                                                 const std::vector<GPUTensorWrapper>& out)
+std::string runtime::gpu::GPU_ExternalFunction::emit_op(GPU_ExternalFunction* external_function,
+                                                        const ngraph::Node* node,
+                                                        const std::vector<GPUTensorWrapper>& args,
+                                                        const std::vector<GPUTensorWrapper>& out)
 {
     auto emit_function = GPU_Emitter::get_emit_function(*node);
-    emit_function(external_function, writer, node, args, out);
+    return emit_function(external_function, node, args, out);
 };
 
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
@@ -175,6 +174,23 @@ runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
 
 runtime::gpu::GPU_ExternalFunction::~GPU_ExternalFunction()
 {
+}
+
+std::string runtime::gpu::GPU_ExternalFunction::add_to_runtime(size_t primitive_index,
+                                                               const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                                                               const std::vector<runtime::gpu::GPUTensorWrapper>& out)
+{
+    codegen::CodeWriter writer;
+    writer << "void* input[] = {" << node_names(args) << "};\n";
+    writer << "void* output[] = {" << node_names(out) << "};\n";
+    writer << "gpu::invoke_primitive(ctx, " << primitive_index << ", input, output);\n";
+    return writer.get_code();
+}
+
+std::string runtime::gpu::GPU_ExternalFunction::node_names(const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                                                           std::initializer_list<int> arg_indexes)
+{
+    return runtime::gpu::GPU_Emitter::node_names(args, arg_indexes);
 }
 
 const string& runtime::gpu::GPU_ExternalFunction::get_pch_header_source()
@@ -489,7 +505,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 auto it = m_node_function_map.find(node.get());
                 if (it == m_node_function_map.end())
                 {
-                    emit_op(this, m_writer, node.get(), in, out);
+                    m_writer << emit_op(this, node.get(), in, out);
                 }
                 else
                 {
@@ -672,9 +688,7 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
     writer << ",\ngpu::GPURuntimeContext* ctx";
     writer.indent--;
     writer << "\n)\n";
-    codegen::CodeWriter tmp_writer;
-    emit_op(this, tmp_writer, &node, in, out);
-    string body = tmp_writer.get_code();
+    string body = emit_op(this, &node, in, out);
     if (body.size() > 0 && body[0] == '{')
     {
         // Body already surrounded by curly braces so don't add more

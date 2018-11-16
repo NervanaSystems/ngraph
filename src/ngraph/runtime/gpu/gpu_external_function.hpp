@@ -52,9 +52,20 @@ namespace ngraph
                                      std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
                 virtual ~GPU_ExternalFunction();
 
+                virtual std::string add_to_runtime(size_t primitive_index,
+                                            const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                                            const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
                 virtual void compile() override;
                 virtual void get_performance_data(std::vector<runtime::PerformanceCounter>& rc) const override;
             private:
+                /// \brief Create a list of node names for each arg in args
+                /// \param args list of tensor arguments
+                /// \param arg_indexes a list of indexes into args for which args to include in
+                ///    the output list, so {1, 2} will include args 1 and 2 and skip 0.
+                /// \ return returns a string containing "arg0_name, arg1_name, etc."
+                std::string node_names(const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                                       std::initializer_list<int> arg_indexes = {});
+
                 void emit_header();
                 void emit_timer_functions();
                 void emit_constant_declarations();
@@ -63,8 +74,8 @@ namespace ngraph
                 void emit_debug_function_entry(Node* node);
                 void emit_debug_function_exit(Node* node);
                 void emit_temp_mem_pool_allocation(std::shared_ptr<Function> current_function);
-                void emit_op(EMIT_ARGS);
                 void store_emitted_functions(const std::string& code);
+                std::string emit_op(EMIT_ARGS);
                 std::string emit_op_as_function(const Node& node, const std::string& function_name);
                 std::string strip_comments(const std::string& s) const;
 
