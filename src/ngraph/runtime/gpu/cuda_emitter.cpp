@@ -2844,8 +2844,6 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
     NVShape combined_reduce_axis;
     NVShape adj_map(rank, 0);
     size_t combined_axis_count = 0;
-    NGRAPH_INFO << "shape " << join(in);
-    NGRAPH_INFO << "reduce_axis" << join(reduce_axis);
     for (int32_t i = 0; i < static_cast<int32_t>(reduce_axis[0]) - 1; i++)
     {
         adj_map[i] = 1;
@@ -2876,7 +2874,6 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
         adj_map[i] = 1;
     }
 
-    NGRAPH_INFO << "combined reduce_axis" << join(combined_reduce_axis);
     NVShape combined_shape;
     size_t shape_i = 1;
     for (int i = 0; i < rank; i++)
@@ -2892,7 +2889,6 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
         }
     }
 
-    NGRAPH_INFO << "combined shape" << join(combined_shape);
     //eleminate dimenson size = 1, update shape and reduce axis
     size_t reduce_idx = 0;
     size_t eliminated_axis_count = 0;
@@ -2915,8 +2911,6 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
             reduce_idx++;
         }
     }
-    NGRAPH_INFO << "simplified shape" << join(simplified_shape);
-    NGRAPH_INFO << "simplified reduce_axis" << join(simplified_reduce_axis);
 }
 
 void runtime::gpu::CUDAEmitter::get_reduce_strides(NVShape input_shape,
