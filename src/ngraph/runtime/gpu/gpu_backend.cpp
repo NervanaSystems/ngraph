@@ -21,6 +21,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
+#include "ngraph/runtime/gpu/gpu_internal_function.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor.hpp"
@@ -122,12 +123,12 @@ shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
 bool runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
 {
     FunctionInstance& instance = m_function_map[func];
-    if (instance.m_external_function == nullptr)
+    if (instance.m_compiled_function == nullptr)
     {
-        instance.m_external_function = make_shared<GPU_ExternalFunction>(func, m_context);
-        instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
-        instance.m_external_function->compile();
-        instance.m_compiled_function = instance.m_external_function->m_compiled_function;
+        instance.m_compiled_function = make_shared<GPU_InternalFunction>(func, m_context);
+        instance.m_compiled_function->m_emit_timing = instance.m_performance_counters_enabled;
+        instance.m_compiled_function->compile();
+        instance.m_runtime = instance.m_compiled_function->m_compiled_function;
         instance.m_inputs.resize(func->get_parameters().size());
         instance.m_outputs.resize(func->get_output_size());
     }
@@ -161,7 +162,7 @@ bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
     validate_call(func, outputs, inputs);
 
     FunctionInstance& instance = m_function_map[func];
-    if (instance.m_external_function == nullptr)
+    if (instance.m_compiled_function == nullptr)
     {
         rc = compile(func);
     }
@@ -174,7 +175,7 @@ bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
     initialize_io(instance.m_outputs.data(), outputs);
 
     auto ctx = m_context->m_runtime_context.get();
-    instance.m_compiled_function(instance.m_inputs.data(), instance.m_outputs.data(), ctx);
+    instance.m_runtime(instance.m_inputs.data(), instance.m_outputs.data(), ctx);
 
     return rc;
 }
@@ -187,7 +188,7 @@ void runtime::gpu::GPU_Backend::remove_compiled_function(shared_ptr<Function> fu
 void runtime::gpu::GPU_Backend::enable_performance_data(shared_ptr<Function> func, bool enable)
 {
     FunctionInstance& instance = m_function_map[func];
-    if (instance.m_external_function != nullptr)
+    if (instance.m_compiled_function != nullptr)
     {
         throw runtime_error("Performance data collection must be enabled prior to compiling.");
     }
@@ -202,9 +203,9 @@ vector<runtime::PerformanceCounter>
     if (it != m_function_map.end())
     {
         const FunctionInstance& instance = it->second;
-        if (instance.m_external_function != nullptr)
+        if (instance.m_compiled_function != nullptr)
         {
-            instance.m_external_function->get_performance_data(rc);
+            instance.m_compiled_function->get_performance_data(rc);
         }
     }
     return rc;
