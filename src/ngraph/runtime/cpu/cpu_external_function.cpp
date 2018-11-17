@@ -660,15 +660,6 @@ using namespace ngraph::runtime;
             writer << "size_t pool_base_ptr = (size_t) ctx->memory_buffers["
                    << m_memory_buffer_sizes.size() - 1 << "]->get_ptr();\n";
             writer << "\n";
-
-            // set role for temporaries
-            for (shared_ptr<Node> node : ordered_ops)
-            {
-                for (descriptor::Tensor* tensor : node->liveness_new_list)
-                {
-                    m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
-                }
-            }
         }
 
         writer << "bool* t_en = (bool*)" << current_function->get_name() << "_t_en;\n";
@@ -726,6 +717,11 @@ using namespace ngraph::runtime;
                     ss << "((" << tensor->get_element_type().c_type_string()
                        << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
                     m_variable_name_map[tensor->get_name()] = ss.str();
+                    tensor->get_pool_offset();
+                    if (m_tensor_roles.find(tensor->get_name()) == m_tensor_roles.end())
+                    {
+                        m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
+                    }
                 }
             }
         }
@@ -1447,20 +1443,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
     // In place concatenation optimization
     process_in_place_concat(m_function->get_ordered_ops());
 
-    // Intermediates, set role
-    if (m_function->get_temporary_pool_size())
-    {
-        m_memory_buffer_sizes.push_back(m_function->get_temporary_pool_size());
-
-        for (auto& node : m_function->get_ordered_ops())
-        {
-            for (auto tensor : node->liveness_new_list)
-            {
-                m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
-            }
-        }
-    }
-
     // Constants
     for (auto& node : m_function->get_ordered_ops())
     {
@@ -1503,6 +1485,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
             {
                 intermediates_offsets.emplace_back(tensor_data[tensor->get_name()],
                                                    tensor->get_pool_offset());
+                if (m_tensor_roles.find(tensor->get_name()) == m_tensor_roles.end())
+                {
+                    m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
+                }
             }
         }
     }
