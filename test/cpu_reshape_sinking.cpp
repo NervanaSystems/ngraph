@@ -89,7 +89,6 @@ TEST(cpu_reshape_sinking, broadcast_swimming)
     auto bias = make_shared<op::Parameter>(element::i32, Shape{channel});
     auto bias_reshape = make_shared<op::Reshape>(bias, AxisVector{0}, Shape{1, channel});
     auto bias_broadcast = make_shared<op::Broadcast>(bias_reshape, conv_nhwc, AxisSet{1, 2});
-    //auto bias_broadcast_reshape = make_shared<op::Reshape>(bias_broadcast, to_nchw, shape_nchw);
 
     auto input = make_shared<op::Parameter>(element::i32, shape_nhwc);
     auto reshape_input = make_shared<op::Reshape>(input, to_nchw, shape_nchw);
@@ -103,12 +102,11 @@ TEST(cpu_reshape_sinking, broadcast_swimming)
     auto func = make_shared<Function>(NodeVector{relu}, op::ParameterVector{bias, input, weights});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
     pass_manager.register_pass<runtime::cpu::pass::CPUReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
     pass_manager.run_passes(func);
+
     ASSERT_EQ(add->get_shape(), conv_nchw);
     ASSERT_EQ(add->get_argument(0)->get_shape(), conv_nchw);
     ASSERT_EQ(add->get_argument(1), conv);
