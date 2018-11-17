@@ -193,7 +193,7 @@ namespace ngraph
                 void sync();
 
             private:
-                CUDAEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx);
+                CUDAEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx, std::shared_ptr<GPUHostParameters> params);
                 uint32_t align_to_block_size(uint32_t threads, uint32_t block_size);
                 void print_tensor_from_gpu(codegen::CodeWriter& writer,
                                            const std::string& tensor_name,
@@ -253,6 +253,7 @@ namespace ngraph
                 void div_to_mul(const NVShape& shape,
                                 std::vector<int>& magic,
                                 std::vector<int>& shift);
+                std::shared_ptr<GPUHostParameters> m_host_parameters;
                 GPUPrimitiveEmitter* m_primitive_emitter;
                 GPURuntimeContext* m_ctx;
             };
