@@ -717,7 +717,6 @@ using namespace ngraph::runtime;
                     ss << "((" << tensor->get_element_type().c_type_string()
                        << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
                     m_variable_name_map[tensor->get_name()] = ss.str();
-                    tensor->get_pool_offset();
                     if (m_tensor_roles.find(tensor->get_name()) == m_tensor_roles.end())
                     {
                         m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
