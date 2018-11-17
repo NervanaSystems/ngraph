@@ -486,8 +486,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
     size_t non_reduce_rank,
     size_t reduce_rank)
 {
-    bool stable_sum = false;
-    //    ((reduce_op == "add") && (data_types[1] == "float" || data_types[1] == "double"));
+    bool stable_sum = ((reduce_op == "add") && (data_types[1] == "float" || data_types[1] == "double"));
     uint32_t loop_unroll = 8;
     writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
@@ -522,6 +521,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                                                    non_reduce_rank,
                                                    true);
             writer << "uint32_t input_idx = non_reduce_input_index;\n";
+            writer << "uint32_t step = reduce_strides_in_input" << reduce_rank -1 << ";\n";
             writer << data_types[1] << " r = init_value;\n";
             if (stable_sum)
             {
@@ -547,8 +547,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                     for (uint32_t j = 0; j < 8; j++)
                     {
                         stable_sum_lambda();
-                        writer << "input_idx += "
-                               << "reduce_strides_in_input" << i << ";\n";
+                        writer << "input_idx += step;\n";
                     }
                 }
                 writer.block_end();
@@ -557,12 +556,11 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                 writer.block_begin();
                 {
                     stable_sum_lambda();
-                    writer << "input_idx += "
-                           << "reduce_strides_in_input" << i << ";\n";
+                    writer << "input_idx += step;\n";
                 }
                 writer.block_end();
                 writer << "input_idx -= "
-                       << "reduce_strides_in_input" << i << " * reduce_shape" << i << ";\n";
+                       << "step * reduce_shape" << i << ";\n";
             }
             for (int32_t i = static_cast<int32_t>(reduce_rank - 2); i >= 0; i--)
             {
