@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <limits>
 #include <cinttypes>
 #include <list>
 
@@ -86,7 +87,7 @@ namespace ngraph
                     return &m_uint64_t_params.back();
                 }
 
-                template <T>
+                template <typename T>
                 void* getMin()
                 {
                     return cache(std::numeric_limits<T>::has_infinity
@@ -94,7 +95,7 @@ namespace ngraph
                                      : std::numeric_limits<T>::min());
                 }
 
-                template <T>
+                template <typename T>
                 void* getMax()
                 {
                     return cache(std::numeric_limits<T>::has_infinity
@@ -102,7 +103,7 @@ namespace ngraph
                                      : std::numeric_limits<T>::max());
                 }
 
-                template <T1, T2>
+                template <typename T1, typename T2>
                 void* getVal(T2 val)
                 {
                     return cache(static_cast<T1>(val));

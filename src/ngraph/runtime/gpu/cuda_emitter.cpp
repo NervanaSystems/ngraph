@@ -71,8 +71,8 @@ std::ostream& operator<<(std::ostream& os, pooling_op_shape& shape)
 runtime::gpu::CUDAEmitter::CUDAEmitter(runtime::gpu::GPUPrimitiveEmitter* emitter,
                                        runtime::gpu::GPURuntimeContext* ctx,
                                        std::shared_ptr<GPUHostParameters> params)
-    : m_host_parameters(parmas)
-    : m_primitive_emitter(emitter)
+    : m_host_parameters(params)
+    , m_primitive_emitter(emitter)
 {
     m_ctx = ctx;
 }
