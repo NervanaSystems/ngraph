@@ -193,7 +193,9 @@ namespace ngraph
                 void sync();
 
             private:
-                CUDAEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx, std::shared_ptr<GPUHostParameters> params);
+                CUDAEmitter(GPUPrimitiveEmitter* emitter,
+                            GPURuntimeContext* ctx,
+                            std::shared_ptr<GPUHostParameters> params);
                 uint32_t align_to_block_size(uint32_t threads, uint32_t block_size);
                 void print_tensor_from_gpu(codegen::CodeWriter& writer,
                                            const std::string& tensor_name,

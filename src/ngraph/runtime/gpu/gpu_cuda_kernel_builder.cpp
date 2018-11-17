@@ -515,30 +515,33 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
             }
             writer << data_types[1] << " input_i;\n";
             //writer << "r = in1[0];\n";
-            for(uint32_t i = 0; i < reduce_rank; i++)
+            for (uint32_t i = 0; i < reduce_rank; i++)
             {
-               writer << "for(uint32_t reduce_coordinate_" << i << " = 0; reduce_coordinate_" << i << " < reduce_shape" << i << ";  reduce_coordinate_" << i << "++)\n";
-               writer.block_begin();
+                writer << "for(uint32_t reduce_coordinate_" << i << " = 0; reduce_coordinate_" << i
+                       << " < reduce_shape" << i << ";  reduce_coordinate_" << i << "++)\n";
+                writer.block_begin();
             }
-                writer << "input_i = in[input_idx];\n";
-                if (stable_sum)
-                {
-                    writer << "y = input_i - c;\n";
-                    writer << "t = r + y;\n";
-                    writer << "c = (t - r) - y;\n";
-                    writer << "r = t;\n";
-                }
-                else
-                {
-                    writer << "r = " << reduce_op << "(r , input_i);\n";
-                }
-            for(int32_t i = static_cast<int32_t>(reduce_rank - 1); i >=0 ; i--)
+            writer << "input_i = in[input_idx];\n";
+            if (stable_sum)
             {
-               writer << "input_idx += " << "reduce_strides_in_input" << i << ";\n";  
-               writer.block_end();
-               writer << "input_idx -= " << "reduce_strides_in_input" << i << " * reduce_shape" << i << ";\n";  
+                writer << "y = input_i - c;\n";
+                writer << "t = r + y;\n";
+                writer << "c = (t - r) - y;\n";
+                writer << "r = t;\n";
             }
-/*
+            else
+            {
+                writer << "r = " << reduce_op << "(r , input_i);\n";
+            }
+            for (int32_t i = static_cast<int32_t>(reduce_rank - 1); i >= 0; i--)
+            {
+                writer << "input_idx += "
+                       << "reduce_strides_in_input" << i << ";\n";
+                writer.block_end();
+                writer << "input_idx -= "
+                       << "reduce_strides_in_input" << i << " * reduce_shape" << i << ";\n";
+            }
+            /*
             writer << "while (reduce_idx + 7 < reduce_count)\n";
             writer.block_begin();
             {
@@ -1966,12 +1969,12 @@ void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::C
     {
         if (i != 0)
         {
-            writer << o_coordinates << "product -= (" << o_coordinates << i - 1 << " * " << i_strides
-                   << brace_open << i - 1 << brace_close << ");\n";
+            writer << o_coordinates << "product -= (" << o_coordinates << i - 1 << " * "
+                   << i_strides << brace_open << i - 1 << brace_close << ");\n";
         }
         writer << "int " << o_coordinates << i << " = division_by_invariant_multiplication("
-               << o_coordinates << "product, " << i_stride_magic << brace_open << i << brace_close << ", "
-               << i_stride_shift << brace_open << i << brace_close << ");\n";
+               << o_coordinates << "product, " << i_stride_magic << brace_open << i << brace_close
+               << ", " << i_stride_shift << brace_open << i << brace_close << ");\n";
     }
 }
 
