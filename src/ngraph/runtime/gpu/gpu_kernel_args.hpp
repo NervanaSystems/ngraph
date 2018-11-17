@@ -69,6 +69,18 @@ namespace ngraph
                 }
 
                 //
+                // Add a already cached argument
+                //
+                GPUKernelArgs& add_cached_with_daatype(const std::string& datatype, const std::string& name, const void* arg)
+                {
+                    validate();
+                    m_argument_list.push_back(arg);
+                    m_placeholder_positions.push_back(false);
+                    add_to_signature(datatype, name);
+                    return *this;
+                }
+
+                //
                 // Retrieve the kernel argument list for use with the launch primitive.
                 //
                 void** get_argument_list() { return m_argument_list.data(); }
