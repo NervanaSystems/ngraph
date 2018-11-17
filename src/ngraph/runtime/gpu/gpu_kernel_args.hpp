@@ -71,7 +71,8 @@ namespace ngraph
                 //
                 // Add a already cached argument
                 //
-                GPUKernelArgs& add_cached_with_daatype(const std::string& datatype, const std::string& name, const void* arg)
+                GPUKernelArgs&
+                    add_cached_data(const std::string& datatype, const std::string& name, void* arg)
                 {
                     validate();
                     m_argument_list.push_back(arg);

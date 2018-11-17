@@ -1700,12 +1700,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
         return primitive_index;
     }
 
-    NVShape reduce_flag(rank, 0);
-    for (auto a : reduce_axis)
-    {
-        reduce_flag[a] = 1;
-    }
-
     NVShape non_reduce_shape;
     NVShape non_reduce_strides;
     NVShape non_reduce_strides_in_input;
@@ -1739,14 +1733,15 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
     args.add_placeholder(dtypes[0], "in0")
         .add_placeholder(dtypes[0], "in1")
         .add_placeholder(dtypes[1], "out")
+        .add_cached_data(dtypes[0], "init_value", init_value)
         .add("non_reduce_strides", non_reduce_strides)
         .add("non_reduce_strides_magic", non_reduce_strides_magic)
         .add("non_reduce_strides_shift", non_reduce_strides_shift)
         .add("non_reduce_strides_in_input", non_reduce_strides_in_input)
         .add("reduce_shape", reduce_shape)
-        .add("reduce_strides", reduce_strides)
-        .add("reduce_strides_magic", reduce_strides_magic)
-        .add("reduce_strides_shift", reduce_strides_shift)
+        //    .add("reduce_strides", reduce_strides)
+        //    .add("reduce_strides_magic", reduce_strides_magic)
+        //    .add("reduce_strides_shift", reduce_strides_shift)
         .add("reduce_strides_in_input", reduce_strides_in_input)
         .add("reduce_count", reduce_count)
         .add("nthreads", nthreads);
@@ -2970,19 +2965,19 @@ void runtime::gpu::CUDAEmitter::div_to_mul(const NVShape& shape,
 
 void* runtime::gpu::CUDAEmitter::get_init_reduce_val(std::string reduce_op, std::string data_type)
 {
-    if(reduce_op == "max")
+    if (reduce_op == "max")
     {
         return m_host_parameters->min_by_datatype(data_type);
     }
-    else if(reduce_op == "min")
+    else if (reduce_op == "min")
     {
         return m_host_parameters->max_by_datatype(data_type);
     }
-    else if(reduce_op == "mul" || reduce_op == "and")
+    else if (reduce_op == "mul" || reduce_op == "and")
     {
         return m_host_parameters->val_by_datatype(data_type, static_cast<int64_t>(1));
     }
-    else if(reduce_op == "add" || reduce_op == "or")
+    else if (reduce_op == "add" || reduce_op == "or")
     {
         return m_host_parameters->val_by_datatype(data_type, static_cast<int64_t>(0));
     }
