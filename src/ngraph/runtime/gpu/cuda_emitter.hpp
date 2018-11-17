@@ -50,6 +50,9 @@ namespace ngraph
                 size_t build_primitive(const op::ReplaceSlice* node, bool in_place_op);
 
             public:
+                size_t build_memset(const std::string& dtype,
+                                               uint32_t tensor_size);
+
                 size_t build_topk(const std::vector<element::Type>& dtypes,
                                   const NVShape& input_shape,
                                   const size_t topk_axis,

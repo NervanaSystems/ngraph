@@ -45,7 +45,7 @@ namespace ngraph
                 //
                 // Add a placeholder parameter for a tensor pointer which will be resolved at runtime.
                 //
-                GPUKernelArgs& add_placeholder(const std::string& type, const std::string& name);
+                GPUKernelArgs& add_placeholder(const std::string& type, const std::string& name, const bool is_pointer = true);
 
                 //
                 // Add a POD argument to the kernel signature and argument list.

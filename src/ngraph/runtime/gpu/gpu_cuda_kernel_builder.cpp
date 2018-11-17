@@ -67,7 +67,7 @@ void runtime::gpu::CudaKernelBuilder::get_memset_op(codegen::CodeWriter& writer,
     {
         writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
         writer << "uint32_t step = gridDim.x * blockDim.x; \n";
-        writer << "for ( ;tid < n; tid += step)\n";
+        writer << "for ( ;tid < nthreads; tid += step)\n";
         writer.block_begin();
         {
             writer << "out[tid] = value;\n";

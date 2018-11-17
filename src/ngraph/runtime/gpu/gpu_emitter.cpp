@@ -1578,34 +1578,26 @@ to fail */
     {
         if (out[0].get_size() != 0)
         {
-            // one of args[] axes has zero size, zero output
-            if (args[0].get_size() == 0)
-            {
-                kernel::emit_memset(writer, out[0], 0);
-            }
-            else if (args[0].get_size() == out[0].get_size())
-            {
-                kernel::emit_memcpyDtD(writer, out[0], args[0]);
-            }
-            else
-            {
+                 NGRAPH_INFO << 1;
                 auto axes_set = sum->get_reduction_axes();
+                 NGRAPH_INFO << 2;
                 ngraph::AxisVector axes_vec;
                 for (auto a : axes_set)
                 {
                     axes_vec.push_back(a);
                 }
+                 NGRAPH_INFO << 3;
                 vector<string> dtypes;
                 dtypes.push_back(args[0].get_type());
                 dtypes.push_back(out[0].get_type());
                 auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
+                 NGRAPH_INFO << 4;
                 auto sum_index = cuda_emitter->build_reduce<ngraph::op::Add>(
                     dtypes, out[0].get_element_type().size(), args[0].get_shape(), out[0].get_shape(), axes_vec);
 
                 writer << "void* input[] = {" << node_names(args) << "};\n";
                 writer << "void* output[] = {" << node_names(out) << "};\n";
                 writer << "gpu::invoke_primitive(ctx, " << sum_index << ", input, output);\n";
-            }
         }
     }
     writer.block_end();
