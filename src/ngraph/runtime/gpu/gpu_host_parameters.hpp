@@ -300,6 +300,25 @@ namespace ngraph
                     }
                 }
 
+                void* min_by_type(element::Type type)
+                {
+                    return min_by_type(type.c_type_string());
+                }
+
+                 void* max_by_type(element::Type type)
+                {
+                    return max_by_type(type.c_type_string());
+                }
+
+                                void* val_by_type(element::Type type, double val)
+                {
+                    return val_by_type(type.c_type_string(), val);
+                }
+
+                                void* val_by_type(element::Type type, uint64_t val)
+                {
+                    return min_by_type(type.c_type_string(), val);
+                }               
             private:
                 std::list<char> m_char_params;
                 std::list<float> m_float_params;
