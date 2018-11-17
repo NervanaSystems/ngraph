@@ -129,11 +129,13 @@ namespace ngraph
                 size_t build_reduce(const std::vector<std::string>& dtypes,
                                     const size_t data_bytes,
                                     NVShape input_shape,
+                                    NVShape output_shape,
                                     NVShape reduce_axis)
                 {
                     return build_reduce(dtypes,
                                         data_bytes,
                                         input_shape,
+                                        output_shape,
                                         reduce_axis,
                                         CudaOpMap<T>::op,
                                         CudaOpMap<T>::math_kernel);
@@ -217,6 +219,7 @@ namespace ngraph
                 size_t build_reduce(const std::vector<std::string>& dtypes,
                                     const size_t data_bytes,
                                     NVShape input_shape,
+                                    NVShape output_shape,
                                     NVShape reduce_axis,
                                     const char* op,
                                     const char* kernel);
