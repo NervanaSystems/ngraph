@@ -522,7 +522,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                                                    true);
             writer << "uint32_t input_idx = non_reduce_input_index;\n";
             writer << "uint32_t step = reduce_strides_in_input" << reduce_rank -1 << ";\n";
-            writer << data_types[1] << " r = init_value;\n";
+            writer << data_types[1] << " r = in0[non_reduce_input_index];\n";
             if (stable_sum)
             {
                 writer << data_types[1] << " c = 0;\n";
@@ -532,14 +532,22 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
             writer << data_types[1] << " input_i;\n";
             for (uint32_t i = 0; i < reduce_rank - 1; i++)
             {
-                writer << "for(uint32_t reduce_coordinate_" << i << " = 0; reduce_coordinate_" << i
+                writer << "for (uint32_t reduce_coordinate_" << i << " = 0; reduce_coordinate_" << i
                        << " < reduce_shape" << i << ";  reduce_coordinate_" << i << "++)\n";
                 writer.block_begin();
             }
             {
                 uint32_t i = reduce_rank - 1;
-                writer << "uint32_t reduce_coordinate_" << i << " = 0;\n";
-                writer << "for(; reduce_coordinate_" << i << " + " << loop_unroll - 1
+                writer << "if (input_idx != non_reduce_input_index)\n";
+                writer.block_begin();
+                {
+                    stable_sum_lambda();
+                }
+                writer.block_end();
+                writer << "input_idx += step;\n";
+
+                writer << "uint32_t reduce_coordinate_" << i << " = 1;\n";
+                writer << "for (; reduce_coordinate_" << i << " + " << loop_unroll - 1
                        << " < reduce_shape" << i << ";  reduce_coordinate_" << i
                        << " += " << loop_unroll << ")\n";
                 writer.block_begin();
@@ -551,7 +559,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                     }
                 }
                 writer.block_end();
-                writer << "for(; reduce_coordinate_" << i << " < reduce_shape" << i
+                writer << "for (; reduce_coordinate_" << i << " < reduce_shape" << i
                        << ";  reduce_coordinate_" << i << "++)\n";
                 writer.block_begin();
                 {
