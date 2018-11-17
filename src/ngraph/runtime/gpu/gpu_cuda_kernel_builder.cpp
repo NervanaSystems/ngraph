@@ -521,7 +521,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                        << " < reduce_shape" << i << ";  reduce_coordinate_" << i << "++)\n";
                 writer.block_begin();
             }
-            writer << "input_i = in[input_idx];\n";
+            writer << "input_i = in0[input_idx];\n";
             if (stable_sum)
             {
                 writer << "y = input_i - c;\n";

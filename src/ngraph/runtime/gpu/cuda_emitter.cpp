@@ -1735,7 +1735,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
     uint32_t block_size_x = 64;
     uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
     auto args = m_primitive_emitter->add_kernel_args();
-    args.add_placeholder(dtypes[0], "in")
+    void* init_value = get_init_reduce_val(op, dtypes[0]);
+    args.add_placeholder(dtypes[0], "in0")
         .add_placeholder(dtypes[0], "in1")
         .add_placeholder(dtypes[1], "out")
         .add("non_reduce_strides", non_reduce_strides)
@@ -2964,5 +2965,30 @@ void runtime::gpu::CUDAEmitter::div_to_mul(const NVShape& shape,
         std::tie(_magic, _shift) = idiv_magic_u64(shape[i]);
         magic.push_back(_magic);
         shift.push_back(_shift);
+    }
+}
+
+void* runtime::gpu::CUDAEmitter::get_init_reduce_val(std::string reduce_op, std::string data_type)
+{
+    if(reduce_op == "max")
+    {
+        return m_host_parameters->min_by_datatype(data_type);
+    }
+    else if(reduce_op == "min")
+    {
+        return m_host_parameters->max_by_datatype(data_type);
+    }
+    else if(reduce_op == "mul" || reduce_op == "and")
+    {
+        return m_host_parameters->val_by_datatype(data_type, static_cast<int64_t>(1));
+    }
+    else if(reduce_op == "add" || reduce_op == "or")
+    {
+        return m_host_parameters->val_by_datatype(data_type, static_cast<int64_t>(0));
+    }
+    else
+    {
+        //not defined.
+        return nullptr;
     }
 }

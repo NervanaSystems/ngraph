@@ -256,6 +256,7 @@ namespace ngraph
                 void div_to_mul(const NVShape& shape,
                                 std::vector<int>& magic,
                                 std::vector<int>& shift);
+                void* get_init_reduce_val(std::string reduce_op, std::string data_type);
                 std::shared_ptr<GPUHostParameters> m_host_parameters;
                 GPUPrimitiveEmitter* m_primitive_emitter;
                 GPURuntimeContext* m_ctx;
