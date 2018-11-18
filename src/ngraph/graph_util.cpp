@@ -31,8 +31,8 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
-#include "ngraph/op/result_vector.hpp"
 #include "ngraph/placement.hpp"
+#include "ngraph/result_vector.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

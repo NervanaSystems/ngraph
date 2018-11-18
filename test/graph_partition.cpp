@@ -209,7 +209,7 @@ TEST(graph_partition, placement_all_cpu_policy)
     shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
     shared_ptr<Node> AplusB = A + B;
     shared_ptr<Node> AplusBtimesC = AplusB * C;
-    shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::ParameterVector{A, B, C});
+    shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, ParameterVector{A, B, C});
 
     for (auto node : f->get_ordered_ops())
     {
@@ -236,7 +236,7 @@ TEST(graph_partition, placement_int_with_cpu_mul_policy)
     shared_ptr<op::Parameter> C = make_shared<op::Parameter>(element::f32, shape);
     shared_ptr<Node> AplusB = A + B;
     shared_ptr<Node> AplusBtimesC = AplusB * C;
-    shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, op::ParameterVector{A, B, C});
+    shared_ptr<Function> f = make_shared<Function>(AplusBtimesC, ParameterVector{A, B, C});
 
     for (auto node : f->get_ordered_ops())
     {
@@ -286,7 +286,7 @@ TEST(graph_partition, hybrid_abc_manual)
     auto D = A + B;
     auto E = D * C;
     auto R = make_shared<op::Result>(E);
-    auto f = make_shared<Function>(ResultVector{R}, op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>(ResultVector{R}, ParameterVector{A, B, C});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
@@ -317,7 +317,7 @@ TEST(graph_partition, hybrid_abc_manual)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    auto f0 = make_shared<Function>(ResultVector{R0, R1}, op::ParameterVector{A, B, C});
+    auto f0 = make_shared<Function>(ResultVector{R0, R1}, ParameterVector{A, B, C});
     int_backend->compile(f0);
     int_backend->call_with_validate(f0, {r0, r1}, {a, b, c});
 
@@ -328,7 +328,7 @@ TEST(graph_partition, hybrid_abc_manual)
     copy_data(p0, read_vector<float>(r0));
     copy_data(p1, read_vector<float>(r1));
 
-    auto f1 = make_shared<Function>(ResultVector{R2}, op::ParameterVector{P0, P1});
+    auto f1 = make_shared<Function>(ResultVector{R2}, ParameterVector{P0, P1});
     cpu_backend->compile(f1);
     cpu_backend->call_with_validate(f1, {r2}, {p0, p1});
 
@@ -337,7 +337,7 @@ TEST(graph_partition, hybrid_abc_manual)
     auto r = int_backend->create_tensor(element::f32, shape);
     copy_data(p2, read_vector<float>(r2));
 
-    auto f2 = make_shared<Function>(ResultVector{R}, op::ParameterVector{P2});
+    auto f2 = make_shared<Function>(ResultVector{R}, ParameterVector{P2});
     int_backend->compile(f2);
     int_backend->call_with_validate(f2, {r}, {p2});
 
@@ -373,7 +373,7 @@ TEST(graph_partition, hybrid_abc)
     auto D = A + B;
     auto E = D * C;
     auto R = make_shared<op::Result>(E);
-    auto f = make_shared<Function>(ResultVector{R}, op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>(ResultVector{R}, ParameterVector{A, B, C});
 
     auto backend = make_shared<HybridBackend>(int_with_cpu_mul_policy);
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
@@ -408,7 +408,7 @@ TEST(graph_partition, hybrid_abcd)
     shared_ptr<Node> F = C + E;
     shared_ptr<Node> G = E + D;
     shared_ptr<Node> H = F + G;
-    shared_ptr<Function> f = make_shared<Function>(H, op::ParameterVector{A, B, C, D});
+    shared_ptr<Function> f = make_shared<Function>(H, ParameterVector{A, B, C, D});
 
     auto backend = make_shared<HybridBackend>(int_with_cpu_mul_policy);
     backend->compile(f);
@@ -444,7 +444,7 @@ TEST(graph_partition, hybrid_back_and_forth)
     shared_ptr<Node> D = A * B;
     shared_ptr<Node> E = D + B;
     shared_ptr<Node> F = E * C;
-    shared_ptr<Function> f = make_shared<Function>(F, op::ParameterVector{A, B, C});
+    shared_ptr<Function> f = make_shared<Function>(F, ParameterVector{A, B, C});
 
     auto backend = make_shared<HybridBackend>(int_with_cpu_mul_policy);
     backend->compile(f);
@@ -481,7 +481,7 @@ TEST(graph_partition, hybrid_multi_middle_nodes)
     shared_ptr<Node> F = D * E;
     shared_ptr<Node> G = E * C;
     shared_ptr<Node> H = F + G;
-    shared_ptr<Function> f = make_shared<Function>(H, op::ParameterVector{A, B, C});
+    shared_ptr<Function> f = make_shared<Function>(H, ParameterVector{A, B, C});
 
     auto backend = make_shared<HybridBackend>(int_with_cpu_mul_policy);
     backend->compile(f);
@@ -509,7 +509,7 @@ TEST(graph_partition, hybrid_no_split)
     shared_ptr<op::Parameter> A = make_shared<op::Parameter>(element::f32, shape);
     shared_ptr<op::Parameter> B = make_shared<op::Parameter>(element::f32, shape);
     shared_ptr<Node> C = A + B;
-    shared_ptr<Function> f = make_shared<Function>(C, op::ParameterVector{A, B});
+    shared_ptr<Function> f = make_shared<Function>(C, ParameterVector{A, B});
 
     auto backend = make_shared<HybridBackend>(int_with_cpu_mul_policy);
     backend->compile(f);
