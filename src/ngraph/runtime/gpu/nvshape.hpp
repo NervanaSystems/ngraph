@@ -128,19 +128,7 @@ namespace ngraph
             }
         }
 
-        NVShape(const AxisVector& vec) { init_NVShape(vec); }
-        NVShape(const AxisSet& axes_set)
-        {
-            ngraph::AxisVector axes_vec;
-            for (auto a : axes_set)
-            {
-                axes_vec.push_back(a);
-            }
-            init_NVShape(axes_vec);
-        }
-
-    private:
-        void init_NVShape(const AxisVector& vec)
+        NVShape(const AxisVector& vec)
         {
             for (auto const& size : vec)
             {
@@ -148,6 +136,20 @@ namespace ngraph
                 {
                     throw std::runtime_error(
                         "Request for axis vector which exceed the bitwidth available for NVShapes "
+                        "(32)");
+                }
+                this->push_back(static_cast<uint32_t>(size));
+            }
+        }
+
+        NVShape(const AxisSet& axes_set)
+        {
+            for (auto const& size : axes_set)
+            {
+                if (size >> 32 != 0)
+                {
+                    throw std::runtime_error(
+                        "Request for axis set which exceed the bitwidth available for NVShapes "
                         "(32)");
                 }
                 this->push_back(static_cast<uint32_t>(size));
