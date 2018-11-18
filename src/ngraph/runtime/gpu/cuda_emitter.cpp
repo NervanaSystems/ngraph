@@ -1416,7 +1416,6 @@ size_t runtime::gpu::CUDAEmitter::build_memset(const std::string& dtype,
     std::stringstream ss;
     ss << kernel_name.str() << "_s_" << tensor_size;
     auto hash = ss.str();
-    NGRAPH_INFO << hash;
 
     // if the primitive exists, we are done
     size_t primitive_index = m_primitive_emitter->lookup(hash);
@@ -1757,7 +1756,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
     ss << kernel_name << "_s_" << join(simplified_input_shape, "_") << "_axis_"
        << join(simplified_reduce_axis, "_");
     auto hash = ss.str();
-    NGRAPH_INFO << hash;
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
@@ -1997,9 +1995,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     NVShape simplified_reduce_axis;
     NVShape simplified_input_shape;
     // simplified_reduce_axis will not be empty, since we checked if input size is same as output size in gpu_emitter
-                 NGRAPH_INFO << 1;
     simplify_reduce_shape(input_shape, reduce_axis, simplified_input_shape, simplified_reduce_axis);
-                 NGRAPH_INFO << 2;
 
     size_t rank = simplified_input_shape.size();
     size_t reduce_rank = simplified_reduce_axis.size();
@@ -2018,7 +2014,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     ss << kernel_name << "_s_" << join(simplified_input_shape, "_") << "_axis_"
        << join(simplified_reduce_axis, "_");
     auto hash = ss.str();
-    NGRAPH_INFO << hash;
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())
@@ -2948,14 +2943,12 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
         adj_map[i] = 1;
         combined_axis_count++;
     }
-                 NGRAPH_INFO << 2;
     for (int32_t i = 0; i < reduce_axis.size() - 1; i++)
     {
         if (static_cast<int32_t>(reduce_axis[i + 1]) - static_cast<int32_t>(reduce_axis[i]) == 1)
         {
             adj_map[reduce_axis[i]] = 1;
             combined_axis_count++;
-                 NGRAPH_INFO << 3;
         }
         else
         {
@@ -2967,10 +2960,8 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
                 adj_map[j] = 1;
                 combined_axis_count++;
             }
-                 NGRAPH_INFO << 4;
         }
     }
-                 NGRAPH_INFO << 12;
     combined_reduce_axis.push_back(reduce_axis.back() - combined_axis_count);
     for (int32_t i = static_cast<int32_t>(reduce_axis.back()) + 1; i < rank - 1; i++)
     {
@@ -2992,7 +2983,6 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
         }
     }
 
-                 NGRAPH_INFO << 13;
     //eleminate dimenson size = 1, update shape and reduce axis
     size_t reduce_idx = 0;
     size_t eliminated_axis_count = 0;

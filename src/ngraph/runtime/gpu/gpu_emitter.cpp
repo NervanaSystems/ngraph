@@ -1578,20 +1578,16 @@ to fail */
     {
         if (out[0].get_size() != 0)
         {
-                 NGRAPH_INFO << 1;
                 auto axes_set = sum->get_reduction_axes();
-                 NGRAPH_INFO << 2;
                 ngraph::AxisVector axes_vec;
                 for (auto a : axes_set)
                 {
                     axes_vec.push_back(a);
                 }
-                 NGRAPH_INFO << 3;
                 vector<string> dtypes;
                 dtypes.push_back(args[0].get_type());
                 dtypes.push_back(out[0].get_type());
                 auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
-                 NGRAPH_INFO << 4;
                 auto sum_index = cuda_emitter->build_reduce<ngraph::op::Add>(
                     dtypes, out[0].get_element_type().size(), args[0].get_shape(), out[0].get_shape(), axes_vec);
 
