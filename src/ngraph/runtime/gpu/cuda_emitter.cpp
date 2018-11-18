@@ -1427,7 +1427,7 @@ size_t runtime::gpu::CUDAEmitter::build_memset(const std::string& dtype,
 
     auto args = m_primitive_emitter->add_kernel_args();
     args.add_placeholder(dtype, "out")
-        .add_placeholder(dtype, "value", false)
+        .add_placeholder(dtype, "value")
         .add("nthreads", tensor_size);
 
     // check if the kernel has already been compiled. if so, create
@@ -2034,13 +2034,18 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
     if (nthreads == 0)
     {
         void* init_value = get_init_reduce_val(op, dtypes[0]);
+        // get an allocator for transient per kernel gpu memory
+        GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+        // (lazy) allocation for kernel arguments
+        size_t idx_init_value = allocator.reserve_argspace(init_value, data_bytes);
         size_t memset_idx = build_memset(dtypes[1], static_cast<uint32_t>(shape_size(output_shape)));
         std::unique_ptr<gpu::primitive> memset(
             new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+                void* init_value_buff = runtime::gpu::invoke_memory_primitive(m_ctx, idx_init_value);
                 gpu::invoke_primitive(m_ctx,
                                       memset_idx,
                                       std::vector<void*>{outputs[0]}.data(),
-                                      std::vector<void*>{init_value}.data());
+                                      std::vector<void*>{init_value_buff}.data());
             }});
         primitive_index = this->m_primitive_emitter->insert(std::move(memset));
     }

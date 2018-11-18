@@ -62,7 +62,7 @@ void runtime::gpu::CudaKernelBuilder::get_memset_op(codegen::CodeWriter& writer,
                                                          const std::string& data_type,
                                                          runtime::gpu::GPUKernelArgs& args)
 {
-    writer << "extern \"C\" __global__ void cuda_" << args.get_input_signature();
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
         writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
@@ -70,7 +70,7 @@ void runtime::gpu::CudaKernelBuilder::get_memset_op(codegen::CodeWriter& writer,
         writer << "for ( ;tid < nthreads; tid += step)\n";
         writer.block_begin();
         {
-            writer << "out[tid] = value;\n";
+            writer << "out[tid] = value[0];\n";
         }
         writer.block_end();
     }
@@ -678,7 +678,6 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
             {
                 writer << "r = " << reduce_op << "(r , input_i);\n";
             }
-            writer << "in_idx += step;\n";
             writer << "in_idx += step;\n";
         }
         writer.block_end();
