@@ -79,7 +79,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis)
     Shape shape_r{2, 3, 2, 3, 2};
 
     auto r = make_shared<op::Dot>(A, B, 2);
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -138,7 +138,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
     Shape shape_r{2};
 
     auto r = make_shared<op::Dot>(A, B, 4);
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -200,7 +200,7 @@ NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
     Shape shape_r{20};
 
     auto r = make_shared<op::Dot>(A, B, 4);
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -231,7 +231,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_0_0)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     Shape shape_r{};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -257,7 +257,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
 
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -283,7 +283,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
     Shape shape_b{2, 0};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{0, 0};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -306,7 +306,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
     Shape shape_b{2, 0};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{3, 0};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -328,7 +328,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_0x2)
     Shape shape_b{0, 2};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{0, 2};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -350,7 +350,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_2x0_0)
     Shape shape_b{0};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{2};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -374,7 +374,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot1d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     Shape shape_r{};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -395,7 +395,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot2d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     Shape shape_r{2, 2};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -439,7 +439,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot3d_3d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     Shape shape_r{2, 2, 2, 2};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -485,7 +485,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot3d_2d)
     Shape shape_b{3, 4};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{4, 2, 4};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -510,7 +510,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
     Shape shape_b{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -531,7 +531,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
     Shape shape_b{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -551,7 +551,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_scalar)
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -572,7 +572,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector_4_3)
     Shape shape_b{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
     Shape shape_r{4};
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -594,7 +594,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector)
     Shape shape_b{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
     Shape shape_r{4};
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -616,7 +616,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
     Shape shape_b{4};
     auto A = make_shared<op::Parameter>(element::i64, shape_a);
     auto B = make_shared<op::Parameter>(element::i64, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
     Shape shape_r{4};
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -667,7 +667,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_3d_multi_axis)
     Shape shape_r{2, 5};
 
     auto r = make_shared<op::Dot>(A, B, 2);
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -716,7 +716,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
     Shape shape_r{2, 4, 4, 2};
 
     auto r = make_shared<op::Dot>(A, B);
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

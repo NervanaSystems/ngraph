@@ -39,7 +39,7 @@ NGRAPH_TEST(${BACKEND_NAME}, add)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Add>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -61,7 +61,7 @@ NGRAPH_TEST(${BACKEND_NAME}, add_overload)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(A + B, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(A + B, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -83,7 +83,7 @@ NGRAPH_TEST(${BACKEND_NAME}, multiply)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Multiply>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Multiply>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -105,7 +105,7 @@ NGRAPH_TEST(${BACKEND_NAME}, multiply_overload)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(A * B, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(A * B, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -128,7 +128,7 @@ NGRAPH_TEST(${BACKEND_NAME}, divide)
 
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -149,7 +149,7 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_overload)
 
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(A / B, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(A / B, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -173,7 +173,7 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_adjoint_stability)
     auto make_external = [&]() {
         auto A = make_shared<op::Parameter>(element::f32, shape);
         auto B = make_shared<op::Parameter>(element::f32, shape);
-        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
+        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), ParameterVector{A, B});
 
         auto Y_out = f->get_output_op(0);
         auto Xs = f->get_parameters();
@@ -216,7 +216,7 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_by_zero_float32)
 
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -241,7 +241,7 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_by_zero_int32)
 
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -278,7 +278,7 @@ NGRAPH_TEST(${BACKEND_NAME}, maximum)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -298,7 +298,7 @@ NGRAPH_TEST(${BACKEND_NAME}, minimum)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Minimum>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Minimum>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -318,7 +318,7 @@ NGRAPH_TEST(${BACKEND_NAME}, minimum_int32)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::Minimum>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Minimum>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -338,7 +338,7 @@ NGRAPH_TEST(${BACKEND_NAME}, minimum_int64)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::i64, shape);
     auto B = make_shared<op::Parameter>(element::i64, shape);
-    auto f = make_shared<Function>(make_shared<op::Minimum>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Minimum>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -358,7 +358,7 @@ NGRAPH_TEST(${BACKEND_NAME}, maximum_int32)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -378,7 +378,7 @@ NGRAPH_TEST(${BACKEND_NAME}, maximum_int64)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::i64, shape);
     auto B = make_shared<op::Parameter>(element::i64, shape);
-    auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -399,7 +399,7 @@ NGRAPH_TEST(${BACKEND_NAME}, power)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Power>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Power>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -419,7 +419,7 @@ NGRAPH_TEST(${BACKEND_NAME}, subtract)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Subtract>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Subtract>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -439,7 +439,7 @@ NGRAPH_TEST(${BACKEND_NAME}, subtract_overload)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(A - B, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(A - B, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
