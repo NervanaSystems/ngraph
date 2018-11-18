@@ -128,7 +128,19 @@ namespace ngraph
             }
         }
 
-        NVShape(const AxisVector& vec)
+        NVShape(const AxisVector& vec) { init_NVShape(vec); }
+        NVShape(const AxisSet& axes_set)
+        {
+            ngraph::AxisVector axes_vec;
+            for (auto a : axes_set)
+            {
+                axes_vec.push_back(a);
+            }
+            init_NVShape(axes_vec);
+        }
+
+    private:
+        void init_NVShape(const AxisVector& vec)
         {
             for (auto const& size : vec)
             {
@@ -142,4 +154,4 @@ namespace ngraph
             }
         }
     };
-}
+} // namespace ngraph

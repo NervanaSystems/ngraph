@@ -755,18 +755,14 @@ void runtime::gpu::GPU_Emitter::emit_Max(EMIT_ARGS)
         }
         else
         {
-            auto axes_set = max->get_reduction_axes();
-            ngraph::AxisVector axes_vec;
-            for (auto a : axes_set)
-            {
-                axes_vec.push_back(a);
-            }
             vector<string> dtypes;
             dtypes.push_back(args[0].get_type());
             dtypes.push_back(out[0].get_type());
             auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
-            index = cuda_emitter->build_reduce<ngraph::op::Max>(
-                dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
+            index = cuda_emitter->build_reduce<ngraph::op::Max>(dtypes,
+                                                                out[0].get_element_type().size(),
+                                                                args[0].get_shape(),
+                                                                max->get_reduction_axes());
         }
     }
     else
@@ -890,18 +886,14 @@ void runtime::gpu::GPU_Emitter::emit_Min(EMIT_ARGS)
         }
         else
         {
-            auto axes_set = min->get_reduction_axes();
-            ngraph::AxisVector axes_vec;
-            for (auto a : axes_set)
-            {
-                axes_vec.push_back(a);
-            }
             vector<string> dtypes;
             dtypes.push_back(args[0].get_type());
             dtypes.push_back(out[0].get_type());
             auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
-            index = cuda_emitter->build_reduce<ngraph::op::Min>(
-                dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
+            index = cuda_emitter->build_reduce<ngraph::op::Min>(dtypes,
+                                                                out[0].get_element_type().size(),
+                                                                args[0].get_shape(),
+                                                                min->get_reduction_axes());
         }
     }
     else
@@ -1014,7 +1006,7 @@ void runtime::gpu::GPU_Emitter::emit_Power(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
 {
-    const ngraph::op::Product* product = static_cast<const ngraph::op::Product*>(node);
+    const ngraph::op::Product* prod = static_cast<const ngraph::op::Product*>(node);
 
     writer.block_begin();
     {
@@ -1048,24 +1040,21 @@ void runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
                         cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MUL,
                                                             dtypes,
                                                             args[0].get_shape(),
-                                                            product->get_reduction_axes(),
+                                                            prod->get_reduction_axes(),
                                                             CUDNNEmitter::ReductionMode::Reduce);
                 }
                 else
                 {
-                    auto axes_set = product->get_reduction_axes();
-                    ngraph::AxisVector axes_vec;
-                    for (auto a : axes_set)
-                    {
-                        axes_vec.push_back(a);
-                    }
                     vector<string> dtypes;
                     dtypes.push_back(args[0].get_type());
                     dtypes.push_back(out[0].get_type());
                     auto& cuda_emitter =
                         external_function->get_primitive_emitter()->get_cuda_emitter();
                     prod_index = cuda_emitter->build_reduce<ngraph::op::Multiply>(
-                        dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
+                        dtypes,
+                        out[0].get_element_type().size(),
+                        args[0].get_shape(),
+                        prod->get_reduction_axes());
                 }
 
                 writer << "void* input[] = {" << node_names(args) << "};\n";
@@ -1664,7 +1653,7 @@ void runtime::gpu::GPU_Emitter::emit_Subtract(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Sum(EMIT_ARGS)
 {
-    if(args[0].get_element_type() == element::i32)
+    if (args[0].get_element_type() == element::i32)
     {
         runtime::gpu::GPU_Emitter::emit_Sum_0(external_function, writer, node, args, out);
     }
