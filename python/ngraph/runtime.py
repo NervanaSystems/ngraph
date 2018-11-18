@@ -73,6 +73,7 @@ class Computation(object):
             shape = parameter.get_shape()
             element_type = parameter.get_element_type()
             self.tensor_views.append(runtime.backend.create_tensor(element_type, shape))
+        self.runtime.handle = self.runtime.backend.compile(self.function)
 
     def __repr__(self):  # type: () -> str
         params_string = ', '.join([param.name for param in self.parameters])
@@ -92,7 +93,7 @@ class Computation(object):
         result_view = self.runtime.backend.create_tensor(result_element_type, result_shape)
         result_arr = np.empty(result_shape, dtype=result_dtype)
 
-        self.runtime.backend.call(self.function, [result_view], self.tensor_views)
+        self.runtime.backend.call(self.runtime.handle, [result_view], self.tensor_views)
 
         Computation._read_tensor_view_to_ndarray(result_view, result_arr)
         result_arr = result_arr.reshape(result_shape)
