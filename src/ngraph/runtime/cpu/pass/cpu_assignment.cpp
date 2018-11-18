@@ -785,6 +785,12 @@ namespace ngraph
                         if (offset[0] != 0)
                             return;
                     }
+                    if (node->get_input_element_type(0) == element::i32)
+                    {
+                        auto offset = offset_const_op->get_vector<int32_t>();
+                        if (offset[0] != 0)
+                            return;
+                    }
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                     op_annotations->set_mkldnn_op(true);
@@ -813,6 +819,14 @@ namespace ngraph
                     if (node->get_output_element_type(0) == element::i8)
                     {
                         auto offset = offset_const_op->get_vector<int8_t>();
+                        if (offset[0] != 0)
+                        {
+                            return;
+                        }
+                    }
+                    if (node->get_output_element_type(0) == element::i32)
+                    {
+                        auto offset = offset_const_op->get_vector<int32_t>();
                         if (offset[0] != 0)
                         {
                             return;

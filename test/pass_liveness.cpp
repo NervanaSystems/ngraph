@@ -39,7 +39,7 @@ TEST(liveness, constant)
 {
     Shape shape{1};
     auto c = op::Constant::create(element::i32, shape, {5});
-    auto f = make_shared<Function>(make_shared<op::Negative>(c), op::ParameterVector{});
+    auto f = make_shared<Function>(make_shared<op::Negative>(c), ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Liveness>();
