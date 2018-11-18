@@ -42,6 +42,7 @@ namespace ngraph
                 auto out_shape = out[0].get_shape();
                 auto input_size = static_cast<int>(shape_size(input_shape));
                 auto out_size = static_cast<int>(shape_size(out_shape));
+                auto out_name = out[0].get_name();
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto input_desc = mkldnn::memory::desc(
@@ -57,11 +58,38 @@ namespace ngraph
 
                 auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
 
-                auto functor = [&, sigmoid_index](CPURuntimeContext* ctx,
+                auto functor = [&, out_name, sigmoid_index](CPURuntimeContext* ctx,
                                                   CPUExecutionContext* ectx) {
+
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, sigmoid_index);
+
+                    if (out_name == "Sigmoid_5905_0") {
+                      std::cout << "Sigmoid_5905_0" << std::endl;
+                      std::cout << "### sigmoid input:" << std::endl;
+                      for (size_t i = 0; i < 1000; ++i) {
+                        std::cout << "i = " << i << std::endl;
+                        for (size_t j = 0; j < 9; ++j) {
+                          std::cout << "  j = " << j << ": ";
+                          for (size_t k = 0; k < 784; ++k) {
+                            std::cout << static_cast<float*>(arg0_tensor)[i*(9*784)+j*784+k] << " ";
+                          }
+                          std::cout << std::endl;
+                        }
+                      }
+                      std::cout << "### sigmoid output:" << std::endl;
+                      for (size_t i = 0; i < 1000; ++i) {
+                        std::cout << "i = " << i << std::endl;
+                        for (size_t j = 0; j < 9; ++j) {
+                          std::cout << "  j = " << j << ": ";
+                          for (size_t k = 0; k < 784; ++k) {
+                            std::cout << static_cast<float*>(out_tensor)[i*(9*784)+j*784+k] << " ";
+                          }
+                          std::cout << std::endl;
+                        }
+                      }
+                    }
                 };
                 functors.emplace_back(functor);
             }

@@ -149,6 +149,18 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
+                std::cout << __func__ << std::endl;
+                for (size_t i = 0; i < 3; ++i) {
+                  std::cout << "arg[" << i << "]: " << args[i].get_name() << " "
+                            << ngraph::vector_to_string(args[i].get_shape()) << std::endl;
+//                  auto& arg_tensor = external_function->get_tensor_data(args[i].get_name());
+                }
+                auto in_shape = args[0].get_shape();
+                auto out_name = out[0].get_name();
+                auto out_shape = out[0].get_shape();
+                std::cout << "out[0]: " << out[0].get_name() << " "
+                          << ngraph::vector_to_string(out[0].get_shape()) << std::endl;
+
                 auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                 auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                 auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
@@ -162,13 +174,59 @@ namespace ngraph
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, conv_index](CPURuntimeContext* ctx,
+                    auto functor = [&, in_shape, out_name, out_shape, conv_index](CPURuntimeContext* ctx,
                                                    CPUExecutionContext* ectx) {
+
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        if (ngraph::shape_size(in_shape) == 50176000) {
+                          std::cout << "### convolution input 50176000:" << std::endl;
+                          for (size_t i = 0; i < 1000; ++i) {
+                            std::cout << "i = " << i << std::endl;
+                            for (size_t j = 0; j < 256; ++j) {
+                              size_t block_row = j / 8; // 32 block rows
+                              size_t row_index = j % 8; // each block row have 8 lines
+                              std::cout << "  j = " << j << ": ";
+                   //           for (size_t k = 0; k < 196; ++k) {
+                              for (size_t k = 0; k < 4; ++k) {
+                                std::cout << static_cast<float*>(arg0_tensor)[i*(256*196)+block_row*8*196+row_index+k*8] << " ";
+                              }
+                              std::cout << std::endl;
+                            }
+                          }
+                        }
+                        if (ngraph::shape_size(in_shape) == 200704000) {
+                          std::cout << "### convolution input 200704000:" << std::endl;
+                          for (size_t i = 0; i < 1000; ++i) {
+                            std::cout << "i = " << i << std::endl;
+                            for (size_t j = 0; j < 256; ++j) {
+                              size_t block_row = j / 8; // 32 block rows
+                              size_t row_index = j % 8; // each block row have 8 lines
+                              std::cout << "  j = " << j << ": ";
+                              for (size_t k = 0; k < 4; ++k) {
+                                std::cout << static_cast<float*>(arg0_tensor)[i*(256*784)+block_row*8*784+row_index+k*8] << " ";
+                              }
+                              std::cout << std::endl;
+                            }
+                          }
+                        }
+//                        if (out_name == "ConvolutionBias_5932_0") {
+//                          std::cout << "### ConvolutionBias_5932_0 output" << std::endl;
+//                          for (size_t i = 0; i < 1000; ++i) {
+//                             std::cout << "i = " << i << std::endl;
+//                             for (size_t j = 0; j < 9; ++j) {
+//                               std::cout << "  j = " << j << ": ";
+//                      //         for (size_t k = 0; k < 784; ++k) {
+//                               for (size_t k = 0; k < 4; ++k) {
+//                                 std::cout << static_cast<float*>(out_tensor)[i*(9*784)+j*784+k] << " ";
+//                               }
+//                               std::cout << std::endl;
+//                             }
+//                           }
+//                        }
                     };
                     functors.emplace_back(functor);
                 }

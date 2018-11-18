@@ -1502,14 +1502,14 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Sigmoid)
                 {
-                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
-                    {
-                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-                        vector<memory::desc> o_mds;
-                        o_mds.push_back(input_md);
-                        set_output_layouts(node, o_mds);
-                    }
-                    else
+//                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+//                    {
+//                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+//                        vector<memory::desc> o_mds;
+//                        o_mds.push_back(input_md);
+//                        set_output_layouts(node, o_mds);
+//                    }
+//                    else
                     {
                         set_native_layouts(external_function, node);
                     }
