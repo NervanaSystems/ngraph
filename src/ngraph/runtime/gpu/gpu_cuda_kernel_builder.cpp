@@ -58,9 +58,9 @@ void runtime::gpu::CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& wr
 }
 
 void runtime::gpu::CudaKernelBuilder::get_memset_op(codegen::CodeWriter& writer,
-                                                         const std::string& name,
-                                                         const std::string& data_type,
-                                                         runtime::gpu::GPUKernelArgs& args)
+                                                    const std::string& name,
+                                                    const std::string& data_type,
+                                                    runtime::gpu::GPUKernelArgs& args)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -508,7 +508,8 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
     size_t non_reduce_rank,
     size_t reduce_rank)
 {
-    bool stable_sum = ((reduce_op == "add") && (data_types[1] == "float" || data_types[1] == "double"));
+    bool stable_sum =
+        ((reduce_op == "add") && (data_types[1] == "float" || data_types[1] == "double"));
     auto stable_sum_lambda = [&]() {
         writer << "input_i = in0[input_idx];\n";
         if (stable_sum)
@@ -543,7 +544,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                                                    non_reduce_rank,
                                                    true);
             writer << "uint32_t input_idx = non_reduce_input_index;\n";
-            writer << "uint32_t step = reduce_strides_in_input" << reduce_rank -1 << ";\n";
+            writer << "uint32_t step = reduce_strides_in_input" << reduce_rank - 1 << ";\n";
             writer << data_types[1] << " r = in0[non_reduce_input_index];\n";
             if (stable_sum)
             {
@@ -619,7 +620,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
     bool stable_sum =
         ((reduce_op == "add") && (data_types[1] == "float" || data_types[1] == "double"));
     auto stable_sum_lambda = [&]() {
-        writer << "input_i = in0[input_idx];\n";
+        writer << "input_i = in[input_idx];\n";
         if (stable_sum)
         {
             writer << "y = input_i - c;\n";

@@ -1058,32 +1058,56 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                 if (dynamic_pointer_cast<ngraph::op::Add>(reduce_func))
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::Add>(
-                        dtypes, out[0].get_element_type().size(), args[0].get_shape(), out[0].get_shape(), axes_vec);
+                        dtypes,
+                        out[0].get_element_type().size(),
+                        args[0].get_shape(),
+                        out[0].get_shape(),
+                        axes_vec);
                 }
                 else if (dynamic_pointer_cast<ngraph::op::Multiply>(reduce_func))
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::Multiply>(
-                        dtypes, out[0].get_element_type().size(), args[0].get_shape(), out[0].get_shape(), axes_vec);
+                        dtypes,
+                        out[0].get_element_type().size(),
+                        args[0].get_shape(),
+                        out[0].get_shape(),
+                        axes_vec);
                 }
                 else if (dynamic_pointer_cast<ngraph::op::Maximum>(reduce_func))
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::Maximum>(
-                        dtypes, out[0].get_element_type().size(), args[0].get_shape(), out[0].get_shape(), axes_vec);
+                        dtypes,
+                        out[0].get_element_type().size(),
+                        args[0].get_shape(),
+                        out[0].get_shape(),
+                        axes_vec);
                 }
                 else if (dynamic_pointer_cast<ngraph::op::Minimum>(reduce_func))
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::Minimum>(
-                        dtypes, out[0].get_element_type().size(), args[0].get_shape(), out[0].get_shape(), axes_vec);
+                        dtypes,
+                        out[0].get_element_type().size(),
+                        args[0].get_shape(),
+                        out[0].get_shape(),
+                        axes_vec);
                 }
                 else if (dynamic_pointer_cast<ngraph::op::And>(reduce_func))
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::And>(
-                        dtypes, out[0].get_element_type().size(), args[0].get_shape(), out[0].get_shape(), axes_vec);
+                        dtypes,
+                        out[0].get_element_type().size(),
+                        args[0].get_shape(),
+                        out[0].get_shape(),
+                        axes_vec);
                 }
                 else if (dynamic_pointer_cast<ngraph::op::Or>(reduce_func))
                 {
-                    emitter_index = cuda_emitter->build_reduce<ngraph::op::Or>(
-                        dtypes, out[0].get_element_type().size(), args[0].get_shape(), out[0].get_shape(), axes_vec);
+                    emitter_index =
+                        cuda_emitter->build_reduce<ngraph::op::Or>(dtypes,
+                                                                   out[0].get_element_type().size(),
+                                                                   args[0].get_shape(),
+                                                                   out[0].get_shape(),
+                                                                   axes_vec);
                 }
                 else
                 {
@@ -1578,22 +1602,26 @@ to fail */
     {
         if (out[0].get_size() != 0)
         {
-                auto axes_set = sum->get_reduction_axes();
-                ngraph::AxisVector axes_vec;
-                for (auto a : axes_set)
-                {
-                    axes_vec.push_back(a);
-                }
-                vector<string> dtypes;
-                dtypes.push_back(args[0].get_type());
-                dtypes.push_back(out[0].get_type());
-                auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
-                auto sum_index = cuda_emitter->build_reduce<ngraph::op::Add>(
-                    dtypes, out[0].get_element_type().size(), args[0].get_shape(), out[0].get_shape(), axes_vec);
+            auto axes_set = sum->get_reduction_axes();
+            ngraph::AxisVector axes_vec;
+            for (auto a : axes_set)
+            {
+                axes_vec.push_back(a);
+            }
+            vector<string> dtypes;
+            dtypes.push_back(args[0].get_type());
+            dtypes.push_back(out[0].get_type());
+            auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
+            auto sum_index =
+                cuda_emitter->build_reduce<ngraph::op::Add>(dtypes,
+                                                            out[0].get_element_type().size(),
+                                                            args[0].get_shape(),
+                                                            out[0].get_shape(),
+                                                            axes_vec);
 
-                writer << "void* input[] = {" << node_names(args) << "};\n";
-                writer << "void* output[] = {" << node_names(out) << "};\n";
-                writer << "gpu::invoke_primitive(ctx, " << sum_index << ", input, output);\n";
+            writer << "void* input[] = {" << node_names(args) << "};\n";
+            writer << "void* output[] = {" << node_names(out) << "};\n";
+            writer << "gpu::invoke_primitive(ctx, " << sum_index << ", input, output);\n";
         }
     }
     writer.block_end();

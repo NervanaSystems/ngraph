@@ -1406,12 +1406,12 @@ size_t runtime::gpu::CUDAEmitter::build_elementwise_n_to_1(const std::vector<std
     return this->m_primitive_emitter->register_primitive(ew, hash);
 }
 
-size_t runtime::gpu::CUDAEmitter::build_memset(const std::string& dtype,
-                                               uint32_t tensor_size)
+size_t runtime::gpu::CUDAEmitter::build_memset(const std::string& dtype, uint32_t tensor_size)
 {
     // kernel_name is used to check if the cuda kernel has been previously compiled
     std::stringstream kernel_name;
-    kernel_name << "memset" << "_" << dtype;
+    kernel_name << "memset"
+                << "_" << dtype;
     // hash is used to check if the emitted primitive already exists
     std::stringstream ss;
     ss << kernel_name.str() << "_s_" << tensor_size;
@@ -1425,9 +1425,7 @@ size_t runtime::gpu::CUDAEmitter::build_memset(const std::string& dtype,
     }
 
     auto args = m_primitive_emitter->add_kernel_args();
-    args.add_placeholder(dtype, "out")
-        .add_placeholder(dtype, "value")
-        .add("nthreads", tensor_size);
+    args.add_placeholder(dtype, "out").add_placeholder(dtype, "value").add("nthreads", tensor_size);
 
     // check if the kernel has already been compiled. if so, create
     // a launch primitive for it based on the input tensor shape
@@ -1445,12 +1443,13 @@ size_t runtime::gpu::CUDAEmitter::build_memset(const std::string& dtype,
     uint32_t block_size_x = 512;
     int num_SMs;
     CUDA_RT_SAFE_CALL(cudaDeviceGetAttribute(&num_SMs, cudaDevAttrMultiProcessorCount, 0));
-    uint32_t aligned_grid_size_x = fmin(num_SMs * 32, align_to_block_size(tensor_size, block_size_x));
+    uint32_t aligned_grid_size_x =
+        fmin(num_SMs * 32, align_to_block_size(tensor_size, block_size_x));
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> memset(
         new gpu::primitive{[=](void** outputs, void** value) mutable {
-             void** args_list = args.resolve_placeholder(0, &outputs[0])
+            void** args_list = args.resolve_placeholder(0, &outputs[0])
                                    .resolve_placeholder(1, &value[0])
                                    .get_argument_list();
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
@@ -2032,26 +2031,27 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
         GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
         // (lazy) allocation for kernel arguments
         size_t idx_init_value = allocator.reserve_argspace(init_value, data_bytes);
-        size_t memset_idx = build_memset(dtypes[1], static_cast<uint32_t>(shape_size(output_shape)));
-        std::unique_ptr<gpu::primitive> memset(
-            new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-                void* init_value_buff = runtime::gpu::invoke_memory_primitive(m_ctx, idx_init_value);
-                gpu::invoke_primitive(m_ctx,
-                                      memset_idx,
-                                      std::vector<void*>{outputs[0]}.data(),
-                                      std::vector<void*>{init_value_buff}.data());
-            }});
+        size_t memset_idx =
+            build_memset(dtypes[1], static_cast<uint32_t>(shape_size(output_shape)));
+        std::unique_ptr<gpu::primitive> memset(new gpu::primitive{[=](void** inputs,
+                                                                      void** outputs) mutable {
+            void* init_value_buff = runtime::gpu::invoke_memory_primitive(m_ctx, idx_init_value);
+            gpu::invoke_primitive(m_ctx,
+                                  memset_idx,
+                                  std::vector<void*>{outputs[0]}.data(),
+                                  std::vector<void*>{init_value_buff}.data());
+        }});
         primitive_index = this->m_primitive_emitter->insert(std::move(memset));
     }
     else if (nthreads == static_cast<uint32_t>(shape_size(output_shape)))
     {
-        size_t size = nthreads * data_bytes; 
+        size_t size = nthreads * data_bytes;
         std::unique_ptr<gpu::primitive> memcopy(
             new gpu::primitive{[=](void** inputs, void** outputs) mutable {
                 runtime::gpu::cuda_memcpyDtD(outputs[0], inputs[0], size);
             }});
         primitive_index = this->m_primitive_emitter->insert(std::move(memcopy));
-    }    
+    }
     else if (non_reduce_rank != 0)
     {
         size_t reduce_idx =
@@ -2933,7 +2933,7 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
     NVShape combined_reduce_axis;
     NVShape adj_map(rank, 0);
     size_t combined_axis_count = 0;
-    if(reduce_axis.empty())
+    if (reduce_axis.empty())
     {
         simplified_shape = in;
         simplified_reduce_axis = reduce_axis;
