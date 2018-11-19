@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <limits>
 
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
@@ -25,6 +26,14 @@ runtime::gpu::GPUTensorWrapper::GPUTensorWrapper(const shared_ptr<descriptor::Te
                                                  const string& alias)
     : m_tensor(tv)
     , m_alias(alias)
+    , m_offset(std::make_pair(TensorType::UNKNOWN, std::numeric_limits<size_t>::max()))
+{
+}
+
+runtime::gpu::GPUTensorWrapper::GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>& tv,
+                                                 const TensorType& type, const size_t& offset)
+    : m_tensor(tv)
+    , m_offset(std::make_pair(type, offset))
 {
 }
 
@@ -58,6 +67,11 @@ const std::string& runtime::gpu::GPUTensorWrapper::get_name() const
     {
         return m_alias;
     }
+}
+
+const std::pair<TensorType, size_t>& runtime::gpu::GPUTensorWrapper::get_offset() const
+{
+    return m_offset;
 }
 
 const std::string& runtime::gpu::GPUTensorWrapper::get_type() const

@@ -72,7 +72,7 @@ namespace ngraph
                 static const size_t s_memory_pool_alignment;
                 static const std::string s_output_dir;
             protected:
-                EntryPoint m_compiled_function;
+                EntryPoint m_runtime;
 
                 // For non-destructive passthrough kernels, propagate function
                 // input buffers to internal ops

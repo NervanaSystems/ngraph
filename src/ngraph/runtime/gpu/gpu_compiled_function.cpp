@@ -56,7 +56,7 @@ const size_t runtime::gpu::GPU_CompiledFunction::GPU_CompiledFunction::s_memory_
 runtime::gpu::GPU_CompiledFunction::GPU_CompiledFunction(
     const shared_ptr<ngraph::Function>& function,
     std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
-    : m_compiled_function(nullptr)
+    : m_runtime(nullptr)
     , m_function(function)
     , m_emit_timing(false)
     , m_is_compiled(false)

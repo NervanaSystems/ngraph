@@ -128,7 +128,7 @@ bool runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
         instance.m_compiled_function = make_shared<GPU_InternalFunction>(func, m_context);
         instance.m_compiled_function->m_emit_timing = instance.m_performance_counters_enabled;
         instance.m_compiled_function->compile();
-        instance.m_runtime = instance.m_compiled_function->m_compiled_function;
+        instance.m_runtime = instance.m_compiled_function->m_runtime;
         instance.m_inputs.resize(func->get_parameters().size());
         instance.m_outputs.resize(func->get_output_size());
     }
