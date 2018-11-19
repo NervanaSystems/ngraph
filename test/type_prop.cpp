@@ -17,7 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/op/embedding.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 
 #include <memory>
 using namespace std;

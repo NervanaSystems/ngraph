@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/embedding.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 
 using namespace std;
 using namespace ngraph;

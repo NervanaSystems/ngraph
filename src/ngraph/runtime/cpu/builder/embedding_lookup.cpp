@@ -16,9 +16,9 @@
 
 #include <cstring>
 
-#include "ngraph/op/embedding.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/reference/embedding.hpp"
+#include "ngraph/runtime/reference/embedding_lookup.hpp"
 
 using namespace std;
 using namespace ngraph;
