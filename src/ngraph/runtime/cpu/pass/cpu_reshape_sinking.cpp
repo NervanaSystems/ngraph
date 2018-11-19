@@ -84,25 +84,6 @@ static void delete_reshape(std::shared_ptr<Node> reshape)
     }
 }
 
-static bool unique_dims(const Shape& shape)
-{
-    if (shape.size() == 0)
-    {
-        return true;
-    }
-
-    size_t n = shape.at(0);
-    for (size_t i = 1; i < shape.size(); i++)
-    {
-        if (n == shape.at(i))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 static void mark_reshape_for_deletion(std::shared_ptr<Node> reshape,
                                       std::set<std::shared_ptr<Node>>& reshapes_to_delete)
 {
