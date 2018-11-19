@@ -3663,7 +3663,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, vector<float>{1,  2,  3,  4,  5, 6, 7, 8, 9, 10, 11, 12, 1, 14,
+    copy_data(a, vector<float>{1, 2,  3,  4,  5, 6, 7, 8, 9, 10, 11, 12, 1, 14,
                                2, 12, 11, 10, 9, 8, 7, 6, 5, 4,  3,  2,  1});
     auto result = backend->create_tensor(element::f32, shape_rt);
 
