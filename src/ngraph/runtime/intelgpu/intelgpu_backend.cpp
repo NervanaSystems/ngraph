@@ -68,6 +68,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
@@ -440,6 +441,10 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             function_output_names.push_back(get_input_name(op));
             break;
+        }
+        case OP_TYPEID::EmbeddingLookup:
+        {
+            throw ngraph_error("EmbeddingLookup isn't implemented yet");
         }
         case OP_TYPEID::GetOutputElement:
         {
