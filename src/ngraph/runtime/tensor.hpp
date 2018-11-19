@@ -104,7 +104,7 @@ namespace ngraph
             /// \param d Pointer to destination runtime::tensor
             /// \param offset Offset into tensor storage to begin writing. Must be element-aligned.
             /// \param n Number of bytes to write, must be integral number of elements.
-            void copy_to(runtime::Tensor* d, size_t offset, size_t n);
+            void copy_to(std::shared_ptr<ngraph::runtime::Tensor> d, size_t offset, size_t n);
 
         protected:
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;

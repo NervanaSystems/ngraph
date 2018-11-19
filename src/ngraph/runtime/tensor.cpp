@@ -71,7 +71,7 @@ void runtime::Tensor::set_stale(bool val)
     m_stale = val;
 }
 
-void runtime::Tensor::copy_to(runtime::Tensor* d, size_t offset, size_t n)
+void runtime::Tensor::copy_to(shared_ptr<runtime::Tensor> d, size_t offset, size_t n)
 {
     void *copy = malloc(n);
     read(copy, offset, n); 
