@@ -254,6 +254,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
         reshape_n->set_op_annotations(reshape_m->get_op_annotations());
 
         ngraph::replace_node(cvt_lt_m, reshape_n);
+        NGRAPH_DEBUG << "ReshapeConvertLayout: Reordering reshape and convertlayout for faster "
+                        "MKLDNN kernels";
 
         return true;
     };

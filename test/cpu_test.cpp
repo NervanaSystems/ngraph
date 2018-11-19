@@ -56,8 +56,8 @@ public:
 
 static void compare_backends(std::shared_ptr<Function>& f1,
                              std::shared_ptr<Function>& f2,
-                             string backend1,
-                             string backend2)
+                             const string backend1,
+                             const string backend2)
 {
     test::Uniform<float> rng(-100.0f, 100.0f);
     vector<vector<float>> args;
