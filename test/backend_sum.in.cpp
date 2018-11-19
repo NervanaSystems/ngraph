@@ -409,7 +409,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
     EXPECT_EQ((vector<float>{0, 0, 0, 0, 0, 0}), read_vector<float>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim_int)
+NGRAPH_TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim_int32)
 {
     Shape shape_a{3, 0, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -449,7 +449,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_5d_to_scalar)
     EXPECT_EQ(std::vector<float>{243.}, read_vector<float>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, sum_5d_to_scalar_int)
+NGRAPH_TEST(${BACKEND_NAME}, sum_5d_to_scalar_int32)
 {
     Shape shape_a{3, 3, 3, 3, 3};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);

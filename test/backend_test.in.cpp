@@ -3228,7 +3228,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_3d_eliminate_zero_dim)
     EXPECT_EQ((vector<float>{1, 1, 1, 1, 1, 1}), read_vector<float>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, product_2d_to_scalar_int)
+NGRAPH_TEST(${BACKEND_NAME}, product_2d_to_scalar_int32)
 {
     Shape shape_a{3, 3};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -3248,7 +3248,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_2d_to_scalar_int)
                                 read_vector<int32_t>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, product_to_scalar_int)
+NGRAPH_TEST(${BACKEND_NAME}, product_to_scalar_int32)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -3348,7 +3348,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_trivial_5d)
               read_vector<float>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, max_trivial_5d_int)
+NGRAPH_TEST(${BACKEND_NAME}, max_trivial_5d_int32)
 {
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -3387,6 +3387,23 @@ NGRAPH_TEST(${BACKEND_NAME}, max_to_scalar)
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, max_to_scalar_int8)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::i8, shape);
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{0, 1}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i8, shape);
+    copy_data(a, vector<int8_t>{1, 2, 3, 4});
+    auto result = backend->create_tensor(element::i8, Shape{});
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<int8_t>{4}), read_vector<int8_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, max_matrix_columns)
@@ -3433,7 +3450,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_int)
+NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_int32)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -3481,7 +3498,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_zero)
     EXPECT_EQ((vector<float>{}), read_vector<float>(a));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_zero_int)
+NGRAPH_TEST(${BACKEND_NAME}, max_matrix_rows_zero_int32)
 {
     Shape shape_a{3, 0};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -3654,7 +3671,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar)
     EXPECT_EQ((vector<float>{14.0f}), read_vector<float>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar_int)
+NGRAPH_TEST(${BACKEND_NAME}, max_3d_to_scalar_int32)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -3756,7 +3773,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_trivial_5d)
               read_vector<float>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, min_trivial_5d_int)
+NGRAPH_TEST(${BACKEND_NAME}, min_trivial_5d_int32)
 {
     Shape shape{2, 2, 2, 2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -3862,7 +3879,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_matrix_rows)
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6}), read_vector<float>(a));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, min_matrix_rows_int)
+NGRAPH_TEST(${BACKEND_NAME}, min_matrix_rows_int32)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -4059,7 +4076,7 @@ NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_scalar)
     EXPECT_EQ((vector<float>{1}), read_vector<float>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_scalar_int)
+NGRAPH_TEST(${BACKEND_NAME}, min_3d_to_scalar_int32)
 {
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
