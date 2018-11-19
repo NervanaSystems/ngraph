@@ -131,14 +131,16 @@ namespace ngraph
                 size_t build_reduce(const std::vector<element::Type>& dtypes,
                                     NVShape input_shape,
                                     NVShape output_shape,
-                                    NVShape reduce_axis)
+                                    NVShape reduce_axis,
+                                    const bool with_init_value = false)
                 {
                     return build_reduce(dtypes,
                                         input_shape,
                                         output_shape,
                                         reduce_axis,
                                         CudaOpMap<T>::op,
-                                        CudaOpMap<T>::math_kernel);
+                                        CudaOpMap<T>::math_kernel,
+                                        with_init_value);
                 }
 
                 template <typename ELEMENTWISE_OP_TYPE, typename REDUCE_OP_TYPE = ngraph::op::Nop>
@@ -221,7 +223,8 @@ namespace ngraph
                                     NVShape output_shape,
                                     NVShape reduce_axis,
                                     const char* op,
-                                    const char* kernel);
+                                    const char* kernel,
+                                    const bool with_init_value);
                 size_t build_reduce_to_nd(const std::vector<element::Type>& dtypes,
                                           NVShape input_shape,
                                           NVShape reduce_axis,

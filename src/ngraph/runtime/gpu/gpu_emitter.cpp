@@ -989,94 +989,75 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
     {
         if (out[0].get_size() != 0)
         {
-                auto axes_set = reduce_op->get_reduction_axes();
-                ngraph::AxisVector axes_vec;
-                for (auto a : axes_set)
-                {
-                    axes_vec.push_back(a);
-                }
-                std::vector<element::Type> dtypes;
-                dtypes.push_back(args[0].get_element_type());
-                dtypes.push_back(out[0].get_element_type());
-                auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
-                auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
+            auto axes_set = reduce_op->get_reduction_axes();
+            ngraph::AxisVector axes_vec;
+            for (auto a : axes_set)
+            {
+                axes_vec.push_back(a);
+            }
+            std::vector<element::Type> dtypes;
+            dtypes.push_back(args[0].get_element_type());
+            dtypes.push_back(out[0].get_element_type());
+            auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
+            auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
 
-                size_t emitter_index;
-                // Reduction function should only have one op
-                std::shared_ptr<Node> reduce_func;
-                std::string op_name;
-                int op_count = 0;
-                for (auto op : reduction_function_ops)
+            size_t emitter_index;
+            // Reduction function should only have one op
+            std::shared_ptr<Node> reduce_func;
+            std::string op_name;
+            int op_count = 0;
+            for (auto op : reduction_function_ops)
+            {
+                if (op->is_constant() || op->is_parameter() || op->is_output())
                 {
-                    if (op->is_constant() || op->is_parameter() || op->is_output())
-                    {
-                        continue;
-                    }
-                    op_count++;
-                    op_name = op->get_name();
-                    reduce_func = op;
-                    if (op_count != 1)
-                    {
-                        throw runtime_error("reduce with more than one op is not implement yet.");
-                    }
+                    continue;
                 }
+                op_count++;
+                op_name = op->get_name();
+                reduce_func = op;
+                if (op_count != 1)
+                {
+                    throw runtime_error("reduce with more than one op is not implement yet.");
+                }
+            }
 
-                if (dynamic_pointer_cast<ngraph::op::Add>(reduce_func))
-                {
-                    emitter_index = cuda_emitter->build_reduce<ngraph::op::Add>(
-                        dtypes,
-                        args[0].get_shape(),
-                        out[0].get_shape(),
-                        axes_vec);
-                }
-                else if (dynamic_pointer_cast<ngraph::op::Multiply>(reduce_func))
-                {
-                    emitter_index = cuda_emitter->build_reduce<ngraph::op::Multiply>(
-                        dtypes,
-                        args[0].get_shape(),
-                        out[0].get_shape(),
-                        axes_vec);
-                }
-                else if (dynamic_pointer_cast<ngraph::op::Maximum>(reduce_func))
-                {
-                    emitter_index = cuda_emitter->build_reduce<ngraph::op::Maximum>(
-                        dtypes,
-                        args[0].get_shape(),
-                        out[0].get_shape(),
-                        axes_vec);
-                }
-                else if (dynamic_pointer_cast<ngraph::op::Minimum>(reduce_func))
-                {
-                    emitter_index = cuda_emitter->build_reduce<ngraph::op::Minimum>(
-                        dtypes,
-                        args[0].get_shape(),
-                        out[0].get_shape(),
-                        axes_vec);
-                }
-                else if (dynamic_pointer_cast<ngraph::op::And>(reduce_func))
-                {
-                    emitter_index = cuda_emitter->build_reduce<ngraph::op::And>(
-                        dtypes,
-                        args[0].get_shape(),
-                        out[0].get_shape(),
-                        axes_vec);
-                }
-                else if (dynamic_pointer_cast<ngraph::op::Or>(reduce_func))
-                {
-                    emitter_index =
-                        cuda_emitter->build_reduce<ngraph::op::Or>(dtypes,
-                                                                   args[0].get_shape(),
-                                                                   out[0].get_shape(),
-                                                                   axes_vec);
-                }
-                else
-                {
-                    throw runtime_error("reduce with function " + op_name +
-                                        " is not implement yet.");
-                }
-                writer << "void* input[] = {" << node_names(args) << "};\n";
-                writer << "void* output[] = {" << node_names(out) << "};\n";
-                writer << "gpu::invoke_primitive(ctx, " << emitter_index << ", input, output);\n";
+            if (dynamic_pointer_cast<ngraph::op::Add>(reduce_func))
+            {
+                emitter_index = cuda_emitter->build_reduce<ngraph::op::Add>(
+                    dtypes, args[0].get_shape(), out[0].get_shape(), axes_vec, true);
+            }
+            else if (dynamic_pointer_cast<ngraph::op::Multiply>(reduce_func))
+            {
+                emitter_index = cuda_emitter->build_reduce<ngraph::op::Multiply>(
+                    dtypes, args[0].get_shape(), out[0].get_shape(), axes_vec, true);
+            }
+            else if (dynamic_pointer_cast<ngraph::op::Maximum>(reduce_func))
+            {
+                emitter_index = cuda_emitter->build_reduce<ngraph::op::Maximum>(
+                    dtypes, args[0].get_shape(), out[0].get_shape(), axes_vec, true);
+            }
+            else if (dynamic_pointer_cast<ngraph::op::Minimum>(reduce_func))
+            {
+                emitter_index = cuda_emitter->build_reduce<ngraph::op::Minimum>(
+                    dtypes, args[0].get_shape(), out[0].get_shape(), axes_vec, true);
+            }
+            else if (dynamic_pointer_cast<ngraph::op::And>(reduce_func))
+            {
+                emitter_index = cuda_emitter->build_reduce<ngraph::op::And>(
+                    dtypes, args[0].get_shape(), out[0].get_shape(), axes_vec, true);
+            }
+            else if (dynamic_pointer_cast<ngraph::op::Or>(reduce_func))
+            {
+                emitter_index = cuda_emitter->build_reduce<ngraph::op::Or>(
+                    dtypes, args[0].get_shape(), out[0].get_shape(), axes_vec, true);
+            }
+            else
+            {
+                throw runtime_error("reduce with function " + op_name + " is not implement yet.");
+            }
+            writer << "void* input[] = {" << node_names(args) << "};\n";
+            writer << "void* output[] = {" << node_names(out) << "};\n";
+            writer << "gpu::invoke_primitive(ctx, " << emitter_index << ", input, output);\n";
         }
     }
     writer.block_end();
@@ -1567,15 +1548,12 @@ to fail */
             {
                 axes_vec.push_back(a);
             }
-            vector<string> dtypes;
-            dtypes.push_back(args[0].get_type());
-            dtypes.push_back(out[0].get_type());
+            vector<element::Type> dtypes;
+            dtypes.push_back(args[0].get_element_type());
+            dtypes.push_back(out[0].get_element_type());
             auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
-            auto sum_index =
-                cuda_emitter->build_reduce<ngraph::op::Add>(dtypes,
-                                                            args[0].get_shape(),
-                                                            out[0].get_shape(),
-                                                            axes_vec);
+            auto sum_index = cuda_emitter->build_reduce<ngraph::op::Add>(
+                dtypes, args[0].get_shape(), out[0].get_shape(), axes_vec);
 
             writer << "void* input[] = {" << node_names(args) << "};\n";
             writer << "void* output[] = {" << node_names(out) << "};\n";
