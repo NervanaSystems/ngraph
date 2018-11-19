@@ -51,6 +51,7 @@
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -237,6 +238,37 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormTrainingRelu)
                 {
                     assign_batchnorm_relu(node);
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::DeconvolutionBias)
+                {
+                    auto convolution = static_cast<ngraph::op::DeconvolutionBias*>(node);
+
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg1_shape = node->get_input_shape(1);
+                    auto arg2_shape = node->get_input_shape(2);
+                    auto result_shape = node->get_output_shape(0);
+                    auto arg0_rank = arg0_shape.size();
+                    auto arg1_rank = arg1_shape.size();
+                    auto arg2_rank = arg2_shape.size();
+
+                    bool data_dilated = false;
+                    for (size_t s : convolution->get_data_dilation_strides_forward())
+                    {
+                        data_dilated = data_dilated || (s != 1);
+                    }
+
+                    if (!data_dilated && ((arg0_rank == 4 && arg1_rank == 4) ||
+                                          (arg0_rank == 5 && arg1_rank == 5)) &&
+                        (arg2_rank == 1) &&
+                        node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        convolution->set_op_annotations(op_annotations);
+                    }
                 }
 
                 template <>
@@ -901,6 +933,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Quantize>},
     {TI(ngraph::op::Dequantize),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Dequantize>},
+    {TI(ngraph::op::DeconvolutionBias),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::DeconvolutionBias>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

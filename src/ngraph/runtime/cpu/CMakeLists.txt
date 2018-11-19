@@ -97,6 +97,7 @@ set(SRC
     op/rnn.cpp
     op/sigmoid_mul.cpp
     op/conv_add.cpp
+    op/deconv.cpp
     pass/cpu_assignment.cpp
     pass/cpu_collapse_dims.cpp
     pass/cpu_concat_inputs.cpp

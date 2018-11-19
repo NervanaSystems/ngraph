@@ -68,6 +68,7 @@ public:
             construct_conv_bias_affine_folding();
             construct_groupconv_batchnorm_global_stats_folding();
             construct_groupconv_batchnorm_global_stats_folding_relu();
+            construct_deconvolution_affine_folding();
             construct_batch_norm_relu();
             construct_batch_norm_relu_global_stats();
             construct_conv_relu();
@@ -104,4 +105,5 @@ private:
     void construct_conv_bias_affine_folding();
     void construct_groupconv_batchnorm_global_stats_folding();
     void construct_groupconv_batchnorm_global_stats_folding_relu();
+    void construct_deconvolution_affine_folding();
 };

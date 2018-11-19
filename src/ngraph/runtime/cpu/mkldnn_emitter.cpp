@@ -28,6 +28,7 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph::runtime::cpu;
@@ -222,6 +223,58 @@ mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(
     mkldnn::convolution_forward::primitive_desc prim_desc(conv_desc_layout, cpu_engine);
     return static_cast<mkldnn::memory::format>(
         prim_desc.weights_primitive_desc().desc().data.format);
+}
+
+size_t MKLDNNEmitter::build_deconvolution_forward(const mkldnn::memory::desc& input_data_desc,
+                                    const mkldnn::memory::desc& weights_desc,
+                                    const mkldnn::memory::desc& bias_desc,
+                                    const mkldnn::memory::desc& result_desc,
+                                    const ngraph::Strides& strides,
+                                    const ngraph::Strides& dilation_strides,
+                                    const ngraph::CoordinateDiff& padding_below,
+                                    const ngraph::CoordinateDiff& padding_above,
+                                    const mkldnn::post_ops& pops)
+{
+    size_t input_data_index = build_memory_primitive(input_data_desc);
+    size_t weights_index = build_memory_primitive(weights_desc);
+    size_t bias_index = build_memory_primitive(bias_desc);
+    size_t result_index = build_memory_primitive(result_desc);
+
+    mkldnn::primitive_attr conv_attr;
+    conv_attr.set_post_ops(pops);
+
+    size_t conv_index = 0;
+    try
+    {
+        auto conv_prim = new mkldnn::deconvolution_forward(
+            {{mkldnn::prop_kind::forward,
+            mkldnn::algorithm::deconvolution_direct,
+            input_data_desc,
+            weights_desc,
+            bias_desc,
+            result_desc,
+            mkldnn::memory::dims(strides.begin(), strides.end()),
+            mkldnn::memory::dims(dilation_strides.begin(), dilation_strides.end()),
+            mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+            mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+            mkldnn::padding_kind::zero},
+
+            conv_attr,
+            executor::global_cpu_engine},
+            *m_mkldnn_primitives[input_data_index],
+            *m_mkldnn_primitives[weights_index],
+            *m_mkldnn_primitives[bias_index],
+            *m_mkldnn_primitives[result_index]);
+
+        conv_index = insert_primitive(conv_prim);
+
+        m_primitive_deps[conv_index] = {input_data_index, weights_index, bias_index, result_index};
+    }
+    catch (const mkldnn::error& e)
+    {
+        throw ngraph_error("Could not create mkldnn deconvolution_forward " + e.message);
+    }
+    return conv_index;
 }
 
 size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& input_data_desc,

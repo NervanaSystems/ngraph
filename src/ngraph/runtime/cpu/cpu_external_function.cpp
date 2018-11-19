@@ -129,6 +129,7 @@
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/propagate_cacheability.hpp"
+#include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
@@ -150,6 +151,7 @@
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
@@ -167,6 +169,8 @@
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_memory_optimization.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_reshape_sinking.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
@@ -374,6 +378,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Dequantize), &runtime::cpu::CPU_Emitter::emit<ngraph::op::Dequantize>},
     {TI(ngraph::op::GroupConvolutionBias),
      &runtime::cpu::CPU_Emitter::emit<op::GroupConvolutionBias>},
+    {TI(ngraph::op::DeconvolutionBias), &runtime::cpu::CPU_Emitter::emit<ngraph::op::DeconvolutionBias>},
 };
 
 static void
@@ -1040,6 +1045,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     // failing mxnet unit tests.
     // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     // pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
+    pass_manager.register_pass<runtime::cpu::pass::CPUReshapeSinking>();
+    pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
     // pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
     // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();

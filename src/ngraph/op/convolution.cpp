@@ -242,11 +242,15 @@ op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_sha
     , m_padding_above_forward(padding_above_forward)
     , m_data_dilation_strides_forward(data_dilation_strides_forward)
 {
+    NGRAPH_DEBUG << "ConvolutionBackpropData ctor" << endl;
+    NGRAPH_DEBUG << "data: " << data_batch_shape << ", filters: " << filters->get_shape()
+                 << ", output_delta: " << output_delta->get_shape();
     constructor_validate_and_infer_types();
 }
 
 void op::ConvolutionBackpropData::validate_and_infer_types()
 {
+    NGRAPH_DEBUG << "ConvolutionBackpropData::validate_and_infer_types" << endl;
     // Backprop to data is itself convolution, with inputs/outputs/attributes transmogrified as
     // follows.
     //
@@ -296,6 +300,8 @@ void op::ConvolutionBackpropData::validate_and_infer_types()
                                   filters_shape,
                                   m_window_movement_strides_forward,
                                   m_window_dilation_strides_forward);
+    NGRAPH_DEBUG << "\tpartial filter_shape: " << filters_shape << "delta_shape: " << delta_shape
+                 << ", inferred_res_shape: " << forward_result_shape << endl ;
 
     NODE_VALIDATION_ASSERT(this, forward_result_shape.compatible(delta_shape))
         << "Inferred forward output shape (" << forward_result_shape << ") does not match shape of "
@@ -341,6 +347,7 @@ void op::ConvolutionBackpropData::validate_and_infer_types()
 void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
                                                     const NodeVector& deltas)
 {
+    NGRAPH_DEBUG << "ConvolutionBackpropData::generate_adjoints" << endl;
     auto delta = deltas.at(0);
 
     auto x = get_argument(1);
@@ -411,6 +418,7 @@ void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints
 
 shared_ptr<Node> op::ConvolutionBackpropData::copy_with_new_args(const NodeVector& new_args) const
 {
+    NGRAPH_DEBUG << "ConvolutionBackpropData::copy_with_new_args" << endl;
     check_new_args_count(this, new_args);
     return make_shared<ConvolutionBackpropData>(m_data_batch_shape,
                                                 new_args.at(0),

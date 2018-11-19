@@ -29,6 +29,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -77,20 +78,24 @@ TEST(cpu_reshape_sinking, edge_splitting)
 
 TEST(cpu_reshape_sinking, mnist_conv)
 {
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "tf_conv_mnist_nhwc.json");
+    //const string json_path = file_util::path_join(SERIALIZED_ZOO, "tf_conv_mnist_nhwc.json");
+    //const string json_path = file_util::path_join(SERIALIZED_ZOO, "tf_function_ngraph_cluster_39.json");
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "dcgan_tf_function_ngraph_cluster_withbatchnorm.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass::Manager pass_manager;
     size_t before_count = count_ops_of_type<op::Reshape>(func);
-    //pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::CoreFusion>();
     pass_manager.register_pass<runtime::cpu::pass::CPUReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
-    //pass_manager.register_pass<pass::CoreFusion>();
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
     //pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    //pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
     pass_manager.run_passes(func);
     size_t before_after = count_ops_of_type<op::Reshape>(func);
+    std::cout <<"before: " << before_count << ", after: " << before_after << "\n";
     ASSERT_LE(before_after, before_count);
 }
