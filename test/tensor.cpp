@@ -131,6 +131,7 @@ TEST(tensor, read_write)
 TEST(tensor, copy_to)
 {
     test_copy_to<float>({1.2, 3.0, 5.0});
+    test_read_write<int64_t>({-1, 2, 4});
 }
 #endif
 
