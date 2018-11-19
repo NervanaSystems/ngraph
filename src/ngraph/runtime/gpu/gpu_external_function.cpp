@@ -619,8 +619,8 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     m_execution_engine->add_module(codegen_module);
     m_execution_engine->finalize();
 
-    m_compiled_function = m_execution_engine->find_function<EntryPoint_t>(m_function_name);
-    if (!m_compiled_function)
+    m_runtime = m_execution_engine->find_function<EntryPoint_t>(m_function_name);
+    if (!m_runtime)
     {
         throw runtime_error("Function failed to compile");
     }

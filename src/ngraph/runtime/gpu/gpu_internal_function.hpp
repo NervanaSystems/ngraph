@@ -56,6 +56,8 @@ namespace ngraph
                 virtual void get_performance_data(std::vector<runtime::PerformanceCounter>& rc) const override;
             private:
 
+                void build_functions();
+
                 // For non-destructive passthrough kernels, propagate function
                 // input buffers to internal ops
                 virtual void propagate_in_place_input(ngraph::descriptor::Output* output,
@@ -65,7 +67,7 @@ namespace ngraph
                 virtual void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
                                                        std::string output_name) override;
                 std::map<std::string, size_t> m_name_index_map;
-                std::unordered_map<std::string, std::string> m_variable_name_map;
+                std::unordered_map<std::string, > m_variable_name_map;
                 std::unordered_map<Node*, Node*> m_node_function_map;
             };
         }
