@@ -109,7 +109,7 @@ namespace ngraph
                     return cache(static_cast<T1>(val));
                 }
 
-                void* min_by_datatype(std::string type)
+                void* min_by_datatype(const std::string& type)
                 {
                     if (type == "char")
                     {
@@ -157,7 +157,7 @@ namespace ngraph
                     }
                 }
 
-                void* max_by_datatype(std::string type)
+                void* max_by_datatype(const std::string& type)
                 {
                     if (type == "char")
                     {
@@ -205,7 +205,7 @@ namespace ngraph
                     }
                 }
 
-                void* val_by_datatype(std::string type, double val)
+                void* val_by_datatype(const std::string& type, double val)
                 {
                     if (type == "char")
                     {
@@ -253,7 +253,7 @@ namespace ngraph
                     }
                 }
 
-                void* val_by_datatype(std::string type, int64_t val)
+                void* val_by_datatype(const std::string& type, int64_t val)
                 {
                     if (type == "char")
                     {

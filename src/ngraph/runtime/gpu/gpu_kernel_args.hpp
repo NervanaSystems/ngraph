@@ -45,7 +45,7 @@ namespace ngraph
                 //
                 // Add a placeholder parameter for a tensor pointer which will be resolved at runtime.
                 //
-                GPUKernelArgs& add_placeholder(const std::string& type, const std::string& name, const bool is_pointer = true);
+                GPUKernelArgs& add_placeholder(const std::string& type, const std::string& name);
 
                 //
                 // Add a POD argument to the kernel signature and argument list.
@@ -66,19 +66,6 @@ namespace ngraph
                     add(const std::string& name, const T& arg)
                 {
                     return add_arguments(name, arg);
-                }
-
-                //
-                // Add a already cached argument
-                //
-                GPUKernelArgs&
-                    add_cached_data(const std::string& datatype, const std::string& name, void* arg)
-                {
-                    validate();
-                    m_argument_list.push_back(arg);
-                    m_placeholder_positions.push_back(false);
-                    add_to_signature(datatype, name);
-                    return *this;
                 }
 
                 //

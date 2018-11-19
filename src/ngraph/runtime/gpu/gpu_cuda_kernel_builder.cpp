@@ -509,6 +509,20 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
     size_t reduce_rank)
 {
     bool stable_sum = ((reduce_op == "add") && (data_types[1] == "float" || data_types[1] == "double"));
+    auto stable_sum_lambda = [&]() {
+        writer << "input_i = in0[input_idx];\n";
+        if (stable_sum)
+        {
+            writer << "y = input_i - c;\n";
+            writer << "t = r + y;\n";
+            writer << "c = (t - r) - y;\n";
+            writer << "r = t;\n";
+        }
+        else
+        {
+            writer << "r = " << reduce_op << "(r , input_i);\n";
+        }
+    };
     uint32_t loop_unroll = 8;
     writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
@@ -516,20 +530,6 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
     {
         writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
         writer << "if (tid < nthreads)\n";
-        auto stable_sum_lambda = [&]() {
-            writer << "input_i = in0[input_idx];\n";
-            if (stable_sum)
-            {
-                writer << "y = input_i - c;\n";
-                writer << "t = r + y;\n";
-                writer << "c = (t - r) - y;\n";
-                writer << "r = t;\n";
-            }
-            else
-            {
-                writer << "r = " << reduce_op << "(r , input_i);\n";
-            }
-        };
         writer.block_begin();
         {
             collective_coordinate_transform_helper(writer,
@@ -618,6 +618,20 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
 {
     bool stable_sum =
         ((reduce_op == "add") && (data_types[1] == "float" || data_types[1] == "double"));
+    auto stable_sum_lambda = [&]() {
+        writer << "input_i = in0[input_idx];\n";
+        if (stable_sum)
+        {
+            writer << "y = input_i - c;\n";
+            writer << "t = r + y;\n";
+            writer << "c = (t - r) - y;\n";
+            writer << "r = t;\n";
+        }
+        else
+        {
+            writer << "r = " << reduce_op << "(r , input_i);\n";
+        }
+    };
     writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -647,18 +661,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
         {
             for (int i = 0; i < unroll_num; i++)
             {
-                writer << "input_i = in[in_idx];\n";
-                if (stable_sum)
-                {
-                    writer << "y = input_i - c;\n";
-                    writer << "t = r + y;\n";
-                    writer << "c = (t - r) - y;\n";
-                    writer << "r = t;\n";
-                }
-                else
-                {
-                    writer << "r = " << reduce_op << "(r , input_i);\n";
-                }
+                stable_sum_lambda();
                 writer << "in_idx += step;\n";
             }
         }
@@ -666,18 +669,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
         writer << "while(in_idx < nthreads)\n";
         writer.block_begin();
         {
-            writer << "input_i = in[in_idx];\n";
-            if (stable_sum)
-            {
-                writer << "y = input_i - c;\n";
-                writer << "t = r + y;\n";
-                writer << "c = (t - r) - y;\n";
-                writer << "r = t;\n";
-            }
-            else
-            {
-                writer << "r = " << reduce_op << "(r , input_i);\n";
-            }
+            stable_sum_lambda();
             writer << "in_idx += step;\n";
         }
         writer.block_end();
@@ -743,6 +735,20 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
 {
     bool stable_sum =
         ((reduce_op == "add") && (data_types[1] == "float" || data_types[1] == "double"));
+    auto stable_sum_lambda = [&]() {
+        writer << "input_i = in[input_idx];\n";
+        if (stable_sum)
+        {
+            writer << "y = input_i - c;\n";
+            writer << "t = r + y;\n";
+            writer << "c = (t - r) - y;\n";
+            writer << "r = t;\n";
+        }
+        else
+        {
+            writer << "r = " << reduce_op << "(r , input_i);\n";
+        }
+    };
     writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -770,18 +776,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
         {
             for (int i = 0; i < unroll_num; i++)
             {
-                writer << "input_i = in[in_idx];\n";
-                if (stable_sum)
-                {
-                    writer << "y = input_i - c;\n";
-                    writer << "t = r + y;\n";
-                    writer << "c = (t - r) - y;\n";
-                    writer << "r = t;\n";
-                }
-                else
-                {
-                    writer << "r = " << reduce_op << "(r , input_i);\n";
-                }
+                stable_sum_lambda();
                 writer << "in_idx += step;\n";
             }
         }
@@ -789,18 +784,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
         writer << "while(in_idx < nthreads)\n";
         writer.block_begin();
         {
-            writer << "input_i = in[in_idx];\n";
-            if (stable_sum)
-            {
-                writer << "y = input_i - c;\n";
-                writer << "t = r + y;\n";
-                writer << "c = (t - r) - y;\n";
-                writer << "r = t;\n";
-            }
-            else
-            {
-                writer << "r = " << reduce_op << "(r , input_i);\n";
-            }
+            stable_sum_lambda();
             writer << "in_idx += step;\n";
         }
         writer.block_end();

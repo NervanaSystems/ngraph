@@ -1778,12 +1778,12 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
                        reduce_strides,
                        reduce_strides_in_input);
 
-    std::vector<int> reduce_strides_magic;
-    std::vector<int> reduce_strides_shift;
+    // std::vector<int> reduce_strides_magic;
+    // std::vector<int> reduce_strides_shift;
     std::vector<int> non_reduce_strides_magic;
     std::vector<int> non_reduce_strides_shift;
 
-    div_to_mul(reduce_strides, reduce_strides_magic, reduce_strides_shift);
+    // div_to_mul(reduce_strides, reduce_strides_magic, reduce_strides_shift);
     div_to_mul(non_reduce_strides, non_reduce_strides_magic, non_reduce_strides_shift);
 
     uint32_t reduce_count = static_cast<uint32_t>(shape_size(reduce_shape));
@@ -1795,7 +1795,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<std::stri
     void* init_value = get_init_reduce_val(op, dtypes[0]);
     args.add_placeholder(dtypes[0], "in0")
         .add_placeholder(dtypes[1], "out")
-        .add_cached_data(dtypes[0], "init_value", init_value)
         .add("non_reduce_strides", non_reduce_strides)
         .add("non_reduce_strides_magic", non_reduce_strides_magic)
         .add("non_reduce_strides_shift", non_reduce_strides_shift)
@@ -2922,13 +2921,15 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
                                                       NVShape& simplified_shape,
                                                       NVShape& simplified_reduce_axis)
 {
-    //join adjacent reduce axis
     int32_t rank = in.size();
-    //sort the axis incase it's not sorted.
+    // Sort the axis incase it's not sorted.
     std::sort(reduce_axis.begin(), reduce_axis.end());
-    //clear simplified_shape and axis
+    // Clear simplified_shape and axis
     simplified_shape.clear();
     simplified_reduce_axis.clear();
+    // Combine axis if there is two or more adjeciant reuce_axis
+    // combine axis if there is two or more adjeciant non_reuce_axis
+    // update combined shape and axis
     NVShape combined_reduce_axis;
     NVShape adj_map(rank, 0);
     size_t combined_axis_count = 0;
@@ -2983,7 +2984,7 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
         }
     }
 
-    //eleminate dimenson size = 1, update shape and reduce axis
+    // eleminate dimensons when dimension size = 1, update shape and reduce axis
     size_t reduce_idx = 0;
     size_t eliminated_axis_count = 0;
     for (int32_t i = 0; i < combined_shape.size(); i++)

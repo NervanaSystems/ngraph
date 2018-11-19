@@ -75,21 +75,12 @@ void runtime::gpu::GPUKernelArgs::add_to_signature(const std::string& type, cons
 }
 
 runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::add_placeholder(const std::string& type,
-                                                                          const std::string& name,
-                                                                          const bool is_pointer)
+                                                                          const std::string& name)
 {
     validate();
     m_argument_list.push_back(nullptr);
     m_placeholder_positions.push_back(true);
-    if(is_pointer)
-    {
     add_to_signature(type + "*", name);
-    }
-    else
-    {
-    add_to_signature(type, name);
-    }
-
     return *this;
 }
 
