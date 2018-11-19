@@ -1082,7 +1082,6 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     REGISTER_KNOBBED_PASS(RNNFusion, false, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(AlgebraicSimplification, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(MultiLayerRNNFusion, false, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(ConcatInputs, false, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPURnnMatFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUReshapeSinking, false, runtime::cpu::pass);
