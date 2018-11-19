@@ -24,8 +24,8 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
-#include "ngraph/op/parameter_vector.hpp"
-#include "ngraph/op/result_vector.hpp"
+#include "ngraph/parameter_vector.hpp"
+#include "ngraph/result_vector.hpp"
 
 namespace ngraph
 {
@@ -34,15 +34,15 @@ namespace ngraph
     {
     public:
         Function(const NodeVector& results,
-                 const op::ParameterVector& parameters,
+                 const ParameterVector& parameters,
                  const std::string& name = "");
 
         Function(const std::shared_ptr<Node>& result,
-                 const op::ParameterVector& parameters,
+                 const ParameterVector& parameters,
                  const std::string& name = "");
 
         Function(const ResultVector& results,
-                 const op::ParameterVector& parameters,
+                 const ParameterVector& parameters,
                  const std::string& name = "");
 
         void init();
@@ -65,7 +65,7 @@ namespace ngraph
         const PartialShape& get_output_partial_shape(size_t i) const;
 
         /// Return the function parameters
-        const op::ParameterVector& get_parameters() const { return m_parameters; }
+        const ParameterVector& get_parameters() const { return m_parameters; }
         /// Return a list of function's outputs
         const ResultVector& get_results() const { return m_results; }
         /// Check that there is a single result and return it.
@@ -89,7 +89,7 @@ namespace ngraph
 
     protected:
         ResultVector m_results;
-        op::ParameterVector m_parameters;
+        ParameterVector m_parameters;
         size_t m_temporary_pool_size;
 
     private:
