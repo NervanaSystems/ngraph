@@ -46,14 +46,20 @@ ExternalProject_Add(
                 -DCMAKE_BUILD_TYPE=Release
                 -DCLDNN__BOOST_VERSION=${BOOST_VERSION}
                 -DCLDNN__INCLUDE_TESTS=FALSE
+                -DCLDNN__INCLUDE_TUTORIAL=FALSE
     EXCLUDE_FROM_ALL TRUE
     )
 
 #------------------------------------------------------------------------------
 
-ExternalProject_Get_Property(ext_cldnn SOURCE_DIR BINARY_DIR)
-
 add_library(libcldnn INTERFACE)
-add_dependencies(libcldnn ext_cldnn)
-target_include_directories(libcldnn SYSTEM INTERFACE ${SOURCE_DIR}/api)
-target_link_libraries(libcldnn INTERFACE ${SOURCE_DIR}/build/out/Linux64/Release/libclDNN64.so)
+if (CLDNN_ROOT_DIR)
+    find_package(CLDNN REQUIRED)
+    target_include_directories(libcldnn SYSTEM INTERFACE ${CLDNN_INCLUDE_DIRS})
+    target_link_libraries(libcldnn INTERFACE ${CLDNN_LIBRARIES})
+else()
+    ExternalProject_Get_Property(ext_cldnn SOURCE_DIR BINARY_DIR)
+    add_dependencies(libcldnn ext_cldnn)
+    target_include_directories(libcldnn SYSTEM INTERFACE ${SOURCE_DIR}/api)
+    target_link_libraries(libcldnn INTERFACE ${SOURCE_DIR}/build/out/Linux64/Release/libclDNN64.so)
+endif()
