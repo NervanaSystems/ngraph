@@ -78,13 +78,13 @@ namespace ngraph
                 }
 
                 size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);
-
+#if 0
                 std::cout << __func__ << std::endl;
                 std::cout << "input: " << args[0].get_name() << " " << ngraph::vector_to_string(in_shape) << std::endl;
                 std::cout << "output: " << out[0].get_name() << " " << ngraph::vector_to_string(out_shape) << std::endl;
                 std::cout << "input desc: " << input_desc.data.format << std::endl;
                 std::cout << "result desc: " << result_desc.data.format << std::endl;
-
+#endif
                 auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
                 auto functor = [&, input_desc, result_desc, in_shape, out_shape, out_name, reorder_index](CPURuntimeContext* ctx,
                                                   CPUExecutionContext* ectx) {

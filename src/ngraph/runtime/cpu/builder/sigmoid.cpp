@@ -64,7 +64,7 @@ namespace ngraph
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, sigmoid_index);
-
+#if 0
                     if (out_name == "Sigmoid_5905_0") {
                       std::cout << "Sigmoid_5905_0" << std::endl;
                       std::cout << "### sigmoid input:" << std::endl;
@@ -90,6 +90,7 @@ namespace ngraph
                         }
                       }
                     }
+#endif
                 };
                 functors.emplace_back(functor);
             }

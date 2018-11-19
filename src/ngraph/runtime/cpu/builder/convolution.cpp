@@ -148,7 +148,7 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::ConvolutionBias)
             {
                 auto& functors = external_function->get_functors();
-
+#if 0
                 std::cout << __func__ << std::endl;
                 for (size_t i = 0; i < 3; ++i) {
                   std::cout << "arg[" << i << "]: " << args[i].get_name() << " "
@@ -160,7 +160,7 @@ namespace ngraph
                 auto out_shape = out[0].get_shape();
                 std::cout << "out[0]: " << out[0].get_name() << " "
                           << ngraph::vector_to_string(out[0].get_shape()) << std::endl;
-
+#endif
                 auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                 auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                 auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
@@ -174,7 +174,7 @@ namespace ngraph
                             node, args, out);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                    auto functor = [&, in_shape, out_name, out_shape, conv_index](CPURuntimeContext* ctx,
+                    auto functor = [&, conv_index](CPURuntimeContext* ctx,
                                                    CPUExecutionContext* ectx) {
 
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
@@ -182,6 +182,8 @@ namespace ngraph
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+						
+#if 0
                         if (ngraph::shape_size(in_shape) == 50176000) {
                           std::cout << "### convolution input 50176000:" << std::endl;
                           for (size_t i = 0; i < 1000; ++i) {
@@ -227,6 +229,7 @@ namespace ngraph
 //                             }
 //                           }
 //                        }
+#endif
                     };
                     functors.emplace_back(functor);
                 }
