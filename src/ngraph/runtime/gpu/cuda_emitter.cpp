@@ -2047,33 +2047,37 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<element::Type>&
     // if input size is 0, memset output to inital value
     if (nthreads == 0)
     {
-        void* init_value = get_init_reduce_val(op, dtypes_str[0]);
-        // get an allocator for transient per kernel gpu memory
-        GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
-        // (lazy) allocation for kernel arguments
-        size_t idx_init_value = allocator.reserve_argspace(init_value, data_bytes);
-        size_t memset_idx =
-            build_memset(dtypes_str[0], static_cast<uint32_t>(shape_size(output_shape)));
-        std::unique_ptr<gpu::primitive> memset(
-            new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-                if (with_init_value)
-                {
+        if (with_init_value)
+        {
+            std::unique_ptr<gpu::primitive> memset(
+                new gpu::primitive{[=](void** inputs, void** outputs) mutable {
                     gpu::invoke_primitive(m_ctx,
                                           memset_idx,
                                           std::vector<void*>{inputs[1]}.data(),
                                           std::vector<void*>{outputs[0]}.data());
-                }
-                else
-                {
+                }});
+            primitive_index = this->m_primitive_emitter->insert(std::move(memset));
+        }
+        else
+        {
+            void* init_value = get_init_reduce_val(op, dtypes_str[0]);
+            // get an allocator for transient per kernel gpu memory
+            GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+            // (lazy) allocation for kernel arguments
+            size_t idx_init_value = allocator.reserve_argspace(init_value, data_bytes);
+            size_t memset_idx =
+                build_memset(dtypes_str[0], static_cast<uint32_t>(shape_size(output_shape)));
+            std::unique_ptr<gpu::primitive> memset(
+                new gpu::primitive{[=](void** inputs, void** outputs) mutable {
                     void* init_value_buff =
                         runtime::gpu::invoke_memory_primitive(m_ctx, idx_init_value);
                     gpu::invoke_primitive(m_ctx,
                                           memset_idx,
                                           std::vector<void*>{init_value_buff}.data(),
                                           std::vector<void*>{outputs[0]}.data());
-                }
-            }});
-        primitive_index = this->m_primitive_emitter->insert(std::move(memset));
+                }});
+            primitive_index = this->m_primitive_emitter->insert(std::move(memset));
+        }
     }
     // if input size is same as output size, do a copy
     else if (nthreads == static_cast<uint32_t>(shape_size(output_shape)))

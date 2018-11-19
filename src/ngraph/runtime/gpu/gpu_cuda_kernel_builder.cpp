@@ -524,7 +524,6 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
             writer << "r = " << reduce_op << "(r , input_i);\n";
         }
     };
-    uint32_t loop_unroll = 8;
     writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -560,6 +559,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                 writer.block_begin();
             }
             {
+                uint32_t loop_unroll = 8;
                 uint32_t i = reduce_rank - 1;
                 writer << "if (input_idx != non_reduce_input_index)\n";
                 writer.block_begin();
