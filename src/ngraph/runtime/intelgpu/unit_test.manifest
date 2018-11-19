@@ -25,9 +25,9 @@ divide_by_zero_int32
 dot_3d_multi_axis
 dot_4d_5d_multi_axis
 dot_4d_5d_multi_axis_more
-embedding_4x5_reverse
-embedding_10x1_arbitrary
-embedding_10x1_arbitrary_index_type_int
+embedding_lookup_4x5_reverse
+embedding_lookup_10x1_arbitrary
+embedding_lookup_10x1_arbitrary_index_type_int
 generate_mask
 function_call
 max_pool_3d
