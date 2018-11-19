@@ -1,5 +1,4 @@
-# nGraph Library [![Build Status][build-status-badge]][build-status]
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+# nGraph Library [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Build Status][build-status-badge]][build-status]
 
 Welcome to the open-source repository for the **Intel® nGraph Library**. Our code 
 base provides a Compiler and runtime suite of tools (APIs) designed to give 
