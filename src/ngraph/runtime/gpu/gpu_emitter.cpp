@@ -984,54 +984,20 @@ void runtime::gpu::GPU_Emitter::emit_Quantize(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
 {
-    // reduction function supported by GPU
-    // CUDNN_REDUCE_TENSOR_ADD
-    // CUDNN_REDUCE_TENSOR_MUL
-    // CUDNN_REDUCE_TENSOR_MIN
-    // CUDNN_REDUCE_TENSOR_MAX
-    // CUDNN_REDUCE_TENSOR_AMAX
-    // CUDNN_REDUCE_TENSOR_AVG
-    // CUDNN_REDUCE_TENSOR_NORM1
-    // CUDNN_REDUCE_TENSOR_NORM2
-    // CUDNN_REDUCE_TENSOR_MUL_NO_ZEROS
-
-    static const unordered_map<type_index, cudnnReduceTensorOp_t> reduce_map{
-        {TI(ngraph::op::Add), CUDNN_REDUCE_TENSOR_ADD},
-        {TI(ngraph::op::Multiply), CUDNN_REDUCE_TENSOR_MUL},
-        {TI(ngraph::op::Maximum), CUDNN_REDUCE_TENSOR_MAX},
-        {TI(ngraph::op::Minimum), CUDNN_REDUCE_TENSOR_MIN}};
     const ngraph::op::Reduce* reduce_op = static_cast<const ngraph::op::Reduce*>(node);
     writer.block_begin();
     {
         if (out[0].get_size() != 0)
         {
-            // one of args0 axes has zero size, zero output, use args1 value
-            if (args[0].get_size() == 0)
-            {
-                writer << out[0].get_type() << " init_value;\n";
-                writer << "runtime::gpu::cuda_memcpyDtH(&init_value, " << args[1].get_name() << " ,"
-                       << args[1].get_element_type().size() << ");\n";
-                writer << "vector<" << out[0].get_type() << "> temp(" << out[0].get_size()
-                       << ", init_value);\n";
-                writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
-                       << ", (void*)temp.data(), " << out[0].get_size() << " * "
-                       << out[0].get_element_type().size() << ");\n";
-            }
-            else if (args[0].get_size() == out[0].get_size())
-            {
-                kernel::emit_memcpyDtD(writer, out[0], args[0]);
-            }
-            else
-            {
                 auto axes_set = reduce_op->get_reduction_axes();
                 ngraph::AxisVector axes_vec;
                 for (auto a : axes_set)
                 {
                     axes_vec.push_back(a);
                 }
-                std::vector<string> dtypes;
-                dtypes.push_back(args[0].get_type());
-                dtypes.push_back(out[0].get_type());
+                std::vector<element::Type> dtypes;
+                dtypes.push_back(args[0].get_element_type());
+                dtypes.push_back(out[0].get_element_type());
                 auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
                 auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
 
@@ -1059,7 +1025,6 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::Add>(
                         dtypes,
-                        out[0].get_element_type().size(),
                         args[0].get_shape(),
                         out[0].get_shape(),
                         axes_vec);
@@ -1068,7 +1033,6 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::Multiply>(
                         dtypes,
-                        out[0].get_element_type().size(),
                         args[0].get_shape(),
                         out[0].get_shape(),
                         axes_vec);
@@ -1077,7 +1041,6 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::Maximum>(
                         dtypes,
-                        out[0].get_element_type().size(),
                         args[0].get_shape(),
                         out[0].get_shape(),
                         axes_vec);
@@ -1086,7 +1049,6 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::Minimum>(
                         dtypes,
-                        out[0].get_element_type().size(),
                         args[0].get_shape(),
                         out[0].get_shape(),
                         axes_vec);
@@ -1095,7 +1057,6 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                 {
                     emitter_index = cuda_emitter->build_reduce<ngraph::op::And>(
                         dtypes,
-                        out[0].get_element_type().size(),
                         args[0].get_shape(),
                         out[0].get_shape(),
                         axes_vec);
@@ -1104,7 +1065,6 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                 {
                     emitter_index =
                         cuda_emitter->build_reduce<ngraph::op::Or>(dtypes,
-                                                                   out[0].get_element_type().size(),
                                                                    args[0].get_shape(),
                                                                    out[0].get_shape(),
                                                                    axes_vec);
@@ -1117,7 +1077,6 @@ void runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
                 writer << "void* input[] = {" << node_names(args) << "};\n";
                 writer << "void* output[] = {" << node_names(out) << "};\n";
                 writer << "gpu::invoke_primitive(ctx, " << emitter_index << ", input, output);\n";
-            }
         }
     }
     writer.block_end();
@@ -1614,7 +1573,6 @@ to fail */
             auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
             auto sum_index =
                 cuda_emitter->build_reduce<ngraph::op::Add>(dtypes,
-                                                            out[0].get_element_type().size(),
                                                             args[0].get_shape(),
                                                             out[0].get_shape(),
                                                             axes_vec);
