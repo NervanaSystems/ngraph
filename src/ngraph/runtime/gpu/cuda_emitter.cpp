@@ -1410,8 +1410,7 @@ size_t runtime::gpu::CUDAEmitter::build_memset(const std::string& dtype, uint32_
 {
     // kernel_name is used to check if the cuda kernel has been previously compiled
     std::stringstream kernel_name;
-    kernel_name << "memset"
-                << "_" << dtype;
+    kernel_name << "memset" << "_" << dtype;
     // hash is used to check if the emitted primitive already exists
     std::stringstream ss;
     ss << kernel_name.str() << "_s_" << tensor_size;
@@ -1425,7 +1424,7 @@ size_t runtime::gpu::CUDAEmitter::build_memset(const std::string& dtype, uint32_
     }
 
     auto args = m_primitive_emitter->add_kernel_args();
-    args.add_placeholder(dtype, "out").add_placeholder(dtype, "value").add("nthreads", tensor_size);
+    args.add_placeholder(dtype, "in").add_placeholder(dtype, "out").add("nthreads", tensor_size);
 
     // check if the kernel has already been compiled. if so, create
     // a launch primitive for it based on the input tensor shape
@@ -1448,9 +1447,9 @@ size_t runtime::gpu::CUDAEmitter::build_memset(const std::string& dtype, uint32_
 
     // create the launch primitive
     std::unique_ptr<gpu::primitive> memset(
-        new gpu::primitive{[=](void** outputs, void** value) mutable {
-            void** args_list = args.resolve_placeholder(0, &outputs[0])
-                                   .resolve_placeholder(1, &value[0])
+        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                   .resolve_placeholder(1, &outputs[0])
                                    .get_argument_list();
             CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
                                           aligned_grid_size_x,
@@ -2038,8 +2037,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& d
             void* init_value_buff = runtime::gpu::invoke_memory_primitive(m_ctx, idx_init_value);
             gpu::invoke_primitive(m_ctx,
                                   memset_idx,
-                                  std::vector<void*>{outputs[0]}.data(),
-                                  std::vector<void*>{init_value_buff}.data());
+                                  std::vector<void*>{init_value_buff}.data(),
+                                  std::vector<void*>{outputs[0]}.data());
         }});
         primitive_index = this->m_primitive_emitter->insert(std::move(memset));
     }

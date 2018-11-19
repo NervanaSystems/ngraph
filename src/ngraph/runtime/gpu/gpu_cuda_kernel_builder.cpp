@@ -70,7 +70,7 @@ void runtime::gpu::CudaKernelBuilder::get_memset_op(codegen::CodeWriter& writer,
         writer << "for ( ;tid < nthreads; tid += step)\n";
         writer.block_begin();
         {
-            writer << "out[tid] = value[0];\n";
+            writer << "out[tid] = in[0];\n";
         }
         writer.block_end();
     }
