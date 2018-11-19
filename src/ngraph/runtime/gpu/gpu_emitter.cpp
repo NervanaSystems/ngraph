@@ -734,7 +734,7 @@ void runtime::gpu::GPU_Emitter::emit_Max(EMIT_ARGS)
     const ngraph::op::Max* max = static_cast<const ngraph::op::Max*>(node);
 
     size_t index;
-    if (args[0].get_element_type() == element::i32)
+    if ((args[0].get_element_type() == element::i32) || (args[0].get_element_type() == element::i8))
     {
         // one of args0 axes has zero size, zero output, use args1 value
         if (args[0].get_size() == 0)
@@ -865,7 +865,7 @@ void runtime::gpu::GPU_Emitter::emit_Min(EMIT_ARGS)
     const ngraph::op::Min* min = static_cast<const ngraph::op::Min*>(node);
 
     size_t index;
-    if (args[0].get_element_type() == element::i32)
+    if ((args[0].get_element_type() == element::i32) || (args[0].get_element_type() == element::i8))
     {
         // one of args0 axes has zero size, zero output, use args1 value
         if (args[0].get_size() == 0)
@@ -1030,20 +1030,8 @@ void runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
             else
             {
                 size_t prod_index;
-                if (args[0].get_element_type() != element::i32)
-                {
-                    std::vector<element::Type> dtypes{args[0].get_element_type(),
-                                                      out[0].get_element_type()};
-                    auto& cudnn_emitter =
-                        external_function->get_primitive_emitter()->get_cudnn_emitter();
-                    prod_index =
-                        cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MUL,
-                                                            dtypes,
-                                                            args[0].get_shape(),
-                                                            prod->get_reduction_axes(),
-                                                            CUDNNEmitter::ReductionMode::Reduce);
-                }
-                else
+                if ((args[0].get_element_type() == element::i32) ||
+                    (args[0].get_element_type() == element::i8))
                 {
                     vector<string> dtypes;
                     dtypes.push_back(args[0].get_type());
@@ -1055,6 +1043,19 @@ void runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
                         out[0].get_element_type().size(),
                         args[0].get_shape(),
                         prod->get_reduction_axes());
+                }
+                else
+                {
+                    std::vector<element::Type> dtypes{args[0].get_element_type(),
+                                                      out[0].get_element_type()};
+                    auto& cudnn_emitter =
+                        external_function->get_primitive_emitter()->get_cudnn_emitter();
+                    prod_index =
+                        cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MUL,
+                                                            dtypes,
+                                                            args[0].get_shape(),
+                                                            prod->get_reduction_axes(),
+                                                            CUDNNEmitter::ReductionMode::Reduce);
                 }
 
                 writer << "void* input[] = {" << node_names(args) << "};\n";
@@ -1653,7 +1654,7 @@ void runtime::gpu::GPU_Emitter::emit_Subtract(EMIT_ARGS)
 
 void runtime::gpu::GPU_Emitter::emit_Sum(EMIT_ARGS)
 {
-    if (args[0].get_element_type() == element::i32)
+    if ((args[0].get_element_type() == element::i32) || (args[0].get_element_type() == element::i8))
     {
         runtime::gpu::GPU_Emitter::emit_Sum_0(external_function, writer, node, args, out);
     }

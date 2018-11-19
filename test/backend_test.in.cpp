@@ -3270,6 +3270,28 @@ NGRAPH_TEST(${BACKEND_NAME}, product_to_scalar_int)
     EXPECT_EQ((vector<int32_t>{1, 2, 3, 4}), read_vector<int32_t>(a));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, product_to_scalar_int8)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::i8, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::Product>(A, AxisSet{0, 1}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i8, shape);
+    copy_data(a, vector<int8_t>{1, 2, 3, 4});
+    auto result = backend->create_tensor(element::i8, Shape{});
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<int8_t>{24}), read_vector<int8_t>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<int8_t>{1, 2, 3, 4}), read_vector<int8_t>(a));
+}
+
 // Trivial case with no reduced axes.
 NGRAPH_TEST(${BACKEND_NAME}, max_trivial)
 {
@@ -3286,6 +3308,23 @@ NGRAPH_TEST(${BACKEND_NAME}, max_trivial)
 
     backend->call_with_validate(f, {result}, {a});
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, max_trivial_int8)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::i8, shape);
+    auto f = make_shared<Function>(make_shared<op::Max>(A, AxisSet{}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i8, shape);
+    copy_data(a, vector<int8_t>{1, 2, 3, 4});
+    auto result = backend->create_tensor(element::i8, shape);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<int8_t>{1, 2, 3, 4}), read_vector<int8_t>(result));
 }
 
 // Failure has been reported at 5D for some reason
@@ -3756,6 +3795,27 @@ NGRAPH_TEST(${BACKEND_NAME}, min_to_scalar)
     // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
     // input tensors, so let's do this too.
     EXPECT_EQ((vector<float>{1, 2, 3, 4}), read_vector<float>(a));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, min_to_scalar_int8)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::i8, shape);
+    auto f = make_shared<Function>(make_shared<op::Min>(A, AxisSet{0, 1}), op::ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i8, shape);
+    copy_data(a, vector<int8_t>{1, 2, 3, 4});
+    auto result = backend->create_tensor(element::i8, Shape{});
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<int8_t>{1}), read_vector<int8_t>(result));
+
+    // For some reason I'm feeling extra paranoid about making sure reduction doesn't clobber the
+    // input tensors, so let's do this too.
+    EXPECT_EQ((vector<int8_t>{1, 2, 3, 4}), read_vector<int8_t>(a));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, min_matrix_columns)
