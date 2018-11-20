@@ -3038,9 +3038,9 @@ void runtime::gpu::CUDAEmitter::simplify_reduce_shape(NVShape in,
                 simplified_reduce_axis.push_back(i - eliminated_axis_count);
             }
         }
-        if (i == combined_reduce_axis[reduce_idx] && reduce_idx < combined_reduce_axis.size() - 1)
+        if (reduce_idx < combined_reduce_axis.size() - 1)
         {
-            reduce_idx++;
+            reduce_idx = (i == combined_reduce_axis[reduce_idx]) ? reduce_idx + 1 : reduce_idx;
         }
     }
 }
