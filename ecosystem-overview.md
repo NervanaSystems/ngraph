@@ -25,14 +25,14 @@ and multi-device support of nGraph Compiler, please refer to “how to
 connect custom framework” section on this page. 
 
 
-|  Framework &   Runtime     | Supported        |  Validated 
-|----------------------------|------------------|-------------
-| TensorFlow* 1.12           | Yes              |  Yes
-| MXNet* 1.4                 | Yes              |  Yes
-| ONNX 1.3                   | Yes              |  Yes
-| ONNX Runtime  Functional   | Functional       |  No
-| PyTorch (via ONNXIFI)      | Functional       |  No
-| PaddlePaddle               | Functional       |  No
+|  Framework & Runtime       | Supported          |  Validated 
+|----------------------------|--------------------|-------------
+| TensorFlow* 1.12           | :heavy_check_mark: |  :heavy_check_mark:
+| MXNet* 1.4                 | :heavy_check_mark: |  :heavy_check_mark:
+| ONNX 1.3                   | :heavy_check_mark: |  :heavy_check_mark:
+| ONNX Runtime  Functional   | Functional         |  No
+| PyTorch (via ONNXIFI)      | Functional         |  No
+| PaddlePaddle               | Functional         |  No
 
 
 
@@ -58,7 +58,7 @@ stack, and early adopters will be able test them in 2019.
 
 | Backend                                       | supported         
 |-----------------------------------------------|-------------------
-| Intel® Architecture CPU                       | Yes               
+| Intel® Architecture CPU                       | :heavy_check_mark:               
 | Intel® Architecture GPUs                      | Functional via clDNN and PlaidML      
 | AMD* GPUs                                     | Functional via PlaidML                 
 | Nvidia* GPUs                                  | Functional via cuDNN and PlaidML        
