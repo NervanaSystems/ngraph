@@ -5,7 +5,7 @@ Validation and testing
 ######################
 
 * **Validating** -- To provide optimizations with nGraph, we first 
-  confirm that a given workload is "validated" as being functional; 
+  confirm that a given workload is :term:`validated` as being functional; 
   that is, we can successfully load its serialized graph as an nGraph 
   :term:`function graph`. Following here is a list of 14 workloads 
   we've tested with success.
@@ -32,6 +32,8 @@ Validation and testing
    BVLC R-CNN ILSVRC13, Functional 
 
 
+Testing
+#######
 
 * **Testing & Performance Optimizations** for workloads that have been 
   "validated" with nGraph are also available via the nGraph 
@@ -49,22 +51,22 @@ TensorFlow
    :widths: 27, 53
    :escape: ~
 
-   Resnet50 v1 and v2, 50% of P40
-   Inception V3 and V4, 50% of P40
-   Inception-ResNetv2, 50% of P40
-   MobileNet v1, 50% of P40
-   SqueezeNet v1.1, 50% of P40
-   SSD-VGG16, 50% of P40
-   R-FCN, 50% of P40
-   Faster RCNN, 50% of P40
-   Yolo v2, 50% of P40
+   Resnet50 v1 and v2, see nbench
+   Inception V3 and V4, see nbench
+   Inception-ResNetv2, see nbench
+   MobileNet v1, see nbench
+   SqueezeNet v1.1, see nbench
+   SSD-VGG16, see nbench
+   R-FCN, see nbench
+   Faster RCNN, see nbench
+   Yolo v2, see nbench
    GNMT, Greater than or equal to :abbr:`Direct Optimization (DO)`
-   Transformer-LT, 50% of P40
-   Wide & Deep, 50% of P40
+   Transformer-LT, see nbench
+   Wide & Deep, see nbench
    WaveNet, Functional
    U-Net, Greater than DO
-   DRAW, 50% of P40
-   A3C, 50% of P40
+   DRAW, see nbench
+   A3C, see nbench
 
 
 MXNet
@@ -76,27 +78,37 @@ MXNet
    :widths: 27, 53
    :escape: ~
 
-   Resnet50 v1 and v2, 50% of P40
-   DenseNet (121 161 169 201), 50% of P40
-   InceptionV3, 50% of P40
-   InceptionV4, 50% of P40
-   Inception-ResNetv2, 50% of P40
-   MobileNet v1, 50% of P40
-   SqueezeNet v1 and v1.1, 50% of P40
+   Resnet50 v1 and v2, see nbench
+   DenseNet (121 161 169 201), see nbench
+   InceptionV3, see nbench
+   InceptionV4, see nbench
+   Inception-ResNetv2, see nbench
+   MobileNet v1, see nbench
+   SqueezeNet v1 and v1.1, see nbench
    VGG16, Functional (No DO available)
-   Faster RCNN, 50% of P40
-   SSD-VGG16, 50% of P40
+   Faster RCNN, see nbench
+   SSD-VGG16, see nbench
    GNMT, Greater than or equal to :abbr:`Direct Optimization (DO)`
-   Transformer-LT, 50% of P40
-   Wide & Deep, 50% of P40
+   Transformer-LT, see nbench
+   Wide & Deep, see nbench
    WaveNet, Functional
-   DeepSpeech2, 50% of P40
-   DCGAN, 50% of P40
+   DeepSpeech2, see nbench
+   DCGAN, see nbench
    A3C, Greater than or equal to DO
 
 
 
-  
+.. important:: See Intel's `Optimization Notice`_ for details. 
+
+
+
+.. _Optimization Notice: https://software.intel.com/en-us/articles/optimization-notice
+
+
+.. Notice revision #20110804:: Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors. These optimizations include SSE2, SSE3, and SSSE3 instruction sets and other optimizations. Intel does not guarantee the availability, functionality, or effectiveness of any optimization on microprocessors not manufactured by Intel. Microprocessor-dependent optimizations in this product are intended for use with Intel microprocessors. Certain optimizations not specific to Intel microarchitecture are reserved for Intel microprocessors. Please refer to the applicable product User and Reference Guides for more information regarding the specific instruction sets covered by this notice.
+
+
+
 
 
 
