@@ -40,8 +40,6 @@ namespace ngraph
 
                 auto input_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
-                auto input_size = static_cast<int>(shape_size(input_shape));
-                auto out_size = static_cast<int>(shape_size(out_shape));
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
@@ -72,9 +70,6 @@ namespace ngraph
                 auto input_shape = args[0].get_shape();
                 auto delta_shape = args[1].get_shape();
                 auto out_shape = out[0].get_shape();
-                int input_size = static_cast<int>(shape_size(input_shape));
-                int delta_size = static_cast<int>(shape_size(delta_shape));
-                int out_size = static_cast<int>(shape_size(out_shape));
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 

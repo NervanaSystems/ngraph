@@ -4157,8 +4157,6 @@ namespace ngraph
             {
                 auto input_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
-                int input_1d_size = static_cast<int>(shape_size(input_shape));
-                int result_1d_size = static_cast<int>(shape_size(result_shape));
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 
@@ -4184,9 +4182,6 @@ namespace ngraph
                 auto input_shape = args[0].get_shape();
                 auto delta_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
-                int input_1d_size = static_cast<int>(shape_size(input_shape));
-                int delta_1d_size = static_cast<int>(shape_size(delta_shape));
-                int result_1d_size = static_cast<int>(shape_size(result_shape));
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
 
