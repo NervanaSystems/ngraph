@@ -31,8 +31,9 @@ runtime::gpu::GPUTensorWrapper::GPUTensorWrapper(const shared_ptr<descriptor::Te
 }
 
 runtime::gpu::GPUTensorWrapper::GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>& tv,
-                                                 const TensorType& type, const size_t& offset)
+                                                 const TensorType& type, const size_t& offset, const std::string& alias)
     : m_tensor(tv)
+    , m_alias(alias)
     , m_offset(std::make_pair(type, offset))
 {
 }

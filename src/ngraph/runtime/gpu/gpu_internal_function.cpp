@@ -126,14 +126,14 @@ using namespace ngraph;
 
 static std::mutex s_compilation;
 
-// std::string runtime::gpu::GPU_InternalFunction::emit_op(GPU_InternalFunction* external_function,
-//                                                         const ngraph::Node* node,
-//                                                         const std::vector<GPUTensorWrapper>& args,
-//                                                         const std::vector<GPUTensorWrapper>& out)
-// {
-//     auto emit_function = GPU_Emitter::get_emit_function(*node);
-//     return emit_function(external_function, node, args, out);
-// };
+std::string runtime::gpu::GPU_InternalFunction::emit_op(GPU_InternalFunction* external_function,
+                                                        const ngraph::Node* node,
+                                                        const std::vector<GPUTensorWrapper>& args,
+                                                        const std::vector<GPUTensorWrapper>& out)
+{
+    auto emit_function = GPU_Emitter::get_emit_function(*node);
+    return emit_function(external_function, node, args, out);
+};
 
 runtime::gpu::GPU_InternalFunction::GPU_InternalFunction(
     const shared_ptr<ngraph::Function>& function,
@@ -164,78 +164,38 @@ std::string runtime::gpu::GPU_InternalFunction::add_to_runtime(size_t primitive_
 
 // void runtime::gpu::GPU_InternalFunction::emit_constant_declarations()
 // {
-//     m_writer << "// Declare all constants\n";
-//     for (const auto& p : m_function_ordered_ops)
-//     {
-//         for (shared_ptr<Node> node : p.second)
-//         {
-//             const op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
-//             if (c)
-//             {
-//                 shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
-//                 // get an allocator for transient per kernel gpu memory
-//                 runtime::gpu::GPUAllocator allocator =
-//                     m_shared_context->m_primitive_emitter->get_memory_allocator();
-//                 size_t idx = allocator.reserve_argspace(c->get_data_ptr(),
-//                                                         tv->size() * tv->get_element_type().size());
-//                 m_writer << "static size_t " << tv->get_name() << "_idx = " << idx << ";\n";
-//                 m_writer << "static " << tv->get_element_type().c_type_string() << "* "
-//                          << tv->get_name() << " = nullptr;\n";
-//                 m_variable_name_map[tv->get_name()] = tv->get_name();
-//             }
-//         }
-//     }
-
-//     m_writer << "\nstatic bool is_constant_mem_ptr_null = true;\n\n";
-//     m_writer << "static void invoke_constant_mem_ptr()\n";
-//     m_writer.block_begin();
-//     {
-//         m_writer << "if(is_constant_mem_ptr_null)\n";
-//         m_writer.block_begin();
-//         {
-//             for (const auto& p : m_function_ordered_ops)
-//             {
-//                 for (shared_ptr<Node> node : p.second)
-//                 {
-//                     const op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
-//                     if (c)
-//                     {
-//                         shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
-//                         m_writer << tv->get_name() << " = reinterpret_cast<"
-//                                  << tv->get_element_type().c_type_string()
-//                                  << "*>(runtime::gpu::invoke_memory_primitive(m_runtime_context, "
-//                                  << tv->get_name() << "_idx));\n";
-//                     }
-//                 }
-//             }
-//             m_writer << "is_constant_mem_ptr_null = false;\n";
-//         }
-//         m_writer.block_end();
-//     }
-//     m_writer.block_end();
+//     // for (const auto& p : m_function_ordered_ops)
+//     // {
+//     //     for (shared_ptr<Node> node : p.second)
+//     //     {
+//     //         const op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
+//     //         if (c)
+//     //         {
+//     //             shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
+//     //             // get an allocator for transient per kernel gpu memory
+//     //             runtime::gpu::GPUAllocator allocator =
+//     //                 m_shared_context->m_primitive_emitter->get_memory_allocator();
+//     //             size_t idx = allocator.reserve_argspace(c->get_data_ptr(),
+//     //                                                     tv->size() * tv->get_element_type().size());
+//     //             // m_writer << "static size_t " << tv->get_name() << "_idx = " << idx << ";\n";
+//     //             // m_writer << "static " << tv->get_element_type().c_type_string() << "* "
+//     //             //          << tv->get_name() << " = nullptr;\n";
+//     //             m_variable_name_map[tv->get_name()] = tv->get_name();
+//     //         }
+//     //     }
+//     // }
 // }
+
+void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
+    shared_ptr<Function> current_function)
+{
+
+}
 
 void runtime::gpu::GPU_InternalFunction::build_functions()
 {
     for (const auto& p : m_function_ordered_ops)
     {
-        auto current_function = p.first;
-        set<string> output_names;
-        for (shared_ptr<Node> op : current_function->get_results())
-        {
-            shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr();
-            output_names.insert(tv->get_name());
-        }
-        set<descriptor::Tensor*> constants;
-        for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
-        {
-            if (dynamic_cast<ngraph::op::Constant*>(node.get()))
-            {
-                shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
-                constants.insert(tv.get());
-            }
-        }
-
         // Add inputs to the variable name map
         size_t arg_index = 0;
         for (shared_ptr<ngraph::op::Parameter> param : current_function->get_parameters())
@@ -243,13 +203,14 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
             for (size_t i = 0; i < param->get_output_size(); ++i)
             {
                 shared_ptr<descriptor::Tensor> tv = param->get_output_tensor_ptr(i);
+
                 const element::Type& et = tv->get_element_type();
                 string type = et.c_type_string();
-                // stringstream ss;
-                // ss << "((" << type << "*)(inputs[" << arg_index << "]))";
-                // m_variable_name_map[tv->get_name()] = ss.str();
+                stringstream ss;
+                ss << "((" << type << "*)(inputs[" << arg_index << "]))";
+                m_variable_name_map[tv->get_name()] =
+                    std::make_tuple(runtime::gpu::GPUTensorWrapper::TensorType::INPUT, arg_index, ss.str());
                 // propagate_in_place_input(&param->get_outputs().at(i), ss.str());
-                //m_variable_name_map[tv->get_name()] = [];;
                 arg_index++;
             }
         }
@@ -262,7 +223,8 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
             string type = tv->get_element_type().c_type_string();
             stringstream ss;
             ss << "((" << type << "*)(outputs[" << i << "]))";
-            m_variable_name_map[tv->get_name()] = ss.str();
+            m_variable_name_map[tv->get_name()] =
+                std::make_tuple(runtime::gpu::GPUTensorWrapper::TensorType::OUTPUT, i, ss.str());
 
             auto res = dynamic_pointer_cast<ngraph::op::Result>(op);
             //keep assigning different outputs to a result descriptor
@@ -274,71 +236,90 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
                 shared_ptr<descriptor::Tensor> itv =
                     res->get_inputs().at(0).get_output().get_tensor_ptr();
                 auto output_name = ss.str();
-                m_variable_name_map[itv->get_name()] = output_name;
-                propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
+                m_variable_name_map[itv->get_name()] =
+                    std::make_tuple(runtime::gpu::GPUTensorWrapper::TensorType::OUTPUT, i, ss.str());
+                //propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
+            }
+        }
+
+        // Add temporaries to the variable name map
+        bool temporaries_used = false;
+        for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
+        {
+            if (node->liveness_new_list.size() > 0)
+            {
+                temporaries_used = true;
+                break;
+            }
+        }
+        if (temporaries_used)
+        {
+            for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
+            {
+                for (descriptor::Tensor* tensor : node->liveness_new_list)
+                {
+                    m_variable_name_map[itv->get_name()] =
+                        std::make_tuple(runtime::gpu::GPUTensorWrapper::TensorType::INTERMEDIATE,
+                                        tensor->get_pool_offset(),
+                                        current_function->get_name());
+                }
+            }
+        }
+
+        // Add constants to the variable name map
+        for (shared_ptr<Node> node : p.second)
+        {
+            if (auto c = std::dynamic_pointer_cast<op::Constant>(node))
+            {
+                shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
+                m_variable_name_map[tv->get_name()] =
+                    std::make_tuple(runtime::gpu::GPUTensorWrapper::TensorType::CONSTANT, 0,
+                                    node->get_name());
             }
         }
 
         for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
         {
+            // vector<string> node_input_names;
+            // vector<string> node_output_names;
             vector<GPUTensorWrapper> in;
-            vector<string> node_input_names;
-            vector<string> node_output_names;
             for (const descriptor::Input& input : node->get_inputs())
             {
                 const descriptor::Output& output = input.get_output();
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-                in.push_back(GPUTensorWrapper(tv, m_variable_name_map[tv->get_name()]));
-                node_input_names.emplace_back(tv->get_name());
+                auto& var = m_variable_name_map[tv->get_name()];
+                in.push_back(GPUTensorWrapper(tv, std::get<0>(var), std::get<1>(var), std::get<2>(var)));
+                // node_input_names.emplace_back(tv->get_name());
             }
             vector<GPUTensorWrapper> out;
             for (const descriptor::Output& output : node->get_outputs())
             {
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-                out.push_back(GPUTensorWrapper(tv, m_variable_name_map[tv->get_name()]));
-                node_output_names.emplace_back(tv->get_name());
+                auto& var = m_variable_name_map[tv->get_name()];
+                out.push_back(GPUTensorWrapper(tv, std::get<0>(var), std::get<1>(var), std::get<2>(var)));
+                // node_output_names.emplace_back(tv->get_name());
             }
 
             // Emit function description comment
-            if (!node->is_parameter() && !node->is_constant())
-            {
-                m_writer << "\n// " << node->get_name() << "(";
-                vector<string> parameter_nodes = node_input_names;
-                parameter_nodes.insert(
-                    parameter_nodes.end(), node_output_names.begin(), node_output_names.end());
-                m_writer << join(parameter_nodes);
-                m_writer << ")\n";
-                emit_debug_function_entry(node.get());
-            }
+            // if (!node->is_parameter() && !node->is_constant())
+            // {
+            //     m_writer << "\n// " << node->get_name() << "(";
+            //     vector<string> parameter_nodes = node_input_names;
+            //     parameter_nodes.insert(
+            //         parameter_nodes.end(), node_output_names.begin(), node_output_names.end());
+            //     m_writer << join(parameter_nodes);
+            //     m_writer << ")\n";
+            //     emit_debug_function_entry(node.get());
+            // }
 
             // Emit operation body
-            auto it = m_node_function_map.find(node.get());
-            if (it == m_node_function_map.end())
-            {
-                m_writer << emit_op(this, node.get(), in, out);
-            }
-            else
-            {
-                string func_name =
-                    ngraph::pass::CommonFunctionCollection::create_function_name(*it->second);
-                vector<string> names;
-                for (const GPUTensorWrapper& tv : in)
-                {
-                    names.push_back(tv.get_name());
-                }
-                for (const GPUTensorWrapper& tv : out)
-                {
-                    names.push_back(tv.get_name());
-                }
-                names.push_back("ctx");
-                m_writer << func_name << "(" << join(names) << ");\n";
-            }
+            m_writer << emit_op(this, node.get(), in, out);
 
             // Emit operation epilogue
-            if (!node->is_parameter() && !node->is_constant())
-            {
-                emit_debug_function_exit(node.get());
-            }
+            // if (!node->is_parameter() && !node->is_constant())
+            // {
+            //     emit_debug_function_exit(node.get());
+            // }
         }
 
     }
@@ -360,16 +341,16 @@ void runtime::gpu::GPU_InternalFunction::compile()
     ngraph::pass::Manager pass_manager;
 #if CUDNN_VERSION >= 7200
     // recurrent network fusion
-    pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<runtime::gpu::pass::MultiLayerRNNFusion>();
+    // pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
+    // pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
+    // pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    // pass_manager.register_pass<runtime::gpu::pass::MultiLayerRNNFusion>();
 #else
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    // pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
 #endif
-    pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
-    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
+    // pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
+    // pass_manager.register_pass<ngraph::pass::LikeReplacement>();
+    // pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
@@ -377,7 +358,6 @@ void runtime::gpu::GPU_InternalFunction::compile()
         *allocator, m_tensor_memory_buffers);
     string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
     pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
-
     pass_manager.run_passes(m_function);
 
     for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
@@ -396,15 +376,9 @@ void runtime::gpu::GPU_InternalFunction::compile()
     m_shared_context->m_primitive_emitter->allocate_primitive_memory();
 
     GPUCallFrame call_frame;
-    // resolve constants
-    // call_frame.resolve_constants(...);
 
-    // resolve intermediates
-    for (auto const& p : m_function_ordered_ops)
-    {
-        auto& func = p.first;
-        call_frame.resolve_intermediates(current_function, m_tensor_memory_buffers[func->get_name()]);
-    }
+    // resolve memory reservations (constants and intermediate buffers)
+    call_frame.resolve_reservations(this, m_tensor_memory_buffers);
 
     // build runtime
     m_runtime = m_runtime_constructor.build(call_frame);

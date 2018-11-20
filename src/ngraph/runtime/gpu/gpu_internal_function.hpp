@@ -20,6 +20,7 @@
 #include <memory>
 #include <typeindex>
 #include <typeinfo>
+#include <tuple>
 #include <unordered_map>
 
 #include "ngraph/function.hpp"
@@ -67,8 +68,7 @@ namespace ngraph
                 virtual void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
                                                        std::string output_name) override;
                 std::map<std::string, size_t> m_name_index_map;
-                std::unordered_map<std::string, > m_variable_name_map;
-                std::unordered_map<Node*, Node*> m_node_function_map;
+                std::unordered_map<std::string, std::tuple<runtime::gpu::GPUTensorWrapper::TensorType, size_t, std::string>> m_variable_name_map;
             };
         }
     }
