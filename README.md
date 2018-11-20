@@ -85,19 +85,6 @@ to improve it:
   modifications are necessary, may provide feedback to guide you. When
   accepted, your pull request will be merged to the repository.
 
-![nGraph Compiler Stack][ngraph-compiler-stack-readme]
-
-| Backend                                       | current support   | future support |
-|-----------------------------------------------|-------------------|----------------|
-| Intel® Architecture CPU                       | yes               | yes            |
-| Intel® Nervana™ Neural Network Processor (NNP)| yes               | yes            |
-| Intel [Movidius™ Myriad™ 2] VPUs              | coming soon       | yes            |
-| Intel® Architecture GPUs                      | via PlaidML       | yes            |
-| AMD* GPUs                                     | via PlaidML       | yes            |
-| NVIDIA* GPUs                                  | via PlaidML       | some           | 
-| Field Programmable Gate Arrays (FPGA)         | no                | yes            |
-
-
 
 [Architecture and features]:https://ngraph.nervanasys.com/docs/latest/project/about.html
 [Documentation]: https://ngraph.nervanasys.com/docs/latest
