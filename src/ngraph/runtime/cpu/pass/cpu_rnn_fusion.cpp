@@ -665,8 +665,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 static std::shared_ptr<Node> stack_rnn_inputs(NodeVector& rnn_input_nodes)
 {
     std::reverse(rnn_input_nodes.begin(), rnn_input_nodes.end());
-    size_t concat_axis = rnn_input_nodes[0]->get_shape().size() == 2 ? 1 : 0;
-    return std::make_shared<op::Concat>(rnn_input_nodes, concat_axis);
+    return std::make_shared<op::Concat>(rnn_input_nodes, 0);
 }
 
 void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_fusion_fprop()
@@ -840,23 +839,19 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         auto layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 0);
         auto layer_rnn_ht_ct = std::make_shared<op::GetOutputElement>(rnn, 1);
 
-        // multi layerd fused rnn second output {GOE1} holds the recurrent output state tensors for the last cell
-        // of all the layers, we will slice the cell state output tensor {ht | ct} -> {ct} and feeds
-        // {ct} consumer from the fused RNN output.
-        auto ct_slice_across_layer = std::make_shared<op::Slice>(
-            layer_rnn_ht_ct,
-            Coordinate{
-                static_cast<unsigned long>(batch_size * rnn_direction * num_fused_rnn_layers), 0},
-            Coordinate{
-                static_cast<unsigned long>(2 * batch_size * rnn_direction * num_fused_rnn_layers),
-                static_cast<unsigned long>(feature_size)});
-
         // Replace all the users of RNN cell state {ct} across different user.
         auto replace_rnn_output_cellstate = [&](std::shared_ptr<Node> rnn_ct_goe1, size_t layer) {
+
+            // multi layerd fused rnn second output {GOE1} holds the recurrent output state tensors for the last cell
+            // of all the layers, {{ht_1 | ct_1} || {ht2 |ct2} || ....{htn | ctn}}
+            // we will slice the cell state output tensor {ct_*} from the fused RNN kerenel output and feeds
+            // {ct_*} consumer if any
             auto ct_slice = std::make_shared<op::Slice>(
-                ct_slice_across_layer,
-                Coordinate{static_cast<unsigned long>(batch_size * (layer - 1)), 0},
-                Coordinate{static_cast<unsigned long>(batch_size * rnn_direction * layer),
+                layer_rnn_ht_ct,
+                Coordinate{static_cast<unsigned long>(
+                               ((layer - 1) * batch_size * num_rnn_cell_states) + batch_size),
+                           0},
+                Coordinate{static_cast<unsigned long>(num_rnn_cell_states * layer * batch_size),
                            static_cast<unsigned long>(feature_size)});
 
             std::shared_ptr<Node> node_to_replace = rnn_ct_goe1->get_users()[0];
@@ -877,7 +872,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                 auto goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(rnn_arg);
                 if (goe_node && goe_node->get_n() == 1)
                 {
-                    replace_rnn_output_cellstate(goe_node, num_fused_rnn_layers - index);
+                    int layer_index = num_fused_rnn_layers - index;
+                    replace_rnn_output_cellstate(goe_node, layer_index);
                 }
                 else if (!goe_node)
                 {

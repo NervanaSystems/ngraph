@@ -79,12 +79,10 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
         throw ngraph_error("src_layer doesnt have a rank 2");
     }
 
-    m_dst_iter_feature_size =
-        weights_iter->get_shape()[1] / (m_direction * m_num_fused_layers * m_num_gates_per_cell);
-    m_dst_layer_feature_size =
-        weights_layer->get_shape()[1] / (m_direction * m_num_fused_layers * m_num_gates_per_cell);
-    m_src_iter_feature_size = weights_iter->get_shape()[0];
-    m_src_layer_feature_size = weights_layer->get_shape()[0];
+    m_dst_iter_feature_size = weights_iter->get_shape()[1] / (m_num_gates_per_cell);
+    m_dst_layer_feature_size = weights_layer->get_shape()[1] / (m_num_gates_per_cell);
+    m_src_iter_feature_size = weights_iter->get_shape()[0] / (m_direction * m_num_fused_layers);
+    m_src_layer_feature_size = weights_layer->get_shape()[0] / (m_direction * m_num_fused_layers);
 
     if (shape_size(src_layer->get_shape()) !=
         m_src_sequence_length * m_batch_size * m_src_layer_feature_size)
@@ -92,10 +90,8 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
         throw ngraph_error("src_layer size is not equal t*n*c");
     }
 
-    if ((bias->get_shape()[0] / m_num_fused_layers) !=
-            (weights_layer->get_shape()[1] / m_num_fused_layers) ||
-        (bias->get_shape()[0] / m_num_fused_layers) !=
-            (weights_iter->get_shape()[1] / m_num_fused_layers))
+    if ((bias->get_shape()[0] / m_num_fused_layers) != (weights_layer->get_shape()[1]) ||
+        (bias->get_shape()[0] / m_num_fused_layers) != (weights_iter->get_shape()[1]))
     {
         throw ngraph_error("bias and weights_shape are not compatible");
     }

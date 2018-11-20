@@ -2208,7 +2208,7 @@ static std::shared_ptr<Function> make_function(const std::string& file_name)
     return func;
 }
 
-TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
+TEST(cpu_fusion, rnn_fusion_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
     auto cpu_f = make_function(file_name);
@@ -2230,7 +2230,7 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
     }
 }
 
-TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
+TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
@@ -2252,7 +2252,7 @@ TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
     }
 }
 
-TEST(cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
+TEST(cpu_fusion, rnn_fusion_2rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
@@ -2970,7 +2970,7 @@ TEST(cpu_fusion, fuse_rnn_across_2layer_1timestep)
     EXPECT_EQ(1, count_ops_of_type<op::Rnn>(cpu_f));
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(cpu_results.at(1), int_results.at(1), 1.0e-4f, 1.0e-4f));
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
 
