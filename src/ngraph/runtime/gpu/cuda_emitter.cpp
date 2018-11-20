@@ -2047,6 +2047,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<element::Type>&
     // if input size is 0, memset output to inital value
     if (nthreads == 0)
     {
+        size_t memset_idx =
+            build_memset(dtypes_str[0], static_cast<uint32_t>(shape_size(output_shape)));
         if (with_init_value)
         {
             std::unique_ptr<gpu::primitive> memset(
@@ -2065,8 +2067,6 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<element::Type>&
             GPUAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
             // (lazy) allocation for kernel arguments
             size_t idx_init_value = allocator.reserve_argspace(init_value, data_bytes);
-            size_t memset_idx =
-                build_memset(dtypes_str[0], static_cast<uint32_t>(shape_size(output_shape)));
             std::unique_ptr<gpu::primitive> memset(
                 new gpu::primitive{[=](void** inputs, void** outputs) mutable {
                     void* init_value_buff =
