@@ -4,7 +4,7 @@
 
 <div align="left">
   <h4>
-    <a href="../ABOUT.md">Architecture & features</a> | <a href="ecosystem-overview" >Ecosystem</a> | <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">Release notes</a><span> | </span> <a href="https://ngraph.nervanasys.com/docs/latest">Documentation</a><span> | </span> <a href="#How-to-contribute" >Contrib guide</a>
+    <a href="../ABOUT.md">Architecture & features</a> | <a href="../ecosystem-overview.md" >Ecosystem</a> | <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">Release notes</a><span> | </span> <a href="https://ngraph.nervanasys.com/docs/latest">Documentation</a><span> | </span> <a href="#How-to-contribute" >Contrib guide</a>
  </h4>
 </div>
 
@@ -95,7 +95,7 @@ to improve it:
 [contrib guide]: https://ngraph.nervanasys.com/docs/latest/project/code-contributor-README.html
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
 [how to import]: https://ngraph.nervanasys.com/docs/latest/howto/import.html
-[nGraph wireframe]: doc/sphinx/source/graphics/ngraph_wireframes_with_notice.png "nGraph wireframe"
+[ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/ngraph_wireframes_with_notice.png "nGraph wireframe"
 [ngraph-compiler-stack-readme]: doc/sphinx/source/graphics/ngraph-compiler-stack-readme.png "nGraph Compiler Stack"
 [build-status]: https://travis-ci.org/NervanaSystems/ngraph/branches
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
