@@ -59,7 +59,7 @@ static void compare_backends(std::shared_ptr<Function>& f1,
                              const string backend1,
                              const string backend2)
 {
-    test::Uniform<float> rng(-100.0f, 100.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : f1->get_parameters())
     {
