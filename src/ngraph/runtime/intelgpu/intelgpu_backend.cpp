@@ -75,7 +75,6 @@
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
-#include "ngraph/op/parameter_vector.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -83,6 +82,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/parameter_vector.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -1516,6 +1516,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::ReverseSequence:
         case OP_TYPEID::SelectAndScatter:
+        case OP_TYPEID::ShapeOf:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::TopK:
         {
@@ -1588,7 +1589,7 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     {
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> tv =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(inputs[i]);
-        const op::ParameterVector& input_params = func->get_parameters();
+        const ParameterVector& input_params = func->get_parameters();
         const string& tensor_name = input_params[i]->get_output_tensor().get_name();
         network->set_input_data(tensor_name, *tv->get_data_ptr());
     }

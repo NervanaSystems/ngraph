@@ -52,6 +52,7 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -639,32 +640,31 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
         auto pattern_map = m.get_pattern_map();
 
         auto conv = std::static_pointer_cast<op::Convolution>(m.get_match_root()->get_argument(0));
-        if (conv->get_input_shape(0).size() == 4)
+
+        if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<op::Convolution>(conv.get()))
         {
-            auto bias = m.get_match_root()->get_argument(1)->get_argument(0);
-            auto bias_shape = bias->get_shape();
-            if (bias_shape.size() > 1)
-            {
-                NGRAPH_DEBUG
-                    << "mpattern = " << m.get_match_root()->get_name()
-                    << "conv_bias bias shape != 1, requires reshape to match filter count.";
-                auto order = ngraph::get_default_order(bias_shape);
-                auto bias_reshape =
-                    std::make_shared<op::Reshape>(bias, order, Shape{conv->get_input_shape(1)[0]});
-                auto conv_bias = std::shared_ptr<Node>(new op::ConvolutionBias(conv, bias_reshape));
-                ngraph::replace_node(m.get_match_root(), conv_bias);
-                return true;
-            }
-            else
-            {
-                auto conv_bias = std::shared_ptr<Node>(new op::ConvolutionBias(conv, bias));
-                ngraph::replace_node(m.get_match_root(), conv_bias);
-                return true;
-            }
+            NGRAPH_DEBUG << "Convolution not supported by MKLDNN";
+            return false;
         }
-        NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
-                     << "conv_bias fusion skipped due to input rank size != 4.";
-        return false;
+
+        auto bias = m.get_match_root()->get_argument(1)->get_argument(0);
+        auto bias_shape = bias->get_shape();
+        if (bias_shape.size() > 1)
+        {
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << "conv_bias bias shape != 1, requires reshape to match filter count.";
+            auto order = ngraph::get_default_order(bias_shape);
+            auto bias_reshape =
+                std::make_shared<op::Reshape>(bias, order, Shape{conv->get_input_shape(1)[0]});
+            auto conv_bias = std::shared_ptr<Node>(new op::ConvolutionBias(conv, bias_reshape));
+            ngraph::replace_node(m.get_match_root(), conv_bias);
+        }
+        else
+        {
+            auto conv_bias = std::shared_ptr<Node>(new op::ConvolutionBias(conv, bias));
+            ngraph::replace_node(m.get_match_root(), conv_bias);
+        }
+        return true;
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(p_conv_bias, callback);
@@ -910,31 +910,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
 
         auto conv = std::static_pointer_cast<op::Convolution>(m.get_match_root()->get_argument(0));
 
-        // These checks are to make sure a MKLDNN Convolution kernel can be used.
-        bool data_dilated = false;
-        for (size_t s : conv->get_data_dilation_strides())
+        if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<op::Convolution>(conv.get()))
         {
-            data_dilated = data_dilated || (s != 1);
-        }
-
-        if (data_dilated)
-        {
-            NGRAPH_DEBUG << "Convolution has dilations greater than 1";
-            return false;
-        }
-
-        if (conv->get_element_type() != element::f32)
-        {
-            NGRAPH_DEBUG << "Convolution isn't of type float";
-            return false;
-        }
-
-        auto arg0_rank = conv->get_input_shape(0).size();
-        auto arg1_rank = conv->get_input_shape(1).size();
-
-        if (arg0_rank != 4 || arg1_rank != 4)
-        {
-            NGRAPH_DEBUG << "Convolution's arguments ranks aren't equal to 4";
+            NGRAPH_DEBUG << "Convolution not supported by MKLDNN";
             return false;
         }
 
@@ -978,40 +956,14 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
         auto conv =
             std::static_pointer_cast<op::ConvolutionBias>(m.get_match_root()->get_argument(0));
 
-        // These checks are to make sure a MKLDNN Convolution kernel can be used.
-        bool data_dilated = false;
-        for (size_t s : conv->get_data_dilation_strides())
-        {
-            data_dilated = data_dilated || (s != 1);
-        }
-
-        if (data_dilated)
-        {
-            NGRAPH_DEBUG << "Convolution has dilations greater than 1";
-            return false;
-        }
-
-        if (conv->get_element_type() != element::f32)
-        {
-            NGRAPH_DEBUG << "Convolution isn't of type float";
-            return false;
-        }
-
-        auto arg0_rank = conv->get_input_shape(0).size();
-        auto arg1_rank = conv->get_input_shape(1).size();
-
-        if (arg0_rank != 4 || arg1_rank != 4)
-        {
-            NGRAPH_DEBUG << "Convolution's arguments ranks aren't equal to 4";
-            return false;
-        }
-
         if (conv->get_users().size() > 1)
         {
             NGRAPH_DEBUG << "Convolution has more than one user";
             return false;
         }
 
+        // ConvolutionBias created only if it can run with MKLDNN.
+        // No further checks needed.
         auto conv_relu = std::make_shared<op::ConvolutionBias>(conv->get_argument(0),
                                                                conv->get_argument(1),
                                                                conv->get_argument(2),
@@ -1060,31 +1012,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
             inplace_input = add_m->get_argument(1);
         }
 
-        //These checks are to make sure a MKLDNN Convolution kernel can be used.
-        bool data_dilated = false;
-        for (size_t s : conv_m->get_data_dilation_strides())
+        if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<op::Convolution>(conv_m.get()))
         {
-            data_dilated = data_dilated || (s != 1);
-        }
-
-        if (data_dilated)
-        {
-            NGRAPH_DEBUG << "Convolution has dilations greater than 1";
-            return false;
-        }
-
-        if (conv_m->get_element_type() != element::f32)
-        {
-            NGRAPH_DEBUG << "Convolution isn't of type float";
-            return false;
-        }
-
-        auto arg0_rank = conv_m->get_input_shape(0).size();
-        auto arg1_rank = conv_m->get_input_shape(1).size();
-
-        if (arg0_rank != 4 || arg1_rank != 4)
-        {
-            NGRAPH_DEBUG << "Convolution's arguments ranks aren't equal to 4";
+            NGRAPH_DEBUG << "Convolution not supported by MKLDNN";
             return false;
         }
 
@@ -1199,31 +1129,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
             inplace_input = add_m->get_argument(1);
         }
 
-        // These checks are to make sure a MKLDNN Convolution kernel can be used.
-        bool data_dilated = false;
-        for (size_t s : conv_m->get_data_dilation_strides())
+        if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<op::ConvolutionBias>(conv_m.get()))
         {
-            data_dilated = data_dilated || (s != 1);
-        }
-
-        if (data_dilated)
-        {
-            NGRAPH_DEBUG << "Convolution has dilations greater than 1";
-            return false;
-        }
-
-        if (conv_m->get_element_type() != element::f32)
-        {
-            NGRAPH_DEBUG << "Convolution isn't of type float";
-            return false;
-        }
-
-        auto arg0_rank = conv_m->get_input_shape(0).size();
-        auto arg1_rank = conv_m->get_input_shape(1).size();
-
-        if (arg0_rank != 4 || arg1_rank != 4)
-        {
-            NGRAPH_DEBUG << "Convolution's arguments ranks aren't equal to 4";
+            NGRAPH_DEBUG << "Convolution not supported by MKLDNN";
             return false;
         }
 
@@ -1678,7 +1586,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
                          << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
 
-            auto m_bn = std::dynamic_pointer_cast<op::BatchNormInference>(m.get_match_root());
+            auto m_bn = std::static_pointer_cast<op::BatchNormInference>(m.get_match_root());
             auto conv_m = std::static_pointer_cast<op::GroupConvolution>(pattern_map[conv_label]);
 
             if (conv_m->get_users().size() > 1)

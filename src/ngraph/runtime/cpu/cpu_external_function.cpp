@@ -128,6 +128,8 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/propagate_cacheability.hpp"
+#include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
@@ -137,6 +139,7 @@
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
@@ -166,6 +169,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_memory_optimization.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_reshape_sinking.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
 #include "ngraph/runtime/cpu/pass/halide_subgraph_extraction.hpp"
@@ -176,6 +180,34 @@
 
 using namespace std;
 using namespace ngraph;
+
+#define STR(s) #s
+
+#define REGISTER_KNOBBED_PASS(name, enable_by_default, prefix)                                     \
+    if (pass_map.find(STR(name)) != pass_map.end())                                                \
+    {                                                                                              \
+        if (pass_map[STR(name)])                                                                   \
+        {                                                                                          \
+            pass_manager.register_pass<prefix::name>();                                            \
+        }                                                                                          \
+    }                                                                                              \
+    else if (enable_by_default)                                                                    \
+    {                                                                                              \
+        pass_manager.register_pass<prefix::name>();                                                \
+    }
+
+#define REGISTER_KNOBBED_PASS_WITH_ARGS(name, enable_by_default, prefix, ...)                      \
+    if (pass_map.find(STR(name)) != pass_map.end())                                                \
+    {                                                                                              \
+        if (pass_map[STR(name)])                                                                   \
+        {                                                                                          \
+            pass_manager.register_pass<prefix::name>(__VA_ARGS__);                                 \
+        }                                                                                          \
+    }                                                                                              \
+    else if (enable_by_default)                                                                    \
+    {                                                                                              \
+        pass_manager.register_pass<prefix::name>(__VA_ARGS__);                                     \
+    }
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function, bool release_function)
@@ -409,6 +441,8 @@ void runtime::cpu::CPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, node_function_map, common_function_string);
     pass_manager.register_pass<ngraph::pass::Liveness>();
+    pass_manager.register_pass<ngraph::pass::PropagateCacheability>(
+        runtime::cpu::get_annotations_factory());
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function);
 
@@ -634,9 +668,6 @@ using namespace ngraph::runtime;
             }
         }
 
-        // In place slice optimization
-        process_in_place_slice(ordered_ops);
-
         // In place concatenation optimization
         process_in_place_concat(ordered_ops);
 
@@ -659,19 +690,6 @@ using namespace ngraph::runtime;
             writer << "size_t pool_base_ptr = (size_t) ctx->memory_buffers["
                    << m_memory_buffer_sizes.size() - 1 << "]->get_ptr();\n";
             writer << "\n";
-
-            // Add temporaries to the variable name map
-            for (shared_ptr<Node> node : ordered_ops)
-            {
-                for (descriptor::Tensor* tensor : node->liveness_new_list)
-                {
-                    stringstream ss;
-                    ss << "((" << tensor->get_element_type().c_type_string()
-                       << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
-                    m_variable_name_map[tensor->get_name()] = ss.str();
-                    m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
-                }
-            }
         }
 
         writer << "bool* t_en = (bool*)" << current_function->get_name() << "_t_en;\n";
@@ -712,6 +730,28 @@ using namespace ngraph::runtime;
                 param_index_map[tv->get_name()] = arg_index;
                 propagate_in_place_input(&param->get_outputs().at(i), ss.str(), false);
                 arg_index++;
+            }
+        }
+
+        // In place slice optimization
+        process_in_place_slice(ordered_ops);
+
+        if (temporaries_used)
+        {
+            // Add temporaries to the variable name map
+            for (shared_ptr<Node> node : ordered_ops)
+            {
+                for (descriptor::Tensor* tensor : node->liveness_new_list)
+                {
+                    stringstream ss;
+                    ss << "((" << tensor->get_element_type().c_type_string()
+                       << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
+                    m_variable_name_map[tensor->get_name()] = ss.str();
+                    if (m_tensor_roles.find(tensor->get_name()) == m_tensor_roles.end())
+                    {
+                        m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
+                    }
+                }
             }
         }
 
@@ -1029,36 +1069,38 @@ using namespace ngraph::runtime;
 
 void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Manager& pass_manager)
 {
-    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    pass_manager.register_pass<ngraph::pass::NopElimination>();
-    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
-    // TODO (pruthvi): Enable all the disabeled RNN fusion graph pass after fixing
-    // failing mxnet unit tests.
-    // pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    // pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
-    // pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
-    pass_manager.register_pass<runtime::cpu::pass::CPURnnMatFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.register_pass<ngraph::pass::CoreFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUHorizontalFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUCollapseDims>();
+    auto pass_map = pass_manager.get_pass_config().get_enables();
+
+    REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS(LSTMFusion, false, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(RNNFusion, false, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(AlgebraicSimplification, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS(MultiLayerRNNFusion, false, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(ConcatInputs, false, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(CPURnnMatFusion, true, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(CPUReshapeSinking, false, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(ReshapeElimination, false, ngraph::pass);
+    REGISTER_KNOBBED_PASS(CoreFusion, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass);
 #if defined(NGRAPH_HALIDE)
-    pass_manager.register_pass<ngraph::runtime::cpu::pass::HalideSubgraphExtraction>();
+    REGISTER_KNOBBED_PASS(HalideSubgraphExtraction, true, ngraph::runtime::cpu::pass);
 #endif
 
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
-    pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi, false);
-    pass_manager.register_pass<runtime::cpu::pass::CPUAssignment>(this);
-    pass_manager.register_pass<ngraph::pass::ConstantFolding>();
-    pass_manager.register_pass<runtime::cpu::pass::CPULayout>(this);
-    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>(
-        runtime::cpu::get_cse_handlers_map());
-    pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
-    pass_manager.register_pass<runtime::cpu::pass::CPUMemoryOptimization>();
-    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+    REGISTER_KNOBBED_PASS_WITH_ARGS(CPUWorkspaceInsertion, true, runtime::cpu::pass, nv_cwi, false);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(CPUAssignment, true, runtime::cpu::pass, this);
+    REGISTER_KNOBBED_PASS(ConstantFolding, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(CPULayout, true, runtime::cpu::pass, this);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(
+        CommonSubexpressionElimination, true, ngraph::pass, runtime::cpu::get_cse_handlers_map());
+    REGISTER_KNOBBED_PASS(CPUPostLayoutOptimizations, true, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(CPUMemoryOptimization, true, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(GetOutputElementElimination, true, ngraph::pass);
     pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
 }
 
@@ -1306,7 +1348,7 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_concat(
                     auto old_offset = input_tensor->get_pool_offset();
                     input_tensor->set_pool_offset(offset);
                     NGRAPH_DEBUG
-                        << "cpu_external_function, propagate: change offset, old offset is "
+                        << "cpu_external_function, propagate: concat, change offset, old offset is "
                         << old_offset << ", new offset is " << offset << std::endl;
                     offset += input_tensor->size();
                     if (auto arg_concat = std::dynamic_pointer_cast<ngraph::op::Concat>(arg))
@@ -1332,11 +1374,17 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
                 auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
                 if (in_place_oi_pairs.size() > 0)
                 {
-                    auto arg = slice->get_argument(0);
-                    auto input = slice->get_input_from(arg);
+                    auto input = &slice->get_inputs().at(0);
+                    auto arg = input->get_output().get_node();
                     auto index = input->get_output().get_index();
                     auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
                     auto input_tensor = &input_node->get_output_tensor(index);
+                    if (m_tensor_roles[input_tensor->get_name()] == CPUTensorRole::INPUT)
+                    {
+                        NGRAPH_DEBUG << "cpu_external_function: function input pointer passed to "
+                                        "slice, do not change offset.";
+                        continue;
+                    }
                     auto offset = input_tensor->get_pool_offset();
                     auto lower_bounds = slice->get_lower_bounds();
                     auto start = 0, accumulated = 1;
@@ -1351,7 +1399,7 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
                     auto old_offset = output_tensor->get_pool_offset();
 
                     output_tensor->set_pool_offset(offset);
-                    NGRAPH_DEBUG << "cpu_external_function: change offset, old offset is "
+                    NGRAPH_DEBUG << "cpu_external_function: slice, change offset, old offset is "
                                  << old_offset << ", new offset is " << offset << std::endl;
                 }
             }
@@ -1380,6 +1428,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
     ngraph::pass::Manager pass_manager;
     register_common_passes(pass_manager);
     pass_manager.register_pass<ngraph::pass::Liveness>();
+    pass_manager.register_pass<ngraph::pass::PropagateCacheability>(
+        runtime::cpu::get_annotations_factory());
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
     pass_manager.run_passes(m_function, false);
 
@@ -1421,27 +1471,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
     // Build executor
 
-    // In place slice optimization
-    process_in_place_slice(m_function->get_ordered_ops());
-
     // In place concatenation optimization
     process_in_place_concat(m_function->get_ordered_ops());
-
-    // Intermediates
-    if (m_function->get_temporary_pool_size())
-    {
-        m_memory_buffer_sizes.push_back(m_function->get_temporary_pool_size());
-
-        for (auto& node : m_function->get_ordered_ops())
-        {
-            for (auto tensor : node->liveness_new_list)
-            {
-                intermediates_offsets.emplace_back(tensor_data[tensor->get_name()],
-                                                   tensor->get_pool_offset());
-                m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
-            }
-        }
-    }
 
     // Constants
     for (auto& node : m_function->get_ordered_ops())
@@ -1468,6 +1499,28 @@ void runtime::cpu::CPU_ExternalFunction::build()
             m_tensor_roles[tv->get_name()] = CPUTensorRole::INPUT;
             propagate_in_place_input(&param->get_outputs().at(i), tv->get_name(), true);
             arg_index++;
+        }
+    }
+
+    // In place slice optimization
+    process_in_place_slice(m_function->get_ordered_ops());
+
+    // Intermediates
+    if (m_function->get_temporary_pool_size())
+    {
+        m_memory_buffer_sizes.push_back(m_function->get_temporary_pool_size());
+
+        for (auto& node : m_function->get_ordered_ops())
+        {
+            for (auto tensor : node->liveness_new_list)
+            {
+                intermediates_offsets.emplace_back(tensor_data[tensor->get_name()],
+                                                   tensor->get_pool_offset());
+                if (m_tensor_roles.find(tensor->get_name()) == m_tensor_roles.end())
+                {
+                    m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
+                }
+            }
         }
     }
 

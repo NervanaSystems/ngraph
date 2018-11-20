@@ -18,7 +18,7 @@
 
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/reference/argmin.hpp"
+#include "ngraph/runtime/cpu/kernel/argmin.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -55,26 +55,27 @@ namespace ngraph
                 {
                     if (is_int64)
                     {
-                        functor = [&, in_shape, out_shape, axis](CPURuntimeContext* ctx,
-                                                                 CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::argmin<float, int64_t>(
-                                static_cast<float*>(arg_tensor),
-                                static_cast<int64_t*>(out_tensor),
-                                in_shape,
-                                out_shape,
-                                axis);
+                        std::function<decltype(runtime::cpu::kernel::argmin<float, int64_t, 1>)>
+                            kernel;
+
+                        SELECT_RANK2(
+                            kernel, float, int64_t, in_shape.size(), runtime::cpu::kernel::argmin);
+
+                        functor = [&, kernel, in_shape, out_shape, axis](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
                         };
                     }
                     else
                     {
-                        functor = [&, in_shape, out_shape, axis](CPURuntimeContext* ctx,
-                                                                 CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::argmin<float, int32_t>(
-                                static_cast<float*>(arg_tensor),
-                                static_cast<int*>(out_tensor),
-                                in_shape,
-                                out_shape,
-                                axis);
+                        std::function<decltype(runtime::cpu::kernel::argmin<float, int, 1>)> kernel;
+
+                        SELECT_RANK2(
+                            kernel, float, int, in_shape.size(), runtime::cpu::kernel::argmin);
+
+                        functor = [&, kernel, in_shape, out_shape, axis](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
                         };
                     }
                 }
@@ -82,26 +83,28 @@ namespace ngraph
                 {
                     if (is_int64)
                     {
-                        functor = [&, in_shape, out_shape, axis](CPURuntimeContext* ctx,
-                                                                 CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::argmin<double, int64_t>(
-                                static_cast<double*>(arg_tensor),
-                                static_cast<int64_t*>(out_tensor),
-                                in_shape,
-                                out_shape,
-                                axis);
+                        std::function<decltype(runtime::cpu::kernel::argmin<double, int64_t, 1>)>
+                            kernel;
+
+                        SELECT_RANK2(
+                            kernel, double, int64_t, in_shape.size(), runtime::cpu::kernel::argmin);
+
+                        functor = [&, kernel, in_shape, out_shape, axis](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
                         };
                     }
                     else
                     {
-                        functor = [&, in_shape, out_shape, axis](CPURuntimeContext* ctx,
-                                                                 CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::argmin<double, int32_t>(
-                                static_cast<double*>(arg_tensor),
-                                static_cast<int*>(out_tensor),
-                                in_shape,
-                                out_shape,
-                                axis);
+                        std::function<decltype(runtime::cpu::kernel::argmin<double, int, 1>)>
+                            kernel;
+
+                        SELECT_RANK2(
+                            kernel, double, int, in_shape.size(), runtime::cpu::kernel::argmin);
+
+                        functor = [&, kernel, in_shape, out_shape, axis](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            kernel(arg_tensor, out_tensor, in_shape, out_shape, axis, ectx->arena);
                         };
                     }
                 }

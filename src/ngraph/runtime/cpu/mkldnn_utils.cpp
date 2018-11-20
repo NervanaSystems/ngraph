@@ -282,6 +282,10 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
         et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(index));
     }
 
+    if (shape == Shape{})
+    {
+        shape = Shape{1};
+    }
     return memory::desc(memory::dims(shape.begin(), shape.end()), et, format);
 }
 
@@ -399,7 +403,7 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
 
 // MKLDNN kernel selection sometimes relies on named layouts like "mkldnn_nchw"
 // Try and convert a blocked layout into a named layout
-memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(mkldnn_memory_desc_t md)
+memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(const mkldnn_memory_desc_t& md)
 {
     auto out_md = memory::desc(md);
 
