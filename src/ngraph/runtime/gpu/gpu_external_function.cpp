@@ -156,7 +156,7 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
     return ss.str();
 }
 
-std::string runtime::gpu::GPU_ExternalFunction::emit_op(GPU_ExternalFunction* external_function,
+std::string runtime::gpu::GPU_ExternalFunction::emit_op(GPU_CompiledFunction* external_function,
                                                         const ngraph::Node* node,
                                                         const std::vector<GPUTensorWrapper>& args,
                                                         const std::vector<GPUTensorWrapper>& out)

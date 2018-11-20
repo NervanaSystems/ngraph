@@ -34,7 +34,7 @@ namespace ngraph
             class GPURuntimeConstructor
             {
             public:
-                using op_runtime_t = std::function<void(const GPUCallFrame& call_frame, GPURuntimeContext* ctx)>;
+                using op_runtime_t = std::function<void(GPUCallFrame& call_frame, GPURuntimeContext* ctx)>;
                 using op_order_t = std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>;
                 GPURuntimeConstructor(const op_order_t& ordered_ops)
                 {
@@ -51,13 +51,13 @@ namespace ngraph
                     m_runtime.push_back(step);
                 }
 
-                EntryPoint build(const GPUCallFrame& call_frame)
+                EntryPoint build(GPUCallFrame& call_frame)
                 {
-                    return [call_frame](void** inputs, void** outputs, GPURuntimeContext* ctx)
+                    return [=](void** inputs, void** outputs, GPURuntimeContext* ctx) mutable
                     {
                         call_frame.resolve_inputs(inputs);
                         call_frame.resolve_outputs(outputs);
-                        for (auto& step : m_runtime)
+                        for (auto const& step : m_runtime)
                         {
                             step(call_frame, ctx);
                         }
