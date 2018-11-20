@@ -621,3 +621,22 @@ TEST(cpu_test, post_layout_reshape_convertlayout)
     auto cpu_f = make_function();
     compare_backends(int_f, cpu_f, "INTERPRETER", "CPU");
 }
+
+TEST(cpu_test, mkldnn_layouts_eltwise)
+{
+    Shape input_shape{3, 11, 14, 14};
+    Shape filter_shape{5, 11, 2, 2};
+
+    auto make_function = [&]() {
+        auto input = std::make_shared<op::Parameter>(element::f32, input_shape);
+        auto filter = std::make_shared<op::Parameter>(element::f32, filter_shape);
+        auto conv = std::make_shared<op::Convolution>(input, filter, Strides{2, 2}, Strides{1, 1});
+        auto sigmoid = std::make_shared<op::Sigmoid>(conv);
+        auto f = make_shared<Function>(NodeVector{sigmoid}, ParameterVector{input, filter});
+        return f;
+    };
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+    compare_backends(int_f, cpu_f, "INTERPRETER", "CPU");
+}
