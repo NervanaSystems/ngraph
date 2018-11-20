@@ -93,6 +93,10 @@ doc/doxygen/latex/*
 doc/doxygen/xml/*
 doc/doxygen/html/*
 
+# Cmake artifacts
+
+/CMakeFiles/
+
 
 # python venv things that might get added accidentally
 ../

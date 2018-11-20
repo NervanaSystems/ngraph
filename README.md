@@ -1,12 +1,11 @@
-# nGraph Compiler Stack Beta
+# nGraph Compiler Stack
 
 [![Build Status][build-status-badge]][build-status] [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph/blob/master/LICENSE)
 
 <div align="left">
-  <h5>
-    <a href="https://ngraph.nervanasys.com/docs/latest/project/about.html">
-      Architecture & features</a> | <a href="#ecosystem-overview" >Ecosystem</a> | <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">Release notes</a><span> | </span> <a href="https://ngraph.nervanasys.com/docs/latest">Documentation</a><span> | </span> <a href="#How-to-contribute" >Contrib guide</a>
- </h5>
+  <h4>
+    <a href="../ABOUT.md">Architecture & features</a> | <a href="ecosystem-overview" >Ecosystem</a> | <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">Release notes</a><span> | </span> <a href="https://ngraph.nervanasys.com/docs/latest">Documentation</a><span> | </span> <a href="#How-to-contribute" >Contrib guide</a>
+ </h4>
 </div>
 
 ## Quick start
@@ -19,7 +18,7 @@ workloads on CPU for inference, please refer to the links below.
 |----------------------------|----------------------------------------|-----------------------------------
 | TensorFlow* 1.12           | [Pip package] or [Build from source]   | 17 [Validated workloads]
 | MXNet* 1.4                 | [Enable the module] or [Source compile]| 17 [Validated workloads]   
-| ONNX 1.3                   | [Pip package] or [Build from source]   | 14 [Validated] workloads with DenseNet-121, Inception-v1, ResNet-50, Inception-v2, ShuffleNet, SqueezeNet, VGG-19, and 7 more   
+| ONNX 1.3                   | [Pip package]                          | 14 [Validated workloads] including DenseNet-121, Inception-v1, ResNet-50, Inception-v2, ShuffleNet, SqueezeNet, VGG-19, and 7 more   
 
 Frameworks using nGraph Compiler stack to execute workloads have shown 
 up to **45X** performance boost when compared to native framework 
@@ -47,12 +46,12 @@ we support. More details on these current and future plans are in the ecosystem
 section. 
 
 
-![nGraph ecosystem][ngraph-ecosystem]
+![nGraph wireframe][ngraph_wireframes_with_notice]
 
 
 While the ecosystem shown above is all functioning, we have validated 
 performance for deep learning inference on CPU processors such as Intel® Xeon®. 
-Please refer to the [Beta release notes] to learn more. The Gold release 
+Please refer to the [Release notes] to learn more. The Gold release 
 is targeted for April 2019; it will feature broader workload coverage, 
 including quantized graphs, and more detail on our advanced support for 
 ``int8``. 
@@ -82,6 +81,7 @@ to improve it:
   accepted, your pull request will be merged to the repository.
 
 
+[Ecosystem]: ecosystem-overview
 [Architecture and features]:https://ngraph.nervanasys.com/docs/latest/project/about.html
 [Documentation]: https://ngraph.nervanasys.com/docs/latest
 [build the Library]: https://ngraph.nervanasys.com/docs/latest/buildlb.html
@@ -95,7 +95,7 @@ to improve it:
 [contrib guide]: https://ngraph.nervanasys.com/docs/latest/project/code-contributor-README.html
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
 [how to import]: https://ngraph.nervanasys.com/docs/latest/howto/import.html
-[ngraph-ecosystem]: doc/sphinx/source/graphics/599px-Intel-ngraph-ecosystem.png "nGraph Ecosystem"
+[nGraph wireframe]: doc/sphinx/source/graphics/ngraph_wireframes_with_notice.png "nGraph wireframe"
 [ngraph-compiler-stack-readme]: doc/sphinx/source/graphics/ngraph-compiler-stack-readme.png "nGraph Compiler Stack"
 [build-status]: https://travis-ci.org/NervanaSystems/ngraph/branches
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
