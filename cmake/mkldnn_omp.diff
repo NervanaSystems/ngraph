@@ -1,12 +1,28 @@
-diff --git a/mkldnn/src/cmake/OpenMP.cmake b/../../cmake/OpenMP.cmake
-index f9c3620e..4e873dab 100644
---- a/mkldnn/src/cmake/OpenMP.cmake
-+++ b/../../cmake/OpenMP.cmake
-@@ -30,7 +30,7 @@ if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+diff --git a/cmake/OpenMP.cmake b/cmake/OpenMP.cmake
+index f9c3620e..ed1ad6c2 100644
+--- a/cmake/OpenMP.cmake
++++ b/cmake/OpenMP.cmake
+@@ -30,14 +30,19 @@ if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
      # But we still want to build the library.
      set(_omp_severity "WARNING")
  else()
 -    set(_omp_severity "FATAL_ERROR")
 +    set(_omp_severity "WARNING")
  endif()
+
+
+ macro(forbid_link_compiler_omp_rt)
+     if (NOT WIN32)
+-        set_if(OpenMP_C_FOUND CMAKE_C_CREATE_SHARED_LIBRARY_FORBIDDEN_FLAGS ${OpenMP_C_FLAGS})
+-        set_if(OpenMP_CXX_FOUND CMAKE_CXX_CREATE_SHARED_LIBRARY_FORBIDDEN_FLAGS ${OpenMP_CXX_FLAGS})
++        if (OpenMP_C_FOUND)
++            set(CMAKE_C_CREATE_SHARED_LIBRARY_FORBIDDEN_FLAGS ${OpenMP_C_FLAGS})
++        endif()
++        if (OpenMP_CXX_FOUND)
++            set(CMAKE_CXX_CREATE_SHARED_LIBRARY_FORBIDDEN_FLAGS ${OpenMP_CXX_FLAGS})
++        endif()
++
+         if (NOT APPLE)
+             set (CMAKE_SHARED_LINKER_FLAGS "-Wl,--as-needed")
+         endif()
 
