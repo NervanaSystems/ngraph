@@ -1,5 +1,3 @@
-ecosystem-overview.md
-
 
 # Framework & runtime support
 
@@ -53,7 +51,7 @@ for Intel, nVidia, and AMD GPU either directly leveraging kernel libraries
 such as clDNN and cuDNN or utilizing PlaidML to codegen and emit OpenCL, 
 OpenGL, LLVM, Cuda, and Metal (Please refer to architecture and features 
 section to learn more about how we plan to take advantage of both solutions 
-using hybrid transformer).  In the similar time frame, we plan to release 
+using hybrid transformer). In the similar time frame, we plan to release 
 version of multinode support. 
 
 We are excited about providing support for our upcoming deep learning 
@@ -65,13 +63,10 @@ stack, and early adopters will be able test them in 2019.
 |-----------------------------------------------|-------------------
 | Intel® Architecture CPU                       | yes               
 | Intel® Architecture GPUs                      | Functional via clDNN and PlaidML      
-| AMD* GPUs                                     | Functional via PlaidML 
-| Field Programmable Gate Arrays (FPGA)         | no                
-| NVIDIA* GPUs                                  | via PlaidML        
+| AMD* GPUs                                     | Functional via PlaidML                 
+| NVIDIA* GPUs                                  | Functional via clDNN and PlaidML        
 | Intel® Nervana™ Neural Network Processor (NNP)| yes               
-| Upcoming DL accelerators                      | Functional      
-
-
+| [Upcoming DL accelerators]                    | see details on [Upcoming DL accelerators]       
 
 
 
@@ -92,8 +87,21 @@ For a more detailed dive into how custom bridge code can be implemented, see our
 documentation [How to]. To learn how TensorFlow and MXNet currently make use of 
 custom bridge code, see the section on [framework-integration-guides].
 
+:note-caption: **Important** 
+   
+   Intel's compilers may or may not optimize to the same degree for non-Intel 
+   microprocessors for optimizations that are not unique to Intel microprocessors. 
+   These optimizations include SSE2, SSE3, and SSSE3 instruction sets and other 
+   optimizations. Intel does not guarantee the availability, functionality, or 
+   effectiveness of any optimization on microprocessors not manufactured by Intel. 
+   Microprocessor-dependent optimizations in this product are intended for use 
+   with Intel microprocessors. Certain optimizations not specific to Intel microarchitecture  are reserved for Intel microprocessors. Please refer to the applicable information regarding the specific instruction sets covered by this 
+   notice.
 
 
+
+
+[Upcoming DL accelerators]: https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/vision-accelerator-design-product-brief.pdf
 [import it]: http://ngraph.nervanasys.com/docs/latest/howto/import.html
 [How to]: https://ngraph.nervanasys.com/docs/latest/howto/index.html
 [framework-integration-guides]: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html

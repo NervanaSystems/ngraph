@@ -1,2 +1,0 @@
-/opt/libraries/ngraph/doc/sphinx/CMakeFiles/rebuild_cache.dir
-/opt/libraries/ngraph/doc/sphinx/CMakeFiles/edit_cache.dir

@@ -3,14 +3,10 @@
 [![Build Status][build-status-badge]][build-status] [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph/blob/master/LICENSE)
 
 <div align="left">
-  <h3>
+  <h5>
     <a href="https://ngraph.nervanasys.com/docs/latest/project/about.html">
-      Architecture and features</a> | <a href="#Ecosystem" >nGraph ecosystem</a><span> </span> <span> | </span> 
-    <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">
-      Beta release notes</a><span> | </span> <br />
-    <a href="https://ngraph.nervanasys.com/docs/latest">Documentation</a><span> | </span>
-    <a href="#How-to-contribute" >How to contribute</a>
- </h3>
+      Architecture & features</a> | <a href="#ecosystem-overview" >Ecosystem</a> | <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">Release notes</a><span> | </span> <a href="https://ngraph.nervanasys.com/docs/latest">Documentation</a><span> | </span> <a href="#How-to-contribute" >Contrib guide</a>
+ </h5>
 </div>
 
 ## Quick start
@@ -23,10 +19,10 @@ workloads on CPU for inference, please refer to the links below.
 |----------------------------|----------------------------------------|-----------------------------------
 | TensorFlow* 1.12           | [Pip package] or [Build from source]   | 17 [Validated workloads]
 | MXNet* 1.4                 | [Enable the module] or [Source compile]| 17 [Validated workloads]   
-| ONNX 1.3                   | [Pip package] or [Build from source]   | 13 [Functional] workloads with DenseNet-121, Inception-v1, ResNet-50, Inception-v2, ShuffleNet, SqueezeNet, VGG-19, and 7 more   
+| ONNX 1.3                   | [Pip package] or [Build from source]   | 14 [Validated] workloads with DenseNet-121, Inception-v1, ResNet-50, Inception-v2, ShuffleNet, SqueezeNet, VGG-19, and 7 more   
 
 Frameworks using nGraph Compiler stack to execute workloads have shown 
-**3X** to **45X** performance boost when compared to native framework 
+up to **45X** performance boost when compared to native framework 
 implementations. We've also seen performance boosts running workloads that 
 are not included on the list of [Validated workloads], thanks to our 
 powerful subgraph pattern matching and thanks to the collaborative efforts 
@@ -108,6 +104,7 @@ to improve it:
 [PlaidML]: https://github.com/plaidml/plaidml
 [Pip package]: https://github.com/NervanaSystems/ngraph-onnx#installing-ngraph-onnx
 [Build from source]: https://github.com/NervanaSystems/ngraph-tf
+[Enable the module]: https://github.com/NervanaSystems/ngraph/blob/mbrookhart/mxnet_tutorial/doc/sphinx/source/shared/mxnet_tutorial.rst
 [Source compile]: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/NGRAPH_README.md
 [nGraph-ONNX]: https://github.com/NervanaSystems/ngraph-onnx/blob/master/README.md
 [nGraph-ONNX adaptable]: https://ai.intel.com/adaptable-deep-learning-solutions-with-ngraph-compiler-and-onnx/
