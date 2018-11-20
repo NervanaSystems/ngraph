@@ -77,9 +77,37 @@ namespace ngraph
 
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ INPUT NODES PARSING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+                enum class LSTMInput
+                {
+                    LSTM_INPUT_X,
+                    LSTM_INPUT_W,
+                    LSTM_INPUT_R,
+                    LSTM_INPUT_B,
+                    LSTM_INPUT_SEQ_LENGTHS,
+                    LSTM_INPUT_INIT_H,
+                    LSTM_INPUT_INIT_C,
+                    LSTM_INPUT_P
+                };
+
+                std::string to_str(const LSTMInput& in)
+                {
+                    switch (in)
+                    {
+                    case LSTMInput::LSTM_INPUT_X: return "X";
+                    case LSTMInput::LSTM_INPUT_W: return "W";
+                    case LSTMInput::LSTM_INPUT_R: return "R";
+                    case LSTMInput::LSTM_INPUT_B: return "B";
+                    case LSTMInput::LSTM_INPUT_SEQ_LENGTHS: return "sequence_lens";
+                    case LSTMInput::LSTM_INPUT_INIT_H: return "initial_h";
+                    case LSTMInput::LSTM_INPUT_INIT_C: return "initial_c";
+                    case LSTMInput::LSTM_INPUT_P: return "P";
+                    default: return "Unrecognized input value!";
+                    }
+                }
+
                 struct LSTMNgInputMap
                 {
-                    using container_type = std::map<std::string, std::shared_ptr<ngraph::Node>>;
+                    using container_type = std::map<LSTMInput, std::shared_ptr<ngraph::Node>>;
                     using iterator = typename container_type::iterator;
 
                     explicit LSTMNgInputMap(const Node& node)
@@ -92,25 +120,28 @@ namespace ngraph
 
                         // ----- Mandatory inputs ------
                         // Packed input sequences. Shape: [seq_length, batch_size, input_size]
-                        m_map["X"] = ng_inputs.at(0);
+                        m_map[LSTMInput::LSTM_INPUT_X] = ng_inputs.at(0);
                         // Weight tensor for the gates. Shape: [num_directions, 4*hidden_size, input_size]
-                        m_map["W"] = ng_inputs.at(1);
+                        m_map[LSTMInput::LSTM_INPUT_W] = ng_inputs.at(1);
                         // The recurrence weight tensor. Shape: [num_directions, 4*hidden_size, hidden_size]
-                        m_map["R"] = ng_inputs.at(2);
+                        m_map[LSTMInput::LSTM_INPUT_R] = ng_inputs.at(2);
 
-                        const std::size_t hidden_size = m_map["R"]->get_shape().back();
-                        const std::size_t batch_size = m_map["X"]->get_shape().at(1);
-                        const std::size_t num_directions = m_map["W"]->get_shape().front();
+                        const std::size_t hidden_size =
+                            m_map[LSTMInput::LSTM_INPUT_R]->get_shape().back();
+                        const std::size_t batch_size =
+                            m_map[LSTMInput::LSTM_INPUT_X]->get_shape().at(1);
+                        const std::size_t num_directions =
+                            m_map[LSTMInput::LSTM_INPUT_W]->get_shape().front();
 
                         // ------ Optional inputs ------
                         // The bias tensor for input gate. Shape [num_directions, 8*hidden_size]
                         if (ng_inputs.size() >= 4)
                         {
-                            m_map["B"] = ng_inputs.at(3);
+                            m_map[LSTMInput::LSTM_INPUT_B] = ng_inputs.at(3);
                         }
                         else
                         {
-                            m_map["B"] = common::make_constant_node<float>(
+                            m_map[LSTMInput::LSTM_INPUT_B] = common::make_constant_node<float>(
                                 element::f32,
                                 {num_directions, 2 * gates_count * hidden_size},
                                 {0.f});
@@ -118,56 +149,58 @@ namespace ngraph
                         // The lengths of the sequences in a batch. Shape [batch_size]
                         if (ng_inputs.size() >= 5)
                         {
-                            m_map["seq_lengths"] = ng_inputs.at(4);
+                            m_map[LSTMInput::LSTM_INPUT_SEQ_LENGTHS] = ng_inputs.at(4);
                         }
                         else
                         {
-                            m_map["seq_lengths"] = common::make_constant_node<std::int32_t>(
-                                element::i32,
-                                {batch_size},
-                                {static_cast<std::int32_t>(m_map["X"]->get_shape().at(0))});
+                            m_map[LSTMInput::LSTM_INPUT_SEQ_LENGTHS] =
+                                common::make_constant_node<std::int32_t>(
+                                    element::i32,
+                                    {batch_size},
+                                    {static_cast<std::int32_t>(
+                                        m_map[LSTMInput::LSTM_INPUT_X]->get_shape().at(0))});
                         }
                         // The initial value of the hidden. Shape [num_directions, batch_size, hidden_size]
                         if (ng_inputs.size() >= 6)
                         {
-                            m_map["init_H"] = ng_inputs.at(5);
+                            m_map[LSTMInput::LSTM_INPUT_INIT_H] = ng_inputs.at(5);
                         }
                         else
                         {
-                            m_map["init_H"] = common::make_constant_node<float>(
+                            m_map[LSTMInput::LSTM_INPUT_INIT_H] = common::make_constant_node<float>(
                                 element::f32, {num_directions, batch_size, hidden_size}, {0.f});
                         }
                         // The initial value of the cell. Shape [num_directions, batch_size, hidden_size]
                         if (ng_inputs.size() >= 7)
                         {
-                            m_map["init_C"] = ng_inputs.at(6);
+                            m_map[LSTMInput::LSTM_INPUT_INIT_C] = ng_inputs.at(6);
                         }
                         else
                         {
-                            m_map["init_C"] = common::make_constant_node<float>(
+                            m_map[LSTMInput::LSTM_INPUT_INIT_C] = common::make_constant_node<float>(
                                 element::f32, {num_directions, batch_size, hidden_size}, {0.f});
                         }
                         // The weight tensor for peepholes. Shape [num_directions, 3*hidde_size]
                         if (ng_inputs.size() >= 8)
                         {
-                            m_map["P"] = ng_inputs.at(7);
+                            m_map[LSTMInput::LSTM_INPUT_P] = ng_inputs.at(7);
                         }
                         else
                         {
-                            m_map["P"] = common::make_constant_node<float>(
+                            m_map[LSTMInput::LSTM_INPUT_P] = common::make_constant_node<float>(
                                 element::f32,
                                 {num_directions, peepholes_count * hidden_size},
                                 {0.f});
                         }
                     }
 
-                    std::shared_ptr<ngraph::Node>& at(const std::string& key)
+                    std::shared_ptr<ngraph::Node>& at(const LSTMInput& key)
                     {
                         return m_map.at(key);
                     }
                     iterator begin() { return m_map.begin(); }
                     iterator end() { return m_map.end(); }
-                    std::map<std::string, std::shared_ptr<ngraph::Node>> m_map;
+                    container_type m_map;
                 };
 
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ATTRIBUTES PARSING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -206,10 +239,11 @@ namespace ngraph
                         // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
                         for (auto& ng_in : input_map)
                         {
-                            if (ng_in.first != "X" && ng_in.first != "seq_lengths")
+                            if (ng_in.first != LSTMInput::LSTM_INPUT_X &&
+                                ng_in.first != LSTMInput::LSTM_INPUT_SEQ_LENGTHS)
                             {
                                 ASSERT_VALID_ARGUMENT(node, ng_in.second->get_shape().at(0) == 1)
-                                    << "Input: { " << ng_in.first
+                                    << "Input: { " << to_str(ng_in.first)
                                     << " } first axis has size different "
                                        "from 1, while direction attribute set to 'forward'.";
                                 ng_in.second = reshape::squeeze(ng_in.second);
@@ -251,18 +285,19 @@ namespace ngraph
                     //           step.
                     // Ht_R    - Hidden state multiplied by weights tensor at current time step.
 
-                    NodeVector p_iof = reshape::split(input_map.at("P"), 3);
+                    NodeVector p_iof = reshape::split(input_map.at(LSTMInput::LSTM_INPUT_P), 3);
                     const auto& p_i = p_iof.at(0);
                     const auto& p_o = p_iof.at(1);
                     const auto& p_f = p_iof.at(2);
-                    std::shared_ptr<ngraph::Node> H_t{input_map.at("init_H")};
-                    std::shared_ptr<ngraph::Node> C_t{input_map.at("init_C")};
+                    std::shared_ptr<ngraph::Node> H_t{input_map.at(LSTMInput::LSTM_INPUT_INIT_H)};
+                    std::shared_ptr<ngraph::Node> C_t{input_map.at(LSTMInput::LSTM_INPUT_INIT_C)};
                     NodeVector h_list;
 
-                    NodeVector b_W_R = reshape::split(input_map.at("B"), 2);
+                    NodeVector b_W_R = reshape::split(input_map.at(LSTMInput::LSTM_INPUT_B), 2);
                     std::shared_ptr<ngraph::Node> bias = b_W_R.at(0) + b_W_R.at(1);
                     NodeVector in_seqs =
-                        reshape::split(input_map.at("X"), input_map.at("X")->get_shape().at(0));
+                        reshape::split(input_map.at(LSTMInput::LSTM_INPUT_X),
+                                       input_map.at(LSTMInput::LSTM_INPUT_X)->get_shape().at(0));
                     for (auto& in_x : in_seqs)
                     {
                         // remove first empty dim, after above split.
@@ -276,10 +311,10 @@ namespace ngraph
 
                         // Xt*(W^T) -- for [iofc] gates.
                         auto Xt_W = std::make_shared<ngraph::op::Dot>(
-                            in_x, reshape::transpose(input_map.at("W")));
+                            in_x, reshape::transpose(input_map.at(LSTMInput::LSTM_INPUT_W)));
                         // Ht-1*(R^T)  -- for [iofc] gates.
                         auto Ht_R = std::make_shared<ngraph::op::Dot>(
-                            H_t, reshape::transpose(input_map.at("R")));
+                            H_t, reshape::transpose(input_map.at(LSTMInput::LSTM_INPUT_R)));
                         // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [iofc] gates.
                         auto gates = add(Xt_W, add(Ht_R, bias));
 
