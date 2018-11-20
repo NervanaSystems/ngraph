@@ -16,8 +16,30 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include "ngraph/node_vector.hpp"
 
-namespace py = pybind11;
+#include "core/node.hpp"
 
-void regclass_pyngraph_op_ParameterVector(py::module m);
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                /// \brief Performs ONNX Transposed Convolution operation.
+                ///
+                /// \param node   The ONNX node object representing this operation.
+                ///
+                /// \return The vector containing Ngraph nodes producing output of ONNX convolution
+                ///         operation.
+                NodeVector conv_transpose(const Node& node);
+
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
