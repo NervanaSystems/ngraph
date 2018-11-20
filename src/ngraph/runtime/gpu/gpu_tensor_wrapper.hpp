@@ -38,7 +38,7 @@ class ngraph::runtime::gpu::GPUTensorWrapper
 public:
     enum TensorType { CONSTANT, INTERMEDIATE, INPUT, OUTPUT, UNKNOWN };
     GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>&, const std::string& alias = "");
-    GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>&, const TensorType&, const size_t&);
+    GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>&, const TensorType&, const size_t&, const std::string& alias);
 
     size_t get_size() const;
     const Shape& get_shape() const;

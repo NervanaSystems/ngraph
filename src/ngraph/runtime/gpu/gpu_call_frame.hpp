@@ -22,7 +22,9 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
+#include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/gpu/gpu_invoke.hpp"
 
 namespace ngraph
 {
@@ -35,8 +37,15 @@ namespace ngraph
             public:
                 using TensorType = GPUTensorWrapper::TensorType;
                 GPUCallFrame() = default;
-                // void resolve_constants(...);
-                void resolve_intermediates();
+                void resolve_reservations(const GPU_CompiledFunction* compiled_function, const std::unordered_map<std::string, size_t>& memory_reservations)
+                {
+                    auto& mem_primitives = compiled_function->get_primitive_emitter()->get_memory_primitives();
+                    for (auto const& p : memory_reservations)
+                    {
+                        // mem_primitives may return pointers for constant or workspace reservations
+                        m_memory_reservations[p.first] = static_cast<unsigned char*>(mem_primitives.at(p.second)());
+                    }
+                }
                 void resolve_inputs(void** inputs, size_t n)
                 {
                     for (size_t i = 0; i < n; i++)
@@ -55,25 +64,24 @@ namespace ngraph
                 // returns pointers of any GPUTensorWrapper::TensorType
                 void** get_tensor_io(const std::vector<GPUTensorWrapper>& tensors)
                 {
-                    std::vector<void*> inputs;
+                    std::vector<void*> ptrs;
                     for (auto const& tensor : tensors)
                     {
-                        auto offset = tensor->get_offset();
-                        auto ptr = get_pointer(offset.first, offset.second);
-                        inputs.push_back(ptr);
+                        auto offset = tensor.get_offset();
+                        auto ptr = get_pointer(offset.first, offset.second, tensor.get_name());
+                        ptrs.push_back(ptr);
                     }
-                    return inputs;
+                    return ptrs;
                 }
 
             private:
-                void* get_pointer(const TensorType& type, size_t offset)
+                void* get_pointer(const TensorType& type, const size_t& offset, const std::string& name = "")
                 {
                     switch(type):
                     {
                     case TensorType::CONSTANT:
-                        return static_cast<void*>(m_constants.at(0) + offset);
                     case TensorType::INTERMEDIATE:
-                        return static_cast<void*>(m_intermediates.at(0) + offset);
+                        return static_cast<void*>(m_memory_reservations.at(name) + offset);
                     case TensorType::INPUT:
                         return static_cast<void*>(m_inputs.at(offset));
                     case TensorType::OUTPUT:
@@ -84,10 +92,9 @@ namespace ngraph
                     }
 
                 }
-                std::vector<int8_t*> m_constants;
-                std::vector<int8_t*> m_intermediates;
-                std::vector<int8_t*> m_inputs;
-                std::vector<int8_t*> m_outputs;
+                std::unordered_map<std::string, unsigned char*> m_memory_reservations;
+                std::vector<unsigned char*> m_inputs;
+                std::vector<unsigned char*> m_outputs;
             };
         }
     }
