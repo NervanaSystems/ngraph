@@ -44,14 +44,8 @@ namespace ngraph
                 auto out_size = static_cast<int>(shape_size(out_shape));
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto input_desc = mkldnn::memory::desc(
-                    {input_size},
-                    mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
-                    mkldnn::memory::format::x);
-                auto out_desc = mkldnn::memory::desc(
-                    {out_size},
-                    mkldnn_utils::get_mkldnn_data_type(out[0].get_element_type()),
-                    mkldnn::memory::format::x);
+                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                auto out_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                 auto sigmoid_index = mkldnn_emitter->build_sigmoid_forward(input_desc, out_desc);
 
@@ -83,18 +77,10 @@ namespace ngraph
                 int out_size = static_cast<int>(shape_size(out_shape));
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto input_desc = mkldnn::memory::desc(
-                    {input_size},
-                    mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
-                    mkldnn::memory::format::x);
-                auto delta_desc = mkldnn::memory::desc(
-                    {delta_size},
-                    mkldnn_utils::get_mkldnn_data_type(args[1].get_element_type()),
-                    mkldnn::memory::format::x);
-                auto out_desc = mkldnn::memory::desc(
-                    {out_size},
-                    mkldnn_utils::get_mkldnn_data_type(out[0].get_element_type()),
-                    mkldnn::memory::format::x);
+
+                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                auto out_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                 size_t sigmoid_index =
                     mkldnn_emitter->build_sigmoid_backward(input_desc, delta_desc, out_desc);
