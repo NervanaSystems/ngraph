@@ -43,7 +43,7 @@ NGRAPH_TEST(${BACKEND_NAME}, embedding_lookup_4x5_reverse)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, rshape);
     auto embed = make_shared<op::EmbeddingLookup>(A, B);
-    auto f0 = make_shared<Function>(NodeVector{embed}, op::ParameterVector{A, B});
+    auto f0 = make_shared<Function>(NodeVector{embed}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -66,7 +66,7 @@ NGRAPH_TEST(${BACKEND_NAME}, embedding_lookup_10x1_arbitrary)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, rshape);
     auto embed = make_shared<op::EmbeddingLookup>(A, B);
-    auto f0 = make_shared<Function>(NodeVector{embed}, op::ParameterVector{A, B});
+    auto f0 = make_shared<Function>(NodeVector{embed}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -88,7 +88,7 @@ NGRAPH_TEST(${BACKEND_NAME}, embedding_lookup_10x1_arbitrary_index_type_int)
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::f32, rshape);
     auto embed = make_shared<op::EmbeddingLookup>(A, B);
-    auto f0 = make_shared<Function>(NodeVector{embed}, op::ParameterVector{A, B});
+    auto f0 = make_shared<Function>(NodeVector{embed}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
