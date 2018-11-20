@@ -1,0 +1,12 @@
+diff --git a/mkldnn/src/cmake/OpenMP.cmake b/../../cmake/OpenMP.cmake
+index f9c3620e..4e873dab 100644
+--- a/mkldnn/src/cmake/OpenMP.cmake
++++ b/../../cmake/OpenMP.cmake
+@@ -30,7 +30,7 @@ if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+     # But we still want to build the library.
+     set(_omp_severity "WARNING")
+ else()
+-    set(_omp_severity "FATAL_ERROR")
++    set(_omp_severity "WARNING")
+ endif()
+
