@@ -217,27 +217,31 @@ namespace ngraph
 
                 static void assign_batchnorm_relu(Node* node)
                 {
-                    if (node->get_argument(2 /*input data*/)->get_shape().size() == 4 ||
-                        node->get_argument(2 /*input data*/)->get_shape().size() == 5)
-                    {
-                        auto bn_relu = static_cast<op::Op*>(node);
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        bn_relu->set_op_annotations(op_annotations);
-                    }
+                    auto bn_relu = static_cast<op::Op*>(node);
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    op_annotations->set_mkldnn_op(true);
+                    bn_relu->set_op_annotations(op_annotations);
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormInferenceRelu)
                 {
-                    assign_batchnorm_relu(node);
+                    if (mkldnn_utils::can_use_mkldnn_batchnorm<ngraph::op::BatchNormInferenceRelu>(
+                            node))
+                    {
+                        assign_batchnorm_relu(node);
+                    }
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormTrainingRelu)
                 {
-                    assign_batchnorm_relu(node);
+                    if (mkldnn_utils::can_use_mkldnn_batchnorm<ngraph::op::BatchNormTrainingRelu>(
+                            node))
+                    {
+                        assign_batchnorm_relu(node);
+                    }
                 }
 
                 template <>
@@ -558,29 +562,30 @@ namespace ngraph
 
                 static void assign_batchnorm(Node* node)
                 {
-                    auto input_shape = node->get_input_shape(2);
-                    auto input_rank = input_shape.size();
-                    if (((input_rank == 4 || input_rank == 5) &&
-                         node->get_input_element_type(2) == element::f32))
-                    {
-                        auto batchnorm = static_cast<op::Op*>(node);
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        batchnorm->set_op_annotations(op_annotations);
-                    }
+                    auto batchnorm = static_cast<op::Op*>(node);
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    op_annotations->set_mkldnn_op(true);
+                    batchnorm->set_op_annotations(op_annotations);
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormTraining)
                 {
-                    assign_batchnorm(node);
+                    if (mkldnn_utils::can_use_mkldnn_batchnorm<ngraph::op::BatchNormTraining>(node))
+                    {
+                        assign_batchnorm(node);
+                    }
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormInference)
                 {
-                    assign_batchnorm(node);
+                    if (mkldnn_utils::can_use_mkldnn_batchnorm<ngraph::op::BatchNormInference>(
+                            node))
+                    {
+                        assign_batchnorm(node);
+                    }
                 }
 
                 template <>
@@ -590,10 +595,8 @@ namespace ngraph
                     auto input_rank = input_shape.size();
                     auto delta_shape = node->get_input_shape(5);
                     auto delta_rank = delta_shape.size();
-                    if (((input_rank == 4 && delta_rank == 4) ||
-                         (input_rank == 5 && delta_rank == 5)) &&
-                        node->get_input_element_type(5) == element::f32 &&
-                        node->get_input_element_type(2) == element::f32)
+                    if (mkldnn_utils::can_use_mkldnn_batchnorm<
+                            ngraph::op::BatchNormTrainingBackprop>(node))
                     {
                         auto batchnorm = static_cast<op::BatchNormTrainingBackprop*>(node);
                         auto op_annotations =

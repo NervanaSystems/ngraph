@@ -20,7 +20,9 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/batch_norm.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
@@ -111,6 +113,65 @@ namespace ngraph
                     }
 
                     return true;
+                }
+
+                template <typename OP>
+                bool can_use_mkldnn_batchnorm(ngraph::Node* node)
+                {
+                    auto validate_bn_for_mkldnn = [&]() -> bool {
+                        auto input_rank = node->get_input_shape(2).size();
+                        auto input_element_type = node->get_input_element_type(2);
+
+                        if (((input_rank == 4 || input_rank == 5) &&
+                             input_element_type == element::f32))
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    };
+
+                    auto validate_bn_bprop_for_mkldnn = [&]() -> bool {
+                        auto input_rank = node->get_input_shape(2).size();
+                        auto input_element_type = node->get_input_element_type(2);
+                        auto delta_rank = node->get_input_shape(5).size();
+                        auto delta_element_type = node->get_input_element_type(5);
+
+                        if (((input_rank == 4 && delta_rank == 4) ||
+                             (input_rank == 5 && delta_rank == 5)) &&
+                            (input_element_type == element::f32) &&
+                            (delta_element_type == element::f32))
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    };
+
+                    if (std::is_same<OP, ngraph::op::BatchNormTraining>())
+                    {
+                        return validate_bn_for_mkldnn();
+                    }
+                    else if (std::is_same<OP, ngraph::op::BatchNormInference>())
+                    {
+                        return validate_bn_for_mkldnn();
+                    }
+                    else if (std::is_same<OP, ngraph::op::BatchNormInferenceRelu>())
+                    {
+                        return validate_bn_for_mkldnn();
+                    }
+                    else if (std::is_same<OP, ngraph::op::BatchNormTrainingRelu>())
+                    {
+                        return validate_bn_for_mkldnn();
+                    }
+                    else if (std::is_same<OP, ngraph::op::BatchNormTrainingBackprop>())
+                    {
+                        return validate_bn_bprop_for_mkldnn();
+                    }
                 }
             }
         }
