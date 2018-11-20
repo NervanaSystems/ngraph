@@ -122,8 +122,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     // This pattern captures the following equations in the given data
     // flow graph
     //
-    //   f_t = sigmoid(W_{if} x_t + b_{if} + W_{hf} h_{(t-1)} + b_{hf});
     //   i_t = sigmoid(W_{ii} x_t + b_{ii} + W_{hi} h_{(t-1)} + b_{hi});
+    //   f_t = sigmoid(W_{if} x_t + b_{if} + W_{hf} h_{(t-1)} + b_{hf});
     //   g_t = tanh   (W_{ig} x_t + b_{ig} + W_{hg} h_{(t-1)} + b_{hg});
     //   o_t = sigmoid(W_{io} x_t + b_{io} + W_{ho} h_{(t-1)} + b_{ho});
     //   c_t = f_t * c_{(t-1)} + i_t * g_t;
@@ -132,7 +132,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
 
     // Inputs to the sub-graph
     // Assumes weights for all the 4 gates are fused in the order -
-    //                      forget (f), input (i), block (g) and output (0)
+    //                      input (i), forget (f), block (g) and output (o)
     auto w_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{100, 400});
     auto bias_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 400});
     auto w_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{50, 400});
@@ -159,9 +159,9 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     auto X = std::make_shared<op::Add>(add2, add1);
 
     // construct gates
-    auto ft = std::make_shared<op::Sigmoid>(
-        std::make_shared<op::Slice>(X, Coordinate{0, 0}, Coordinate{10, 100}));
     auto it = std::make_shared<op::Sigmoid>(
+        std::make_shared<op::Slice>(X, Coordinate{0, 0}, Coordinate{10, 100}));
+    auto ft = std::make_shared<op::Sigmoid>(
         std::make_shared<op::Slice>(X, Coordinate{0, 100}, Coordinate{10, 200}));
     auto gt = std::make_shared<op::Tanh>(
         std::make_shared<op::Slice>(X, Coordinate{0, 200}, Coordinate{10, 300}));
