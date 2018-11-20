@@ -22,6 +22,7 @@
 
 #include "gpu_layout.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/topk.hpp"
@@ -38,6 +39,33 @@ namespace ngraph
         {
             namespace pass
             {
+                template <>
+                void GPULayout::LAYOUT_DECL(ngraph::op::Concat)
+                {
+                    auto concat = std::dynamic_pointer_cast<ngraph::op::Concat>(node);
+                    auto first_arg = concat->get_argument(0);
+                    if (concat->get_input_size() == 1)
+                    {
+                        ngraph::replace_node(concat, first_arg);
+                    }
+                    // else
+                    // {
+                    //     bool is_broadcast = true;
+                    //     for (auto& arg : concat->get_arguments())
+                    //     {
+                    //         if (arg != first_arg)
+                    //         {
+                    //             is_broadcast = false;
+                    //         }
+                    //     }
+                    //     if (is_broadcast)
+                    //     {
+                    //         auto result_shape = concat->get_shape();
+                    //         auto broadcast = std::make_shared<ngraph::op::Broadcast>(first_arg, result_shape, AxisSet{concat->get_concatenation_axis()});
+                    //         ngraph::replace_node(concat, broadcast);
+                    //     }
+                    // }
+                }
                 template <>
                 void GPULayout::LAYOUT_DECL(ngraph::op::ReplaceSlice)
                 {
@@ -183,6 +211,7 @@ namespace ngraph
 #define TI(x) type_index(typeid(x))
 
 static const runtime::gpu::pass::LayoutOpMap s_dispatcher{
+    {TI(ngraph::op::Concat), &runtime::gpu::pass::GPULayout::layout<ngraph::op::Concat>},
     {TI(ngraph::op::ReplaceSlice),
      &runtime::gpu::pass::GPULayout::layout<ngraph::op::ReplaceSlice>},
     {TI(ngraph::op::Reshape), &runtime::gpu::pass::GPULayout::layout<ngraph::op::Reshape>},
