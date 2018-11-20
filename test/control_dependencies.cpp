@@ -88,7 +88,7 @@ TEST(control_dependencies, cdep_ops)
     auto cdop =
         make_shared<ControlDependencyOp>(NodeVector{A}, std::set<std::shared_ptr<Node>>{absn});
 
-    auto f = make_shared<Function>(cdop, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(cdop, ParameterVector{A, B});
     auto nodes = f->get_ordered_ops(true);
     ASSERT_EQ(nodes.back()->get_argument(0), cdop);
 }
@@ -103,7 +103,7 @@ TEST(control_dependencies, two_cdep_ops)
     auto cdop = make_shared<ControlDependencyOp>(NodeVector{A},
                                                  std::set<std::shared_ptr<Node>>{absn, absn_c});
 
-    auto f = make_shared<Function>(cdop, op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>(cdop, ParameterVector{A, B, C});
     auto nodes = f->get_ordered_ops(true);
     ASSERT_EQ(nodes.back()->get_argument(0), cdop);
 }
@@ -118,7 +118,7 @@ TEST(control_dependencies, two_cdep_ops_op_on_top)
                                                  std::set<std::shared_ptr<Node>>{absn, absn_b});
     auto absn_cdop = make_shared<op::Abs>(cdop);
 
-    auto f = make_shared<Function>(absn_cdop, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(absn_cdop, ParameterVector{A, B});
     auto nodes = f->get_ordered_ops(true);
     ASSERT_EQ(nodes.back()->get_argument(0), absn_cdop);
 }
@@ -130,7 +130,7 @@ TEST(control_dependencies, clone_function_cdop)
     auto cdop =
         make_shared<ControlDependencyOp>(NodeVector{A}, std::set<std::shared_ptr<Node>>{absn});
 
-    auto f = make_shared<Function>(cdop, op::ParameterVector{A});
+    auto f = make_shared<Function>(cdop, ParameterVector{A});
     auto clone = ngraph::clone_function(*f.get());
     auto matcher = std::make_shared<pattern::Matcher>(cdop, nullptr);
     auto cdop_clone = clone->get_results().at(0)->get_argument(0);
@@ -151,7 +151,7 @@ TEST(control_dependencies, clone_function_cdop_abs)
                                                  std::set<std::shared_ptr<Node>>{absn, absn_b});
     auto absn_cdop = make_shared<op::Abs>(cdop);
 
-    auto f = make_shared<Function>(absn_cdop, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(absn_cdop, ParameterVector{A, B});
     auto clone = ngraph::clone_function(*f.get());
     auto matcher = std::make_shared<pattern::Matcher>(cdop, nullptr);
     auto cdop_clone = clone->get_results().at(0)->get_argument(0)->get_argument(0);
@@ -170,7 +170,7 @@ TEST(control_dependencies, serialize_cdop)
     auto absn = make_shared<op::Abs>(A);
     auto cdop = make_shared<op::Negative>(A);
     cdop->add_control_dependency(absn);
-    auto f = make_shared<Function>(cdop, op::ParameterVector{A});
+    auto f = make_shared<Function>(cdop, ParameterVector{A});
 
     string js = serialize(f, 4);
     shared_ptr<Function> clone = deserialize(js);
@@ -195,7 +195,7 @@ TEST(control_dependencies, serialize_cdop_abs)
     cdop->add_control_dependency(absn_b);
     auto absn_cdop = make_shared<op::Abs>(cdop);
 
-    auto f = make_shared<Function>(absn_cdop, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(absn_cdop, ParameterVector{A, B});
 
     string js = serialize(f, 4);
     shared_ptr<Function> clone = deserialize(js);
