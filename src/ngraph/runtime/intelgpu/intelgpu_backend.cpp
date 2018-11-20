@@ -442,10 +442,6 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             function_output_names.push_back(get_input_name(op));
             break;
         }
-        case OP_TYPEID::EmbeddingLookup:
-        {
-            throw ngraph_error("EmbeddingLookup isn't implemented yet");
-        }
         case OP_TYPEID::GetOutputElement:
         {
             if (op->get_inputs().empty() || op->get_outputs().size() != 1)
@@ -1524,6 +1520,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::TopK:
+        case OP_TYPEID::EmbeddingLookup:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");
