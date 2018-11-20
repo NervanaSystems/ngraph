@@ -568,9 +568,9 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
-        writer << "extern __shared__ " << data_type << " sdata[];\n";
-        writer << "uint32_t tid = blockIdx.x; \n";
-        writer << "uint32_t init_idx = threadIdx.x;"
+        writer << "extern __shared__ " << data_types[1] << " sdata[];\n";
+        writer << "uint32_t tid = blockIdx.x;\n";
+        writer << "uint32_t init_idx = threadIdx.x;";
         writer << "uint32_t step = blockDim.x; \n";
         collective_coordinate_transform_helper(writer,
                                                 "tid",
@@ -584,14 +584,14 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
                                                 true);
         writer << "uint32_t input_idx;\n";
         writer << "uint32_t reduce_idx = init_idx;\n";
-        writer << data_types[1] << " r_max = 0;\n"
-        writer << data_types[1] << " input_i;\n"
+        writer << data_types[1] << " r_max;\n";
+        writer << data_types[1] << " input_i;\n";
 
         // find max
         writer.block_begin();
         {
             get_reduce_input_lambda();
-            writer << "r_max = input_i;\n"
+            writer << "r_max = input_i;\n";
             writer << "reduce_idx += step;\n";
         }
         writer.block_end();
