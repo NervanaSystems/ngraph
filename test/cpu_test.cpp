@@ -614,7 +614,7 @@ TEST(cpu_test, post_layout_reshape_convertlayout)
                                                  CoordinateDiff{0, 0},
                                                  Strides{1, 1});
         auto reshape = make_shared<op::Reshape>(conv, AxisVector{0, 2, 3, 1}, Shape{1, 3, 4, 5});
-        return make_shared<Function>(NodeVector{reshape}, op::ParameterVector{A, B});
+        return make_shared<Function>(NodeVector{reshape}, ParameterVector{A, B});
     };
 
     auto int_f = make_function();
