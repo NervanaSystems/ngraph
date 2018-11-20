@@ -143,6 +143,41 @@ namespace ngraph
                             throw ngraph_error("Unsupported dequantization element type");
                         }
                     }
+                    else if (args[0].get_element_type() == element::i32)
+                    {
+                        if (out[0].get_element_type() == element::f32)
+                        {
+                            functor = [&, arg0_shape, arg1_shape, daxes](
+                                CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                ngraph::runtime::reference::dequantize<int32_t>(
+                                    static_cast<int32_t*>(arg0_tensor),
+                                    static_cast<float*>(arg1_tensor),
+                                    static_cast<int32_t*>(arg2_tensor),
+                                    static_cast<float*>(out_tensor),
+                                    arg0_shape,
+                                    arg1_shape,
+                                    daxes);
+                            };
+                        }
+                        else if (out[0].get_element_type() == element::f64)
+                        {
+                            functor = [&, arg0_shape, arg1_shape, daxes](
+                                CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                ngraph::runtime::reference::dequantize<int32_t>(
+                                    static_cast<int32_t*>(arg0_tensor),
+                                    static_cast<double*>(arg1_tensor),
+                                    static_cast<int32_t*>(arg2_tensor),
+                                    static_cast<double*>(out_tensor),
+                                    arg0_shape,
+                                    arg1_shape,
+                                    daxes);
+                            };
+                        }
+                        else
+                        {
+                            throw ngraph_error("Unsupported dequantization element type");
+                        }
+                    }
                     else
                     {
                         throw ngraph_error("Unsupported input element type");
@@ -273,6 +308,21 @@ namespace ngraph
                                     round_mode);
                             };
                         }
+                        else if (out[0].get_element_type() == element::i32)
+                        {
+                            functor = [&, arg0_shape, arg1_shape, daxes, round_mode](
+                                CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                ngraph::runtime::reference::quantize<float>(
+                                    static_cast<float*>(arg0_tensor),
+                                    static_cast<float*>(arg1_tensor),
+                                    static_cast<int32_t*>(arg2_tensor),
+                                    static_cast<int32_t*>(out_tensor),
+                                    arg0_shape,
+                                    arg1_shape,
+                                    daxes,
+                                    round_mode);
+                            };
+                        }
                         else
                         {
                             throw ngraph_error("Unsupported quantization element type");
@@ -304,6 +354,21 @@ namespace ngraph
                                     static_cast<double*>(arg1_tensor),
                                     static_cast<uint8_t*>(arg2_tensor),
                                     static_cast<uint8_t*>(out_tensor),
+                                    arg0_shape,
+                                    arg1_shape,
+                                    daxes,
+                                    round_mode);
+                            };
+                        }
+                        else if (out[0].get_element_type() == element::i32)
+                        {
+                            functor = [&, arg0_shape, arg1_shape, daxes, round_mode](
+                                CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                ngraph::runtime::reference::quantize<double>(
+                                    static_cast<double*>(arg0_tensor),
+                                    static_cast<double*>(arg1_tensor),
+                                    static_cast<int32_t*>(arg2_tensor),
+                                    static_cast<int32_t*>(out_tensor),
                                     arg0_shape,
                                     arg1_shape,
                                     daxes,
