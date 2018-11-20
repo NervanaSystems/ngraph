@@ -99,7 +99,7 @@ TEST(cpu_reshape_sinking, broadcast_swimming)
     auto add = bias_broadcast + conv_reshape;
     auto relu = make_shared<op::Relu>(add);
 
-    auto func = make_shared<Function>(NodeVector{relu}, op::ParameterVector{bias, input, weights});
+    auto func = make_shared<Function>(NodeVector{relu}, ParameterVector{bias, input, weights});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<runtime::cpu::pass::CPUReshapeSinking>();
