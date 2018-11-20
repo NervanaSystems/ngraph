@@ -96,7 +96,7 @@ TEST(reshape_elimination, dot_transpose_to_dot_w_transpose_args)
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ReshapeElimination>();
-    auto func = make_shared<Function>(graph, op::ParameterVector{W, x});
+    auto func = make_shared<Function>(graph, ParameterVector{W, x});
     pass_manager.run_passes(func);
     auto gdot = graph->get_argument(0);
     ASSERT_TRUE(std::dynamic_pointer_cast<op::Dot>(gdot));
