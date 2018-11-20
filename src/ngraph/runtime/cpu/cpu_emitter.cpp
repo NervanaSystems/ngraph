@@ -4155,18 +4155,11 @@ namespace ngraph
             {
                 auto input_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
-                int input_1d_size = static_cast<int>(shape_size(input_shape));
-                int result_1d_size = static_cast<int>(shape_size(result_shape));
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto input_desc = mkldnn::memory::desc(
-                    {input_1d_size},
-                    mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
-                    mkldnn::memory::format::x);
-                auto result_desc = mkldnn::memory::desc(
-                    {result_1d_size},
-                    mkldnn_utils::get_mkldnn_data_type(out[0].get_element_type()),
-                    mkldnn::memory::format::x);
+
+                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                 size_t sigmoid_index =
                     mkldnn_emitter->build_sigmoid_forward(input_desc, result_desc);
@@ -4187,23 +4180,12 @@ namespace ngraph
                 auto input_shape = args[0].get_shape();
                 auto delta_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
-                int input_1d_size = static_cast<int>(shape_size(input_shape));
-                int delta_1d_size = static_cast<int>(shape_size(delta_shape));
-                int result_1d_size = static_cast<int>(shape_size(result_shape));
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto input_desc = mkldnn::memory::desc(
-                    {input_1d_size},
-                    mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
-                    mkldnn::memory::format::x);
-                auto delta_desc = mkldnn::memory::desc(
-                    {delta_1d_size},
-                    mkldnn_utils::get_mkldnn_data_type(args[1].get_element_type()),
-                    mkldnn::memory::format::x);
-                auto result_desc = mkldnn::memory::desc(
-                    {result_1d_size},
-                    mkldnn_utils::get_mkldnn_data_type(out[0].get_element_type()),
-                    mkldnn::memory::format::x);
+
+                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                 size_t sigmoid_index =
                     mkldnn_emitter->build_sigmoid_backward(input_desc, delta_desc, result_desc);

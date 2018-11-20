@@ -20,6 +20,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
@@ -200,24 +201,61 @@ namespace ngraph
 
                     auto scale_const_op =
                         std::dynamic_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));
+                    std::vector<float> scales;
                     if (scale_const_op == nullptr)
                     {
-                        throw ngraph_error("Quantize scale must be a constant");
-                    }
-                    auto scale = scale_const_op->get_vector<float>();
+                        auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                        auto scales_size = shape_size(args[1].get_shape());
 
-                    std::vector<float> scales;
-                    scales.push_back(1.0 / scale[0]);
-                    size_t quantize_index =
-                        mkldnn_emitter->build_quantize_reorder(input_desc, result_desc, scales);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
-                    auto functor = [&, quantize_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, quantize_index);
-                    };
-                    functors.emplace_back(functor);
+                        // Dummy value while we wait for the actual values that are provided during
+                        // execution
+                        scales.push_back(1.0f);
+                        size_t quantize_index =
+                            mkldnn_emitter->build_quantize_reorder(input_desc, result_desc, scales);
+                        auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
+                        auto functor = [&, input_desc, result_desc, scales_size, quantize_index](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            // Create MKLDNN reorder primitive during the first iteration.
+                            // Assumes the scales dont change for the duration of the graph
+                            if (ctx->first_iteration)
+                            {
+                                mkldnn::primitive_attr attr;
+                                vector<float> dyn_scales;
+                                dyn_scales.assign(static_cast<float*>(arg1_tensor),
+                                                  static_cast<float*>(arg1_tensor) + scales_size);
+                                attr.set_output_scales(0, dyn_scales);
+                                attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
+                                auto reorder_desc = mkldnn::reorder::primitive_desc(
+                                    {input_desc, executor::global_cpu_engine},
+                                    {result_desc, executor::global_cpu_engine},
+                                    attr);
+                                ctx->mkldnn_primitives[quantize_index]->reset(
+                                    (new mkldnn::reorder(reorder_desc,
+                                                         *ctx->mkldnn_primitives[deps[0]],
+                                                         *ctx->mkldnn_primitives[deps[1]]))
+                                        ->get());
+                            }
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, quantize_index);
+                        };
+                        functors.emplace_back(functor);
+                    }
+                    else
+                    {
+                        auto scale = scale_const_op->get_vector<float>();
+                        scales.push_back(1.0 / scale[0]);
+                        size_t quantize_index =
+                            mkldnn_emitter->build_quantize_reorder(input_desc, result_desc, scales);
+                        auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
+                        auto functor = [&, quantize_index](CPURuntimeContext* ctx,
+                                                           CPUExecutionContext* ectx) {
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, quantize_index);
+                        };
+                        functors.emplace_back(functor);
+                    }
                 }
                 else
                 {

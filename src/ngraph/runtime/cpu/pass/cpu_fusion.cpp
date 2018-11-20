@@ -1587,7 +1587,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
                          << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
 
-            auto m_bn = std::dynamic_pointer_cast<op::BatchNormInference>(m.get_match_root());
+            auto m_bn = std::static_pointer_cast<op::BatchNormInference>(m.get_match_root());
             auto conv_m = std::static_pointer_cast<op::GroupConvolution>(pattern_map[conv_label]);
 
             if (conv_m->get_users().size() > 1)

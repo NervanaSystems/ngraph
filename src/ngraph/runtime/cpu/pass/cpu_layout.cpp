@@ -92,16 +92,16 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
         const auto& output = input.get_output();
         auto tv = output.get_tensor_ptr();
         auto tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout());
-
-        if (input.get_shape() == Shape{})
-        {
-            tvl->set_mkldnn_md(required_mds[index]);
-        }
         if (!tvl)
         {
             throw ngraph_error(
                 "In insert_input_conversions: Expecting Layout descriptor to be already set on " +
                 output.get_node()->get_name());
+        }
+
+        if (input.get_shape() == Shape{})
+        {
+            tvl->set_mkldnn_md(required_mds[index]);
         }
         if (!tvl->is_mkldnn_layout())
         {
@@ -1186,6 +1186,10 @@ namespace ngraph
                         if (with_indices)
                         {
                             i_mds.push_back(fwd_prim_desc.workspace_primitive_desc().desc());
+                        }
+                        else if (node->get_input_size() == 3)
+                        {
+                            i_mds.push_back(diff_dst_desc);
                         }
 
                         o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
