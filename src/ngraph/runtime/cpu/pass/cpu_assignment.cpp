@@ -773,6 +773,11 @@ namespace ngraph
                     auto dequantize = static_cast<op::Dequantize*>(node);
                     auto offset_const_op =
                         std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(2));
+                    // TODO: MLK-DNN only handles float / not double
+                    if (node->get_output_element_type(0) != element::f32)
+                    {
+                        return;
+                    }
                     if (node->get_input_element_type(0) == element::u8)
                     {
                         auto offset = offset_const_op->get_vector<uint8_t>();
@@ -805,6 +810,11 @@ namespace ngraph
                         std::static_pointer_cast<ngraph::op::Constant>(quantize->get_argument(2));
                     op::Quantize::RoundMode round_mode = quantize->get_round_mode();
                     if (round_mode != op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN)
+                    {
+                        return;
+                    }
+                    // TODO: MLK-DNN only handles float / not double
+                    if (node->get_input_element_type(0) != element::f32)
                     {
                         return;
                     }
