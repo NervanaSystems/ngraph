@@ -379,7 +379,7 @@ TEST(builder, dynamic_scaled_Q_unsigned)
     auto B = make_shared<op::Parameter>(element::f32, Shape{});
     auto C = make_shared<op::Parameter>(element::f32, Shape{});
     auto QT = ngraph::builder::ScaledQuantize(A, B, C, element::u8, quantization_axes, round_mode);
-    auto f = make_shared<Function>(NodeVector{QT}, op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>(NodeVector{QT}, ParameterVector{A, B, C});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
