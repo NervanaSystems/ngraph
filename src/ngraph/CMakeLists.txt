@@ -141,6 +141,7 @@ set (SRC
     pass/memory_visualize.cpp
     pass/nop_elimination.cpp
     pass/pass.cpp
+    pass/pass_config.cpp
     pass/propagate_cacheability.cpp
     pass/reshape_elimination.cpp
     pass/zero_dim_tensor_elimination.cpp

@@ -1018,6 +1018,17 @@ private:
                                        quantize->get_axes(),
                                        quantize->get_round_mode());
             }
+            else if (type == element::i32)
+            {
+                reference::quantize<T>(static_cast<const T*>(args[0]),
+                                       static_cast<const T*>(args[1]),
+                                       static_cast<const int32_t*>(args[2]),
+                                       static_cast<int32_t*>(out[0]),
+                                       node.get_input_shape(0),
+                                       node.get_input_shape(1),
+                                       quantize->get_axes(),
+                                       quantize->get_round_mode());
+            }
             else
             {
                 std::stringstream ss;

@@ -205,7 +205,7 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
     vector<shared_ptr<Function>> sub_functions;
     for (auto cluster : clusters)
     {
-        op::ParameterVector par_vector;
+        ParameterVector par_vector;
         ResultVector res_vector;
         for (auto node : cluster)
         {
@@ -388,7 +388,7 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
     vector<shared_ptr<Function>> sub_functions;
     for (auto cluster : clusters)
     {
-        op::ParameterVector par_vector;
+        ParameterVector par_vector;
         ResultVector res_vector;
         for (auto node : cluster)
         {
