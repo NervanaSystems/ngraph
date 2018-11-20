@@ -578,3 +578,32 @@ TEST(cpu_test, convert_layout)
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
     }
 }
+
+TEST(cpu_test, mkldnn_layouts_eltwise)
+{
+    Shape input_shape{3, 11, 14, 14};
+    Shape filter_shape{5, 11, 2, 2};
+
+    auto make_function = [&]() {
+        auto input = std::make_shared<op::Parameter>(element::f32, input_shape);
+        auto filter = std::make_shared<op::Parameter>(element::f32, filter_shape);
+        auto conv = std::make_shared<op::Convolution>(input, filter, Strides{2, 2}, Strides{1, 1});
+        auto sigmoid = std::make_shared<op::Sigmoid>(conv);
+        auto f = make_shared<Function>(NodeVector{sigmoid}, ParameterVector{input, filter});
+        return f;
+    };
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+
+    std::vector<float> input_vec(shape_size(input_shape));
+    std::vector<float> filter_vec(shape_size(filter_shape));
+    test::Uniform<float> rand_gen(-1, 1);
+    rand_gen.initialize(input_vec);
+    rand_gen.initialize(filter_vec);
+    vector<vector<float>> args{input_vec, filter_vec};
+
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0)));
+}
