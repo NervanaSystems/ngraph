@@ -108,16 +108,17 @@ void test_copy_to(const vector<T>& x)
     auto a = backend->create_tensor(element::from<T>(), Shape{2, x.size()});
     auto b = backend->create_tensor(element::from<T>(), Shape{2, x.size()});
 
-    vector<T> result(x.size());
+    vector<T> result(2*x.size());
 
     a->write(&x[0], 0, x.size() * sizeof(T));
     copy(x.begin(), x.end(), result.begin());
     a->write(&x[0], x.size() * sizeof(T), x.size() * sizeof(T));
     copy(x.begin(), x.end(), result.begin() + x.size());
+    
+    auto s = a->get_size_in_bytes();
+    a->copy_to(b, 0, s );
 
-    a->copy_to(b, 0, x.size() * sizeof(T) );
-
-    vector<T> af_vector(x.size());
+    vector<T> af_vector(2*x.size());
     b->read(af_vector.data(), 0, af_vector.size() * sizeof(T));
     ASSERT_EQ(af_vector, result);
 }
