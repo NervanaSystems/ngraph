@@ -21,7 +21,7 @@
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/runtime/gpu/gpu_external_function.hpp"
+#include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 
 namespace ngraph
@@ -56,7 +56,7 @@ namespace ngraph
                             "Multi-output elementwise ops are not currently supported.");
                     }
                     auto& cuda_emitter =
-                        external_function->get_primitive_emitter()->get_cuda_emitter();
+                        compiled_function->get_primitive_emitter()->get_cuda_emitter();
 
                     std::vector<std::string> dtypes;
                     for (auto& arg : args)
@@ -67,7 +67,7 @@ namespace ngraph
                     auto ew_index =
                         cuda_emitter->build_elementwise<T>(dtypes, out[0].get_shape());
 
-                    return external_function->add_to_runtime(ew_index, args, out);
+                    return compiled_function->add_to_runtime(ew_index, args, out);
                 }
 
                 static std::string emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t);

@@ -41,6 +41,7 @@ namespace ngraph
         namespace gpu
         {
             class GPU_Emitter;
+            class GPURuntimeConstructor;
             struct GPURuntimeContext;
 
             class GPU_InternalFunction : public GPU_CompiledFunction
@@ -58,6 +59,7 @@ namespace ngraph
             private:
 
                 void build_functions();
+                std::string emit_op(EMIT_ARGS);
 
                 // For non-destructive passthrough kernels, propagate function
                 // input buffers to internal ops
@@ -67,8 +69,8 @@ namespace ngraph
                 // internal ops
                 virtual void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
                                                        std::string output_name) override;
-                std::map<std::string, size_t> m_name_index_map;
                 std::unordered_map<std::string, std::tuple<runtime::gpu::GPUTensorWrapper::TensorType, size_t, std::string>> m_variable_name_map;
+                std::unique_ptr<GPURuntimeConstructor> m_runtime_constructor;
             };
         }
     }

@@ -120,19 +120,21 @@
 #include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_constructor.hpp"
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
+#include "ngraph/runtime/gpu/gpu_invoke.hpp"
+#include "ngraph/runtime/gpu/gpu_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 static std::mutex s_compilation;
 
-std::string runtime::gpu::GPU_InternalFunction::emit_op(GPU_InternalFunction* external_function,
+std::string runtime::gpu::GPU_InternalFunction::emit_op(GPU_CompiledFunction* compiled_function,
                                                         const ngraph::Node* node,
                                                         const std::vector<GPUTensorWrapper>& args,
                                                         const std::vector<GPUTensorWrapper>& out)
 {
     auto emit_function = GPU_Emitter::get_emit_function(*node);
-    return emit_function(external_function, node, args, out);
+    return emit_function(compiled_function, node, args, out);
 };
 
 runtime::gpu::GPU_InternalFunction::GPU_InternalFunction(
@@ -150,52 +152,23 @@ std::string runtime::gpu::GPU_InternalFunction::add_to_runtime(size_t primitive_
                                                                const std::vector<runtime::gpu::GPUTensorWrapper>& args,
                                                                const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
-    auto primitive_invocation = [primitive_index](const GPUCallFrame& call_frame, GPURuntimeContext* ctx)
+    auto primitive_invocation = [args, out, primitive_index](GPUCallFrame& call_frame, GPURuntimeContext* ctx) mutable
     {
         // here, these inputs and outputs could be any of [constant, input, output, intermediate]
         auto inputs = call_frame.get_tensor_io(args);
         auto outputs = call_frame.get_tensor_io(out);
-        runtime::gpu::gpu_invoke_primitive(ctx, primitive_index, inputs, outputs);
+        runtime::gpu::invoke_primitive(ctx, primitive_index, inputs.data(), outputs.data());
     };
-    m_runtime_constructor.add(primitive_invocation);
+    m_runtime_constructor->add(primitive_invocation);
 
-    return compose_manifest(primitive_index, args, out);
-}
-
-// void runtime::gpu::GPU_InternalFunction::emit_constant_declarations()
-// {
-//     // for (const auto& p : m_function_ordered_ops)
-//     // {
-//     //     for (shared_ptr<Node> node : p.second)
-//     //     {
-//     //         const op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
-//     //         if (c)
-//     //         {
-//     //             shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
-//     //             // get an allocator for transient per kernel gpu memory
-//     //             runtime::gpu::GPUAllocator allocator =
-//     //                 m_shared_context->m_primitive_emitter->get_memory_allocator();
-//     //             size_t idx = allocator.reserve_argspace(c->get_data_ptr(),
-//     //                                                     tv->size() * tv->get_element_type().size());
-//     //             // m_writer << "static size_t " << tv->get_name() << "_idx = " << idx << ";\n";
-//     //             // m_writer << "static " << tv->get_element_type().c_type_string() << "* "
-//     //             //          << tv->get_name() << " = nullptr;\n";
-//     //             m_variable_name_map[tv->get_name()] = tv->get_name();
-//     //         }
-//     //     }
-//     // }
-// }
-
-void runtime::gpu::GPU_ExternalFunction::emit_temp_mem_pool_allocation(
-    shared_ptr<Function> current_function)
-{
-
+    return "";//compose_manifest(primitive_index, args, out);
 }
 
 void runtime::gpu::GPU_InternalFunction::build_functions()
 {
     for (const auto& p : m_function_ordered_ops)
     {
+        auto& current_function = p.first;
         // Add inputs to the variable name map
         size_t arg_index = 0;
         for (shared_ptr<ngraph::op::Parameter> param : current_function->get_parameters())
@@ -258,7 +231,7 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
             {
                 for (descriptor::Tensor* tensor : node->liveness_new_list)
                 {
-                    m_variable_name_map[itv->get_name()] =
+                    m_variable_name_map[tensor->get_name()] =
                         std::make_tuple(runtime::gpu::GPUTensorWrapper::TensorType::INTERMEDIATE,
                                         tensor->get_pool_offset(),
                                         current_function->get_name());
@@ -313,7 +286,8 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
             // }
 
             // Emit operation body
-            m_writer << emit_op(this, node.get(), in, out);
+            // m_writer << emit_op(this, node.get(), in, out);
+            emit_op(this, node.get(), in, out);
 
             // Emit operation epilogue
             // if (!node->is_parameter() && !node->is_constant())
@@ -365,6 +339,8 @@ void runtime::gpu::GPU_InternalFunction::compile()
         m_function_ordered_ops.emplace(current_function, current_function->get_ordered_ops());
     }
 
+    m_runtime_constructor = runtime::gpu::make_unique<GPURuntimeConstructor>(m_function_ordered_ops);
+
     // build and emit functions
     build_functions();
 
@@ -375,13 +351,13 @@ void runtime::gpu::GPU_InternalFunction::compile()
     allocator->close();
     m_shared_context->m_primitive_emitter->allocate_primitive_memory();
 
-    GPUCallFrame call_frame;
+    GPUCallFrame call_frame(m_function->get_parameters().size(), m_function->get_output_size());
 
     // resolve memory reservations (constants and intermediate buffers)
     call_frame.resolve_reservations(this, m_tensor_memory_buffers);
 
     // build runtime
-    m_runtime = m_runtime_constructor.build(call_frame);
+    m_runtime = m_runtime_constructor->build(call_frame);
 
     // store manifest
 

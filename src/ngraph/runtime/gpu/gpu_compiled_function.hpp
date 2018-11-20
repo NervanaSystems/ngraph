@@ -36,7 +36,7 @@
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 
 #define EMIT_ARGS                                                                                  \
-    runtime::gpu::GPU_ExternalFunction *external_function,            \
+    runtime::gpu::GPU_CompiledFunction *compiled_function,            \
         const Node *node, const std::vector<runtime::gpu::GPUTensorWrapper> &args,                 \
         const std::vector<runtime::gpu::GPUTensorWrapper> &out
 

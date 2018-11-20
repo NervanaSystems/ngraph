@@ -32,11 +32,12 @@ namespace ngraph
     {
         namespace gpu
         {
-            class GPUCallFrame;
+            class GPUCallFrame
             {
             public:
                 using TensorType = GPUTensorWrapper::TensorType;
-                GPUCallFrame() = default;
+                GPUCallFrame(const size_t& num_inputs, const size_t& num_outputs) :
+                    m_inputs(num_inputs, nullptr), m_outputs(num_outputs, nullptr) {}
                 void resolve_reservations(const GPU_CompiledFunction* compiled_function, const std::unordered_map<std::string, size_t>& memory_reservations)
                 {
                     auto& mem_primitives = compiled_function->get_primitive_emitter()->get_memory_primitives();
@@ -46,23 +47,25 @@ namespace ngraph
                         m_memory_reservations[p.first] = static_cast<unsigned char*>(mem_primitives.at(p.second)());
                     }
                 }
-                void resolve_inputs(void** inputs, size_t n)
+                void resolve_inputs(void** inputs)
                 {
-                    for (size_t i = 0; i < n; i++)
+                    for (size_t i = 0; i < m_inputs.size(); i++)
                     {
-                        m_inputs.push_back(inputs[i]);
+                        void* input = inputs[i];
+                        m_inputs[i] = static_cast<unsigned char*>(input);
                     }
                 }
-                void resolve_outputs(void** outputs, size_t n)
+                void resolve_outputs(void** outputs)
                 {
-                    for (size_t i = 0; i < n; i++)
+                    for (size_t i = 0; i < m_outputs.size(); i++)
                     {
-                        m_outputs.push_back(outputs[i]);
+                        void* output = outputs[i];
+                        m_outputs[i] = static_cast<unsigned char*>(output);
                     }
                 }
 
                 // returns pointers of any GPUTensorWrapper::TensorType
-                void** get_tensor_io(const std::vector<GPUTensorWrapper>& tensors)
+                std::vector<void*> get_tensor_io(const std::vector<GPUTensorWrapper>& tensors)
                 {
                     std::vector<void*> ptrs;
                     for (auto const& tensor : tensors)
@@ -77,7 +80,7 @@ namespace ngraph
             private:
                 void* get_pointer(const TensorType& type, const size_t& offset, const std::string& name = "")
                 {
-                    switch(type):
+                    switch(type)
                     {
                     case TensorType::CONSTANT:
                     case TensorType::INTERMEDIATE:
@@ -89,7 +92,7 @@ namespace ngraph
                     case TensorType::UNKNOWN:
                     default:
                         throw ngraph_error("GPUCallFrame encountered unknown or uninitialized tensor type");
-                    }
+                    };
 
                 }
                 std::unordered_map<std::string, unsigned char*> m_memory_reservations;
