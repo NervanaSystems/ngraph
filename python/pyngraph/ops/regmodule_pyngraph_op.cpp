@@ -93,4 +93,15 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Tan(m_op);
     regclass_pyngraph_op_Tanh(m_op);
     regclass_pyngraph_op_TopK(m_op);
+    regclass_pyngraph_op_Max(m_op);
+    regclass_pyngraph_op_Product(m_op);
+    regclass_pyngraph_op_AllReduce(m_op);
+    regclass_pyngraph_op_FunctionCall(m_op);
+    regclass_pyngraph_op_GetOutputElement(m_op);
+    regclass_pyngraph_op_Min(m_op);
+    regclass_pyngraph_op_BatchNormTraining(m_op);
+    regclass_pyngraph_op_BatchNormInference(m_op);
+    regclass_pyngraph_op_BatchNormTrainingBackprop(m_op);
+    regclass_pyngraph_op_Softmax(m_op);
+    regclass_pyngraph_op_Result(m_op);
 }

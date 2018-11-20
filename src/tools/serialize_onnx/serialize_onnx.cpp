@@ -66,7 +66,7 @@ int main(int argc, char** argv)
     ifstream f(input);
     if (f)
     {
-        shared_ptr<ngraph::Function> function = ngraph::onnx_import::import_onnx_function(input);
+        std::shared_ptr<ngraph::Function> function = ngraph::onnx_import::import_onnx_model(input);
 
         ngraph::stopwatch timer;
         timer.start();

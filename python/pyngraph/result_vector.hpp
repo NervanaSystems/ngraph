@@ -14,33 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <istream>
-#include <memory>
-#include <string>
-#include <vector>
+#pragma once
 
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
-#include "ngraph/frontend/onnx_import/onnx.hpp"
-#include "ngraph/function.hpp"
-#include "pyngraph/onnx_import/onnx_import.hpp"
 
 namespace py = pybind11;
 
-static std::shared_ptr<ngraph::Function> import_onnx_model(const std::string& model_proto)
-{
-    std::istringstream iss(model_proto, std::ios_base::binary | std::ios_base::in);
-    return ngraph::onnx_import::import_onnx_model(iss);
-}
-
-static std::shared_ptr<ngraph::Function> import_onnx_model_file(const std::string& filename)
-{
-    return ngraph::onnx_import::import_onnx_model(filename);
-}
-
-void regmodule_pyngraph_onnx_import(py::module mod)
-{
-    mod.def("import_onnx_model", &import_onnx_model);
-    mod.def("import_onnx_model_file", &import_onnx_model_file);
-}
+void regclass_pyngraph_ResultVector(py::module m);

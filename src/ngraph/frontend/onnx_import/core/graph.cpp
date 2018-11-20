@@ -95,6 +95,16 @@ namespace ngraph
             }
         }
 
+        NodeVector Graph::get_ng_outputs() const
+        {
+            NodeVector results;
+            for (const auto& output : m_graph_proto->output())
+            {
+                results.emplace_back(get_ng_node_from_cache(output.name()));
+            }
+            return results;
+        }
+
     } // namespace onnx_import
 
 } // namespace ngraph

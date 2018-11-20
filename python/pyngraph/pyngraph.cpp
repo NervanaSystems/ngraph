@@ -27,6 +27,7 @@
 #include "pyngraph/ops/util/regmodule_pyngraph_op_util.hpp"
 #include "pyngraph/parameter_vector.hpp"
 #include "pyngraph/passes/regmodule_pyngraph_passes.hpp"
+#include "pyngraph/result_vector.hpp"
 #include "pyngraph/runtime/regmodule_pyngraph_runtime.hpp"
 #include "pyngraph/serializer.hpp"
 #include "pyngraph/shape.hpp"
@@ -58,4 +59,5 @@ PYBIND11_MODULE(_pyngraph, m)
     regmodule_pyngraph_runtime(m);
     regmodule_pyngraph_passes(m);
     regmodule_pyngraph_util(m);
+    regclass_pyngraph_ResultVector(m);
 }

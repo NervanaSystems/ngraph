@@ -68,6 +68,7 @@
 #include "pyngraph/ops/relu.hpp"
 #include "pyngraph/ops/replace_slice.hpp"
 #include "pyngraph/ops/reshape.hpp"
+#include "pyngraph/ops/result.hpp"
 #include "pyngraph/ops/reverse.hpp"
 #include "pyngraph/ops/select.hpp"
 #include "pyngraph/ops/sign.hpp"
