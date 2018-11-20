@@ -591,10 +591,6 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormTrainingBackprop)
                 {
-                    auto input_shape = node->get_input_shape(2);
-                    auto input_rank = input_shape.size();
-                    auto delta_shape = node->get_input_shape(5);
-                    auto delta_rank = delta_shape.size();
                     if (mkldnn_utils::can_use_mkldnn_batchnorm<
                             ngraph::op::BatchNormTrainingBackprop>(node))
                     {

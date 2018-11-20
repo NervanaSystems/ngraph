@@ -87,9 +87,10 @@ ngraph::op::BatchNormInferenceRelu::BatchNormInferenceRelu(double eps,
 {
     constructor_validate_and_infer_types();
     auto bn_input_shape = get_input_shape(INPUT);
-    if (bn_input_shape.size() != 4)
+
+    if (bn_input_shape.size() != 4 && bn_input_shape.size() != 5)
     {
-        throw ngraph_error("input tensor to batchnorm must have rank 4");
+        throw ngraph_error("input tensor to batchnorm must have rank 4/rank5");
     }
 
     if (bn_input_shape[1] == 0)
