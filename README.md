@@ -4,7 +4,7 @@
 
 <div align="left">
   <h4>
-    <a href="../ABOUT.md">Architecture & features</a> | <a href="../ecosystem-overview.md" >Ecosystem</a> | <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">Release notes</a><span> | </span> <a href="https://ngraph.nervanasys.com/docs/latest">Documentation</a><span> | </span> <a href="#How-to-contribute" >Contrib guide</a>
+    <a href="../ABOUT.md">Architecture & features</a> | <a href="../ecosystem-overview.md" >Ecosystem</a> | <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">Release notes</a><span> | </span> <a href="https://ngraph.nervanasys.com/docs/latest">Documentation</a><span> | </span> <a href="#How-to-contribute" >Contribution guide</a>
  </h4>
 </div>
 
@@ -14,14 +14,14 @@
 To begin using nGraph with popular frameworks to accelerate deep learning 
 workloads on CPU for inference, please refer to the links below. 
 
-|  Framework / Version       | Installation guide                     | Notes  
+|  Framework (Version)       | Installation guide                     | Notes  
 |----------------------------|----------------------------------------|-----------------------------------
 | TensorFlow* 1.12           | [Pip package] or [Build from source]   | 17 [Validated workloads]
 | MXNet* 1.4                 | [Enable the module] or [Source compile]| 17 [Validated workloads]   
-| ONNX 1.3                   | [Pip package]                          | 14 [Validated workloads] including DenseNet-121, Inception-v1, ResNet-50, Inception-v2, ShuffleNet, SqueezeNet, VGG-19, and 7 more   
+| ONNX 1.3                   | [Pip package]                          | 14 [Validated workloads] 
 
 Frameworks using nGraph Compiler stack to execute workloads have shown 
-up to **45X** performance boost when compared to native framework 
+**up to 45X** performance boost when compared to native framework 
 implementations. We've also seen performance boosts running workloads that 
 are not included on the list of [Validated workloads], thanks to our 
 powerful subgraph pattern matching and thanks to the collaborative efforts 
