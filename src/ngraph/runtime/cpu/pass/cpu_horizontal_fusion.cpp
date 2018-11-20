@@ -68,6 +68,12 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
         auto m_filters_shape = conv_bias_root->get_input_shape(1);
         auto f_h = m_filters_shape[2];
         auto f_w = m_filters_shape[3];
+        auto m_window_movement_strides = conv_bias_root->get_window_movement_strides();
+        auto m_window_dilation_strides = conv_bias_root->get_window_dilation_strides();
+        auto m_padding_below = conv_bias_root->get_padding_below();
+        auto m_padding_above = conv_bias_root->get_padding_above();
+        auto m_data_dilation_strides = conv_bias_root->get_data_dilation_strides();
+        auto m_with_relu = conv_bias_root->with_relu();
 
         // get weights and bias from each CBR and create Concat nodes
         std::vector<std::shared_ptr<Node>> weights_nodes;
@@ -97,6 +103,43 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
             {
                 NGRAPH_DEBUG
                     << "conv_horizontal_fusion: skip conv node with different filter shape\n";
+                continue;
+            }
+            auto conv_u = std::static_pointer_cast<op::ConvolutionBias>(u);
+            if (conv_u->get_window_movement_strides() != m_window_movement_strides)
+            {
+                NGRAPH_DEBUG << "conv_horizontal_fusion: skip conv node with different window "
+                                "movement strides\n";
+                continue;
+            }
+            if (conv_u->get_window_dilation_strides() != m_window_dilation_strides)
+            {
+                NGRAPH_DEBUG << "conv_horizontal_fusion: skip conv node with different window "
+                                "dilation strides\n";
+                continue;
+            }
+            if (conv_u->get_padding_below() != m_padding_below)
+            {
+                NGRAPH_DEBUG << "conv_horizontal_fusion: skip conv node with different padding "
+                                "below\n";
+                continue;
+            }
+            if (conv_u->get_padding_above() != m_padding_above)
+            {
+                NGRAPH_DEBUG << "conv_horizontal_fusion: skip conv node with different padding "
+                                "above\n";
+                continue;
+            }
+            if (conv_u->get_data_dilation_strides() != m_data_dilation_strides)
+            {
+                NGRAPH_DEBUG << "conv_horizontal_fusion: skip conv node with different data "
+                                "dilation strides\n";
+                continue;
+            }
+            if (conv_u->with_relu() != m_with_relu)
+            {
+                NGRAPH_DEBUG << "conv_horizontal_fusion: skip conv node with different relu "
+                                "status\n";
                 continue;
             }
             weights_nodes.push_back(u->get_argument(1));
