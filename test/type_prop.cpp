@@ -2386,6 +2386,26 @@ TEST(type_prop, or_bad_arguments)
         });
 }
 
+TEST(type_prop, embedding_lookup_non_matrix_weights)
+{
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::boolean, Shape{2, 4, 5});
+    try
+    {
+        auto bc = make_shared<op::EmbeddingLookup>(tv0_2_4_param_0, tv0_2_4_param_1);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("weights are expected to be a matrix"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, embedding_lookup_static_shapes)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{8, 10, 12});
