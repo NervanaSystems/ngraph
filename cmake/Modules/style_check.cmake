@@ -14,17 +14,25 @@
 # limitations under the License.
 # ******************************************************************************
 
+function(STYLE_CHECK_FILE PATH)
+    # message(STATUS "*******xx******** ${PATH}")
+endfunction()
+
 set(DIRECTORIES_OF_INTEREST
     src
     test
 )
+
+find_program(CLANG_FORMAT clang-format PATHS ENV PATH)
+message(STATUS "clang format search ${CLANG_FORMAT}")
+if (CLANG_FORMAT)
+
+endif()
 message(STATUS "NGRAPH_SOURCE_DIR ${NGRAPH_SOURCE_DIR}")
-message("************************************************************************")
 foreach(DIRECTORY ${DIRECTORIES_OF_INTEREST})
     set(DIR "${NGRAPH_SOURCE_DIR}/${DIRECTORY}/*.?pp")
-    message("DIR ${DIR}")
     file(GLOB_RECURSE XPP_FILES ${DIR})
     foreach(FILE ${XPP_FILES})
-        message("FILE ${FILE}")
+        style_check_file(${FILE})
     endforeach(FILE)
 endforeach(DIRECTORY)
