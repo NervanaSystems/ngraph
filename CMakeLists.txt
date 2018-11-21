@@ -16,8 +16,8 @@
 
 cmake_minimum_required (VERSION 3.1)
 
-if(${PROJECT_SOURCE_DIR} STREQUAL ${PROJECT_BINARY_DIR})
-    message(SEND_ERROR "In-source builds are not allowed.")
+if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
+    message(FATAL_ERROR "In-source builds are not allowed.")
 endif()
 
 include(cmake/Modules/git_tags.cmake)
