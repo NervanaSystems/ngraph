@@ -141,6 +141,35 @@ namespace ngraph
                                                          std::size_t outermost_axes_count = 1,
                                                          std::size_t innermost_axes_count = 0);
 
+            /// \brief      Split node on specified axis into multiple parts.
+            ///
+            /// \param[in]  node          The input node.
+            /// \param[in]  length_parts  The vector defining the lengts of each splitted part.
+            /// \param[in]  axis          The axis we split input node on. Default value is zero axis.
+            ///
+            /// \return     The vector containing multiple nodes we split input node into.
+            ///
+            NodeVector split(const std::shared_ptr<ngraph::Node>& node,
+                             const std::vector<std::size_t>& length_parts,
+                             std::size_t axis = 0);
+
+            /// \brief      Split node on specified axis into multiple parts.
+            ///
+            /// \param[in]  node          The input node.
+            /// \param[in]  split_parts   The number of parts we want to split input node at given
+            ///                           axis. The length of the axis to split must be divisible by
+            ///                           this value.
+            /// \param[in]  axis          The axis we split input node on. Default value is zero axis.
+            ///
+            /// \note       This implementation supports negative `axis` values (similar to NumPy
+            ///             indexing).
+            ///
+            /// \return     The vector containing multiple nodes we split input node into.
+            ///
+            NodeVector split(const std::shared_ptr<ngraph::Node>& node,
+                             std::size_t split_parts,
+                             int axis = 0);
+
         } // namespace  reshape
     }     // namespace onnx_import
 } // namespace ngraph
