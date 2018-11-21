@@ -773,7 +773,7 @@ namespace ngraph
                     auto dequantize = static_cast<op::Dequantize*>(node);
                     auto offset_const_op =
                         std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(2));
-                    // TODO: MLK-DNN only handles float / not double
+                    // TODO: MKLDNN only handles float / not double
                     if (node->get_output_element_type(0) != element::f32)
                     {
                         return;
@@ -813,7 +813,7 @@ namespace ngraph
                     {
                         return;
                     }
-                    // TODO: MLK-DNN only handles float / not double
+                    // TODO: MKLDNN only handles float / not double
                     if (node->get_input_element_type(0) != element::f32)
                     {
                         return;
