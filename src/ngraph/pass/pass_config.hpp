@@ -16,8 +16,24 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <map>
 
-namespace py = pybind11;
+namespace ngraph
+{
+    namespace pass
+    {
+        class PassConfig;
+    }
+}
 
-void regclass_pyngraph_op_ParameterVector(py::module m);
+class ngraph::pass::PassConfig
+{
+public:
+    PassConfig();
+    const std::map<std::string, bool>& get_enables() { return m_enables; }
+    void set_pass_enable(std::string name, bool enable);
+    bool get_pass_enable(std::string name);
+
+private:
+    std::map<std::string, bool> m_enables;
+};

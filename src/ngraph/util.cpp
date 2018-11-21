@@ -27,7 +27,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/result_vector.hpp"
+#include "ngraph/result_vector.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/util.hpp"
@@ -262,7 +262,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // Utility for getting bprop parameters with fprop cache.
     auto get_bprop_params = [&bprop_inputs, &fprop_cache]() {
         // get cloned bprop parameters
-        op::ParameterVector bprop_input_params;
+        ParameterVector bprop_input_params;
         for (auto param : bprop_inputs)
         {
             bprop_input_params.push_back(
