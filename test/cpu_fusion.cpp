@@ -2932,30 +2932,12 @@ TEST(cpu_fusion, fuse_batch_dot_forward)
     }
 }
 
-TEST(cpu_fusion, fuse_rnn_across_layer)
+TEST(cpu_fusion, fuse_rnn_across_layer_2layer_3timestep)
 {
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
-    const string json_path =
-        file_util::path_join(SERIALIZED_ZOO, "mxnet/2rnn_layer_1timestep.json");
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-    pass_manager.run_passes(func);
-    size_t ref_rnn_count = 1;
-    auto rnn_count = count_ops_of_type<op::Rnn>(func);
-    EXPECT_EQ(ref_rnn_count, rnn_count);
-}
-
-TEST(cpu_fusion, fuse_rnn_across_2layer_1timestep)
-{
-    const std::string file_name("mxnet/2rnn_layer_1timestep.json");
+    const std::string file_name("mxnet/2layer_3timestep_ic100oc100.json");
     auto cpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(-10.0f, 10.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
