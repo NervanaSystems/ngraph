@@ -1187,6 +1187,10 @@ namespace ngraph
                         {
                             i_mds.push_back(fwd_prim_desc.workspace_primitive_desc().desc());
                         }
+                        else if (node->get_input_size() == 3)
+                        {
+                            i_mds.push_back(diff_dst_desc);
+                        }
 
                         o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
                     }
