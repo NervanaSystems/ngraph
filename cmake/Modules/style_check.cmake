@@ -21,9 +21,8 @@ function(STYLE_CHECK_FILE PATH)
     execute_process(COMMAND ${CLANG_FORMAT} -style=file -output-replacements-xml ${PATH}
         OUTPUT_VARIABLE STYLE_CHECK_RESULT)
         list(LENGTH STYLE_CHECK_RESULT RESULT_LENGTH)
-        # message(STATUS "${PATH} ${RESULT_LENGTH}")
         if (RESULT_LENGTH GREATER 1)
-            message(STATUS "style error ${PATH}")
+            message(FATAL_ERROR "style error ${PATH}")
         endif()
 endfunction()
 

@@ -14,8 +14,29 @@
 # limitations under the License.
 # ******************************************************************************
 
-message(STATUS "NGRAPH_STYLE_APPLY ${CMAKE_SOURCE_DIR}")
-file(GLOB_RECURSE XPP_FILES ${CMAKE_SOURCE_DIR})
-foreach(FILE IN ${XPP_FILES})
-    message("FILE ${FILE}")
-endforeach(FILE)
+set(CLANG_FORMAT_FILENAME clang-format-3.9)
+find_program(CLANG_FORMAT ${CLANG_FORMAT_FILENAME} PATHS ENV PATH)
+
+function(STYLE_APPLY_FILE PATH)
+    execute_process(COMMAND ${CLANG_FORMAT} -style=file -i ${PATH}
+        OUTPUT_VARIABLE STYLE_CHECK_RESULT)
+endfunction()
+
+set(DIRECTORIES_OF_INTEREST
+    src
+    doc
+    test
+    python/pyngraph
+)
+
+if (CLANG_FORMAT)
+    foreach(DIRECTORY ${DIRECTORIES_OF_INTEREST})
+        set(DIR "${NGRAPH_SOURCE_DIR}/${DIRECTORY}/*.?pp")
+        file(GLOB_RECURSE XPP_FILES ${DIR})
+        foreach(FILE ${XPP_FILES})
+            style_apply_file(${FILE})
+        endforeach(FILE)
+    endforeach(DIRECTORY)
+else()
+    message(STATUS "${CLANG_FORMAT_FILENAME} not found, style not available")
+endif()
