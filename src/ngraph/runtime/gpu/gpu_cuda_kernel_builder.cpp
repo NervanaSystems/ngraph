@@ -348,7 +348,8 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
                 writer << "uint32_t reduce_idx = in_idx;\n";
                 for (int64_t j = 0; j < last_r_idx; j++)
                 {
-                    writer << "reduce_idx += idx" << j << " * reduce_strides_in_input" << j << ";\n";
+                    writer << "reduce_idx += idx" << j << " * reduce_strides_in_input" << j
+                           << ";\n";
                 }
                 writer << "uint32_t step = reduce_strides_in_input" << last_r_idx << ";\n";
                 writer << "if(reduce_idx != init_in_idx)\n";
@@ -406,7 +407,8 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
                 writer << "uint32_t reduce_idx = in_idx;\n";
                 for (int64_t j = 0; j < last_r_idx; j++)
                 {
-                    writer << "reduce_idx += idx" << j << " * reduce_strides_in_input" << j << ";\n";
+                    writer << "reduce_idx += idx" << j << " * reduce_strides_in_input" << j
+                           << ";\n";
                 }
                 writer << "uint32_t step = reduce_strides_in_input" << last_r_idx << ";\n";
                 writer << "int idx" << last_r_idx << " = 0;\n";
@@ -458,7 +460,8 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
                 writer << "uint32_t reduce_idx = in_idx;\n";
                 for (int64_t j = 0; j < last_r_idx; j++)
                 {
-                    writer << "reduce_idx += idx" << j << " * reduce_strides_in_input" << j << ";\n";
+                    writer << "reduce_idx += idx" << j << " * reduce_strides_in_input" << j
+                           << ";\n";
                 }
                 writer << "uint32_t step = reduce_strides_in_input" << last_r_idx << ";\n";
                 writer << "int idx" << last_r_idx << " = 0;\n";
@@ -498,31 +501,32 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
     return;
 }
 
-void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeWriter& writer,
-                                                     const std::string& name,
-                                                     runtime::gpu::GPUKernelArgs& args,
-                                                     const std::vector<std::string>& data_types,
-                                                     size_t non_reduce_rank,
-                                                     size_t reduce_rank,
-                                                     size_t block_size_x)
+void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    runtime::gpu::GPUKernelArgs& args,
+    const std::vector<std::string>& data_types,
+    size_t non_reduce_rank,
+    size_t reduce_rank,
+    size_t block_size_x)
 {
     writer << runtime::gpu::nvrtc::helpers();
     auto get_reduce_input_lambda = [&]() {
         collective_coordinate_transform_helper(writer,
-                                                    "reduce_idx",
-                                                    "reduce_strides",
-                                                    "reduce_strides_magic",
-                                                    "reduce_strides_shift",
-                                                    "reduce_strides_in_input",
-                                                    "reduce_coordinate",
-                                                    "reduce_input_index",
-                                                    reduce_rank,
-                                                    true);
+                                               "reduce_idx",
+                                               "reduce_strides",
+                                               "reduce_strides_magic",
+                                               "reduce_strides_shift",
+                                               "reduce_strides_in_input",
+                                               "reduce_coordinate",
+                                               "reduce_input_index",
+                                               reduce_rank,
+                                               true);
         writer << "input_idx = reduce_input_index + non_reduce_input_index;\n";
         writer << "input_i = in[input_idx];\n";
     };
 
-    auto stable_sum_lambda = [&](){
+    auto stable_sum_lambda = [&]() {
         writer << "input_i = expf(input_i - r_max);\n";
         writer << "y = input_i - c;\n";
         writer << "t = r_sum + y;\n";
@@ -530,11 +534,9 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
         writer << "r_sum = t;\n";
     };
 
-    auto max_lambda = [&](){
-        writer << "r_max = r_max > input_i ? r_max : input_i;\n";
-    };
+    auto max_lambda = [&]() { writer << "r_max = r_max > input_i ? r_max : input_i;\n"; };
 
-    auto divide_lambda = [&](){
+    auto divide_lambda = [&]() {
         writer << "input_i = expf(input_i - r_max) / r_sum;\n";
         writer << "out[input_idx] = input_i;\n";
     };
@@ -570,21 +572,21 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
     writer.block_begin();
     {
         writer << "extern __shared__ " << data_types[1] << " sdata[];\n";
-        writer << "uint32_t tid = blockIdx.x;\n";
-        writer << "uint32_t init_idx = threadIdx.x;\n";
+        writer << "uint32_t bid = blockIdx.x;\n";
+        writer << "uint32_t tid = threadIdx.x;\n";
         writer << "uint32_t step = blockDim.x; \n";
         collective_coordinate_transform_helper(writer,
-                                                "tid",
-                                                "non_reduce_strides",
-                                                "non_reduce_strides_magic",
-                                                "non_reduce_strides_shift",
-                                                "non_reduce_strides_in_input",
-                                                "non_reduce_coordinate",
-                                                "non_reduce_input_index",
-                                                non_reduce_rank,
-                                                true);
+                                               "bid",
+                                               "non_reduce_strides",
+                                               "non_reduce_strides_magic",
+                                               "non_reduce_strides_shift",
+                                               "non_reduce_strides_in_input",
+                                               "non_reduce_coordinate",
+                                               "non_reduce_input_index",
+                                               non_reduce_rank,
+                                               true);
         writer << "uint32_t input_idx;\n";
-        writer << "uint32_t reduce_idx = init_idx;\n";
+        writer << "uint32_t reduce_idx = tid;\n";
         writer << data_types[1] << " r_max;\n";
         writer << data_types[1] << " input_i;\n";
 
@@ -599,7 +601,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
         writer << "while (reduce_idx + 7 * step < reduce_count)\n";
         writer.block_begin();
         {
-            for(int i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++)
             {
                 writer.block_begin();
                 get_reduce_input_lambda();
@@ -613,22 +615,21 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
         writer << "while (reduce_idx < reduce_count)\n";
         writer.block_begin();
         {
-                writer.block_begin();
-                get_reduce_input_lambda();
-                max_lambda();
-                writer << "reduce_idx += step;\n";
-                writer.block_end();
+            writer.block_begin();
+            get_reduce_input_lambda();
+            max_lambda();
+            writer << "reduce_idx += step;\n";
+            writer.block_end();
         }
         writer.block_end();
-
         // reduction max
         // accumulate 32 threads for each warp
         for (int i = 16; i >= 1; i >>= 1)
         {
             if (block_size_x > i)
             {
-                writer << data_types[1] << " t" << i << " = __shfl_down_sync(0xffffffff, r_max, " << i << ", 32);\n";
-                writer << "r_max = r_max > t" << i << " ? r_max : t" << i << ";\n";
+                writer << "input_i = __shfl_down_sync(0xffffffff, r_max, " << i << ", 32);\n";
+                max_lambda();
             }
         }
         if (block_size_x > 32)
@@ -656,7 +657,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
                 if (warp_size > i)
                 {
                     writer << "input_i = __shfl_down_sync(0xffffffff, r_max, " << i << ", 32);\n";
-                    writer << "r_max = r_max > input_i ? r_max : input_i;\n";
+                    max_lambda();
                 }
             }
         }
@@ -664,23 +665,23 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
         writer << "if(tid == 0)\n";
         writer.block_begin();
         {
-            writer << "sdata[0] = r_max;\n";;
+            writer << "sdata[0] = r_max;\n";
+            ;
         }
         writer.block_end();
         writer << "__syncthreads();\n";
         writer << "r_max = sdata[0];\n";
-
 
         //exp and sum , https://en.wikipedia.org/wiki/Kahan_summation_algorithm
         writer << data_types[1] << " r_sum = 0;\n";
         writer << data_types[1] << " c = 0;\n";
         writer << data_types[1] << " y;\n";
         writer << data_types[1] << " t;\n";
-        writer << "reduce_idx = init_idx;\n";
+        writer << "reduce_idx = tid;\n";
         writer << "while (reduce_idx + 7 * step < reduce_count)\n";
         writer.block_begin();
         {
-            for(int i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++)
             {
                 writer.block_begin();
                 get_reduce_input_lambda();
@@ -694,11 +695,11 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
         writer << "while (reduce_idx < reduce_count)\n";
         writer.block_begin();
         {
-                writer.block_begin();
-                get_reduce_input_lambda();
-                stable_sum_lambda();
-                writer << "reduce_idx += step;\n";
-                writer.block_end();
+            writer.block_begin();
+            get_reduce_input_lambda();
+            stable_sum_lambda();
+            writer << "reduce_idx += step;\n";
+            writer.block_end();
         }
         writer.block_end();
 
@@ -742,18 +743,19 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
         writer << "if(tid == 0)\n";
         writer.block_begin();
         {
-            writer << "sdata[0] = r_sum;\n";;
+            writer << "sdata[0] = r_sum;\n";
+            ;
         }
         writer.block_end();
         writer << "__syncthreads();\n";
         writer << "r_sum = sdata[0];\n";
 
         // divide
-        writer << "reduce_idx = init_idx;\n";
+        writer << "reduce_idx = tid;\n";
         writer << "while (reduce_idx + 7 * step < reduce_count)\n";
         writer.block_begin();
         {
-            for(int i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++)
             {
                 writer.block_begin();
                 get_reduce_input_lambda();
@@ -767,11 +769,11 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
         writer << "while (reduce_idx < reduce_count)\n";
         writer.block_begin();
         {
-                writer.block_begin();
-                get_reduce_input_lambda();
-                divide_lambda();
-                writer << "reduce_idx += step;\n";
-                writer.block_end();
+            writer.block_begin();
+            get_reduce_input_lambda();
+            divide_lambda();
+            writer << "reduce_idx += step;\n";
+            writer.block_end();
         }
         writer.block_end();
     }
@@ -2214,8 +2216,8 @@ void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::C
                                                                       std::string o_coordinates,
                                                                       size_t rank,
                                                                       bool register_arguments)
-{   
-    if(rank == 0)
+{
+    if (rank == 0)
     {
         return;
     }
