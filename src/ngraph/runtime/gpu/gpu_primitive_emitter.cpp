@@ -24,6 +24,7 @@ using namespace ngraph::runtime::gpu;
 GPUPrimitiveEmitter::GPUPrimitiveEmitter()
     : m_memory_manager(this)
     , m_host_parameters(new GPUHostParameters)
+    , m_host_emitter(new HostEmitter(this, nullptr))
     , m_cuda_emitter(new CUDAEmitter(this, nullptr))
     , m_cudnn_emitter(new CUDNNEmitter(this, nullptr, nullptr))
     , m_cublas_emitter(new CUBLASEmitter(this, nullptr))
@@ -33,6 +34,7 @@ GPUPrimitiveEmitter::GPUPrimitiveEmitter()
 GPUPrimitiveEmitter::GPUPrimitiveEmitter(const std::unique_ptr<GPURuntimeContext>& ctx)
     : m_memory_manager(this)
     , m_host_parameters(new GPUHostParameters)
+    , m_host_emitter(new HostEmitter(this, ctx.get()))
     , m_cuda_emitter(new CUDAEmitter(this, ctx.get()))
     , m_cudnn_emitter(new CUDNNEmitter(this, ctx.get(), this->m_host_parameters))
     , m_cublas_emitter(new CUBLASEmitter(this, ctx.get()))
@@ -40,6 +42,10 @@ GPUPrimitiveEmitter::GPUPrimitiveEmitter(const std::unique_ptr<GPURuntimeContext
 {
 }
 
+std::unique_ptr<HostEmitter>& GPUPrimitiveEmitter::get_host_emitter()
+{
+    return m_host_emitter;
+}
 std::unique_ptr<CUDAEmitter>& GPUPrimitiveEmitter::get_cuda_emitter()
 {
     return m_cuda_emitter;
@@ -48,7 +54,6 @@ std::unique_ptr<CUDNNEmitter>& GPUPrimitiveEmitter::get_cudnn_emitter()
 {
     return m_cudnn_emitter;
 }
-
 std::unique_ptr<CUBLASEmitter>& GPUPrimitiveEmitter::get_cublas_emitter()
 {
     return m_cublas_emitter;

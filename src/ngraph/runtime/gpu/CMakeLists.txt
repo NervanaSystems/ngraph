@@ -22,6 +22,7 @@ set(SRC
     cuda_emitter.cpp
     cudnn_emitter.cpp
     cublas_emitter.cpp
+    host_emitter.cpp
     gpu_backend.cpp
     gpu_cuda_context_manager.cpp
     gpu_cuda_function_builder.cpp
