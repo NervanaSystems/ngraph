@@ -1,18 +1,18 @@
-/*******************************************************************************
- * Copyright 2017-2018 Intel Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -45,24 +45,24 @@ namespace ngraph
     namespace autodiff
     {
         template <typename T>
-        std::vector<std::shared_ptr<runtime::TensorView>>
-            get_autodiff(const std::shared_ptr<runtime::Backend>& backend,
+        std::vector<std::shared_ptr<runtime::Tensor>>
+            get_autodiff(runtime::Backend* backend,
                          std::shared_ptr<Function>& df,
-                         const std::vector<std::shared_ptr<runtime::TensorView>>& df_input_args,
+                         const std::vector<std::shared_ptr<runtime::Tensor>>& df_input_args,
                          const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
             // df/dX* = f'(c, ...)
             // using X* to denote all x "of interest" (represented by indep_params)
 
             // return value for this function
-            std::vector<std::shared_ptr<runtime::TensorView>> results;
+            std::vector<std::shared_ptr<runtime::Tensor>> results;
 
             // adjoint
             auto c_arg = df_input_args[0];
             auto y_shape = c_arg->get_shape();
 
             // df/dX* arguments
-            std::vector<std::shared_ptr<runtime::TensorView>> df_output_args;
+            std::vector<std::shared_ptr<runtime::Tensor>> df_output_args;
 
             // for each x "of interest"
             for (auto x : indep_params)
@@ -100,7 +100,7 @@ namespace ngraph
                 write_vector(c_arg, c_vec);
 
                 // call modified df/dX* = f'(c, cached)
-                backend->call(df, df_output_args, df_input_args);
+                backend->call_with_validate(df, df_output_args, df_input_args);
 
                 // reset the adjoint element
                 c_vec[i] = 0;
@@ -125,11 +125,11 @@ namespace ngraph
         }
 
         template <typename T>
-        std::vector<std::shared_ptr<runtime::TensorView>> backprop_derivative(
-            const std::shared_ptr<runtime::Backend>& backend,
-            const std::shared_ptr<Function>& f,
-            const std::vector<std::shared_ptr<runtime::TensorView>>& f_input_args,
-            const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
+        std::vector<std::shared_ptr<runtime::Tensor>>
+            backprop_derivative(runtime::Backend* backend,
+                                const std::shared_ptr<Function>& f,
+                                const std::vector<std::shared_ptr<runtime::Tensor>>& f_input_args,
+                                const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
             // y = f(X)
             // using X (upper case) to denote all paramenters of f (represented by f_input_args)
@@ -165,7 +165,7 @@ namespace ngraph
             auto df = s_df_map[f];
 
             // (c, X) arguments
-            std::vector<std::shared_ptr<runtime::TensorView>> df_input_args = f_input_args;
+            std::vector<std::shared_ptr<runtime::Tensor>> df_input_args = f_input_args;
             df_input_args.insert(df_input_args.begin(), c_arg);
 
             // call f'(c,X) to get df/dX*
@@ -177,11 +177,11 @@ namespace ngraph
             auto fprop_cache = cache_fprop(f, df);
 
             // (y, cached) arguments
-            std::vector<std::shared_ptr<runtime::TensorView>> mod_f_output_args;
+            std::vector<std::shared_ptr<runtime::Tensor>> mod_f_output_args;
             mod_f_output_args.push_back(backend->create_tensor<T>(y_shape));
 
             // (c, cached) arguments
-            std::vector<std::shared_ptr<runtime::TensorView>> mod_df_input_args = df_input_args;
+            std::vector<std::shared_ptr<runtime::Tensor>> mod_df_input_args = df_input_args;
 
             // add cached nodes to both modified f output and modified f' input arguments
             for (auto node : fprop_cache.fprop_output_nodes)
@@ -198,7 +198,7 @@ namespace ngraph
             }
             auto clone_fwd = s_clone_fwd_map[f];
 
-            backend->call(clone_fwd, mod_f_output_args, f_input_args);
+            backend->call_with_validate(clone_fwd, mod_f_output_args, f_input_args);
 
             // call modfied f'(c, cached) to get df/dX*
             if (!s_clone_bwd_map[f])
@@ -208,8 +208,8 @@ namespace ngraph
             auto clone_bwd = s_clone_bwd_map[f];
             auto cache_dfdx = get_autodiff<T>(backend, clone_bwd, mod_df_input_args, indep_params);
 
-            const auto numpy_atol = 1e-5f;
-            const auto numpy_rtol = 1e-8f;
+            const T numpy_atol = static_cast<const T>(1e-5f);
+            const T numpy_rtol = static_cast<const T>(1e-8f);
             auto close = ngraph::test::all_close<T>(dfdx, cache_dfdx, numpy_atol, numpy_rtol);
             if (!close)
             {

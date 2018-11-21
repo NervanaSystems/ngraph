@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "cpu_workspace_insertion.hpp"
 #include <algorithm>
@@ -61,9 +61,11 @@ static std::shared_ptr<pattern::Matcher> create_maxpool_with_indices_matcher()
     Shape window_shape{3};
     auto max_pool = std::make_shared<op::MaxPool>(data, window_shape);
     auto delta = std::make_shared<pattern::op::Label>(element::f32, max_pool->get_shape());
+    auto max_pool_label = std::make_shared<pattern::op::Label>(element::f32, max_pool->get_shape());
     auto max_pool_bprop =
         std::make_shared<op::MaxPoolBackprop>(data,
                                               delta,
+                                              max_pool_label,
                                               max_pool->get_window_shape(),
                                               max_pool->get_window_movement_strides(),
                                               max_pool->get_padding_below(),
@@ -94,44 +96,21 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::run_on_function(std::shared_ptr<
 
 bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
 {
-    auto data = std::dynamic_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(0));
-    auto delta = std::dynamic_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(1));
+    auto data = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(0));
+    auto delta = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(1));
+    auto max_pool = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(2));
     NGRAPH_DEBUG << "In a callback for construct_max_pool_with_indices against "
                  << m.get_match_root()->get_name();
 
     auto pattern_map = m.get_pattern_map();
-    auto m_max_pool_bprop = std::dynamic_pointer_cast<op::MaxPoolBackprop>(m.get_match_root());
+    auto m_max_pool = std::static_pointer_cast<op::MaxPool>(pattern_map[max_pool]);
+    auto m_max_pool_bprop = std::static_pointer_cast<op::MaxPoolBackprop>(m.get_match_root());
 
     if (m_max_pool_bprop->get_shape().size() != 4 ||
         m_max_pool_bprop->get_window_shape().size() != 2 ||
         m_max_pool_bprop->get_input_element_type(0) != element::f32)
     {
         NGRAPH_DEBUG << "MKLDNN doesn't support inputs of given shape type";
-        return false;
-    }
-
-    //find the original MaxPool now
-    std::shared_ptr<op::MaxPool> m_max_pool;
-    for (auto u : pattern_map[data]->get_users())
-    {
-        if (auto mp = std::dynamic_pointer_cast<op::MaxPool>(u))
-        {
-            if (mp->get_window_shape() == m_max_pool_bprop->get_window_shape() &&
-                mp->get_window_movement_strides() ==
-                    m_max_pool_bprop->get_window_movement_strides() &&
-                mp->get_padding_below() == m_max_pool_bprop->get_padding_below() &&
-                mp->get_padding_above() == m_max_pool_bprop->get_padding_above())
-            {
-                m_max_pool = mp;
-                break;
-            }
-        }
-    }
-
-    if (!m_max_pool)
-    {
-        NGRAPH_DEBUG << "MaxPool for " << pattern_map[data]->get_name() << " and "
-                     << m_max_pool_bprop->get_name() << " not found";
         return false;
     }
 
@@ -147,7 +126,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
     auto max_pool_with_indices_indices =
         std::make_shared<op::GetOutputElement>(max_pool_with_indices, 1);
 
-    //rewire users to use a new MaxPoolWithIndices (maxpool's output)
+    // rewire users to use a new MaxPoolWithIndices (maxpool's output)
     for (auto& o : m_max_pool->get_outputs())
     {
         std::set<ngraph::descriptor::Input*> copy{begin(o.get_inputs()), end(o.get_inputs())};
@@ -157,7 +136,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
         }
     }
 
-    //create a new max_pool_with_indices_bprop
+    // create a new max_pool_with_indices_bprop
     auto max_pool_with_indices_bprop =
         std::make_shared<op::MaxPoolWithIndicesBackprop>(pattern_map[data],
                                                          pattern_map[delta],
@@ -168,6 +147,9 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
                                                          m_max_pool->get_padding_above());
 
     ngraph::replace_node(m_max_pool_bprop, max_pool_with_indices_bprop);
-    m_indices_list.push_back(max_pool_with_indices_indices);
+    if (m_return_indices)
+    {
+        m_indices_list.push_back(max_pool_with_indices_indices);
+    }
     return true;
 }

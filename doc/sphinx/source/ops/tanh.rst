@@ -8,22 +8,51 @@ Tanh
 
    Tanh  // Elementwise hyperbolic tangent operation.
 
-..   /// \brief Elementwise hyperbolic tangent operation.
-        ///
-        /// ## Inputs
-        ///
-        /// |       | Type                              | Description                                     |
-        /// | ----- | --------------------------------- | ----------------------------------------------- |
-        /// | `arg` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and numeric element type. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                   | Description                                                                           |
-        /// | ---------------------- | ------------------------------------------------------------------------------------- |
-        /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \tanh(\texttt{arg}[i_1,\dots,i_n])\f$ |
+Description
+===========
 
-..       /// \brief Constructs a hyperbolic tangent operation.
-            ///
-            /// \param arg Node that produces the input tensor.
+Produce a tensor with the same shape and element typye as ``arg,``
+where the value at each coordinate of ``output`` is the hyperbolic
+tangent of the value of ``arg`` at the same coordinate.
+
+Inputs
+------
+
++-----------------+-------------------------+--------------------------------+
+| Name            | Element Type            | Shape                          |
++=================+=========================+================================+
+| ``arg``         | Any                     | Any                            |
++-----------------+-------------------------+--------------------------------+
+
+Outputs
+-------
+
++-----------------+-------------------------+--------------------------------+
+| Name            | Element Type            | Shape                          |
++=================+=========================+================================+
+| ``output``      | Same as ``arg``         | Same as ``arg``                |
++-----------------+-------------------------+--------------------------------+
 
 
+Mathematical Definition
+=======================
+
+.. math::
+
+   \mathtt{output}_{i_0, \ldots, i_{n-1}} = \tanh(\mathtt{arg}_{i_0,
+   \ldots, i_{n-1}})
+
+Backprop
+========
+
+.. math::
+
+   \overline{\mathtt{arg}} \leftarrow \Delta\ (1 - \mathtt{output}^2)
+
+
+C++ Interface
+=============
+
+.. doxygenclass:: ngraph::op::Tanh
+   :project: ngraph
+   :members:

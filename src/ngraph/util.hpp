@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -26,7 +26,9 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/node_vector.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
@@ -47,9 +49,10 @@ namespace ngraph
     std::string join(const T& v, const std::string& sep = ", ")
     {
         std::ostringstream ss;
+        size_t count = 0;
         for (const auto& x : v)
         {
-            if (&x != &*(v.begin()))
+            if (count++ > 0)
             {
                 ss << sep;
             }
@@ -64,46 +67,6 @@ namespace ngraph
         std::ostringstream os;
         os << "[ " << ngraph::join(v) << " ]";
         return os.str();
-    }
-
-    template <typename U, typename T>
-    bool contains(const U& container, const T& obj)
-    {
-        bool rc = false;
-        for (auto o : container)
-        {
-            if (o == obj)
-            {
-                rc = true;
-                break;
-            }
-        }
-        return rc;
-    }
-
-    template <typename U, typename T>
-    bool contains_key(const U& container, const T& obj)
-    {
-        bool rc = false;
-        for (auto o : container)
-        {
-            if (o.first == obj)
-            {
-                rc = true;
-                break;
-            }
-        }
-        return rc;
-    }
-
-    template <typename U, typename T>
-    void remove_from(U& container, const T& obj)
-    {
-        auto it = container.find(obj);
-        if (it != container.end())
-        {
-            container.erase(it);
-        }
     }
 
     size_t hash_combine(const std::vector<size_t>& list);
@@ -212,33 +175,21 @@ namespace ngraph
         return y > x ? 0 : x - y;
     }
 
-    template <typename T, bool (*func)(T)>
-    void check_fp_values(const char* name, const T* array, size_t n)
-    {
-        bool (*fPtr)(T) = &std::isinf;
-        const char* cerr_type = fPtr == func ? "Inf" : "NaN";
-        for (size_t i = 0; i < n; i++)
-        {
-            if (func(array[i]))
-            {
-                throw std::runtime_error(std::string("Discovered ") + cerr_type + " in '" + name +
-                                         "'");
-            }
-        }
-    }
-
-    template void
-        check_fp_values<float, std::isinf>(const char* name, const float* array, size_t n);
-    template void
-        check_fp_values<float, std::isnan>(const char* name, const float* array, size_t n);
-    template void
-        check_fp_values<double, std::isinf>(const char* name, const double* array, size_t n);
-    template void
-        check_fp_values<double, std::isnan>(const char* name, const double* array, size_t n);
+    void check_fp_values_isinf(const char* name, const float* array, size_t n);
+    void check_fp_values_isinf(const char* name, const double* array, size_t n);
+    void check_fp_values_isnan(const char* name, const float* array, size_t n);
+    void check_fp_values_isnan(const char* name, const double* array, size_t n);
 
     void* aligned_alloc(size_t alignment, size_t size);
     void aligned_free(void*);
     size_t round_up(size_t size, size_t alignment);
+    template <typename T>
+    T apply_permutation(T input, ngraph::AxisVector order);
+
+    AxisVector get_default_order(size_t rank);
+    AxisVector get_default_order(const Shape& shape);
+
+    AxisVector get_permutation_to_default_order(const AxisVector& axis_order);
 
     /*
     * Return type struct for cache_fprop, with the modified fprop and bprop

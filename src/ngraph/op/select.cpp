@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <memory>
 
@@ -29,34 +29,38 @@ using namespace ngraph;
 op::Select::Select(const shared_ptr<Node>& arg0,
                    const shared_ptr<Node>& arg1,
                    const shared_ptr<Node>& arg2)
-    : RequiresTensorViewArgs("Select", NodeVector{arg0, arg1, arg2})
+    : Op("Select", check_single_output_args({arg0, arg1, arg2}))
 {
-    auto& input_0 = get_inputs().at(0);
-    auto& input_1 = get_inputs().at(1);
-    auto& input_2 = get_inputs().at(2);
+    constructor_validate_and_infer_types();
+}
 
-    if (input_0.get_element_type() != element::boolean)
-    {
-        throw ngraph_error("Argument 0 for arithmetic operators must have boolean element type");
-    }
-    if (input_0.get_shape() != input_1.get_shape() || input_0.get_shape() != input_2.get_shape())
-    {
-        throw ngraph_error("Arguments must have the same shape");
-    }
-    if (input_1.get_element_type() != input_2.get_element_type())
-    {
-        throw ngraph_error("Arguments 1 and 2 must have the same element type");
-    }
+void op::Select::validate_and_infer_types()
+{
+    NODE_VALIDATION_ASSERT(this,
+                           get_input_element_type(0).is_dynamic() ||
+                               get_input_element_type(0) == element::boolean)
+        << "Argument 0 does not have boolean element type (element type: "
+        << get_input_element_type(0) << ").";
 
-    set_value_type_checked(input_1.get_element_type(), input_1.get_shape());
+    PartialShape result_shape = get_input_partial_shape(0);
+
+    NODE_VALIDATION_ASSERT(this, PartialShape::merge_into(result_shape, get_input_partial_shape(1)))
+        << "Argument shapes are inconsistent.";
+    NODE_VALIDATION_ASSERT(this, PartialShape::merge_into(result_shape, get_input_partial_shape(2)))
+        << "Argument shapes are inconsistent.";
+
+    element::Type result_et;
+
+    NODE_VALIDATION_ASSERT(
+        this, element::Type::merge(result_et, get_input_element_type(1), get_input_element_type(2)))
+        << "Argument 1 and 2 element types are inconsistent.";
+
+    set_output_type(0, result_et, result_shape);
 }
 
 shared_ptr<Node> op::Select::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 3)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<Select>(new_args.at(0), new_args.at(1), new_args.at(2));
 }
 

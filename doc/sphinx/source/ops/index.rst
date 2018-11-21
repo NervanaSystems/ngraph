@@ -1,7 +1,7 @@
 .. ops/index.rst
 
-Core Ops
-========
+About Core Ops
+==============
 
 An ``Op``'s primary role is to function as a node in a directed acyclic graph 
 dependency computation graph.  
@@ -40,14 +40,79 @@ that must be performed are:
 
 
 Alphabetical list of Core ``ops``
-----------------------------------
+=================================
 
 Not currently a comprehensive list.  
 
-.. tabularcolumns:: column spec
+.. hlist:: 
+   :columns: 3
+
+   * :doc:`abs`
+   * :doc:`acos`
+   * :doc:`add`
+   * :doc:`allreduce`
+   * :doc:`and`
+   * :doc:`asin`
+   * :doc:`atan`
+   * :doc:`avg_pool`
+   * :doc:`avg_pool_backprop`
+   * :doc:`batch_norm`
+   * :doc:`broadcast`
+   * :doc:`ceiling`
+   * :doc:`concat`
+   * :doc:`constant`
+   * :doc:`convert`
+   * :doc:`convolution`
+   * :doc:`cos`
+   * :doc:`cosh`
+   * :doc:`dequantize`
+   * :doc:`divide`
+   * :doc:`dot`
+   * :doc:`drop_out`
+   * :doc:`equal`
+   * :doc:`exp`
+   * :doc:`floor`
+   * :doc:`function_call`
+   * :doc:`get_output_element`
+   * :doc:`greater_eq`
+   * :doc:`greater`
+   * :doc:`less_eq`
+   * :doc:`less`
+   * :doc:`log`
+   * :doc:`max`
+   * :doc:`maximum`
+   * :doc:`max_pool` 
+   * :doc:`min`
+   * :doc:`minimum`
+   * :doc:`multiply`
+   * :doc:`negative`
+   * :doc:`not_equal`
+   * :doc:`not`
+   * :doc:`one_hot`
+   * :doc:`or`
+   * :doc:`pad`
+   * :doc:`parameter`
+   * :doc:`power`
+   * :doc:`product`
+   * :doc:`quantize`
+   * :doc:`relu`
+   * :doc:`result`
+   * :doc:`shape_of`
+   * :doc:`sigmoid`
+   * :doc:`sign`
+   * :doc:`sin`
+   * :doc:`sinh`
+   * :doc:`slice`
+   * :doc:`softmax`
+   * :doc:`sqrt`
+   * :doc:`subtract`
+   * :doc:`tan`
+   * :doc:`tanh`
+
+
 
 .. toctree::
-   :maxdepth: 1
+   :hidden:
 
    abs.rst
    acos.rst
@@ -67,8 +132,10 @@ Not currently a comprehensive list.
    convolution.rst
    cos.rst
    cosh.rst
+   dequantize.rst
    divide.rst
    dot.rst
+   drop_out.rst
    equal.rst
    exp.rst
    floor.rst
@@ -94,9 +161,17 @@ Not currently a comprehensive list.
    parameter.rst
    power.rst
    product.rst
+   quantize.rst
    relu.rst
+   result.rst
+   shape_of.rst
    sigmoid.rst
+   sign.rst
+   sin.rst
+   sinh.rst
+   slice.rst
    softmax.rst
+   sqrt.rst
+   subtract.rst
+   tan.rst
    tanh.rst
-
-   

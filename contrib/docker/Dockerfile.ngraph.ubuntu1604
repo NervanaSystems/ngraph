@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y \
         git \
         wget patch diffutils zlib1g-dev libtinfo-dev \
         doxygen graphviz \
-        python-pip
+        python-pip python3-sphinx
 
 RUN apt-get clean autoclean && \
     apt-get autoremove -y

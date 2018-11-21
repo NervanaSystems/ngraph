@@ -1,18 +1,18 @@
-/*******************************************************************************
- * Copyright 2017-2018 Intel Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <memory>
 
@@ -36,7 +36,7 @@ TEST(nop_elimination, eliminate_pad)
     Shape padding_interior{0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
@@ -49,7 +49,7 @@ TEST(nop_elimination, eliminate_sum)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
@@ -63,8 +63,7 @@ TEST(nop_elimination, eliminate_convert)
     Shape shape{};
     auto type = element::f32;
     auto A = make_shared<op::Parameter>(type, shape);
-    auto f =
-        make_shared<Function>(make_shared<op::Convert>(A, element::f32), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Convert>(A, element::f32), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
@@ -78,7 +77,7 @@ TEST(nop_elimination, eliminate_slice)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Slice>(A, Coordinate{0, 0}, Coordinate{2, 2}),
-                                   op::ParameterVector{A});
+                                   ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
@@ -91,8 +90,8 @@ TEST(nop_elimination, eliminate_broadcast)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}),
-                                   op::ParameterVector{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
@@ -105,7 +104,7 @@ TEST(nop_elimination, eliminate_stop_gradient)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::StopGradient>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::StopGradient>(A), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();

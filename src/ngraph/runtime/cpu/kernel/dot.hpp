@@ -1,25 +1,25 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/shape.hpp"
 
@@ -40,7 +40,8 @@ namespace ngraph
                          void* output,
                          const Shape& input0_shape,
                          const Shape& input1_shape,
-                         const Shape& output_shape)
+                         const Shape& output_shape,
+                         int arena)
                 {
                     constexpr unsigned int OutRank = Input0Rank + Input1Rank - 2 * DotDims;
 
@@ -77,11 +78,13 @@ namespace ngraph
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Input1Rank, Eigen::RowMajor>> in1(
                         static_cast<ElementType*>(input1), in1_dims);
 
-                    out.device(eigen::global_thread_pool_device) = in0.contract(in1, dot_dims);
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
+                        in0.contract(in1, dot_dims);
                 }
 
                 template <typename ElementType>
-                void dot_scalar(void* input0, void* input1, void* output, size_t element_count)
+                void dot_scalar(
+                    void* input0, void* input1, void* output, size_t element_count, int arena)
                 {
                     Eigen::array<Eigen::Index, 1> out_dims;
                     Eigen::array<Eigen::Index, 1> in1_dims;
@@ -95,7 +98,8 @@ namespace ngraph
                     Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> in1(
                         static_cast<ElementType*>(input1), in1_dims);
 
-                    out.device(eigen::global_thread_pool_device) = in0[0] * in1;
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
+                        in0[0] * in1;
                 }
 
                 template <typename ElementType>
@@ -104,10 +108,11 @@ namespace ngraph
                                    void* output,
                                    const Shape& input0_shape,
                                    const Shape& input1_shape,
-                                   const Shape& output_shape)
+                                   const Shape& output_shape,
+                                   int arena)
                 {
                     dot<ElementType, 1, 1, 1>(
-                        input0, input1, output, input0_shape, input1_shape, output_shape);
+                        input0, input1, output, input0_shape, input1_shape, output_shape, arena);
                 }
 
                 template <typename ElementType>
@@ -116,10 +121,24 @@ namespace ngraph
                                    void* output,
                                    const Shape& input0_shape,
                                    const Shape& input1_shape,
-                                   const Shape& output_shape)
+                                   const Shape& output_shape,
+                                   int arena)
                 {
                     dot<ElementType, 2, 1, 1>(
-                        input0, input1, output, input0_shape, input1_shape, output_shape);
+                        input0, input1, output, input0_shape, input1_shape, output_shape, arena);
+                }
+
+                template <typename ElementType>
+                void dot_1d_2d_1rd(void* input0,
+                                   void* input1,
+                                   void* output,
+                                   const Shape& input0_shape,
+                                   const Shape& input1_shape,
+                                   const Shape& output_shape,
+                                   int arena)
+                {
+                    dot<ElementType, 1, 2, 1>(
+                        input0, input1, output, input0_shape, input1_shape, output_shape, arena);
                 }
 
                 template <typename ElementType>
@@ -128,10 +147,11 @@ namespace ngraph
                                    void* output,
                                    const Shape& input0_shape,
                                    const Shape& input1_shape,
-                                   const Shape& output_shape)
+                                   const Shape& output_shape,
+                                   int arena)
                 {
                     dot<ElementType, 3, 3, 1>(
-                        input0, input1, output, input0_shape, input1_shape, output_shape);
+                        input0, input1, output, input0_shape, input1_shape, output_shape, arena);
                 }
 
                 template <typename ElementType>
@@ -140,10 +160,11 @@ namespace ngraph
                                    void* output,
                                    const Shape& input0_shape,
                                    const Shape& input1_shape,
-                                   const Shape& output_shape)
+                                   const Shape& output_shape,
+                                   int arena)
                 {
                     dot<ElementType, 3, 2, 1>(
-                        input0, input1, output, input0_shape, input1_shape, output_shape);
+                        input0, input1, output, input0_shape, input1_shape, output_shape, arena);
                 }
 
                 template <typename ElementType>

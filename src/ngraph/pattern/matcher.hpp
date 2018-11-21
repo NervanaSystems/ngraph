@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -23,6 +23,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/pattern/op/any.hpp"
+#include "ngraph/pattern/op/any_of.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 
@@ -123,7 +124,7 @@ namespace ngraph
             /// \param pattern is a recurring pattern
             /// \param rpattern specifies a node to recur from next
             /// \param patterns a map from labels to matches
-            friend op::Label; //TODO: refine to match_class
+            friend op::Label; // TODO: refine to match_class
 
         protected:
             void add_node(std::shared_ptr<Node> node) { m_matched_list.push_back(node); }
@@ -163,6 +164,9 @@ namespace ngraph
             bool match_any(const std::shared_ptr<op::Any>& pattern_node,
                            const std::shared_ptr<Node>& graph_node,
                            PatternMap& pattern_map);
+            bool match_any_of(const std::shared_ptr<op::AnyOf>& pattern_node,
+                              const std::shared_ptr<Node>& graph_node,
+                              PatternMap& pattern_map);
 
             graph_rewrite_callback m_callback;
             size_t m_depth;

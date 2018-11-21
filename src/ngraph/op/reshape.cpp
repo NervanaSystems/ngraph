@@ -1,23 +1,24 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
-
-#include "ngraph/op/reshape.hpp"
-#include "ngraph/function.hpp"
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
+#include <iostream>
+
+#include "ngraph/function.hpp"
+#include "ngraph/op/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -25,62 +26,69 @@ using namespace ngraph;
 op::Reshape::Reshape(const shared_ptr<Node>& arg,
                      const AxisVector& input_order,
                      const Shape& output_shape)
-    : RequiresTensorViewArgs("Reshape", {arg})
+    : Op("Reshape", check_single_output_args({arg}))
     , m_input_order(input_order)
     , m_output_shape(output_shape)
 {
-    auto& input = get_inputs().at(0);
-    auto input_shape = input.get_shape();
-    auto input_rank = input_shape.size();
+    constructor_validate_and_infer_types();
+}
 
-    if (m_input_order.size() != input_rank)
+void op::Reshape::validate_and_infer_types()
+{
+    auto& input_shape = get_input_partial_shape(0);
+    auto input_rank = input_shape.rank();
+
+    // Check that the input axis order is a permutation of (0,...,n-1) for some n.
+    for (size_t i = 0; i < m_input_order.size(); i++)
     {
-        throw ngraph_error("Input axis order for reshape is not a permutation of argument's axes");
+        NODE_VALIDATION_ASSERT(
+            this, find(begin(m_input_order), end(m_input_order), i) != end(m_input_order))
+            << "Input axis order is not a permutation of argument's axis indices (axis order: "
+            << m_input_order << ", argument shape: " << input_shape << ").";
     }
 
-    for (size_t i = 0; i < input_rank; i++)
+    // TODO(amprocte): should be possible to move around unknown dims in the input shape.
+    if (input_rank.is_static())
     {
-        auto it = find(begin(m_input_order), end(m_input_order), i);
-        if (end(m_input_order) == it)
+        NODE_VALIDATION_ASSERT(this, m_input_order.size() == size_t(input_rank))
+            << "Input axis order is not a permutation of argument's axis indices (axis order: "
+            << m_input_order << ", argument shape: " << input_shape << ").";
+
+        for (size_t i = 0; i < size_t(input_rank); i++)
         {
-            throw ngraph_error(
-                "Input axis order for reshape is not a permutation of argument's axes");
+            auto it = find(begin(m_input_order), end(m_input_order), i);
+            NODE_VALIDATION_ASSERT(this, it != end(m_input_order))
+                << "Input axis order is not a permutation of argument's axis indices (axis order: "
+                << m_input_order << ", argument shape: " << input_shape << ").";
         }
-    }
 
-    size_t input_shape_product = 1;
-    for (auto i : input_shape)
-    {
-        input_shape_product *= i;
-    }
+        // TODO(amprocte): make a partial_shape_size() analogous to shape_size().
+        Dimension input_shape_product = 1;
+        for (size_t i = 0; i < size_t(input_rank); i++)
+        {
+            input_shape_product *= input_shape[i];
+        }
 
-    size_t output_shape_product = 1;
-    for (auto i : m_output_shape)
-    {
-        output_shape_product *= i;
-    }
-
-    if (input_shape_product != output_shape_product)
-    {
-        throw ngraph_error(
-            "Product of output shape dimensions does not match product of argument shape "
-            "dimensions for reshape");
+        if (input_shape_product.is_static())
+        {
+            NODE_VALIDATION_ASSERT(this, size_t(input_shape_product) == shape_size(m_output_shape))
+                << "Product of output shape dimensions does not match product of argument shape "
+                   "dimensions "
+                << "(output shape: " << m_output_shape << ", argument shape: " << input_shape
+                << ").";
+        }
     }
 
     if (!std::is_sorted(m_input_order.begin(), m_input_order.end()))
     {
         m_is_transpose = true;
     }
-
-    set_value_type_checked(input.get_element_type(), m_output_shape);
+    set_output_type(0, get_input_element_type(0), m_output_shape);
 }
 
 shared_ptr<Node> op::Reshape::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<Reshape>(new_args.at(0), m_input_order, m_output_shape);
 }
 

@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 //
 // The public API for ngraph++
@@ -24,23 +24,23 @@
 #error("ngraph.hpp is for external use only")
 #endif
 
-/// @namespace ngraph
-/// @brief The Intel Nervana Graph C++ API.
+/// \namespace ngraph
+/// \brief The Intel Nervana Graph C++ API.
 
-/// @namespace ngraph::descriptor
-/// @brief Descriptors are compile-time representations of objects that will appear at run-time.
+/// \namespace ngraph::descriptor
+/// \brief Descriptors are compile-time representations of objects that will appear at run-time.
 
-/// @namespace ngraph::descriptor::layout
-/// @brief Layout descriptors describe how tensor views are implemented.
+/// \namespace ngraph::descriptor::layout
+/// \brief Layout descriptors describe how tensor views are implemented.
 
-/// @namespace ngraph::op
-/// @brief Ops used in graph-building.
+/// \namespace ngraph::op
+/// \brief Ops used in graph-building.
 
-/// @namespace ngraph::runtime
-/// @brief The objects used for executing the graph.
+/// \namespace ngraph::runtime
+/// \brief The objects used for executing the graph.
 
-/// @namespace ngraph::builder
-/// @brief Convenience functions that create addional graph nodes to implement commonly-used
+/// \namespace ngraph::builder
+/// \brief Convenience functions that create addional graph nodes to implement commonly-used
 ///        recipes, for example auto-broadcast.
 
 #include "ngraph/builder/autobroadcast.hpp"
@@ -49,12 +49,11 @@
 #include "ngraph/builder/tensor_mask.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/descriptor/input.hpp"
-#include "ngraph/descriptor/layout/dense_tensor_view_layout.hpp"
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
-#include "ngraph/descriptor/primary_tensor_view.hpp"
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/descriptor/tensor_view.hpp"
+#include "ngraph/dimension.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
@@ -63,6 +62,8 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -75,10 +76,12 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -87,6 +90,7 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
+#include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -103,10 +107,10 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
-#include "ngraph/op/remainder.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
@@ -125,8 +129,10 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/op/topk.hpp"
+#include "ngraph/partial_shape.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/tensor_view.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/shape_util.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "ngraph/type/type.hpp"

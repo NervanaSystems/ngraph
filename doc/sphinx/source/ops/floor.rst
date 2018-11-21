@@ -11,7 +11,7 @@ Floor
 Description
 ===========
 
-Produces a single output tensor of the same element type and shape as ``arg``,
+Produces a single output tensor of the same element type and shape as ``arg,``
 where the value at each coordinate of ``output`` is the floor of the
 value at each ``arg`` coordinate.
 

@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <sstream>
 #include <string>
@@ -68,7 +68,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
     vector<std::string> backend_names{"INTERPRETER", "CPU"};
     vector<int> n_runs{200, 200, using_ref_kernels ? 200 : 200000}; // one for each backend
     vector<std::function<void()>> test_callbacks;                   // one for each backend
-    vector<std::shared_ptr<runtime::TensorView>> result_tvs;        // one for each backend
+    vector<std::shared_ptr<runtime::Tensor>> result_tvs;            // one for each backend
 
     for (std::string backend_name : backend_names)
     {
@@ -86,7 +86,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
 
         auto backend = runtime::Backend::create(backend_name);
 
-        vector<shared_ptr<runtime::TensorView>> input_vals;
+        vector<shared_ptr<runtime::Tensor>> input_vals;
 
         for (size_t i = 0; i < n_arrays; i++)
         {
@@ -98,7 +98,9 @@ TEST(benchmark, concat_32x1x200_axis1_6)
         auto result_tv = backend->create_tensor(element::f32, result_shape);
         result_tvs.push_back(result_tv);
 
-        std::function<void()> cb = [&]() { backend->call(f, {result_tv}, input_vals); };
+        std::function<void()> cb = [&]() {
+            backend->call_with_validate(f, {result_tv}, input_vals);
+        };
 
         test_callbacks.push_back(cb);
     }

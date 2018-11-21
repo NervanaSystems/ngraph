@@ -20,12 +20,13 @@ import numpy as np
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
     NodeVector, Shape, Strides
 
-from ngraph.impl.op import Abs, Acos, Add, And, Asin, Atan, AvgPool, BatchNorm, Broadcast, \
-    Ceiling, Concat, Constant, Convert, Convolution, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
-    FunctionCall, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, Max, Maximum, MaxPool, \
-    Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, \
-    Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, Sqrt, \
-    Subtract, Sum, Tan, Tanh
+from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
+    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Concat, Constant, Convert, \
+    Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
+    FunctionCall, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, \
+    Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, \
+    Parameter, Product, Power, Reduce, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, \
+    Sin, Sinh, Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh, TopK
 
 from typing import Callable, Iterable, List, Union
 
@@ -601,6 +602,49 @@ def convolution(data_batch,                     # type: Node
 
 
 @nameable_op
+def convolution_backprop_data(data_batch_shape,                      # type: TensorShape
+                              filters,                               # type: Node
+                              output_delta,                          # type: Node
+                              window_movement_strides_forward=None,  # type: List[int]
+                              window_dilation_strides_forward=None,  # type: List[int]
+                              padding_below_forward=None,            # type: List[int]
+                              padding_above_forward=None,            # type: List[int]
+                              data_dilation_strides_forward=None,    # type: List[int]
+                              name=None,                             # type: str
+                              ):
+    # type: (...) -> Node
+    """Return node performing a batched-convolution data batch-backprop operation.
+
+    :param data_batch_shape: The shape of the data batch from forward-prop.
+    :param filters: The node producing the filters from forward-prop.
+    :param output_delta: The node producing output delta.
+    :param window_movement_strides_forward: The window movement strides from forward-prop.
+    :param window_dilation_strides_forward: The window dilation strides from forward-prop.
+    :param padding_below_forward: The padding-below sizes from forward-prop.
+    :param padding_above_forward: The padding-above sizes from forward-prop.
+    :param data_dilation_strides_forward: The data dilation strides from forward-prop.
+    """
+    spatial_dim_count = len(data_batch_shape) - 2
+    if window_movement_strides_forward is None:
+        window_movement_strides_forward = [1] * spatial_dim_count
+    if window_dilation_strides_forward is None:
+        window_dilation_strides_forward = [1] * spatial_dim_count
+    if padding_below_forward is None:
+        padding_below_forward = [0] * spatial_dim_count
+    if padding_above_forward is None:
+        padding_above_forward = [0] * spatial_dim_count
+    if data_dilation_strides_forward is None:
+        data_dilation_strides_forward = [1] * spatial_dim_count
+
+    return ConvolutionBackpropData(Shape(data_batch_shape), filters, output_delta,
+                                   Strides(window_movement_strides_forward),
+                                   Strides(window_dilation_strides_forward),
+                                   CoordinateDiff(padding_below_forward),
+                                   CoordinateDiff(padding_above_forward),
+                                   Strides(data_dilation_strides_forward))
+
+
+@nameable_op
 def avg_pool(data_batch,             # type: Node
              window_shape,           # type: TensorShape
              window_strides=None,    # type: List[int]
@@ -781,7 +825,7 @@ def softmax(node, axes, name=None):  # type: (Node, Iterable[int], str) -> Node
     :param name: The optional new name for output node.
     :return: The new node with softmax operation applied on each element.
     """
-    if type(axes) is not set:
+    if not isinstance(axes, set):
         axes = set(axes)
     return Softmax(node, AxisSet(axes))
 
@@ -875,15 +919,86 @@ def batch_norm(eps,             # type: float
                data,            # type: Node
                mean=None,       # type: Node
                variance=None,   # type: Node
-               training=False,  # type: bool
                name=None,       # type: str
                ):
     # type: (...) -> Node
     """Return batch normalization node."""
     if mean is None and variance is None:
-        return BatchNorm(eps, gamma, beta, data)
+        return BatchNormTraining(eps, gamma, beta, data)
     else:
-        return BatchNorm(eps, gamma, beta, data, mean, variance, training)
+        return BatchNormInference(eps, gamma, beta, data, mean, variance)
+
+
+@nameable_op
+def lrn(data,       # type: Node
+        alpha=1,    # type: float
+        beta=0.5,   # type: float
+        bias=1,     # type: float
+        size=5,     # type: int
+        name=None,  # type: str
+        ):
+    # type: (...) -> Node
+    """Return a node which performs element-wise Local Response Normalization (LRN) operation.
+
+    :param data: Input data.
+    :param alpha: A scale factor (usually positive).
+    :param beta: An exponent.
+    :param bias: An offset (usually positive) to avoid dividing by 0.
+    :param size: Width of the 1-D normalization window.
+    :param name: An optional name of the output node.
+    :return: The new node which performs LRN.
+    """
+    return LRN(data, alpha, beta, bias, size)
+
+
+@nameable_op
+def argmax(data,     # type: Node
+           axis=0,   # type: int
+           ):
+    # type: (...) -> Node
+    """Return a node which performs ArgMax index reduction operation.
+
+    :param data: Input data.
+    :param axis: Reduction Axis.
+    :return: The new node which performs ArgMax
+    """
+    return ArgMax(data, axis, get_element_type(np.int32))
+
+
+@nameable_op
+def argmin(data,    # type: Node
+           axis=0,  # type: int
+           ):
+    # type: (...) -> Node
+    """Return a node which performs ArgMin index reduction operation.
+
+    :param data: Input data.
+    :param axis: Reduction Axis.
+    :return: The new node which performs ArgMin
+    """
+    return ArgMin(data, axis, get_element_type(np.int32))
+
+
+@nameable_op
+def topk(data,       # type: Node
+         k,          # type: int
+         kaxis=-1,   # type: int
+         cmax=True,  # type: bool
+         ):
+    # type: (...) -> Node
+    """Return a node which performs TopK.
+
+    :param data: Input data.
+    :param kaxis: TopK Axis.
+    :param k: K.
+    :param cmax: Compute TopK largest (True) or smallest (False)
+    :return: The new node which performs TopK (both indices and values)
+    """
+    return TopK(data,
+                len(data.get_shape()) - 1 if kaxis == -1 else kaxis,
+                get_element_type(np.int32),
+                k,
+                cmax)
 
 
 @nameable_op

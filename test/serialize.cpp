@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <fstream>
 #include <sstream>
@@ -53,7 +53,7 @@ TEST(serialize, main)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C}, "f");
+    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C}, "f");
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
     auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -61,7 +61,7 @@ TEST(serialize, main)
     auto Z = make_shared<op::Parameter>(element::f32, shape);
     auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}) +
                                        make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}),
-                                   op::ParameterVector{X, Y, Z},
+                                   ParameterVector{X, Y, Z},
                                    "g");
 
     // Now make "h(X,Y,Z) = g(X,Y,Z) + g(X,Y,Z)"
@@ -70,7 +70,7 @@ TEST(serialize, main)
     auto Z1 = make_shared<op::Parameter>(element::f32, shape);
     auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}) +
                                        make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}),
-                                   op::ParameterVector{X1, Y1, Z1},
+                                   ParameterVector{X1, Y1, Z1},
                                    "h");
 
     string js = serialize(h, 4);
@@ -94,13 +94,13 @@ TEST(serialize, main)
     copy_data(z, vector<float>{9, 10, 11, 12});
     auto result = backend->create_tensor(element::f32, shape);
 
-    backend->call(sfunc, {result}, {x, y, z});
+    backend->call_with_validate(sfunc, {result}, {x, y, z});
     EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
-    backend->call(sfunc, {result}, {y, x, z});
+    backend->call_with_validate(sfunc, {result}, {y, x, z});
     EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
-    backend->call(sfunc, {result}, {x, z, y});
+    backend->call_with_validate(sfunc, {result}, {x, z, y});
     EXPECT_EQ((vector<float>{200, 288, 392, 512}), read_vector<float>(result));
 }
 #endif
@@ -137,7 +137,7 @@ TEST(serialize, constant)
     const string tmp_file = "serialize_constant.cpio";
     Shape shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
-    auto f = make_shared<Function>(A, op::ParameterVector{});
+    auto f = make_shared<Function>(A, ParameterVector{});
 
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), A->get_vector<float>());
     serialize(tmp_file, f);

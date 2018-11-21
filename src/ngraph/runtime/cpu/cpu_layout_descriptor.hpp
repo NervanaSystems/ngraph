@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -23,10 +23,8 @@
 
 #include <mkldnn.hpp>
 
-#include "ngraph/axis_vector.hpp"
-#include "ngraph/descriptor/layout/tensor_view_layout.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/type/type.hpp"
 
 namespace ngraph
 {
@@ -34,39 +32,40 @@ namespace ngraph
     {
         namespace cpu
         {
-            class LayoutDescriptor : public ngraph::descriptor::layout::TensorViewLayout
+            class LayoutDescriptor : public ngraph::descriptor::layout::TensorLayout
             {
             public:
-                LayoutDescriptor(const ngraph::descriptor::TensorView& tv,
-                                 const AxisVector& tv_axis_order);
+                LayoutDescriptor(const ngraph::descriptor::Tensor& tv);
                 ~LayoutDescriptor() override {}
-                size_t get_size() override { return size; }
-                size_t get_offset() const { return offset; }
+                virtual size_t get_allocated_size() override { return m_buffer_size; }
+                size_t get_offset() const { return m_offset; }
                 size_t get_index_offset(const std::vector<size_t>& indices) override;
 
-                const Strides& get_strides() const override { return strides; }
-                bool operator==(const TensorViewLayout& other) const override;
+                Strides get_strides() const override { return m_strides; }
+                void set_strides(Strides& strides) { m_strides = strides; }
+                bool operator==(const TensorLayout& other) const override;
 
-                void set_mkldnn_format(const mkldnn::memory::format& format)
+                const mkldnn::memory::desc& get_mkldnn_md() const { return m_mkldnn_md; }
+                void set_mkldnn_md(const mkldnn::memory::desc& md);
+                bool is_mkldnn_layout() const
                 {
-                    mkldnn_format = format;
+                    return m_mkldnn_md.data.format != mkldnn::memory::format::format_undef;
                 }
-                mkldnn::memory::format get_mkldnn_format() const { return mkldnn_format; }
-                const AxisVector& get_axis_order() const { return axis_order; }
-                void set_axis_order(const AxisVector& perm);
-                static const AxisVector Native2DAxisOrder;
-                static const AxisVector Native4DAxisOrder;
-                static const AxisVector CHWNAxisOrder;
-                static AxisVector create_native_axis_order(size_t rank);
+                bool is_row_major_layout();
+
+                static const mkldnn::memory::desc DummyDesc;
 
             private:
-                AxisVector axis_order;
-                Strides strides;
-                size_t offset;
-                size_t size;
+                // Native row-major layout for now
+                Strides m_strides;
+                size_t m_offset;
 
-                // Numeric backend-specific fields
-                mkldnn::memory::format mkldnn_format;
+                // For tensor views that can be tracked with MKLDNN memory
+                // descriptors, this holds the physical layout information
+                // Otherwise, physical layout is assumed to be in row-major
+                // format represented by m_strides
+                mkldnn::memory::desc m_mkldnn_md;
+                size_t m_buffer_size;
             };
 
             typedef std::vector<std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>>

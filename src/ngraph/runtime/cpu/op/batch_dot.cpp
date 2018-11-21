@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "batch_dot.hpp"
 #include "ngraph/log.hpp"
@@ -32,10 +32,12 @@ shared_ptr<Node> op::BatchDot::copy_with_new_args(const NodeVector& new_args) co
 }
 
 op::BatchDot::BatchDot(shared_ptr<Node> a, shared_ptr<Node> b, bool transpose_a, bool transpose_b)
-    : RequiresTensorViewArgs("BatchDot", vector<shared_ptr<Node>>{a, b})
+    : Op("BatchDot", check_single_output_args({a, b}))
     , m_transpose_a(transpose_a)
     , m_transpose_b(transpose_b)
 {
+    constructor_validate_and_infer_types();
+
     const auto& shape_a = a->get_shape();
     const auto& shape_b = b->get_shape();
     if (shape_a.size() != 3 || shape_b.size() != 3)
@@ -65,5 +67,5 @@ op::BatchDot::BatchDot(shared_ptr<Node> a, shared_ptr<Node> b, bool transpose_a,
         shape_a.at(0), shape_a.at(3 - dot_dimension_a), shape_b.at(3 - dot_dimension_b)};
     NGRAPH_DEBUG << "dot_shape shape = " << vector_to_string(dot_shape);
 
-    add_output(a->get_element_type(), dot_shape);
+    set_output_type(0, a->get_element_type(), dot_shape);
 }

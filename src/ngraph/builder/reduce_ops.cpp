@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <numeric>
 
@@ -22,10 +22,11 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/power.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -44,13 +45,10 @@ namespace ngraph
         std::shared_ptr<Node> l2_norm(const std::shared_ptr<Node>& node,
                                       const AxisSet& reduction_axes)
         {
-            const auto& et = node->get_element_type();
             auto x2 = node * node;
             auto x2sum = std::make_shared<op::Sum>(x2, reduction_axes);
 
-            // TODO(mbrookhart): Use Sqrt instead of Power
-            auto half = op::Constant::create(et, x2sum->get_shape(), {0.5});
-            return std::make_shared<op::Power>(x2sum, half);
+            return std::make_shared<op::Sqrt>(x2sum);
         }
 
         std::shared_ptr<Node> mean(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
@@ -69,12 +67,7 @@ namespace ngraph
                                       const AxisSet& reduction_axes,
                                       const bool bessel_correction)
         {
-            auto var = variance(node, reduction_axes, bessel_correction);
-
-            const auto& et = node->get_element_type();
-            // TODO(mbrookhart): Use Sqrt instead of Power
-            auto half = op::Constant::create(et, var->get_shape(), {0.5});
-            return std::make_shared<op::Power>(var, half);
+            return std::make_shared<op::Sqrt>(variance(node, reduction_axes, bessel_correction));
         }
 
         // This currently calculates [E[X^2] - E[X]^2] instead of [E[(X-\mu)^2]]
@@ -93,8 +86,7 @@ namespace ngraph
                 reshape[i] = 1;
             }
 
-            ngraph::AxisVector order(mu->get_shape().size());
-            std::iota(order.begin(), order.end(), 0);
+            ngraph::AxisVector order = ngraph::get_default_order(mu->get_shape());
 
             mu = std::make_shared<op::Reshape>(mu, order, reshape);
 

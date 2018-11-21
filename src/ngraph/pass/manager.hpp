@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -23,6 +23,7 @@
 
 #include "ngraph/pass/manager_state.hpp"
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/pass/pass_config.hpp"
 
 namespace ngraph
 {
@@ -57,12 +58,15 @@ public:
     void run_passes(std::shared_ptr<Function>, bool transitive = true);
 
     ManagerState& get_state();
+    PassConfig& get_pass_config() { return m_pass_config; }
+    void set_pass_config(const PassConfig& pass_config) { m_pass_config = pass_config; }
     void set_pass_visualization(bool new_state) { m_visualize = new_state; }
     void set_pass_serialization(bool new_state) { m_serialize = new_state; }
 private:
     std::vector<std::string> m_pass_names;
     std::vector<std::shared_ptr<PassBase>> m_pass_list;
     ManagerState m_state;
+    PassConfig m_pass_config;
     bool m_visualize = false;
     bool m_serialize = false;
 };

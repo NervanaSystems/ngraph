@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 
@@ -38,15 +38,12 @@ runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
     cleanup_runtime_context();
 }
 
-void runtime::cpu::CPU_CallFrame::call(
-    const std::vector<std::shared_ptr<runtime::TensorView>>& output_tvs,
-    const std::vector<std::shared_ptr<runtime::TensorView>>& input_tvs)
+void runtime::cpu::CPU_CallFrame::inner_call(
+    const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
     vector<void*> inputs;
     vector<void*> outputs;
-
-    propagate_layouts(input_tvs, m_external_function->get_parameter_layout_descriptors());
-    propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
 
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
@@ -80,8 +77,17 @@ void runtime::cpu::CPU_CallFrame::call(
     }
 }
 
+void runtime::cpu::CPU_CallFrame::call(
+    const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
+{
+    ctx->pc = 0;
+    propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
+    inner_call(output_tvs, input_tvs);
+}
+
 void runtime::cpu::CPU_CallFrame::propagate_layouts(
-    const std::vector<std::shared_ptr<runtime::TensorView>>& tvs,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
     const LayoutDescriptorPtrs& layouts) const
 {
     if (layouts.size() != tvs.size())
@@ -96,7 +102,7 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
             throw ngraph_error(
                 "Error propagating layouts - layout information missing from tensor view");
         }
-        tvs[i]->get_descriptor()->set_tensor_view_layout(layouts[i]);
+        tvs[i]->set_tensor_layout(layouts[i]);
     }
 }
 
@@ -104,12 +110,16 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 {
     ctx = new CPURuntimeContext;
 
+    ctx->pc = 0;
     ctx->op_durations = nullptr;
     if (runtime::cpu::IsTracingEnabled())
     {
         ctx->op_durations = new int64_t[m_external_function->get_op_attrs().size()];
     }
     ctx->p_en = new bool[m_external_function->get_parameter_layout_descriptors().size()];
+
+    ctx->first_iteration = true;
+
     // Create temporary buffer pools
     size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
     for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
@@ -120,6 +130,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
     ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
     ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
+    ctx->states = m_external_function->m_states.data();
 
     if (std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
     {
@@ -127,7 +138,6 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         const auto envParallelism = std::getenv("NGRAPH_INTER_OP_PARALLELISM");
         const auto parallelism = envParallelism == nullptr ? 1 : std::atoi(envParallelism);
         ctx->c = new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
-        ctx->init = new tbb::task_scheduler_init(parallelism);
     }
 }
 
@@ -154,7 +164,6 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
             delete node;
         }
         delete ctx->c;
-        delete ctx->init;
     }
     delete ctx;
 }

@@ -14,40 +14,66 @@
 # limitations under the License.
 # ******************************************************************************
 
+include(FindOpenMP)
+
 set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
     cpu_call_frame.cpp
-    cpu_emitter.cpp
+    cpu_executor.cpp
     cpu_external_function.cpp
-    cpu_kernel_emitters.cpp
-    cpu_kernel_utils.cpp
     cpu_kernels.cpp
     cpu_layout_descriptor.cpp
+    cpu_op_annotations.cpp
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
+    cpu_visualize_tree.cpp
+    cpu_cse.cpp
+    cpu_debugger.cpp
+    builder/add.cpp
+    builder/allreduce.cpp
     builder/avg_pool.cpp
+    builder/argmin.cpp
+    builder/argmax.cpp
     builder/batch_norm.cpp
     builder/broadcast.cpp
+    builder/bounded_relu.cpp
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
+    builder/quantized_conv.cpp
     builder/convolution.cpp
     builder/dot.cpp
     builder/function_call.cpp
+    builder/lstm.cpp
+    builder/lrn.cpp
     builder/matmul_bias.cpp
     builder/max.cpp
     builder/max_pool.cpp
     builder/min.cpp
+    builder/one_hot.cpp
+    builder/relu.cpp
+    builder/pad.cpp
+    builder/product.cpp
+    builder/reduce_function.cpp
+    builder/reduce_function_window.cpp
+    builder/replace_slice.cpp
+    builder/quantized_max_pool.cpp
+    builder/quantized_avg_pool.cpp
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
+    builder/rnn.cpp
     builder/select.cpp
     builder/select_and_scatter.cpp
     builder/sigmoid.cpp
+    builder/slice.cpp
+    builder/softmax.cpp
     builder/sum.cpp
-    kernel/eigen_thread_pool.cpp
+    builder/topk.cpp
+    builder/state.cpp
+    builder/quantization.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
     kernel/reduce_sum.cpp
@@ -59,6 +85,8 @@ set(SRC
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/group_conv.cpp
+    op/group_conv_bias.cpp
+    op/halide_op.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
@@ -68,17 +96,38 @@ set(SRC
     op/max_pool_with_indices.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
+    op/conv_add.cpp
     pass/cpu_assignment.cpp
+    pass/cpu_collapse_dims.cpp
     pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp
+    pass/cpu_horizontal_fusion.cpp
     pass/cpu_layout.cpp
+    pass/cpu_loop_kernel_fusion.cpp
+    pass/cpu_mat_fusion.cpp
+    pass/cpu_memory_optimization.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
-    pass/cpu_mat_fusion.cpp
-    pass/cpu_loop_kernel_fusion.cpp
-    pass/cpu_shuffle_folding.cpp
     pass/cpu_workspace_insertion.cpp
+    pass/cpu_reshape_sinking.cpp
 )
+
+if (NOT NGRAPH_DEX_ONLY)
+    set(SRC
+        ${SRC}
+        cpu_emitter.cpp
+        cpu_kernel_emitters.cpp
+        cpu_kernel_utils.cpp
+        )
+endif()
+
+if (NGRAPH_HALIDE)
+    set(SRC
+        ${SRC}
+        builder/halide_op.cpp
+        pass/halide_subgraph_extraction.cpp
+        )
+endif()
 
 if (NGRAPH_TBB_ENABLE)
     include(${TBB_ROOT}/cmake/TBBBuild.cmake)
@@ -114,18 +163,49 @@ if (NGRAPH_CPU_ENABLE)
 
     add_library(cpu_backend SHARED ${SRC})
     set_target_properties(cpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+    if (NGRAPH_DEX_ONLY)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
+    endif()
+    if (NGRAPH_HALIDE)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_HALIDE")
+        ExternalProject_Get_Property(ext_halide BINARY_DIR)
+        target_include_directories(cpu_backend SYSTEM PRIVATE ${BINARY_DIR}/include)
+        target_link_libraries(cpu_backend PRIVATE ${BINARY_DIR}/lib/libHalide.a libhalidellvm)
+        add_dependencies(cpu_backend ext_halide)
+    endif()
+
+    if(OPENMP_FOUND)
+        target_compile_options(cpu_backend PRIVATE "${OpenMP_CXX_FLAGS}")
+        target_compile_definitions(cpu_backend PRIVATE EIGEN_OPENMP)
+    else()
+         message(WARNING "The build toolset doesn't support OpenMP. This will impact performance and lead to slowdowns.")
+    endif()
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
         find_package(MPI REQUIRED)
-        add_definitions(-DNGRAPH_DISTRIBUTED)
-        include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-        link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-        target_link_libraries(cpu_backend PRIVATE ${MPI_CXX_LIBRARIES})
+        target_compile_definitions(cpu_backend
+            PRIVATE NGRAPH_DISTRIBUTED)
+        target_include_directories(cpu_backend
+            SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+        target_link_libraries(cpu_backend
+            PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
     endif()
 
-    target_link_libraries(cpu_backend PUBLIC ngraph codegen libmkldnn libeigen libjson libtbb)
+    add_dependencies(cpu_backend ext_mkldnn ext_eigen)
+    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libeigen libjson libtbb)
+    if (NOT NGRAPH_DEX_ONLY)
+        target_link_libraries(cpu_backend PUBLIC codegen)
+    endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
     set_target_properties(cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    if (NOT APPLE)
+        # CPU backend uses third-party libraries like Eigen that might be linked in and
+        # exported by other DSOs as well. In the absence of versioning, this could lead to the
+        # CPU backend picking up the wrong version or even multiple versions of the
+        # third-party library. -Bsymbolic-functions tells the linker to prefer the internal
+        # version inside cpu_backend over what is available through the global symbol table
+        set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
+    endif()
 
     install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

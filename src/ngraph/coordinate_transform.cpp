@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <cstdio>
 #include <iostream>
@@ -45,6 +45,7 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
     , m_target_padding_below(target_padding_below)
     , m_target_padding_above(target_padding_above)
     , m_target_dilation_strides(target_dilation_strides)
+    , m_end_iterator(Shape(), true)
 {
     m_n_axes = source_shape.size();
 
@@ -456,21 +457,21 @@ bool CoordinateTransform::Iterator::operator!=(const Iterator& it)
 
 bool CoordinateTransform::Iterator::operator==(const Iterator& it)
 {
-    if (m_target_shape != it.m_target_shape)
+    if (it.m_oob)
+    {
+        // Out-of-bounds iterators are always equal; in other words, an iterator is always equal to
+        // end() even if the internally stored coordinates are different.
+
+        // If one iterator is out of bounds and the other is not, they are unequal even if their
+        // target coordinates happen to match.
+        return m_oob;
+    }
+    else if (m_oob)
     {
         return false;
     }
 
-    // Out-of-bounds iterators are always equal; in other words, an iterator is always equal to
-    // end() even if the internally stored coordinates are different.
-    if (m_oob && it.m_oob)
-    {
-        return true;
-    }
-
-    // If one iterator is out of bounds and the other is not, they are unequal even if their target
-    // coordinates happen to match.
-    if (m_oob != it.m_oob)
+    if (m_target_shape != it.m_target_shape)
     {
         return false;
     }

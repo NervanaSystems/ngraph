@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "gtest/gtest.h"
 
@@ -38,7 +38,7 @@ TEST(build_graph, build_simple)
     ASSERT_EQ(dot->get_arguments()[0], arg2);
     ASSERT_EQ(dot->get_arguments()[1], arg0);
 
-    auto cluster_0 = make_shared<Function>(dot, op::ParameterVector{arg0, arg1, arg2, arg3});
+    auto cluster_0 = make_shared<Function>(dot, ParameterVector{arg0, arg1, arg2, arg3});
 
     ASSERT_EQ(cluster_0->get_output_op(0)->get_argument(0), dot);
 }
@@ -60,7 +60,7 @@ TEST(build_graph, node_comparison)
 TEST(build_graph, literal)
 {
     // float scalar from a float
-    //auto float0 = FloatConstant::make(3.0);
+    // auto float0 = FloatConstant::make(3.0);
     vector<float> float_t{3.0};
     auto float0 = make_shared<op::Constant>(element::f32, Shape{}, float_t);
     ASSERT_EQ(float0->get_vector<float>(), std::vector<float>{3.0});
@@ -72,7 +72,6 @@ TEST(build_graph, literal)
 
     vector<int32_t> int32{3};
     auto int32_0 = make_shared<op::Constant>(element::i32, Shape{}, int32);
-    auto int32_scalar_type = make_shared<TensorViewType>(element::i32, Shape{});
     ASSERT_EQ(int32_0->get_vector<int32_t>(), std::vector<int>{3});
     ASSERT_EQ(int32_0->get_element_type(), element::i32);
     ASSERT_EQ(int32_0->get_shape(), Shape{});
@@ -81,7 +80,7 @@ TEST(build_graph, literal)
 TEST(build_graph, tensor)
 {
     // float scalar from a float
-    //auto float0 = FloatConstant::make(3.0);
+    // auto float0 = FloatConstant::make(3.0);
     Shape shape{2, 3};
     vector<float> float_t(shape_size(shape), 0);
     auto float0 = make_shared<op::Constant>(element::f32, shape, float_t);
@@ -118,7 +117,7 @@ TEST(build_graph, function_undeclared_parameters)
     ASSERT_EQ(dot->get_arguments()[1], arg0);
     try
     {
-        auto f = make_shared<Function>(dot, op::ParameterVector{arg0, arg1, arg3});
+        auto f = make_shared<Function>(dot, ParameterVector{arg0, arg1, arg3});
         f->get_ops();
         // Should have thrown, so fail if it didn't
         FAIL() << "Undeclared parameter not detected.";

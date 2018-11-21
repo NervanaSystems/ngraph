@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 #include "cpu_concat_inputs.hpp"
 
 #include <algorithm>
@@ -82,10 +82,10 @@ void ngraph::runtime::cpu::pass::ConcatInputs::concat_lstm_inputs()
             std::shared_ptr<Node> bias =
                 std::make_shared<op::Add>(pattern_map[bias1], pattern_map[bias2]);
 
-            auto lstm_node = pattern_map[lstm_node_label]->get_arguments()[0];
-            auto batch_size = std::dynamic_pointer_cast<op::Lstm>(lstm_node)->get_batch_size();
-            auto feature_size =
-                std::dynamic_pointer_cast<op::Lstm>(lstm_node)->get_src_iter_feature_size();
+            auto lstm_node = std::static_pointer_cast<op::Lstm>(
+                pattern_map[lstm_node_label]->get_arguments()[0]);
+            auto batch_size = lstm_node->get_batch_size();
+            auto feature_size = lstm_node->get_src_iter_feature_size();
             auto lstm_mkldnn_node = std::make_shared<op::Lstm>(
                 src_layer, src_iter, pattern_map[weights_i2h], pattern_map[weights_h2h], bias);
 
@@ -94,24 +94,20 @@ void ngraph::runtime::cpu::pass::ConcatInputs::concat_lstm_inputs()
 
             // dst_iter of lstm mkldnn output holds the results of both recurrent state
             // tensor outputs. we need to slice the ct.
-            auto ht_slice =
-                std::make_shared<op::Slice>(lstm_ht_ct_out,
-                                            Coordinate{0, 0},
-                                            Coordinate{static_cast<unsigned long>(batch_size),
-                                                       static_cast<unsigned long>(feature_size)});
-            auto ct_slice =
-                std::make_shared<op::Slice>(lstm_ht_ct_out,
-                                            Coordinate{static_cast<unsigned long>(batch_size), 0},
-                                            Coordinate{static_cast<unsigned long>(2 * batch_size),
-                                                       static_cast<unsigned long>(feature_size)});
+            auto ht_slice = std::make_shared<op::Slice>(
+                lstm_ht_ct_out, Coordinate{0, 0}, Coordinate{batch_size, feature_size});
+            auto ct_slice = std::make_shared<op::Slice>(lstm_ht_ct_out,
+                                                        Coordinate{batch_size, 0},
+                                                        Coordinate{(2 * batch_size), feature_size});
 
             // now go through the GOE'sand replace the slices(ht)
             std::set<std::shared_ptr<ngraph::Node>> lstm_outputs;
             for (auto& goes : lstm_node->get_outputs().at(0).get_inputs())
             {
                 auto goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(goes->get_node());
+                NGRAPH_ASSERT(goe_node);
                 lstm_outputs.insert(goes->get_node());
-                //first output node of lstm
+                // first output node of lstm
                 if (goe_node->get_n() == 0)
                 {
                     NGRAPH_DEBUG << "Replacing 1st output Lstm node " << goe_node->get_name()

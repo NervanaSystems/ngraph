@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include "ngraph/cpio.hpp"
 #include "ngraph/log.hpp"
@@ -76,6 +76,8 @@ cpio::Header cpio::Header::read(istream& stream)
         {
             throw runtime_error("CPIO magic error");
         }
+        // magic value defined in CPIO spec
+        rc.magic = 0x71C7;
         rc.dev = read_u16(stream, true);
         rc.ino = read_u16(stream, true);
         rc.mode = read_u16(stream, true);
@@ -93,6 +95,8 @@ cpio::Header cpio::Header::read(istream& stream)
         {
             throw runtime_error("CPIO magic error");
         }
+        // magic value defined in CPIO spec
+        rc.magic = 0x71C7;
         rc.dev = read_u16(stream);
         rc.ino = read_u16(stream);
         rc.mode = read_u16(stream);
@@ -148,7 +152,11 @@ cpio::Writer::Writer(const string& filename)
 
 cpio::Writer::~Writer()
 {
-    close();
+    write("TRAILER!!!", nullptr, 0);
+    if (m_my_stream.is_open())
+    {
+        m_my_stream.close();
+    }
 }
 
 void cpio::Writer::open(ostream& out)
@@ -160,15 +168,6 @@ void cpio::Writer::open(const string& filename)
 {
     m_stream = &m_my_stream;
     m_my_stream.open(filename, ios_base::binary | ios_base::out);
-}
-
-void cpio::Writer::close()
-{
-    write("TRAILER!!!", nullptr, 0);
-    if (m_my_stream.is_open())
-    {
-        m_my_stream.close();
-    }
 }
 
 void cpio::Writer::write(const string& record_name, const void* data, uint32_t size_in_bytes)

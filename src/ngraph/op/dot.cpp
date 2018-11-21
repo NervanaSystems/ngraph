@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <functional>
 #include <memory>
@@ -29,71 +29,108 @@
 using namespace std;
 using namespace ngraph;
 
-//
-// Helper function to compute the number of dot axes according to default behavior when
-// they are not specified.
-//
-size_t default_reduction_axes_count(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-{
-    if (arg0->get_shape().size() == 0 || arg1->get_shape().size() == 0)
-    {
-        return 0;
-    }
-    else
-    {
-        return 1;
-    }
-}
-
 op::Dot::Dot(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : Dot(arg0, arg1, default_reduction_axes_count(arg0, arg1))
+    : Dot(arg0, arg1, 0, false)
 {
 }
 
 op::Dot::Dot(const shared_ptr<Node>& arg0,
              const shared_ptr<Node>& arg1,
-             size_t reduction_axes_count)
-    : RequiresTensorViewArgs("Dot", {arg0, arg1})
+             size_t reduction_axes_count,
+             bool has_reduction_axes_count)
+    : Op("Dot", check_single_output_args({arg0, arg1}))
     , m_reduction_axes_count(reduction_axes_count)
+    , m_has_reduction_axes_count(has_reduction_axes_count)
 {
-    auto& input_0 = get_inputs().at(0);
-    auto& input_1 = get_inputs().at(1);
+    constructor_validate_and_infer_types();
+}
 
-    if (input_0.get_element_type() != input_1.get_element_type())
+void op::Dot::validate_and_infer_types()
+{
+    element::Type result_et;
+
+    NODE_VALIDATION_ASSERT(
+        this, element::Type::merge(result_et, get_input_element_type(0), get_input_element_type(1)))
+        << "Arguments do not have the same element type (arg0 element type: "
+        << get_input_element_type(0) << ", arg1 element type: " << get_input_element_type(1)
+        << ").";
+
+    const PartialShape& arg0_shape = get_input_partial_shape(0);
+    const PartialShape& arg1_shape = get_input_partial_shape(1);
+
+    // If an explicit value was not passed for reduction axis count at construction time, we have
+    // some extra work to do.
+    //
+    // - If one of the arguments is known to be scalar, the count is 0.
+    // - If both of the arguments are known to be nonscalar, the count is 1.
+    // - Otherwise, the count is unknown.
+    bool reduction_axes_ambiguous = !m_has_reduction_axes_count;
+
+    if (reduction_axes_ambiguous)
     {
-        throw ngraph_error("Arguments to dot must have the same element type");
-    }
-
-    Shape input_0_shape = input_0.get_shape();
-    Shape input_1_shape = input_1.get_shape();
-
-    if (reduction_axes_count > input_0_shape.size())
-    {
-        throw ngraph_error("Dot has too many axes for arg0");
-    }
-
-    if (reduction_axes_count > input_1_shape.size())
-    {
-        throw ngraph_error("Dot has too many axes for arg1");
-    }
-
-    for (size_t i = 0; i < reduction_axes_count; i++)
-    {
-        if (input_0_shape[input_0_shape.size() - reduction_axes_count + i] != input_1_shape[i])
+        if (arg0_shape.rank().same_scheme(0) || arg1_shape.rank().same_scheme(0))
         {
-            throw ngraph_error("Dot axes do not have same length");
+            m_reduction_axes_count = 0;
+            reduction_axes_ambiguous = false;
+        }
+        else if (arg0_shape.rank().is_static() && arg1_shape.rank().is_static())
+        {
+            m_reduction_axes_count = 1;
+            reduction_axes_ambiguous = false;
         }
     }
 
-    Shape result_shape(input_0_shape.size() + input_1_shape.size() - 2 * reduction_axes_count);
+    PartialShape result_shape;
 
-    copy(input_0_shape.begin(), input_0_shape.end() - reduction_axes_count, result_shape.begin());
-    copy(input_1_shape.begin() + reduction_axes_count,
-         input_1_shape.end(),
-         result_shape.begin() + (input_0_shape.size() - reduction_axes_count));
+    NODE_VALIDATION_ASSERT(this,
+                           reduction_axes_ambiguous || arg0_shape.rank().is_dynamic() ||
+                               m_reduction_axes_count <= size_t(arg0_shape.rank()))
+        << "Reduction axes count (" << m_reduction_axes_count
+        << ") is too large (arg0 shape: " << arg0_shape << ", arg1 shape: " << arg1_shape << ").";
 
-    auto result_type = make_shared<TensorViewType>(input_0.get_element_type(), result_shape);
-    set_value_type_checked(result_type);
+    NODE_VALIDATION_ASSERT(this,
+                           reduction_axes_ambiguous || arg1_shape.rank().is_dynamic() ||
+                               m_reduction_axes_count <= size_t(arg1_shape.rank()))
+        << "Reduction axes count (" << m_reduction_axes_count
+        << ") is too large (arg0 shape: " << arg0_shape << ", arg1 shape: " << arg1_shape << ").";
+
+    if (!reduction_axes_ambiguous && arg0_shape.rank().is_static() && arg1_shape.rank().is_static())
+    {
+        for (size_t i = 0; i < m_reduction_axes_count; i++)
+        {
+            size_t axis_index_arg0 = size_t(arg0_shape.rank()) - m_reduction_axes_count + i;
+            size_t axis_index_arg1 = i;
+
+            NODE_VALIDATION_ASSERT(
+                this, arg0_shape[axis_index_arg0].compatible(arg1_shape[axis_index_arg1]))
+                << "Paired axes (axis " << axis_index_arg0 << " from arg0, axis " << axis_index_arg1
+                << " from arg1) do not have same length (arg0 shape: " << arg0_shape
+                << ", arg1 shape: " << arg1_shape
+                << ", reduction axes count: " << m_reduction_axes_count << ").";
+        }
+
+        std::vector<Dimension> result_dims(size_t(arg0_shape.rank()) + size_t(arg1_shape.rank()) -
+                                           2 * m_reduction_axes_count);
+
+        size_t i = 0;
+
+        for (size_t j = 0; j < size_t(arg0_shape.rank()) - m_reduction_axes_count; j++)
+        {
+            result_dims[i++] = arg0_shape[j];
+        }
+        for (size_t j = m_reduction_axes_count; j < size_t(arg1_shape.rank()); j++)
+        {
+            result_dims[i++] = arg1_shape[j];
+        }
+
+        result_shape = PartialShape(result_dims);
+    }
+    else
+    {
+        result_shape = PartialShape::dynamic();
+    }
+
+    set_output_type(0, result_et, result_shape);
 }
 
 shared_ptr<op::Reshape> make_reshape_axes_to_front(const shared_ptr<Node>& n,
@@ -136,11 +173,11 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
     J_shape.insert(J_shape.begin(), y_shape.begin(), y_shape.begin() + m_reduction_axes_count);
     K_shape.insert(K_shape.begin(), y_shape.begin() + J_shape.size(), y_shape.end());
 
-    auto y_reshaped = make_reshape_axes_to_front(y, J_shape, K_shape);               // KI
-    auto delta_dot_y_reshaped = make_shared<Dot>(delta, y_reshaped, K_shape.size()); // JI
+    auto y_reshaped = make_reshape_axes_to_front(y, J_shape, K_shape);               // KJ
+    auto delta_dot_y_reshaped = make_shared<Dot>(delta, y_reshaped, K_shape.size()); // IK.KJ->IJ
     adjoints.add_delta(x, delta_dot_y_reshaped);
 
     auto x_reshaped = make_reshape_axes_to_front(x, I_shape, J_shape);               // JI
-    auto x_reshaped_dot_delta = make_shared<Dot>(x_reshaped, delta, I_shape.size()); // JK
+    auto x_reshaped_dot_delta = make_shared<Dot>(x_reshaped, delta, I_shape.size()); // JI.IK->JK
     adjoints.add_delta(y, x_reshaped_dot_delta);
 }

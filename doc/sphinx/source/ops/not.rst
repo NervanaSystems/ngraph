@@ -12,7 +12,7 @@ Not
 Description
 ===========
 
-Produces a single output tensor of boolean type and the same shape as ``arg``,
+Produces a single output tensor of boolean type and the same shape as ``arg,``
 where the value at each coordinate of ``output`` is the negation of the
 value at each ``arg`` coordinate.
 

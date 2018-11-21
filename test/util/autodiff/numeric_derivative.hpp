@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -26,17 +26,17 @@ namespace ngraph
 {
     namespace autodiff
     {
-        /// @brief numeric approximation of the derivative
-        /// @param f A function
-        /// @param args Values for the arguments (the independent variables)
-        /// @param delta increment for the variables
-        /// @param indep_params parameters with respect to which to compute derivatives
-        /// @returns vector of dy/dvar, where each dy/dvar's shape is concat(y.shape(), var.shape())
+        /// \brief numeric approximation of the derivative
+        /// \param f A function
+        /// \param args Values for the arguments (the independent variables)
+        /// \param delta increment for the variables
+        /// \param indep_params parameters with respect to which to compute derivatives
+        /// \returns vector of dy/dvar, where each dy/dvar's shape is concat(y.shape(), var.shape())
         template <typename T>
-        std::vector<std::shared_ptr<runtime::TensorView>>
-            numeric_derivative(const std::shared_ptr<runtime::Backend>& backend,
+        std::vector<std::shared_ptr<runtime::Tensor>>
+            numeric_derivative(runtime::Backend* backend,
                                const std::shared_ptr<Function>& f,
-                               const std::vector<std::shared_ptr<runtime::TensorView>>& args,
+                               const std::vector<std::shared_ptr<runtime::Tensor>>& args,
                                T delta,
                                const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
         {
@@ -45,7 +45,7 @@ namespace ngraph
             auto params = f->get_parameters();
 
             // Results for each derivative, shape Y|X_i
-            std::vector<std::shared_ptr<runtime::TensorView>> results;
+            std::vector<std::shared_ptr<runtime::Tensor>> results;
 
             for (auto param : indep_params)
             {
@@ -58,8 +58,8 @@ namespace ngraph
             // ref_y is the function evaluated at the args
             auto ref_y = backend->create_tensor<T>(y_shape);
 
-            backend->call(
-                f, std::vector<std::shared_ptr<ngraph::runtime::TensorView>>{ref_y}, args);
+            backend->call_with_validate(
+                f, std::vector<std::shared_ptr<ngraph::runtime::Tensor>>{ref_y}, args);
             auto ref_vec = read_vector<T>(ref_y);
 
             // inc_y will hold f(x+dx) values
@@ -84,7 +84,7 @@ namespace ngraph
                         auto old_val = vec[j];
                         vec[j] += delta;
                         write_vector(arg, vec);
-                        backend->call(f, {inc_y}, args);
+                        backend->call_with_validate(f, {inc_y}, args);
                         auto inc_vec = read_vector<T>(inc_y);
                         vec[j] = old_val;
                         write_vector(arg, vec);

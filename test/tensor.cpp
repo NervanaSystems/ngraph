@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <memory>
@@ -39,7 +39,7 @@ TEST(tensor, size)
     {
         auto arg0 = make_shared<op::Parameter>(element::f32, Shape{2, 3});
         auto add = make_shared<op::Add>(arg0, arg0);
-        auto f0 = make_shared<Function>(add, op::ParameterVector{arg0});
+        auto f0 = make_shared<Function>(add, ParameterVector{arg0});
 
         pass_manager.run_passes(f0);
 
@@ -52,7 +52,7 @@ TEST(tensor, size)
     {
         auto arg0 = make_shared<op::Parameter>(element::f32, Shape{});
         auto add = make_shared<op::Add>(arg0, arg0);
-        auto f0 = make_shared<Function>(add, op::ParameterVector{arg0});
+        auto f0 = make_shared<Function>(add, ParameterVector{arg0});
 
         pass_manager.run_passes(f0);
 
@@ -65,7 +65,7 @@ TEST(tensor, size)
     {
         auto arg0 = make_shared<op::Parameter>(element::f32, Shape{1});
         auto add = make_shared<op::Add>(arg0, arg0);
-        auto f0 = make_shared<Function>(add, op::ParameterVector{arg0});
+        auto f0 = make_shared<Function>(add, ParameterVector{arg0});
 
         pass_manager.run_passes(f0);
 
@@ -116,7 +116,7 @@ TEST(tensor, output_flag)
 
     auto arg0 = make_shared<op::Parameter>(element::f32, Shape{1});
     auto add = make_shared<op::Add>(arg0, arg0);
-    auto f0 = make_shared<Function>(add, op::ParameterVector{arg0});
+    auto f0 = make_shared<Function>(add, ParameterVector{arg0});
 
     pass_manager.run_passes(f0);
 

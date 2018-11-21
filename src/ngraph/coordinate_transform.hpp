@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -93,8 +93,7 @@ namespace ngraph
         };
 
         Iterator begin() noexcept { return Iterator(m_target_shape); }
-        Iterator end() noexcept { return Iterator(m_target_shape, true); }
-    private:
+        Iterator end() noexcept { return m_end_iterator; }
         size_t index_source(const Coordinate& c) const;
         static Strides default_strides(size_t n_axes);
         static CoordinateDiff default_padding(size_t n_axes);
@@ -113,5 +112,6 @@ namespace ngraph
 
         Shape m_target_shape;
         size_t m_n_axes;
+        Iterator m_end_iterator;
     };
 }

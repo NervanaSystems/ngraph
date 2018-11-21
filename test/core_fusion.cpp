@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <cstdio>
@@ -52,7 +52,7 @@ TEST(core_fusion, core_fusion_pass_basic)
     auto graph = make_shared<op::Abs>(max);
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::CoreFusion>();
-    auto func = make_shared<Function>(graph, op::ParameterVector{B});
+    auto func = make_shared<Function>(graph, ParameterVector{B});
     pass_manager.run_passes(func);
     ASSERT_NE(std::dynamic_pointer_cast<op::Relu>(graph->get_argument(0)), nullptr);
 }
@@ -119,13 +119,13 @@ TEST(core_fusion, sparsity_opt_56x56)
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::CoreFusion>();
-    auto params = op::ParameterVector{data_stride3,
-                                      weights_stride3,
-                                      param_broadcast_w3,
-                                      weights_stride1,
-                                      param_broadcast_w1,
-                                      other_arg,
-                                      weights_conv_s2};
+    auto params = ParameterVector{data_stride3,
+                                  weights_stride3,
+                                  param_broadcast_w3,
+                                  weights_stride1,
+                                  param_broadcast_w1,
+                                  other_arg,
+                                  weights_conv_s2};
     auto func = make_shared<Function>(NodeVector{conv_s2_1, conv_s2_2}, params);
     pass_manager.run_passes(func);
     auto results = func->get_results();

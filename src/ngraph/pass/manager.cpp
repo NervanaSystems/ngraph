@@ -1,21 +1,24 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
+#ifdef WIN32
+#else
 #include <cxxabi.h>
+#endif
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -87,6 +90,10 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
         auto call_graph_pass = dynamic_pointer_cast<CallGraphPass>(pass);
         if (module_pass)
         {
+            if (auto vt_pass = dynamic_pointer_cast<pass::VisualizeTree>(module_pass))
+            {
+                vt_pass->set_ops_to_details(get_state().get_visualize_tree_ops_map());
+            }
             module_pass->run_on_module(fs);
         }
         else if (function_pass)
@@ -114,9 +121,15 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
             }
         }
 
+        // Better to do this in node replacement but this will do for now
+        for (auto f : fs)
+        {
+            f->validate_nodes_and_infer_types();
+        }
+
         if (m_visualize || m_serialize)
         {
-            //visualizations and serializations will be named after the outermost function
+            // visualizations and serializations will be named after the outermost function
             const size_t num_digits_in_pass_index = 3;
             std::string index_str = std::to_string(index);
             index_str = std::string(num_digits_in_pass_index - index_str.length(), '0') + index_str;
@@ -126,12 +139,13 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
             if (m_visualize)
             {
                 pass::VisualizeTree vt(base_filename + pass::VisualizeTree::get_file_ext());
+                vt.set_ops_to_details(get_state().get_visualize_tree_ops_map());
                 vt.run_on_module(fs);
             }
 
             if (m_serialize)
             {
-                //no "." in the extension
+                // no "." in the extension
                 pass::Serialization st(base_filename + "json");
                 st.run_on_module(fs);
             }
@@ -142,8 +156,10 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
         {
             PassBase* p = pass.get();
             string name = typeid(*p).name();
+#ifndef WIN32
             int status;
-            name = abi::__cxa_demangle(name.c_str(), 0, 0, &status);
+            name = abi::__cxa_demangle(name.c_str(), nullptr, nullptr, &status);
+#endif
             cout << setw(7) << pass_timer.get_milliseconds() << "ms " << name << "\n";
         }
     }

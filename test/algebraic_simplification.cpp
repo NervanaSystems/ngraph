@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <cstdio>
@@ -75,7 +75,7 @@ TEST(algebraic_simplification, add_types_shapes)
             auto add_b_0_0 = add_b_0 + iconst0;
 
             auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, add_a_0_0, c, add_b_0_0},
-                                                op::ParameterVector{a, b, c});
+                                                ParameterVector{a, b, c});
             pass_manager.run_passes(f);
 
             ASSERT_EQ(count_ops_of_type<op::Add>(f), 0);
@@ -106,7 +106,7 @@ TEST(algebraic_simplification, add_broadcast)
     auto add_b_0_0 = add_b_0 + const_broadcast;
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, add_a_0_0, c, add_b_0_0},
-                                        op::ParameterVector{a, b, c});
+                                        ParameterVector{a, b, c});
     pass_manager.run_passes(f);
 
     ASSERT_EQ(count_ops_of_type<op::Add>(f), 0);
@@ -135,7 +135,7 @@ TEST(algebraic_simplification, multiply_broadcast)
     auto mul_b_0_0 = mul_b_0 * const_broadcast;
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, mul_a_0_0, c, mul_b_0_0},
-                                        op::ParameterVector{a, b, c});
+                                        ParameterVector{a, b, c});
     pass_manager.run_passes(f);
 
     ASSERT_EQ(count_ops_of_type<op::Add>(f), 0);
@@ -164,7 +164,7 @@ TEST(algebraic_simplification, zero_plus_zero_commutativity)
     auto add_b_0_0 = iconst0 + b;
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, add_a_0_0, c, add_b_0_0},
-                                        op::ParameterVector{a, b, c});
+                                        ParameterVector{a, b, c});
     pass_manager.run_passes(f);
 
     ASSERT_TRUE(ngraph::is_zero(f->get_results().at(2)->get_argument(0)));
@@ -187,7 +187,7 @@ TEST(algebraic_simplification, zero_multiply_zero_one)
     auto add_b_0 = iconst1 * iconst0;
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, add_a_0, c, add_b_0},
-                                        op::ParameterVector{a, b, c});
+                                        ParameterVector{a, b, c});
     pass_manager.run_passes(f);
 
     ASSERT_TRUE(ngraph::is_zero(f->get_results().at(2)->get_argument(0)));
@@ -212,7 +212,7 @@ TEST(algebraic_simplification, add_negative_tests)
     auto add_b_0_0 = add_b_0 + abs_a;
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, add_a_0_0, c, add_b_0_0},
-                                        op::ParameterVector{a, b, c});
+                                        ParameterVector{a, b, c});
     pass_manager.run_passes(f);
 
     auto expected = ngraph::NodeVector{a, b, add_a_0_0, c, add_b_0_0};
@@ -241,7 +241,7 @@ TEST(algebraic_simplification, multiply_negative_tests)
     auto add_b_0_0 = add_b_0 * abs_a;
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, add_a_0_0, c, add_b_0_0},
-                                        op::ParameterVector{a, b, c});
+                                        ParameterVector{a, b, c});
     pass_manager.run_passes(f);
 
     auto expected = ngraph::NodeVector{a, b, add_a_0_0, c, add_b_0_0};
@@ -261,7 +261,7 @@ TEST(algebraic_simplification, multiply_prod_vector_one)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
 
-    auto f = std::make_shared<Function>(ngraph::NodeVector{prod_fconst1}, op::ParameterVector{});
+    auto f = std::make_shared<Function>(ngraph::NodeVector{prod_fconst1}, ParameterVector{});
     pass_manager.run_passes(f);
     auto new_broadcast =
         std::dynamic_pointer_cast<op::Broadcast>(f->get_results().at(0)->get_argument(0));
@@ -281,7 +281,7 @@ TEST(algebraic_simplification, multiply_prod_scalar_one)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
 
-    auto f = std::make_shared<Function>(ngraph::NodeVector{prod_fconst1}, op::ParameterVector{});
+    auto f = std::make_shared<Function>(ngraph::NodeVector{prod_fconst1}, ParameterVector{});
     pass_manager.run_passes(f);
     auto new_const =
         std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
@@ -300,7 +300,7 @@ TEST(algebraic_simplification, multiply_prod_negative)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
 
-    auto f = std::make_shared<Function>(ngraph::NodeVector{prod_fconst1}, op::ParameterVector{});
+    auto f = std::make_shared<Function>(ngraph::NodeVector{prod_fconst1}, ParameterVector{});
     pass_manager.run_passes(f);
     auto f_prod = f->get_results().at(0)->get_argument(0);
     ASSERT_EQ(f_prod, prod_fconst1);
@@ -315,7 +315,7 @@ TEST(algebraic_simplification, multiply_sum_scalar_one)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
 
-    auto f = std::make_shared<Function>(ngraph::NodeVector{sum_fconst1}, op::ParameterVector{});
+    auto f = std::make_shared<Function>(ngraph::NodeVector{sum_fconst1}, ParameterVector{});
     pass_manager.run_passes(f);
     auto new_const =
         std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
@@ -334,7 +334,7 @@ TEST(algebraic_simplification, multiply_sum_vector_one)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
 
-    auto f = std::make_shared<Function>(ngraph::NodeVector{sum_fconst1}, op::ParameterVector{});
+    auto f = std::make_shared<Function>(ngraph::NodeVector{sum_fconst1}, ParameterVector{});
     pass_manager.run_passes(f);
     auto new_broadcast =
         std::dynamic_pointer_cast<op::Broadcast>(f->get_results().at(0)->get_argument(0));
@@ -354,7 +354,7 @@ TEST(algebraic_simplification, multiply_sum_negative)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
 
-    auto f = std::make_shared<Function>(ngraph::NodeVector{sum_fconst1}, op::ParameterVector{});
+    auto f = std::make_shared<Function>(ngraph::NodeVector{sum_fconst1}, ParameterVector{});
     pass_manager.run_passes(f);
     auto f_sum = f->get_results().at(0)->get_argument(0);
     ASSERT_EQ(f_sum, sum_fconst1);
@@ -382,9 +382,9 @@ TEST(algebraic_simplification, concat_reshape_slice)
     pass_manager.register_pass<pass::AlgebraicSimplification>();
     pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
 
-    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, op::ParameterVector{a});
+    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
     pass_manager.run_passes(f);
-    ASSERT_EQ(f->get_results().at(0)->get_argument(0), concat);
+    ASSERT_TRUE(std::dynamic_pointer_cast<op::Reshape>(f->get_results().at(0)->get_argument(0)));
 }
 
 TEST(algebraic_simplification, concat_slice)
@@ -405,7 +405,7 @@ TEST(algebraic_simplification, concat_slice)
     pass_manager.register_pass<pass::AlgebraicSimplification>();
     pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
 
-    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, op::ParameterVector{a});
+    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
     pass_manager.run_passes(f);
     ASSERT_EQ(f->get_results().at(0)->get_argument(0), goe);
 }
@@ -425,7 +425,68 @@ TEST(algebraic_simplification, concat_parameter_slice)
     pass_manager.register_pass<pass::AlgebraicSimplification>();
     pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
 
-    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, op::ParameterVector{a});
+    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
+    pass_manager.run_passes(f);
+    ASSERT_EQ(f->get_results().at(0)->get_argument(0), a);
+}
+
+TEST(algebraic_simplification, concat_parameter_slices_reversed)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{96, 100});
+    auto slice1 = make_shared<op::Slice>(a, Coordinate{0, 0}, Coordinate{32, 100}, Strides{1, 1});
+    auto slice2 = make_shared<op::Slice>(a, Coordinate{32, 0}, Coordinate{64, 100}, Strides{1, 1});
+    auto slice3 = make_shared<op::Slice>(a, Coordinate{64, 0}, Coordinate{96, 100}, Strides{1, 1});
+
+    size_t concat_axis = 0;
+    auto concat = make_shared<op::Concat>(NodeVector{slice3, slice2, slice1}, concat_axis);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
+    pass_manager.run_passes(f);
+    ASSERT_EQ(f->get_results().at(0)->get_argument(0), concat);
+}
+
+TEST(algebraic_simplification, concat_parameter_slices_element_count)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{96, 100});
+    //slicing 30 elements out of 96; should trigger a check that some elements are missing
+    auto slice1 = make_shared<op::Slice>(a, Coordinate{0, 0}, Coordinate{10, 100}, Strides{1, 1});
+    auto slice2 = make_shared<op::Slice>(a, Coordinate{10, 0}, Coordinate{20, 100}, Strides{1, 1});
+    auto slice3 = make_shared<op::Slice>(a, Coordinate{20, 0}, Coordinate{30, 100}, Strides{1, 1});
+
+    size_t concat_axis = 0;
+    auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
+    pass_manager.run_passes(f);
+    ASSERT_EQ(f->get_results().at(0)->get_argument(0), concat);
+}
+
+TEST(algebraic_simplification, concat_parameter_non_uniform_slices)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{96, 100});
+    auto slice1 = make_shared<op::Slice>(a, Coordinate{0, 0}, Coordinate{38, 100}, Strides{1, 1});
+    auto slice2 = make_shared<op::Slice>(a, Coordinate{38, 0}, Coordinate{64, 100}, Strides{1, 1});
+    auto slice3 = make_shared<op::Slice>(a, Coordinate{64, 0}, Coordinate{96, 100}, Strides{1, 1});
+
+    size_t concat_axis = 0;
+    auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::AlgebraicSimplification>();
+    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+
+    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
     pass_manager.run_passes(f);
     ASSERT_EQ(f->get_results().at(0)->get_argument(0), concat);
 }
@@ -450,7 +511,7 @@ TEST(algebraic_simplification, concat_different_goes)
     pass_manager.register_pass<pass::AlgebraicSimplification>();
     pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
 
-    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, op::ParameterVector{a});
+    auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
     pass_manager.run_passes(f);
     ASSERT_EQ(f->get_results().at(0)->get_argument(0), concat);
 }
@@ -471,7 +532,7 @@ TEST(algebraic_simplification, log_neg_neg)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
 
-    auto f = std::make_shared<Function>(ngraph::NodeVector{neg4}, op::ParameterVector{a, b});
+    auto f = std::make_shared<Function>(ngraph::NodeVector{neg4}, ParameterVector{a, b});
     pass_manager.run_passes(f);
     auto sub = std::dynamic_pointer_cast<op::Subtract>(neg_inner->get_argument(0));
     ASSERT_TRUE(sub != nullptr);
@@ -497,7 +558,7 @@ TEST(algebraic_simplification, log_no_exp)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
 
-    auto f = std::make_shared<Function>(ngraph::NodeVector{neg4}, op::ParameterVector{a, b});
+    auto f = std::make_shared<Function>(ngraph::NodeVector{neg4}, ParameterVector{a, b});
     pass_manager.run_passes(f);
     ASSERT_EQ(neg_inner->get_argument(0), log_div);
 }
@@ -518,7 +579,7 @@ TEST(algebraic_simplification, log_no_divide)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
 
-    auto f = std::make_shared<Function>(ngraph::NodeVector{neg4}, op::ParameterVector{a, b});
+    auto f = std::make_shared<Function>(ngraph::NodeVector{neg4}, ParameterVector{a, b});
     pass_manager.run_passes(f);
     ASSERT_EQ(neg_inner->get_argument(0), log_mul);
 }

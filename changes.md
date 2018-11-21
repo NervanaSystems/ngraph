@@ -1,10 +1,14 @@
 # API Changes
 
+## Passes
+* `LikeReplacement` pass must be run by all transformers.
+
 ## Nodes, Parameters
 
 * `Nodes` is now `NodeVector`
 * `Parameters` is now `ParameterVector`
 * `NodeVector`, `ParameterVector`, `AxisVector`, `AxisSet`, `Shape`, `Stride`, `Coordinate`, and `CoordinateDiff` are now classes, not type aliases.
+* `PrimaryTensorView` is now `TensorView` (and will merge into `Tensor`)
 
 ## Changes to ops
 
@@ -61,5 +65,5 @@ make_shared<Function>(results, result_type, parameters);
 make_shared<Function>(results, parameters);
 ```
 
-The runtime::TensorView methods to get_tensor<> and write<T>(std::vector&) have been removed
+The runtime::Tensor methods to get_tensor<> and write<T>(std::vector&) have been removed
 to the unit test directory under utils/test_tool.hpp read_vector and write_vector.

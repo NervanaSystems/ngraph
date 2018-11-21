@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <iostream>
@@ -51,7 +51,7 @@
 using namespace ngraph;
 void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
 {
-    //construct variance
+    // construct variance
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
     auto neg_input = std::make_shared<op::Negative>(input);
     auto exp_neg_input = std::make_shared<op::Exp>(neg_input);
@@ -63,7 +63,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
     auto add_exp = std::make_shared<op::Add>(exp_neg_input, broadcast_constant);
     auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
 
-    //Define a call back that needs to called once the DFG matches the pattern
+    // Define a call back that needs to called once the DFG matches the pattern
     ngraph::pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.get_match_root()->get_name();
@@ -118,7 +118,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     auto input_slice_0 = std::make_shared<op::Slice>(X, Coordinate{0, 0}, Coordinate{10, 100});
     auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
 
-    //ct-1 -> cell state (src_iter -> {ht | ct-1}
+    // ct-1 -> cell state (src_iter -> {ht | ct-1}
     auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
     auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, ct_1);
 
@@ -141,7 +141,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     auto ht = std::make_shared<op::Multiply>(output_gate, tanh_2);
     auto ht_label = std::make_shared<pattern::op::Label>(ht, nullptr, NodeVector{ht});
 
-    //Define a call back that needs to called once the DFG matches the pattern
+    // Define a call back that needs to called once the DFG matches the pattern
     pattern::graph_rewrite_callback callback = [ct_label,
                                                 input_xt,
                                                 weights_i2h,
@@ -481,7 +481,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto rnn_ht_out = std::make_shared<op::GetOutputElement>(rnn, 0);
         auto rnn_ht_ct_out = std::make_shared<op::GetOutputElement>(rnn, 1);
 
-        //slice the rnn ht's
+        // slice the rnn ht's
         size_t start_index = 0;
         size_t end_index = batch_size;
         // capture the slices in the reverse order, so it corrosponds to lstm_goes order captured by the Pattern matcher
@@ -530,7 +530,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             // now get the GOE0 which is the first output of lstm (ht)
             for (auto& goes : lstm_nodes[index]->get_outputs().at(0).get_inputs())
             {
-                auto goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(goes->get_node());
+                auto goe_node = std::static_pointer_cast<op::GetOutputElement>(goes->get_node());
                 // first output node of lstm
                 if (goe_node->get_n() == 0)
                 {
@@ -575,7 +575,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             }
         }
 
-        //now go through the lstm goe_0 consumers and replace them with the slice
+        // now go through the lstm goe_0 consumers and replace them with the slice
         for (auto& node : lstm_goe0_user)
         {
             for (size_t i = 0; i < node->get_input_size(); i++)

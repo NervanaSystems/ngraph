@@ -14,6 +14,9 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(compile_benchmark)
 add_subdirectory(nbench)
+add_subdirectory(ngraph-to-plaidml)
 add_subdirectory(reserialize)
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    add_subdirectory(serialize_onnx)
+endif()

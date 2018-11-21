@@ -21,16 +21,21 @@ set(SRC
     intelgpu_op_batchnorm.cpp
     intelgpu_op_broadcast.cpp
     intelgpu_op_custom_kernels.cpp
+    intelgpu_op_convolution.cpp
+    intelgpu_op_softmax.cpp
+    intelgpu_op_custom_func_call.cpp
     code_writer.cpp
+    visualize_tree.cpp
 )
 
 if (NGRAPH_INTELGPU_ENABLE)
     add_library(intelgpu_backend SHARED ${SRC})
-    set_target_properties(intelgpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
-    target_link_libraries(intelgpu_backend PUBLIC ngraph)
-    find_package(CLDNN REQUIRED)
-    target_include_directories(intelgpu_backend SYSTEM PUBLIC ${CLDNN_INCLUDE_DIRS})
-    target_link_libraries(intelgpu_backend PUBLIC ${CLDNN_LIBRARIES})
+    target_link_libraries(intelgpu_backend PUBLIC ngraph libcldnn)
+    set_target_properties(intelgpu_backend
+        PROPERTIES
+            VERSION ${NGRAPH_VERSION}
+            SOVERSION ${NGRAPH_API_VERSION}
+            LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     install(TARGETS intelgpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

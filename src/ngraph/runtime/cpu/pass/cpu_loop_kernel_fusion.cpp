@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <iostream>
@@ -59,7 +59,7 @@ public:
             if (is_fusible(n))
             {
                 auto arg_from_fusible_group = collect_fusible_args(n);
-                //create a new group
+                // create a new group
                 if (!arg_from_fusible_group)
                 {
                     m_heads.insert(std::make_pair(n, n));
@@ -94,7 +94,6 @@ public:
         for (auto e : m_graphs)
         {
             auto& lkg = e.second;
-
             NodeVector member_outputs = ngraph::get_subgraph_outputs(lkg.m_nodes, NodeVector{});
             auto lk = std::make_shared<runtime::cpu::op::LoopKernel>(
                 lkg.m_nodes, member_outputs, lkg.m_inputs);
@@ -149,7 +148,7 @@ private:
         std::shared_ptr<Node> arg_from_fusible_group;
         for (auto arg : n->get_arguments())
         {
-            //an argument is fusible and a part of some group
+            // an argument is fusible and a part of some group
             NGRAPH_DEBUG << "Considering " << arg->get_name();
             if (m_heads.count(arg) != 0)
             {
@@ -195,16 +194,16 @@ bool ngraph::runtime::cpu::pass::CPULoopKernelFusion::run_on_function(
                     "support for fusing multi-output nodes in loop kernels isn't yet implemented");
             }
 
-            //TODO: revisit when we need support for multi-output nodes
+            // TODO: revisit when we need support for multi-output nodes
             auto& orig_output = outputs.at(i)->get_outputs().at(0);
 
-            //this is needed since replace_output modifies orig_output.get_inputs()
+            // this is needed since replace_output modifies orig_output.get_inputs()
             std::set<ngraph::descriptor::Input*> inputs_copy{begin(orig_output.get_inputs()),
                                                              end(orig_output.get_inputs())};
             for (auto input : inputs_copy)
             {
-                //this user is NOT internal to this loop kernel
-                //so it needs to be replaced with corresponding lk's GOE
+                // this user is NOT internal to this loop kernel
+                // so it needs to be replaced with corresponding lk's GOE
                 if (lk_nodes_set.count(input->get_node()) == 0)
                 {
                     input->replace_output(ith_output);
@@ -213,5 +212,5 @@ bool ngraph::runtime::cpu::pass::CPULoopKernelFusion::run_on_function(
         }
     }
 
-    return !lkc.get_loop_kernels().empty();
+    return !loop_kernels.empty();
 }

@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <algorithm>
 #include <fstream>
@@ -160,7 +160,7 @@ void pass::MemoryVisualize::draw_tensor_weight(ostream& file, const list<shared_
     for (const descriptor::Tensor* tensor : tensor_set)
     {
         int generator_weight = compute_op_weight(generator_op[tensor]);
-        if (contains(largest_live_list, tensor))
+        if (largest_live_list.find(tensor) != largest_live_list.end())
         {
             file << "    <tr style=\"background-color: #f0c0f0\">";
         }
@@ -185,7 +185,7 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<shared_ptr<
     size_t offset = 200;
     size_t width = 1000;
     size_t scale = width - offset;
-    size_t line_spacing = stroke_width * 1.5;
+    size_t line_spacing = static_cast<size_t>(stroke_width * 1.5);
     size_t line_count = 0;
     for (shared_ptr<Node> node : nodes)
     {
@@ -203,7 +203,7 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<shared_ptr<
         float footprint = float(MemoryVisualize::memory_footprint(node));
         y += line_spacing;
         size_t x1 = offset;
-        size_t x2 = ((usage / memory_footprint) * scale) + offset;
+        size_t x2 = static_cast<size_t>(((usage / memory_footprint) * scale) + offset);
         file << "<text x=\"" << 0 << "\" y=\"" << y + text_offset << "\" fill=\""
              << "black"
              << "\">" << node->get_name() << "</text>\n";
@@ -211,7 +211,7 @@ void pass::MemoryVisualize::draw_histogram(ostream& file, const list<shared_ptr<
              << "\"";
         file << " style=\"stroke:forestgreen;stroke-width:" << stroke_width << "\" />\n";
         x1 = x2;
-        x2 = ((footprint / memory_footprint) * scale) + offset;
+        x2 = static_cast<size_t>(((footprint / memory_footprint) * scale) + offset);
         file << "<line x1=\"" << x1 << "\" y1=\"" << y << "\" x2=\"" << x2 << "\" y2=\"" << y
              << "\"";
         file << " style=\"stroke:firebrick;stroke-width:" << stroke_width << "\" />\n";
@@ -241,11 +241,11 @@ int pass::MemoryVisualize::compute_op_weight(const shared_ptr<Node> exop)
     int mass = 0;
     for (const descriptor::Tensor* tensor : exop->liveness_new_list)
     {
-        mass += tensor->size();
+        mass += static_cast<int>(tensor->size());
     }
     for (const descriptor::Tensor* tensor : exop->liveness_free_list)
     {
-        mass -= tensor->size();
+        mass -= static_cast<int>(tensor->size());
     }
     return mass;
 }

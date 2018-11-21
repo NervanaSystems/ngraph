@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
@@ -22,53 +22,53 @@
 using namespace ngraph;
 using namespace std;
 
-shared_ptr<runtime::TensorView>
+shared_ptr<runtime::Tensor>
     make_reduce_result(function<shared_ptr<Node>(const shared_ptr<Node>&, const AxisSet&)> func)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(func(A, {0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(func(A, {0}), ParameterVector{A});
     auto backend = runtime::Backend::create("INTERPRETER");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->create_tensor(element::f32, shape_rt);
-    backend->call(f, {result}, {a});
+    backend->call_with_validate(f, {result}, {a});
 
     return result;
 }
 
-shared_ptr<runtime::TensorView> make_reduce_result_true(
+shared_ptr<runtime::Tensor> make_reduce_result_true(
     function<shared_ptr<Node>(const shared_ptr<Node>&, const AxisSet&, bool)> func)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(func(A, {0}, true), op::ParameterVector{A});
+    auto f = make_shared<Function>(func(A, {0}, true), ParameterVector{A});
     auto backend = runtime::Backend::create("INTERPRETER");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->create_tensor(element::f32, shape_rt);
-    backend->call(f, {result}, {a});
+    backend->call_with_validate(f, {result}, {a});
 
     return result;
 }
 
-shared_ptr<runtime::TensorView> make_reduce_result_false(
+shared_ptr<runtime::Tensor> make_reduce_result_false(
     function<shared_ptr<Node>(const shared_ptr<Node>&, const AxisSet&, bool)> func)
 {
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(func(A, {0}, false), op::ParameterVector{A});
+    auto f = make_shared<Function>(func(A, {0}, false), ParameterVector{A});
     auto backend = runtime::Backend::create("INTERPRETER");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->create_tensor(element::f32, shape_rt);
-    backend->call(f, {result}, {a});
+    backend->call_with_validate(f, {result}, {a});
 
     return result;
 }
@@ -140,7 +140,7 @@ TEST(builder, tensor_mask)
     Shape mask_shape{3, 5};
     auto f =
         make_shared<Function>(builder::tensor_mask<op::Less>(sequence_lengths, 1, 0, mask_shape, 0),
-                              op::ParameterVector{sequence_lengths});
+                              ParameterVector{sequence_lengths});
 
     auto backend = runtime::Backend::create("INTERPRETER");
 
@@ -148,7 +148,7 @@ TEST(builder, tensor_mask)
     copy_data(sequence_lengths_data, vector<uint32_t>{1, 3, 2});
     auto result = backend->create_tensor(element::boolean, mask_shape);
 
-    backend->call(f, {result}, {sequence_lengths_data});
+    backend->call_with_validate(f, {result}, {sequence_lengths_data});
     vector<char> expected{1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0};
 
     EXPECT_EQ(expected, read_vector<char>(result));

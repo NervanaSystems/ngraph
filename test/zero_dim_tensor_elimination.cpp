@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <memory>
 
@@ -45,7 +45,7 @@ TEST(zero_dim_tensor_elimination, zero_sum)
     auto abs_node = std::make_shared<op::Abs>(A);
     auto sum_node = std::make_shared<op::Sum>(abs_node, AxisSet{0});
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
-    auto f = std::make_shared<Function>(NodeVector{sum_node, constant}, op::ParameterVector{A});
+    auto f = std::make_shared<Function>(NodeVector{sum_node, constant}, ParameterVector{A});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
@@ -65,7 +65,7 @@ TEST(zero_dim_tensor_elimination, zero_const_conv)
     auto abs_node = std::make_shared<op::Abs>(convolution);
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
     auto f =
-        std::make_shared<Function>(NodeVector{abs_node, constant}, op::ParameterVector{A, weights});
+        std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A, weights});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
@@ -84,7 +84,7 @@ TEST(zero_dim_tensor_elimination, zero_const_avg_pool)
         std::make_shared<op::AvgPool>(A, Shape{1}, Strides{1}, Shape{2}, Shape{2}, true);
     auto abs_node = std::make_shared<op::Abs>(avg_pool);
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
-    auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, op::ParameterVector{A});
+    auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
@@ -103,7 +103,7 @@ TEST(zero_dim_tensor_elimination, zero_const_pad)
     auto pad = std::make_shared<op::Pad>(A, B, Shape{2}, Shape{2}, Shape{0});
     auto abs_node = std::make_shared<op::Abs>(pad);
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
-    auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, op::ParameterVector{A, B});
+    auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
@@ -122,7 +122,7 @@ TEST(zero_dim_tensor_elimination, zero_const_slice)
     auto pad = std::make_shared<op::Pad>(A, B, Shape{2}, Shape{2}, Shape{0});
     auto abs_node = std::make_shared<op::Abs>(pad);
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
-    auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, op::ParameterVector{A, B});
+    auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<pass::VisualizeTree>("before.pdf");

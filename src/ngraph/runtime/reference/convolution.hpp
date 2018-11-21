@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -59,7 +59,7 @@ namespace ngraph
                 // At the outermost level we will walk over every output coordinate O.
                 CoordinateTransform output_transform(out_shape);
 
-                for (Coordinate out_coord : output_transform)
+                for (const Coordinate& out_coord : output_transform)
                 {
                     // Our output coordinate O will have the form:
                     //
@@ -169,9 +169,10 @@ namespace ngraph
 
                     CoordinateTransform::Iterator input_it = input_batch_transform.begin();
                     CoordinateTransform::Iterator filter_it = filter_transform.begin();
+                    CoordinateTransform::Iterator input_it_end = input_batch_transform.end();
+                    CoordinateTransform::Iterator filter_it_end = filter_transform.end();
 
-                    while (input_it != input_batch_transform.end() &&
-                           filter_it != filter_transform.end())
+                    while (input_it != input_it_end && filter_it != filter_it_end)
                     {
                         const Coordinate& input_batch_coord = *input_it;
                         Coordinate filter_coord = *filter_it;

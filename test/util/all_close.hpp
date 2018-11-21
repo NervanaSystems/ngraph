@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
@@ -27,23 +27,61 @@ namespace ngraph
 {
     namespace test
     {
-        /// @brief Same as numpy.allclose
-        /// @param a First tensor to compare
-        /// @param b Second tensor to compare
-        /// @param rtol Relative tolerance
-        /// @param atol Absolute tolerance
-        /// @returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
+        /// \brief Same as numpy.allclose
+        /// \param a First tensor to compare
+        /// \param b Second tensor to compare
+        /// \param rtol Relative tolerance
+        /// \param atol Absolute tolerance
+        /// \returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
         template <typename T>
-        bool all_close(const std::vector<T>& a,
-                       const std::vector<T>& b,
-                       T rtol = static_cast<T>(1e-5),
-                       T atol = static_cast<T>(1e-8))
+        typename std::enable_if<std::is_signed<T>::value, bool>::type
+            all_close(const std::vector<T>& a,
+                      const std::vector<T>& b,
+                      T rtol = static_cast<T>(1e-5),
+                      T atol = static_cast<T>(1e-8))
+        {
+            bool rc = true;
+            assert(a.size() == b.size());
+            size_t count = 0;
+            for (size_t i = 0; i < a.size(); ++i)
+            {
+                if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]) || !std::isfinite(a[i]) ||
+                    !std::isfinite(b[i]))
+                {
+                    if (count < 5)
+                    {
+                        NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
+                    }
+                    count++;
+                    rc = false;
+                }
+            }
+            if (!rc)
+            {
+                NGRAPH_INFO << "diff count: " << count << " out of " << a.size();
+            }
+            return rc;
+        }
+
+        /// \brief Same as numpy.allclose
+        /// \param a First tensor to compare
+        /// \param b Second tensor to compare
+        /// \param rtol Relative tolerance
+        /// \param atol Absolute tolerance
+        /// \returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
+        template <typename T>
+        typename std::enable_if<std::is_unsigned<T>::value, bool>::type
+            all_close(const std::vector<T>& a,
+                      const std::vector<T>& b,
+                      T rtol = static_cast<T>(1e-5),
+                      T atol = static_cast<T>(1e-8))
         {
             bool rc = true;
             assert(a.size() == b.size());
             for (size_t i = 0; i < a.size(); ++i)
             {
-                if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]))
+                T abs_diff = (a[i] > b[i]) ? (a[i] - b[i]) : (b[i] - a[i]);
+                if (abs_diff > atol + rtol * b[i])
                 {
                     NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
                     rc = false;
@@ -52,20 +90,20 @@ namespace ngraph
             return rc;
         }
 
-        /// @brief Same as numpy.allclose
-        /// @param a First tensor to compare
-        /// @param b Second tensor to compare
-        /// @param rtol Relative tolerance
-        /// @param atol Absolute tolerance
+        /// \brief Same as numpy.allclose
+        /// \param a First tensor to compare
+        /// \param b Second tensor to compare
+        /// \param rtol Relative tolerance
+        /// \param atol Absolute tolerance
         /// Returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
         template <typename T>
-        bool all_close(const std::shared_ptr<ngraph::runtime::TensorView>& a,
-                       const std::shared_ptr<ngraph::runtime::TensorView>& b,
+        bool all_close(const std::shared_ptr<ngraph::runtime::Tensor>& a,
+                       const std::shared_ptr<ngraph::runtime::Tensor>& b,
                        T rtol = 1e-5f,
                        T atol = 1e-8f)
         {
             // Check that the layouts are compatible
-            if (*a->get_tensor_view_layout() != *b->get_tensor_view_layout())
+            if (*a->get_tensor_layout() != *b->get_tensor_layout())
             {
                 throw ngraph_error("Cannot compare tensors with different layouts");
             }
@@ -78,15 +116,15 @@ namespace ngraph
             return all_close(read_vector<T>(a), read_vector<T>(b), rtol, atol);
         }
 
-        /// @brief Same as numpy.allclose
-        /// @param as First tensors to compare
-        /// @param bs Second tensors to compare
-        /// @param rtol Relative tolerance
-        /// @param atol Absolute tolerance
+        /// \brief Same as numpy.allclose
+        /// \param as First tensors to compare
+        /// \param bs Second tensors to compare
+        /// \param rtol Relative tolerance
+        /// \param atol Absolute tolerance
         /// Returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
         template <typename T>
-        bool all_close(const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& as,
-                       const std::vector<std::shared_ptr<ngraph::runtime::TensorView>>& bs,
+        bool all_close(const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& as,
+                       const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& bs,
                        T rtol,
                        T atol)
         {

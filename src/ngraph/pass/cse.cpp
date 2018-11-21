@@ -1,18 +1,18 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #include <memory>
 #include <set>
@@ -46,7 +46,6 @@
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/relu.hpp"
-#include "ngraph/op/remainder.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
@@ -73,8 +72,8 @@ static bool cse_constant(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
         return false;
     }
 
-    auto ca = std::dynamic_pointer_cast<op::Constant>(a);
-    auto cb = std::dynamic_pointer_cast<op::Constant>(b);
+    auto ca = std::static_pointer_cast<op::Constant>(a);
+    auto cb = std::static_pointer_cast<op::Constant>(b);
 
     size_t size = shape_size(a->get_shape()) * a->get_element_type().size();
 
@@ -85,8 +84,8 @@ static bool cse_reshape(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_reshape for " << a->get_name() << " and " << b->get_name();
 
-    auto reshape_a = std::dynamic_pointer_cast<ngraph::op::Reshape>(a);
-    auto reshape_b = std::dynamic_pointer_cast<ngraph::op::Reshape>(b);
+    auto reshape_a = std::static_pointer_cast<ngraph::op::Reshape>(a);
+    auto reshape_b = std::static_pointer_cast<ngraph::op::Reshape>(b);
 
     return (a->get_argument(0) == b->get_argument(0)) &&
            (reshape_a->get_input_order() == reshape_b->get_input_order()) &&
@@ -96,8 +95,8 @@ static bool cse_broadcast(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_broadcast for " << a->get_name() << " and " << b->get_name();
 
-    auto broadcast_a = std::dynamic_pointer_cast<ngraph::op::Broadcast>(a);
-    auto broadcast_b = std::dynamic_pointer_cast<ngraph::op::Broadcast>(b);
+    auto broadcast_a = std::static_pointer_cast<ngraph::op::Broadcast>(a);
+    auto broadcast_b = std::static_pointer_cast<ngraph::op::Broadcast>(b);
 
     return (a->get_argument(0) == b->get_argument(0)) &&
            (broadcast_a->get_broadcast_axes() == broadcast_b->get_broadcast_axes()) &&
@@ -122,8 +121,8 @@ static bool cse_reduction(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_reduction for " << a->get_name() << " and " << b->get_name();
 
-    auto ar_a = std::dynamic_pointer_cast<op::util::ArithmeticReduction>(a);
-    auto ar_b = std::dynamic_pointer_cast<op::util::ArithmeticReduction>(b);
+    auto ar_a = std::static_pointer_cast<op::util::ArithmeticReduction>(a);
+    auto ar_b = std::static_pointer_cast<op::util::ArithmeticReduction>(b);
 
     return ar_a->get_argument(0) == ar_b->get_argument(0) &&
            ar_a->get_reduction_axes() == ar_b->get_reduction_axes();
@@ -162,7 +161,6 @@ static std::unordered_map<std::type_index,
          {TI(op::Minimum), cse_binarywise},
          {TI(op::Multiply), cse_binarywise},
          {TI(op::Power), cse_binarywise},
-         //{TI(op::Remainder), cse_binarywise},
          {TI(op::Subtract), cse_binarywise},
          {TI(op::Sum), cse_reduction},
          {TI(op::Product), cse_reduction},
@@ -177,8 +175,12 @@ static std::unordered_map<std::type_index,
 class NodeKey
 {
 public:
-    NodeKey(std::shared_ptr<Node> n)
+    NodeKey(std::shared_ptr<Node> n,
+            std::unordered_map<std::type_index,
+                               std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
+                backend_handlers)
         : m_node(n)
+        , m_backend_handlers(backend_handlers)
     {
     }
 
@@ -193,17 +195,30 @@ public:
             return false;
         }
 
-        auto eh = ops_to_cse_handlers.find(TI(p_this));
-        if (eh == ops_to_cse_handlers.end())
         {
-            return false;
+            auto eh = ops_to_cse_handlers.find(TI(p_this));
+            if (eh != ops_to_cse_handlers.end())
+            {
+                return eh->second(m_node, other.get_node());
+            }
         }
 
-        return eh->second(m_node, other.get_node());
+        {
+            auto eh = m_backend_handlers.find(TI(p_this));
+            if (eh != m_backend_handlers.end())
+            {
+                return eh->second(m_node, other.get_node());
+            }
+        }
+
+        return false;
     }
 
 private:
     std::shared_ptr<Node> m_node;
+    std::unordered_map<std::type_index,
+                       std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
+        m_backend_handlers;
 };
 
 namespace std
@@ -225,8 +240,8 @@ namespace std
 
             auto cargs = k.get_node()->get_arguments();
 
-            //TODO: Do we need another map, so we could
-            //specify how to compute hash for each op?
+            // TODO: Do we need another map, so we could
+            // specify how to compute hash for each op?
             if (p_this.is_commutative())
             {
                 std::sort(begin(cargs), end(cargs));
@@ -256,7 +271,7 @@ bool ngraph::pass::CommonSubexpressionElimination::run_on_function(
             continue;
         }
 
-        NodeKey n_key{n};
+        NodeKey n_key(n, m_backend_cse_handlers);
         if (expressions.count(n_key))
         {
             ngraph::replace_node(n, expressions.at(n_key));

@@ -19,6 +19,8 @@ from ngraph.ops import absolute
 from ngraph.ops import absolute as abs
 from ngraph.ops import acos
 from ngraph.ops import add
+from ngraph.ops import argmax
+from ngraph.ops import argmin
 from ngraph.ops import asin
 from ngraph.ops import atan
 from ngraph.ops import avg_pool
@@ -31,6 +33,7 @@ from ngraph.ops import concat
 from ngraph.ops import constant
 from ngraph.ops import convert
 from ngraph.ops import convolution
+from ngraph.ops import convolution_backprop_data
 from ngraph.ops import cos
 from ngraph.ops import cosh
 from ngraph.ops import divide
@@ -48,6 +51,7 @@ from ngraph.ops import log
 from ngraph.ops import logical_and
 from ngraph.ops import logical_or
 from ngraph.ops import logical_not
+from ngraph.ops import lrn
 from ngraph.ops import max
 from ngraph.ops import max_pool
 from ngraph.ops import maximum
@@ -77,5 +81,6 @@ from ngraph.ops import subtract
 from ngraph.ops import sum
 from ngraph.ops import tan
 from ngraph.ops import tanh
+from ngraph.ops import topk
 
 from ngraph.runtime import runtime

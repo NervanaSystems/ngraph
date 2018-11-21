@@ -1,24 +1,25 @@
-/*******************************************************************************
-* Copyright 2017-2018 Intel Corporation
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*******************************************************************************/
+//*****************************************************************************
+// Copyright 2017-2018 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
 
 #pragma once
 
 #include <cmath>
 
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/shape_util.hpp"
 
 namespace ngraph
 {
@@ -42,12 +43,14 @@ namespace ngraph
 
                 CoordinateTransform input_transform(in_shape);
 
+                T c = 0;
                 for (const Coordinate& input_coord : input_transform)
                 {
-                    Coordinate output_coord = project(input_coord, reduction_axes);
-
-                    out[output_transform.index(output_coord)] +=
-                        arg[input_transform.index(input_coord)];
+                    Coordinate output_coord = reduce(input_coord, reduction_axes);
+                    T y = arg[input_transform.index(input_coord)] - c;
+                    T t = out[output_transform.index(output_coord)] + y;
+                    c = (t - out[output_transform.index(output_coord)]) - y;
+                    out[output_transform.index(output_coord)] = t;
                 }
             }
         }

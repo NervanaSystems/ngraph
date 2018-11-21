@@ -6,23 +6,25 @@ Distributed Training in nGraph
 Why distributed training?
 -------------------------
 
-A tremendous amount of data is required to train deep neural networks in diverse 
-areas -- from computer vision to natural language processing. Meanwhile, 
-computation used in AI training has been increasing exponentially. And even 
-though significant improvements have been made in algorithms and hardware, 
-using one machine to train a very large neural network / model is usually not 
-optimal. The use of multiple nodes, then, becomes important for making deep 
-learning training feasible with a large datasets.   
+A tremendous amount of data is required to train DNNs in diverse areas -- from 
+computer vision to natural language processing. Meanwhile, computation used in 
+AI training has been increasing exponentially. And even though significant 
+improvements have been made in algorithms and hardware, using one machine to 
+train a very large :term:`NN` is usually not optimal. The use of multiple nodes, 
+then, becomes important for making deep learning training feasible with large 
+datasets.   
 
 Data parallelism is the most popular parallel architecture to accelerate deep 
-learning with large datasets. The first algorithm we support is based on the 
-`synchronous`_ :term:`SGD` method, and partitions the dataset among workers 
+learning with large datasets. The first algorithm we support is `based on the 
+synchronous`_ :term:`SGD` method, and partitions the dataset among workers 
 where each worker executes the same neural network model. For every iteration, 
 nGraph backend computes the gradients in back-propagation, aggregates the gradients 
 across all workers, and then update the weights. 
 
 How? (Generic frameworks)
 -------------------------
+
+* :doc:`../howto/distribute-train`
 
 To synchronize gradients across all workers, the essential operation for data 
 parallel training, due to its simplicity and scalability over parameter servers, 
@@ -94,7 +96,7 @@ communication collective ops such as allgather, scatter, gather, etc. in
 the future. 
 
 
-.. _synchronous: https://arxiv.org/pdf/1602.06709.pdf 
+.. _based on the synchronous: https://arxiv.org/pdf/1602.06709.pdf 
 .. _one could train ResNet-50 with Imagenet-1k data: https://blog.surf.nl/en/imagenet-1k-training-on-intel-xeon-phi-in-less-than-40-minutes/
 .. _arxiv.org/pdf/1709.05011.pdf: https://arxiv.org/pdf/1709.05011.pdf
 .. _Intel MLSL: https://github.com/intel/MLSL/releases

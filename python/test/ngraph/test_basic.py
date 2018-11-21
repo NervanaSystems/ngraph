@@ -164,7 +164,7 @@ def test_bad_data_shape():
     A = ng.parameter(shape=[2, 2], name='A', dtype=np.float32)
     B = ng.parameter(shape=[2, 2], name='B')
     model = (A + B)
-    runtime = ng.runtime(backend_name='CPU')
+    runtime = ng.runtime(backend_name='INTERPRETER')
     computation = runtime.computation(model, A, B)
 
     value_a = np.array([[1, 2]], dtype=np.float32)
@@ -219,8 +219,11 @@ def test_constant_get_data_signed_integer(data_type):
 def test_constant_get_data_unsigned_integer(data_type):
     np.random.seed(133391)
     input_data = np.random.randn(2, 3, 4).astype(data_type)
-    input_data = (np.iinfo(data_type).min + input_data * np.iinfo(data_type).max +
-                  input_data * np.iinfo(data_type).max)
+    input_data = (
+        np.iinfo(data_type).min
+        + input_data * np.iinfo(data_type).max
+        + input_data * np.iinfo(data_type).max
+    )
     node = ng.constant(input_data, dtype=data_type)
     retrieved_data = node.get_data()
     assert np.allclose(input_data, retrieved_data)
