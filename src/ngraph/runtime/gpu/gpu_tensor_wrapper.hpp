@@ -29,6 +29,7 @@ namespace ngraph
         namespace gpu
         {
             class GPUTensorWrapper;
+            std::ostream& operator<<(std::ostream& out, const ngraph::runtime::gpu::GPUTensorWrapper& obj);
         }
     }
 }
@@ -47,7 +48,7 @@ public:
     const std::string& get_name() const;
     const std::string& get_type() const;
     const std::pair<TensorType, size_t>& get_offset() const;
-
+    friend std::ostream& ngraph::runtime::gpu::operator<<(std::ostream& out, const ngraph::runtime::gpu::GPUTensorWrapper& obj);
 private:
     std::shared_ptr<descriptor::Tensor> m_tensor;
     std::string m_alias;

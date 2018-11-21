@@ -80,3 +80,13 @@ const std::string& runtime::gpu::GPUTensorWrapper::get_type() const
 {
     return get_element_type().c_type_string();
 }
+
+std::ostream& ngraph::runtime::gpu::operator<<(std::ostream& out, const ngraph::runtime::gpu::GPUTensorWrapper& obj)
+{
+    static std::vector<std::string> types { "CONSTANT", "INTERMEDIATE", "INPUT", "OUTPUT", "UNKNOWN" };
+    out << "gpu::tensor { name: " << obj.m_tensor->get_name() << " tensor_type: " << types.at(obj.m_offset.first)
+        << ", offset/index: " << obj.m_offset.second << ", dtype: " << obj.get_element_type() << ", shape: " << obj.get_shape()
+        << ", size: " << obj.get_size() << ", alias: " << obj.m_alias
+        << " }";
+    return out;
+}
