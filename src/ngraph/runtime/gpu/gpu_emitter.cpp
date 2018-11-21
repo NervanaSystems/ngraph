@@ -230,7 +230,6 @@ std::string runtime::gpu::GPU_Emitter::emit_Atan(EMIT_ARGS)
     return emit_elementwise<ngraph::op::Atan>(compiled_function, node, args, out);
 }
 
-
 std::string runtime::gpu::GPU_Emitter::emit_AvgPool(EMIT_ARGS)
 {
     // assumes NC{d1,d2,...} format
@@ -241,7 +240,6 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPool(EMIT_ARGS)
     auto padding_above = avg_pool->get_padding_above();
 
     size_t index = 0;
-
     // if 1d or has asymmetric padding, must handle pooling manually
     if (input_shape.size() == 3 || padding_below != padding_above)
     {
@@ -266,7 +264,7 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPool(EMIT_ARGS)
             : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
 
         index = cudnn_emitter->build_pooling(cudnn_avg_type,
-                                             out[0].get_type(),
+                                             out[0].get_element_type(),
                                              CUDNNEmitter::Prop::Forward,
                                              input_shape,
                                              result_shape,
@@ -298,7 +296,7 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
             : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
 
         auto index = cudnn_emitter->build_pooling(cudnn_avg_type,
-                                                  out[0].get_type(),
+                                                  out[0].get_element_type(),
                                                   CUDNNEmitter::Prop::Backward,
                                                   output_shape,
                                                   delta_shape,
@@ -311,9 +309,10 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
         // the forward pass but does not use them. It also behaves differently
         // for max pool vs avg pool. The repetition of args below is to address
         // this interface in a way that supports both max and avg pooling
-        // writer << "void* input[] = {" << node_names(args, {0, 0}) << "};\n";
+        // writer << "void* input[] = {" << node_names(args, {0, 0, 0}) << "};\n";
         // writer << "void* output[] = {" << node_names(out) << "};\n";
-        // writer << "gpu::invoke_primitive(ctx, "index<< ", input, output);\n";
+        // writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+        return compiled_function->add_to_runtime(index, args, out);
     }
     return "";
 }
@@ -725,17 +724,19 @@ std::string runtime::gpu::GPU_Emitter::emit_MaxPoolBackprop(EMIT_ARGS)
 
     auto& cudnn_emitter = compiled_function->get_primitive_emitter()->get_cudnn_emitter();
 
-    if (fp_input_shape.size() >= 4)
-    {
-        auto index = cudnn_emitter->build_pooling(CUDNN_POOLING_MAX,
-                                                  out[0].get_type(),
-                                                  CUDNNEmitter::Prop::Backward,
-                                                  fp_input_shape,
-                                                  fp_output_shape,
-                                                  mpb->get_window_movement_strides(),
-                                                  mpb->get_window_shape(),
-                                                  mpb->get_padding_below(),
-                                                  mpb->get_padding_above());
+        bool needs_fprop = (args.size() != 3);
+        if (fp_input_shape.size() >= 4)
+        {
+            auto index = cudnn_emitter->build_pooling(CUDNN_POOLING_MAX,
+                                                      out[0].get_element_type(),
+                                                      CUDNNEmitter::Prop::Backward,
+                                                      fp_input_shape,
+                                                      fp_output_shape,
+                                                      mpb->get_window_movement_strides(),
+                                                      mpb->get_window_shape(),
+                                                      mpb->get_padding_below(),
+                                                      mpb->get_padding_above(),
+                                                      needs_fprop);
 
         return compiled_function->add_to_runtime(index, args, out);
     }
