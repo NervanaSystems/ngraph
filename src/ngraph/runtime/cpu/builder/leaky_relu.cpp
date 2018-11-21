@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/cpu/op/bounded_relu.hpp"
+#include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
@@ -30,7 +30,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::BoundedRelu)
+            void Builder::BUILDER_DECL(ngraph::op::LeakyRelu)
             {
                 auto& functors = external_function->get_functors();
 
@@ -45,23 +45,23 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto bounded_relu_index =
-                        mkldnn_emitter->build_bounded_relu(input_desc, result_desc, alpha);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
-                    auto functor = [&, bounded_relu_index](CPURuntimeContext* ctx,
-                                                           CPUExecutionContext* ectx) {
+                    auto leaky_relu_index =
+                        mkldnn_emitter->build_leaky_relu(input_desc, result_desc, alpha);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(leaky_relu_index);
+                    auto functor = [&, leaky_relu_index](CPURuntimeContext* ctx,
+                                                         CPUExecutionContext* ectx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], input_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, bounded_relu_index);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, leaky_relu_index);
                     };
                     functors.emplace_back(functor);
                 }
                 else
                 {
-                    std::function<decltype(runtime::cpu::kernel::bounded_relu<float>)> kernel;
+                    std::function<decltype(runtime::cpu::kernel::leaky_relu<float>)> kernel;
 
                     SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::bounded_relu);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::leaky_relu);
 
                     auto functor = [&, kernel, alpha, count](CPURuntimeContext* ctx,
                                                              CPUExecutionContext* ectx) {
@@ -70,7 +70,7 @@ namespace ngraph
                     functors.emplace_back(functor);
                 }
             }
-            REGISTER_OP_BUILDER(BoundedRelu);
+            REGISTER_OP_BUILDER(LeakyRelu);
         }
     }
 }
