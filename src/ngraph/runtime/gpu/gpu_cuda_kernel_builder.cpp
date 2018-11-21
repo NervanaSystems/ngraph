@@ -523,6 +523,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
     };
 
     auto stable_sum_lambda = [&](){
+        writer << "input_i = expf(input_i - r_max);\n";
         writer << "y = input_i - c;\n";
         writer << "t = r_sum + y;\n";
         writer << "c = (t - r_sum) - y;\n";
@@ -535,7 +536,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
 
     auto divide_lambda = [&](){
         writer << "input_i = expf(input_i - r_max) / r_sum;\n";
-        writer << "out[reduce_idx] = input_i;\n";
+        writer << "out[input_idx] = input_i;\n";
     };
 
     // auto unroll_loop_lambda = [&](void (*func)()) -> void {
@@ -570,7 +571,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
     {
         writer << "extern __shared__ " << data_types[1] << " sdata[];\n";
         writer << "uint32_t tid = blockIdx.x;\n";
-        writer << "uint32_t init_idx = threadIdx.x;";
+        writer << "uint32_t init_idx = threadIdx.x;\n";
         writer << "uint32_t step = blockDim.x; \n";
         collective_coordinate_transform_helper(writer,
                                                 "tid",
@@ -654,8 +655,8 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
             {
                 if (warp_size > i)
                 {
-                    writer << data_types[1] << " t" << i << " = __shfl_down_sync(0xffffffff, r_max, " << i << ", 32);\n";
-                    writer << "r_max = r_max > t" << i << " ? r_max : t" << i << ";\n";
+                    writer << "input_i = __shfl_down_sync(0xffffffff, r_max, " << i << ", 32);\n";
+                    writer << "r_max = r_max > input_i ? r_max : input_i;\n";
                 }
             }
         }
@@ -712,8 +713,6 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
         }
         if (block_size_x > 32)
         {
-            writer << "uint32_t lane_idx = threadIdx.x & 0x1f; \n";
-            writer << "uint32_t warp_idx = threadIdx.x >> 5; \n";
             writer << "if(lane_idx == 0)\n";
             writer.block_begin();
             {
@@ -739,6 +738,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
             }
         }
         // save and broadcast
+        writer << "__syncthreads();\n";
         writer << "if(tid == 0)\n";
         writer.block_begin();
         {
@@ -2214,7 +2214,11 @@ void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::C
                                                                       std::string o_coordinates,
                                                                       size_t rank,
                                                                       bool register_arguments)
-{
+{   
+    if(rank == 0)
+    {
+        return;
+    }
     std::string brace_open = (register_arguments) ? "" : "[";
     std::string brace_close = (register_arguments) ? "" : "]";
 
