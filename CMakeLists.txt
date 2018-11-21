@@ -16,6 +16,10 @@
 
 cmake_minimum_required (VERSION 3.1)
 
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+    message(FATAL_ERROR "In-source builds are not allowed.")
+endif()
+
 include(cmake/Modules/git_tags.cmake)
 
 NGRAPH_GET_VERSION_LABEL()
@@ -73,10 +77,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY -DTBB_USE_THREADING_TO
 if($ENV{NGRAPH_USE_PREBUILT_LLVM})
     set(NGRAPH_USE_PREBUILT_LLVM TRUE)
 endif()
-
-# These variables are undocumented but useful.
-set(CMAKE_DISABLE_SOURCE_CHANGES ON)
-set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 # Create compilation database compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
