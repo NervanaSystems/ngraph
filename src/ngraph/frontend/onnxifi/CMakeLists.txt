@@ -32,4 +32,10 @@ target_include_directories(onnxifi-ngraph SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${O
 set(ONNXIFI_VERSION ${NGRAPH_VERSION})
 set(ONNXIFI_ABI_VERSION 1)
 
+if(NGRAPH_LIB_VERSIONING_ENABLE)
+    set_target_properties(onnxifi-ngraph PROPERTIES
+        VERSION ${ONNXIFI_VERSION}
+        SOVERSION ${ONNXIFI_ABI_VERSION})
+endif()
+
 install(TARGETS onnxifi-ngraph DESTINATION ${NGRAPH_INSTALL_LIB})

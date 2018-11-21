@@ -16,6 +16,11 @@
 
 if (NGRAPH_INTERPRETER_ENABLE)
     add_library(interpreter_backend SHARED int_backend.cpp node_wrapper.cpp)
+    if(NGRAPH_LIB_VERSIONING_ENABLE)
+        set_target_properties(interpreter_backend PROPERTIES
+            VERSION ${NGRAPH_VERSION}
+            SOVERSION ${NGRAPH_API_VERSION})
+    endif()
     target_link_libraries(interpreter_backend PUBLIC ngraph)
     set_target_properties(interpreter_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
@@ -23,7 +28,7 @@ if (NGRAPH_INTERPRETER_ENABLE)
         LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
         ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
     )
-    
+
     if(NGRAPH_DISTRIBUTED_ENABLE)
         find_package(MPI REQUIRED)
         target_compile_definitions(interpreter_backend

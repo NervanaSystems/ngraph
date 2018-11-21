@@ -76,6 +76,11 @@ if (NGRAPH_GPU_ENABLE OR (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY))
         add_dependencies(header_resource ext_eigen ext_mkldnn)
     endif()
 
+    if(NGRAPH_LIB_VERSIONING_ENABLE)
+        set_target_properties(codegen PROPERTIES
+            VERSION ${NGRAPH_VERSION}
+            SOVERSION ${NGRAPH_API_VERSION})
+    endif()
     add_dependencies(codegen header_resource)
     if (NGRAPH_CPU_ENABLE)
         add_dependencies(codegen libmkldnn libeigen)

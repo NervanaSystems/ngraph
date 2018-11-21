@@ -16,6 +16,11 @@
 
 if (NGRAPH_HYBRID_ENABLE)
     add_library(hybrid_backend SHARED hybrid_backend.cpp)
+    if(NGRAPH_LIB_VERSIONING_ENABLE)
+        set_target_properties(hybrid_backend PROPERTIES
+            VERSION ${NGRAPH_VERSION}
+            SOVERSION ${NGRAPH_API_VERSION})
+    endif()
     target_link_libraries(hybrid_backend PUBLIC ngraph)
     set_target_properties(hybrid_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
