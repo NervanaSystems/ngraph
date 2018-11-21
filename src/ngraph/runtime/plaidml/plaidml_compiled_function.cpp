@@ -42,19 +42,31 @@ bool ngraph::runtime::plaidml::CompiledFunction::schedule_invocation(
 
     NGRAPH_DEBUG << "Binding PlaidML function " << this;
 
+    m_bound_inputs.resize(inputs.size());
+    m_bound_outputs.resize(outputs.size());
+
     std::size_t input_count = 0;
     for (const auto& param : m_func->get_parameters())
     {
         for (std::size_t idx = 0; idx < param->get_output_size(); ++idx)
         {
             descriptor::Tensor* tv = param->get_output_tensor_ptr(idx).get();
-            auto rtv = dynamic_cast<PlaidML_Tensor*>(inputs[input_count++].get());
+            auto& input = inputs.at(input_count);
+            auto rtv = dynamic_cast<PlaidML_Tensor*>(input.get());
             if (!rtv)
             {
                 throw std::runtime_error{
-                    "The PlaidML backend only operations on PlaidML tensor views"};
+                    "The PlaidML backend only operates on PlaidML tensor views"};
             }
             rtv->sync_input();
+            auto& bound_input = m_bound_inputs.at(input_count);
+            ++input_count;
+            if (bound_input.lock() == input)
+            {
+                // No need to re-bind this input.
+                continue;
+            }
+            bound_input = input;
             NGRAPH_DEBUG << "Binding input " << m_input_names.at(tv) << " to tensor " << rtv;
             m_invoker.set_input(m_input_names.at(tv), rtv->tensor());
         }
@@ -66,12 +78,21 @@ bool ngraph::runtime::plaidml::CompiledFunction::schedule_invocation(
         for (std::size_t idx = 0; idx < result->get_output_size(); ++idx)
         {
             descriptor::Tensor* tv = result->get_output_tensor_ptr(idx).get();
-            auto rtv = dynamic_cast<PlaidML_Tensor*>(outputs[output_count++].get());
+            auto& output = outputs.at(output_count);
+            auto rtv = dynamic_cast<PlaidML_Tensor*>(output.get());
             if (!rtv)
             {
                 throw std::runtime_error{
-                    "The PlaidML backend only operations on PlaidML tensor views"};
+                    "The PlaidML backend only operates on PlaidML tensor views"};
             }
+            auto& bound_output = m_bound_outputs.at(output_count);
+            ++output_count;
+            if (bound_output.lock() == output)
+            {
+                // No need to re-bind this output.
+                continue;
+            }
+            bound_output = output;
             NGRAPH_DEBUG << "Binding output " << m_output_names.at(tv) << " to tensor " << rtv;
             m_invoker.set_output(m_output_names.at(tv), rtv->tensor());
         }
@@ -91,7 +112,7 @@ bool ngraph::runtime::plaidml::CompiledFunction::schedule_invocation(
             if (!rtv)
             {
                 throw std::runtime_error{
-                    "The PlaidML backend only operations on PlaidML tensor views"};
+                    "The PlaidML backend only operates on PlaidML tensor views"};
             }
             rtv->sync_output();
         }
