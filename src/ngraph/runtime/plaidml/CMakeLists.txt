@@ -58,7 +58,6 @@ if (NGRAPH_PLAIDML_ENABLE)
     install(FILES ${PLAIDML_LIBRARIES} DESTINATION ${NGRAPH_INSTALL_LIB})
 
     add_library(plaidml_backend SHARED ${SRC})
-    set_target_properties(plaidml_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
     target_include_directories(plaidml_backend SYSTEM PUBLIC ${PLAIDML_INCLUDE_DIRS})
     target_link_libraries(plaidml_backend PUBLIC ngraph libplaidml)
     set_target_properties(plaidml_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${NGRAPH_BUILD_DIR}")

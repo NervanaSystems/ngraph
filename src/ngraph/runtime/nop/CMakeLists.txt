@@ -16,7 +16,6 @@
 
 if (NGRAPH_NOP_ENABLE)
     add_library(nop_backend SHARED nop_backend.cpp)
-    set_target_properties(nop_backend PROPERTIES VERSION ${NGRAPH_VERSION})
     target_link_libraries(nop_backend PUBLIC ngraph)
     set_target_properties(nop_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 

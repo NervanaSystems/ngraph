@@ -136,7 +136,6 @@ if (NGRAPH_GPU_ENABLE)
     endif()
 
     add_library(gpu_backend SHARED ${SRC} ${CUDA_OBJ})
-    set_target_properties(gpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
     target_link_libraries(gpu_backend PUBLIC ngraph codegen)
     find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
     find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
