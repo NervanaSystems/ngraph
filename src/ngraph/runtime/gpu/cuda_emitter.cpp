@@ -1636,17 +1636,21 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<std::string>& 
                                                 NVShape input_shape,
                                                 NVShape reduce_axis)
 {
-    size_t rank = input_shape.size();
-    size_t reduce_rank = reduce_axis.size();
+    NVShape simplified_reduce_axis;
+    NVShape simplified_input_shape;
+    simplify_reduce_shape(input_shape, reduce_axis, simplified_input_shape, simplified_reduce_axis);
+
+    size_t rank = simplified_input_shape.size();
+    size_t reduce_rank = simplified_input_shape.size();
     size_t non_reduce_rank = rank - reduce_rank;
     // assumes NC{d1,...,dn} format
     std::string kernel_name = "softmax_" + join(dtypes, "_");
     kernel_name +=
-        "_ri_" + std::to_string(input_shape.size()) + "_rr_" + std::to_string(reduce_axis.size());
+        "_ri_" + std::to_string(simplified_input_shape.size()) + "_rr_" + std::to_string(simplified_input_shape.size());
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
 
     std::stringstream ss;
-    ss << kernel_name << "_s_" << join(input_shape, "_") << "_axis_" << join(reduce_axis, "_");
+    ss << kernel_name << "_s_" << join(simplified_input_shape, "_") << "_axis_" << join(simplified_input_shape, "_");
     auto hash = ss.str();
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
@@ -1655,79 +1659,135 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<std::string>& 
         return primitive_index;
     }
 
-    NVShape reduce_flag(rank, 0);
-    for (auto a : reduce_axis)
-    {
-        reduce_flag[a] = 1;
-    }
-    NVShape output_shape;
+    NVShape non_reduce_shape;
     NVShape non_reduce_strides;
+    NVShape non_reduce_strides_in_input;
     NVShape reduce_shape;
     NVShape reduce_strides;
-    NVShape input_strides = row_major_strides(input_shape);
-    for (int i = 0; i < rank; i++)
-    {
-        if (reduce_flag[i] != 0)
-        {
-            reduce_shape.push_back(input_shape[i]);
-            reduce_strides.push_back(input_strides[i]);
-        }
-        else
-        {
-            non_reduce_strides.push_back(input_strides[i]);
-            output_shape.push_back(input_shape[i]);
-        }
-    }
-    NVShape output_strides = row_major_strides(output_shape);
-    uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
+    NVShape reduce_strides_in_input;
+    get_reduce_strides(simplified_input_shape,
+                       simplified_reduce_axis,
+                       non_reduce_shape,
+                       non_reduce_strides,
+                       non_reduce_strides_in_input,
+                       reduce_shape,
+                       reduce_strides,
+                       reduce_strides_in_input);
+
+    std::vector<int> reduce_strides_magic;
+    std::vector<int> reduce_strides_shift;
+    std::vector<int> non_reduce_strides_magic;
+    std::vector<int> non_reduce_strides_shift;
+
+    div_to_mul(reduce_strides, reduce_strides_magic, reduce_strides_shift);
+    div_to_mul(non_reduce_strides, non_reduce_strides_magic, non_reduce_strides_shift);
+
+    uint32_t nthreads = static_cast<uint32_t>(shape_size(non_reduce_shape));
     // TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
-    if (reduce_flag.back() == 1)
+    if (reduce_flag.back() != 1)
     {
-        block_size_x = 8;
-    }
-    uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
-    auto args = m_primitive_emitter->add_kernel_args();
-    args.add_placeholder(dtypes[0], "in")
-        .add_placeholder(dtypes[1], "out")
-        .add("out_strides", output_strides)
-        .add("non_reduce_strides", non_reduce_strides)
-        .add("reduce_shape", reduce_shape)
-        .add("reduce_strides", reduce_strides)
-        .add("nthreads", nthreads);
+        uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
+        auto args = m_primitive_emitter->add_kernel_args();
+        args.add_placeholder(dtypes[0], "in")
+            .add_placeholder(dtypes[1], "out")
+            .add("non_reduce_strides", non_reduce_strides)
+            .add("non_reduce_strides_in_input", non_reduce_strides_in_input)
+            .add("reduce_strides_in_input", reduce_strides_in_input)
+            .add("reduce_shape", reduce_shape)
+            .add("nthreads", nthreads);
 
-    // if the kernel has not been compiled, build it
-    auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
-    if (compiled_kernel == nullptr)
+        // if the kernel has not been compiled, build it
+        auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
+        if (compiled_kernel == nullptr)
+        {
+            codegen::CodeWriter writer;
+            CudaKernelBuilder::add_pod_typedefs(writer);
+            runtime::gpu::CudaKernelBuilder::get_softmax_op(
+                writer, kernel_name, args, dtypes, non_reduce_rank, reduce_rank);
+            compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
+        }
+
+        std::unique_ptr<gpu::primitive> softmax(
+            new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+                void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                    .resolve_placeholder(1, &outputs[0])
+                                    .get_argument_list();
+
+                CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                            aligned_grid_size_x,
+                                            1,
+                                            1,
+                                            block_size_x,
+                                            1,
+                                            1,
+                                            0,
+                                            nullptr,
+                                            args_list,
+                                            nullptr));
+                debug_sync();
+            }});
+
+        return this->m_primitive_emitter->register_primitive(softmax, hash);
+    }
+    else
     {
-        codegen::CodeWriter writer;
-        CudaKernelBuilder::add_pod_typedefs(writer);
-        runtime::gpu::CudaKernelBuilder::get_softmax_op(
-            writer, kernel_name, args, dtypes, non_reduce_rank, reduce_rank);
-        compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
+        uint32_t reduce_count = static_cast<uint32_t>(shape_size(reduce_shape);
+        uint32_t block_size_x = 1;
+        while ((block_size_x << 1) <= reduce_count)
+        {
+            block_size_x <<= 1;
+        }
+        block_size_x = fmin(512, block_size_x);
+        uint32_t shared_data_bytes = block_size_x * static_cast<uint32_t>(data_bytes);
+        uint32_t aligned_grid_size_x = nthreads;
+        auto args = m_primitive_emitter->add_kernel_args();
+        args.add_placeholder(dtypes[0], "in")
+            .add_placeholder(dtypes[1], "out")
+            .add("non_reduce_strides", non_reduce_strides)
+            .add("non_reduce_strides_magic", non_reduce_strides_magic)
+            .add("non_reduce_strides_shift", non_reduce_strides_shift)
+            .add("non_reduce_strides_in_input", non_reduce_strides_in_input)
+            .add("reduce_strides", reduce_strides)
+            .add("reduce_strides_magic", reduce_strides_magic)
+            .add("reduce_strides_shift", reduce_strides_shift)
+            .add("reduce_strides_in_input", reduce_strides_in_input)
+            .add("reduce_count", reduce_count)
+            .add("nthreads", nthreads);
+
+        // if the kernel has not been compiled, build it
+        auto compiled_kernel = m_ctx->compiled_kernel_pool->get(kernel_name);
+        if (compiled_kernel == nullptr)
+        {
+            codegen::CodeWriter writer;
+            CudaKernelBuilder::add_pod_typedefs(writer);
+            runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
+                writer, kernel_name, args, dtypes, non_reduce_rank, reduce_rank, block_size_x);
+            compiled_kernel = m_ctx->compiled_kernel_pool->set(kernel_name, writer.get_code());
+        }
+
+        std::unique_ptr<gpu::primitive> softmax(
+            new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+                void** args_list = args.resolve_placeholder(0, &inputs[0])
+                                    .resolve_placeholder(1, &outputs[0])
+                                    .get_argument_list();
+
+                CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
+                                            aligned_grid_size_x,
+                                            1,
+                                            1,
+                                            block_size_x,
+                                            1,
+                                            1,
+                                            shared_data_bytes,
+                                            nullptr,
+                                            args_list,
+                                            nullptr));
+                debug_sync();
+            }});
+
+        return this->m_primitive_emitter->register_primitive(softmax, hash);
     }
-
-    std::unique_ptr<gpu::primitive> softmax(
-        new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-            void** args_list = args.resolve_placeholder(0, &inputs[0])
-                                   .resolve_placeholder(1, &outputs[0])
-                                   .get_argument_list();
-
-            CUDA_SAFE_CALL(cuLaunchKernel(*compiled_kernel.get(),
-                                          aligned_grid_size_x,
-                                          1,
-                                          1,
-                                          block_size_x,
-                                          1,
-                                          1,
-                                          0,
-                                          nullptr,
-                                          args_list,
-                                          nullptr));
-            debug_sync();
-        }});
-
-    return this->m_primitive_emitter->register_primitive(softmax, hash);
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<element::Type>& dtypes,

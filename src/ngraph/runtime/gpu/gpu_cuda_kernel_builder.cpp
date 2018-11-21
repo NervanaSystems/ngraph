@@ -326,9 +326,9 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
             // loop through all reduction axis
             for (int64_t i = 0; i < static_cast<int64_t>(out_rank); i++)
             {
-                writer << "in_idx += (dim_idx_generator / out_strides" << i
-                       << ") * non_reduce_strides" << i << ";\n";
-                writer << "dim_idx_generator %= out_strides" << i << ";\n";
+                writer << "in_idx += (dim_idx_generator / non_reduce_strides" << i
+                       << ") * non_reduce_strides_in_input" << i << ";\n";
+                writer << "dim_idx_generator %= non_reduce_strides" << i << ";\n";
             }
             writer << "uint32_t init_in_idx = in_idx;\n";
             int64_t last_r_idx = static_cast<int64_t>(reduce_rank) - 1;
@@ -348,9 +348,9 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
                 writer << "uint32_t reduce_idx = in_idx;\n";
                 for (int64_t j = 0; j < last_r_idx; j++)
                 {
-                    writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
+                    writer << "reduce_idx += idx" << j << " * reduce_strides_in_input" << j << ";\n";
                 }
-                writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
+                writer << "uint32_t step = reduce_strides_in_input" << last_r_idx << ";\n";
                 writer << "if(reduce_idx != init_in_idx)\n";
                 writer.block_begin();
                 {
@@ -406,9 +406,9 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
                 writer << "uint32_t reduce_idx = in_idx;\n";
                 for (int64_t j = 0; j < last_r_idx; j++)
                 {
-                    writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
+                    writer << "reduce_idx += idx" << j << " * reduce_strides_in_input" << j << ";\n";
                 }
-                writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
+                writer << "uint32_t step = reduce_strides_in_input" << last_r_idx << ";\n";
                 writer << "int idx" << last_r_idx << " = 0;\n";
                 // unroll last reduction axis
                 uint32_t unroll_num = 8;
@@ -458,9 +458,9 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer
                 writer << "uint32_t reduce_idx = in_idx;\n";
                 for (int64_t j = 0; j < last_r_idx; j++)
                 {
-                    writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
+                    writer << "reduce_idx += idx" << j << " * reduce_strides_in_input" << j << ";\n";
                 }
-                writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
+                writer << "uint32_t step = reduce_strides_in_input" << last_r_idx << ";\n";
                 writer << "int idx" << last_r_idx << " = 0;\n";
                 // unroll last reduction axis
                 uint32_t unroll_num = 8;
