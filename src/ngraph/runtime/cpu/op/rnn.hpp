@@ -54,8 +54,6 @@ namespace ngraph
                 size_t num_timesteps,
                 size_t num_gates_per_cell,
                 size_t src_sequence_length,
-                size_t src_layer_feature_size,
-                size_t src_iter_feature_size,
                 size_t num_cell_states,
                 size_t direction,
                 size_t num_fused_layers);
@@ -67,6 +65,8 @@ namespace ngraph
             size_t get_batch_size() const { return m_batch_size; }
             size_t get_src_layer_feature_size() const { return m_src_layer_feature_size; }
             size_t get_src_iter_feature_size() const { return m_src_iter_feature_size; }
+            size_t get_dst_layer_feature_size() const { return m_dst_layer_feature_size; }
+            size_t get_dst_iter_feature_size() const { return m_dst_iter_feature_size; }
             size_t get_num_cell_states() const { return m_num_cell_states; }
             size_t get_direction() const { return m_direction; }
             size_t get_num_fused_layers() const { return m_num_fused_layers; }
@@ -77,6 +77,8 @@ namespace ngraph
             size_t m_batch_size;
             size_t m_src_layer_feature_size;
             size_t m_src_iter_feature_size;
+            size_t m_dst_layer_feature_size;
+            size_t m_dst_iter_feature_size;
             size_t m_num_cell_states;
             size_t m_direction;
             size_t m_num_fused_layers;

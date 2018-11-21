@@ -35,8 +35,6 @@ shared_ptr<Node> op::Rnn::copy_with_new_args(const NodeVector& new_args) const
                             m_num_timesteps,
                             m_num_gates_per_cell,
                             m_src_sequence_length,
-                            m_src_layer_feature_size,
-                            m_src_iter_feature_size,
                             m_num_cell_states,
                             m_direction,
                             m_num_fused_layers);
@@ -50,8 +48,6 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
              size_t num_timesteps,
              size_t num_gates_per_cell,
              size_t src_sequence_length,
-             size_t src_layer_feature_size,
-             size_t src_iter_feature_size,
              size_t num_cell_states,
              size_t direction,
              size_t num_fused_layers)
@@ -59,14 +55,11 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     , m_num_timesteps(num_timesteps)
     , m_num_gates_per_cell(num_gates_per_cell)
     , m_src_sequence_length(src_sequence_length)
-    , m_src_layer_feature_size(src_layer_feature_size)
-    , m_src_iter_feature_size(src_iter_feature_size)
     , m_num_cell_states(num_cell_states)
     , m_direction(direction)
     , m_num_fused_layers(num_fused_layers)
 {
     constructor_validate_and_infer_types();
-
     if (src_layer->get_shape().size() != weights_layer->get_shape().size())
     {
         throw ngraph_error("src_layer and i2h weights size dont match");
@@ -86,14 +79,19 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
         throw ngraph_error("src_layer doesnt have a rank 2");
     }
 
+    m_dst_iter_feature_size = weights_iter->get_shape()[1] / (m_num_gates_per_cell);
+    m_dst_layer_feature_size = weights_layer->get_shape()[1] / (m_num_gates_per_cell);
+    m_src_iter_feature_size = weights_iter->get_shape()[0] / (m_direction * m_num_fused_layers);
+    m_src_layer_feature_size = weights_layer->get_shape()[0] / (m_direction * m_num_fused_layers);
+
     if (shape_size(src_layer->get_shape()) !=
         m_src_sequence_length * m_batch_size * m_src_layer_feature_size)
     {
         throw ngraph_error("src_layer size is not equal t*n*c");
     }
 
-    if (bias->get_shape()[0] != weights_layer->get_shape()[0] ||
-        bias->get_shape()[0] != weights_iter->get_shape()[0])
+    if ((bias->get_shape()[0] / m_num_fused_layers) != (weights_layer->get_shape()[1]) ||
+        (bias->get_shape()[0] / m_num_fused_layers) != (weights_iter->get_shape()[1]))
     {
         throw ngraph_error("bias and weights_shape are not compatible");
     }

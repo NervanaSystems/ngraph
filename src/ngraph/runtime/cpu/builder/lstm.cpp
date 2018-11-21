@@ -39,7 +39,7 @@ namespace ngraph
                 }
 
                 const ngraph::op::Lstm* lstm_node = static_cast<const ngraph::op::Lstm*>(node);
-                if (args.size() != 5 || !lstm_node->get_fused_inputs())
+                if (args.size() != 5)
                 {
                     throw ngraph_error(
                         "Lstm op doesnt have the required number of inputs to create MKLDNN "

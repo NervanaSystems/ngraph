@@ -62,7 +62,6 @@
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_loop_kernel_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
@@ -2071,20 +2070,16 @@ TEST(cpu_fusion, group_convolution)
     ASSERT_EQ(rv, erv);
 }
 
-//TODO(Pruthvi) enable this test after MKLDNN RNN bug is fixed
-#if 0
 TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
 {
     auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
     auto src_iter = make_shared<op::Parameter>(element::f32, Shape{20, 100});
-    auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{400, 100});
-    auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{400, 100});
+    auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{100, 400});
+    auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{100, 400});
     auto biases = make_shared<op::Parameter>(element::f32, Shape{400});
     const int number_of_timesteps = 1;
     const int number_of_gates_per_cell = 4;
     const int src_seq_length = 1;
-    const int src_layer_feature_size = 100;
-    const int feature_size = 100;
     const int num_rnn_cell_states = 2;
     const int rnn_direction = 1;
     const int num_of_rnn_fused_layer = 1;
@@ -2096,8 +2091,6 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
                                          number_of_timesteps,
                                          number_of_gates_per_cell,
                                          src_seq_length,
-                                         src_layer_feature_size,
-                                         feature_size,
                                          num_rnn_cell_states,
                                          rnn_direction,
                                          num_of_rnn_fused_layer);
@@ -2120,8 +2113,7 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     shared_ptr<runtime::Tensor> biases_t =
         backend->create_tensor(element::f32, biases->get_shape());
     shared_ptr<runtime::Tensor> result_ht = backend->create_tensor(element::f32, {10, 100});
-    shared_ptr<runtime::Tensor> result_ct =
-        backend->create_tensor(element::f32, Shape{20, 100});
+    shared_ptr<runtime::Tensor> result_ct = backend->create_tensor(element::f32, Shape{20, 100});
 
     copy_data(src_layer_t, vector<float>(1000, 1));
     copy_data(src_iter_t, vector<float>(2000, 1));
@@ -2150,13 +2142,11 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
     EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
 }
-#endif
 
 TEST(cpu_fusion, fuse_lstm_cells)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     const string json_path =
         file_util::path_join(SERIALIZED_ZOO, "mxnet/2rnn_layer_3lstm_cell.json");
     const string json_string = file_util::read_file_to_string(json_path);
@@ -2219,12 +2209,12 @@ static std::shared_ptr<Function> make_function(const std::string& file_name)
     return func;
 }
 
-TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
+TEST(cpu_fusion, rnn_fusion_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
     auto cpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
@@ -2241,12 +2231,12 @@ TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
     }
 }
 
-TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
+TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
@@ -2263,12 +2253,12 @@ TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
     }
 }
 
-TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
+TEST(cpu_fusion, rnn_fusion_2rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
@@ -2943,30 +2933,12 @@ TEST(cpu_fusion, fuse_batch_dot_forward)
     }
 }
 
-TEST(cpu_fusion, fuse_rnn_across_layer)
+TEST(cpu_fusion, fuse_rnn_across_layer_2layer_3timestep)
 {
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
-    const string json_path =
-        file_util::path_join(SERIALIZED_ZOO, "mxnet/2rnn_layer_1timestep.json");
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-    pass_manager.run_passes(func);
-    size_t ref_rnn_count = 1;
-    auto rnn_count = count_ops_of_type<op::Rnn>(func);
-    EXPECT_EQ(ref_rnn_count, rnn_count);
-}
-
-TEST(DISABLED_cpu_fusion, fuse_rnn_across_2layer_1timestep)
-{
-    const std::string file_name("mxnet/2rnn_layer_1timestep.json");
+    const std::string file_name("mxnet/2layer_3timestep_ic100oc100.json");
     auto cpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
@@ -2978,12 +2950,10 @@ TEST(DISABLED_cpu_fusion, fuse_rnn_across_2layer_1timestep)
     auto int_results = execute(int_f, args, "INTERPRETER");
     auto cpu_results = execute(cpu_f, args, "CPU");
 
-    // TODO (pruthvi): Enable this after fixing failing
-    // mxnet rnn unit tests
-    // EXPECT_EQ(1, count_ops_of_type<op::Rnn>(cpu_f));
+    EXPECT_EQ(1, count_ops_of_type<op::Rnn>(cpu_f));
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(cpu_results.at(1), int_results.at(1), 1.0e-4f, 1.0e-4f));
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
 
