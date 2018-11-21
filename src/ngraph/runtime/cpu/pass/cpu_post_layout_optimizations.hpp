@@ -39,7 +39,9 @@ public:
     {
         construct_weight_fusion();
         construct_slice_convertLayout_fusion();
+        construct_reshape_convertLayout_fusion();
     }
     void construct_weight_fusion();
     void construct_slice_convertLayout_fusion();
+    void construct_reshape_convertLayout_fusion();
 };
