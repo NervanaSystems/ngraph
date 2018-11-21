@@ -400,20 +400,21 @@ std::string runtime::gpu::GPU_Emitter::emit_Broadcast(EMIT_ARGS)
     auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
     auto arg_shape = args[0].get_shape();
     auto result_shape = out[0].get_shape();
-
     auto& axes = broadcast->get_broadcast_axes();
+
+    size_t index;
     // broadcast axes is empty, do a copy
     if (axes.empty())
     {
-        // kernel::emit_memcpyDtD(writer, out[0], args[0]);
-        // return;
-        return "";
+        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
+        index = host_emitter->build_memcpy(cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size());
     }
-
-    auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
-    auto index = cuda_emitter->build_broadcast(
-        {{args[0].get_type(), out[0].get_type()}}, result_shape, axes);
-
+    else
+    {
+        auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
+        index = cuda_emitter->build_broadcast(
+            {{args[0].get_type(), out[0].get_type()}}, result_shape, axes);
+    }
     return compiled_function->add_to_runtime(index, args, out);
 }
 
@@ -552,26 +553,25 @@ std::string runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
     const Shape& arg1_shape = args[1].get_shape();
     const Shape& out_shape = out[0].get_shape();
 
+    size_t index;
     // set output to 0 if input size is 0
     if (args[0].get_size() == 0 || args[1].get_size() == 0)
     {
-        // writer << "runtime::gpu::cuda_memset(" << out[0].get_name() << ", 0, "
-        //        << out[0].get_size() << " * " << out[0].get_element_type().size() << ");\n";
-        return "";
+        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
+        index = host_emitter->build_zero_out(0, out[0].get_size() * out[0].get_element_type().size());
     }
-
     else
     {
         auto& cublas_emitter = compiled_function->get_primitive_emitter()->get_cublas_emitter();
-        auto index = cublas_emitter->build_dot(out[0].get_element_type(),
-                                               arg0_shape,
-                                               arg1_shape,
-                                               out_shape,
-                                               reduction_axes_count,
-                                               node);
-
-        return compiled_function->add_to_runtime(index, args, out);
+        index = cublas_emitter->build_dot(out[0].get_element_type(),
+                                          arg0_shape,
+                                          arg1_shape,
+                                          out_shape,
+                                          reduction_axes_count,
+                                          node);
     }
+
+    return compiled_function->add_to_runtime(index, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)
@@ -608,11 +608,9 @@ std::string runtime::gpu::GPU_Emitter::emit_GenerateMask(EMIT_ARGS)
 std::string runtime::gpu::GPU_Emitter::emit_GetOutputElement(EMIT_ARGS)
 {
     auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
-
-    // writer << "runtime::gpu::cuda_memcpyDtD(" << out[0].get_name() << ", "
-    //        << args[get_tuple_element->get_n()].get_name() << ", "
-    //        << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-    return "";
+    auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
+    size_t index = host_emitter->build_memcpy(cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size(), 0, get_tuple_element->get_n());
+    return compiled_function->add_to_runtime(index, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Greater(EMIT_ARGS)
@@ -853,6 +851,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
     {
         return "";
     }
+    size_t index;
     // one of args[] axes has zero size, fill output with 1
     if (args[0].get_size() == 0)
     {
@@ -866,8 +865,8 @@ std::string runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
     }
     else if (args[0].get_size() == out[0].get_size())
     {
-        // kernel::emit_memcpyDtD(writer, out[0], args[0]);
-        return "";
+        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
+        index = host_emitter->build_memcpy(cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size());
     }
     // descriptors for tensors  with <= 4 dimensions
     else
@@ -876,15 +875,15 @@ std::string runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
                 out[0].get_element_type()};
         auto& cudnn_emitter =
             compiled_function->get_primitive_emitter()->get_cudnn_emitter();
-        auto index =
+        index =
             cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MUL,
                                                 dtypes,
                                                 args[0].get_shape(),
                                                 product->get_reduction_axes(),
                                                 CUDNNEmitter::ReductionMode::Reduce);
-
-        return compiled_function->add_to_runtime(index, args, out);
     }
+
+    return compiled_function->add_to_runtime(index, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Quantize(EMIT_ARGS)
@@ -915,6 +914,8 @@ std::string runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
     {
         return "";
     }
+
+    size_t emitter_index;
     // one of args0 axes has zero size, zero output, use args1 value
     if (args[0].get_size() == 0)
     {
@@ -930,8 +931,8 @@ std::string runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
     }
     else if (args[0].get_size() == out[0].get_size())
     {
-        // kernel::emit_memcpyDtD(writer, out[0], args[0]);
-        return "";
+        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
+        emitter_index = host_emitter->build_memcpy(cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size());
     }
     else
     {
@@ -947,7 +948,6 @@ std::string runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
         auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
         auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
 
-        size_t emitter_index;
         // Reduction function should only have one op
         std::shared_ptr<Node> reduce_func;
         std::string op_name;
@@ -1002,9 +1002,8 @@ std::string runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
             throw runtime_error("reduce with function " + op_name +
                                 " is not implement yet.");
         }
-
-        return compiled_function->add_to_runtime(emitter_index, args, out);
     }
+    return compiled_function->add_to_runtime(emitter_index, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_ReduceWindow(EMIT_ARGS)
@@ -1022,6 +1021,8 @@ std::string runtime::gpu::GPU_Emitter::emit_ReduceWindow(EMIT_ARGS)
     {
         return "";
     }
+
+    size_t index;
     // one of args0 axes has zero size, zero output, use args1 value
     if (args[0].get_size() == 0)
     {
@@ -1037,8 +1038,8 @@ std::string runtime::gpu::GPU_Emitter::emit_ReduceWindow(EMIT_ARGS)
     }
     else if (args[0].get_size() == out[0].get_size())
     {
-        // kernel::emit_memcpyDtD(writer, out[0], args[0]);
-        return "";
+        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
+        index = host_emitter->build_memcpy(cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size());
     }
     else
     {
@@ -1085,16 +1086,16 @@ std::string runtime::gpu::GPU_Emitter::emit_ReduceWindow(EMIT_ARGS)
         // this dtypes is two build the binary op, expect both input has same type with args[0]
         vector<string> dtypes{args[0].get_type(), args[0].get_type(), out[0].get_type()};
 
-        auto index = cuda_emitter->build_reduce_window(
+        index = cuda_emitter->build_reduce_window(
             it->second,
             dtypes,
             args[0].get_shape(),
             out[0].get_shape(),
             reduce_window_op->get_window_shape(),
             reduce_window_op->get_window_movement_strides());
-
-        return compiled_function->add_to_runtime(index, args, out);
     }
+
+    return compiled_function->add_to_runtime(index, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Relu(EMIT_ARGS)
@@ -1141,8 +1142,9 @@ std::string runtime::gpu::GPU_Emitter::emit_Reshape(EMIT_ARGS)
     //for a zero-size tensor, or change from 1^m shape to 1^n shape, just do a copy
     if (!reshape->get_is_transpose() || result_shape_product < 2)
     {
-        // kernel::emit_memcpyDtD(writer, out[0], args[0]);
-        return "";
+        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
+        size_t index = host_emitter->build_memcpy(cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size());
+        return compiled_function->add_to_runtime(index, args, out);
     }
 
     //combine inordered dimensons after reorder in shape, update output shape and input order
@@ -1208,18 +1210,18 @@ std::string runtime::gpu::GPU_Emitter::emit_Reshape(EMIT_ARGS)
         new_result_shape.push_back(new_arg_shape[new_input_order[i]]);
     }
 
+    size_t index;
     // If there is no layout change, we can just copy.
     bool same_layout = is_sorted(new_input_order.begin(), new_input_order.end());
     if (same_layout)
     {
-        // kernel::emit_memcpyDtD(writer, out[0], args[0]);
-        return "";
+        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
+        index = host_emitter->build_memcpy(cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size());
     }
     // If there *is* a layout change in the 2D case, we transpose the input.
     else
     {
         auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
-        size_t index;
         if (new_rank == 2)
         {
             index = cuda_emitter->build_reshape_2d(
@@ -1237,9 +1239,9 @@ std::string runtime::gpu::GPU_Emitter::emit_Reshape(EMIT_ARGS)
             index = cuda_emitter->build_reshape(
                 {{args[0].get_type(), out[0].get_type()}}, new_arg_shape, new_input_order);
         }
-
-        return compiled_function->add_to_runtime(index, args, out);
     }
+
+    return compiled_function->add_to_runtime(index, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Result(EMIT_ARGS)
@@ -1250,8 +1252,9 @@ std::string runtime::gpu::GPU_Emitter::emit_Result(EMIT_ARGS)
         return "";
     }
 
-    // kernel::emit_memcpyDtD(writer, out[0], args[0]);
-    return "";
+    auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
+    size_t index = host_emitter->build_memcpy(cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size());
+    return compiled_function->add_to_runtime(index, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Reverse(EMIT_ARGS)
@@ -1271,19 +1274,19 @@ std::string runtime::gpu::GPU_Emitter::emit_Reverse(EMIT_ARGS)
     {
         reverse_axes_flag[a] = 1;
     }
+    size_t index;
     if (out[0].get_size() == 1)
     {
-        // kernel::emit_memcpyDtD(writer, out[0], args[0]);
-        return "";
+        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
+        index = host_emitter->build_memcpy(cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size());
     }
     else
     {
         auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
-        auto index = cuda_emitter->build_reverse(
+        index = cuda_emitter->build_reverse(
             {{args[0].get_type(), out[0].get_type()}}, arg_shape, reverse_axes_flag);
-
-        return compiled_function->add_to_runtime(index, args, out);
     }
+    return compiled_function->add_to_runtime(index, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_ReverseSequence(EMIT_ARGS)
@@ -1375,22 +1378,22 @@ std::string runtime::gpu::GPU_Emitter::emit_Slice(EMIT_ARGS)
     const Coordinate& lower_bounds = slice->get_lower_bounds();
     const Strides slice_strides = slice->get_strides();
 
+    size_t index;
     if (args[0].get_size() == out[0].get_size())
     {
-        // kernel::emit_memcpyDtD(writer, out[0], args[0]);
-        return "";
+        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
+        index = host_emitter->build_memcpy(cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size());
     }
     else
     {
         auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
-        auto index = cuda_emitter->build_slice({{args[0].get_type(), out[0].get_type()}},
+        index = cuda_emitter->build_slice({{args[0].get_type(), out[0].get_type()}},
                                                arg_shape,
                                                lower_bounds,
                                                slice_strides,
                                                result_shape);
-
-        return compiled_function->add_to_runtime(index, args, out);
     }
+    return compiled_function->add_to_runtime(index, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Softmax(EMIT_ARGS)
@@ -1442,16 +1445,17 @@ std::string runtime::gpu::GPU_Emitter::emit_Sum_0(EMIT_ARGS)
     {
         return "";
     }
+    size_t index;
     // one of args[] axes has zero size, zero output
     if (args[0].get_size() == 0)
     {
-        // kernel::emit_memset(writer, out[0], 0);
-        return "";
+        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
+        index = host_emitter->build_zero_out(0, out[0].get_size() * out[0].get_element_type().size());
     }
     else if (args[0].get_size() == out[0].get_size())
     {
-        // kernel::emit_memcpyDtD(writer, out[0], args[0]);
-        return "";
+        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
+        index = host_emitter->build_memcpy(cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size());
     }
     else
     {
@@ -1465,11 +1469,10 @@ std::string runtime::gpu::GPU_Emitter::emit_Sum_0(EMIT_ARGS)
         dtypes.push_back(args[0].get_type());
         dtypes.push_back(out[0].get_type());
         auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
-        auto index = cuda_emitter->build_reduce<ngraph::op::Add>(
+        index = cuda_emitter->build_reduce<ngraph::op::Add>(
             dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
-
-        return compiled_function->add_to_runtime(index, args, out);
     }
+    return compiled_function->add_to_runtime(index, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Sum_1(EMIT_ARGS)
@@ -1485,30 +1488,31 @@ std::string runtime::gpu::GPU_Emitter::emit_Sum_1(EMIT_ARGS)
     {
         return "";
     }
+    size_t index;
     // one of args[] axes has zero size, zero output
     if (args[0].get_size() == 0)
     {
-        // kernel::emit_memset(writer, out[0], 0);
-        return "";
+        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
+        index = host_emitter->build_zero_out(0, out[0].get_size() * out[0].get_element_type().size());
     }
     else if (args[0].get_size() == out[0].get_size())
     {
-        // kernel::emit_memcpyDtD(writer, out[0], args[0]);
-        return "";
+        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
+        index = host_emitter->build_memcpy(cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size());
     }
     else
     {
         auto& cudnn_emitter =
             compiled_function->get_primitive_emitter()->get_cudnn_emitter();
-        auto index =
+        index =
             cudnn_emitter->build_reduce_forward(reduce_op,
                                                 dtypes,
                                                 args[0].get_shape(),
                                                 sum->get_reduction_axes(),
                                                 CUDNNEmitter::ReductionMode::Reduce);
-
-        return compiled_function->add_to_runtime(index, args, out);
     }
+
+    return compiled_function->add_to_runtime(index, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Tan(EMIT_ARGS)

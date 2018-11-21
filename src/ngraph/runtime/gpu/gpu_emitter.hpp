@@ -47,8 +47,7 @@ namespace ngraph
                 {
                     if (out[0].get_size() == 0)
                     {
-                        // return;
-                        return"";
+                        return "";
                     }
                     else if (out.size() > 1)
                     {
