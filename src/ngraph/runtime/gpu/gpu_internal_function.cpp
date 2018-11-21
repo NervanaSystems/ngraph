@@ -161,8 +161,30 @@ std::string runtime::gpu::GPU_InternalFunction::add_to_runtime(size_t primitive_
     };
     m_runtime_constructor->add(primitive_invocation);
 
-    return "";//compose_manifest(primitive_index, args, out);
+    return compose_manifest(primitive_index, args, out);
 }
+
+std::string runtime::gpu::GPU_InternalFunction::compose_manifest(const size_t& primitive_index,
+                                                                 const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                                                                 const std::vector<runtime::gpu::GPUTensorWrapper>& out) const
+{
+    codegen::CodeWriter writer;
+    writer.block_begin();
+    {
+        for (auto const& tensor : args)
+        {
+            writer << "push " << tensor << "\n";
+        }
+        writer << "call primitive(" << primitive_index << ");\n";
+        for (auto const& tensor : out)
+        {
+            writer << "pop " << tensor << "\n";
+        }
+    }
+    writer.block_end();
+    return writer.get_code();
+}
+
 
 void runtime::gpu::GPU_InternalFunction::build_functions()
 {
@@ -253,8 +275,8 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
 
         for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
         {
-            // vector<string> node_input_names;
-            // vector<string> node_output_names;
+            vector<string> node_input_names;
+            vector<string> node_output_names;
             vector<GPUTensorWrapper> in;
             for (const descriptor::Input& input : node->get_inputs())
             {
@@ -262,7 +284,7 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 auto& var = m_variable_name_map[tv->get_name()];
                 in.push_back(GPUTensorWrapper(tv, std::get<0>(var), std::get<1>(var), std::get<2>(var)));
-                // node_input_names.emplace_back(tv->get_name());
+                node_input_names.emplace_back(tv->get_name());
             }
             vector<GPUTensorWrapper> out;
             for (const descriptor::Output& output : node->get_outputs())
@@ -270,24 +292,24 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 auto& var = m_variable_name_map[tv->get_name()];
                 out.push_back(GPUTensorWrapper(tv, std::get<0>(var), std::get<1>(var), std::get<2>(var)));
-                // node_output_names.emplace_back(tv->get_name());
+                node_output_names.emplace_back(tv->get_name());
             }
 
             // Emit function description comment
-            // if (!node->is_parameter() && !node->is_constant())
-            // {
-            //     m_writer << "\n// " << node->get_name() << "(";
-            //     vector<string> parameter_nodes = node_input_names;
-            //     parameter_nodes.insert(
-            //         parameter_nodes.end(), node_output_names.begin(), node_output_names.end());
-            //     m_writer << join(parameter_nodes);
-            //     m_writer << ")\n";
-            //     emit_debug_function_entry(node.get());
-            // }
+            if (!node->is_parameter() && !node->is_constant())
+            {
+                m_manifest << "\n// " << current_function->get_name() << "::" << node->get_name() << "(";
+                vector<string> parameter_nodes = node_input_names;
+                parameter_nodes.insert(
+                    parameter_nodes.end(), node_output_names.begin(), node_output_names.end());
+                m_manifest << join(parameter_nodes);
+                m_manifest << ")\n";
+                // emit_debug_function_entry(node.get());
+            }
 
             // Emit operation body
             // m_writer << emit_op(this, node.get(), in, out);
-            emit_op(this, node.get(), in, out);
+            m_manifest << emit_op(this, node.get(), in, out);
 
             // Emit operation epilogue
             // if (!node->is_parameter() && !node->is_constant())
@@ -315,16 +337,16 @@ void runtime::gpu::GPU_InternalFunction::compile()
     ngraph::pass::Manager pass_manager;
 #if CUDNN_VERSION >= 7200
     // recurrent network fusion
-    // pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
-    // pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
-    // pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    // pass_manager.register_pass<runtime::gpu::pass::MultiLayerRNNFusion>();
+    pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<runtime::gpu::pass::MultiLayerRNNFusion>();
 #else
-    // pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
 #endif
-    // pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
-    // pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    // pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
+    pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
+    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
+    pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
@@ -344,9 +366,6 @@ void runtime::gpu::GPU_InternalFunction::compile()
     // build and emit functions
     build_functions();
 
-    // reserve constants
-
-
     // allocate device buffers for intermediates, primitive arguments, and workspace
     allocator->close();
     m_shared_context->m_primitive_emitter->allocate_primitive_memory();
@@ -360,8 +379,17 @@ void runtime::gpu::GPU_InternalFunction::compile()
     m_runtime = m_runtime_constructor->build(call_frame);
 
     // store manifest
+    save_manifest_to_disk();
 
     m_is_compiled = true;
+}
+
+void runtime::gpu::GPU_InternalFunction::save_manifest_to_disk() const
+{
+    string filename = file_util::path_join(s_output_dir, m_function_name + "_manifest.txt");
+    ofstream out(filename);
+    out << m_manifest.get_code();
+    out.close();
 }
 
 void runtime::gpu::GPU_InternalFunction::propagate_in_place_input(

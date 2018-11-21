@@ -60,6 +60,11 @@ namespace ngraph
 
                 void build_functions();
                 std::string emit_op(EMIT_ARGS);
+                std::string compose_manifest(const size_t& primitive_index,
+                                             const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                                             const std::vector<runtime::gpu::GPUTensorWrapper>& out) const;
+                void save_manifest_to_disk() const;
+
 
                 // For non-destructive passthrough kernels, propagate function
                 // input buffers to internal ops
@@ -71,6 +76,7 @@ namespace ngraph
                                                        std::string output_name) override;
                 std::unordered_map<std::string, std::tuple<runtime::gpu::GPUTensorWrapper::TensorType, size_t, std::string>> m_variable_name_map;
                 std::unique_ptr<GPURuntimeConstructor> m_runtime_constructor;
+                codegen::CodeWriter m_manifest;
             };
         }
     }
