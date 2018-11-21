@@ -78,10 +78,10 @@ namespace ngraph
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
 
-            Shape m_window_shape;
-            Strides m_window_movement_strides;
-            Shape m_padding_below;
-            Shape m_padding_above;
+            const Shape m_window_shape;
+            const Strides m_window_movement_strides;
+            const Shape m_padding_below;
+            const Shape m_padding_above;
         };
 
         class MaxPoolBackprop : public Op
@@ -110,10 +110,10 @@ namespace ngraph
             std::shared_ptr<op::MaxPool> get_forward_op() const;
 
         protected:
-            Shape m_window_shape;
-            Strides m_window_movement_strides;
-            Shape m_padding_below;
-            Shape m_padding_above;
+            const Shape m_window_shape;
+            const Strides m_window_movement_strides;
+            const Shape m_padding_below;
+            const Shape m_padding_above;
             std::weak_ptr<op::MaxPool> m_forward_op;
         };
     }

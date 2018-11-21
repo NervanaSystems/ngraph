@@ -22,27 +22,18 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise type conversion operation.
-        class Convert : public Op
+        /// \brief Range op
+        class Range : public Op
         {
         public:
-            /// \brief Constructs a conversion operation.
-            ///
-            /// \param arg          Node that produces the input tensor.
-            /// \param element_type Element type for the output tensor.
-            Convert(const std::shared_ptr<Node>& arg, const ngraph::element::Type& element_type);
-
-            void validate_and_infer_types() override;
+            /// \brief Constructs a range operation.
+            Range(const std::shared_ptr<Node>& range_lo, const std::shared_ptr<Node>& range_hi);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            const element::Type& get_convert_element_type() const { return m_element_type; }
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-
-            const ngraph::element::Type m_element_type;
+            void validate_and_infer_types() override;
         };
     }
 }

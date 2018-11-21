@@ -47,8 +47,8 @@ namespace ngraph
                                            const NodeVector& deltas) override;
 
         private:
-            size_t m_batch_axis{0};
-            size_t m_seq_axis{0};
+            const size_t m_batch_axis;
+            const size_t m_seq_axis;
         };
     }
 }

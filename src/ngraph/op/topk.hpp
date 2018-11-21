@@ -53,10 +53,10 @@ namespace ngraph
             size_t get_k() const { return m_k; }
             bool get_compute_max() const { return m_compute_max; }
         protected:
-            size_t m_top_k_axis;
-            element::Type m_index_element_type;
+            const size_t m_top_k_axis;
+            const element::Type m_index_element_type;
             size_t m_k;
-            bool m_compute_max;
+            const bool m_compute_max;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
         };

@@ -59,10 +59,10 @@ namespace ngraph
                                            const NodeVector& deltas) override;
             void validate_and_infer_types() override;
 
-            double m_alpha;
-            double m_beta;
-            double m_bias;
-            size_t m_size;
+            const double m_alpha;
+            const double m_beta;
+            const double m_bias;
+            const size_t m_size;
         };
     }
 }

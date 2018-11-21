@@ -247,12 +247,12 @@ namespace ngraph
             }
 
         protected:
-            Shape m_data_batch_shape;
-            Strides m_window_movement_strides_forward;
-            Strides m_window_dilation_strides_forward;
-            CoordinateDiff m_padding_below_forward;
-            CoordinateDiff m_padding_above_forward;
-            Strides m_data_dilation_strides_forward;
+            const Shape m_data_batch_shape;
+            const Strides m_window_movement_strides_forward;
+            const Strides m_window_dilation_strides_forward;
+            const CoordinateDiff m_padding_below_forward;
+            const CoordinateDiff m_padding_above_forward;
+            const Strides m_data_dilation_strides_forward;
 
             Strides m_window_movement_strides_backward;
             Strides m_window_dilation_strides_backward;
@@ -344,12 +344,12 @@ namespace ngraph
             }
 
         protected:
-            Shape m_filters_shape;
-            Strides m_window_movement_strides_forward;
-            Strides m_window_dilation_strides_forward;
-            CoordinateDiff m_padding_below_forward;
-            CoordinateDiff m_padding_above_forward;
-            Strides m_data_dilation_strides_forward;
+            const Shape m_filters_shape;
+            const Strides m_window_movement_strides_forward;
+            const Strides m_window_dilation_strides_forward;
+            const CoordinateDiff m_padding_below_forward;
+            const CoordinateDiff m_padding_above_forward;
+            const Strides m_data_dilation_strides_forward;
 
             Strides m_window_movement_strides_backward;
             Strides m_window_dilation_strides_backward;

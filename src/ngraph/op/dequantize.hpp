@@ -53,8 +53,8 @@ namespace ngraph
                                            const NodeVector& deltas) override;
 
         private:
-            ngraph::element::Type m_type;
-            ngraph::AxisSet m_axes;
+            const ngraph::element::Type m_type;
+            const ngraph::AxisSet m_axes;
         };
     }
 }

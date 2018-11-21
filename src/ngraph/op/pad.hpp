@@ -54,9 +54,9 @@ namespace ngraph
             void validate_and_infer_types() override;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            Shape m_padding_below;
-            Shape m_padding_above;
-            Shape m_padding_interior;
+            const Shape m_padding_below;
+            const Shape m_padding_above;
+            const Shape m_padding_interior;
         };
     }
 }

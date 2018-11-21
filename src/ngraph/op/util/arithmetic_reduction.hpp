@@ -42,7 +42,7 @@ namespace ngraph
                 /// \return The axis positions (0-based) to be eliminated through reduction.
                 const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
             protected:
-                AxisSet m_reduction_axes;
+                const AxisSet m_reduction_axes;
             };
         }
     }

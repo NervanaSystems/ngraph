@@ -29,7 +29,7 @@ op::ReplaceSlice::ReplaceSlice(const shared_ptr<Node>& arg0,
     : Op("ReplaceSlice", check_single_output_args({arg0, arg1}))
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
-    , m_strides(strides)
+    , m_strides(strides.size() == 0 ? Strides(m_lower_bounds.size(), 1) : strides)
 {
     constructor_validate_and_infer_types();
 }
@@ -48,13 +48,6 @@ op::ReplaceSlice::ReplaceSlice(const shared_ptr<Node>& arg0,
 
 void op::ReplaceSlice::validate_and_infer_types()
 {
-    // An empty stride vector with lower_bounds/upper_bounds filled in means that we need to
-    // construct the default value.
-    if (m_strides.size() == 0)
-    {
-        m_strides = Strides(m_lower_bounds.size(), 1);
-    }
-
     const PartialShape& arg0_shape = get_input_partial_shape(0);
     const PartialShape& arg1_shape = get_input_partial_shape(1);
     Dimension merged_args_rank;

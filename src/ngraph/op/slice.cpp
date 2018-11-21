@@ -26,7 +26,7 @@ op::Slice::Slice(const shared_ptr<Node>& arg,
     : Op("Slice", check_single_output_args({arg}))
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
-    , m_strides(strides)
+    , m_strides(strides.size() == 0 ? Strides(m_lower_bounds.size(), 1) : strides)
 {
     constructor_validate_and_infer_types();
 }
@@ -44,13 +44,6 @@ op::Slice::Slice(const shared_ptr<Node>& arg,
 
 void op::Slice::validate_and_infer_types()
 {
-    // An empty stride vector with lower_bounds/upper_bounds filled in means that we need to
-    // construct the default value.
-    if (m_strides.size() == 0)
-    {
-        m_strides = Strides(m_lower_bounds.size(), 1);
-    }
-
     NODE_VALIDATION_ASSERT(this,
                            m_lower_bounds.size() == m_upper_bounds.size() &&
                                m_lower_bounds.size() == m_strides.size())

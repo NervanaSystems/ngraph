@@ -62,8 +62,8 @@ namespace ngraph
         protected:
             void validate_and_infer_types() override;
 
-            PartialShape m_shape;
-            size_t m_one_hot_axis;
+            const PartialShape m_shape;
+            const size_t m_one_hot_axis;
         };
     }
 }

@@ -87,7 +87,7 @@ namespace ngraph
 
             const AxisVector m_input_order;
             const Shape m_output_shape;
-            bool m_is_transpose{false};
+            const bool m_is_transpose;
         };
     }
 }

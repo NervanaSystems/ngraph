@@ -29,6 +29,7 @@ op::Reshape::Reshape(const shared_ptr<Node>& arg,
     : Op("Reshape", check_single_output_args({arg}))
     , m_input_order(input_order)
     , m_output_shape(output_shape)
+    , m_is_transpose(!std::is_sorted(m_input_order.begin(), m_input_order.end()))
 {
     constructor_validate_and_infer_types();
 }
@@ -79,10 +80,6 @@ void op::Reshape::validate_and_infer_types()
         }
     }
 
-    if (!std::is_sorted(m_input_order.begin(), m_input_order.end()))
-    {
-        m_is_transpose = true;
-    }
     set_output_type(0, get_input_element_type(0), m_output_shape);
 }
 

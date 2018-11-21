@@ -30,9 +30,9 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
                      bool include_padding_in_avg_computation)
     : Op("AvgPool", check_single_output_args({arg}))
     , m_window_shape(window_shape)
-    , m_window_movement_strides(window_movement_strides)
-    , m_padding_below(padding_below)
-    , m_padding_above(padding_above)
+    , m_window_movement_strides(window_movement_strides.size() == 0 ? Strides(m_window_shape.size(), 1) : window_movement_strides)
+    , m_padding_below(window_movement_strides.size() == 0 ? Shape(m_window_shape.size(), 0) : padding_below)
+    , m_padding_above(window_movement_strides.size() == 0 ? Shape(m_window_shape.size(), 0) : padding_above)
     , m_include_padding_in_avg_computation(include_padding_in_avg_computation)
 {
     constructor_validate_and_infer_types();
@@ -40,21 +40,6 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
 
 void op::AvgPool::validate_and_infer_types()
 {
-    if (0 == m_window_movement_strides.size())
-    {
-        m_window_movement_strides = Strides(m_window_shape.size(), 1);
-    }
-
-    if (0 == m_padding_below.size())
-    {
-        m_padding_below = Shape(m_window_shape.size(), 0);
-    }
-
-    if (0 == m_padding_above.size())
-    {
-        m_padding_above = Shape(m_window_shape.size(), 0);
-    }
-
     const PartialShape& arg_shape = get_input_partial_shape(0);
 
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for

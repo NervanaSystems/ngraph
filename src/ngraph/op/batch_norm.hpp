@@ -69,7 +69,7 @@ namespace ngraph
             static constexpr size_t INPUT_BETA = 1;
             static constexpr size_t INPUT_DATA = 2;
 
-            double m_epsilon;
+            const double m_epsilon;
         };
 
         class BatchNormInference : public Op
@@ -119,7 +119,7 @@ namespace ngraph
             static constexpr size_t INPUT_MEAN = 3;
             static constexpr size_t INPUT_VARIANCE = 4;
 
-            double m_epsilon;
+            const double m_epsilon;
         };
 
         class BatchNormTrainingBackprop : public Op
@@ -147,7 +147,7 @@ namespace ngraph
             static constexpr size_t INPUT_VARIANCE = 4;
             static constexpr size_t INPUT_DELTA = 5;
 
-            double m_epsilon;
+            const double m_epsilon;
         };
     }
 }

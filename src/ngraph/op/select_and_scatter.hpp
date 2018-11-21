@@ -102,8 +102,8 @@ namespace ngraph
         protected:
             std::shared_ptr<Function> m_selection_function;
             std::shared_ptr<Function> m_scatter_function;
-            Shape m_window_shape;
-            Strides m_window_movement_strides;
+            const Shape m_window_shape;
+            const Strides m_window_movement_strides;
         };
     }
 }

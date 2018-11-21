@@ -80,8 +80,8 @@ namespace ngraph
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
         protected:
             std::shared_ptr<Function> m_reduction_function;
-            Shape m_window_shape;
-            Strides m_window_movement_strides;
+            const Shape m_window_shape;
+            const Strides m_window_movement_strides;
         };
     }
 }

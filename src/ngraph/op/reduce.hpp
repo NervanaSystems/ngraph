@@ -103,7 +103,7 @@ namespace ngraph
             const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
         protected:
             std::shared_ptr<Function> m_reduction_function;
-            AxisSet m_reduction_axes;
+            const AxisSet m_reduction_axes;
         };
     }
 }

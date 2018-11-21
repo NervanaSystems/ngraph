@@ -18,9 +18,13 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/autobroadcast.hpp"
+#include "ngraph/builder/broadcast_scalar_to.hpp"
+#include "ngraph/builder/num_elements.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -54,14 +58,15 @@ namespace ngraph
 
         std::shared_ptr<Node> mean(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
         {
+            std::cout << *node << std::endl;
             auto xsum = std::make_shared<op::Sum>(node, reduction_axes);
+            std::cout << *xsum << std::endl;
+            auto divisor = builder::broadcast_scalar_to(std::make_shared<op::ShapeOf>(xsum), builder::num_elements(node) / builder::num_elements(xsum));
+            std::cout << *divisor << std::endl;
+            auto divisor_converted = std::make_shared<op::Convert>(divisor, xsum->get_element_type());
+            std::cout << *divisor_converted << std::endl;
 
-            auto N = get_num_elements(node->get_shape(), reduction_axes);
-            const auto& et = node->get_element_type();
-
-            auto divisor = op::Constant::create(et, xsum->get_shape(), {N});
-
-            return xsum / divisor;
+            return xsum / divisor_converted;
         }
 
         std::shared_ptr<Node> std_dev(const std::shared_ptr<Node>& node,

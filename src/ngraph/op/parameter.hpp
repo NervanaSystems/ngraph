@@ -51,9 +51,9 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
-            bool m_cacheable;
-            PartialShape m_partial_shape;
-            element::Type m_element_type;
+            const bool m_cacheable;
+            const PartialShape m_partial_shape;
+            const element::Type m_element_type;
         };
     }
 }

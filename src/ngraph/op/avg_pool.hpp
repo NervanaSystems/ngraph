@@ -97,11 +97,11 @@ namespace ngraph
             }
 
         protected:
-            Shape m_window_shape;
-            Strides m_window_movement_strides;
-            Shape m_padding_below;
-            Shape m_padding_above;
-            bool m_include_padding_in_avg_computation;
+            const Shape m_window_shape;
+            const Strides m_window_movement_strides;
+            const Shape m_padding_below;
+            const Shape m_padding_above;
+            const bool m_include_padding_in_avg_computation;
         };
 
         class AvgPoolBackprop : public Op
@@ -131,12 +131,12 @@ namespace ngraph
             }
 
         protected:
-            Shape m_forward_arg_shape;
-            Shape m_window_shape;
-            Strides m_window_movement_strides;
-            Shape m_padding_below;
-            Shape m_padding_above;
-            bool m_include_padding_in_avg_computation;
+            const Shape m_forward_arg_shape;
+            const Shape m_window_shape;
+            const Strides m_window_movement_strides;
+            const Shape m_padding_below;
+            const Shape m_padding_above;
+            const bool m_include_padding_in_avg_computation;
         };
     }
 }
