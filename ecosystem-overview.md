@@ -74,11 +74,6 @@ framework, and the result is a function that can be compiled from a framework.
 A fully-compiled function that makes use of bridge code thus becomes a "function 
 graph", or what we sometimes call an nGraph graph.
 
-**Note** Low-level nGraph APIs are not accessible dynamically via bridge code; 
-this is the nature of stateless graphs. However, please note that a graph with 
-a "saved" checkpoint can be "continued" to run from a previously-applied 
-checkpoint, or it can loaded as static graph for further inspection.
-
 For a more detailed dive into how custom bridge code can be implemented, see our 
 documentation [How to]. To learn how TensorFlow and MXNet currently make use of 
 custom bridge code, see the section on [framework-integration-guides].
