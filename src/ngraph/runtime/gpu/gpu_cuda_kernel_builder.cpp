@@ -57,6 +57,28 @@ void runtime::gpu::CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& wr
     return;
 }
 
+void runtime::gpu::CudaKernelBuilder::get_memset_op(codegen::CodeWriter& writer,
+                                                    const std::string& name,
+                                                    const std::string& data_type,
+                                                    runtime::gpu::GPUKernelArgs& args)
+{
+    writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
+    writer.block_begin();
+    {
+        writer << "uint32_t tid = blockIdx.x * blockDim.x + threadIdx.x; \n";
+        writer << "uint32_t step = gridDim.x * blockDim.x; \n";
+        writer << "for ( ;tid < nthreads; tid += step)\n";
+        writer.block_begin();
+        {
+            writer << "out[tid] = in[0];\n";
+        }
+        writer.block_end();
+    }
+    writer.block_end();
+
+    return;
+}
+
 void runtime::gpu::CudaKernelBuilder::get_cudnn_bn_inv_var_op(codegen::CodeWriter& writer,
                                                               const std::string& name,
                                                               runtime::gpu::GPUKernelArgs& args)
@@ -483,9 +505,25 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
     runtime::gpu::GPUKernelArgs& args,
     const std::vector<std::string>& data_types,
     const std::string& reduce_op,
-    size_t out_rank,
+    size_t non_reduce_rank,
     size_t reduce_rank)
 {
+    bool stable_sum =
+        ((reduce_op == "add") && (data_types[1] == "float" || data_types[1] == "double"));
+    auto stable_sum_lambda = [&]() {
+        writer << "input_i = in0[input_idx];\n";
+        if (stable_sum)
+        {
+            writer << "y = input_i - c;\n";
+            writer << "t = r + y;\n";
+            writer << "c = (t - r) - y;\n";
+            writer << "r = t;\n";
+        }
+        else
+        {
+            writer << "r = " << reduce_op << "(r , input_i);\n";
+        }
+    };
     writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -494,68 +532,74 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
         writer << "if (tid < nthreads)\n";
         writer.block_begin();
         {
-            if (out_rank > 0)
+            collective_coordinate_transform_helper(writer,
+                                                   "tid",
+                                                   "non_reduce_strides",
+                                                   "non_reduce_strides_magic",
+                                                   "non_reduce_strides_shift",
+                                                   "non_reduce_strides_in_input",
+                                                   "non_reduce_coordinate",
+                                                   "non_reduce_input_index",
+                                                   non_reduce_rank,
+                                                   true);
+            writer << "uint32_t input_idx = non_reduce_input_index;\n";
+            writer << "uint32_t step = reduce_strides_in_input" << reduce_rank - 1 << ";\n";
+            writer << data_types[1] << " r = in0[non_reduce_input_index];\n";
+            if (stable_sum)
             {
-                writer << "uint32_t dim_idx_generator = tid;\n";
+                writer << data_types[1] << " c = 0;\n";
+                writer << data_types[1] << " y;\n";
+                writer << data_types[1] << " t;\n";
             }
-            writer << "uint32_t in_idx = 0;\n";
-
-            // loop through all reduction axis
-            for (int64_t i = 0; i < static_cast<int64_t>(out_rank); i++)
+            writer << data_types[1] << " input_i;\n";
+            for (uint32_t i = 0; i < reduce_rank - 1; i++)
             {
-                writer << "in_idx += (dim_idx_generator / out_strides" << i
-                       << ") * non_reduce_strides" << i << ";\n";
-                writer << "dim_idx_generator %= out_strides" << i << ";\n";
-            }
-            writer << "uint32_t init_in_idx = in_idx;\n";
-            writer << data_types[1] << " r = in[init_in_idx];\n";
-            int64_t last_r_idx = static_cast<int64_t>(reduce_rank) - 1;
-            for (int64_t j = 0; j < last_r_idx; j++)
-            {
-                writer << "for(int idx" << j << " = 0; idx" << j << "< reduce_shape" << j << "; idx"
-                       << j << "++)\n";
+                writer << "for (uint32_t reduce_coordinate_" << i << " = 0; reduce_coordinate_" << i
+                       << " < reduce_shape" << i << ";  reduce_coordinate_" << i << "++)\n";
                 writer.block_begin();
             }
             {
-                writer << "uint32_t reduce_idx = in_idx;\n";
-                for (int64_t j = 0; j < last_r_idx; j++)
-                {
-                    writer << "reduce_idx += idx" << j << " * reduce_strides" << j << ";\n";
-                }
-                writer << "uint32_t step = reduce_strides" << last_r_idx << ";\n";
-                writer << "if(reduce_idx != init_in_idx)\n";
+                uint32_t loop_unroll = 8;
+                uint32_t i = reduce_rank - 1;
+                writer << "if (input_idx != non_reduce_input_index)\n";
                 writer.block_begin();
                 {
-                    writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
+                    stable_sum_lambda();
                 }
                 writer.block_end();
-                writer << "reduce_idx += step;\n";
-                writer << "int idx" << last_r_idx << " = 1;\n";
-                // unroll last reduction axis
-                uint32_t unroll_num = 8;
-                writer << "for(; idx" << last_r_idx << " + " << unroll_num << " - 1 < reduce_shape"
-                       << last_r_idx << "; idx" << last_r_idx << " += " << unroll_num << ")\n";
+                writer << "input_idx += step;\n";
+
+                writer << "uint32_t reduce_coordinate_" << i << " = 1;\n";
+                writer << "for (; reduce_coordinate_" << i << " + " << loop_unroll - 1
+                       << " < reduce_shape" << i << ";  reduce_coordinate_" << i
+                       << " += " << loop_unroll << ")\n";
                 writer.block_begin();
                 {
-                    for (int k = 0; k < unroll_num; k++)
+                    for (uint32_t j = 0; j < 8; j++)
                     {
-                        writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
-                        writer << "reduce_idx += step;\n";
+                        stable_sum_lambda();
+                        writer << "input_idx += step;\n";
                     }
                 }
                 writer.block_end();
-                writer << "for(; idx" << last_r_idx << " < reduce_shape" << last_r_idx << "; idx"
-                       << last_r_idx << "++)\n";
+                writer << "for (; reduce_coordinate_" << i << " < reduce_shape" << i
+                       << ";  reduce_coordinate_" << i << "++)\n";
                 writer.block_begin();
                 {
-                    writer << "r = " << reduce_op << "(r , in[reduce_idx]);\n";
-                    writer << "reduce_idx += step;\n";
+                    stable_sum_lambda();
+                    writer << "input_idx += step;\n";
                 }
                 writer.block_end();
+                writer << "input_idx -= "
+                       << "step * reduce_shape" << i << ";\n";
             }
-            for (int64_t j = 0; j < last_r_idx; j++)
+            for (int32_t i = static_cast<int32_t>(reduce_rank - 2); i >= 0; i--)
             {
+                writer << "input_idx += "
+                       << "reduce_strides_in_input" << i << ";\n";
                 writer.block_end();
+                writer << "input_idx -= "
+                       << "reduce_strides_in_input" << i << " * reduce_shape" << i << ";\n";
             }
             writer << "out[tid] = r;\n";
         }
@@ -573,6 +617,22 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
     const std::string& reduce_op,
     uint32_t block_size_x)
 {
+    bool stable_sum =
+        ((reduce_op == "add") && (data_types[1] == "float" || data_types[1] == "double"));
+    auto stable_sum_lambda = [&]() {
+        writer << "input_i = in[input_idx];\n";
+        if (stable_sum)
+        {
+            writer << "y = input_i - c;\n";
+            writer << "t = r + y;\n";
+            writer << "c = (t - r) - y;\n";
+            writer << "r = t;\n";
+        }
+        else
+        {
+            writer << "r = " << reduce_op << "(r , input_i);\n";
+        }
+    };
     writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -581,30 +641,37 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
         writer << "uint32_t tid = threadIdx.x; \n";
         writer << "uint32_t step = blockDim.x; \n";
         writer << "sdata[tid] = 0;\n";
-        writer << "uint32_t in_idx = tid;\n";
+        writer << "uint32_t input_idx = tid;\n";
         writer << data_types[1] << " r = 0;\n";
-        writer << "if(in_idx < nthreads)\n";
+        writer << data_types[1] << " input_i;\n";
+        writer << "if(input_idx < nthreads)\n";
         writer.block_begin();
-        writer << "r = in[in_idx];\n";
-        writer << "in_idx += step;\n";
+        writer << "r = in[input_idx];\n";
+        writer << "input_idx += step;\n";
         writer.block_end();
         //accumulate reduction to blockDim.x threads
+        if (stable_sum)
+        {
+            writer << data_types[1] << " c = 0;\n";
+            writer << data_types[1] << " y;\n";
+            writer << data_types[1] << " t;\n";
+        }
         uint32_t unroll_num = 8;
-        writer << "while(in_idx + (step * " << unroll_num - 1 << ") < nthreads)\n";
+        writer << "while(input_idx + (step * " << unroll_num - 1 << ") < nthreads)\n";
         writer.block_begin();
         {
             for (int i = 0; i < unroll_num; i++)
             {
-                writer << "r = " << reduce_op << "(r , in[in_idx]);\n";
-                writer << "in_idx += step;\n";
+                stable_sum_lambda();
+                writer << "input_idx += step;\n";
             }
         }
         writer.block_end();
-        writer << "while(in_idx < nthreads)\n";
+        writer << "while(input_idx < nthreads)\n";
         writer.block_begin();
         {
-            writer << "r = " << reduce_op << "(r , in[in_idx]);\n";
-            writer << "in_idx += step;\n";
+            stable_sum_lambda();
+            writer << "input_idx += step;\n";
         }
         writer.block_end();
 
@@ -667,36 +734,59 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
     const std::vector<std::string>& data_types,
     const std::string& reduce_op)
 {
+    bool stable_sum =
+        ((reduce_op == "add") && (data_types[1] == "float" || data_types[1] == "double"));
+    auto stable_sum_lambda = [&]() {
+        writer << "input_i = in[input_idx];\n";
+        if (stable_sum)
+        {
+            writer << "y = input_i - c;\n";
+            writer << "t = r + y;\n";
+            writer << "c = (t - r) - y;\n";
+            writer << "r = t;\n";
+        }
+        else
+        {
+            writer << "r = " << reduce_op << "(r , input_i);\n";
+        }
+    };
     writer << runtime::gpu::nvrtc::helpers();
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
         writer << "uint32_t tid = blockDim.x*blockIdx.x + threadIdx.x;\n";
         writer << "uint32_t step = gridDim.x * blockDim.x; \n";
-        writer << "uint32_t in_idx = tid;\n";
+        writer << "uint32_t input_idx = tid;\n";
         writer << data_types[1] << " r = 0;\n";
-        writer << "if(in_idx < nthreads)\n";
+        writer << data_types[1] << " input_i;\n";
+        writer << "if(input_idx < nthreads)\n";
         writer.block_begin();
-        writer << "r = in[in_idx];\n";
-        writer << "in_idx += step;\n";
+        writer << "r = in[input_idx];\n";
+        writer << "input_idx += step;\n";
         writer.block_end();
         //accumulate reduction to step threads
+        if (stable_sum)
+        {
+            writer << data_types[1] << " c = 0;\n";
+            writer << data_types[1] << " y;\n";
+            writer << data_types[1] << " t;\n";
+        }
         uint32_t unroll_num = 8;
-        writer << "while(in_idx + (step * " << unroll_num - 1 << ") < nthreads)\n";
+        writer << "while(input_idx + (step * " << unroll_num - 1 << ") < nthreads)\n";
         writer.block_begin();
         {
             for (int i = 0; i < unroll_num; i++)
             {
-                writer << "r = " << reduce_op << "(r , in[in_idx]);\n";
-                writer << "in_idx += step;\n";
+                stable_sum_lambda();
+                writer << "input_idx += step;\n";
             }
         }
         writer.block_end();
-        writer << "while(in_idx < nthreads)\n";
+        writer << "while(input_idx < nthreads)\n";
         writer.block_begin();
         {
-            writer << "r = " << reduce_op << "(r , in[in_idx]);\n";
-            writer << "in_idx += step;\n";
+            stable_sum_lambda();
+            writer << "input_idx += step;\n";
         }
         writer.block_end();
         writer << "out[tid] = r;\n";
@@ -1856,19 +1946,53 @@ void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::C
     //  product = product % stride[0]
     //  d1 = product/stride[1]
     //  ...
-    writer << "int coordinate_product = " << i_coord_product << ";\n";
+    writer << "int " << o_coordinates << "product = " << i_coord_product << ";\n";
     for (size_t i = 0; i < rank; i++)
     {
         if (i != 0)
         {
-            writer << "coordinate_product -= (" << o_coordinates << i - 1 << " * " << i_strides
-                   << brace_open << i - 1 << brace_close << ");\n";
+            writer << o_coordinates << "product -= (" << o_coordinates << i - 1 << " * "
+                   << i_strides << brace_open << i - 1 << brace_close << ");\n";
         }
         writer << "int " << o_coordinates << i << " = division_by_invariant_multiplication("
-               << "coordinate_product, " << i_stride_magic << brace_open << i << brace_close << ", "
-               << i_stride_shift << brace_open << i << brace_close << ");\n";
+               << o_coordinates << "product, " << i_stride_magic << brace_open << i << brace_close
+               << ", " << i_stride_shift << brace_open << i << brace_close << ");\n";
     }
 }
+
+void runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
+    codegen::CodeWriter& writer,
+    std::string i_thread_index,
+    std::string i_strides,
+    std::string i_stride_magic,
+    std::string i_stride_shift,
+    std::string i_reduced_strides,
+    std::string o_coordinates,
+    std::string reduced_idx,
+    size_t rank,
+    bool register_arguments)
+{
+    coordinate_transform_to_multi_d(writer,
+                                    i_strides,
+                                    i_stride_magic,
+                                    i_stride_shift,
+                                    i_thread_index,
+                                    o_coordinates,
+                                    rank,
+                                    register_arguments);
+
+    std::string brace_open = (register_arguments) ? "" : "[";
+    std::string brace_close = (register_arguments) ? "" : "]";
+
+    // index into reduced tensor from coordinates of non-reduced tensor
+    writer << "uint32_t " << reduced_idx << " = 0;\n";
+    for (size_t i = 0; i < rank; i++)
+    {
+        writer << reduced_idx << " += " << o_coordinates << i << " * " << i_reduced_strides
+               << brace_open << i << brace_close << ";\n";
+    }
+}
+
 std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
     codegen::CodeWriter& writer,
     std::string i_thread_index,

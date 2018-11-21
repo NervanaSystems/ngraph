@@ -40,6 +40,11 @@ namespace ngraph
                                                const std::string& op,
                                                const std::vector<std::string>& data_types);
 
+                static void get_memset_op(codegen::CodeWriter& writer,
+                                          const std::string& name,
+                                          const std::string& data_type,
+                                          runtime::gpu::GPUKernelArgs& args);
+
                 static void get_cudnn_bn_inv_var_op(codegen::CodeWriter& writer,
                                                     const std::string& name,
                                                     runtime::gpu::GPUKernelArgs& args);
@@ -78,22 +83,34 @@ namespace ngraph
                                               const std::string& data_type,
                                               uint32_t block_size);
 
+                /// \brief reduce op for output that is not scalar
+                /// stable kahan sum is been used for float point sum.
+                /// no initial value needed since we load one input value as initial
+                /// not support 0 sized input
                 static void get_reduce_to_nd_op(codegen::CodeWriter& writer,
                                                 const std::string& name,
                                                 runtime::gpu::GPUKernelArgs& args,
                                                 const std::vector<std::string>& data_types,
                                                 const std::string& reduce_op,
-                                                size_t out_rank,
+                                                size_t non_reduce_rank,
                                                 size_t reduce_rank);
 
-                static void get_topk(codegen::CodeWriter& writer,
-                                     const std::string& name,
-                                     const std::vector<std::string>& dtypes,
-                                     bool compute_max,
-                                     runtime::gpu::GPUKernelArgs& args,
-                                     bool use_malloc);
+                /// \brief This is the preprocess to reduce to scalar if the input data size is large than a number.
+                /// The number can be tuned based on hardware.
+                /// This cuda kernel will accumulate reduction to a certain number of bins depends on hardware.
+                /// stable kahan sum is been used for float point sum.
+                /// no initial value needed since we load one input value as initial
+                /// not support 0 sized input
+                static void get_reduce_to_scalar_acc_op(codegen::CodeWriter& writer,
+                                                        const std::string& name,
+                                                        runtime::gpu::GPUKernelArgs& args,
+                                                        const std::vector<std::string>& data_types,
+                                                        const std::string& reduce_op);
 
-                //using one block with at most 512 threads to reduce to scalar.
+                /// \brief This op using one block with at most 512 threads to reduce to scalar.
+                /// stable kahan sum is been used for float point sum.
+                /// no initial value needed since we load one input value as initial
+                /// not support 0 sized input
                 static void get_reduce_to_scalar_op(codegen::CodeWriter& writer,
                                                     const std::string& name,
                                                     runtime::gpu::GPUKernelArgs& args,
@@ -101,14 +118,12 @@ namespace ngraph
                                                     const std::string& reduce_op,
                                                     uint32_t block_size_x);
 
-                //This is the preprocess to reduce to scalar if the data size is large than a number.
-                //The number can be tuned based on hardware.
-                //This cuda kernel will accumulate reduction to a certain number of bins depends on hardware.
-                static void get_reduce_to_scalar_acc_op(codegen::CodeWriter& writer,
-                                                        const std::string& name,
-                                                        runtime::gpu::GPUKernelArgs& args,
-                                                        const std::vector<std::string>& data_types,
-                                                        const std::string& reduce_op);
+                static void get_topk(codegen::CodeWriter& writer,
+                                     const std::string& name,
+                                     const std::vector<std::string>& dtypes,
+                                     bool compute_max,
+                                     runtime::gpu::GPUKernelArgs& args,
+                                     bool use_malloc);
 
                 static void get_slice_op(codegen::CodeWriter& writer,
                                          const std::string& name,
@@ -215,6 +230,16 @@ namespace ngraph
                                                             std::string o_coordinates,
                                                             size_t rank,
                                                             bool register_arguments = false);
+                static void collective_coordinate_transform_helper(codegen::CodeWriter& writer,
+                                                                   std::string i_thread_index,
+                                                                   std::string i_strides,
+                                                                   std::string i_stride_magic,
+                                                                   std::string i_stride_shift,
+                                                                   std::string i_reduced_strides,
+                                                                   std::string o_coordinates,
+                                                                   std::string reduced_idx,
+                                                                   size_t rank,
+                                                                   bool register_arguments = true);
             };
         }
     }
