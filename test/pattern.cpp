@@ -440,6 +440,23 @@ TEST(pattern, matcher)
     auto bea_false = std::make_shared<pattern::op::Any>(a, false_pred, NodeVector{a, b});
     ASSERT_FALSE(n.match(bea_false, a + b));
 
+    auto add_abs_b = abs + b;
+    auto bea_any_of = std::make_shared<pattern::op::AnyOf>(a, is_bea, NodeVector{abs});
+    ASSERT_TRUE(n.match(bea_any_of, add_abs_b));
+
+    auto add_b_abs = b + abs;
+    ASSERT_TRUE(n.match(bea_any_of, add_b_abs));
+
+    auto bea_any_of_label =
+        std::make_shared<pattern::op::Label>(a, nullptr, NodeVector{bea_any_of});
+    ASSERT_TRUE(n.match(bea_any_of_label, add_b_abs));
+    ASSERT_EQ(n.get_pattern_map()[bea_any_of_label], add_b_abs);
+
+    auto abs_label = std::make_shared<pattern::op::Label>(a, nullptr, NodeVector{abs});
+    auto bea_label_any_of = std::make_shared<pattern::op::AnyOf>(a, is_bea, NodeVector{abs_label});
+    ASSERT_TRUE(n.match(bea_label_any_of, add_b_abs));
+    ASSERT_EQ(n.get_pattern_map()[abs_label], abs);
+
     auto bea_label = std::make_shared<pattern::op::Label>(a, nullptr, NodeVector{bea});
     auto ab = a + b;
     ASSERT_TRUE(n.match(bea_label, ab));
