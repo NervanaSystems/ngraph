@@ -140,7 +140,7 @@ static bool simplify_concat(std::shared_ptr<Node> n)
             NGRAPH_DEBUG << "setting branch_tip to " << branch_tip->get_name();
         }
 
-        if (slice->get_users().size() > 1)
+        if (slice->get_users(true).size() > 1)
         {
             NGRAPH_DEBUG << slice->get_name() << " has more than one user";
             return false;
@@ -162,7 +162,7 @@ static bool simplify_concat(std::shared_ptr<Node> n)
                 return false;
             }
 
-            if (rcarg->get_users().size() > 1)
+            if (rcarg->get_users(true).size() > 1)
             {
                 NGRAPH_DEBUG << rcarg->get_name() << " has more than one user";
                 return false;
@@ -173,7 +173,7 @@ static bool simplify_concat(std::shared_ptr<Node> n)
     auto concat = std::static_pointer_cast<op::Concat>(n);
     size_t concat_axis = concat->get_concatenation_axis();
 
-    auto slice_shape = branch_tip->get_users().at(0)->get_shape();
+    auto slice_shape = branch_tip->get_users(true).at(0)->get_shape();
     size_t slice_axis = std::numeric_limits<size_t>::max();
 
     auto btip_shape = branch_tip->get_shape();
