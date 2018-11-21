@@ -5798,7 +5798,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop)
     auto var = std::make_shared<op::GetOutputElement>(bn_fp, 2);
 
     auto func_bn =
-        std::make_shared<Function>(NodeVector{bnorm, mean, var}, op::ParameterVector{input, g, b});
+        std::make_shared<Function>(NodeVector{bnorm, mean, var}, ParameterVector{input, g, b});
 
     std::vector<float> input_arg{0.0f, 4.0f};
     std::vector<float> gamma_arg{1.0f};
