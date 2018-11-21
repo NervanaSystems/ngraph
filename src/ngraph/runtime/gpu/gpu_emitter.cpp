@@ -1645,11 +1645,9 @@ tensorflow test failures*/
                                                         args[0].get_shape(),
                                                         sum->get_reduction_axes(),
                                                         CUDNNEmitter::ReductionMode::Reduce);
-
-                writer << "gpu::invoke_primitive(ctx, " << sum_index << ", ";
-                writer << "std::vector<void*>{" << args[0].get_name() << "}.data(), ";
-                writer << "std::vector<void*>{" << out[0].get_name() << "}.data()";
-                writer << ");\n";
+                writer << "void* input[] = {" << node_names(args) << "};\n";
+                writer << "void* output[] = {" << node_names(out) << "};\n";
+                writer << "gpu::invoke_primitive(ctx, " << sum_index << ", input, output);\n";
             }
         }
     }
