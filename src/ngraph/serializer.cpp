@@ -831,12 +831,25 @@ static shared_ptr<ngraph::Function>
                     node_js.at("window_movement_strides").get<vector<size_t>>();
                 auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
                 auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
-                node = make_shared<op::MaxPoolBackprop>(args[0],
-                                                        args[1],
-                                                        window_shape,
-                                                        window_movement_strides,
-                                                        padding_below,
-                                                        padding_above);
+                if (args.size() == 3)
+                {
+                    node = make_shared<op::MaxPoolBackprop>(args[0],
+                                                            args[1],
+                                                            args[2],
+                                                            window_shape,
+                                                            window_movement_strides,
+                                                            padding_below,
+                                                            padding_above);
+                }
+                else
+                {
+                    node = make_shared<op::MaxPoolBackprop>(args[0],
+                                                            args[1],
+                                                            window_shape,
+                                                            window_movement_strides,
+                                                            padding_below,
+                                                            padding_above);
+                }
                 break;
             }
             case OP_TYPEID::Maximum:

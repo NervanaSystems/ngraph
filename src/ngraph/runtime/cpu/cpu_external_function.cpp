@@ -668,9 +668,6 @@ using namespace ngraph::runtime;
             }
         }
 
-        // In place slice optimization
-        process_in_place_slice(ordered_ops);
-
         // In place concatenation optimization
         process_in_place_concat(ordered_ops);
 
@@ -693,19 +690,6 @@ using namespace ngraph::runtime;
             writer << "size_t pool_base_ptr = (size_t) ctx->memory_buffers["
                    << m_memory_buffer_sizes.size() - 1 << "]->get_ptr();\n";
             writer << "\n";
-
-            // Add temporaries to the variable name map
-            for (shared_ptr<Node> node : ordered_ops)
-            {
-                for (descriptor::Tensor* tensor : node->liveness_new_list)
-                {
-                    stringstream ss;
-                    ss << "((" << tensor->get_element_type().c_type_string()
-                       << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
-                    m_variable_name_map[tensor->get_name()] = ss.str();
-                    m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
-                }
-            }
         }
 
         writer << "bool* t_en = (bool*)" << current_function->get_name() << "_t_en;\n";
@@ -746,6 +730,28 @@ using namespace ngraph::runtime;
                 param_index_map[tv->get_name()] = arg_index;
                 propagate_in_place_input(&param->get_outputs().at(i), ss.str(), false);
                 arg_index++;
+            }
+        }
+
+        // In place slice optimization
+        process_in_place_slice(ordered_ops);
+
+        if (temporaries_used)
+        {
+            // Add temporaries to the variable name map
+            for (shared_ptr<Node> node : ordered_ops)
+            {
+                for (descriptor::Tensor* tensor : node->liveness_new_list)
+                {
+                    stringstream ss;
+                    ss << "((" << tensor->get_element_type().c_type_string()
+                       << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
+                    m_variable_name_map[tensor->get_name()] = ss.str();
+                    if (m_tensor_roles.find(tensor->get_name()) == m_tensor_roles.end())
+                    {
+                        m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
+                    }
+                }
             }
         }
 
@@ -1342,7 +1348,7 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_concat(
                     auto old_offset = input_tensor->get_pool_offset();
                     input_tensor->set_pool_offset(offset);
                     NGRAPH_DEBUG
-                        << "cpu_external_function, propagate: change offset, old offset is "
+                        << "cpu_external_function, propagate: concat, change offset, old offset is "
                         << old_offset << ", new offset is " << offset << std::endl;
                     offset += input_tensor->size();
                     if (auto arg_concat = std::dynamic_pointer_cast<ngraph::op::Concat>(arg))
@@ -1368,11 +1374,17 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
                 auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
                 if (in_place_oi_pairs.size() > 0)
                 {
-                    auto arg = slice->get_argument(0);
-                    auto input = slice->get_input_from(arg);
+                    auto input = &slice->get_inputs().at(0);
+                    auto arg = input->get_output().get_node();
                     auto index = input->get_output().get_index();
                     auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
                     auto input_tensor = &input_node->get_output_tensor(index);
+                    if (m_tensor_roles[input_tensor->get_name()] == CPUTensorRole::INPUT)
+                    {
+                        NGRAPH_DEBUG << "cpu_external_function: function input pointer passed to "
+                                        "slice, do not change offset.";
+                        continue;
+                    }
                     auto offset = input_tensor->get_pool_offset();
                     auto lower_bounds = slice->get_lower_bounds();
                     auto start = 0, accumulated = 1;
@@ -1387,7 +1399,7 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
                     auto old_offset = output_tensor->get_pool_offset();
 
                     output_tensor->set_pool_offset(offset);
-                    NGRAPH_DEBUG << "cpu_external_function: change offset, old offset is "
+                    NGRAPH_DEBUG << "cpu_external_function: slice, change offset, old offset is "
                                  << old_offset << ", new offset is " << offset << std::endl;
                 }
             }
@@ -1459,27 +1471,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
     // Build executor
 
-    // In place slice optimization
-    process_in_place_slice(m_function->get_ordered_ops());
-
     // In place concatenation optimization
     process_in_place_concat(m_function->get_ordered_ops());
-
-    // Intermediates
-    if (m_function->get_temporary_pool_size())
-    {
-        m_memory_buffer_sizes.push_back(m_function->get_temporary_pool_size());
-
-        for (auto& node : m_function->get_ordered_ops())
-        {
-            for (auto tensor : node->liveness_new_list)
-            {
-                intermediates_offsets.emplace_back(tensor_data[tensor->get_name()],
-                                                   tensor->get_pool_offset());
-                m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
-            }
-        }
-    }
 
     // Constants
     for (auto& node : m_function->get_ordered_ops())
@@ -1506,6 +1499,28 @@ void runtime::cpu::CPU_ExternalFunction::build()
             m_tensor_roles[tv->get_name()] = CPUTensorRole::INPUT;
             propagate_in_place_input(&param->get_outputs().at(i), tv->get_name(), true);
             arg_index++;
+        }
+    }
+
+    // In place slice optimization
+    process_in_place_slice(m_function->get_ordered_ops());
+
+    // Intermediates
+    if (m_function->get_temporary_pool_size())
+    {
+        m_memory_buffer_sizes.push_back(m_function->get_temporary_pool_size());
+
+        for (auto& node : m_function->get_ordered_ops())
+        {
+            for (auto tensor : node->liveness_new_list)
+            {
+                intermediates_offsets.emplace_back(tensor_data[tensor->get_name()],
+                                                   tensor->get_pool_offset());
+                if (m_tensor_roles.find(tensor->get_name()) == m_tensor_roles.end())
+                {
+                    m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
+                }
+            }
         }
     }
 
