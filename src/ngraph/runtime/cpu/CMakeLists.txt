@@ -46,6 +46,7 @@ set(SRC
     builder/convolution.cpp
     builder/dot.cpp
     builder/function_call.cpp
+    builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
     builder/matmul_bias.cpp
@@ -90,6 +91,7 @@ set(SRC
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
+    op/leaky_relu.cpp
     op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
