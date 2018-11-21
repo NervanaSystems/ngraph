@@ -38,7 +38,7 @@ namespace ngraph
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
                 size_t count = out[0].get_size();
 
-                auto alpha = static_cast<const op::BoundedRelu*>(node)->get_alpha();
+                auto alpha = static_cast<const op::LeakyRelu*>(node)->get_alpha();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {

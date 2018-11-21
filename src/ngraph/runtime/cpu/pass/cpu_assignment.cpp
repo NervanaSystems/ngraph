@@ -720,6 +720,11 @@ namespace ngraph
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
+                        if (get_user_count(node->get_argument(0).get()) == 1)
+                        {
+                            // Safe to overwrite input
+                            op_annotations->add_in_place_oi_pair({0, 0, true});
+                        }
                         bounded_relu->set_op_annotations(op_annotations);
                     }
                 }
@@ -739,6 +744,11 @@ namespace ngraph
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
+                        if (get_user_count(node->get_argument(0).get()) == 1)
+                        {
+                            // Safe to overwrite input
+                            op_annotations->add_in_place_oi_pair({0, 0, true});
+                        }
                         leaky_relu->set_op_annotations(op_annotations);
                     }
                 }
