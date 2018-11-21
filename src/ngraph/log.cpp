@@ -69,9 +69,12 @@ LogHelper::LogHelper(LOG_TYPE type,
 
     time_t tt = chrono::system_clock::to_time_t(chrono::system_clock::now());
     auto tm = gmtime(&tt);
-    char buffer[256];
-    strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%Sz", tm);
-    m_stream << buffer << " ";
+    if (tm)
+    {
+        char buffer[256];
+        strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%Sz", tm);
+        m_stream << buffer << " ";
+    }
 
     m_stream << file;
     m_stream << " " << line;
