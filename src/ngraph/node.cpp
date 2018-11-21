@@ -21,6 +21,7 @@
 
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
@@ -382,7 +383,7 @@ descriptor::Output* Node::get_output_to(const shared_ptr<Node>& dst)
     throw ngraph_error("Error: dst is not one of self's output Node");
 }
 
-NodeVector Node::get_users() const
+NodeVector Node::get_users(bool check_is_used) const
 {
     NodeVector result;
 
@@ -390,7 +391,17 @@ NodeVector Node::get_users() const
     {
         for (auto input : get_output_inputs(i))
         {
-            result.push_back(input->get_node());
+            if (check_is_used)
+            {
+                if (is_used(input->get_node().get()))
+                {
+                    result.push_back(input->get_node());
+                }
+            }
+            else
+            {
+                result.push_back(input->get_node());
+            }
         }
     }
 
