@@ -46,6 +46,7 @@ set(SRC
     builder/convolution.cpp
     builder/dot.cpp
     builder/function_call.cpp
+    builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
     builder/matmul_bias.cpp
@@ -90,6 +91,7 @@ set(SRC
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
+    op/leaky_relu.cpp
     op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
@@ -109,6 +111,7 @@ set(SRC
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
     pass/cpu_reshape_sinking.cpp
+    ngraph_version.cpp
 )
 
 if (NOT NGRAPH_DEX_ONLY)

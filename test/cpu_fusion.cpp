@@ -56,6 +56,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
@@ -2991,6 +2992,45 @@ TEST(cpu_fusion, fuse_bounded_relu_inter_vs_cpu)
     check_bounded_relu(Shape{4, 3, 2, 2}, 6.0f);
     check_bounded_relu(Shape{4, 3}, 4.0f);
     check_bounded_relu(Shape{4, 3, 2}, 2.0f);
+}
+
+TEST(cpu_fusion, fuse_leaky_relu)
+{
+    auto make_function = [](Shape input_shape, vector<float> alpha_val) {
+        auto input = std::make_shared<op::Parameter>(element::f32, input_shape);
+        auto alpha = op::Constant::create<float>(element::f32, input_shape, alpha_val);
+        auto out =
+            std::make_shared<op::Maximum>(input, std::make_shared<op::Multiply>(input, alpha));
+        auto f = make_shared<Function>(NodeVector{out}, ParameterVector{input});
+        return f;
+    };
+
+    auto no_fuse1 = make_function(Shape{1, 2, 3}, std::vector<float>(6, -1.0f));
+    auto no_fuse2 = make_function(Shape{1, 3}, std::vector<float>{1.4f, 1.2f, 1.4f});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.run_passes(no_fuse1);
+    pass_manager.run_passes(no_fuse2);
+    EXPECT_EQ(0, count_ops_of_type<op::LeakyRelu>(no_fuse1));
+    EXPECT_EQ(0, count_ops_of_type<op::LeakyRelu>(no_fuse2));
+
+    // non-mkldnn kernel
+    auto cpu_f1 = make_function(Shape{1, 2, 3}, std::vector<float>(6, 0.1f));
+    // mkldnn kernel
+    auto cpu_f2 = make_function(Shape{2, 3}, std::vector<float>(6, 0.1f));
+
+    vector<vector<float>> args;
+    args.push_back(std::vector<float>{-1, -2, 0, 1, 2, 3});
+    std::vector<float> expected_result{-0.1f, -0.2f, 0.0f, 1.0f, 2.0f, 3.0f};
+
+    auto cpu1_results = execute(cpu_f1, args, "CPU");
+    EXPECT_EQ(1, count_ops_of_type<op::LeakyRelu>(cpu_f1));
+    EXPECT_TRUE(test::all_close(cpu1_results.at(0), expected_result));
+
+    auto cpu2_results = execute(cpu_f2, args, "CPU");
+    EXPECT_EQ(1, count_ops_of_type<op::LeakyRelu>(cpu_f2));
+    EXPECT_TRUE(test::all_close(cpu2_results.at(0), expected_result));
 }
 
 TEST(cpu_fusion, dot_batch_forward)

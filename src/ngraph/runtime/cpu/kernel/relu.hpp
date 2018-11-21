@@ -64,6 +64,23 @@ namespace ngraph
                 }
 
                 template <typename ElementType>
+                void leaky_relu(
+                    void* input0, void* output, ElementType alpha, size_t count, int arena)
+                {
+                    Eigen::array<Eigen::Index, 1> out_dims, in_dims;
+
+                    out_dims[0] = in_dims[0] = count;
+
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> out(
+                        static_cast<ElementType*>(output), out_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> in0(
+                        static_cast<ElementType*>(input0), in_dims);
+
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
+                        in0.cwiseMax(in0 * alpha);
+                }
+
+                template <typename ElementType>
                 void relu_backprop(void* arg, void* delta_arg, void* out, size_t count, int arena)
                 {
                     reference::relu_backprop<ElementType>(static_cast<ElementType*>(arg),

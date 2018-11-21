@@ -15,33 +15,25 @@
 //*****************************************************************************
 
 #pragma once
-#include "ngraph/pass/graph_rewrite.hpp"
+
+#include "ngraph/node_vector.hpp"
+
+#include "core/node.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace cpu
+        namespace op
         {
-            namespace pass
+            namespace set_1
             {
-                class CPUPostLayoutOptimizations;
-            }
-        }
-    }
-}
+                NodeVector lstm(const Node& node);
 
-class ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations : public ngraph::pass::GraphRewrite
-{
-public:
-    CPUPostLayoutOptimizations()
-        : GraphRewrite()
-    {
-        construct_weight_fusion();
-        construct_slice_convertLayout_fusion();
-        construct_reshape_convertLayout_fusion();
-    }
-    void construct_weight_fusion();
-    void construct_slice_convertLayout_fusion();
-    void construct_reshape_convertLayout_fusion();
-};
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
