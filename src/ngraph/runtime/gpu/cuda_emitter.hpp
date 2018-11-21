@@ -190,7 +190,7 @@ namespace ngraph
                                     size_t concat_axis,
                                     NVShape output_shape);
 
-                size_t build_softmax(const std::vector<std::string>& dtypes,
+                size_t build_softmax(const std::vector<element::Type>& dtypes,
                                      NVShape input_shape,
                                      NVShape reduce_axis);
 

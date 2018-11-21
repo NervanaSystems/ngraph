@@ -514,8 +514,8 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(codegen::CodeW
                                                     "reduce_strides_magic",
                                                     "reduce_strides_shift",
                                                     "reduce_strides_in_input",
-                                                    "reduce_coordinate_init",
-                                                    "reduce_input_index_init",
+                                                    "reduce_coordinate",
+                                                    "reduce_input_index",
                                                     reduce_rank,
                                                     true);
         writer << "input_idx = reduce_input_index + non_reduce_input_index;\n";
