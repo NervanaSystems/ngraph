@@ -97,7 +97,8 @@ namespace ngraph
 
                 CPUExecutor& GetCPUExecutor()
                 {
-                    static CPUExecutor cpu_executor(GetNumThreadPools());
+                    static int num_thread_pools = GetNumThreadPools();
+                    static CPUExecutor cpu_executor(num_thread_pools < 1 ? 1 : num_thread_pools);
                     return cpu_executor;
                 }
 
