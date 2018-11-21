@@ -112,6 +112,7 @@ set(SRC
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
     pass/cpu_reshape_sinking.cpp
+    ngraph_version.cpp
 )
 
 if (NOT NGRAPH_DEX_ONLY)

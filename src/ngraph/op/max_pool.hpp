@@ -92,8 +92,15 @@ namespace ngraph
                             const Shape& window_shape,
                             const Strides& window_movement_strides,
                             const Shape& padding_below,
-                            const Shape& padding_above,
-                            const std::shared_ptr<op::MaxPool>& forward_op = nullptr);
+                            const Shape& padding_above);
+
+            MaxPoolBackprop(const std::shared_ptr<Node>& arg_forward,
+                            const std::shared_ptr<Node>& delta,
+                            const std::shared_ptr<Node>& result_forward,
+                            const Shape& window_shape,
+                            const Strides& window_movement_strides,
+                            const Shape& padding_below,
+                            const Shape& padding_above);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -104,17 +111,11 @@ namespace ngraph
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Shape& get_padding_below() const { return m_padding_below; }
             const Shape& get_padding_above() const { return m_padding_above; }
-            /// \return A pointer to the corresponding `MaxPool` forward prop op. This may be
-            ///         `nullptr` if no such pointer was provided at construction time, or if the
-            ///         forward op has been freed due to graph rewriting.
-            std::shared_ptr<op::MaxPool> get_forward_op() const;
-
         protected:
             Shape m_window_shape;
             Strides m_window_movement_strides;
             Shape m_padding_below;
             Shape m_padding_above;
-            std::weak_ptr<op::MaxPool> m_forward_op;
         };
     }
 }
