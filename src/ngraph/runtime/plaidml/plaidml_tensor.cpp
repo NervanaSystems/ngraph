@@ -101,6 +101,11 @@ void ngraph::runtime::plaidml::PlaidML_Tensor::read(void* p, size_t tensor_offse
 
 void ngraph::runtime::plaidml::PlaidML_Tensor::sync_input()
 {
+    if (!get_stale())
+    {
+        return;
+    }
+    set_stale(false);
     if (!m_memory)
     {
         if (m_is_logically_zero)
@@ -122,6 +127,7 @@ void ngraph::runtime::plaidml::PlaidML_Tensor::sync_output()
 {
     // The tensor's been used for an output, so it's no longer logically zero.
     m_is_logically_zero = false;
+    set_stale(false);
 
     if (!m_memory)
     {
