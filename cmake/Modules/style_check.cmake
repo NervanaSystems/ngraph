@@ -14,25 +14,34 @@
 # limitations under the License.
 # ******************************************************************************
 
+set(CLANG_FORMAT_FILENAME clang-format-3.9)
+find_program(CLANG_FORMAT ${CLANG_FORMAT_FILENAME} PATHS ENV PATH)
+
 function(STYLE_CHECK_FILE PATH)
-    # message(STATUS "*******xx******** ${PATH}")
+    execute_process(COMMAND ${CLANG_FORMAT} -style=file -output-replacements-xml ${PATH}
+        OUTPUT_VARIABLE STYLE_CHECK_RESULT)
+        list(LENGTH STYLE_CHECK_RESULT RESULT_LENGTH)
+        # message(STATUS "${PATH} ${RESULT_LENGTH}")
+        if (RESULT_LENGTH GREATER 1)
+            message(STATUS "style error ${PATH}")
+        endif()
 endfunction()
 
 set(DIRECTORIES_OF_INTEREST
     src
+    doc
     test
+    python/pyngraph
 )
 
-find_program(CLANG_FORMAT clang-format PATHS ENV PATH)
-message(STATUS "clang format search ${CLANG_FORMAT}")
 if (CLANG_FORMAT)
-
+    foreach(DIRECTORY ${DIRECTORIES_OF_INTEREST})
+        set(DIR "${NGRAPH_SOURCE_DIR}/${DIRECTORY}/*.?pp")
+        file(GLOB_RECURSE XPP_FILES ${DIR})
+        foreach(FILE ${XPP_FILES})
+            style_check_file(${FILE})
+        endforeach(FILE)
+    endforeach(DIRECTORY)
+else()
+    message(STATUS "${CLANG_FORMAT_FILENAME} not found, style not available")
 endif()
-message(STATUS "NGRAPH_SOURCE_DIR ${NGRAPH_SOURCE_DIR}")
-foreach(DIRECTORY ${DIRECTORIES_OF_INTEREST})
-    set(DIR "${NGRAPH_SOURCE_DIR}/${DIRECTORY}/*.?pp")
-    file(GLOB_RECURSE XPP_FILES ${DIR})
-    foreach(FILE ${XPP_FILES})
-        style_check_file(${FILE})
-    endforeach(FILE)
-endforeach(DIRECTORY)
