@@ -36,16 +36,42 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void batch_norm_training_with_intermediates(double eps,
-                                                        const T* gamma,
-                                                        const T* beta,
-                                                        const T* input,
-                                                        T* normed_input,
-                                                        T* mean,
-                                                        T* variance,
-                                                        T* centered_input,
-                                                        T* scaled_input,
-                                                        const Shape& input_shape)
+            void batch_norm_inference(double eps,
+                                      const T* gamma,
+                                      const T* beta,
+                                      const T* input,
+                                      const T* mean,
+                                      const T* variance,
+                                      T* normed_input,
+                                      const Shape& input_shape)
+            {
+                auto eps_casted = static_cast<T>(eps);
+                CoordinateTransform input_transform(input_shape);
+
+                for (Coordinate input_coord : input_transform)
+                {
+                    auto channel_num = input_coord[1];
+                    auto channel_gamma = gamma[channel_num];
+                    auto channel_beta = beta[channel_num];
+                    auto channel_mean = mean[channel_num];
+                    auto channel_var = variance[channel_num];
+
+                    auto input_index = input_transform.index(input_coord);
+                    auto normalized =
+                        (input[input_index] - channel_mean) / (std::sqrt(channel_var + eps_casted));
+                    normed_input[input_index] = normalized * channel_gamma + channel_beta;
+                }
+            }
+
+            template <typename T>
+            void batch_norm_training(double eps,
+                                     const T* gamma,
+                                     const T* beta,
+                                     const T* input,
+                                     T* normed_input,
+                                     T* mean,
+                                     T* variance,
+                                     const Shape& input_shape)
             {
                 std::cerr << "REFERENCE!!" << std::endl;
 
@@ -77,11 +103,11 @@ namespace ngraph
                     }
                     T channel_mean = channel_sum / (shape_size(input_shape) / channels);
                     mean[c] = channel_mean;
+
                     T channel_diff_square_sum = 0;
                     for (Coordinate input_coord : input_transform)
                     {
                         auto centered = input[input_transform.index(input_coord)] - channel_mean;
-                        centered_input[input_transform.index(input_coord)] = centered;
                         channel_diff_square_sum += centered * centered;
                     }
                     T channel_var = channel_diff_square_sum / (shape_size(input_shape) / channels);
@@ -95,61 +121,8 @@ namespace ngraph
                     for (Coordinate input_coord : input_transform)
                     {
                         auto input_index = input_transform.index(input_coord);
-                        scaled_input[input_index] = centered_input[input_index] * scale;
-                        normed_input[input_index] = scaled_input[input_index] + channel_beta;
+                        normed_input[input_index] = (input[input_index] - channel_mean) * scale + channel_beta;
                     }
-                }
-            }
-
-            template <typename T>
-            void batch_norm_training(double eps,
-                                     const T* gamma,
-                                     const T* beta,
-                                     const T* input,
-                                     T* normed_input,
-                                     T* mean,
-                                     T* variance,
-                                     const Shape& input_shape)
-            {
-                std::vector<T> centered(shape_size(input_shape));
-                std::vector<T> normalized(shape_size(input_shape));
-                batch_norm_training_with_intermediates(eps,
-                                                       gamma,
-                                                       beta,
-                                                       input,
-                                                       normed_input,
-                                                       mean,
-                                                       variance,
-                                                       centered.data(),
-                                                       normalized.data(),
-                                                       input_shape);
-            }
-
-            template <typename T>
-            void batch_norm_inference(double eps,
-                                      const T* gamma,
-                                      const T* beta,
-                                      const T* input,
-                                      const T* mean,
-                                      const T* variance,
-                                      T* normed_input,
-                                      const Shape& input_shape)
-            {
-                auto eps_casted = static_cast<T>(eps);
-                CoordinateTransform input_transform(input_shape);
-
-                for (Coordinate input_coord : input_transform)
-                {
-                    auto channel_num = input_coord[1];
-                    auto channel_gamma = gamma[channel_num];
-                    auto channel_beta = beta[channel_num];
-                    auto channel_mean = mean[channel_num];
-                    auto channel_var = variance[channel_num];
-
-                    auto input_index = input_transform.index(input_coord);
-                    auto normalized =
-                        (input[input_index] - channel_mean) / (std::sqrt(channel_var + eps_casted));
-                    normed_input[input_index] = normalized * channel_gamma + channel_beta;
                 }
             }
 
