@@ -15,33 +15,31 @@
 //*****************************************************************************
 
 #pragma once
-#include "ngraph/pass/graph_rewrite.hpp"
+
+#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace op
     {
-        namespace cpu
+        /// \brief Elementwise Maximum(arg, arg * alpha) operation
+        ///        alpha > 0
+        ///
+        class LeakyRelu : public Op
         {
-            namespace pass
-            {
-                class CPUPostLayoutOptimizations;
-            }
-        }
+        public:
+            /// \brief Constructs a LeakyRelu operation.
+            ///
+            /// \param arg Node input to the Relu.
+            LeakyRelu(std::shared_ptr<ngraph::Node> arg, float alpha);
+            float get_alpha() const { return m_alpha; }
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+        private:
+            float m_alpha;
+        };
     }
 }
-
-class ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations : public ngraph::pass::GraphRewrite
-{
-public:
-    CPUPostLayoutOptimizations()
-        : GraphRewrite()
-    {
-        construct_weight_fusion();
-        construct_slice_convertLayout_fusion();
-        construct_reshape_convertLayout_fusion();
-    }
-    void construct_weight_fusion();
-    void construct_slice_convertLayout_fusion();
-    void construct_reshape_convertLayout_fusion();
-};

@@ -141,5 +141,19 @@ namespace ngraph
                 this->push_back(static_cast<uint32_t>(size));
             }
         }
+
+        NVShape(const AxisSet& axes_set)
+        {
+            for (auto const& size : axes_set)
+            {
+                if (size >> 32 != 0)
+                {
+                    throw std::runtime_error(
+                        "Request for axis set which exceed the bitwidth available for NVShapes "
+                        "(32)");
+                }
+                this->push_back(static_cast<uint32_t>(size));
+            }
+        }
     };
-}
+} // namespace ngraph

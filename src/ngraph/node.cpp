@@ -21,6 +21,7 @@
 
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
@@ -49,25 +50,24 @@ Node::Node(const std::string& node_type, const NodeVector& arguments, size_t out
 }
 
 // While we are still doing validation and type inference in the constructor, this is true
-// It can be set to false to debug doing validation/inference after construction. When that
-// is working, these two functions will be removed.
-static bool in_transition = true;
+// The #define can be commented out to debug doing validation/inference after construction.
+// When that is working, these two functions will be removed.
+#define IN_TRANSITION
 
 void Node::constructor_validate_and_infer_types()
 {
-    if (in_transition)
-    {
-        validate_and_infer_types();
-    }
+#ifdef IN_TRANSITION
+    validate_and_infer_types();
+#endif
 }
 
 void Node::delayed_validate_and_infer_types()
 {
-    if (!in_transition)
-    {
-        validate_and_infer_types();
-    }
+#ifndef IN_TRANSITION
+    validate_and_infer_types();
+#endif
 }
+#undef IN_TRANSITION
 
 void Node::set_output_size(size_t n)
 {
@@ -382,7 +382,7 @@ descriptor::Output* Node::get_output_to(const shared_ptr<Node>& dst)
     throw ngraph_error("Error: dst is not one of self's output Node");
 }
 
-NodeVector Node::get_users() const
+NodeVector Node::get_users(bool check_is_used) const
 {
     NodeVector result;
 
@@ -390,7 +390,17 @@ NodeVector Node::get_users() const
     {
         for (auto input : get_output_inputs(i))
         {
-            result.push_back(input->get_node());
+            if (check_is_used)
+            {
+                if (is_used(input->get_node().get()))
+                {
+                    result.push_back(input->get_node());
+                }
+            }
+            else
+            {
+                result.push_back(input->get_node());
+            }
         }
     }
 
