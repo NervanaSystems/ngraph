@@ -55,6 +55,10 @@ namespace ngraph
                                                    const std::string& function_name,
                                                    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
                                                    const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
+                virtual std::string add_call_to_runtime(const std::string& caller,
+                                                        const std::string& callee,
+                                                        const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                                                        const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
                 virtual void compile() override;
                 virtual void get_performance_data(std::vector<runtime::PerformanceCounter>& rc) const override;
             private:
