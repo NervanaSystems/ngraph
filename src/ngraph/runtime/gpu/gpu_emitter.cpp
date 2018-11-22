@@ -592,11 +592,7 @@ std::string runtime::gpu::GPU_Emitter::emit_FunctionCall(EMIT_ARGS)
 {
     auto function_call = static_cast<const ngraph::op::FunctionCall*>(node);
     shared_ptr<Function> function = function_call->get_functions()[0];
-
-    // writer << "void* input[] = {" << node_names(args) << "};\n";
-    // writer << "void* output[] = {" << node_names(out) << "};\n";
-    // writer << function->get_name() << "(input, output, ctx);\n";
-    return "";
+    return compiled_function->add_call_to_runtime(function_name, function->get_name(), args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_GenerateMask(EMIT_ARGS)

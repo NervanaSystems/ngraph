@@ -19,11 +19,13 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <vector>
 #include <unordered_map>
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {
@@ -49,6 +51,30 @@ namespace ngraph
                 void add(const std::string& name, const op_runtime_t& step)
                 {
                     m_runtime[name].push_back(step);
+                }
+
+                void add_call(const std::string& caller,
+                              const std::string& callee,
+                              const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                              const std::vector<runtime::gpu::GPUTensorWrapper>& out)
+                {
+                    auto& runtime = m_runtime[callee];
+                    auto call = [args, out, &runtime](GPUCallFrame& caller_frame, GPURuntimeContext* ctx) mutable
+                    {
+                        // extract memory pointers from the callers stack
+                        auto inputs = caller_frame.get_tensor_io(args);
+                        auto outputs = caller_frame.get_tensor_io(out);
+                        // create a new call frame for the nested function
+                        GPUCallFrame callee_frame = caller_frame;
+                        // resolve the inputs of the new call frame
+                        callee_frame.resolve_inputs(inputs);
+                        callee_frame.resolve_outputs(outputs);
+                        for (auto const& step : runtime)
+                        {
+                            step(callee_frame, ctx);
+                        }
+                    };
+                    add(caller, call);
                 }
 
                 EntryPoint build(const std::string& function, GPUCallFrame& call_frame)

@@ -162,7 +162,17 @@ std::string runtime::gpu::GPU_InternalFunction::add_to_runtime(size_t primitive_
                                                                const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
     std::function<void(GPUCallFrame& call_frame, GPURuntimeContext* ctx)> primitive_invocation;
-    if (m_trace)
+    if (!m_trace)
+    {
+        primitive_invocation = [args, out, primitive_index](GPUCallFrame& call_frame, GPURuntimeContext* ctx) mutable
+        {
+            // here, these inputs and outputs could be any of [constant, input, output, intermediate]
+            auto inputs = call_frame.get_tensor_io(args);
+            auto outputs = call_frame.get_tensor_io(out);
+            runtime::gpu::invoke_primitive(ctx, primitive_index, inputs.data(), outputs.data());
+        };
+    }
+    else
     {
         primitive_invocation = [this, args, out, primitive_index](GPUCallFrame& call_frame, GPURuntimeContext* ctx) mutable
         {
@@ -192,19 +202,32 @@ std::string runtime::gpu::GPU_InternalFunction::add_to_runtime(size_t primitive_
             runtime::gpu::invoke_primitive(ctx, primitive_index, inputs.data(), outputs.data());
         };
     }
-    else
-    {
-        primitive_invocation = [args, out, primitive_index](GPUCallFrame& call_frame, GPURuntimeContext* ctx) mutable
-        {
-            // here, these inputs and outputs could be any of [constant, input, output, intermediate]
-            auto inputs = call_frame.get_tensor_io(args);
-            auto outputs = call_frame.get_tensor_io(out);
-            runtime::gpu::invoke_primitive(ctx, primitive_index, inputs.data(), outputs.data());
-        };
-    }
     m_runtime_constructor->add(function_name, primitive_invocation);
 
     return compose_manifest(primitive_index, args, out);
+}
+
+std::string runtime::gpu::GPU_InternalFunction::add_call_to_runtime(const std::string& caller,
+                                                                    const std::string& callee,
+                                                                    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                                                                    const std::vector<runtime::gpu::GPUTensorWrapper>& out)
+{
+    m_runtime_constructor->add_call(caller, callee, args, out);
+    codegen::CodeWriter writer;
+    writer.block_begin();
+    {
+        for (auto const& tensor : args)
+        {
+            writer << "push " << tensor << "\n";
+        }
+        writer << "call " << callee << "\n";
+        for (auto const& tensor : out)
+        {
+            writer << "pop " << tensor << "\n";
+        }
+    }
+    writer.block_end();
+    return writer.get_code();
 }
 
 std::string runtime::gpu::GPU_InternalFunction::compose_manifest(const size_t& primitive_index,
@@ -218,7 +241,7 @@ std::string runtime::gpu::GPU_InternalFunction::compose_manifest(const size_t& p
         {
             writer << "push " << tensor << "\n";
         }
-        writer << "call primitive(" << primitive_index << ");\n";
+        writer << "call primitive(" << primitive_index << ")\n";
         for (auto const& tensor : out)
         {
             writer << "pop " << tensor << "\n";

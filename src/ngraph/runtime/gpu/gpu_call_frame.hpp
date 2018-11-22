@@ -59,8 +59,30 @@ namespace ngraph
                     }
                 }
 
+                void resolve_inputs(const std::vector<void*>& inputs)
+                {
+                    m_inputs.clear();
+                    m_inputs.resize(inputs.size(), nullptr);
+                    for (size_t i = 0; i < m_inputs.size(); i++)
+                    {
+                        void* input = inputs[i];
+                        m_inputs[i] = static_cast<unsigned char*>(input);
+                    }
+                }
+
                 void resolve_outputs(void** outputs)
                 {
+                    for (size_t i = 0; i < m_outputs.size(); i++)
+                    {
+                        void* output = outputs[i];
+                        m_outputs[i] = static_cast<unsigned char*>(output);
+                    }
+                }
+
+                void resolve_outputs(const std::vector<void*>& outputs)
+                {
+                    m_outputs.clear();
+                    m_outputs.resize(outputs.size(), nullptr);
                     for (size_t i = 0; i < m_outputs.size(); i++)
                     {
                         void* output = outputs[i];

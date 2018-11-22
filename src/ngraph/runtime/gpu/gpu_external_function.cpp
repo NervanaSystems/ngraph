@@ -189,6 +189,18 @@ std::string runtime::gpu::GPU_ExternalFunction::add_to_runtime(size_t primitive_
     return writer.get_code();
 }
 
+std::string runtime::gpu::GPU_ExternalFunction::add_call_to_runtime(const std::string& caller,
+                                                                    const std::string& callee,
+                                                                    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                                                                    const std::vector<runtime::gpu::GPUTensorWrapper>& out)
+{
+    codegen::CodeWriter writer;
+    writer << "void* input[] = {" << node_names(args) << "};\n";
+    writer << "void* output[] = {" << node_names(out) << "};\n";
+    writer << callee << "(input, output, ctx);\n";
+    return writer.get_code();
+}
+
 std::string runtime::gpu::GPU_ExternalFunction::node_names(const std::vector<runtime::gpu::GPUTensorWrapper>& args,
                                                            std::initializer_list<int> arg_indexes)
 {
