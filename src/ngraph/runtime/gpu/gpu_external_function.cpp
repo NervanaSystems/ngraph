@@ -157,12 +157,13 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
 }
 
 std::string runtime::gpu::GPU_ExternalFunction::emit_op(GPU_CompiledFunction* external_function,
+                                                        const std::string& function_name,
                                                         const ngraph::Node* node,
                                                         const std::vector<GPUTensorWrapper>& args,
                                                         const std::vector<GPUTensorWrapper>& out)
 {
     auto emit_function = GPU_Emitter::get_emit_function(*node);
-    return emit_function(external_function, node, args, out);
+    return emit_function(external_function, function_name, node, args, out);
 };
 
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
@@ -177,6 +178,7 @@ runtime::gpu::GPU_ExternalFunction::~GPU_ExternalFunction()
 }
 
 std::string runtime::gpu::GPU_ExternalFunction::add_to_runtime(size_t primitive_index,
+                                                               const std::string& function_name,
                                                                const std::vector<runtime::gpu::GPUTensorWrapper>& args,
                                                                const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
@@ -505,7 +507,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_functions()
                 auto it = m_node_function_map.find(node.get());
                 if (it == m_node_function_map.end())
                 {
-                    m_writer << emit_op(this, node.get(), in, out);
+                    m_writer << emit_op(this, current_function->get_name(), node.get(), in, out);
                 }
                 else
                 {
@@ -688,7 +690,7 @@ string runtime::gpu::GPU_ExternalFunction::emit_op_as_function(const Node& node,
     writer << ",\ngpu::GPURuntimeContext* ctx";
     writer.indent--;
     writer << "\n)\n";
-    string body = emit_op(this, &node, in, out);
+    string body = emit_op(this, function_name, &node, in, out);
     if (body.size() > 0 && body[0] == '{')
     {
         // Body already surrounded by curly braces so don't add more

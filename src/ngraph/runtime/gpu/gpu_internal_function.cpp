@@ -129,12 +129,13 @@ using namespace ngraph;
 static std::mutex s_compilation;
 
 std::string runtime::gpu::GPU_InternalFunction::emit_op(GPU_CompiledFunction* compiled_function,
+                                                        const std::string& function_name,
                                                         const ngraph::Node* node,
                                                         const std::vector<GPUTensorWrapper>& args,
                                                         const std::vector<GPUTensorWrapper>& out)
 {
     auto emit_function = GPU_Emitter::get_emit_function(*node);
-    return emit_function(compiled_function, node, args, out);
+    return emit_function(compiled_function, function_name, node, args, out);
 };
 
 runtime::gpu::GPU_InternalFunction::GPU_InternalFunction(
@@ -156,6 +157,7 @@ runtime::gpu::GPU_InternalFunction::~GPU_InternalFunction()
 }
 
 std::string runtime::gpu::GPU_InternalFunction::add_to_runtime(size_t primitive_index,
+                                                               const std::string& function_name,
                                                                const std::vector<runtime::gpu::GPUTensorWrapper>& args,
                                                                const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
@@ -200,7 +202,7 @@ std::string runtime::gpu::GPU_InternalFunction::add_to_runtime(size_t primitive_
             runtime::gpu::invoke_primitive(ctx, primitive_index, inputs.data(), outputs.data());
         };
     }
-    m_runtime_constructor->add(primitive_invocation);
+    m_runtime_constructor->add(function_name, primitive_invocation);
 
     return compose_manifest(primitive_index, args, out);
 }
@@ -350,7 +352,7 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
 
             // Emit operation body
             // m_writer << emit_op(this, node.get(), in, out);
-            m_manifest << emit_op(this, node.get(), in, out);
+            m_manifest << emit_op(this, current_function->get_name(), node.get(), in, out);
 
             // Emit operation epilogue
             // if (!node->is_parameter() && !node->is_constant())
@@ -422,7 +424,7 @@ void runtime::gpu::GPU_InternalFunction::compile()
     call_frame.resolve_reservations(this, m_tensor_memory_buffers);
 
     // build runtime
-    m_runtime = m_runtime_constructor->build(call_frame);
+    m_runtime = m_runtime_constructor->build(m_function_name, call_frame);
 
     // store manifest
     save_manifest_to_disk();

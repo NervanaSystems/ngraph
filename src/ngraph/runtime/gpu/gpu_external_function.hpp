@@ -53,8 +53,9 @@ namespace ngraph
                 virtual ~GPU_ExternalFunction();
 
                 virtual std::string add_to_runtime(size_t primitive_index,
-                                            const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                            const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
+                                                   const std::string& function_name,
+                                                   const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                                                   const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
                 virtual void compile() override;
                 virtual void get_performance_data(std::vector<runtime::PerformanceCounter>& rc) const override;
             private:
