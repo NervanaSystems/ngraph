@@ -146,19 +146,60 @@ runtime::gpu::GPU_InternalFunction::GPU_InternalFunction(
 
 runtime::gpu::GPU_InternalFunction::~GPU_InternalFunction()
 {
+    if (m_trace)
+    {
+        string filename = file_util::path_join(s_output_dir, m_function_name + "_trace.txt");
+        ofstream out(filename);
+        out << m_trace->get_code();
+        out.close();
+    }
 }
 
 std::string runtime::gpu::GPU_InternalFunction::add_to_runtime(size_t primitive_index,
                                                                const std::vector<runtime::gpu::GPUTensorWrapper>& args,
                                                                const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
-    auto primitive_invocation = [args, out, primitive_index](GPUCallFrame& call_frame, GPURuntimeContext* ctx) mutable
+    std::function<void(GPUCallFrame& call_frame, GPURuntimeContext* ctx)> primitive_invocation;
+    if (m_trace)
     {
-        // here, these inputs and outputs could be any of [constant, input, output, intermediate]
-        auto inputs = call_frame.get_tensor_io(args);
-        auto outputs = call_frame.get_tensor_io(out);
-        runtime::gpu::invoke_primitive(ctx, primitive_index, inputs.data(), outputs.data());
-    };
+        primitive_invocation = [this, args, out, primitive_index](GPUCallFrame& call_frame, GPURuntimeContext* ctx) mutable
+        {
+            // here, these inputs and outputs could be any of [constant, input, output, intermediate]
+            auto inputs = call_frame.get_tensor_io(args);
+            auto outputs = call_frame.get_tensor_io(out);
+            *m_trace << "(";
+            for (size_t i = 0; i < outputs.size(); i++)
+            {
+                if (i != 0)
+                {
+                    *m_trace << ", ";
+                }
+                *m_trace << std::hex << outputs[i];
+            }
+            *m_trace << ") = primitive(" << primitive_index << ", ";
+            for (size_t i = 0; i < inputs.size(); i++)
+            {
+                if (i != 0)
+                {
+                    *m_trace << ", ";
+                }
+                *m_trace << std::hex << inputs[i];
+            }
+            *m_trace << ");\n";
+            *m_trace << compose_manifest(primitive_index, args, out);
+            runtime::gpu::invoke_primitive(ctx, primitive_index, inputs.data(), outputs.data());
+        };
+    }
+    else
+    {
+        primitive_invocation = [args, out, primitive_index](GPUCallFrame& call_frame, GPURuntimeContext* ctx) mutable
+        {
+            // here, these inputs and outputs could be any of [constant, input, output, intermediate]
+            auto inputs = call_frame.get_tensor_io(args);
+            auto outputs = call_frame.get_tensor_io(out);
+            runtime::gpu::invoke_primitive(ctx, primitive_index, inputs.data(), outputs.data());
+        };
+    }
     m_runtime_constructor->add(primitive_invocation);
 
     return compose_manifest(primitive_index, args, out);
@@ -362,6 +403,11 @@ void runtime::gpu::GPU_InternalFunction::compile()
     }
 
     m_runtime_constructor = runtime::gpu::make_unique<GPURuntimeConstructor>(m_function_ordered_ops);
+
+    if (std::getenv("NGRAPH_GPU_TRACE"))
+    {
+        m_trace = std::make_shared<codegen::CodeWriter>();
+    }
 
     // build and emit functions
     build_functions();

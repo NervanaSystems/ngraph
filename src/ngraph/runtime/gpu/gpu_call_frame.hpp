@@ -36,8 +36,10 @@ namespace ngraph
             {
             public:
                 using TensorType = GPUTensorWrapper::TensorType;
+
                 GPUCallFrame(const size_t& num_inputs, const size_t& num_outputs) :
                     m_inputs(num_inputs, nullptr), m_outputs(num_outputs, nullptr) {}
+
                 void resolve_reservations(const GPU_CompiledFunction* compiled_function, const std::unordered_map<std::string, size_t>& memory_reservations)
                 {
                     auto& mem_primitives = compiled_function->get_primitive_emitter()->get_memory_primitives();
@@ -47,6 +49,7 @@ namespace ngraph
                         m_memory_reservations[p.first] = static_cast<unsigned char*>(mem_primitives.at(p.second)());
                     }
                 }
+
                 void resolve_inputs(void** inputs)
                 {
                     for (size_t i = 0; i < m_inputs.size(); i++)
@@ -55,6 +58,7 @@ namespace ngraph
                         m_inputs[i] = static_cast<unsigned char*>(input);
                     }
                 }
+
                 void resolve_outputs(void** outputs)
                 {
                     for (size_t i = 0; i < m_outputs.size(); i++)
@@ -95,6 +99,7 @@ namespace ngraph
                     };
 
                 }
+
                 std::unordered_map<std::string, unsigned char*> m_memory_reservations;
                 std::vector<unsigned char*> m_inputs;
                 std::vector<unsigned char*> m_outputs;

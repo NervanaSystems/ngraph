@@ -76,6 +76,7 @@ namespace ngraph
                                                        std::string output_name) override;
                 std::unordered_map<std::string, std::tuple<runtime::gpu::GPUTensorWrapper::TensorType, size_t, std::string>> m_variable_name_map;
                 std::unique_ptr<GPURuntimeConstructor> m_runtime_constructor;
+                std::shared_ptr<codegen::CodeWriter> m_trace;
                 codegen::CodeWriter m_manifest;
             };
         }
