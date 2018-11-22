@@ -37,6 +37,7 @@
 
 #define EMIT_ARGS                                                                                  \
     runtime::gpu::GPU_CompiledFunction *compiled_function,            \
+        const std::string& function_name,                                       \
         const Node *node, const std::vector<runtime::gpu::GPUTensorWrapper> &args,                 \
         const std::vector<runtime::gpu::GPUTensorWrapper> &out
 
@@ -64,6 +65,7 @@ namespace ngraph
                     return m_shared_context->m_primitive_emitter;
                 }
                 virtual std::string add_to_runtime(size_t primitive_index,
+                                                   const std::string& function_name,
                                                    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
                                                    const std::vector<runtime::gpu::GPUTensorWrapper>& out) = 0;
                 virtual void compile() = 0;

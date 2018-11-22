@@ -66,7 +66,7 @@ namespace ngraph
                     auto ew_index =
                         cuda_emitter->build_elementwise<T>(dtypes, out[0].get_shape());
 
-                    return compiled_function->add_to_runtime(ew_index, args, out);
+                    return compiled_function->add_to_runtime(ew_index, function_name, args, out);
                 }
 
                 static std::string emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t);
