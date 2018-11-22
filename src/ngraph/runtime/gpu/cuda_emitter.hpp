@@ -127,8 +127,8 @@ namespace ngraph
                 template <typename T>
                 size_t build_reduce(const std::vector<std::string>& dtypes,
                                     const size_t data_bytes,
-                                    NVShape input_shape,
-                                    NVShape reduce_axis)
+                                    const NVShape& input_shape,
+                                    const NVShape& reduce_axis)
                 {
                     return build_reduce(dtypes,
                                         data_bytes,
@@ -213,8 +213,8 @@ namespace ngraph
                                                     bool save_elementwise);
                 size_t build_reduce(const std::vector<std::string>& dtypes,
                                     const size_t data_bytes,
-                                    NVShape input_shape,
-                                    NVShape reduce_axis,
+                                    const NVShape& input_shape,
+                                    const NVShape& reduce_axis,
                                     const char* op,
                                     const char* kernel);
                 size_t build_reduce_to_nd(const std::vector<std::string>& dtypes,
