@@ -36,19 +36,21 @@ namespace ngraph
             public:
                 using op_runtime_t = std::function<void(GPUCallFrame& call_frame, GPURuntimeContext* ctx)>;
                 using op_order_t = std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>;
+
                 GPURuntimeConstructor(const op_order_t& ordered_ops)
+                    : m_runtime(std::make_shared<std::vector<op_runtime_t>>())
                 {
                     size_t num_ops = 0;
                     for (auto const& ops : ordered_ops)
                     {
                         num_ops += ops.second.size();
                     }
-                    m_runtime.reserve(num_ops);
+                    m_runtime->reserve(num_ops);
                 }
 
                 void add(const op_runtime_t& step)
                 {
-                    m_runtime.push_back(step);
+                    m_runtime->push_back(step);
                 }
 
                 EntryPoint build(GPUCallFrame& call_frame)
@@ -57,7 +59,7 @@ namespace ngraph
                     {
                         call_frame.resolve_inputs(inputs);
                         call_frame.resolve_outputs(outputs);
-                        for (auto const& step : m_runtime)
+                        for (auto const& step : *m_runtime)
                         {
                             step(call_frame, ctx);
                         }
@@ -65,7 +67,7 @@ namespace ngraph
                 }
 
             private:
-                std::vector<op_runtime_t> m_runtime;
+                std::shared_ptr<std::vector<op_runtime_t>> m_runtime;
             };
         }
     }
