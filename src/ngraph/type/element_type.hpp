@@ -32,6 +32,23 @@ namespace ngraph
 {
     namespace element
     {
+        enum class Type_t
+        {
+            dynamic,
+            boolean,
+            bf16,
+            f32,
+            f64,
+            i8,
+            i16,
+            i32,
+            i64,
+            u8,
+            u16,
+            u32,
+            u64
+        };
+
         class Type;
 
         extern const Type dynamic;
@@ -115,32 +132,6 @@ namespace ngraph
         {
             throw std::invalid_argument("Unknown type");
         }
-        template <>
-        const Type& from<char>();
-        template <>
-        const Type& from<bool>();
-        template <>
-        const Type& from<float>();
-        template <>
-        const Type& from<double>();
-        template <>
-        const Type& from<int8_t>();
-        template <>
-        const Type& from<int16_t>();
-        template <>
-        const Type& from<int32_t>();
-        template <>
-        const Type& from<int64_t>();
-        template <>
-        const Type& from<uint8_t>();
-        template <>
-        const Type& from<uint16_t>();
-        template <>
-        const Type& from<uint32_t>();
-        template <>
-        const Type& from<uint64_t>();
-        template <>
-        const Type& from<ngraph::bfloat16>();
 
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
     }
