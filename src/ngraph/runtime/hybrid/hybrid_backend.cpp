@@ -143,30 +143,53 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
     }
 
     // Call subfunctions
+    size_t count =0; 
     for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
     {
         // Init backend
         size_t placement = get_colocated_function_placement_size(sub_function);
         // (placement-1) as 0 is default placement
         auto backend = m_backend_list[(placement - 1)].second;
-
+        NGRAPH_INFO << " the placement name  " << m_backend_list[(placement - 1)].first ; 
         // Prepare parameter TensorViews
         vector<shared_ptr<runtime::Tensor>> parameter_tvs;
         for (auto parameter_node : sub_function->get_parameters())
         {   
             // Todo: copy parameter nodes if it does not belong to the main function 
             //  parameter backend 
-            if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
+            // if ((count == 0 )&& ((placement - 1) != 1))
+            // {
+            //     NGRAPH_INFO << " creating new parameter tensor for " << m_backend_list[(placement - 1)].first ; 
+            //     auto result_node = instance.m_map_parameter_to_result.at(parameter_node);
+            //     // auto result_tv = map_node_to_tensor_view.at(result_node);
+            //     auto parameter_tv = backend->create_tensor(parameter_node->get_element_type(),
+            //                                                parameter_node->get_shape());
+
+            //     // copy_data(parameter_tv, read_vector<float>(result_tv));
+            //     auto s = result_tv->get_size_in_bytes();
+            //     result_tv->copy_to(parameter_tv, 0, s );
+
+            //     map_node_to_tensor_view[parameter_node] = parameter_tv;
+            //     parameter_tvs.push_back(parameter_tv);
+            // }
+            // else
+             if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
             {
+                NGRAPH_INFO << " no new creation of parameter node " ;
                 parameter_tvs.push_back(map_node_to_tensor_view.at(parameter_node));
             }
             else
-            {
+            {   
+                NGRAPH_INFO << " creating new parameter tensor for " << m_backend_list[(placement - 1)].first ; 
                 auto result_node = instance.m_map_parameter_to_result.at(parameter_node);
                 auto result_tv = map_node_to_tensor_view.at(result_node);
                 auto parameter_tv = backend->create_tensor(parameter_node->get_element_type(),
                                                            parameter_node->get_shape());
-                copy_data(parameter_tv, read_vector<float>(result_tv));
+
+                // copy_data(parameter_tv, read_vector<float>(result_tv));
+                auto s = result_tv->get_size_in_bytes();
+                result_tv->copy_to(parameter_tv, 0, s );
+
                 map_node_to_tensor_view[parameter_node] = parameter_tv;
                 parameter_tvs.push_back(parameter_tv);
             }
@@ -176,14 +199,15 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
         vector<shared_ptr<runtime::Tensor>> result_tvs;
         for (auto result_node : sub_function->get_results())
         {   
-            // Todo: copy result nodes if it does not belong to the main function 
-            //  result backend
             if (map_node_to_tensor_view.find(result_node) != map_node_to_tensor_view.end())
             {
+                 NGRAPH_INFO << " no new creation of result node " ;
                 result_tvs.push_back(map_node_to_tensor_view.at(result_node));
             }
             else
             {
+                NGRAPH_INFO << " creating new result tensor for " << m_backend_list[(placement - 1)].first ; 
+
                 auto result_tv = backend->create_tensor(result_node->get_element_type(),
                                                         result_node->get_shape());
                 map_node_to_tensor_view[result_node] = result_tv;

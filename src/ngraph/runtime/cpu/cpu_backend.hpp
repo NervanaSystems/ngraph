@@ -57,7 +57,8 @@ namespace ngraph
                 void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
                 std::vector<PerformanceCounter>
                     get_performance_data(std::shared_ptr<Function> func) const override;
-
+                
+                bool is_supported(const Node& node) const override;
             private:
                 class FunctionInstance
                 {

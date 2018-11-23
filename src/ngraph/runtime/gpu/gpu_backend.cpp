@@ -260,6 +260,15 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& node) const
     {
         rc = false;
     }
+    else if (node.description() == "Multiply")
+    {
+        rc = false;
+    }
+    else if (node.description() == "Add")
+    {
+        rc = false;
+    }
+    
 
     return rc;
 }

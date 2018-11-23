@@ -152,3 +152,15 @@ vector<runtime::PerformanceCounter>
     }
     return rc;
 }
+
+bool runtime::cpu::CPU_Backend::is_supported(const Node& node) const
+{
+    bool rc = true;
+
+    if (node.description() == "Multiply")
+    {
+        rc = false;
+    }
+    return rc;
+    
+}
