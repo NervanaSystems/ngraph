@@ -153,30 +153,38 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
         NGRAPH_INFO << " the placement name  " << m_backend_list[(placement - 1)].first ; 
         // Prepare parameter TensorViews
         vector<shared_ptr<runtime::Tensor>> parameter_tvs;
+        size_t number_of_parameter_tv = 0; 
         for (auto parameter_node : sub_function->get_parameters())
         {   
             // Todo: copy parameter nodes if it does not belong to the main function 
             //  parameter backend 
-            // if ((count == 0 )&& ((placement - 1) != 1))
-            // {
-            //     NGRAPH_INFO << " creating new parameter tensor for " << m_backend_list[(placement - 1)].first ; 
-            //     auto result_node = instance.m_map_parameter_to_result.at(parameter_node);
-            //     // auto result_tv = map_node_to_tensor_view.at(result_node);
-            //     auto parameter_tv = backend->create_tensor(parameter_node->get_element_type(),
-            //                                                parameter_node->get_shape());
+            if ((count == 0 )&& ((placement - 1) != 1))
+            {   
+                if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
+                {
+                    NGRAPH_INFO << " no new creation of parameter node  for count == 0 i.e. edge of graph " ;
+                    parameter_tvs.push_back(map_node_to_tensor_view.at(parameter_node));
+                    number_of_parameter_tv+=1; 
+                }
 
-            //     // copy_data(parameter_tv, read_vector<float>(result_tv));
-            //     auto s = result_tv->get_size_in_bytes();
-            //     result_tv->copy_to(parameter_tv, 0, s );
+                NGRAPH_INFO << " creating new parameter tensor for " << m_backend_list[(placement - 1)].first ; 
+                // auto result_node = instance.m_map_parameter_to_result.at(parameter_node);
+                auto result_tv = map_node_to_tensor_view.at(parameter_node);
+                auto parameter_tv = backend->create_tensor(parameter_node->get_element_type(),
+                                                           parameter_node->get_shape());
 
-            //     map_node_to_tensor_view[parameter_node] = parameter_tv;
-            //     parameter_tvs.push_back(parameter_tv);
-            // }
-            // else
-             if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
+                // copy_data(parameter_tv, read_vector<float>(result_tv));
+                auto s = result_tv->get_size_in_bytes();
+                result_tv->copy_to(parameter_tv, 0, s );
+
+                map_node_to_tensor_view[parameter_node] = parameter_tv;
+                parameter_tvs.push_back(parameter_tv);
+            }
+            else if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
             {
                 NGRAPH_INFO << " no new creation of parameter node " ;
                 parameter_tvs.push_back(map_node_to_tensor_view.at(parameter_node));
+                number_of_parameter_tv+=1; 
             }
             else
             {   
@@ -192,7 +200,9 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
 
                 map_node_to_tensor_view[parameter_node] = parameter_tv;
                 parameter_tvs.push_back(parameter_tv);
+                number_of_parameter_tv+=1; 
             }
+            NGRAPH_INFO << "the number of parameter tensor is " << number_of_parameter_tv; 
         }
 
         // Prepare result TensorViews
@@ -217,6 +227,7 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
 
         // Call
         backend->call_with_validate(sub_function, result_tvs, parameter_tvs);
+        count += 1; 
     }
     return rc;
 }
