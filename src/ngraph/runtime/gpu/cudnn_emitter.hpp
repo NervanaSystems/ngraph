@@ -128,14 +128,15 @@ namespace ngraph
                                        const double beta);
 
                 size_t build_pooling(const cudnnPoolingMode_t& pool_op,
-                                     const std::string& dtype,
+                                     const element::Type& dtype,
                                      const Prop& direction,
                                      const ngraph::Shape& input_shape,
                                      const ngraph::Shape& output_shape,
                                      const ngraph::Strides& window_strides,
                                      const ngraph::Shape& window_shape,
                                      const ngraph::Shape& padding_below,
-                                     const ngraph::Shape& padding_above);
+                                     const ngraph::Shape& padding_above,
+                                     bool bprop_needs_pooling = false);
 
                 size_t build_batchnorm(const cudnnBatchNormMode_t& bn_op,
                                        const std::string& dtype,
@@ -154,12 +155,6 @@ namespace ngraph
                                  const double lrn_beta,
                                  const double lrn_bias,
                                  const size_t lrn_size);
-
-                size_t build_softmax(const cudnnSoftmaxAlgorithm_t& algorithm,
-                                     const cudnnSoftmaxMode_t& mode,
-                                     const std::string& dtype,
-                                     const Prop& direction,
-                                     const Shape& tensor_shape);
 
                 void debug_sync();
                 void sync();

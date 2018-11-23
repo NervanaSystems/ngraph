@@ -60,9 +60,15 @@ set (SRC
     op/dot.cpp
     op/equal.cpp
     op/exp.cpp
+    op/experimental/generate_mask.cpp
+    op/experimental/quantized_avg_pool.cpp
+    op/experimental/quantized_conv_bias.cpp
+    op/experimental/quantized_conv_relu.cpp
+    op/experimental/quantized_conv.cpp
+    op/experimental/quantized_max_pool.cpp
+    op/experimental/shape_of.cpp
     op/floor.cpp
     op/function_call.cpp
-    op/experimental/generate_mask.cpp
     op/get_output_element.cpp
     op/greater.cpp
     op/greater_eq.cpp
@@ -87,11 +93,6 @@ set (SRC
     op/power.cpp
     op/product.cpp
     op/quantize.cpp
-    op/experimental/quantized_avg_pool.cpp
-    op/experimental/quantized_conv_bias.cpp
-    op/experimental/quantized_conv_relu.cpp
-    op/experimental/quantized_conv.cpp
-    op/experimental/quantized_max_pool.cpp
     op/reduce.cpp
     op/reduce_window.cpp
     op/relu.cpp
@@ -139,6 +140,8 @@ set (SRC
     pass/memory_visualize.cpp
     pass/nop_elimination.cpp
     pass/pass.cpp
+    pass/pass_config.cpp
+    pass/propagate_cacheability.cpp
     pass/reshape_elimination.cpp
     pass/zero_dim_tensor_elimination.cpp
     pass/validate_graph.cpp
@@ -194,7 +197,11 @@ add_subdirectory(codegen)
 add_subdirectory(runtime)
 
 target_compile_definitions(ngraph PRIVATE SHARED_LIB_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}")
-set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+if(NGRAPH_LIB_VERSIONING_ENABLE)
+    set_target_properties(ngraph PROPERTIES
+        VERSION ${NGRAPH_VERSION}
+        SOVERSION ${NGRAPH_API_VERSION})
+endif()
 target_link_libraries(ngraph PRIVATE libjson)
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 

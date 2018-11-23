@@ -34,7 +34,7 @@ namespace ngraph
                                   const Shape& arg_shape,
                                   size_t batch_axis,
                                   size_t sequence_axis,
-                                  U* sequence_lengths)
+                                  const U* sequence_lengths)
             {
                 CoordinateTransform input_transform(arg_shape);
                 for (const Coordinate& in_coord : input_transform)

@@ -2712,8 +2712,7 @@ TEST(type_prop, reduce_deduce)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     auto r0 = make_shared<op::Reduce>(param_0, param_1, f, AxisSet{0});
     ASSERT_EQ(r0->get_element_type(), element::f32);
@@ -2739,8 +2738,7 @@ TEST(type_prop, reduce_nonscalar)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     try
     {
@@ -2765,8 +2763,7 @@ TEST(type_prop, reduce_elem_type_mismatch)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     try
     {
@@ -2793,7 +2790,7 @@ TEST(type_prop, reduce_function_return_element_type_mismatch)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Equal>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     try
     {
@@ -2822,7 +2819,7 @@ TEST(type_prop, reduce_function_return_shape_mismatch)
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(
         make_shared<op::Broadcast>(f_param_0 + f_param_1, Shape{1}, AxisSet{0}),
-        op::ParameterVector{f_param_0, f_param_1});
+        ParameterVector{f_param_0, f_param_1});
 
     try
     {
@@ -2848,7 +2845,7 @@ TEST(type_prop, reduce_function_arg0_type_mismatch)
 
     auto f_param_0 = make_shared<op::Parameter>(element::boolean, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_1, ParameterVector{f_param_0, f_param_1});
 
     try
     {
@@ -2873,7 +2870,7 @@ TEST(type_prop, reduce_function_arg1_type_mismatch)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::boolean, Shape{});
-    auto f = make_shared<Function>(f_param_0, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0, ParameterVector{f_param_0, f_param_1});
 
     try
     {
@@ -2900,7 +2897,7 @@ TEST(type_prop, reduce_function_arg_count_mismatch)
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_2 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(f_param_0 + f_param_1 + f_param_2,
-                                   op::ParameterVector{f_param_0, f_param_1, f_param_2});
+                                   ParameterVector{f_param_0, f_param_1, f_param_2});
 
     try
     {
@@ -2926,8 +2923,7 @@ TEST(type_prop, reduce_axis_oob)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     try
     {
@@ -2952,7 +2948,7 @@ TEST(type_prop, function_call_deduce)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B * C), op::ParameterVector{A, B, C});
+    auto f = make_shared<Function>((A + B * C), ParameterVector{A, B, C});
 
     // Now make "f(X,Y,Z) + f(X,Y,Z)"
     auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -8430,8 +8426,7 @@ TEST(type_prop, reduce_window_deduce_1d)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4};
     Strides move_strides{1};
@@ -8448,8 +8443,7 @@ TEST(type_prop, reduce_window_deduce_1d_strided_even)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4};
     Strides move_strides{4};
@@ -8466,8 +8460,7 @@ TEST(type_prop, reduce_window_deduce_1d_strided_uneven)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4};
     Strides move_strides{4};
@@ -8484,8 +8477,7 @@ TEST(type_prop, reduce_window_deduce_2d_strided_uneven)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 2};
     Strides move_strides{4, 3};
@@ -8502,8 +8494,7 @@ TEST(type_prop, reduce_window_deduce_3d_strided_uneven)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -8520,8 +8511,7 @@ TEST(type_prop, reduce_window_deduce_non_scalar_init)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -8550,8 +8540,7 @@ TEST(type_prop, reduce_window_deduce_different_element_types)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -8581,8 +8570,7 @@ TEST(type_prop, reduce_window_deduce_bad_window_shape)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 2};
     Strides move_strides{4, 3, 2};
@@ -8611,8 +8599,7 @@ TEST(type_prop, reduce_window_deduce_bad_move_strides)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3};
@@ -8642,8 +8629,7 @@ TEST(type_prop, reduce_window_deduce_zero_length_axis)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 0, 4};
     Strides move_strides{4, 3, 2};
@@ -8672,8 +8658,7 @@ TEST(type_prop, reduce_window_deduce_zero_length_stride)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 0, 2};
@@ -8702,8 +8687,7 @@ TEST(type_prop, reduce_window_deduce_window_too_big)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(f_param_0 + f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0 + f_param_1, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 11, 4};
     Strides move_strides{4, 3, 2};
@@ -8734,7 +8718,7 @@ TEST(type_prop, reduce_window_deduce_param_count)
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_2 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(f_param_0 + f_param_1,
-                                   op::ParameterVector{f_param_0, f_param_1, f_param_2});
+                                   ParameterVector{f_param_0, f_param_1, f_param_2});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -8764,7 +8748,7 @@ TEST(type_prop, reduce_window_deduce_param_0_wrong_element_type)
 
     auto f_param_0 = make_shared<op::Parameter>(element::i32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_1, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -8794,7 +8778,7 @@ TEST(type_prop, reduce_window_deduce_param_0_wrong_shape)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{1});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(f_param_1, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_1, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -8823,7 +8807,7 @@ TEST(type_prop, reduce_window_deduce_param_1_wrong_element_type)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::i32, Shape{});
-    auto f = make_shared<Function>(f_param_0, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -8853,7 +8837,7 @@ TEST(type_prop, reduce_window_deduce_param_1_wrong_shape)
 
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto f = make_shared<Function>(f_param_0, op::ParameterVector{f_param_0, f_param_1});
+    auto f = make_shared<Function>(f_param_0, ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -8883,7 +8867,7 @@ TEST(type_prop, reduce_window_deduce_multi_output)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(NodeVector{f_param_0 + f_param_1, f_param_0 * f_param_1},
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -8913,7 +8897,7 @@ TEST(type_prop, reduce_window_reduction_function_return_element_type_mismatch)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Convert>(f_param_0 + f_param_1, element::i32),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -8946,7 +8930,7 @@ TEST(type_prop, reduce_window_reduction_function_return_shape_mismatch)
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(
         make_shared<op::Broadcast>(f_param_0 + f_param_1, Shape{1}, AxisSet{0}),
-        op::ParameterVector{f_param_0, f_param_1});
+        ParameterVector{f_param_0, f_param_1});
 
     Shape window_shape{4, 2, 4};
     Strides move_strides{4, 3, 2};
@@ -8978,12 +8962,11 @@ TEST(type_prop, select_and_scatter_deduce_1d)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{4};
     Strides move_strides{1};
@@ -9003,12 +8986,11 @@ TEST(type_prop, select_and_scatter_deduce_2d)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{4, 5};
     Strides move_strides{1, 1};
@@ -9028,12 +9010,11 @@ TEST(type_prop, select_and_scatter_deduce_3d)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{4, 5, 2};
     Strides move_strides{1, 1, 1};
@@ -9053,12 +9034,11 @@ TEST(type_prop, select_and_scatter_deduce_3d_strided)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{4, 3, 2};
     Strides move_strides{4, 6, 5};
@@ -9078,12 +9058,11 @@ TEST(type_prop, select_and_scatter_deduce_3d_strided_uneven)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9103,12 +9082,11 @@ TEST(type_prop, select_and_scatter_deduce_init_not_scalar)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9140,12 +9118,11 @@ TEST(type_prop, select_and_scatter_deduce_init_elem_type_wrong)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9178,12 +9155,11 @@ TEST(type_prop, select_and_scatter_deduce_source_elem_type_wrong)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9216,12 +9192,11 @@ TEST(type_prop, select_and_scatter_deduce_source_window_shape_wrong_rank)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5};
     Strides move_strides{6, 6, 3};
@@ -9254,12 +9229,11 @@ TEST(type_prop, select_and_scatter_deduce_source_window_strides_wrong_rank)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6};
@@ -9292,12 +9266,11 @@ TEST(type_prop, select_and_scatter_deduce_source_window_shape_zero_length_axis)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 0, 3};
     Strides move_strides{6, 6, 3};
@@ -9329,12 +9302,11 @@ TEST(type_prop, select_and_scatter_deduce_source_window_strides_zero_length_axis
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 0, 3};
@@ -9366,12 +9338,11 @@ TEST(type_prop, select_and_scatter_deduce_source_window_too_big)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 19, 3};
     Strides move_strides{6, 6, 3};
@@ -9403,12 +9374,11 @@ TEST(type_prop, select_and_scatter_deduce_source_tensor_wrong_shape)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9441,12 +9411,11 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_count)
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_2 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1, f_param_2});
+                                   ParameterVector{f_param_0, f_param_1, f_param_2});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9479,12 +9448,11 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_0_eleme
     auto f_param_0 = make_shared<op::Parameter>(element::i32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_1, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9517,12 +9485,11 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_0_shape
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{1});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_1, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9554,12 +9521,11 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_1_eleme
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::i32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_0),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9592,12 +9558,11 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_param_1_shape
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{1});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_0),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9631,12 +9596,11 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_multi_output)
     auto f = make_shared<Function>(
         std::vector<std::shared_ptr<Node>>{make_shared<op::Greater>(f_param_0, f_param_1),
                                            make_shared<op::Greater>(f_param_0, f_param_1)},
-        op::ParameterVector{f_param_0, f_param_1});
+        ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9668,12 +9632,11 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_result_elemen
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Add>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9708,12 +9671,11 @@ TEST(type_prop, select_and_scatter_deduce_selection_function_wrong_result_shape)
     auto f = make_shared<Function>(
         make_shared<op::Broadcast>(
             make_shared<op::Greater>(f_param_0, f_param_1), Shape{1}, AxisSet{0}),
-        op::ParameterVector{f_param_0, f_param_1});
+        ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9746,13 +9708,13 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_count)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_2 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g = make_shared<Function>(g_param_0 + g_param_1,
-                                   op::ParameterVector{g_param_0, g_param_1, g_param_2});
+                                   ParameterVector{g_param_0, g_param_1, g_param_2});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9785,12 +9747,11 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_0_element
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::i32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_1 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_1 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9823,12 +9784,11 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_0_shape)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{1});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_1 + g_param_1, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_1 + g_param_1, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9860,12 +9820,11 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_1_element
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::i32, Shape{});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_0, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_0, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9898,12 +9857,11 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_param_1_shape)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto g =
-        make_shared<Function>(g_param_0 + g_param_0, op::ParameterVector{g_param_0, g_param_1});
+    auto g = make_shared<Function>(g_param_0 + g_param_0, ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9935,13 +9893,13 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_multi_output)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g = make_shared<Function>(
         std::vector<std::shared_ptr<Node>>{g_param_0 + g_param_1, g_param_0 + g_param_1},
-        op::ParameterVector{g_param_0, g_param_1});
+        ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -9973,12 +9931,12 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_result_element_
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g = make_shared<Function>(make_shared<op::Greater>(g_param_0, g_param_1),
-                                   op::ParameterVector{g_param_0, g_param_1});
+                                   ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -10012,13 +9970,13 @@ TEST(type_prop, select_and_scatter_deduce_scatter_function_wrong_result_shape)
     auto f_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto f = make_shared<Function>(make_shared<op::Greater>(f_param_0, f_param_1),
-                                   op::ParameterVector{f_param_0, f_param_1});
+                                   ParameterVector{f_param_0, f_param_1});
 
     auto g_param_0 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g_param_1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto g = make_shared<Function>(
         make_shared<op::Broadcast>(g_param_0 + g_param_1, Shape{1}, AxisSet{0}),
-        op::ParameterVector{g_param_0, g_param_1});
+        ParameterVector{g_param_0, g_param_1});
 
     Shape window_shape{5, 5, 3};
     Strides move_strides{6, 6, 3};
@@ -12141,7 +12099,7 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_channel_ok)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{1};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12163,7 +12121,7 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_image_ok)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{0};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12185,7 +12143,7 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_row_ok)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{2};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12207,7 +12165,7 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_image_channel_ok)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{0, 1};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12229,7 +12187,7 @@ TEST(type_prop, quantize_f32_to_i8_nchw_whole_batch_ok)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12251,7 +12209,7 @@ TEST(type_prop, quantize_f64_to_i8_ok)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12273,7 +12231,7 @@ TEST(type_prop, quantize_f64_to_u8_ok)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12295,7 +12253,7 @@ TEST(type_prop, quantize_f64_to_dyn_fails)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12328,7 +12286,7 @@ TEST(type_prop, quantize_i8_to_u8_fails)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12363,7 +12321,7 @@ TEST(type_prop, quantize_f32_to_f32_fails)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12398,7 +12356,7 @@ TEST(type_prop, quantize_batch_scale_type_mismatch_fails)
     element::Type scale_type = element::f64;
     element::Type offset_type = quantized_type;
     AxisSet axes{};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12433,7 +12391,7 @@ TEST(type_prop, quantize_offset_type_mismatch_fails)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = element::u8;
     AxisSet axes{};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12468,7 +12426,7 @@ TEST(type_prop, quantize_oob_axis_fails)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{3, 4};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12502,7 +12460,7 @@ TEST(type_prop, quantize_scale_shape_mismatch_same_rank_fails)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{0, 1};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12536,7 +12494,7 @@ TEST(type_prop, quantize_scale_shape_mismatch_different_rank_fails)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{0, 1};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12570,7 +12528,7 @@ TEST(type_prop, quantize_offset_shape_mismatch_same_rank_fails)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{0, 1};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12604,7 +12562,7 @@ TEST(type_prop, quantize_offset_shape_mismatch_different_rank_fails)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{0, 1};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12638,7 +12596,7 @@ TEST(type_prop, quantize_partial_all_rank_dynamic_ok)
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{0, 1, 2000};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12661,7 +12619,7 @@ TEST(type_prop,
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{0, 1, 2000};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12685,7 +12643,7 @@ TEST(
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{0, 1};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12721,7 +12679,7 @@ TEST(type_prop,
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{0, 1, 5, 88};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12745,7 +12703,7 @@ TEST(
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{0, 1, 5, 88};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12781,7 +12739,7 @@ TEST(
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{0, 1, 5, 88};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12817,7 +12775,7 @@ TEST(
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{1, 3, 5};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12842,7 +12800,7 @@ TEST(
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{1, 3, 6};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -12878,7 +12836,7 @@ TEST(
     element::Type scale_type = unquantized_type;
     element::Type offset_type = quantized_type;
     AxisSet axes{1, 3, 5};
-    auto round_mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
@@ -13343,10 +13301,6 @@ TEST(type_prop, dequantize_offset_shape_mismatch_different_rank_fails)
     }
 }
 
-/////
-/////
-/////
-
 TEST(type_prop, dequantize_partial_all_rank_dynamic_ok)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
@@ -13606,4 +13560,41 @@ TEST(
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, shape_of)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto so = make_shared<op::ShapeOf>(a);
+
+    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_shape(), Shape{4});
+}
+
+TEST(type_prop, shape_of_partial_et_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
+    auto so = make_shared<op::ShapeOf>(a);
+
+    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_shape(), Shape{4});
+}
+
+TEST(type_prop, shape_of_partial_rank_static_dynamic)
+{
+    auto a = make_shared<op::Parameter>(
+        element::f32, PartialShape{1, Dimension::dynamic(), Dimension::dynamic(), 4});
+    auto so = make_shared<op::ShapeOf>(a);
+
+    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_shape(), Shape{4});
+}
+
+TEST(type_prop, shape_of_partial_rank_dynamic)
+{
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto so = make_shared<op::ShapeOf>(a);
+
+    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_TRUE(so->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
 }

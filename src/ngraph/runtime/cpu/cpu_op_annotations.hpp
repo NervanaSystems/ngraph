@@ -16,6 +16,9 @@
 
 #pragma once
 
+#include <functional>
+#include <memory>
+
 #include "ngraph/op/util/op_annotations.hpp"
 
 namespace ngraph
@@ -34,6 +37,9 @@ namespace ngraph
             private:
                 bool m_mkldnn_op = false;
             };
+
+            std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)>
+                get_annotations_factory();
         }
     }
 }

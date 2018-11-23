@@ -44,7 +44,6 @@ namespace ngraph
                 friend class GPUPrimitiveEmitter;
 
             public:
-                size_t build_primitive(const op::Softmax* node);
                 size_t build_primitive(const op::Convolution* node);
                 size_t build_primitive(const op::MaxPool* node);
                 size_t build_primitive(const op::ReplaceSlice* node, bool in_place_op);
@@ -128,8 +127,8 @@ namespace ngraph
                 template <typename T>
                 size_t build_reduce(const std::vector<std::string>& dtypes,
                                     const size_t data_bytes,
-                                    NVShape input_shape,
-                                    NVShape reduce_axis)
+                                    const NVShape& input_shape,
+                                    const NVShape& reduce_axis)
                 {
                     return build_reduce(dtypes,
                                         data_bytes,
@@ -186,10 +185,9 @@ namespace ngraph
                                     size_t concat_axis,
                                     NVShape output_shape);
 
-                size_t build_softmax_divide(const std::vector<std::string>& dtypes,
-                                            NVShape input_shape,
-                                            NVShape reduce_shape,
-                                            std::vector<size_t> axes_flag);
+                size_t build_softmax(const std::vector<std::string>& dtypes,
+                                     NVShape input_shape,
+                                     NVShape reduce_axis);
 
                 void debug_sync();
                 void sync();
@@ -215,8 +213,8 @@ namespace ngraph
                                                     bool save_elementwise);
                 size_t build_reduce(const std::vector<std::string>& dtypes,
                                     const size_t data_bytes,
-                                    NVShape input_shape,
-                                    NVShape reduce_axis,
+                                    const NVShape& input_shape,
+                                    const NVShape& reduce_axis,
                                     const char* op,
                                     const char* kernel);
                 size_t build_reduce_to_nd(const std::vector<std::string>& dtypes,

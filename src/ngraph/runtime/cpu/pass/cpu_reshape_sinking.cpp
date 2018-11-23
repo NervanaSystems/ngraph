@@ -144,6 +144,58 @@ void swim(descriptor::Input* input, std::shared_ptr<op::Reshape> reshape)
             NGRAPH_DEBUG << "Propagating reshape " << describe_reshape(csw.reshape) << " for "
                          << n->get_name() << " to " << unary->get_argument(0);
         }
+        else if (std::dynamic_pointer_cast<op::Broadcast>(n))
+        {
+            auto old_broadcast = std::static_pointer_cast<op::Broadcast>(n);
+            auto broadcast_axes = old_broadcast->get_broadcast_axes();
+            auto broadcast_reshape = csw.reshape;
+            bool in_order = true;
+            AxisSet new_broadcast_axes;
+            std::vector<size_t> new_source_axes;
+            auto input_order = broadcast_reshape->get_input_order();
+            for (size_t i = 0; i < input_order.size(); i++)
+            {
+                if (broadcast_axes.count(input_order.at(i)) != 0)
+                {
+                    new_broadcast_axes.insert(i);
+                }
+                else
+                {
+                    if (new_source_axes.size() != 0 && new_source_axes.back() > input_order.at(i))
+                    {
+                        in_order = false;
+                    }
+                    new_source_axes.push_back(i);
+                }
+            }
+
+            auto broadcast_input = old_broadcast->get_argument(0);
+            if (!in_order)
+            {
+                AxisVector new_source_axes_sorted{new_source_axes};
+                std::sort(new_source_axes_sorted.begin(), new_source_axes_sorted.end());
+                std::map<size_t, size_t> old_new_source_axes;
+                for (size_t i = 0; new_source_axes_sorted.size(); i++)
+                {
+                    old_new_source_axes.insert({new_source_axes.at(i), i});
+                }
+
+                AxisVector new_source_axis_order;
+                for (auto axis : new_source_axes_sorted)
+                {
+                    new_source_axis_order.push_back(old_new_source_axes.at(axis));
+                }
+
+                auto new_arg_shape =
+                    ngraph::apply_permutation(broadcast_input->get_shape(), new_source_axis_order);
+                broadcast_input = std::make_shared<op::Reshape>(
+                    broadcast_input, new_source_axis_order, new_arg_shape);
+            }
+
+            auto new_broadcast = std::make_shared<op::Broadcast>(
+                broadcast_input, broadcast_reshape->get_shape(), new_broadcast_axes);
+            csw.input->replace_output(new_broadcast->get_outputs().at(0));
+        }
         //TODO: Add cases to push through Reshape and BinaryElementwiseArithmetic
         else
         {

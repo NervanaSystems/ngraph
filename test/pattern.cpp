@@ -55,8 +55,7 @@ std::shared_ptr<Node> create_reduction(const std::shared_ptr<Node>& node,
     const auto& et = node->get_element_type();
     auto f_A = std::make_shared<op::Parameter>(et, Shape{});
     auto f_B = std::make_shared<op::Parameter>(et, Shape{});
-    auto f =
-        std::make_shared<Function>(std::make_shared<T>(f_A, f_B), op::ParameterVector{f_A, f_B});
+    auto f = std::make_shared<Function>(std::make_shared<T>(f_A, f_B), ParameterVector{f_A, f_B});
 
     auto init = std::make_shared<op::Constant>(et, Shape{}, std::vector<std::string>({init_val}));
     return std::make_shared<op::Reduce>(node, init, f, reduction_axes);
@@ -270,7 +269,7 @@ static void run_passes(pass::Manager& pass_manager,
                        shared_ptr<Node> graph,
                        std::vector<shared_ptr<op::Parameter>> parms)
 {
-    auto func = make_shared<Function>(graph, op::ParameterVector{parms});
+    auto func = make_shared<Function>(graph, ParameterVector{parms});
     pass_manager.run_passes(func);
 }
 
@@ -289,7 +288,7 @@ TEST(pattern, graph_rewrite)
         auto graph_b = b + iconst0;
 
         auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, graph_a, c, graph_b},
-                                            op::ParameterVector{a, b, c});
+                                            ParameterVector{a, b, c});
         pass_manager.run_passes(f);
 
         ASSERT_TRUE(graph_a->get_output_inputs(0).empty());
@@ -440,6 +439,23 @@ TEST(pattern, matcher)
 
     auto bea_false = std::make_shared<pattern::op::Any>(a, false_pred, NodeVector{a, b});
     ASSERT_FALSE(n.match(bea_false, a + b));
+
+    auto add_abs_b = abs + b;
+    auto bea_any_of = std::make_shared<pattern::op::AnyOf>(a, is_bea, NodeVector{abs});
+    ASSERT_TRUE(n.match(bea_any_of, add_abs_b));
+
+    auto add_b_abs = b + abs;
+    ASSERT_TRUE(n.match(bea_any_of, add_b_abs));
+
+    auto bea_any_of_label =
+        std::make_shared<pattern::op::Label>(a, nullptr, NodeVector{bea_any_of});
+    ASSERT_TRUE(n.match(bea_any_of_label, add_b_abs));
+    ASSERT_EQ(n.get_pattern_map()[bea_any_of_label], add_b_abs);
+
+    auto abs_label = std::make_shared<pattern::op::Label>(a, nullptr, NodeVector{abs});
+    auto bea_label_any_of = std::make_shared<pattern::op::AnyOf>(a, is_bea, NodeVector{abs_label});
+    ASSERT_TRUE(n.match(bea_label_any_of, add_b_abs));
+    ASSERT_EQ(n.get_pattern_map()[abs_label], abs);
 
     auto bea_label = std::make_shared<pattern::op::Label>(a, nullptr, NodeVector{bea});
     auto ab = a + b;
@@ -750,7 +766,7 @@ TEST(pattern, recurrent_graph_rewrite)
 
         auto graph = abs_add_a3 * abs_add_b2;
 
-        auto f = std::make_shared<Function>(ngraph::NodeVector{graph}, op::ParameterVector{a, b});
+        auto f = std::make_shared<Function>(ngraph::NodeVector{graph}, ParameterVector{a, b});
         pass_manager.run_passes(f);
 
         auto left_abs = graph->get_argument(0);

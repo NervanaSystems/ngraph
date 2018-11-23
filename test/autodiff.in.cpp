@@ -46,7 +46,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
     auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
-    auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
+    auto f = make_shared<Function>(maxpool, ParameterVector{A});
 
     shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::i32, maxpool_shape);
     vector<int> dataEp(shape_size(maxpool_shape), 4);
@@ -86,7 +86,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
     Shape window_shape{3, 3};
     auto window_movement_strides = Strides{2, 2};
     auto maxpool = make_shared<op::MaxPool>(reshape, window_shape, window_movement_strides);
-    auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
+    auto f = make_shared<Function>(maxpool, ParameterVector{A});
 
     shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::i32, maxpool_shape);
     vector<int> dataEp(shape_size(maxpool_shape), 4);
@@ -127,7 +127,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max_pad1x2_2x3
     Shape pad_above{3, 4};
     auto maxpool = make_shared<op::MaxPool>(
         reshape, window_shape, window_movement_strides, pad_below, pad_above);
-    auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
+    auto f = make_shared<Function>(maxpool, ParameterVector{A});
 
     shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::f32, maxpool_shape);
     vector<float> dataEp(shape_size(maxpool_shape), 4);
@@ -166,7 +166,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
     auto window_movement_strides = Strides{2, 2};
     auto avgpool =
         make_shared<op::AvgPool>(A, window_shape, window_movement_strides, padding, padding, false);
-    auto f = make_shared<Function>(avgpool, op::ParameterVector{A});
+    auto f = make_shared<Function>(avgpool, ParameterVector{A});
 
     shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::i32, avgpool_shape);
     vector<int> dataEp(shape_size(avgpool_shape), 4);
@@ -199,7 +199,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
     auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
-    auto f = make_shared<Function>(avgpool, op::ParameterVector{A});
+    auto f = make_shared<Function>(avgpool, ParameterVector{A});
 
     shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::i32, avgpool_shape);
     vector<int> dataEp(shape_size(avgpool_shape), 4);
@@ -232,7 +232,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{2, 2};
     auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
-    auto f = make_shared<Function>(avgpool, op::ParameterVector{A});
+    auto f = make_shared<Function>(avgpool, ParameterVector{A});
 
     shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::i32, avgpool_shape);
     vector<int> dataEp(shape_size(avgpool_shape), 12);
@@ -331,7 +331,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
         Shape window_shape{2, 2};
         auto window_movement_strides = Strides{2, 2};
         auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
-        return make_shared<Function>(avgpool, op::ParameterVector{A});
+        return make_shared<Function>(avgpool, ParameterVector{A});
 
     };
 
@@ -355,7 +355,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numer
         Shape window_shape{2, 2};
         auto window_movement_strides = Strides{1, 1};
         auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
-        return make_shared<Function>(avgpool, op::ParameterVector{A});
+        return make_shared<Function>(avgpool, ParameterVector{A});
 
     };
 
@@ -381,7 +381,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_paddi
         auto window_movement_strides = Strides{2, 2};
         auto avgpool = make_shared<op::AvgPool>(
             A, window_shape, window_movement_strides, padding, padding, false);
-        return make_shared<Function>(avgpool, op::ParameterVector{A});
+        return make_shared<Function>(avgpool, ParameterVector{A});
 
     };
 
@@ -1005,13 +1005,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_power)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
 
-    auto x0 = rng_neg.initialize(backend->create_tensor<float>(shape));
-    auto x1 = rng_pos.initialize(backend->create_tensor<float>(shape));
-
-    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
-
-    x0 = rng_pos.initialize(backend->create_tensor<float>(shape));
-    x1 = rng_neg.initialize(backend->create_tensor<float>(shape));
+    auto x0 = rng_pos.initialize(backend->create_tensor<float>(shape));
+    auto x1 = rng_neg.initialize(backend->create_tensor<float>(shape));
 
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 
@@ -1566,7 +1561,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
     Shape window_shape{2, 2};
     auto window_movement_strides = Strides{1, 1};
     auto maxpool = make_shared<op::MaxPool>(A, window_shape, window_movement_strides);
-    auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
+    auto f = make_shared<Function>(maxpool, ParameterVector{A});
     shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::f32, maxpool_shape);
     vector<float> dataEp(shape_size(maxpool_shape), 4);
 
@@ -1603,7 +1598,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
     Shape window_shape{3, 3};
     auto window_movement_strides = Strides{2, 2};
     auto maxpool = make_shared<op::MaxPool>(A, window_shape, window_movement_strides);
-    auto f = make_shared<Function>(maxpool, op::ParameterVector{A});
+    auto f = make_shared<Function>(maxpool, ParameterVector{A});
 
     shared_ptr<runtime::Tensor> ep = backend->create_tensor(element::f32, maxpool_shape);
     vector<float> dataEp(shape_size(maxpool_shape), 4);
@@ -1650,7 +1645,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_three_outputs)
         goes.push_back(make_shared<op::GetOutputElement>(BN, 2));
 
         auto f = make_shared<Function>(make_shared<op::GetOutputElement>(BN, 0),
-                                       op::ParameterVector{A, B, C});
+                                       ParameterVector{A, B, C});
         return f;
     };
 
@@ -1677,7 +1672,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n3_c2_h3)
     size_t sequence_axis = 0;
 
     auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
-    auto f = make_shared<Function>(rs, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(rs, ParameterVector{A, B});
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, seq_len_shape);
@@ -1716,7 +1711,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n4d2c3h2w2)
     size_t sequence_axis = 2;
 
     auto rs = std::make_shared<op::ReverseSequence>(A, B, batch_axis, sequence_axis);
-    auto f = make_shared<Function>(rs, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(rs, ParameterVector{A, B});
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, seq_len_shape);
