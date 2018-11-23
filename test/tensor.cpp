@@ -116,7 +116,7 @@ void test_copy_to(const vector<T>& x)
     copy(x.begin(), x.end(), result.begin() + x.size());
     
     auto s = a->get_size_in_bytes();
-    a->copy_to(b, 0, s );
+    a->copy_to(b, 0, s);
 
     vector<T> af_vector(2*x.size());
     b->read(af_vector.data(), 0, af_vector.size() * sizeof(T));

@@ -256,19 +256,11 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& node) const
         type = node.get_input_element_type(0);
     }
 
+    // ToDo: add other unsupported GPU backend ops to this ifelse statement 
     if (type != element::f32)
     {
         rc = false;
     }
-    else if (node.description() == "Multiply")
-    {
-        rc = false;
-    }
-    else if (node.description() == "Add")
-    {
-        rc = false;
-    }
-    
 
     return rc;
 }

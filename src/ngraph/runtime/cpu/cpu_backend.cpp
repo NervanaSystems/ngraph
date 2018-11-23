@@ -155,12 +155,6 @@ vector<runtime::PerformanceCounter>
 
 bool runtime::cpu::CPU_Backend::is_supported(const Node& node) const
 {
-    bool rc = true;
-
-    if (node.description() == "Multiply")
-    {
-        rc = false;
-    }
-    return rc;
-    
+    // Todo : return false for unsupported CPU backend ops
+    return true;
 }
