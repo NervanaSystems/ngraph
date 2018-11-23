@@ -20,13 +20,13 @@
 #include <cudnn.h>
 
 #include "ngraph/graph_util.hpp"
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
-#include "ngraph/runtime/interpreter/int_backend.hpp"
+#include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor.hpp"
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -41,10 +41,9 @@ extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
 #ifdef NGRAPH_HYBRID_ENABLE
     vector<pair<string, shared_ptr<runtime::Backend>>> backend_list{
-        {"GPU", make_shared<runtime::gpu::GPU_Backend>()}
-       ,{"CPU", make_shared<runtime::cpu::CPU_Backend>()}
-       ,{"INTERPRETER", make_shared<runtime::interpreter::INTBackend>()}
-       };
+        {"GPU", make_shared<runtime::gpu::GPU_Backend>()},
+        {"CPU", make_shared<runtime::cpu::CPU_Backend>()},
+        {"INTERPRETER", make_shared<runtime::interpreter::INTBackend>()}};
 
     auto wrapper = new runtime::hybrid::HybridBackend(backend_list);
     return wrapper;
@@ -256,7 +255,7 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& node) const
         type = node.get_input_element_type(0);
     }
 
-    // ToDo: add other unsupported GPU backend ops to this ifelse statement 
+    // TODO: add other unsupported GPU backend ops to this ifelse statement
     if (type != element::f32)
     {
         rc = false;

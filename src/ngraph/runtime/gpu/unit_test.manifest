@@ -1,5 +1,5 @@
 #int64 is not supprted by cuDNN
-# abc_int64
+abc_int64
 batch_norm_one_output
 batch_norm_three_outputs
 backwards_batch_norm_three_outputs

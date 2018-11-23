@@ -108,7 +108,6 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
 {
     // Get FunctionInstance
     bool rc = true;
-    // compile(func);
 
     // Backup main inputs and outputs before main_function will be split
     vector<shared_ptr<op::Parameter>> main_inputs = func->get_parameters();
@@ -139,44 +138,44 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
     }
 
     // Call subfunctions
-    size_t count =0; 
+    size_t count = 0;
     for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
     {
         // Init backend
         size_t placement = get_colocated_function_placement_size(sub_function);
         // (placement-1) as 0 is default placement
         auto backend = m_backend_list[(placement - 1)].second;
-        
+
         // Prepare parameter TensorViews
         vector<shared_ptr<runtime::Tensor>> parameter_tvs;
-        size_t number_of_parameter_tv = 0; 
+        size_t number_of_parameter_tv = 0;
         for (auto parameter_node : sub_function->get_parameters())
-        {   
+        {
             if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
             {
                 parameter_tvs.push_back(map_node_to_tensor_view.at(parameter_node));
-                number_of_parameter_tv+=1; 
+                number_of_parameter_tv += 1;
             }
             else
-            {   
+            {
                 auto result_node = instance.m_map_parameter_to_result.at(parameter_node);
                 auto result_tv = map_node_to_tensor_view.at(result_node);
                 auto parameter_tv = backend->create_tensor(parameter_node->get_element_type(),
                                                            parameter_node->get_shape());
 
                 auto size_bytes = result_tv->get_size_in_bytes();
-                result_tv->copy_to(parameter_tv, 0, size_bytes );
+                result_tv->copy_to(parameter_tv, 0, size_bytes);
 
                 map_node_to_tensor_view[parameter_node] = parameter_tv;
                 parameter_tvs.push_back(parameter_tv);
-                number_of_parameter_tv+=1; 
+                number_of_parameter_tv += 1;
             }
         }
 
         // Prepare result TensorViews
         vector<shared_ptr<runtime::Tensor>> result_tvs;
         for (auto result_node : sub_function->get_results())
-        {   
+        {
             if (map_node_to_tensor_view.find(result_node) != map_node_to_tensor_view.end())
             {
                 result_tvs.push_back(map_node_to_tensor_view.at(result_node));
