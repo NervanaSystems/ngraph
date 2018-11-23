@@ -21,11 +21,13 @@
 #pragma once
 
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "ngraph/except.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/type/bfloat16.hpp"
 
 namespace ngraph
@@ -34,6 +36,7 @@ namespace ngraph
     {
         enum class Type_t
         {
+            undefined,
             dynamic,
             boolean,
             bf16,
@@ -68,36 +71,41 @@ namespace ngraph
         class Type
         {
         public:
-            Type() {}
+            Type()
+                : m_type{element::Type_t::undefined}
+            {
+            }
             Type(const Type&) = default;
+            Type(const Type_t t)
+                : m_type{t}
+            {
+            }
             Type(size_t bitwidth,
                  bool is_real,
                  bool is_signed,
                  bool is_quantized,
                  const std::string& cname);
-            Type& operator=(const Type&);
+            // Type& operator=(const Type&);
             virtual ~Type() {}
             const std::string& c_type_string() const;
             size_t size() const;
             size_t hash() const;
-            bool is_static() const { return (*this != dynamic); }
+            bool is_static() const;
             bool is_dynamic() const { return !is_static(); }
-            bool is_real() const { return m_is_real; }
-            bool is_signed() const { return m_is_signed; }
-            bool is_quantized() const { return m_is_quantized; }
-            size_t bitwidth() const { return m_bitwidth; }
+            bool is_real() const;
+            bool is_signed() const;
+            bool is_quantized() const;
+            size_t bitwidth() const;
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
             bool operator<(const Type& other) const;
             friend std::ostream& operator<<(std::ostream&, const Type&);
             static std::vector<const Type*> get_known_types();
 
-            /// Returns true if the type is floating point, else false.
-            bool get_is_real() const { return m_is_real; }
             /// \brief Checks whether this element type is merge-compatible with `t`.
             /// \param t The element type to compare this element type to.
             /// \return `true` if this element type is compatible with `t`, else `false`.
-            bool compatible(element::Type t) const;
+            bool compatible(const element::Type& t) const;
 
             /// \brief Merges two element types t1 and t2, writing the result into dst and
             ///        returning true if successful, else returning false.
@@ -120,11 +128,7 @@ namespace ngraph
             static bool merge(element::Type& dst, const element::Type& t1, const element::Type& t2);
 
         private:
-            size_t m_bitwidth{0};
-            bool m_is_real{false};
-            bool m_is_signed{false};
-            bool m_is_quantized{false};
-            std::string m_cname{"dynamic"};
+            Type_t m_type;
         };
 
         template <typename T>
@@ -132,6 +136,32 @@ namespace ngraph
         {
             throw std::invalid_argument("Unknown type");
         }
+        template <>
+        const Type& from<char>();
+        template <>
+        const Type& from<bool>();
+        template <>
+        const Type& from<float>();
+        template <>
+        const Type& from<double>();
+        template <>
+        const Type& from<int8_t>();
+        template <>
+        const Type& from<int16_t>();
+        template <>
+        const Type& from<int32_t>();
+        template <>
+        const Type& from<int64_t>();
+        template <>
+        const Type& from<uint8_t>();
+        template <>
+        const Type& from<uint16_t>();
+        template <>
+        const Type& from<uint32_t>();
+        template <>
+        const Type& from<uint64_t>();
+        template <>
+        const Type& from<ngraph::bfloat16>();
 
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
     }

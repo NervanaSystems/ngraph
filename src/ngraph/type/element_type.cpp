@@ -16,28 +16,69 @@
 
 #include <cmath>
 #include <iostream>
+#include <map>
 
+#include "ngraph/log.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph;
+using namespace std;
 
-const element::Type element::dynamic(0, false, false, false, "dynamic");
-const element::Type element::boolean(8, false, true, false, "char");
-const element::Type element::bf16(16, true, true, false, "bfloat16");
-const element::Type element::f32(32, true, true, false, "float");
-const element::Type element::f64(64, true, true, false, "double");
-const element::Type element::i8(8, false, true, true, "int8_t");
-const element::Type element::i16(16, false, true, false, "int16_t");
-const element::Type element::i32(32, false, true, true, "int32_t");
-const element::Type element::i64(64, false, true, false, "int64_t");
-const element::Type element::u8(8, false, false, true, "uint8_t");
-const element::Type element::u16(16, false, false, false, "uint16_t");
-const element::Type element::u32(32, false, false, false, "uint32_t");
-const element::Type element::u64(64, false, false, false, "uint64_t");
+const element::Type element::dynamic(element::Type_t::dynamic);
+const element::Type element::boolean(element::Type_t::boolean);
+const element::Type element::bf16(element::Type_t::bf16);
+const element::Type element::f32(element::Type_t::f32);
+const element::Type element::f64(element::Type_t::f64);
+const element::Type element::i8(element::Type_t::i8);
+const element::Type element::i16(element::Type_t::i16);
+const element::Type element::i32(element::Type_t::i32);
+const element::Type element::i64(element::Type_t::i64);
+const element::Type element::u8(element::Type_t::u8);
+const element::Type element::u16(element::Type_t::u16);
+const element::Type element::u32(element::Type_t::u32);
+const element::Type element::u64(element::Type_t::u64);
+
+class TypeInfo
+{
+public:
+    TypeInfo(
+        size_t bitwidth, bool is_real, bool is_signed, bool is_quantized, const std::string& cname)
+        : m_bitwidth{bitwidth}
+        , m_is_real{is_real}
+        , m_is_signed{is_signed}
+        , m_is_quantized{is_quantized}
+        , m_cname{cname}
+    {
+    }
+    size_t m_bitwidth;
+    bool m_is_real;
+    bool m_is_signed;
+    bool m_is_quantized;
+    std::string m_cname;
+};
+
+static map<element::Type_t, TypeInfo> s_type_info_map{
+    {element::Type_t::undefined,
+     TypeInfo(std::numeric_limits<size_t>::max(), false, false, false, "undefined")},
+    {element::Type_t::dynamic, TypeInfo(0, false, false, false, "dynamic")},
+    {element::Type_t::boolean, TypeInfo(8, false, true, false, "char")},
+    {element::Type_t::bf16, TypeInfo(16, true, true, false, "bfloat16")},
+    {element::Type_t::f32, TypeInfo(32, true, true, false, "float")},
+    {element::Type_t::f64, TypeInfo(64, true, true, false, "double")},
+    {element::Type_t::i8, TypeInfo(8, false, true, true, "int8_t")},
+    {element::Type_t::i16, TypeInfo(16, false, true, false, "int16_t")},
+    {element::Type_t::i32, TypeInfo(32, false, true, true, "int32_t")},
+    {element::Type_t::i64, TypeInfo(64, false, true, false, "int64_t")},
+    {element::Type_t::u8, TypeInfo(8, false, false, true, "uint8_t")},
+    {element::Type_t::u16, TypeInfo(16, false, false, false, "uint16_t")},
+    {element::Type_t::u32, TypeInfo(32, false, false, false, "uint32_t")},
+    {element::Type_t::u64, TypeInfo(64, false, false, false, "uint64_t")},
+};
 
 std::vector<const element::Type*> element::Type::get_known_types()
 {
-    std::vector<const element::Type*> rc = {&element::boolean,
+    std::vector<const element::Type*> rc = {&element::dynamic,
+                                            &element::boolean,
                                             &element::bf16,
                                             &element::f32,
                                             &element::f64,
@@ -54,63 +95,52 @@ std::vector<const element::Type*> element::Type::get_known_types()
 
 element::Type::Type(
     size_t bitwidth, bool is_real, bool is_signed, bool is_quantized, const std::string& cname)
-    : m_bitwidth{bitwidth}
-    , m_is_real{is_real}
-    , m_is_signed{is_signed}
-    , m_is_quantized{is_quantized}
-    , m_cname{cname}
 {
+    for (const pair<element::Type_t, TypeInfo>& t : s_type_info_map)
+    {
+        const TypeInfo& info = t.second;
+        if (bitwidth == info.m_bitwidth && is_real == info.m_is_real &&
+            is_signed == info.m_is_signed && is_quantized == info.m_is_quantized)
+        {
+            m_type = t.first;
+            return;
+        }
+    }
 }
 
-element::Type& element::Type::operator=(const element::Type& t)
-{
-    m_bitwidth = t.m_bitwidth;
-    m_is_real = t.m_is_real;
-    m_is_signed = t.m_is_signed;
-    m_is_quantized = t.m_is_quantized;
-    m_cname = t.m_cname;
-    return *this;
-}
+// element::Type& element::Type::operator=(const element::Type& t)
+// {
+//     m_bitwidth = t.m_bitwidth;
+//     m_is_real = t.m_is_real;
+//     m_is_signed = t.m_is_signed;
+//     m_is_quantized = t.m_is_quantized;
+//     m_cname = t.m_cname;
+//     return *this;
+// }
 
 const std::string& element::Type::c_type_string() const
 {
-    return m_cname;
+    return s_type_info_map.at(m_type).m_cname;
 }
 
 bool element::Type::operator==(const element::Type& other) const
 {
-    return m_bitwidth == other.m_bitwidth && m_is_real == other.m_is_real &&
-           m_is_signed == other.m_is_signed && m_is_quantized == other.m_is_quantized &&
-           m_cname == other.m_cname;
+    return m_type == other.m_type;
 }
 
 bool element::Type::operator<(const Type& other) const
 {
-    size_t v1 = m_bitwidth << 3;
-    v1 |= static_cast<size_t>(m_is_real ? 4 : 0);
-    v1 |= static_cast<size_t>(m_is_signed ? 2 : 0);
-    v1 |= static_cast<size_t>(m_is_quantized ? 1 : 0);
-
-    size_t v2 = other.m_bitwidth << 3;
-    v2 |= static_cast<size_t>(other.m_is_real ? 4 : 0);
-    v2 |= static_cast<size_t>(other.m_is_signed ? 2 : 0);
-    v2 |= static_cast<size_t>(other.m_is_quantized ? 1 : 0);
-
-    return v1 < v2;
+    return m_type < other.m_type;
 }
 
 size_t element::Type::size() const
 {
-    return std::ceil(static_cast<float>(m_bitwidth) / 8.0f);
+    return std::ceil(static_cast<float>(bitwidth()) / 8.0f);
 }
 
 size_t element::Type::hash() const
 {
-    size_t h1 = std::hash<size_t>{}(m_bitwidth);
-    size_t h2 = std::hash<bool>{}(m_is_real);
-    size_t h3 = std::hash<bool>{}(m_is_signed);
-    size_t h4 = std::hash<bool>{}(m_is_quantized);
-    return h1 ^ ((h2 ^ ((h3 ^ (h4 << 1)) << 1)) << 1);
+    return static_cast<size_t>(m_type);
 }
 
 namespace ngraph
@@ -120,7 +150,7 @@ namespace ngraph
         template <>
         const Type& from<char>()
         {
-            return boolean;
+            return element::boolean;
         }
         template <>
         const Type& from<bool>()
@@ -187,12 +217,12 @@ namespace ngraph
 
 std::ostream& element::operator<<(std::ostream& out, const element::Type& obj)
 {
-    out << "element::Type{" << obj.m_bitwidth << ", " << obj.m_is_real << ", " << obj.m_is_signed
-        << ", " << obj.m_is_quantized << ", \"" << obj.m_cname << "\"}";
+    out << "element::Type{" << obj.bitwidth() << ", " << obj.is_real() << ", " << obj.is_signed()
+        << ", " << obj.is_quantized() << ", \"" << obj.c_type_string() << "\"}";
     return out;
 }
 
-bool element::Type::compatible(element::Type t) const
+bool element::Type::compatible(const element::Type& t) const
 {
     return (is_dynamic() || t.is_dynamic() || *this == t);
 }
@@ -218,4 +248,29 @@ bool element::Type::merge(element::Type& dst, const element::Type& t1, const ele
     {
         return false;
     }
+}
+
+bool element::Type::is_static() const
+{
+    return s_type_info_map.at(m_type).m_bitwidth != 0;
+}
+
+bool element::Type::is_real() const
+{
+    return s_type_info_map.at(m_type).m_is_real;
+}
+
+bool element::Type::is_signed() const
+{
+    return s_type_info_map.at(m_type).m_is_signed;
+}
+
+bool element::Type::is_quantized() const
+{
+    return s_type_info_map.at(m_type).m_is_quantized;
+}
+
+size_t element::Type::bitwidth() const
+{
+    return s_type_info_map.at(m_type).m_bitwidth;
 }
