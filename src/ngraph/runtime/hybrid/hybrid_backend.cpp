@@ -109,10 +109,6 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
     // Get FunctionInstance
     bool rc = true;
 
-    // Backup main inputs and outputs before main_function will be split
-    vector<shared_ptr<op::Parameter>> main_inputs = func->get_parameters();
-    vector<shared_ptr<op::Result>> main_outputs = func->get_results();
-
     auto it = m_function_map.find(func);
     if (it == m_function_map.end())
     {

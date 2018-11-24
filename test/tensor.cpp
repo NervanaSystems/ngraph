@@ -154,15 +154,14 @@ TEST(tensor, copy_to_same_backend)
     test_copy_to_same_backend<float>({1.2, 3.0, 5.0, 6.2, 7.0, 8.0});
     test_copy_to_same_backend<int64_t>({-1, 2, 4, -5, 3, 6});
 }
+#endif
 
-#if defined(NGRAPH_GPU_ENABLE)
+#if defined(NGRAPH_GPU_ENABLE) && defined(NGRAPH_INTERPRETER_ENABLE)
 TEST(tensor, copy_to_other_backend)
 {
     test_copy_to_other_backend<float>({1.2, 3.0, 5.0, 6.2, 7.0, 8.0});
     test_copy_to_other_backend<int64_t>({-1, 2, 4, -5, 3, 6});
 }
-#endif
-
 #endif
 
 TEST(tensor, output_flag)
