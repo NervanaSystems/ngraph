@@ -120,3 +120,10 @@ zero_sized_sqrt
 zero_sized_subtract
 zero_sized_tan
 zero_sized_tanh
+product_2d_to_scalar_int32
+product_to_scalar_int32
+product_to_scalar_int8
+max_matrix_rows_zero_int32
+max_to_scalar_int8
+min_to_scalar_int8
+max_3d_to_scalar_double

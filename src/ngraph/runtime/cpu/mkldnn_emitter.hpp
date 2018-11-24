@@ -598,17 +598,9 @@ namespace ngraph
                                              const mkldnn::memory::desc& result_desc,
                                              int softmax_axis);
 
-                size_t build_bounded_relu(const ngraph::Node* node,
-                                          const std::vector<TensorViewWrapper>& args,
-                                          const std::vector<TensorViewWrapper>& out)
-                {
-                    auto bounded_relu_node = static_cast<const ngraph::op::BoundedRelu*>(node);
-                    float alpha = bounded_relu_node->get_alpha();
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                    return build_bounded_relu(input_desc, result_desc, alpha);
-                }
+                size_t build_leaky_relu(const mkldnn::memory::desc& input_desc,
+                                        const mkldnn::memory::desc& result_desc,
+                                        float alpha);
 
                 size_t build_bounded_relu(const mkldnn::memory::desc& input_desc,
                                           const mkldnn::memory::desc& result_desc,
