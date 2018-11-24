@@ -143,13 +143,11 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
 
         // Prepare parameter TensorViews
         vector<shared_ptr<runtime::Tensor>> parameter_tvs;
-        size_t number_of_parameter_tv = 0;
         for (auto parameter_node : sub_function->get_parameters())
         {
             if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
             {
                 parameter_tvs.push_back(map_node_to_tensor_view.at(parameter_node));
-                number_of_parameter_tv += 1;
             }
             else
             {
@@ -163,7 +161,6 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
 
                 map_node_to_tensor_view[parameter_node] = parameter_tv;
                 parameter_tvs.push_back(parameter_tv);
-                number_of_parameter_tv += 1;
             }
         }
 
