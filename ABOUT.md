@@ -16,31 +16,31 @@ deep learning frameworks and backends currently are functioning.
 #### Bridge
 
 Starting from the top of the stack, nGraph receives a computational graph
-from a deep learning framework such as TensorFlow* or MXNet. The
-computational graph is converted to nGraph internal representation
-by a bridge created for corresponding framework.
+from a deep learning framework such as TensorFlow* or MXNet*. The
+computational graph is converted to an nGraph internal representation
+by a bridge created for the corresponding framework.
 
 An nGraph bridge examines the whole graph to pattern match subgraphs
-which it knows how to execute, and these subgraphs are encapsulated.
+which nGraph knows how to execute, and these subgraphs are encapsulated.
 Parts of the graph that are not encapsulated will default to framework
 implementation when executed.
 
 #### nGraph Core
 
 nGraph uses a strongly-typed and platform-neutral
-:abbr:`Intermediate Representation (IR)` to construct a "stateless"
+`Intermediate Representation (IR)` to construct a "stateless"
 computational graph. Each node, or op, in the graph corresponds to
-one :term:`step` in a computation, where each step produces zero or
+one `step` in a computation, where each step produces zero or
 more tensor outputs from zero or more tensor inputs.
 
 This allows nGraph to apply its state of art optimizations instead
-of having to follow how framework implements op execution, memory
-management, data layouts, etc.
+of having to follow how a particular framework implements op execution,
+memory management, data layouts, etc.
 
 In addition, using nGraph IR allows faster optimization delivery
 for many of the supported frameworks. For example, if nGraph optimizes
-ResNet for TensorFlow, the same optimization can be readily applied
-to MXNet or ONNX implementations of ResNet.
+ResNet* for TensorFlow*, the same optimization can be readily applied
+to MXNet* or ONNX* implementations of ResNet*.
 
 #### Hybrid Transformer
 
@@ -54,24 +54,24 @@ we will further expand the capabilities of Hybrid transformer
 by enabling more features, such as localized cost modeling and memory
 sharing.
 
-Once the subgraphs are assigned, the  corresponding backend
-will execute the IR.
+Once the subgraphs are assigned, the corresponding backend will
+execute the IR.
 
 
 #### Backends
 
 Focusing our attention on the CPU backend, when the IR is passed to
 the IA (Intel Architecture) transformer, it can be executed in two modes:
-Direct EXecution (DEX) and code generation.
+Direct EXecution (DEX) and code generation (`codegen`).
 
-In `codegen` mode nGraph generates and compiles code which can
+In `codegen` mode, nGraph generates and compiles code which can
 either call into highly optimized kernels like MKL-DNN or JITers like Halide.
 Although our team wrote kernels for nGraph for some operations,
 nGraph leverages existing kernel libraries such as MKL-DNN, Eigen, and MLSL.
 
 MLSL library is called when nGraph executes distributed training.
-At the time of nGraph Beta release, nGraph achieved state of the art
-results for ResNet50 with 16 nodes and 32 nodes for TensorFlow and MXNet.
+At the time of the nGraph Beta release, nGraph achieved state of the art
+results for ResNet50 with 16 nodes and 32 nodes for TensorFlow* and MXNet*.
 We are excited to continue our work in enabling distributed training,
 and we plan to expand the nodes to 256 in Q4 ‘18. Additionally, we
 are testing model parallelism in addition to data parallelism.
@@ -90,8 +90,8 @@ TBB Flow Graph.
 Features
 --------
 
-The nGraph (IR) Intermediate Representation contains a combination
-of device-specific and non-device-specific optimization :
+nGraph performs a combination of device-specific and
+non-device-specific optimizations:
 
 -   **Fusion** -- Fuse multiple ops to to decrease memory usage.
 -   **Data layout abstraction** -- Make abstraction easier and faster
