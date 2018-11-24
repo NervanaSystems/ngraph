@@ -42,7 +42,7 @@ We strongly believe in providing freedom, performance, and ease-of-use to AI
 developers. 
 
 The diagram below shows what deep learning frameworks and hardware targets
-we support. More details on these current and future plans are in the ecosystem
+we support. More details on these current and future plans are in the [ecosystem]
 section. 
 
 
