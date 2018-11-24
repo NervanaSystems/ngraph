@@ -234,53 +234,23 @@ void runtime::interpreter::INTBackend::generate_calls(const element::Type& type,
                                                       const vector<const void*>& inputs,
                                                       FunctionInstance& instance)
 {
-    if (type == element::boolean)
+    stringstream ss;
+    switch (type.get_type_enum())
     {
-        op_engine<char>(op, outputs, inputs, instance);
-    }
-    else if (type == element::f32)
-    {
-        op_engine<float>(op, outputs, inputs, instance);
-    }
-    else if (type == element::f64)
-    {
-        op_engine<double>(op, outputs, inputs, instance);
-    }
-    else if (type == element::i8)
-    {
-        op_engine<int8_t>(op, outputs, inputs, instance);
-    }
-    else if (type == element::i16)
-    {
-        op_engine<int16_t>(op, outputs, inputs, instance);
-    }
-    else if (type == element::i32)
-    {
-        op_engine<int32_t>(op, outputs, inputs, instance);
-    }
-    else if (type == element::i64)
-    {
-        op_engine<int64_t>(op, outputs, inputs, instance);
-    }
-    else if (type == element::u8)
-    {
-        op_engine<uint8_t>(op, outputs, inputs, instance);
-    }
-    else if (type == element::u16)
-    {
-        op_engine<uint16_t>(op, outputs, inputs, instance);
-    }
-    else if (type == element::u32)
-    {
-        op_engine<uint32_t>(op, outputs, inputs, instance);
-    }
-    else if (type == element::u64)
-    {
-        op_engine<uint64_t>(op, outputs, inputs, instance);
-    }
-    else
-    {
-        stringstream ss;
+    case element::Type_t::boolean: op_engine<char>(op, outputs, inputs, instance); break;
+    case element::Type_t::f32: op_engine<float>(op, outputs, inputs, instance); break;
+    case element::Type_t::f64: op_engine<double>(op, outputs, inputs, instance); break;
+    case element::Type_t::i8: op_engine<int8_t>(op, outputs, inputs, instance); break;
+    case element::Type_t::i16: op_engine<int16_t>(op, outputs, inputs, instance); break;
+    case element::Type_t::i32: op_engine<int32_t>(op, outputs, inputs, instance); break;
+    case element::Type_t::i64: op_engine<int64_t>(op, outputs, inputs, instance); break;
+    case element::Type_t::u8: op_engine<uint8_t>(op, outputs, inputs, instance); break;
+    case element::Type_t::u16: op_engine<uint16_t>(op, outputs, inputs, instance); break;
+    case element::Type_t::u32: op_engine<uint32_t>(op, outputs, inputs, instance); break;
+    case element::Type_t::u64: op_engine<uint64_t>(op, outputs, inputs, instance); break;
+    case element::Type_t::undefined:
+    case element::Type_t::dynamic:
+    case element::Type_t::bf16:
         ss << "unsupported element type " << type << " op " << op.get_node().get_name();
         throw ngraph_error(ss.str());
     }
