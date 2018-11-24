@@ -100,7 +100,7 @@ namespace ngraph
             /// \param n Number of bytes to read, must be integral number of elements.
             virtual void read(void* p, size_t offset, size_t n) const = 0;
 
-            /// \brief copy bytes directly from the tensor
+            /// \brief copy bytes directly from the tensor to another tensor 
             /// \param d Pointer to destination runtime::tensor
             /// \param offset Offset into tensor storage to begin writing. Must be element-aligned.
             /// \param n Number of bytes to write, must be integral number of elements.

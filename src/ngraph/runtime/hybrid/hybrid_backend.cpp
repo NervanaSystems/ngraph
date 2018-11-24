@@ -134,7 +134,6 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
     }
 
     // Call subfunctions
-    size_t count = 0;
     for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
     {
         // Init backend
