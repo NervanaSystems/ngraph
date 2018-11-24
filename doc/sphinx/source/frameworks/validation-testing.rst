@@ -20,7 +20,7 @@ TensorFlow
    Inception-ResNetv2, Image recognition
    MobileNet v1, Image recognition
    SqueezeNet v1.1, Image recognition
-   DenseNet121, Image recognition
+   DenseNet-121, Image recognition
    SSD-VGG16, Object detection
    SSD-MobileNetv1, Object detection
    Faster RCNN, Object detection
@@ -42,7 +42,7 @@ MXNet
    :escape: ~
 
    Resnet50 v1 and v2, Image recognition
-   DenseNet (121 161 169 201), Image recognition
+   DenseNet (121, 161, 169, 201), Image recognition
    InceptionV3, Image recognition
    InceptionV4, Image recognition
    Inception-ResNetv2, Image recognition
@@ -59,6 +59,8 @@ MXNet
    DCGAN, Generative adversarial network
    A3C, Reinforcement learning
 
+ONNX
+=====
 
 Additionally, we validated the following workloads are functional through nGraph ONNX importer: 
 
@@ -87,7 +89,7 @@ Additionally, we validated the following workloads are functional through nGraph
 
 
 
-.. important:: See Intel's `Optimization Notice`_ for details. 
+.. important:: Please see Intel's `Optimization Notice`_ for details on disclaimers. 
 
 
 
