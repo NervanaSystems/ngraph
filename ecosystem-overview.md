@@ -21,7 +21,7 @@ workloads.
 
 The table below summarizes our current progress on supported frameworks. 
 If you are an architect of a framework wishing to take advantage of speed 
-and multi-device support of nGraph Compiler, please refer to [framework-integration-guides] section.  
+and multi-device support of nGraph Compiler, please refer to [Framework integration guide] section.  
 
 
 |  Framework & Runtime       | Supported          |  Validated 
@@ -46,10 +46,11 @@ for Intel, Nvidia*, and AMD* GPU either leveraging kernel libraries
 such as clDNN and cuDNN directly or utilizing PlaidML to compile for codegen 
 and emit OpenCL, OpenGL, LLVM, Cuda, and Metal. Please refer to [Architecture 
 and features] section to learn more about how we plan to take advantage of 
-both solutions using hybrid transformer). In the similar time frame, we plan 
+both solutions using hybrid transformer. We expect to have stable support for aformentioned GPUs
+in the early second half of 2019. In the similar time frame, we plan 
 to release multinode support. 
 
-We are excited about providing support for our upcoming deep learning 
+Additionally, we are excited about providing support for our upcoming deep learning 
 accelerators such as NNP (Neural Network Processor) via nGraph compiler 
 stack, and early adopters will be able test them in 2019.
 
@@ -74,4 +75,4 @@ stack, and early adopters will be able test them in 2019.
 [ONNX Runtime]:https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-build-deploy-onnx
 [WinML]: http://docs.microsoft.com/en-us/windows/ai
 [How to]: https://ngraph.nervanasys.com/docs/latest/howto/index.html
-[framework-integration-guides]: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html
+[Framework integration guide]: https://ngraph.nervanasys.com/docs/latest/frameworks/index.html
