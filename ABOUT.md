@@ -12,11 +12,18 @@ deep learning frameworks and backends currently are functioning.
 ![](doc/sphinx/source/graphics/stackngrknl.png)
 
 
-Starting from the top of the diagram, we present a simplified view of 
-the nGraph Intermediate Representation (IR). The nGraph IR is a format 
-which works with a framework such as TensorFlow\* or MXNet\* when there 
-is a corresponding "Bridge" or import method, such as from NNVM or via 
-[ONNX](http://onnx.ai). Once the nGraph IR can begin using nGraph's 
+In the diagram, nGraph stack is colored in gray. Starting from the 
+top of the stack, nGraph receives a computational graph 
+from a deep learning frameworks such as TensorFlow* or MXNet. The computational
+graph is converted to nGraph internal representation by a bridge created for corresponding framework. 
+nGraph examines the whole graph to pattern match subgraphs which it knows how to optimize.
+
+
+, and these subgraphs are encapsulated. Parts of the graph that are not encapsulated default to framework implementation when executed. nGraph keeps the input and output semantics of encapsulated subgraphs and rebuilds the encapsulated subgraph with nGraph graph IR (Intermediate Representation) with its Core API.  
+
+
+
+Once the nGraph IR can begin using nGraph's 
 Core ops, components lower in the stack can begin parsing and 
 pattern-matching subgraphs for device-specific optimizations; these 
 are then encapsulated. This encapsulation is represented on the diagram 
