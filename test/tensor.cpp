@@ -102,23 +102,42 @@ void test_read_write(const vector<T>& x)
 }
 
 template <typename T>
-void test_copy_to(const vector<T>& x)
+void test_copy_to_same_backend(const vector<T>& x)
 {
-    auto backend = runtime::Backend::create("INTERPRETER");
-    auto a = backend->create_tensor(element::from<T>(), Shape{2, x.size()});
-    auto b = backend->create_tensor(element::from<T>(), Shape{2, x.size()});
+    auto backend_int = runtime::Backend::create("INTERPRETER");
+    auto a = backend_int->create_tensor(element::from<T>(), Shape{(x.size() / 2), (x.size() / 2)});
+    auto b = backend_int->create_tensor(element::from<T>(), Shape{(x.size() / 2), (x.size() / 2)});
 
-    vector<T> result(2 * x.size());
+    vector<T> result(x.size());
 
     a->write(&x[0], 0, x.size() * sizeof(T));
-    copy(x.begin(), x.end(), result.begin());
-    a->write(&x[0], x.size() * sizeof(T), x.size() * sizeof(T));
-    copy(x.begin(), x.end(), result.begin() + x.size());
+    a->read(result.data(), 0, result.size() * sizeof(T));
 
     auto s = a->get_size_in_bytes();
     a->copy_to(b, 0, s);
 
-    vector<T> af_vector(2 * x.size());
+    vector<T> af_vector(x.size());
+    b->read(af_vector.data(), 0, af_vector.size() * sizeof(T));
+    ASSERT_EQ(af_vector, result);
+}
+
+template <typename T>
+void test_copy_to_other_backend(const vector<T>& x)
+{
+    auto backend_gpu = runtime::Backend::create("GPU");
+    auto backend_int = runtime::Backend::create("INTERPRETER");
+    auto a = backend_gpu->create_tensor(element::from<T>(), Shape{(x.size() / 2), (x.size() / 2)});
+    auto b = backend_int->create_tensor(element::from<T>(), Shape{(x.size() / 2), (x.size() / 2)});
+
+    vector<T> result(x.size());
+
+    a->write(&x[0], 0, x.size() * sizeof(T));
+    a->read(result.data(), 0, result.size() * sizeof(T));
+
+    auto s = a->get_size_in_bytes();
+    a->copy_to(b, 0, s);
+
+    vector<T> af_vector(x.size());
     b->read(af_vector.data(), 0, af_vector.size() * sizeof(T));
     ASSERT_EQ(af_vector, result);
 }
@@ -129,11 +148,21 @@ TEST(tensor, read_write)
     test_read_write<float>({1.0, 3.0, 5.0});
     test_read_write<int64_t>({-1, 2, 4});
 }
-TEST(tensor, copy_to)
+
+TEST(tensor, copy_to_same_backend)
 {
-    test_copy_to<float>({1.2, 3.0, 5.0});
-    test_read_write<int64_t>({-1, 2, 4});
+    test_copy_to_same_backend<float>({1.2, 3.0, 5.0, 6.2, 7.0, 8.0});
+    test_copy_to_same_backend<int64_t>({-1, 2, 4, -5, 3, 6});
 }
+
+#if defined(NGRAPH_GPU_ENABLE)
+TEST(tensor, copy_to_other_backend)
+{
+    test_copy_to_other_backend<float>({1.2, 3.0, 5.0, 6.2, 7.0, 8.0});
+    test_copy_to_other_backend<int64_t>({-1, 2, 4, -5, 3, 6});
+}
+#endif
+
 #endif
 
 TEST(tensor, output_flag)
