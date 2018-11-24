@@ -4,97 +4,86 @@
 Validation and testing
 ######################
 
-* **Validating** -- To provide optimizations with nGraph, we first 
-  confirm that a given workload is :term:`validated` as being functional; 
-  that is, we can successfully load its serialized graph as an nGraph 
-  :term:`function graph`. Following here is a list of 14 workloads 
-  we've tested with success.
-
-
-.. csv-table::
-   :header: "Workload", "Validated"
-   :widths: 27, 53
-   :escape: ~
-
-   DenseNet-121, Functional
-   Inception-v1, Functional
-   Inception-v2, Functional
-   ResNet-50, Functional
-   Shufflenet, Functional
-   SqueezeNet, Functional
-   VGG-19, Functional
-   ZFNet-512, Functional
-   MNIST, Functional
-   Emotion-FERPlus, Functional
-   BVLC AlexNet, Functional
-   BVLC GoogleNet, Functional
-   BVLC CaffeNet, Functional
-   BVLC R-CNN ILSVRC13, Functional 
-
-
-Testing
-#######
-
-* **Testing & Performance Optimizations** for workloads that have been 
-  "validated" with nGraph are also available via the nGraph 
-  :abbr:`Intermediate Representation (IR)`). For example, a common use 
-  case for data scientists is to train a new model with a large dataset, 
-  and so nGraph already has several accelerations available "out of the 
-  box" for the workloads noted below.
+We validated perfomance for the following TensorFlow and MXNet workloads:
 
 
 TensorFlow 
 ==========
 
 .. csv-table::
-   :header: "TensorFlow Workloads", "Performance"
+   :header: "TensorFlow Workloads", "Type"
    :widths: 27, 53
    :escape: ~
 
-   Resnet50 v1 and v2, see nbench
-   Inception V3 and V4, see nbench
-   Inception-ResNetv2, see nbench
-   MobileNet v1, see nbench
-   SqueezeNet v1.1, see nbench
-   SSD-VGG16, see nbench
-   R-FCN, see nbench
-   Faster RCNN, see nbench
-   Yolo v2, see nbench
-   GNMT, Greater than or equal to :abbr:`Direct Optimization (DO)`
-   Transformer-LT, see nbench
-   Wide & Deep, see nbench
-   WaveNet, Functional
-   U-Net, Greater than DO
-   DRAW, see nbench
-   A3C, see nbench
-
+   Resnet50 v1 and v2, Image recognition
+   Inception V3 and V4, Image recognition
+   Inception-ResNetv2, Image recognition
+   MobileNet v1, Image recognition
+   SqueezeNet v1.1, Image recognition
+   DenseNet121, Image recognition
+   SSD-VGG16, Object detection
+   SSD-MobileNetv1, Object detection
+   Faster RCNN, Object detection
+   Yolo v2, Object detection
+   Wide & Deep, Recommender system
+   NCF, Recommender system
+   WaveNet, Speech generation
+   U-Net, Image segmentation
+   DCGAN, Generative adversarial network
+   DRAW, Image generation
+   A3C, Reinforcement learning
 
 MXNet
 =====
 
-
 .. csv-table::
-   :header: "MXNet Workloads", "Performance"
+   :header: "MXNet Workloads", "Type"
    :widths: 27, 53
    :escape: ~
 
-   Resnet50 v1 and v2, see nbench
-   DenseNet (121 161 169 201), see nbench
-   InceptionV3, see nbench
-   InceptionV4, see nbench
-   Inception-ResNetv2, see nbench
-   MobileNet v1, see nbench
-   SqueezeNet v1 and v1.1, see nbench
-   VGG16, Functional (No DO available)
-   Faster RCNN, see nbench
-   SSD-VGG16, see nbench
-   GNMT, Greater than or equal to :abbr:`Direct Optimization (DO)`
-   Transformer-LT, see nbench
-   Wide & Deep, see nbench
-   WaveNet, Functional
-   DeepSpeech2, see nbench
-   DCGAN, see nbench
-   A3C, Greater than or equal to DO
+   Resnet50 v1 and v2, Image recognition
+   DenseNet (121 161 169 201), Image recognition
+   InceptionV3, Image recognition
+   InceptionV4, Image recognition
+   Inception-ResNetv2, Image recognition
+   MobileNet v1, Image recognition
+   SqueezeNet v1 and v1.1, Image recognition
+   VGG16, Image recognition
+   Faster RCNN, Object detection
+   SSD-VGG16, Object detection
+   GNMT, Language translation
+   Transformer-LT, Language translation
+   Wide & Deep, Recommender system
+   WaveNet, Speech generation
+   DeepSpeech2, Speech recognition
+   DCGAN, Generative adversarial network
+   A3C, Reinforcement learning
+
+
+Additionally, we validated the following workloads are functional through nGraph ONNX importer: 
+
+
+.. csv-table::
+   :header: "Workload", "Type"
+   :widths: 27, 53
+   :escape: ~
+
+   DenseNet-121, Image recognition
+   Inception-v1, Image recognition
+   Inception-v2, Image recognition
+   ResNet-50, Image recognition
+   Shufflenet, Image recognition
+   SqueezeNet, Image recognition
+   VGG-19, Image recognition
+   ZFNet-512, Image recognition
+   MNIST, Image recognition
+   Emotion-FERPlus, Image recognition
+   BVLC AlexNet, Image recognition
+   BVLC GoogleNet, Image recognition
+   BVLC CaffeNet, Image recognition
+   BVLC R-CNN ILSVRC13, Object detection 
+
+
 
 
 
