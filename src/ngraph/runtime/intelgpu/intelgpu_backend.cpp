@@ -27,6 +27,7 @@
 #include <CPP/convolution.hpp>
 #include <CPP/data.hpp>
 #include <CPP/eltwise.hpp>
+#include <CPP/gemm.hpp>
 #include <CPP/input_layout.hpp>
 #include <CPP/layout.hpp>
 #include <CPP/lrn.hpp>
@@ -671,14 +672,51 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             arguments_check(op, 2, 1);
 
-            do_dot_operation(topology,
-                             get_input_name(op, 0),
-                             get_input_shape(op, 0),
-                             get_input_name(op, 1),
-                             get_input_shape(op, 1),
-                             get_output_name(op),
-                             get_output_shape(op),
-                             get_output_type(op));
+            const shared_ptr<op::Dot> dot_inst = static_pointer_cast<op::Dot>(op);
+            const size_t axes_count = dot_inst->get_reduction_axes_count();
+            const Shape& input0_shape = get_input_shape(op, 0);
+            const Shape& input1_shape = get_input_shape(op, 1);
+            const size_t input0_elem_count = shape_size(input0_shape);
+            const size_t input1_elem_count = shape_size(input1_shape);
+
+            if (get_input_type(op) == element::f32 && get_input_type(op, 1) == element::f32 &&
+                get_output_type(op) == element::f32 && input0_elem_count && input1_elem_count &&
+                (axes_count == 1) && (input0_shape.size() < 3) && (input1_shape.size() < 3) &&
+                !input0_shape.empty() && !input1_shape.empty())
+            {
+                string input1_name = get_input_name(op, 1);
+
+                // If we have A[5] and B[5] here, in cldnn we have A[1, 1, 1, 5] and B[1, 1, 1, 5]
+                // it needs to be reshaped into A[1, 1, 1, 5] and B[1, 1, 5, 1]
+                if (!input0_shape.empty() && (input1_shape.size() == 1))
+                {
+                    const string new_name = input1_name + "_reshaped";
+                    Shape new_shape = input1_shape;
+                    new_shape.push_back(1);
+                    const cldnn::tensor reshaped_tensor =
+                        intelgpu_space::create_cldnn_tensor(new_shape);
+
+                    const cldnn::reshape reshape_op(new_name, input1_name, reshaped_tensor);
+                    topology.add(reshape_op);
+
+                    input1_name = new_name;
+                }
+
+                const cldnn::gemm dot_op(get_output_name(op), get_input_name(op, 0), input1_name);
+                topology.add(dot_op);
+            }
+            else
+            {
+                do_dot_operation(topology,
+                                 get_input_name(op, 0),
+                                 get_input_shape(op, 0),
+                                 get_input_name(op, 1),
+                                 get_input_shape(op, 1),
+                                 get_output_name(op),
+                                 get_output_shape(op),
+                                 get_output_type(op),
+                                 axes_count);
+            }
             break;
         }
         case OP_TYPEID::MaxPool:

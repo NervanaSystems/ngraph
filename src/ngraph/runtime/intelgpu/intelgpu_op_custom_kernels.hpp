@@ -72,7 +72,8 @@ namespace ngraph
                                   const Shape& inputB_shape,
                                   const std::string& output_name,
                                   const Shape& output_shape,
-                                  const element::Type& output_type);
+                                  const element::Type& output_type,
+                                  size_t reduction_axes_count);
 
             void do_slice_operation(cldnn::topology& topology,
                                     const std::string& input_name,
