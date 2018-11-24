@@ -87,6 +87,7 @@ namespace ngraph
                  const std::string& cname);
             // Type& operator=(const Type&);
             virtual ~Type() {}
+            Type_t get_type_enum() const { return m_type; }
             const std::string& c_type_string() const;
             size_t size() const;
             size_t hash() const;
