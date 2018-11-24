@@ -21,8 +21,7 @@ workloads.
 
 The table below summarizes our current progress on supported frameworks. 
 If you are an architect of a framework wishing to take advantage of speed 
-and multi-device support of nGraph Compiler, please refer to “how to 
-connect custom framework” section on this page. 
+and multi-device support of nGraph Compiler, please refer to [framework-integration-guides] section.  
 
 
 |  Framework & Runtime       | Supported          |  Validated 
@@ -45,8 +44,8 @@ freedom to AI developers to deploy their deep learning workloads to the
 desired hardware without a lock in. We currently have functioning backends 
 for Intel, Nvidia*, and AMD* GPU either leveraging kernel libraries 
 such as clDNN and cuDNN directly or utilizing PlaidML to compile for codegen 
-and emit OpenCL, OpenGL, LLVM, Cuda, and Metal. (Please refer to architecture 
-and features section to learn more about how we plan to take advantage of 
+and emit OpenCL, OpenGL, LLVM, Cuda, and Metal. (Please refer to [Architecture 
+and features] section to learn more about how we plan to take advantage of 
 both solutions using hybrid transformer). In the similar time frame, we plan 
 to release multinode support. 
 
@@ -63,37 +62,12 @@ stack, and early adopters will be able test them in 2019.
 | AMD* GPUs                                     | Functional via PlaidML                 
 | Nvidia* GPUs                                  | Functional via cuDNN and PlaidML        
 | Intel® Nervana™ Neural Network Processor (NNP)| Functional               
-| [Upcoming DL accelerators]                    | see details on [Upcoming DL accelerators]       
-
-
-## How do I connect a framework?
-
-The nGraph Library manages framework bridges for some of the more widely-known 
-frameworks. A bridge acts as an intermediary between the nGraph core and the 
-framework, and the result is a function that can be compiled from a framework. 
-A fully-compiled function that makes use of bridge code thus becomes a "function 
-graph", or what we sometimes call an nGraph graph.
-
-For a more detailed dive into how custom bridge code can be implemented, see our 
-documentation [How to]. To learn how TensorFlow and MXNet currently make use of 
-custom bridge code, see the section on [framework-integration-guides].
-
-:note-caption: **Important** -- Intel's compilers may or may not optimize to the 
-same degree for non-Intel microprocessors for optimizations that are not unique 
-to Intel microprocessors. These optimizations include SSE2, SSE3, and SSSE3 
-instruction sets and other optimizations. Intel does not guarantee the availability, 
-functionality, or effectiveness of any optimization on microprocessors not 
-manufactured by Intel. Microprocessor-dependent optimizations in this product 
-are intended for use with Intel microprocessors. Certain optimizations not specific 
-to Intel microarchitecture  are reserved for Intel microprocessors. Please refer 
-to the applicable product User and Reference Guides for more information regarding 
-the specific instruction sets covered by this notice.
+| Upcoming DL accelerators                      | Functional and will be announced in the near future       
 
 
 
 
-
-
+[Architecture and features]: ./ABOUT.md
 [Upcoming DL accelerators]: https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/vision-accelerator-design-product-brief.pdf
 [import it]: http://ngraph.nervanasys.com/docs/latest/howto/import.html
 [ONNXIFI]: https://github.com/onnx/onnx/blob/master/docs/ONNXIFI.md
