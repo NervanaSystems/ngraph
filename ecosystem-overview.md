@@ -44,7 +44,7 @@ freedom to AI developers to deploy their deep learning workloads to the
 desired hardware without a lock in. We currently have functioning backends 
 for Intel, Nvidia*, and AMD* GPU either leveraging kernel libraries 
 such as clDNN and cuDNN directly or utilizing PlaidML to compile for codegen 
-and emit OpenCL, OpenGL, LLVM, Cuda, and Metal. (Please refer to [Architecture 
+and emit OpenCL, OpenGL, LLVM, Cuda, and Metal. Please refer to [Architecture 
 and features] section to learn more about how we plan to take advantage of 
 both solutions using hybrid transformer). In the similar time frame, we plan 
 to release multinode support. 
