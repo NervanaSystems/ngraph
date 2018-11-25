@@ -1669,20 +1669,26 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
         {
             pool.reset(new gpu::primitive{
                 [=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
+                    void*  y = inputs[0];
+                    void* dy = inputs[0];
+                    void*  x = inputs[0];
+                    if (pool_op == 0 || pool_op == 3)
+                    {
+                        y = inputs[2];
+                        dy = inputs[1];
+                        x = inputs[0];
+                    }
                     CUDNN_SAFE_CALL(cudnnPoolingBackward(*m_ctx->cudnn_handle,
                                                          desc,
                                                          alpha,
-                                                         // output (wrt maxpool) tensor
                                                          output_desc,
-                                                         inputs[2],
-                                                         // adjoint of output
+                                                         y,
                                                          output_desc,
-                                                         inputs[1],
-                                                         // input (wrt maxpool) tensor
+                                                         dy,
                                                          input_desc,
-                                                         inputs[0],
+                                                         x,
                                                          beta,
-                                                         // adjoint of input
+                                                         // adjoint of input (dx)
                                                          input_desc,
                                                          outputs[0]));
                     debug_sync();
