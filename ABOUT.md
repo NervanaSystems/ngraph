@@ -45,7 +45,7 @@ to MXNet* or ONNX* implementations of ResNet*.
 #### Hybrid Transformer
 
 Hybrid transformer takes the nGraph IR, and partitions it into
-subgraphs, which can be assigned to the best-performing backend.
+subgraphs, which can then be assigned to the best-performing backend.
 There are two hardware backends shown in the stack diagram to demonstrate
 this graph partitioning. The Hybrid transformer assigns complex operations
 (subgraphs) to Intel® Nervana™ Neural Network Processor (NNP) to expedite the
@@ -61,7 +61,7 @@ execute the IR.
 #### Backends
 
 Focusing our attention on the CPU backend, when the IR is passed to
-the IA (Intel Architecture) transformer, it can be executed in two modes:
+the Intel® Architecture (IA) transformer, it can be executed in two modes:
 Direct EXecution (DEX) and code generation (`codegen`).
 
 In `codegen` mode, nGraph generates and compiles code which can
@@ -114,7 +114,7 @@ Beta Limitations
 ----------------
 
 In this Beta release, nGraph only supports Just In Time compilation,
-but we plan add support for Ahead of Time compilation in the official
+but we plan to add support for Ahead of Time compilation in the official
 release of nGraph. nGraph currently has limited support for dynamic graphs.
 
 Current nGraph Compiler full stack
