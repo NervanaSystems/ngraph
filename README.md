@@ -24,12 +24,10 @@ Frameworks using nGraph Compiler stack to execute workloads have shown
 **up to 45X** performance boost when compared to native framework 
 implementations. We've also seen performance boosts running workloads that 
 are not included on the list of [Validated workloads], thanks to our 
-powerful subgraph pattern matching and thanks to the collaborative efforts 
-we've put into the DL community, such as with [nGraph-ONNX adaptable] APIs 
-and [nGraph for PyTorch developers].
+powerful subgraph pattern matching.
 
 Additional work is also being done via [PlaidML] which will feature running 
-compute for Deep Learning with GPU accleration and support for MacOS. See our 
+compute for Deep Learning with GPU accleration. See our 
 [Architecture and features] for what the stack looks like today and watch our 
 [Release Notes] for recent changes.
 
