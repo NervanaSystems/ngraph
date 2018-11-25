@@ -1125,7 +1125,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Reshape(EMIT_ARGS)
     }
     auto reshape = static_cast<const op::Reshape*>(node);
 
-    if (out[0].get_name() == args[0].get_name())
+    if (out[0].get_name() == args[0].get_name() && out[0].get_offset() == args[0].get_offset())
     {
         // writer << "// Logical reshape eliminated\n";
         return "";
