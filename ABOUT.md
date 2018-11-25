@@ -33,7 +33,7 @@ computational graph. Each node, or op, in the graph corresponds to
 one `step` in a computation, where each step produces zero or
 more tensor outputs from zero or more tensor inputs.
 
-This allows nGraph to apply its state of art optimizations instead
+This allows nGraph to apply its state of the art optimizations instead
 of having to follow how a particular framework implements op execution,
 memory management, data layouts, etc.
 
@@ -73,7 +73,7 @@ MLSL library is called when nGraph executes distributed training.
 At the time of the nGraph Beta release, nGraph achieved state of the art
 results for ResNet50 with 16 nodes and 32 nodes for TensorFlow* and MXNet*.
 We are excited to continue our work in enabling distributed training,
-and we plan to expand the nodes to 256 in Q4 ‘18. Additionally, we
+and we plan to expand to 256 nodes in Q4 ‘18. Additionally, we
 are testing model parallelism in addition to data parallelism.
 
 The other mode of execution is Direct EXecution (DEX). In DEX mode,
