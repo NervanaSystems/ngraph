@@ -4,7 +4,7 @@
 Validation and testing
 ######################
 
-We validated perfomance for the following TensorFlow and MXNet workloads:
+We validated performance for the following TensorFlow* and MXNet* workloads:
 
 
 TensorFlow 
