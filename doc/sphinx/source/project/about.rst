@@ -16,27 +16,27 @@ nGraph Compiler stack architecture
 ==================================
 
 
-The diagram below represents our current Beta release stack. Please note that
-the stack diagram is simplified to show how nGraph executes deep learning 
-workloads with two hardware backends; however, many other deep learning 
-frameworks and backends currently are functioning. 
+The diagram below represents our current |release| release stack. Please 
+note that the stack diagram is simplified to show how nGraph executes deep 
+learning workloads with two hardware backends; however, many other deep 
+learning frameworks and backends currently are functioning. 
 
 .. figure:: ../graphics/stackngrknl.png
-    :width: 771px
+    :width: 455px
     :alt: Current Beta release stack
 
     Simplified stack diagram for nGraph Compiler and components Beta 
 
-Starting from the top of the diagram, we present a simplified view of how 
-the nGraph :abbr:`Intermediate Representation (IR)` can receive a graph from a
-framework such as TensorFlow\* or MXNet\* when there is a corresponding 
-"Bridge" or import method, such as from NNVM or via `ONNX`_. Once the nGraph 
-:doc:`../ops/index` can begin parsing the graph as a computation graph, they
-can pattern-match subgraphs for device-specific optimizations; these are then 
-encapsulated. This encapsulation is represented on the diagram as the colored  
-background between the ``ngraph`` kernel(s) and the the stack above. 
+Starting from the top of the diagram, we present a simplified view of the nGraph 
+Intermediate Representation (IR). The nGraph IR is a format which works with a 
+framework such as TensorFlow* or MXNet* when there is a corresponding "Bridge"
+or import method, such as from NNVM or via `ONNX`_. Once the nGraph IR can begin 
+using nGraph's Core ops, components lower in the stack can begin parsing and 
+pattern-matching subgraphs for device-specific optimizations; these are then 
+encapsulated. This encapsulation is represented on the diagram as the colored 
+background between the ``ngraph`` kernel(s) and the the stack above.
 
-Note that everything at or below the "Kernel APIs" and "Subgraph APIs" gets 
+Note that everything at or below the **Kernel APIs** and **Subgraph APIs** gets 
 executed "automatically" during training runs. In other words, the accelerations 
 are automatic: parts of the graph that are not encapsulated default to framework 
 implementation when executed. For example, if nGraph optimizes ResNet50 for 
@@ -89,7 +89,7 @@ Features
 The nGraph :abbr:`(IR) Intermediate Representation` contains a combination of 
 device-specific and non-device-specific optimization :
 
-* **Fusion** -- Fuse multiple ops to to decrease memory usage "localities".
+* **Fusion** -- Fuse multiple ops to to decrease memory usage.
 * **Data layout abstraction** -- Make abstraction easier and faster with nGraph 
   translating element order to work best for a given or available device.
 * **Data reuse** -- Save results and reuse for subgraphs with the same input.
@@ -108,7 +108,6 @@ device-specific and non-device-specific optimization :
    (or when available, such as with CPU cycles). Thus, we expect that adding of 
    new Core ops should be infrequent and that most functionality instead gets 
    added with new functions that build sub-graphs from existing core ops.   
-
 
 
 .. _portable:
