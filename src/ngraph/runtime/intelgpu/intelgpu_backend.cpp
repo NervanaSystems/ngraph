@@ -385,7 +385,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         return true;
     }
 
-    vector<cldnn::primitive_id> function_output_names;
+    set<cldnn::primitive_id> func_output_names;
     cldnn::topology topology;
 
     if (m_dump_graph_enable)
@@ -439,7 +439,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             arguments_check(op, 1, 1);
 
-            function_output_names.push_back(get_input_name(op));
+            func_output_names.insert(get_input_name(op));
             break;
         }
         case OP_TYPEID::GetOutputElement:
@@ -1328,7 +1328,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
                 // Need to mark this operation as "output" to keep mean and variance
                 // in cldnn::network
-                function_output_names.push_back(get_output_name(op));
+                func_output_names.insert(get_output_name(op));
             }
 #endif
             else
@@ -1598,9 +1598,10 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
     network_build_options.set_option(cldnn::build_option::optimize_data(m_cldnn_graph_optimize));
 
-    if (!function_output_names.empty())
+    if (!func_output_names.empty())
     {
-        network_build_options.set_option(cldnn::build_option::outputs(function_output_names));
+        vector<cldnn::primitive_id> names_vec(func_output_names.begin(), func_output_names.end());
+        network_build_options.set_option(cldnn::build_option::outputs(names_vec));
     }
 
     if (m_cldnn_dump_enable)
