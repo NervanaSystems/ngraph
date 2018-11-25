@@ -15,6 +15,7 @@
 # ******************************************************************************
 
 cmake_minimum_required (VERSION 3.1)
+set (CMAKE_CXX_STANDARD 11)
 
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed.")
@@ -167,9 +168,11 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     include( cmake/clang_4_0_flags.cmake )
 endif()
 
-include(cmake/sdl.cmake)
+if (WIN32)
+    set(CMAKE_CXX_FLAGS "/W0 /EHsc")
+endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+include(cmake/sdl.cmake)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (DEFINED NGRAPH_USE_CXX_ABI)
@@ -184,21 +187,27 @@ if (${NGRAPH_WARNINGS_AS_ERRORS})
     message(STATUS "Warnings as errors")
 endif()
 
-SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
-SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
+if(NOT WIN32)
+    SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
+    SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
+endif()
 
 if (NGRAPH_CODE_COVERAGE_ENABLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
 endif()
 
 # Enable build target CPU features
-set(NGRAPH_TARGET_ARCH native CACHE STRING "Target CPU architecture to build for. Defaults to the native CPU architecture")
+if(NOT WIN32)
+    set(NGRAPH_TARGET_ARCH native CACHE
+        STRING "Target CPU architecture to build for. Defaults to the native CPU architecture")
 
-if (NOT "${NGRAPH_TARGET_ARCH}" STREQUAL "native")
-    message(WARNING "Build target architecture was overridden. The resulting build might not work correctly on the host CPU.")
+    if (NOT "${NGRAPH_TARGET_ARCH}" STREQUAL "native")
+        message(WARNING
+            "Build target architecture was overridden. The resulting build might not work correctly on the host CPU.")
+    endif()
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=${NGRAPH_TARGET_ARCH}")
 endif()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=${NGRAPH_TARGET_ARCH}")
 
 if (DEFINED NGRAPH_TUNE_ARCH)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=${NGRAPH_TUNE_ARCH}")

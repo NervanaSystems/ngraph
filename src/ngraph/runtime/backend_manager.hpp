@@ -23,7 +23,7 @@
 #include <unordered_map>
 #include <vector>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #define DL_HANDLE HMODULE
 #else

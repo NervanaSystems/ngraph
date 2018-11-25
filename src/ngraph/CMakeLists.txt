@@ -196,6 +196,7 @@ endif()
 add_subdirectory(codegen)
 add_subdirectory(runtime)
 
+message(STATUS "****************************** ${CMAKE_SHARED_LIBRARY_SUFFIX}")
 target_compile_definitions(ngraph PRIVATE SHARED_LIB_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}")
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(ngraph PROPERTIES
@@ -242,7 +243,7 @@ endif()
 
 # nGraph
 install(FILES ${CMAKE_BINARY_DIR}/VERSION DESTINATION ${CMAKE_INSTALL_PREFIX})
-install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph.so
+install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph"

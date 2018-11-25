@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #else
 #include <dlfcn.h>
@@ -30,7 +30,7 @@
 using namespace std;
 using namespace ngraph;
 
-#ifdef WIN32
+#ifdef _WIN32
 #define CLOSE_LIBRARY(a) FreeLibrary(a)
 #define DLSYM(a, b) GetProcAddress(a, b)
 #else
@@ -91,7 +91,10 @@ unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         if (!handle)
         {
             stringstream ss;
-            ss << "Backend '" << type << "' not registered. Error:" << dlerror();
+			ss << "Backend '" << type << "' not registered. Error:";
+#ifndef _WIN32
+			ss << dlerror();
+#endif
             throw runtime_error(ss.str());
         }
         function<const char*()> get_ngraph_version_string =
@@ -119,7 +122,7 @@ unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
 // This doodad finds the full path of the containing shared library
 static string find_my_file()
 {
-#ifdef WIN32
+#ifdef _WIN32
     return ".";
 #else
     Dl_info dl_info;
@@ -144,7 +147,7 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
     string library_name = "lib" + to_lower(type) + "_backend" + string(SHARED_LIB_EXT);
     string my_directory = file_util::get_directory(find_my_file());
     string library_path = file_util::path_join(my_directory, library_name);
-#ifdef WIN32
+#ifdef _WIN32
     handle = LoadLibrary(library_path.c_str());
 #else
     handle = dlopen(library_path.c_str(), RTLD_NOW | RTLD_GLOBAL);

@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <algorithm>
-#include <algorithm>
 #include <cinttypes>
 #include <cmath>
 #include <cstdlib>
@@ -139,7 +138,7 @@ NGRAPH_TEST(${BACKEND_NAME}, aliased_output)
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = A + B;
     auto D = A * B;
-    auto E = op::Constant::create(element::f32, shape, {1, 2, 3, 4});
+    auto E = op::Constant::create<float>(element::f32, shape, {1, 2, 3, 4});
     auto f = make_shared<Function>(NodeVector{C, C, D, D, C, E, E}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -3230,8 +3229,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_2d_to_scalar_int32)
     auto result = backend->create_tensor(element::i32, shape_rt);
 
     backend->call_with_validate(f, {result}, {a});
-    EXPECT_TRUE(test::all_close(vector<int32_t>{1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9},
-                                read_vector<int32_t>(result)));
+    EXPECT_EQ(vector<int32_t>{1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9}, read_vector<int32_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_to_scalar_int32)
@@ -6090,7 +6088,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop)
 
     auto func = std::make_shared<Function>(dx, ParameterVector{g, b, input, delta});
     auto results = execute(func, args, "${BACKEND_NAME}");
-    EXPECT_TRUE(test::all_close_f(std::vector<float>{350.957, -388.67}, results.at(0)));
+    EXPECT_TRUE(test::all_close_f(std::vector<float>{350.957f, -388.67f}, results.at(0)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop_2step)
@@ -6134,7 +6132,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop_2step)
 
     auto func = std::make_shared<Function>(dx, ParameterVector{g, b, bn_output, m, v, delta});
     results = execute(func, args, "${BACKEND_NAME}");
-    EXPECT_TRUE(test::all_close_f(std::vector<float>{350.957, -388.67}, results.at(0)));
+    EXPECT_TRUE(test::all_close_f(std::vector<float>{350.957f, -388.67f}, results.at(0)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar)

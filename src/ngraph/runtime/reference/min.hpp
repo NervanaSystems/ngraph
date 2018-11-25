@@ -22,7 +22,7 @@
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/shape_util.hpp"
 
-#ifdef WIN32
+#ifdef _WIN32
 #undef min
 #endif
 
