@@ -11,7 +11,7 @@ TensorFlow
 ==========
 
 .. csv-table::
-   :header: "TensorFlow Workloads", "Type"
+   :header: "TensorFlow Workload", "Type"
    :widths: 27, 53
    :escape: ~
 
@@ -37,12 +37,12 @@ MXNet
 =====
 
 .. csv-table::
-   :header: "MXNet Workloads", "Type"
+   :header: "MXNet Workload", "Type"
    :widths: 27, 53
    :escape: ~
 
    Resnet50 v1 and v2, Image recognition
-   DenseNet (121, 161, 169, 201), Image recognition
+   DenseNet-121, Image recognition
    InceptionV3, Image recognition
    InceptionV4, Image recognition
    Inception-ResNetv2, Image recognition
@@ -66,7 +66,7 @@ Additionally, we validated the following workloads are functional through nGraph
 
 
 .. csv-table::
-   :header: "Workload", "Type"
+   :header: "ONNX Workload", "Type"
    :widths: 27, 53
    :escape: ~
 
