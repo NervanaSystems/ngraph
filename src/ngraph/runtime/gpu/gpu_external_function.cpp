@@ -183,9 +183,13 @@ std::string runtime::gpu::GPU_ExternalFunction::add_to_runtime(size_t primitive_
                                                                const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
     codegen::CodeWriter writer;
-    writer << "void* input[] = {" << node_names(args) << "};\n";
-    writer << "void* output[] = {" << node_names(out) << "};\n";
-    writer << "gpu::invoke_primitive(ctx, " << primitive_index << ", input, output);\n";
+    writer.block_begin();
+    {
+        writer << "void* input[] = {" << node_names(args) << "};\n";
+        writer << "void* output[] = {" << node_names(out) << "};\n";
+        writer << "gpu::invoke_primitive(ctx, " << primitive_index << ", input, output);\n";
+        writer.block_end();
+    }
     return writer.get_code();
 }
 
@@ -195,9 +199,13 @@ std::string runtime::gpu::GPU_ExternalFunction::add_call_to_runtime(const std::s
                                                                     const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
     codegen::CodeWriter writer;
-    writer << "void* input[] = {" << node_names(args) << "};\n";
-    writer << "void* output[] = {" << node_names(out) << "};\n";
-    writer << callee << "(input, output, ctx);\n";
+    writer.block_begin();
+    {
+        writer << "void* input[] = {" << node_names(args) << "};\n";
+        writer << "void* output[] = {" << node_names(out) << "};\n";
+        writer << callee << "(input, output, ctx);\n";
+    }
+    writer.block_end();
     return writer.get_code();
 }
 
