@@ -283,57 +283,265 @@ NGRAPH_TEST(${BACKEND_NAME}, multiple_result)
     EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(r1));
 }
 
+template <typename T>
+class BatchNormInferenceTester
+{
+public:
+    BatchNormInferenceTester(const std::unique_ptr<ngraph::runtime::Backend>& backend,
+                             const Shape& input_shape,
+                             element::Type etype,
+                             double epsilon)
+        : m_backend(backend)
+    {
+        Shape channel_shape{input_shape.at(1)};
+
+        auto Input = make_shared<op::Parameter>(etype, input_shape);
+        auto Gamma = make_shared<op::Parameter>(etype, channel_shape);
+        auto Beta = make_shared<op::Parameter>(etype, channel_shape);
+        auto Mean = make_shared<op::Parameter>(etype, channel_shape);
+        auto Variance = make_shared<op::Parameter>(etype, channel_shape);
+        auto BN = make_shared<op::BatchNormInference>(Input, Gamma, Beta, Mean, Variance, epsilon);
+        m_function = make_shared<Function>(BN, ParameterVector{Input, Gamma, Beta, Mean, Variance});
+
+        m_input = backend->create_tensor(etype, input_shape);
+        m_gamma = backend->create_tensor(etype, channel_shape);
+        m_beta = backend->create_tensor(etype, channel_shape);
+        m_mean = backend->create_tensor(etype, channel_shape);
+        m_variance = backend->create_tensor(etype, channel_shape);
+        m_result = backend->create_tensor(etype, input_shape);
+    }
+
+    bool call(const std::vector<T>& input,
+              const std::vector<T>& gamma,
+              const std::vector<T>& beta,
+              const std::vector<T>& mean,
+              const std::vector<T>& variance,
+              const std::vector<T>& result)
+    {
+        copy_data(m_input, input);
+        copy_data(m_gamma, gamma);
+        copy_data(m_beta, beta);
+        copy_data(m_mean, mean);
+        copy_data(m_variance, variance);
+        m_backend->call_with_validate(
+            m_function, {m_result}, {m_input, m_gamma, m_beta, m_mean, m_variance});
+        auto res = read_vector<T>(m_result);
+        return test::all_close(result, res);
+    }
+
+protected:
+    const std::unique_ptr<ngraph::runtime::Backend>& m_backend;
+    std::shared_ptr<Function> m_function;
+    std::shared_ptr<ngraph::runtime::Tensor> m_input;
+    std::shared_ptr<ngraph::runtime::Tensor> m_gamma;
+    std::shared_ptr<ngraph::runtime::Tensor> m_beta;
+    std::shared_ptr<ngraph::runtime::Tensor> m_mean;
+    std::shared_ptr<ngraph::runtime::Tensor> m_variance;
+    std::shared_ptr<ngraph::runtime::Tensor> m_result;
+};
+
+template <typename T>
+class BatchNormInferenceTesterZeroEpsilon : public BatchNormInferenceTester<T>
+{
+public:
+    // These are for documentation purposes only below
+    using Input = test::NDArray<T, 2>;
+    using Gamma = test::NDArray<T, 1>;
+    using Beta = test::NDArray<T, 1>;
+    using Mean = test::NDArray<T, 1>;
+    using Variance = test::NDArray<T, 1>;
+    using Result = test::NDArray<T, 2>;
+
+    BatchNormInferenceTesterZeroEpsilon(const std::unique_ptr<ngraph::runtime::Backend>& backend,
+                                        element::Type etype)
+        : BatchNormInferenceTester<T>(backend, Shape{2, 3}, etype, 0.0)
+    {
+    }
+
+    bool test(const Input& input,
+              const Gamma& gamma,
+              const Beta& beta,
+              const Mean& mean,
+              const Variance& variance,
+              const Result& result)
+    {
+        return BatchNormInferenceTester<T>::call(input.get_vector(),
+                                                 gamma.get_vector(),
+                                                 beta.get_vector(),
+                                                 mean.get_vector(),
+                                                 variance.get_vector(),
+                                                 result.get_vector());
+    }
+
+    bool test_gamma()
+    {
+        return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
+                    Gamma{2.0, 3.0, 4.0},
+                    Beta{0.0, 0.0, 0.0},
+                    Mean{0.0, 0.0, 0.0},
+                    Variance{1.0, 1.0, 1.0},
+                    Result{{2.0, 6.0, 12.0}, {-2.0, -6.0, -12.0}});
+    }
+
+    bool test_beta()
+    {
+        return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
+                    Gamma{1.0, 1.0, 1.0},
+                    Beta{2.0, -2.0, 3.0},
+                    Mean{0.0, 0.0, 0.0},
+                    Variance{1.0, 1.0, 1.0},
+                    Result{{3.0, 0.0, 6.0}, {1.0, -4.0, 0.0}});
+    }
+
+    bool test_mean()
+    {
+        return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
+                    Gamma{1.0, 1.0, 1.0},
+                    Beta{0.0, 0.0, 0.0},
+                    Mean{-2.0, 2.0, -3.0},
+                    Variance{1.0, 1.0, 1.0},
+                    Result{{3.0, 0.0, 6.0}, {1.0, -4.0, 0.0}});
+    }
+
+    bool test_variance()
+    {
+        return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
+                    Gamma{1.0, 1.0, 1.0},
+                    Beta{0.0, 0.0, 0.0},
+                    Mean{0.0, 0.0, 0.0},
+                    Variance{0.25, .0625, 4.0},
+                    Result{{2.0, 8.0, 1.5}, {-2.0, -8.0, -1.5}});
+    }
+};
+
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_0eps_f64)
+{
+    using T = double;
+    auto& et = element::f64;
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    BatchNormInferenceTesterZeroEpsilon<T> bnt(backend, et);
+    EXPECT_TRUE(bnt.test_gamma()) << "Gamma test";
+    EXPECT_TRUE(bnt.test_beta()) << "Beta test";
+    EXPECT_TRUE(bnt.test_mean()) << "Mean test";
+    EXPECT_TRUE(bnt.test_variance()) << "Variance test";
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_0_eps_f32)
+{
+    using T = float;
+    auto& et = element::f32;
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    BatchNormInferenceTesterZeroEpsilon<T> bnt(backend, et);
+    EXPECT_TRUE(bnt.test_gamma()) << "Gamma test";
+    EXPECT_TRUE(bnt.test_beta()) << "Beta test";
+    EXPECT_TRUE(bnt.test_mean()) << "Mean test";
+    EXPECT_TRUE(bnt.test_variance()) << "Variance test";
+}
+
+template <typename T>
+class BatchNormInferenceTesterNonZeroEpsilon : public BatchNormInferenceTester<T>
+{
+public:
+    // These are for documentation purposes only below
+    using Input = test::NDArray<T, 2>;
+    using Gamma = test::NDArray<T, 1>;
+    using Beta = test::NDArray<T, 1>;
+    using Mean = test::NDArray<T, 1>;
+    using Variance = test::NDArray<T, 1>;
+    using Result = test::NDArray<T, 2>;
+
+    BatchNormInferenceTesterNonZeroEpsilon(const std::unique_ptr<ngraph::runtime::Backend>& backend,
+                                           element::Type etype)
+        : BatchNormInferenceTester<T>(backend, Shape{2, 3}, etype, 0.25)
+    {
+    }
+
+    bool test(const Input& input,
+              const Gamma& gamma,
+              const Beta& beta,
+              const Mean& mean,
+              const Variance& variance,
+              const Result& result)
+    {
+        return BatchNormInferenceTester<T>::call(input.get_vector(),
+                                                 gamma.get_vector(),
+                                                 beta.get_vector(),
+                                                 mean.get_vector(),
+                                                 variance.get_vector(),
+                                                 result.get_vector());
+    }
+
+    bool test_gamma()
+    {
+        return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
+                    Gamma{2.0, 3.0, 4.0},
+                    Beta{0.0, 0.0, 0.0},
+                    Mean{0.0, 0.0, 0.0},
+                    Variance{0.75, 0.75, 0.75},
+                    Result{{2.0, 6.0, 12.0}, {-2.0, -6.0, -12.0}});
+    }
+
+    bool test_beta()
+    {
+        return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
+                    Gamma{1.0, 1.0, 1.0},
+                    Beta{2.0, -2.0, 3.0},
+                    Mean{0.0, 0.0, 0.0},
+                    Variance{0.75, 0.75, 0.75},
+                    Result{{3.0, 0.0, 6.0}, {1.0, -4.0, 0.0}});
+    }
+
+    bool test_mean()
+    {
+        return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
+                    Gamma{1.0, 1.0, 1.0},
+                    Beta{0.0, 0.0, 0.0},
+                    Mean{-2.0, 2.0, -3.0},
+                    Variance{0.75, 0.75, 0.75},
+                    Result{{3.0, 0.0, 6.0}, {1.0, -4.0, 0.0}});
+    }
+
+    bool test_variance()
+    {
+        return test(Input{{3.0, 5.0, 1.0}, {-3.0, -5.0, -1.0}},
+                    Gamma{1.0, 1.0, 1.0},
+                    Beta{0.0, 0.0, 0.0},
+                    Mean{0.0, 0.0, 0.0},
+                    Variance{2.0, 6.0, 0.0},
+                    Result{{2.0, 2.0, 2.0}, {-2.0, -2.0, -2.0}});
+    }
+};
+
 NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_f64)
 {
-    size_t N = 2;
-    size_t C = 3;
-    Shape shape_in{N, C};
-    Shape shape_channels{C};
-    double epsilon = 0.0;
-    auto& etype = element::f64;
-
-    auto A = make_shared<op::Parameter>(etype, shape_in);
-    auto Gamma = make_shared<op::Parameter>(etype, shape_channels);
-    auto Beta = make_shared<op::Parameter>(etype, shape_channels);
-    auto Mean = make_shared<op::Parameter>(etype, shape_channels);
-    auto Variance = make_shared<op::Parameter>(etype, shape_channels);
-
-    auto BN = make_shared<op::BatchNormInference>(A, Gamma, Beta, Mean, Variance, epsilon);
-    auto f = make_shared<Function>(BN, ParameterVector{A, Gamma, Beta, Mean, Variance});
-
+    using T = double;
+    auto& et = element::f64;
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    BatchNormInferenceTesterNonZeroEpsilon<T> bnt(backend, et);
+    EXPECT_TRUE(bnt.test_gamma()) << "Gamma test";
+    EXPECT_TRUE(bnt.test_beta()) << "Beta test";
+    EXPECT_TRUE(bnt.test_mean()) << "Mean test";
+    EXPECT_TRUE(bnt.test_variance()) << "Variance test";
+}
 
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(etype, shape_in);
-    auto gamma = backend->create_tensor(etype, shape_channels);
-    auto beta = backend->create_tensor(etype, shape_channels);
-    auto mean = backend->create_tensor(etype, shape_channels);
-    auto variance = backend->create_tensor(etype, shape_channels);
-    auto result = backend->create_tensor(etype, shape_in);
-
-    auto in_0 = test::NDArray<double, 2>({{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}});
-    auto gamma_0 = test::NDArray<double, 1>({2.0, 3.0, 4.0});
-    auto beta_0 = test::NDArray<double, 1>({0.0, 0.0, 0.0});
-    auto mean_0 = test::NDArray<double, 1>({0.0, 0.0, 0.0});
-    auto variance_0 = test::NDArray<double, 1>({1.0, 1.0, 1.0});
-    auto result_0 = test::NDArray<double, 2>({{2.0, 6.0, 12.0}, {-2.0, -6.0, -12.0}});
-
-    copy_data(a, in_0.get_vector());
-    copy_data(gamma, gamma_0.get_vector());
-    copy_data(beta, beta_0.get_vector());
-    copy_data(mean, mean_0.get_vector());
-    copy_data(variance, variance_0.get_vector());
-
-    backend->call_with_validate(f, {result}, {a, gamma, beta, mean, variance});
-    EXPECT_TRUE(test::all_close(result_0.get_vector(), read_vector<double>(result)));
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_f32)
+{
+    using T = float;
+    auto& et = element::f32;
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    BatchNormInferenceTesterNonZeroEpsilon<T> bnt(backend, et);
+    EXPECT_TRUE(bnt.test_gamma()) << "Gamma test";
+    EXPECT_TRUE(bnt.test_beta()) << "Beta test";
+    EXPECT_TRUE(bnt.test_mean()) << "Mean test";
+    EXPECT_TRUE(bnt.test_variance()) << "Variance test";
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, batch_norm_three_outputs)
 {
-    auto shape_in = Shape{2, 3};
+    auto input_shape = Shape{2, 3};
     auto shape_mean = Shape{3};
 
-    auto A = make_shared<op::Parameter>(element::f64, shape_in);
+    auto A = make_shared<op::Parameter>(element::f64, input_shape);
     auto Beta =
         op::Constant::create(element::f64, shape_mean, {2.14211921, -0.75733924, 0.42210531});
     auto Gamma =
@@ -348,12 +556,12 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_three_outputs)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f64, shape_in);
+    auto a = backend->create_tensor(element::f64, input_shape);
     copy_data(
         a,
         vector<double>{-1.97431703, -2.06521307, 0.54122217, 2.53375939, -0.22342691, 0.45340773});
 
-    auto result0 = backend->create_tensor(element::f64, shape_in);
+    auto result0 = backend->create_tensor(element::f64, input_shape);
     vector<double> expected_result0{
         0.3879149, -1.13662076, 1.34494817, 3.89632344, -0.37805778, -0.50073695};
 
