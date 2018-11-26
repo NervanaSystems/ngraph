@@ -695,7 +695,14 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
         case OP_TYPEID::MaxPoolBackprop:
         {
-            arguments_check(op, 2, 1);
+            if (op->get_input_size() == 3)
+            {
+                arguments_check(op, 3, 1);
+            }
+            else
+            {
+                arguments_check(op, 2, 1);
+            }
 
             const shared_ptr<op::MaxPoolBackprop> max_pool_b =
                 static_pointer_cast<op::MaxPoolBackprop>(op);

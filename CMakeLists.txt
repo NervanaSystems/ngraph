@@ -16,6 +16,10 @@
 
 cmake_minimum_required (VERSION 3.1)
 
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+    message(FATAL_ERROR "In-source builds are not allowed.")
+endif()
+
 include(cmake/Modules/git_tags.cmake)
 
 NGRAPH_GET_VERSION_LABEL()
@@ -74,14 +78,6 @@ if($ENV{NGRAPH_USE_PREBUILT_LLVM})
     set(NGRAPH_USE_PREBUILT_LLVM TRUE)
 endif()
 
-if (DEFINED NGRAPH_USE_CXX_ABI AND NGRAPH_USE_PREBUILT_LLVM)
-    message(FATAL_ERROR "Unable to use NGRAPH_USE_PREBUILT_LLVM with NGRAPH_USE_CXX_ABI")
-endif()
-
-# These variables are undocumented but useful.
-set(CMAKE_DISABLE_SOURCE_CHANGES ON)
-set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-
 # Create compilation database compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -103,6 +99,7 @@ option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
+option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 
 message(STATUS "NGRAPH_UNIT_TEST_ENABLE:      ${NGRAPH_UNIT_TEST_ENABLE}")
 message(STATUS "NGRAPH_TOOLS_ENABLE:          ${NGRAPH_TOOLS_ENABLE}")
@@ -117,6 +114,8 @@ message(STATUS "NGRAPH_DEBUG_ENABLE:          ${NGRAPH_DEBUG_ENABLE}")
 message(STATUS "NGRAPH_ONNX_IMPORT_ENABLE:    ${NGRAPH_ONNX_IMPORT_ENABLE}")
 message(STATUS "NGRAPH_DEX_ONLY:              ${NGRAPH_DEX_ONLY}")
 message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:  ${NGRAPH_CODE_COVERAGE_ENABLE}")
+message(STATUS "NGRAPH_LIB_VERSIONING_ENABLE: ${NGRAPH_LIB_VERSIONING_ENABLE}")
+message(STATUS "NGRAPH_PYTHON_BUILD_ENABLE:   ${NGRAPH_PYTHON_BUILD_ENABLE}")
 
 if (NGRAPH_HYBRID_ENABLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_HYBRID_ENABLE")
@@ -168,6 +167,8 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     include( cmake/clang_4_0_flags.cmake )
 endif()
 
+include(cmake/sdl.cmake)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -201,24 +202,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=${NGRAPH_TARGET_ARCH}")
 
 if (DEFINED NGRAPH_TUNE_ARCH)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=${NGRAPH_TUNE_ARCH}")
-endif()
-
-# flags required for SDL-3
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -fPIE -D_FORTIFY_SOURCE=2")
-if (NOT WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wformat -Wformat-security")
-endif()
-if (NOT APPLE)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -z noexecstack")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -z relro -z now")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pie")
-endif()
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector")
-    else()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector-strong")
-    endif()
 endif()
 
 if (NGRAPH_USE_GOLD)
@@ -283,6 +266,7 @@ include(cmake/external_gtest.cmake)
 include(cmake/external_json.cmake)
 include(cmake/external_eigen.cmake)
 include(cmake/external_mkldnn.cmake)
+include(cmake/external_cldnn.cmake)
 
 if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
     include(cmake/external_llvm_prebuilt.cmake)
@@ -301,6 +285,8 @@ endif()
 
 add_definitions(-DPROJECT_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
+message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")
+message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 add_subdirectory(src)
 
 if (NGRAPH_UNIT_TEST_ENABLE)
@@ -315,3 +301,6 @@ if (NGRAPH_DOC_BUILD_ENABLE)
     add_subdirectory(doc)
 endif()
 
+if (NGRAPH_PYTHON_BUILD_ENABLE)
+    add_subdirectory(python)
+endif()

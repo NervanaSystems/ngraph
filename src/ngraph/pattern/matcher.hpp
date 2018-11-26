@@ -23,6 +23,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/pattern/op/any.hpp"
+#include "ngraph/pattern/op/any_of.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 
@@ -163,6 +164,9 @@ namespace ngraph
             bool match_any(const std::shared_ptr<op::Any>& pattern_node,
                            const std::shared_ptr<Node>& graph_node,
                            PatternMap& pattern_map);
+            bool match_any_of(const std::shared_ptr<op::AnyOf>& pattern_node,
+                              const std::shared_ptr<Node>& graph_node,
+                              PatternMap& pattern_map);
 
             graph_rewrite_callback m_callback;
             size_t m_depth;
