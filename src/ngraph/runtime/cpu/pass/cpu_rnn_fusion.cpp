@@ -821,3 +821,14 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         rnn_goe0_label, src_layer_label, empty_correlated_matches, callback);
     this->add_matcher(m);
 }
+
+void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
+{
+    auto rnn_left_to_right = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{400, 100}, pattern::has_class<op::Rnn>());
+    auto rnn_left_to_right_goe0 = std::make_shared<op::GetOutputElement>(rnn_left_to_right, 0);
+
+    auto rnn_right_to_left = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{400, 100}, pattern::has_class<op::Rnn>());
+    auto rnn_right_to_left_goe0 = std::make_shared<op::GetOutputElement>(rnn_right_to_left, 0);
+}
