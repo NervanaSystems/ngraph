@@ -266,7 +266,7 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPool(EMIT_ARGS)
             : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
 
         index = cudnn_emitter->build_pooling(cudnn_avg_type,
-                                             out[0].get_type(),
+                                             out[0].get_element_type(),
                                              CUDNNEmitter::Prop::Forward,
                                              input_shape,
                                              result_shape,
@@ -298,7 +298,7 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
             : CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING;
 
         auto index = cudnn_emitter->build_pooling(cudnn_avg_type,
-                                                  out[0].get_type(),
+                                                  out[0].get_element_type(),
                                                   CUDNNEmitter::Prop::Backward,
                                                   output_shape,
                                                   delta_shape,
@@ -973,7 +973,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
         }
     }
 
-    return compiled_function->add_to_runtime(index, function_name, args, out);
+    return compiled_function->add_to_runtime(prod_index, function_name, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Quantize(EMIT_ARGS)
@@ -1524,11 +1524,11 @@ std::string runtime::gpu::GPU_Emitter::emit_Sum(EMIT_ARGS)
 {
     if ((args[0].get_element_type() == element::i32) || (args[0].get_element_type() == element::i8))
     {
-        runtime::gpu::GPU_Emitter::emit_Sum_0(compiled_function, writer, node, args, out);
+        return runtime::gpu::GPU_Emitter::emit_Sum_0(compiled_function, function_name, node, args, out);
     }
     else
     {
-        runtime::gpu::GPU_Emitter::emit_Sum_1(compiled_function, writer, node, args, out);
+        return runtime::gpu::GPU_Emitter::emit_Sum_1(compiled_function, function_name, node, args, out);
     }
 }
 
@@ -1539,7 +1539,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Sum_0(EMIT_ARGS)
    to fail */
 {
     const ngraph::op::Sum* sum = static_cast<const ngraph::op::Sum*>(node);
-    if (out[0].get_size() != 0)
+    if (out[0].get_size() == 0)
     {
         return "";
     }
@@ -1577,7 +1577,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Sum_1(EMIT_ARGS)
     const ngraph::op::Sum* sum = static_cast<const ngraph::op::Sum*>(node);
     std::vector<element::Type> dtypes{args[0].get_element_type(), out[0].get_element_type()};
     cudnnReduceTensorOp_t reduce_op = CUDNN_REDUCE_TENSOR_ADD;
-    if (out[0].get_size() != 0)
+    if (out[0].get_size() == 0)
     {
         return "";
     }
