@@ -184,14 +184,14 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
             // else
              if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
             {
-                auto result_tv = map_node_to_tensor_view.at(parameter_node);
-                auto s = result_tv->get_element_count();
-                vector<int64_t> parameter_vetor(s);
-                result_tv->read(parameter_vetor.data(), 0, parameter_vetor.size() * sizeof(int64_t));
-                std::cout << "tensor values " << std::endl; 
-                for (auto value : parameter_vetor)
-                    std::cout << value << ", "; 
-                std::cout << std::endl; 
+                // auto result_tv = map_node_to_tensor_view.at(parameter_node);
+                // auto s = result_tv->get_element_count();
+                // vector<int64_t> parameter_vetor(s);
+                // result_tv->read(parameter_vetor.data(), 0, parameter_vetor.size() * sizeof(int64_t));
+                // std::cout << "tensor values " << std::endl; 
+                // for (auto value : parameter_vetor)
+                //     std::cout << value << ", "; 
+                // std::cout << std::endl; 
 
                 NGRAPH_INFO << " no new creation of parameter node " ;
                 parameter_tvs.push_back(map_node_to_tensor_view.at(parameter_node));

@@ -268,7 +268,10 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& node) const
     {
         rc = false;
     }
-    
+    else if (node.description() == "BatchNormInference")
+    {
+        rc = false;
+    }
 
     return rc;
 }
