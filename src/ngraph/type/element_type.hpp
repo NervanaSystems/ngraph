@@ -85,7 +85,6 @@ namespace ngraph
                  bool is_signed,
                  bool is_quantized,
                  const std::string& cname);
-            // Type& operator=(const Type&);
             virtual ~Type() {}
             Type_t get_type_enum() const { return m_type; }
             const std::string& c_type_string() const;

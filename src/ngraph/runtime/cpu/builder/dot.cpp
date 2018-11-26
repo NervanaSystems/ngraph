@@ -1,3 +1,4 @@
+cmake../ ngraph - DNGRAPH_CPU_ENABLE = FALSE cmake-- build.--target nbench-- config Release
 //*****************************************************************************
 // Copyright 2017-2018 Intel Corporation
 //
@@ -22,7 +23,7 @@
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/kernel/dot.hpp"
 
-using namespace std;
+                                       using namespace std;
 using namespace ngraph;
 
 namespace ngraph
