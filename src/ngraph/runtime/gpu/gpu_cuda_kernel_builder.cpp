@@ -901,6 +901,8 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_op(codegen::CodeWriter& writ
 //     writer.block_end();
 //     return;
 // }
+#define SKIP_BLOCK 128 
+#define USE_RAND
 
 void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeWriter& writer,
                                                                   const std::string& name,
@@ -917,6 +919,15 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
         writer << "extern __shared__ " << data_type << " sdata[];\n";
         writer << "uint32_t non_reduce_idx = blockIdx.x;\n";
         writer << "uint32_t blocksize = blockDim.x;\n";
+        writer << "uint32_t tid = threadIdx.x;\n";
+#ifdef USE_RAND
+        writer << "uint64_t rand_num = tid;\n";
+        writer << "uint32_t rand_num_32;\n";
+        writer << "uint64_t a = 16807;\n";
+        writer << "uint64_t b = 2147483647;\n";
+        writer << "uint32_t c = " << SKIP_BLOCK - 1 << ";\n"; //only work for 2^n
+#endif
+        writer << "uint32_t skip_step = " << SKIP_BLOCK << " * blocksize;\n";
         writer << "uint32_t max_data_count = shared_data_count - blocksize;\n";
         writer << "uint32_t count = max_data_count < reduce_count ? max_data_count : reduce_count;\n";
         writer << data_type << " gamma = in0[non_reduce_idx];\n";
@@ -931,7 +942,6 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
                                                "non_reduce_input_index",
                                                non_reduce_rank,
                                                true);
-        writer << "uint32_t tid = threadIdx.x;\n";
         writer << "uint32_t reduce_idx = tid;\n";
         writer << data_type << " r_sum = 0;\n";
         writer << data_type << " input_i;\n";
@@ -939,6 +949,12 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
         writer << "while (reduce_idx < count)\n";
         writer.block_begin();
         {
+#ifdef USE_RAND
+            writer << "rand_num = (a * rand_num) & b;\n";
+            writer << "rand_num_32 = static_cast<uint32_t>(rand_num) & c;\n";
+            writer << "if(rand_num_32 == 0)\n";
+            writer.block_begin();
+#endif
             collective_coordinate_transform_helper(writer,
                                                    "reduce_idx",
                                                    "reduce_strides",
@@ -953,12 +969,23 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
             writer << "input_i = in2[input_idx];\n";
             writer << "sdata[blocksize + reduce_idx] = input_i;\n";
             writer << "r_sum += input_i;\n";
+#ifdef USE_RAND
+            writer.block_end();
             writer << "reduce_idx += blocksize;\n";
+#else
+            writer << "reduce_idx += skip_step;\n";
+#endif
         }
         writer.block_end();
         writer << "while (reduce_idx < reduce_count)\n";
         writer.block_begin();
         {
+#ifdef USE_RAND
+            writer << "rand_num = (a * rand_num) & b;\n";
+            writer << "rand_num_32 = static_cast<uint32_t>(rand_num) & c;\n";
+            writer << "if(rand_num_32 == 0)\n";
+            writer.block_begin();
+#endif
             collective_coordinate_transform_helper(writer,
                                                    "reduce_idx",
                                                    "reduce_strides",
@@ -972,7 +999,12 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
             writer << "uint32_t input_idx = reduce_input_index + non_reduce_input_index;\n";
             writer << "input_i = in2[input_idx];\n";
             writer << "r_sum += input_i;\n";
+#ifdef USE_RAND
+            writer.block_end();
             writer << "reduce_idx += blocksize;\n";
+#else
+            writer << "reduce_idx += skip_step;\n";
+#endif
         }
         writer.block_end();
         //reduction sum
@@ -1034,18 +1066,39 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
         writer << "r_sum = 0;\n";
         writer << "reduce_idx = tid;\n";
 
+#ifdef USE_RAND
+        //reset init so it will use same idx for var as mean 
+        writer << "rand_num = tid;\n";
+#endif
         writer << "while (reduce_idx < count)\n";
         writer.block_begin();
         {
+#ifdef USE_RAND
+            writer << "rand_num = (a * rand_num) & b;\n";
+            writer << "rand_num_32 = static_cast<uint32_t>(rand_num) & c;\n";
+            writer << "if(rand_num_32 == 0)\n";
+            writer.block_begin();
+#endif
             writer << "input_i = sdata[blocksize + reduce_idx] - r_mean;\n";
             writer << "input_i = input_i * input_i;\n";
             writer << "r_sum += input_i;\n";
+#ifdef USE_RAND
+            writer.block_end();
             writer << "reduce_idx += blocksize;\n";
+#else
+            writer << "reduce_idx += skip_step;\n";
+#endif
         }
         writer.block_end();
         writer << "while (reduce_idx < reduce_count)\n";
         writer.block_begin();
         {
+#ifdef USE_RAND
+            writer << "rand_num = (a * rand_num) & b;\n";
+            writer << "rand_num_32 = static_cast<uint32_t>(rand_num) & c;\n";
+            writer << "if(rand_num_32 == 0)\n";
+            writer.block_begin();
+#endif
             collective_coordinate_transform_helper(writer,
                                                    "reduce_idx",
                                                    "reduce_strides",
@@ -1061,7 +1114,12 @@ void runtime::gpu::CudaKernelBuilder::get_batchnorm_with_stats_op(codegen::CodeW
             writer << "input_i = in2[input_idx] - r_mean;\n";
             writer << "input_i = input_i * input_i;\n";
             writer << "r_sum += input_i;\n";
+#ifdef USE_RAND
+            writer.block_end();
             writer << "reduce_idx += blocksize;\n";
+#else
+            writer << "reduce_idx += skip_step;\n";
+#endif
         }
         writer.block_end();
 
