@@ -42,56 +42,13 @@ namespace ngraph
                 using op_order_t =
                     std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>;
 
-                GPURuntimeConstructor(const op_order_t& ordered_ops)
-                {
-                    for (auto const& ops : ordered_ops)
-                    {
-                        m_runtime[ops.first->get_name()].reserve(ops.second.size());
-                    }
-                }
-
-                void add(const std::string& name, const op_runtime_t& step)
-                {
-                    m_runtime[name].push_back(step);
-                }
-
+                GPURuntimeConstructor(const op_order_t& ordered_ops);
+                void add(const std::string& name, const op_runtime_t& step);
                 void add_call(const std::string& caller,
                               const std::string& callee,
                               const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                              const std::vector<runtime::gpu::GPUTensorWrapper>& out)
-                {
-                    auto& runtime = m_runtime[callee];
-                    auto call = [args, out, &runtime](GPUCallFrame& caller_frame,
-                                                      GPURuntimeContext* ctx) mutable {
-                        // extract memory pointers from the callers stack
-                        auto inputs = caller_frame.get_tensor_io(args);
-                        auto outputs = caller_frame.get_tensor_io(out);
-                        // create a new call frame for the nested function
-                        GPUCallFrame callee_frame = caller_frame;
-                        // resolve the inputs of the new call frame
-                        callee_frame.resolve_inputs(inputs);
-                        callee_frame.resolve_outputs(outputs);
-                        for (auto const& step : runtime)
-                        {
-                            step(callee_frame, ctx);
-                        }
-                    };
-                    add(caller, call);
-                }
-
-                EntryPoint build(const std::string& function, GPUCallFrame& call_frame)
-                {
-                    auto& runtime = m_runtime.at(function);
-                    return [call_frame, &runtime](
-                        void** inputs, void** outputs, GPURuntimeContext* ctx) mutable {
-                        call_frame.resolve_inputs(inputs);
-                        call_frame.resolve_outputs(outputs);
-                        for (auto const& step : runtime)
-                        {
-                            step(call_frame, ctx);
-                        }
-                    };
-                }
+                              const std::vector<runtime::gpu::GPUTensorWrapper>& out);
+                EntryPoint build(const std::string& function, GPUCallFrame& call_frame);
 
             private:
                 std::unordered_map<std::string, std::vector<op_runtime_t>> m_runtime;

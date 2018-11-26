@@ -20,10 +20,7 @@
 #include <memory>
 #include <unordered_map>
 
-#include "ngraph/function.hpp"
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
-#include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 
 namespace ngraph
@@ -37,97 +34,20 @@ namespace ngraph
             public:
                 using TensorType = GPUTensorWrapper::TensorType;
 
-                GPUCallFrame(const size_t& num_inputs, const size_t& num_outputs)
-                    : m_inputs(num_inputs, nullptr)
-                    , m_outputs(num_outputs, nullptr)
-                {
-                }
-
+                GPUCallFrame(const size_t& num_inputs, const size_t& num_outputs);
                 void resolve_reservations(
                     const GPU_CompiledFunction* compiled_function,
-                    const std::unordered_map<std::string, size_t>& memory_reservations)
-                {
-                    auto& mem_primitives =
-                        compiled_function->get_primitive_emitter()->get_memory_primitives();
-                    for (auto const& p : memory_reservations)
-                    {
-                        // mem_primitives may return pointers for constant or workspace reservations
-                        m_memory_reservations[p.first] =
-                            static_cast<unsigned char*>(mem_primitives.at(p.second)());
-                    }
-                }
-
-                void resolve_inputs(void** inputs)
-                {
-                    for (size_t i = 0; i < m_inputs.size(); i++)
-                    {
-                        void* input = inputs[i];
-                        m_inputs[i] = static_cast<unsigned char*>(input);
-                    }
-                }
-
-                void resolve_inputs(const std::vector<void*>& inputs)
-                {
-                    m_inputs.clear();
-                    m_inputs.resize(inputs.size(), nullptr);
-                    for (size_t i = 0; i < m_inputs.size(); i++)
-                    {
-                        void* input = inputs[i];
-                        m_inputs[i] = static_cast<unsigned char*>(input);
-                    }
-                }
-
-                void resolve_outputs(void** outputs)
-                {
-                    for (size_t i = 0; i < m_outputs.size(); i++)
-                    {
-                        void* output = outputs[i];
-                        m_outputs[i] = static_cast<unsigned char*>(output);
-                    }
-                }
-
-                void resolve_outputs(const std::vector<void*>& outputs)
-                {
-                    m_outputs.clear();
-                    m_outputs.resize(outputs.size(), nullptr);
-                    for (size_t i = 0; i < m_outputs.size(); i++)
-                    {
-                        void* output = outputs[i];
-                        m_outputs[i] = static_cast<unsigned char*>(output);
-                    }
-                }
-
-                // returns pointers of any GPUTensorWrapper::TensorType
-                std::vector<void*> get_tensor_io(const std::vector<GPUTensorWrapper>& tensors)
-                {
-                    std::vector<void*> ptrs;
-                    for (auto const& tensor : tensors)
-                    {
-                        auto offset = tensor.get_offset();
-                        auto ptr = get_pointer(offset.first, offset.second, tensor.get_name());
-                        ptrs.push_back(ptr);
-                    }
-                    return ptrs;
-                }
+                    const std::unordered_map<std::string, size_t>& memory_reservations);
+                void resolve_inputs(void** inputs);
+                void resolve_inputs(const std::vector<void*>& inputs);
+                void resolve_outputs(void** outputs);
+                void resolve_outputs(const std::vector<void*>& outputs);
+                std::vector<void*> get_tensor_io(const std::vector<GPUTensorWrapper>& tensors);
 
             private:
                 void* get_pointer(const TensorType& type,
                                   const size_t& offset,
-                                  const std::string& name = "")
-                {
-                    switch (type)
-                    {
-                    case TensorType::CONSTANT:
-                    case TensorType::INTERMEDIATE:
-                        return static_cast<void*>(m_memory_reservations.at(name) + offset);
-                    case TensorType::INPUT: return static_cast<void*>(m_inputs.at(offset));
-                    case TensorType::OUTPUT: return static_cast<void*>(m_outputs.at(offset));
-                    case TensorType::UNKNOWN:
-                    default:
-                        throw ngraph_error(
-                            "GPUCallFrame encountered unknown or uninitialized tensor type");
-                    };
-                }
+                                  const std::string& name = "");
 
                 std::unordered_map<std::string, unsigned char*> m_memory_reservations;
                 std::vector<unsigned char*> m_inputs;

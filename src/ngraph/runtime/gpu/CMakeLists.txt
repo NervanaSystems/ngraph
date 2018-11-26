@@ -24,6 +24,7 @@ set(SRC
     cublas_emitter.cpp
     host_emitter.cpp
     gpu_backend.cpp
+    gpu_call_frame.cpp
     gpu_cuda_context_manager.cpp
     gpu_cuda_function_builder.cpp
     gpu_cuda_function_pool.cpp
@@ -32,19 +33,20 @@ set(SRC
     gpu_compiled_function.cpp
     gpu_internal_function.cpp
     gpu_invoke.cpp
+    gpu_kernel_args.cpp
     gpu_kernel_emitters.cpp
     gpu_memory_manager.cpp
     gpu_primitive_emitter.cpp
+    gpu_runtime_constructor.cpp
     gpu_runtime_context.cpp
     gpu_tensor_wrapper.cpp
     gpu_tensor.cpp
     gpu_util.cpp
     type_info.cpp
-    pass/gpu_layout.cpp
-    pass/tensor_memory_reservation.cpp
-    gpu_kernel_args.cpp
-    pass/gpu_rnn_fusion.cpp
     pass/gpu_batch_norm_cache.cpp
+    pass/gpu_layout.cpp
+    pass/gpu_rnn_fusion.cpp
+    pass/tensor_memory_reservation.cpp
     op/batch_norm.cpp
     op/rnn.cpp
     )
