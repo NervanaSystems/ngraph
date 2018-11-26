@@ -78,11 +78,6 @@ unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         type = type.substr(0, colon);
     }
 
-    NGRAPH_INFO << type;
-#if _WIN32
-
-#endif
-
     auto registry = get_registry();
     auto it = registry.find(type);
     if (it != registry.end())
