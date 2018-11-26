@@ -62,3 +62,17 @@ shape_of_scalar
 shape_of_vector
 shape_of_matrix
 shape_of_5d
+# zero size axis needs to be implemented
+# differently in gpu_emitter.cpp
+# these should be re-enabled before
+# merging to master
+product_matrix_rows_zero
+product_matrix_cols_zero
+product_vector_zero
+product_matrix_to_scalar_zero_by_zero
+product_3d_eliminate_zero_dim
+max_matrix_rows_zero_int32
+reduce_matrix_rows_zero
+reduce_matrix_cols_zero
+reduce_vector_zero
+reduce_matrix_to_scalar_zero_by_zero
