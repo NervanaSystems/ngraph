@@ -1310,8 +1310,11 @@ namespace ngraph
                         }
                     }
 
-                    if (mkldnn_utils::is_mkldnn_padded_layout(md, squeezed_axis))
+                    if (mkldnn_utils::is_mkldnn_padded_layout(
+                            md, ngraph::get_default_order(input_shape)))
+                    {
                         return false;
+                    }
 
                     return true;
                 }
