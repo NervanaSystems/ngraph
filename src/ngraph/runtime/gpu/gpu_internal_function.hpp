@@ -59,8 +59,11 @@ namespace ngraph
                                                         const std::string& callee,
                                                         const std::vector<runtime::gpu::GPUTensorWrapper>& args,
                                                         const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
-                virtual void compile() override;
                 virtual void get_performance_data(std::vector<runtime::PerformanceCounter>& rc) const override;
+            protected:
+                virtual void compile_function() override;
+                virtual void add_passes(ngraph::pass::Manager& pass_manager) override;
+                virtual void emit() override;
             private:
 
                 void build_functions();

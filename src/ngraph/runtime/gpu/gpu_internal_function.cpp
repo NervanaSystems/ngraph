@@ -112,12 +112,6 @@
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
-#include "ngraph/runtime/gpu/op/batch_norm.hpp"
-#include "ngraph/runtime/gpu/op/rnn.hpp"
-#include "ngraph/runtime/gpu/pass/gpu_batch_norm_cache.hpp"
-#include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
-#include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
-#include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_constructor.hpp"
 #include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_invoke.hpp"
@@ -125,8 +119,6 @@
 
 using namespace std;
 using namespace ngraph;
-
-static std::mutex s_compilation;
 
 std::string runtime::gpu::GPU_InternalFunction::emit_op(GPU_CompiledFunction* compiled_function,
                                                         const std::string& function_name,
@@ -387,46 +379,12 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
     }
 }
 
-void runtime::gpu::GPU_InternalFunction::compile()
+void runtime::gpu::GPU_InternalFunction::add_passes(ngraph::pass::Manager& pass_manager)
 {
-    if (m_is_compiled)
-    {
-        return;
-    }
-    std::unique_lock<std::mutex> lock(s_compilation);
+}
 
-    m_function_name = m_function->get_name();
-
-    auto allocator = std::make_shared<runtime::gpu::GPUAllocator>(
-        m_shared_context->m_primitive_emitter->get_memory_allocator());
-
-    ngraph::pass::Manager pass_manager;
-#if CUDNN_VERSION >= 7200
-    // recurrent network fusion
-    pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<runtime::gpu::pass::MultiLayerRNNFusion>();
-#else
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-#endif
-    pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
-    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
-    pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
-    pass_manager.register_pass<ngraph::pass::Liveness>();
-    pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
-    pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(
-        *allocator, m_tensor_memory_buffers);
-    string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
-    pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
-    pass_manager.run_passes(m_function);
-
-    for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
-    {
-        m_function_ordered_ops.emplace(current_function, current_function->get_ordered_ops());
-    }
-
+void runtime::gpu::GPU_InternalFunction::emit()
+{
     m_runtime_constructor = runtime::gpu::make_unique<GPURuntimeConstructor>(m_function_ordered_ops);
 
     if (std::getenv("NGRAPH_GPU_TRACE"))
@@ -436,11 +394,10 @@ void runtime::gpu::GPU_InternalFunction::compile()
 
     // build and emit functions
     build_functions();
+}
 
-    // allocate device buffers for intermediates, primitive arguments, and workspace
-    allocator->close();
-    m_shared_context->m_primitive_emitter->allocate_primitive_memory();
-
+void runtime::gpu::GPU_InternalFunction::compile_function()
+{
     GPUCallFrame call_frame(m_function->get_parameters().size(), m_function->get_output_size());
 
     // resolve memory reservations (constants and intermediate buffers)

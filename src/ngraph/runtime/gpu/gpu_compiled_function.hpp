@@ -71,12 +71,17 @@ namespace ngraph
                                                         const std::string& callee,
                                                         const std::vector<runtime::gpu::GPUTensorWrapper>& args,
                                                         const std::vector<runtime::gpu::GPUTensorWrapper>& out) = 0;
-                virtual void compile() = 0;
+                void compile();
+
                 virtual void get_performance_data(std::vector<runtime::PerformanceCounter>& rc) const = 0;
 
                 static const size_t s_memory_pool_alignment;
                 static const std::string s_output_dir;
             protected:
+                virtual void compile_function() = 0;
+                virtual void add_passes(ngraph::pass::Manager& pass_manager) = 0;
+                virtual void emit() = 0;
+
                 EntryPoint m_runtime;
 
                 // For non-destructive passthrough kernels, propagate function

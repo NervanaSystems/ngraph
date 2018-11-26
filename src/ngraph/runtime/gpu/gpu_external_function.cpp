@@ -26,7 +26,6 @@
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/descriptor/input.hpp"
-#include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
@@ -103,26 +102,16 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
-#include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
-#include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
-#include "ngraph/runtime/gpu/op/batch_norm.hpp"
-#include "ngraph/runtime/gpu/op/rnn.hpp"
-#include "ngraph/runtime/gpu/pass/gpu_batch_norm_cache.hpp"
-#include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
-#include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
-#include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-static std::mutex s_compilation;
 
 static string emit_string_array(const vector<string>& s, size_t max_line_length)
 {
@@ -566,65 +555,28 @@ void runtime::gpu::GPU_ExternalFunction::store_emitted_functions(const string& c
     out.close();
 }
 
-void runtime::gpu::GPU_ExternalFunction::compile()
+void runtime::gpu::GPU_ExternalFunction::add_passes(ngraph::pass::Manager& pass_manager)
 {
-    if (m_is_compiled)
-    {
-        return;
-    }
-    std::unique_lock<std::mutex> lock(s_compilation);
-
-    m_function_name = m_function->get_name();
-
-    auto allocator = std::make_shared<runtime::gpu::GPUAllocator>(
-        m_shared_context->m_primitive_emitter->get_memory_allocator());
-
-    ngraph::pass::Manager pass_manager;
-#if CUDNN_VERSION >= 7200
-    // recurrent network fusion
-    pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<runtime::gpu::pass::MultiLayerRNNFusion>();
-#else
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-#endif
-    pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
-    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
-    pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
-    pass_manager.register_pass<ngraph::pass::Liveness>();
-    pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
-    pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(
-        *allocator, m_tensor_memory_buffers);
-    std::string common_function_string;
     auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
                          this,
                          placeholders::_1,
                          placeholders::_2);
     pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, m_node_function_map, common_function_string);
-    string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
-    pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
+}
 
-    pass_manager.run_passes(m_function);
-
-    for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
-    {
-        m_function_ordered_ops.emplace(current_function, current_function->get_ordered_ops());
-    }
-
+void runtime::gpu::GPU_ExternalFunction::emit()
+{
     emit_header();
     emit_timer_functions();
     emit_constant_declarations();
     emit_function_declarations();
-    m_writer << common_function_string << "\n";
+    m_writer << m_common_function_string << "\n";
     emit_functions();
+}
 
-    // allocate device buffers for primitive arguments and workspace
-    allocator->close();
-    m_shared_context->m_primitive_emitter->allocate_primitive_memory();
-
+void runtime::gpu::GPU_ExternalFunction::compile_function()
+{
     string code = m_writer.get_code();
     store_emitted_functions(code);
 
@@ -646,8 +598,6 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     {
         throw runtime_error("Function failed to compile");
     }
-
-    m_is_compiled = true;
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit_debug_function_entry(Node* node)

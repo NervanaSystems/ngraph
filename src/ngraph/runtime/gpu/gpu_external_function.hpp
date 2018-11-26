@@ -62,8 +62,11 @@ namespace ngraph
                                                         const std::string& callee,
                                                         const std::vector<runtime::gpu::GPUTensorWrapper>& args,
                                                         const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
-                virtual void compile() override;
                 virtual void get_performance_data(std::vector<runtime::PerformanceCounter>& rc) const override;
+            protected:
+                virtual void compile_function() override;
+                virtual void add_passes(ngraph::pass::Manager& pass_manager) override;
+                virtual void emit() override;
             private:
                 /// \brief Create a list of node names for each arg in args
                 /// \param args list of tensor arguments
@@ -98,6 +101,7 @@ namespace ngraph
                 virtual void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
                                                        std::string output_name) override;
                 codegen::CodeWriter m_writer;
+                std::string m_common_function_string;
                 std::unique_ptr<codegen::Compiler> m_compiler;
                 std::unique_ptr<codegen::ExecutionEngine> m_execution_engine;
                 std::map<std::string, size_t> m_name_index_map;
