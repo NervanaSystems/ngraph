@@ -78,6 +78,11 @@ unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         type = type.substr(0, colon);
     }
 
+    NGRAPH_INFO << type;
+#if _WIN32
+
+#endif
+
     auto registry = get_registry();
     auto it = registry.find(type);
     if (it != registry.end())
@@ -91,9 +96,9 @@ unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         if (!handle)
         {
             stringstream ss;
-			ss << "Backend '" << type << "' not registered. Error:";
+            ss << "Backend '" << type << "' not registered. Error:";
 #ifndef _WIN32
-			ss << dlerror();
+            ss << dlerror();
 #endif
             throw runtime_error(ss.str());
         }

@@ -15,7 +15,11 @@
 # ******************************************************************************
 
 if (NGRAPH_INTERPRETER_ENABLE)
-    add_library(interpreter_backend SHARED int_backend.cpp node_wrapper.cpp)
+    if(WIN32)
+        add_library(interpreter_backend STATIC int_backend.cpp node_wrapper.cpp)
+    else()
+        add_library(interpreter_backend SHARED int_backend.cpp node_wrapper.cpp)
+    endif()
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(interpreter_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}

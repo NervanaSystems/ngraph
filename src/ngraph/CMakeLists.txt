@@ -172,7 +172,11 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC distributed.cpp)
 endif()
 
-add_library(ngraph SHARED ${SRC})
+if(WIN32)
+    add_library(ngraph STATIC ${SRC})
+else()
+    add_library(ngraph SHARED ${SRC})
+endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     find_package(MPI REQUIRED)
@@ -196,7 +200,6 @@ endif()
 add_subdirectory(codegen)
 add_subdirectory(runtime)
 
-message(STATUS "****************************** ${CMAKE_SHARED_LIBRARY_SUFFIX}")
 target_compile_definitions(ngraph PRIVATE SHARED_LIB_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}")
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(ngraph PROPERTIES

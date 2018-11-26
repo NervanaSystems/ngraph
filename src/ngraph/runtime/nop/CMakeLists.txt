@@ -15,7 +15,11 @@
 # ******************************************************************************
 
 if (NGRAPH_NOP_ENABLE)
-    add_library(nop_backend SHARED nop_backend.cpp)
+    if(WIN32)
+        add_library(nop_backend STATIC nop_backend.cpp)
+    else()
+        add_library(nop_backend SHARED nop_backend.cpp)
+    endif()
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(nop_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}

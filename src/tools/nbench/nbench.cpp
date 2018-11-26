@@ -385,13 +385,19 @@ OPTIONS
             if (!backend.empty())
             {
                 cout << "\n---- Benchmark ----\n";
+                NGRAPH_INFO;
                 shared_ptr<Function> f = deserialize(model);
+                NGRAPH_INFO;
                 auto perf_data = run_benchmark(
                     f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                NGRAPH_INFO;
                 auto perf_shape = to_perf_shape(f, perf_data);
+                NGRAPH_INFO;
                 aggregate_perf_data.insert(
                     aggregate_perf_data.end(), perf_shape.begin(), perf_shape.end());
+                NGRAPH_INFO;
                 print_results(perf_shape, timing_detail);
+                NGRAPH_INFO;
             }
         }
         catch (ngraph::unsupported_op& ue)

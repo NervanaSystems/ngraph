@@ -25,6 +25,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -43,6 +44,13 @@ extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
     return new runtime::interpreter::INTBackend();
 }
+
+static class RegisterBackend
+{
+public:
+    RegisterBackend() { runtime::BackendManager::register_backend("INTERPRETER", new_backend); }
+    ~RegisterBackend() {}
+} s_register_backend;
 
 shared_ptr<runtime::Tensor>
     runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)
