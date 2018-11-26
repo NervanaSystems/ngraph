@@ -140,6 +140,7 @@ set (SRC
     pass/memory_visualize.cpp
     pass/nop_elimination.cpp
     pass/pass.cpp
+    pass/pass_config.cpp
     pass/propagate_cacheability.cpp
     pass/reshape_elimination.cpp
     pass/zero_dim_tensor_elimination.cpp
@@ -196,7 +197,11 @@ add_subdirectory(codegen)
 add_subdirectory(runtime)
 
 target_compile_definitions(ngraph PRIVATE SHARED_LIB_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}")
-set_target_properties(ngraph PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+if(NGRAPH_LIB_VERSIONING_ENABLE)
+    set_target_properties(ngraph PROPERTIES
+        VERSION ${NGRAPH_VERSION}
+        SOVERSION ${NGRAPH_API_VERSION})
+endif()
 target_link_libraries(ngraph PRIVATE libjson)
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 

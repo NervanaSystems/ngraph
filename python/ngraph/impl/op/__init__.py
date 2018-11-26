@@ -95,7 +95,6 @@ from _pyngraph.op import Op
 from _pyngraph.op import Or
 from _pyngraph.op import Pad
 from _pyngraph.op import Parameter
-from _pyngraph.op import ParameterVector
 from _pyngraph.op import Power
 from _pyngraph.op import Product
 from _pyngraph.op import Reduce
