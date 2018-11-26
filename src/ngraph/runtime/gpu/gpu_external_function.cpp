@@ -564,7 +564,7 @@ void runtime::gpu::GPU_ExternalFunction::add_passes(ngraph::pass::Manager& pass_
                          placeholders::_1,
                          placeholders::_2);
     pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
-        femitter, m_node_function_map, common_function_string);
+        femitter, m_node_function_map, m_common_function_string);
 }
 
 void runtime::gpu::GPU_ExternalFunction::emit()
