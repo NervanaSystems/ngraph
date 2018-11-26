@@ -42,6 +42,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
@@ -205,6 +206,10 @@ namespace ngraph
 
                 // For a chain of concat ops, propagate memory pool offsets
                 void propagate_in_place_concat(std::shared_ptr<ngraph::op::Concat> concat);
+
+                // Find in-place slice ops and set appropriate memory pool offset for its output
+                void process_in_place_slice(std::list<std::shared_ptr<Node>> nodes);
+
                 bool computes_result(Node* node);
                 void release_function() { m_function = nullptr; }
 #if !defined(NGRAPH_DEX_ONLY)

@@ -39,7 +39,7 @@ TEST(halide, halide_subgraph)
 
     auto relu = make_shared<op::Relu>((A + B) * C);
 
-    auto f = make_shared<Function>(relu + D, op::ParameterVector{A, B, C, D});
+    auto f = make_shared<Function>(relu + D, ParameterVector{A, B, C, D});
 
     auto backend = runtime::Backend::create("CPU");
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);

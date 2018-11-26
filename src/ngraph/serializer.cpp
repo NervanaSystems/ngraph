@@ -45,6 +45,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -830,12 +831,25 @@ static shared_ptr<ngraph::Function>
                     node_js.at("window_movement_strides").get<vector<size_t>>();
                 auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
                 auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
-                node = make_shared<op::MaxPoolBackprop>(args[0],
-                                                        args[1],
-                                                        window_shape,
-                                                        window_movement_strides,
-                                                        padding_below,
-                                                        padding_above);
+                if (args.size() == 3)
+                {
+                    node = make_shared<op::MaxPoolBackprop>(args[0],
+                                                            args[1],
+                                                            args[2],
+                                                            window_shape,
+                                                            window_movement_strides,
+                                                            padding_below,
+                                                            padding_above);
+                }
+                else
+                {
+                    node = make_shared<op::MaxPoolBackprop>(args[0],
+                                                            args[1],
+                                                            window_shape,
+                                                            window_movement_strides,
+                                                            padding_below,
+                                                            padding_above);
+                }
                 break;
             }
             case OP_TYPEID::Maximum:
@@ -1012,6 +1026,11 @@ static shared_ptr<ngraph::Function>
                                                          scatter_f_ptr,
                                                          window_shape,
                                                          window_movement_strides);
+                break;
+            }
+            case OP_TYPEID::ShapeOf:
+            {
+                node = make_shared<op::ShapeOf>(args[0]);
                 break;
             }
             case OP_TYPEID::Sigmoid:
@@ -1547,6 +1566,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["window_shape"] = tmp->get_window_shape();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         break;
+    }
+    case OP_TYPEID::ShapeOf: { break;
     }
     case OP_TYPEID::Sigmoid: { break;
     }

@@ -30,6 +30,7 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -45,6 +46,7 @@
 #include "ngraph/runtime/reference/negate.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
+#include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
 
@@ -378,7 +380,8 @@ void ngraph::pass::ConstantFolding::construct_constant_binary()
 
 bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
-    return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Negative>(n);
+    return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Negative>(n) ||
+           std::dynamic_pointer_cast<op::Relu>(n);
 }
 
 template <class T>
@@ -396,6 +399,11 @@ shared_ptr<op::Constant> make_constant_unary(shared_ptr<op::Constant> constant,
     else if (std::dynamic_pointer_cast<op::Negative>(unary))
     {
         runtime::reference::negate<T>(
+            constant->get_vector<T>().data(), out_vec.data(), shape_size(out_shape));
+    }
+    else if (std::dynamic_pointer_cast<op::Relu>(unary))
+    {
+        runtime::reference::relu<T>(
             constant->get_vector<T>().data(), out_vec.data(), shape_size(out_shape));
     }
     else
@@ -559,7 +567,7 @@ void ngraph::pass::ConstantFolding::construct_constant_quantize()
         make_shared<pattern::op::Label>(element::f32, Shape{2}, pattern::has_class<op::Constant>());
     auto q_scale = op::Constant::create(element::f32, Shape{}, {1});
     auto q_offset = op::Constant::create(element::i8, Shape{}, {0});
-    auto mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
     auto quant_op =
         make_shared<op::Quantize>(constant_label, q_scale, q_offset, element::i8, AxisSet{}, mode);
     auto quant = make_shared<pattern::op::Label>(quant_op, nullptr, NodeVector{quant_op});
@@ -580,11 +588,6 @@ void ngraph::pass::ConstantFolding::construct_constant_quantize()
         auto type = quant_match->get_element_type();
 
         if (constant_match->get_element_type() != element::f32)
-        {
-            return false;
-        }
-
-        if (quantize_op->get_round_mode() != op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO)
         {
             return false;
         }

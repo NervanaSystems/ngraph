@@ -48,7 +48,7 @@ TEST(debugger, add_breakpoint)
     auto absn = make_shared<op::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
-    auto f = make_shared<Function>(neg, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
@@ -84,7 +84,7 @@ TEST(debugger, stepping)
     auto absn = make_shared<op::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
-    auto f = make_shared<Function>(neg, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
@@ -121,7 +121,7 @@ TEST(debugger, delete_breakpoint)
     auto absn = make_shared<op::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
-    auto f = make_shared<Function>(neg, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
@@ -161,7 +161,7 @@ TEST(debugger, while_stepping)
     auto absn = make_shared<op::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
-    auto f = make_shared<Function>(neg, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
@@ -199,7 +199,7 @@ TEST(debugger, resume)
     auto absn = make_shared<op::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
-    auto f = make_shared<Function>(neg, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
@@ -223,4 +223,128 @@ TEST(debugger, resume)
     dbg.resume();
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
+}
+
+TEST(tracer, basic)
+{
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto B = make_shared<op::Parameter>(element::i32, shape);
+
+    auto add = make_shared<op::Add>(A, B);
+    auto absn = make_shared<op::Abs>(add);
+    auto neg = make_shared<op::Negative>(absn);
+
+    auto f = make_shared<Function>(neg, ParameterVector{A, B});
+
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shape);
+
+    vector<int> dataA{-1};
+    vector<int> dataB{-776};
+    copy_data(a, dataA);
+    copy_data(b, dataB);
+
+    auto cf =
+        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+
+    ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+
+    int good_or_bad_value = -777;
+    auto add_tracer = [&good_or_bad_value](void** values, const std::string& name) {
+        ASSERT_EQ(static_cast<int*>(values[0])[0], good_or_bad_value);
+    };
+
+    dbg.add_tracepoint(add, add_tracer);
+    dbg.call({result}, {a, b});
+    dbg.delete_tracepoint(add);
+    good_or_bad_value = 777;
+    dbg.call({result}, {a, b});
+}
+
+TEST(tracer, count_tracepoint)
+{
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto B = make_shared<op::Parameter>(element::i32, shape);
+
+    auto add = make_shared<op::Add>(A, B);
+
+    auto f = make_shared<Function>(add, ParameterVector{A, B});
+
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shape);
+
+    auto cf =
+        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+
+    ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+
+    const size_t num_iterations = 10;
+    const size_t offset = 5;
+
+    std::function<void(void**, const std::string&)> callback =
+        [num_iterations, offset](void** values, const std::string& name) {
+            ASSERT_EQ(static_cast<int*>(values[0])[0], num_iterations - 1 + offset);
+        };
+
+    ngraph::runtime::cpu::CPU_CountTracepoint count_tracepoint(callback, 10);
+    for (size_t i = 0; i < num_iterations; i++)
+    {
+        dbg.add_tracepoint(add, count_tracepoint);
+        vector<int> dataA{static_cast<int>(offset)};
+        vector<int> dataB{static_cast<int>(i)};
+        copy_data(a, dataA);
+        copy_data(b, dataB);
+        dbg.call({result}, {a, b});
+    }
+}
+
+TEST(tracer, conditional_tracepoint)
+{
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto B = make_shared<op::Parameter>(element::i32, shape);
+
+    auto add = make_shared<op::Add>(A, B);
+
+    auto f = make_shared<Function>(add, ParameterVector{A, B});
+
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shape);
+
+    auto cf =
+        std::dynamic_pointer_cast<ngraph::runtime::cpu::CPU_Backend>(backend)->get_call_frame(f);
+
+    ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
+
+    const size_t num_iterations = 10;
+    const size_t offset = 5;
+    int countdown = num_iterations;
+
+    auto add_tracer = [offset, &countdown, num_iterations](void** values, const std::string& name) {
+        if (countdown-- == 0)
+        {
+            ASSERT_EQ(static_cast<int*>(values[0])[0], num_iterations - 1 + offset);
+        }
+    };
+
+    for (size_t i = 0; i < num_iterations; i++)
+    {
+        dbg.add_tracepoint(add, add_tracer);
+        vector<int> dataA{static_cast<int>(offset)};
+        vector<int> dataB{static_cast<int>(i)};
+        copy_data(a, dataA);
+        copy_data(b, dataB);
+        dbg.call({result}, {a, b});
+    }
 }

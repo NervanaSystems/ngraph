@@ -20,6 +20,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
@@ -32,6 +33,10 @@ pass::MemoryLayout::MemoryLayout(size_t alignment, bool disable_memory_sharing)
     : m_alignment(alignment)
     , m_disable_memory_sharing(disable_memory_sharing)
 {
+    if (m_alignment == 0)
+    {
+        throw invalid_argument("Memory alignment must be > 0");
+    }
 }
 
 bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
@@ -44,8 +49,9 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
 
         if (auto op = std::dynamic_pointer_cast<op::Op>(node))
         {
-            // concat in_place_oi should be treated differently
-            if (!std::dynamic_pointer_cast<op::Concat>(node))
+            // concat and slice in_place_oi should be treated differently
+            if (!std::dynamic_pointer_cast<op::Concat>(node) &&
+                !std::dynamic_pointer_cast<op::Slice>(node))
             {
                 if (auto op_annotations = op->get_op_annotations())
                 {
@@ -261,6 +267,10 @@ void pass::MemoryManager::dump(ostream& out)
 
 size_t pass::MemoryManager::align(size_t size, size_t alignment)
 {
+    if (alignment == 0)
+    {
+        throw invalid_argument("alignment must be > 0");
+    }
     if (size == 0)
     {
         size = alignment;
