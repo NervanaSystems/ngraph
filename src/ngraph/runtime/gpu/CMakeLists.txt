@@ -30,7 +30,6 @@ set(SRC
     gpu_cuda_kernel_builder.cpp
     gpu_emitter.cpp
     gpu_compiled_function.cpp
-    gpu_external_function.cpp
     gpu_internal_function.cpp
     gpu_invoke.cpp
     gpu_kernel_emitters.cpp
@@ -49,6 +48,11 @@ set(SRC
     op/batch_norm.cpp
     op/rnn.cpp
     )
+
+if (NOT NGRAPH_DEX_ONLY)
+    list(APPEND SRC gpu_external_function.cpp)
+endif()
+
 set(CUDA_INC
     ${PROJECT_SOURCE_DIR}/src/
     )
@@ -140,7 +144,12 @@ if (NGRAPH_GPU_ENABLE)
 
     add_library(gpu_backend SHARED ${SRC} ${CUDA_OBJ})
     set_target_properties(gpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
-    target_link_libraries(gpu_backend PUBLIC ngraph codegen)
+    target_link_libraries(gpu_backend PUBLIC ngraph)
+    if (NGRAPH_DEX_ONLY)
+        target_compile_definitions(gpu_backend PRIVATE "NGRAPH_DEX_ONLY")
+    else()
+        target_link_libraries(gpu_backend PUBLIC codegen)
+    endif()
     find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
     find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
     find_library(CUDA_cudart_LIBRARY libcudart_static.a /usr/local/cuda/lib64)

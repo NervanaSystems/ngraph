@@ -16,6 +16,8 @@
 
 #pragma once
 
+#if !defined(NGRAPH_DEX_ONLY)
+
 #include <functional>
 #include <memory>
 #include <typeindex>
@@ -105,3 +107,4 @@ namespace ngraph
         }
     }
 }
+#endif // !defined(NGRAPH_DEX_ONLY)

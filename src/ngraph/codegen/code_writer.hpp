@@ -30,12 +30,19 @@ namespace ngraph
 class ngraph::codegen::CodeWriter
 {
 public:
-    CodeWriter();
-    std::string get_code() const;
+    CodeWriter()
+        : indent(0)
+        , m_pending_indent(true)
+        , m_temporary_name_count(0) {}
+    std::string get_code() const
+    {
+        return m_ss.str();
+    }
 
-    void operator+=(const std::string&);
-
-    size_t indent;
+    void operator+=(const std::string& s)
+    {
+        *this << s;
+    }
 
     template <typename T>
     friend CodeWriter& operator<<(CodeWriter& out, const T& obj)
@@ -66,7 +73,15 @@ public:
         return out;
     }
 
-    std::string generate_temporary_name(std::string prefix = "tempvar");
+    std::string generate_temporary_name(std::string prefix = "tempvar")
+    {
+        std::stringstream ss;
+
+        ss << prefix << m_temporary_name_count;
+        m_temporary_name_count++;
+
+        return ss.str();
+    }
 
     void block_begin()
     {
@@ -80,6 +95,7 @@ public:
         *this << "}\n";
     }
 
+    size_t indent;
 private:
     std::stringstream m_ss;
     bool m_pending_indent;
