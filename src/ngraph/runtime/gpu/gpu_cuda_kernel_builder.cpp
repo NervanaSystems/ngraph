@@ -541,33 +541,6 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
         writer << "out[input_idx] = input_i;\n";
     };
 
-    // auto unroll_loop_lambda = [&](void (*func)()) -> void {
-    //     writer << "while (reduce_idx + 7 * step < reduce_count)\n";
-    //     writer.block_begin();
-    //     {
-    //         for(int i = 0; i < 8; i++)
-    //         {
-    //             writer.block_begin();
-    //             get_reduce_input_lambda();
-    //             func();
-    //             writer << "reduce_idx += step;\n";
-    //             writer.block_end();
-    //         }
-    //     }
-    //     writer.block_end();
-
-    //     writer << "while (reduce_idx < reduce_count)\n";
-    //     writer.block_begin();
-    //     {
-    //             writer.block_begin();
-    //             get_reduce_input_lambda();
-    //             func();
-    //             writer << "reduce_idx += step;\n";
-    //             writer.block_end();
-    //     }
-    //     writer.block_end();
-    // }
-
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
     {
