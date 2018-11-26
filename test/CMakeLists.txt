@@ -92,7 +92,7 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 
 if(NGRAPH_GPU_ENABLE)
-    list(APPEND SRC cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
+    list(APPEND SRC gpu_test.cpp gpu_fusion.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
 endif()
 

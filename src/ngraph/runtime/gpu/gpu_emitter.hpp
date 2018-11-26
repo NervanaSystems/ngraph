@@ -19,7 +19,6 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"

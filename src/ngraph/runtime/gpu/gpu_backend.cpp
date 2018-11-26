@@ -125,14 +125,7 @@ bool runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_compiled_function == nullptr)
     {
-        if (std::getenv("NGRAPH_CODEGEN"))
-        {
-            instance.m_compiled_function = make_shared<GPU_ExternalFunction>(func, m_context);
-        }
-        else
-        {
-            instance.m_compiled_function = make_shared<GPU_InternalFunction>(func, m_context);
-        }
+        instance.m_compiled_function = runtime::gpu::GPU_CompiledFunction::make(func, m_context);
         instance.m_compiled_function->m_emit_timing = instance.m_performance_counters_enabled;
         instance.m_compiled_function->compile();
         instance.m_runtime = instance.m_compiled_function->m_runtime;

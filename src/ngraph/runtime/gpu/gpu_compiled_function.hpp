@@ -22,9 +22,6 @@
 #include <typeinfo>
 #include <unordered_map>
 
-#include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/codegen/compiler.hpp"
-#include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
@@ -59,6 +56,8 @@ namespace ngraph
                                          std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
                 virtual ~GPU_CompiledFunction();
 
+                static std::shared_ptr<GPU_CompiledFunction> make(const std::shared_ptr<ngraph::Function>& function,
+                                                                  std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
                 std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
                 const std::unique_ptr<GPUPrimitiveEmitter>& get_primitive_emitter() const
                 {
