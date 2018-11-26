@@ -107,14 +107,14 @@
 #include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
+#include "ngraph/runtime/gpu/gpu_call_frame.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_internal_function.hpp"
+#include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
+#include "ngraph/runtime/gpu/gpu_runtime_constructor.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
-#include "ngraph/runtime/gpu/gpu_runtime_constructor.hpp"
-#include "ngraph/runtime/gpu/gpu_call_frame.hpp"
-#include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
 
 using namespace std;
@@ -148,16 +148,17 @@ runtime::gpu::GPU_InternalFunction::~GPU_InternalFunction()
     }
 }
 
-std::string runtime::gpu::GPU_InternalFunction::add_to_runtime(size_t primitive_index,
-                                                               const std::string& function_name,
-                                                               const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                                               const std::vector<runtime::gpu::GPUTensorWrapper>& out)
+std::string runtime::gpu::GPU_InternalFunction::add_to_runtime(
+    size_t primitive_index,
+    const std::string& function_name,
+    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+    const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
-    std::function<void(GPUCallFrame& call_frame, GPURuntimeContext* ctx)> primitive_invocation;
+    std::function<void(GPUCallFrame & call_frame, GPURuntimeContext * ctx)> primitive_invocation;
     if (!m_trace)
     {
-        primitive_invocation = [args, out, primitive_index](GPUCallFrame& call_frame, GPURuntimeContext* ctx) mutable
-        {
+        primitive_invocation = [args, out, primitive_index](GPUCallFrame& call_frame,
+                                                            GPURuntimeContext* ctx) mutable {
             // here, these inputs and outputs could be any of [constant, input, output, intermediate]
             auto inputs = call_frame.get_tensor_io(args);
             auto outputs = call_frame.get_tensor_io(out);
@@ -166,8 +167,8 @@ std::string runtime::gpu::GPU_InternalFunction::add_to_runtime(size_t primitive_
     }
     else
     {
-        primitive_invocation = [this, args, out, primitive_index](GPUCallFrame& call_frame, GPURuntimeContext* ctx) mutable
-        {
+        primitive_invocation = [this, args, out, primitive_index](GPUCallFrame& call_frame,
+                                                                  GPURuntimeContext* ctx) mutable {
             // here, these inputs and outputs could be any of [constant, input, output, intermediate]
             auto inputs = call_frame.get_tensor_io(args);
             auto outputs = call_frame.get_tensor_io(out);
@@ -199,10 +200,11 @@ std::string runtime::gpu::GPU_InternalFunction::add_to_runtime(size_t primitive_
     return compose_manifest(primitive_index, args, out);
 }
 
-std::string runtime::gpu::GPU_InternalFunction::add_call_to_runtime(const std::string& caller,
-                                                                    const std::string& callee,
-                                                                    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                                                    const std::vector<runtime::gpu::GPUTensorWrapper>& out)
+std::string runtime::gpu::GPU_InternalFunction::add_call_to_runtime(
+    const std::string& caller,
+    const std::string& callee,
+    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+    const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
     m_runtime_constructor->add_call(caller, callee, args, out);
     codegen::CodeWriter writer;
@@ -222,9 +224,10 @@ std::string runtime::gpu::GPU_InternalFunction::add_call_to_runtime(const std::s
     return writer.get_code();
 }
 
-std::string runtime::gpu::GPU_InternalFunction::compose_manifest(const size_t& primitive_index,
-                                                                 const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                                                 const std::vector<runtime::gpu::GPUTensorWrapper>& out) const
+std::string runtime::gpu::GPU_InternalFunction::compose_manifest(
+    const size_t& primitive_index,
+    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+    const std::vector<runtime::gpu::GPUTensorWrapper>& out) const
 {
     codegen::CodeWriter writer;
     writer.block_begin();
@@ -243,7 +246,6 @@ std::string runtime::gpu::GPU_InternalFunction::compose_manifest(const size_t& p
     return writer.get_code();
 }
 
-
 void runtime::gpu::GPU_InternalFunction::build_functions()
 {
     for (const auto& p : m_function_ordered_ops)
@@ -261,8 +263,8 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
                 string type = et.c_type_string();
                 stringstream ss;
                 ss << "((" << type << "*)(inputs[" << arg_index << "]))";
-                m_variable_name_map[tv->get_name()] =
-                    std::make_tuple(runtime::gpu::GPUTensorWrapper::TensorType::INPUT, arg_index, ss.str());
+                m_variable_name_map[tv->get_name()] = std::make_tuple(
+                    runtime::gpu::GPUTensorWrapper::TensorType::INPUT, arg_index, ss.str());
                 // propagate_in_place_input(&param->get_outputs().at(i), ss.str());
                 arg_index++;
             }
@@ -289,8 +291,8 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
                 shared_ptr<descriptor::Tensor> itv =
                     res->get_inputs().at(0).get_output().get_tensor_ptr();
                 auto output_name = ss.str();
-                m_variable_name_map[itv->get_name()] =
-                    std::make_tuple(runtime::gpu::GPUTensorWrapper::TensorType::OUTPUT, i, ss.str());
+                m_variable_name_map[itv->get_name()] = std::make_tuple(
+                    runtime::gpu::GPUTensorWrapper::TensorType::OUTPUT, i, ss.str());
                 //propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
             }
         }
@@ -325,9 +327,8 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
             if (auto c = std::dynamic_pointer_cast<op::Constant>(node))
             {
                 shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
-                m_variable_name_map[tv->get_name()] =
-                    std::make_tuple(runtime::gpu::GPUTensorWrapper::TensorType::CONSTANT, 0,
-                                    node->get_name());
+                m_variable_name_map[tv->get_name()] = std::make_tuple(
+                    runtime::gpu::GPUTensorWrapper::TensorType::CONSTANT, 0, node->get_name());
             }
         }
 
@@ -341,7 +342,8 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
                 const descriptor::Output& output = input.get_output();
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 auto& var = m_variable_name_map[tv->get_name()];
-                in.push_back(GPUTensorWrapper(tv, std::get<0>(var), std::get<1>(var), std::get<2>(var)));
+                in.push_back(
+                    GPUTensorWrapper(tv, std::get<0>(var), std::get<1>(var), std::get<2>(var)));
                 node_input_names.emplace_back(tv->get_name());
             }
             vector<GPUTensorWrapper> out;
@@ -349,14 +351,16 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
             {
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 auto& var = m_variable_name_map[tv->get_name()];
-                out.push_back(GPUTensorWrapper(tv, std::get<0>(var), std::get<1>(var), std::get<2>(var)));
+                out.push_back(
+                    GPUTensorWrapper(tv, std::get<0>(var), std::get<1>(var), std::get<2>(var)));
                 node_output_names.emplace_back(tv->get_name());
             }
 
             // Emit function description comment
             if (!node->is_parameter() && !node->is_constant())
             {
-                m_manifest << "\n// " << current_function->get_name() << "::" << node->get_name() << "(";
+                m_manifest << "\n// " << current_function->get_name() << "::" << node->get_name()
+                           << "(";
                 vector<string> parameter_nodes = node_input_names;
                 parameter_nodes.insert(
                     parameter_nodes.end(), node_output_names.begin(), node_output_names.end());
@@ -375,7 +379,6 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
             //     emit_debug_function_exit(node.get());
             // }
         }
-
     }
 }
 
@@ -385,7 +388,8 @@ void runtime::gpu::GPU_InternalFunction::add_passes(ngraph::pass::Manager& pass_
 
 void runtime::gpu::GPU_InternalFunction::emit()
 {
-    m_runtime_constructor = runtime::gpu::make_unique<GPURuntimeConstructor>(m_function_ordered_ops);
+    m_runtime_constructor =
+        runtime::gpu::make_unique<GPURuntimeConstructor>(m_function_ordered_ops);
 
     if (std::getenv("NGRAPH_GPU_TRACE"))
     {
@@ -502,7 +506,8 @@ void runtime::gpu::GPU_InternalFunction::propagate_in_place_output(
     // } while (propagate_further);
 }
 
-void runtime::gpu::GPU_InternalFunction::get_performance_data(std::vector<runtime::PerformanceCounter>& rc) const
+void runtime::gpu::GPU_InternalFunction::get_performance_data(
+    std::vector<runtime::PerformanceCounter>& rc) const
 {
     // auto* engine = this->m_execution_engine.get();
     // if (engine)

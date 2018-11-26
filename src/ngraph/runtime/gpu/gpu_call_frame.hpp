@@ -23,8 +23,8 @@
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 #include "ngraph/runtime/gpu/gpu_invoke.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {
@@ -37,16 +37,23 @@ namespace ngraph
             public:
                 using TensorType = GPUTensorWrapper::TensorType;
 
-                GPUCallFrame(const size_t& num_inputs, const size_t& num_outputs) :
-                    m_inputs(num_inputs, nullptr), m_outputs(num_outputs, nullptr) {}
-
-                void resolve_reservations(const GPU_CompiledFunction* compiled_function, const std::unordered_map<std::string, size_t>& memory_reservations)
+                GPUCallFrame(const size_t& num_inputs, const size_t& num_outputs)
+                    : m_inputs(num_inputs, nullptr)
+                    , m_outputs(num_outputs, nullptr)
                 {
-                    auto& mem_primitives = compiled_function->get_primitive_emitter()->get_memory_primitives();
+                }
+
+                void resolve_reservations(
+                    const GPU_CompiledFunction* compiled_function,
+                    const std::unordered_map<std::string, size_t>& memory_reservations)
+                {
+                    auto& mem_primitives =
+                        compiled_function->get_primitive_emitter()->get_memory_primitives();
                     for (auto const& p : memory_reservations)
                     {
                         // mem_primitives may return pointers for constant or workspace reservations
-                        m_memory_reservations[p.first] = static_cast<unsigned char*>(mem_primitives.at(p.second)());
+                        m_memory_reservations[p.first] =
+                            static_cast<unsigned char*>(mem_primitives.at(p.second)());
                     }
                 }
 
@@ -104,22 +111,22 @@ namespace ngraph
                 }
 
             private:
-                void* get_pointer(const TensorType& type, const size_t& offset, const std::string& name = "")
+                void* get_pointer(const TensorType& type,
+                                  const size_t& offset,
+                                  const std::string& name = "")
                 {
-                    switch(type)
+                    switch (type)
                     {
                     case TensorType::CONSTANT:
                     case TensorType::INTERMEDIATE:
                         return static_cast<void*>(m_memory_reservations.at(name) + offset);
-                    case TensorType::INPUT:
-                        return static_cast<void*>(m_inputs.at(offset));
-                    case TensorType::OUTPUT:
-                        return static_cast<void*>(m_outputs.at(offset));
+                    case TensorType::INPUT: return static_cast<void*>(m_inputs.at(offset));
+                    case TensorType::OUTPUT: return static_cast<void*>(m_outputs.at(offset));
                     case TensorType::UNKNOWN:
                     default:
-                        throw ngraph_error("GPUCallFrame encountered unknown or uninitialized tensor type");
+                        throw ngraph_error(
+                            "GPUCallFrame encountered unknown or uninitialized tensor type");
                     };
-
                 }
 
                 std::unordered_map<std::string, unsigned char*> m_memory_reservations;

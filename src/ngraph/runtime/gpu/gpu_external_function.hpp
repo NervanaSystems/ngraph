@@ -34,9 +34,9 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
+#include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
-#include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
 
 namespace ngraph
 {
@@ -54,19 +54,24 @@ namespace ngraph
                                      std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
                 virtual ~GPU_ExternalFunction();
 
-                virtual std::string add_to_runtime(size_t primitive_index,
-                                                   const std::string& function_name,
-                                                   const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                                   const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
-                virtual std::string add_call_to_runtime(const std::string& caller,
-                                                        const std::string& callee,
-                                                        const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                                        const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
-                virtual void get_performance_data(std::vector<runtime::PerformanceCounter>& rc) const override;
+                virtual std::string
+                    add_to_runtime(size_t primitive_index,
+                                   const std::string& function_name,
+                                   const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                                   const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
+                virtual std::string add_call_to_runtime(
+                    const std::string& caller,
+                    const std::string& callee,
+                    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                    const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
+                virtual void get_performance_data(
+                    std::vector<runtime::PerformanceCounter>& rc) const override;
+
             protected:
                 virtual void compile_function() override;
                 virtual void add_passes(ngraph::pass::Manager& pass_manager) override;
                 virtual void emit() override;
+
             private:
                 /// \brief Create a list of node names for each arg in args
                 /// \param args list of tensor arguments

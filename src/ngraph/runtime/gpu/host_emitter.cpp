@@ -19,22 +19,24 @@
 #include <sstream>
 #include <vector>
 
-#include "ngraph/runtime/gpu/host_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/gpu/host_emitter.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
 
-runtime::gpu::HostEmitter::HostEmitter(GPUPrimitiveEmitter* emitter,
-                                       GPURuntimeContext* ctx)
+runtime::gpu::HostEmitter::HostEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx)
     : m_primitive_emitter(emitter)
     , m_ctx(ctx)
 {
 }
 
-size_t runtime::gpu::HostEmitter::build_memcpy(const cudaMemcpyKind& kind, const size_t& size, const size_t& dst, const size_t& src)
+size_t runtime::gpu::HostEmitter::build_memcpy(const cudaMemcpyKind& kind,
+                                               const size_t& size,
+                                               const size_t& dst,
+                                               const size_t& src)
 {
     std::stringstream ss;
     ss << "memcpy" << kind << "_dst" << dst << "_src" << src << "_sz" << size;
@@ -49,16 +51,18 @@ size_t runtime::gpu::HostEmitter::build_memcpy(const cudaMemcpyKind& kind, const
 
     std::unique_ptr<gpu::primitive> launch_kernel(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-                CUDA_RT_SAFE_CALL(cudaMemcpy(outputs[dst], inputs[src], size, kind));
-            }});
+            CUDA_RT_SAFE_CALL(cudaMemcpy(outputs[dst], inputs[src], size, kind));
+        }});
 
     return this->m_primitive_emitter->register_primitive(launch_kernel, hash);
 }
 
-size_t runtime::gpu::HostEmitter::build_zero_out(const size_t& dst, const size_t& size, bool is_local)
+size_t
+    runtime::gpu::HostEmitter::build_zero_out(const size_t& dst, const size_t& size, bool is_local)
 {
     std::stringstream ss;
-    ss << "zero" << "_dst" << dst << "_sz" << size << "_local" << is_local;
+    ss << "zero"
+       << "_dst" << dst << "_sz" << size << "_local" << is_local;
     std::string hash = ss.str();
 
     // check if the requested kernel is already an inserted primitive
@@ -71,18 +75,16 @@ size_t runtime::gpu::HostEmitter::build_zero_out(const size_t& dst, const size_t
     std::unique_ptr<gpu::primitive> launch_kernel;
     if (is_local)
     {
-        launch_kernel.reset(
-            new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-                    void* tensor = gpu::invoke_memory_primitive(m_ctx, dst);
-                    CUDA_RT_SAFE_CALL(cudaMemset(tensor, 0, size));
-                }});
+        launch_kernel.reset(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void* tensor = gpu::invoke_memory_primitive(m_ctx, dst);
+            CUDA_RT_SAFE_CALL(cudaMemset(tensor, 0, size));
+        }});
     }
     else
     {
-        launch_kernel.reset(
-            new gpu::primitive{[=](void** inputs, void** outputs) mutable {
-                    CUDA_RT_SAFE_CALL(cudaMemset(outputs[dst], 0, size));
-                }});
+        launch_kernel.reset(new gpu::primitive{[=](void** inputs, void** outputs) mutable {
+            CUDA_RT_SAFE_CALL(cudaMemset(outputs[dst], 0, size));
+        }});
     }
 
     return this->m_primitive_emitter->register_primitive(launch_kernel, hash);

@@ -19,8 +19,8 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
@@ -37,8 +37,10 @@ namespace ngraph
             class GPURuntimeConstructor
             {
             public:
-                using op_runtime_t = std::function<void(GPUCallFrame& call_frame, GPURuntimeContext* ctx)>;
-                using op_order_t = std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>;
+                using op_runtime_t =
+                    std::function<void(GPUCallFrame& call_frame, GPURuntimeContext* ctx)>;
+                using op_order_t =
+                    std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>;
 
                 GPURuntimeConstructor(const op_order_t& ordered_ops)
                 {
@@ -59,8 +61,8 @@ namespace ngraph
                               const std::vector<runtime::gpu::GPUTensorWrapper>& out)
                 {
                     auto& runtime = m_runtime[callee];
-                    auto call = [args, out, &runtime](GPUCallFrame& caller_frame, GPURuntimeContext* ctx) mutable
-                    {
+                    auto call = [args, out, &runtime](GPUCallFrame& caller_frame,
+                                                      GPURuntimeContext* ctx) mutable {
                         // extract memory pointers from the callers stack
                         auto inputs = caller_frame.get_tensor_io(args);
                         auto outputs = caller_frame.get_tensor_io(out);
@@ -80,8 +82,8 @@ namespace ngraph
                 EntryPoint build(const std::string& function, GPUCallFrame& call_frame)
                 {
                     auto& runtime = m_runtime.at(function);
-                    return [call_frame, &runtime](void** inputs, void** outputs, GPURuntimeContext* ctx) mutable
-                    {
+                    return [call_frame, &runtime](
+                        void** inputs, void** outputs, GPURuntimeContext* ctx) mutable {
                         call_frame.resolve_inputs(inputs);
                         call_frame.resolve_outputs(outputs);
                         for (auto const& step : runtime)

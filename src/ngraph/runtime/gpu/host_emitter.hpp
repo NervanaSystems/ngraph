@@ -33,15 +33,16 @@ namespace ngraph
             class HostEmitter
             {
                 friend class GPUPrimitiveEmitter;
+
             public:
-                size_t build_memcpy(const cudaMemcpyKind& kind, const size_t& size, const size_t& dst = 0, const size_t& src = 0);
+                size_t build_memcpy(const cudaMemcpyKind& kind,
+                                    const size_t& size,
+                                    const size_t& dst = 0,
+                                    const size_t& src = 0);
                 size_t build_zero_out(const size_t& dst, const size_t& size, bool is_local = false);
 
-
             private:
-                HostEmitter(GPUPrimitiveEmitter* emitter,
-                            GPURuntimeContext* ctx);
-
+                HostEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx);
 
                 GPUPrimitiveEmitter* m_primitive_emitter;
                 GPURuntimeContext* m_ctx;

@@ -33,17 +33,11 @@ public:
     CodeWriter()
         : indent(0)
         , m_pending_indent(true)
-        , m_temporary_name_count(0) {}
-    std::string get_code() const
+        , m_temporary_name_count(0)
     {
-        return m_ss.str();
     }
-
-    void operator+=(const std::string& s)
-    {
-        *this << s;
-    }
-
+    std::string get_code() const { return m_ss.str(); }
+    void operator+=(const std::string& s) { *this << s; }
     template <typename T>
     friend CodeWriter& operator<<(CodeWriter& out, const T& obj)
     {
@@ -96,6 +90,7 @@ public:
     }
 
     size_t indent;
+
 private:
     std::stringstream m_ss;
     bool m_pending_indent;

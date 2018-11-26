@@ -15,9 +15,9 @@
 //*****************************************************************************
 #include <limits>
 
-#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -26,13 +26,16 @@ runtime::gpu::GPUTensorWrapper::GPUTensorWrapper(const shared_ptr<descriptor::Te
                                                  const string& alias)
     : m_tensor(tv)
     , m_alias(alias)
-    , m_offset(std::make_pair(runtime::gpu::GPUTensorWrapper::TensorType::UNKNOWN, std::numeric_limits<size_t>::max()))
+    , m_offset(std::make_pair(runtime::gpu::GPUTensorWrapper::TensorType::UNKNOWN,
+                              std::numeric_limits<size_t>::max()))
 {
 }
 
-runtime::gpu::GPUTensorWrapper::GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>& tv,
-                                                 const runtime::gpu::GPUTensorWrapper::TensorType& type,
-                                                 const size_t& offset, const std::string& alias)
+runtime::gpu::GPUTensorWrapper::GPUTensorWrapper(
+    const std::shared_ptr<descriptor::Tensor>& tv,
+    const runtime::gpu::GPUTensorWrapper::TensorType& type,
+    const size_t& offset,
+    const std::string& alias)
     : m_tensor(tv)
     , m_alias(alias)
     , m_offset(std::make_pair(type, offset))
@@ -71,7 +74,8 @@ const std::string& runtime::gpu::GPUTensorWrapper::get_name() const
     }
 }
 
-const std::pair<runtime::gpu::GPUTensorWrapper::TensorType, size_t>& runtime::gpu::GPUTensorWrapper::get_offset() const
+const std::pair<runtime::gpu::GPUTensorWrapper::TensorType, size_t>&
+    runtime::gpu::GPUTensorWrapper::get_offset() const
 {
     return m_offset;
 }
@@ -81,12 +85,14 @@ const std::string& runtime::gpu::GPUTensorWrapper::get_type() const
     return get_element_type().c_type_string();
 }
 
-std::ostream& ngraph::runtime::gpu::operator<<(std::ostream& out, const ngraph::runtime::gpu::GPUTensorWrapper& obj)
+std::ostream& ngraph::runtime::gpu::operator<<(std::ostream& out,
+                                               const ngraph::runtime::gpu::GPUTensorWrapper& obj)
 {
-    static std::vector<std::string> types { "CONSTANT", "INTERMEDIATE", "INPUT", "OUTPUT", "UNKNOWN" };
-    out << "gpu::tensor { name: " << obj.m_tensor->get_name() << " tensor_type: " << types.at(obj.m_offset.first)
-        << ", offset/index: " << obj.m_offset.second << ", dtype: " << obj.get_element_type() << ", shape: " << obj.get_shape()
-        << ", size: " << obj.get_size() << ", alias: " << obj.m_alias
-        << " }";
+    static std::vector<std::string> types{"CONSTANT", "INTERMEDIATE", "INPUT", "OUTPUT", "UNKNOWN"};
+    out << "gpu::tensor { name: " << obj.m_tensor->get_name()
+        << " tensor_type: " << types.at(obj.m_offset.first)
+        << ", offset/index: " << obj.m_offset.second << ", dtype: " << obj.get_element_type()
+        << ", shape: " << obj.get_shape() << ", size: " << obj.get_size()
+        << ", alias: " << obj.m_alias << " }";
     return out;
 }

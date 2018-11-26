@@ -1669,9 +1669,9 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
         {
             pool.reset(new gpu::primitive{
                 [=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
-                    void*  y = inputs[0];
+                    void* y = inputs[0];
                     void* dy = inputs[0];
-                    void*  x = inputs[0];
+                    void* x = inputs[0];
                     if (pool_op == 0 || pool_op == 3)
                     {
                         y = inputs[2];

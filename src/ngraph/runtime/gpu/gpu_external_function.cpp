@@ -166,10 +166,11 @@ runtime::gpu::GPU_ExternalFunction::~GPU_ExternalFunction()
 {
 }
 
-std::string runtime::gpu::GPU_ExternalFunction::add_to_runtime(size_t primitive_index,
-                                                               const std::string& function_name,
-                                                               const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                                               const std::vector<runtime::gpu::GPUTensorWrapper>& out)
+std::string runtime::gpu::GPU_ExternalFunction::add_to_runtime(
+    size_t primitive_index,
+    const std::string& function_name,
+    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+    const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
     codegen::CodeWriter writer;
     writer.block_begin();
@@ -182,10 +183,11 @@ std::string runtime::gpu::GPU_ExternalFunction::add_to_runtime(size_t primitive_
     return writer.get_code();
 }
 
-std::string runtime::gpu::GPU_ExternalFunction::add_call_to_runtime(const std::string& caller,
-                                                                    const std::string& callee,
-                                                                    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                                                    const std::vector<runtime::gpu::GPUTensorWrapper>& out)
+std::string runtime::gpu::GPU_ExternalFunction::add_call_to_runtime(
+    const std::string& caller,
+    const std::string& callee,
+    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+    const std::vector<runtime::gpu::GPUTensorWrapper>& out)
 {
     codegen::CodeWriter writer;
     writer.block_begin();
@@ -198,8 +200,8 @@ std::string runtime::gpu::GPU_ExternalFunction::add_call_to_runtime(const std::s
     return writer.get_code();
 }
 
-std::string runtime::gpu::GPU_ExternalFunction::node_names(const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                                           std::initializer_list<int> arg_indexes)
+std::string runtime::gpu::GPU_ExternalFunction::node_names(
+    const std::vector<runtime::gpu::GPUTensorWrapper>& args, std::initializer_list<int> arg_indexes)
 {
     return runtime::gpu::GPU_Emitter::node_names(args, arg_indexes);
 }
@@ -803,7 +805,8 @@ string runtime::gpu::GPU_ExternalFunction::strip_comments(const string& s) const
     return out.str();
 }
 
-void runtime::gpu::GPU_ExternalFunction::get_performance_data(std::vector<runtime::PerformanceCounter>& rc) const
+void runtime::gpu::GPU_ExternalFunction::get_performance_data(
+    std::vector<runtime::PerformanceCounter>& rc) const
 {
     auto* engine = this->m_execution_engine.get();
     if (engine)
@@ -812,8 +815,7 @@ void runtime::gpu::GPU_ExternalFunction::get_performance_data(std::vector<runtim
         auto get_name = engine->find_function<const char*(size_t)>("get_debug_timer_name");
         auto get_microseconds =
             engine->find_function<size_t(size_t)>("get_debug_timer_microseconds");
-        auto get_call_count =
-            engine->find_function<size_t(size_t)>("get_debug_timer_call_count");
+        auto get_call_count = engine->find_function<size_t(size_t)>("get_debug_timer_call_count");
 
         if (get_count && get_name && get_microseconds && get_call_count)
         {

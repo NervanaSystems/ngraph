@@ -62,8 +62,7 @@ namespace ngraph
                         dtypes.push_back(arg.get_type());
                     }
                     dtypes.push_back(out[0].get_type());
-                    auto ew_index =
-                        cuda_emitter->build_elementwise<T>(dtypes, out[0].get_shape());
+                    auto ew_index = cuda_emitter->build_elementwise<T>(dtypes, out[0].get_shape());
 
                     return compiled_function->add_to_runtime(ew_index, function_name, args, out);
                 }

@@ -33,8 +33,7 @@
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 
 #define EMIT_ARGS                                                                                  \
-    runtime::gpu::GPU_CompiledFunction *compiled_function,            \
-        const std::string& function_name,                                       \
+    runtime::gpu::GPU_CompiledFunction *compiled_function, const std::string &function_name,       \
         const Node *node, const std::vector<runtime::gpu::GPUTensorWrapper> &args,                 \
         const std::vector<runtime::gpu::GPUTensorWrapper> &out
 
@@ -53,30 +52,35 @@ namespace ngraph
 
             public:
                 GPU_CompiledFunction(const std::shared_ptr<ngraph::Function>& function,
-                                         std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
+                                     std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
                 virtual ~GPU_CompiledFunction();
 
-                static std::shared_ptr<GPU_CompiledFunction> make(const std::shared_ptr<ngraph::Function>& function,
-                                                                  std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
+                static std::shared_ptr<GPU_CompiledFunction>
+                    make(const std::shared_ptr<ngraph::Function>& function,
+                         std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
                 std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
                 const std::unique_ptr<GPUPrimitiveEmitter>& get_primitive_emitter() const
                 {
                     return m_shared_context->m_primitive_emitter;
                 }
-                virtual std::string add_to_runtime(size_t primitive_index,
-                                                   const std::string& function_name,
-                                                   const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                                   const std::vector<runtime::gpu::GPUTensorWrapper>& out) = 0;
-                virtual std::string add_call_to_runtime(const std::string& caller,
-                                                        const std::string& callee,
-                                                        const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                                        const std::vector<runtime::gpu::GPUTensorWrapper>& out) = 0;
+                virtual std::string
+                    add_to_runtime(size_t primitive_index,
+                                   const std::string& function_name,
+                                   const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                                   const std::vector<runtime::gpu::GPUTensorWrapper>& out) = 0;
+                virtual std::string
+                    add_call_to_runtime(const std::string& caller,
+                                        const std::string& callee,
+                                        const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                                        const std::vector<runtime::gpu::GPUTensorWrapper>& out) = 0;
                 void compile();
 
-                virtual void get_performance_data(std::vector<runtime::PerformanceCounter>& rc) const = 0;
+                virtual void
+                    get_performance_data(std::vector<runtime::PerformanceCounter>& rc) const = 0;
 
                 static const size_t s_memory_pool_alignment;
                 static const std::string s_output_dir;
+
             protected:
                 virtual void compile_function() = 0;
                 virtual void add_passes(ngraph::pass::Manager& pass_manager) = 0;

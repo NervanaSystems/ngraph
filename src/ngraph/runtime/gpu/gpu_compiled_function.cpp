@@ -25,8 +25,8 @@
 #include <tuple>
 
 #include "ngraph/descriptor/input.hpp"
-#include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
+#include "ngraph/descriptor/output.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
@@ -35,8 +35,8 @@
 
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
-#include "ngraph/runtime/gpu/gpu_internal_function.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
+#include "ngraph/runtime/gpu/gpu_internal_function.hpp"
 #include "ngraph/runtime/gpu/op/batch_norm.hpp"
 #include "ngraph/runtime/gpu/op/rnn.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_batch_norm_cache.hpp"
@@ -79,8 +79,9 @@ runtime::gpu::GPU_CompiledFunction::~GPU_CompiledFunction()
 {
 }
 
-std::shared_ptr<runtime::gpu::GPU_CompiledFunction> runtime::gpu::GPU_CompiledFunction::make(const std::shared_ptr<ngraph::Function>& function,
-                                                                                             std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
+std::shared_ptr<runtime::gpu::GPU_CompiledFunction> runtime::gpu::GPU_CompiledFunction::make(
+    const std::shared_ptr<ngraph::Function>& function,
+    std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
 {
 #if defined(NGRAPH_DEX_ONLY)
     return std::make_shared<runtime::gpu::GPU_InternalFunction>(function, shared_context);
@@ -90,12 +91,8 @@ std::shared_ptr<runtime::gpu::GPU_CompiledFunction> runtime::gpu::GPU_CompiledFu
     if (auto env = std::getenv("NGRAPH_CODEGEN"))
     {
         std::string env_codegen(env);
-        if (env_codegen == "0" ||
-            env_codegen == "false" ||
-            env_codegen == "False" ||
-            env_codegen == "FALSE" ||
-            env_codegen == "no" ||
-            env_codegen == "No" ||
+        if (env_codegen == "0" || env_codegen == "false" || env_codegen == "False" ||
+            env_codegen == "FALSE" || env_codegen == "no" || env_codegen == "No" ||
             env_codegen == "NO")
         {
             use_codegen = false;
