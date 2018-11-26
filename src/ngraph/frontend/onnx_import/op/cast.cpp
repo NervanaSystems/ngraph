@@ -15,14 +15,12 @@
 //*****************************************************************************
 
 #include <memory>
-
 #include <onnx-ml.pb.h>
-
-#include "ngraph/op/convert.hpp"
-#include "ngraph/type/element_type.hpp"
 
 #include "cast.hpp"
 #include "exceptions.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {

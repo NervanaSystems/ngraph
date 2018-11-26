@@ -21,9 +21,8 @@
 #include <string>
 #include <unordered_map>
 
-#include "ngraph/except.hpp"
-
 #include "core/operator_set.hpp"
+#include "ngraph/except.hpp"
 
 namespace ngraph
 {
