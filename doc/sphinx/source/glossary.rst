@@ -175,5 +175,15 @@ Glossary
    SGD
 
       :abbr:`Stochastic Gradient Descent (SGD)`, also known as incremental 
-      gradient descent, is an iterative method for optimizing a differentiable 
-      objective function.
+      gradient descent, is an iterative method for optimizing a 
+      differentiable objective function.
+
+   validated
+
+      To provide optimizations with nGraph, we first confirm that a given 
+      workload is "validated" as being functional; that is, we can
+      successfully load its serialized graph as an nGraph :term:`function 
+      graph`
+
+
+ 

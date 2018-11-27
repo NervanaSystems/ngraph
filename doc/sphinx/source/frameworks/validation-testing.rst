@@ -4,99 +4,102 @@
 Validation and testing
 ######################
 
-* **Validating** -- To provide optimizations with nGraph, we first 
-  confirm that a given workload is "validated" as being functional; 
-  that is, we can successfully load its serialized graph as an nGraph 
-  :term:`function graph`. Following here is a list of 14 workloads 
-  we've tested with success.
-
-
-.. csv-table::
-   :header: "Workload", "Validated"
-   :widths: 27, 53
-   :escape: ~
-
-   DenseNet-121, Functional
-   Inception-v1, Functional
-   Inception-v2, Functional
-   ResNet-50, Functional
-   Shufflenet, Functional
-   SqueezeNet, Functional
-   VGG-19, Functional
-   ZFNet-512, Functional
-   MNIST, Functional
-   Emotion-FERPlus, Functional
-   BVLC AlexNet, Functional
-   BVLC GoogleNet, Functional
-   BVLC CaffeNet, Functional
-   BVLC R-CNN ILSVRC13, Functional 
-
-
-
-* **Testing & Performance Optimizations** for workloads that have been 
-  "validated" with nGraph are also available via the nGraph 
-  :abbr:`Intermediate Representation (IR)`). For example, a common use 
-  case for data scientists is to train a new model with a large dataset, 
-  and so nGraph already has several accelerations available "out of the 
-  box" for the workloads noted below.
+We validated performance for the following TensorFlow* and MXNet* workloads:
 
 
 TensorFlow 
 ==========
 
 .. csv-table::
-   :header: "TensorFlow Workloads", "Performance"
+   :header: "TensorFlow Workload", "Type"
    :widths: 27, 53
    :escape: ~
 
-   Resnet50 v1 and v2, 50% of P40
-   Inception V3 and V4, 50% of P40
-   Inception-ResNetv2, 50% of P40
-   MobileNet v1, 50% of P40
-   SqueezeNet v1.1, 50% of P40
-   SSD-VGG16, 50% of P40
-   R-FCN, 50% of P40
-   Faster RCNN, 50% of P40
-   Yolo v2, 50% of P40
-   GNMT, Greater than or equal to :abbr:`Direct Optimization (DO)`
-   Transformer-LT, 50% of P40
-   Wide & Deep, 50% of P40
-   WaveNet, Functional
-   U-Net, Greater than DO
-   DRAW, 50% of P40
-   A3C, 50% of P40
-
+   Resnet50 v1 and v2, Image recognition
+   Inception V3 and V4, Image recognition
+   Inception-ResNetv2, Image recognition
+   MobileNet v1, Image recognition
+   SqueezeNet v1.1, Image recognition
+   DenseNet-121, Image recognition
+   SSD-VGG16, Object detection
+   SSD-MobileNetv1, Object detection
+   Faster RCNN, Object detection
+   Yolo v2, Object detection
+   Wide & Deep, Recommender system
+   NCF, Recommender system
+   WaveNet, Speech generation
+   U-Net, Image segmentation
+   DCGAN, Generative adversarial network
+   DRAW, Image generation
+   A3C, Reinforcement learning
 
 MXNet
 =====
 
-
 .. csv-table::
-   :header: "MXNet Workloads", "Performance"
+   :header: "MXNet Workload", "Type"
    :widths: 27, 53
    :escape: ~
 
-   Resnet50 v1 and v2, 50% of P40
-   DenseNet (121 161 169 201), 50% of P40
-   InceptionV3, 50% of P40
-   InceptionV4, 50% of P40
-   Inception-ResNetv2, 50% of P40
-   MobileNet v1, 50% of P40
-   SqueezeNet v1 and v1.1, 50% of P40
-   VGG16, Functional (No DO available)
-   Faster RCNN, 50% of P40
-   SSD-VGG16, 50% of P40
-   GNMT, Greater than or equal to :abbr:`Direct Optimization (DO)`
-   Transformer-LT, 50% of P40
-   Wide & Deep, 50% of P40
-   WaveNet, Functional
-   DeepSpeech2, 50% of P40
-   DCGAN, 50% of P40
-   A3C, Greater than or equal to DO
+   Resnet50 v1 and v2, Image recognition
+   DenseNet-121, Image recognition
+   InceptionV3, Image recognition
+   InceptionV4, Image recognition
+   Inception-ResNetv2, Image recognition
+   MobileNet v1, Image recognition
+   SqueezeNet v1 and v1.1, Image recognition
+   VGG16, Image recognition
+   Faster RCNN, Object detection
+   SSD-VGG16, Object detection
+   GNMT, Language translation
+   Transformer-LT, Language translation
+   Wide & Deep, Recommender system
+   WaveNet, Speech generation
+   DeepSpeech2, Speech recognition
+   DCGAN, Generative adversarial network
+   A3C, Reinforcement learning
+
+ONNX
+=====
+
+Additionally, we validated the following workloads are functional through nGraph ONNX importer: 
+
+
+.. csv-table::
+   :header: "ONNX Workload", "Type"
+   :widths: 27, 53
+   :escape: ~
+
+   DenseNet-121, Image recognition
+   Inception-v1, Image recognition
+   Inception-v2, Image recognition
+   ResNet-50, Image recognition
+   Shufflenet, Image recognition
+   SqueezeNet, Image recognition
+   VGG-19, Image recognition
+   ZFNet-512, Image recognition
+   MNIST, Image recognition
+   Emotion-FERPlus, Image recognition
+   BVLC AlexNet, Image recognition
+   BVLC GoogleNet, Image recognition
+   BVLC CaffeNet, Image recognition
+   BVLC R-CNN ILSVRC13, Object detection 
 
 
 
-  
+
+
+.. important:: Please see Intel's `Optimization Notice`_ for details on disclaimers. 
+
+
+
+.. _Optimization Notice: https://software.intel.com/en-us/articles/optimization-notice
+
+
+.. Notice revision #20110804: Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors. These optimizations include SSE2, SSE3, and SSSE3 instruction sets and other optimizations. Intel does not guarantee the availability, functionality, or effectiveness of any optimization on microprocessors not manufactured by Intel. Microprocessor-dependent optimizations in this product are intended for use with Intel microprocessors. Certain optimizations not specific to Intel microarchitecture are reserved for Intel microprocessors. Please refer to the applicable product User and Reference Guides for more information regarding the specific instruction sets covered by this notice.
+
+
+
 
 
 
