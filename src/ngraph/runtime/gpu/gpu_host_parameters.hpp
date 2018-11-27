@@ -87,122 +87,10 @@ namespace ngraph
                     return &m_uint64_t_params.back();
                 }
 
-                template <typename T>
-                void* getLowest()
-                {
-                    return cache(std::numeric_limits<T>::has_infinity
-                                     ? -std::numeric_limits<T>::infinity()
-                                     : std::numeric_limits<T>::lowest());
-                }
-
-                template <typename T>
-                void* getMax()
-                {
-                    return cache(std::numeric_limits<T>::has_infinity
-                                     ? std::numeric_limits<T>::infinity()
-                                     : std::numeric_limits<T>::max());
-                }
-
                 template <typename T1, typename T2>
                 void* getVal(T2 val)
                 {
                     return cache(static_cast<T1>(val));
-                }
-
-                void* lowest_by_datatype(const std::string& type)
-                {
-                    if (type == "char")
-                    {
-                        return getLowest<char>();
-                    }
-                    else if (type == "float")
-                    {
-                        return getLowest<float>();
-                    }
-                    else if (type == "double")
-                    {
-                        return getLowest<double>();
-                    }
-                    else if (type == "int8_t")
-                    {
-                        return getLowest<int8_t>();
-                    }
-                    else if (type == "int16_t")
-                    {
-                        return getLowest<int16_t>();
-                    }
-                    else if (type == "int32_t")
-                    {
-                        return getLowest<int32_t>();
-                    }
-                    else if (type == "int64_t")
-                    {
-                        return getLowest<int64_t>();
-                    }
-                    else if (type == "uint8_t")
-                    {
-                        return getLowest<uint8_t>();
-                    }
-                    else if (type == "uint16_t")
-                    {
-                        return getLowest<uint16_t>();
-                    }
-                    else if (type == "uint32_t")
-                    {
-                        return getLowest<uint32_t>();
-                    }
-                    else if (type == "uint64_t")
-                    {
-                        return getLowest<uint64_t>();
-                    }
-                }
-
-                void* max_by_datatype(const std::string& type)
-                {
-                    if (type == "char")
-                    {
-                        return getMax<char>();
-                    }
-                    else if (type == "float")
-                    {
-                        return getMax<float>();
-                    }
-                    else if (type == "double")
-                    {
-                        return getMax<double>();
-                    }
-                    else if (type == "int8_t")
-                    {
-                        return getMax<int8_t>();
-                    }
-                    else if (type == "int16_t")
-                    {
-                        return getMax<int16_t>();
-                    }
-                    else if (type == "int32_t")
-                    {
-                        return getMax<int32_t>();
-                    }
-                    else if (type == "int64_t")
-                    {
-                        return getMax<int64_t>();
-                    }
-                    else if (type == "uint8_t")
-                    {
-                        return getMax<uint8_t>();
-                    }
-                    else if (type == "uint16_t")
-                    {
-                        return getMax<uint16_t>();
-                    }
-                    else if (type == "uint32_t")
-                    {
-                        return getMax<uint32_t>();
-                    }
-                    else if (type == "uint64_t")
-                    {
-                        return getMax<uint64_t>();
-                    }
                 }
 
                 void* val_by_datatype(const std::string& type, double val)
@@ -251,6 +139,7 @@ namespace ngraph
                     {
                         return getVal<uint64_t>(val);
                     }
+                    throw ngraph_error("Cast requested for invalid dtype");
                 }
 
                 void* val_by_datatype(const std::string& type, int64_t val)
@@ -299,6 +188,7 @@ namespace ngraph
                     {
                         return getVal<uint64_t>(val);
                     }
+                    throw ngraph_error("Cast requested for invalid dtype");
                 }
 
             private:
