@@ -1096,7 +1096,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
     REGISTER_KNOBBED_PASS_WITH_ARGS(CPUWorkspaceInsertion, true, runtime::cpu::pass, nv_cwi, false);
     REGISTER_KNOBBED_PASS_WITH_ARGS(CPUAssignment, true, runtime::cpu::pass, this);
-    REGISTER_KNOBBED_PASS(ConstantFolding, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS(ConstantFolding, false, ngraph::pass);
     REGISTER_KNOBBED_PASS_WITH_ARGS(CPULayout, true, runtime::cpu::pass, this);
     REGISTER_KNOBBED_PASS_WITH_ARGS(
         CommonSubexpressionElimination, true, ngraph::pass, runtime::cpu::get_cse_handlers_map());
