@@ -615,7 +615,7 @@ public:
 
     BatchNormTrainingTesterZeroEpsilon(const std::unique_ptr<ngraph::runtime::Backend>& backend,
                                        element::Type etype)
-        : BatchNormTrainingTester<T>(backend, Shape{16, 2}, etype, 0.0)
+        : BatchNormTrainingTester<T>(backend, Shape{10, 3}, etype, 0.0)
     {
     }
 
@@ -635,43 +635,60 @@ public:
                                                 variance.get_vector());
     }
 
-    std::tuple<bool, bool, bool> test_gamma()
+    std::tuple<bool, bool, bool> test_mean_variance()
     {
-        return test(Input{{0.0, 1.0},
-                          {1.0, 1.0},
-                          {1.0, 1.0},
-                          {1.0, 2.0},
-                          {2.0, 3.0},
-                          {5.0, 4.0},
-                            {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
-                          {0.0, -1.0},
-                          {-1.0, -1.0},
-                          {-1.0, -1.0},
-                          {-1.0, -2.0},
-                          {-2.0, -3.0},
-                          {-5.0, -4.0}},
-                    Gamma{1.0, 1.0},
-                    Beta{0.0, 0.0},
-                    NormedInput{{0.0, 0.125},
-                                {0.125, 0.125},
-                                {0.125, 0.125},
-                                {0.125, 0.25},
-                                {0.25, 0.375},
-                                {0.675, 0.375},
-                                  {0.0, 0.0}, {0.0, 0.0},{0.0, 0.0}, {0.0, 0.0},
-                                {0.0, -0.125},
-                                {-0.125, -.0125},
-                                {-0.125, -0.125},
-                                {-0.125, -0.25},
-                                {-0.25, -0.375},
-                                {-0.675, -0.5}},
-                    Mean{0.0, 0.0},
-                    Variance{64.0, 64.0});
+        return test(Input{{0.0, 1.0, 0.0},
+                          {1.0, 2.0, 0.25},
+                          {1.0, 2.0, 0.25},
+                          {3.0, 4.0, 0.75},
+                          {3.0, 4.0, 0.75},
+                          {0.0, 1.0, 0.0},
+                          {-1.0, 0.0, -0.25},
+                          {-1.0, 0.0, -0.25},
+                          {-3.0, -2.0, -0.75},
+                          {-3.0, -2.0, -0.75}},
+                    Gamma{1.0, 1.0, 1.0},
+                    Beta{0.0, 0.0, 0.0},
+                    NormedInput{{0.0, 0.0, 0.0},
+                                {0.5, 0.5, 0.5},
+                                {0.5, 0.5, 0.5},
+                                {1.5, 1.5, 1.5},
+                                {1.5, 1.5, 1.5},
+                                {0.0, 0.0, 0.0},
+                                {-0.5, -0.5, -0.5},
+                                {-0.5, -0.5, -0.5},
+                                {-1.5, -1.5, -1.5},
+                                {-1.5, -1.5, -1.5}},
+                    Mean{0.0, 1.0, 0.0},
+                    Variance{4.0, 4.0, 0.25});
     }
 
-    std::tuple<bool, bool, bool> test_beta()
+    std::tuple<bool, bool, bool> test_gamma_beta()
     {
-        return std::tuple<bool, bool, bool>(true, true, true);
+        return test(Input{{0.0, 1.0, 0.0},
+                          {1.0, 2.0, 0.25},
+                          {1.0, 2.0, 0.25},
+                          {3.0, 4.0, 0.75},
+                          {3.0, 4.0, 0.75},
+                          {0.0, 1.0, 0.0},
+                          {-1.0, 0.0, -0.25},
+                          {-1.0, 0.0, -0.25},
+                          {-3.0, -2.0, -0.75},
+                          {-3.0, -2.0, -0.75}},
+                    Gamma{2.0, 1.0, 2.0},
+                    Beta{0.0, 1.0, 1.0},
+                    NormedInput{{0.0, 1.0, 1.0},
+                                {1.0, 1.5, 2.0},
+                                {1.0, 1.5, 2.0},
+                                {3.0, 2.5, 4.0},
+                                {3.0, 2.5, 4.0},
+                                {0.0, 1.0, 1.0},
+                                {-1.0, 0.5, 0.0},
+                                {-1.0, 0.5, 0.0},
+                                {-3.0, -0.5, -2.0},
+                                {-3.0, -0.5, -2.0}},
+                    Mean{0.0, 1.0, 0.0},
+                    Variance{4.0, 4.0, 0.25});
     }
 };
 
@@ -682,29 +699,34 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_training_0eps_f64)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     BatchNormTrainingTesterZeroEpsilon<T> bnt(backend, et);
     std::tuple<bool, bool, bool> result;
-    result = bnt.test_gamma();
-    EXPECT_TRUE(std::get<0>(result)) << "Gamma test normed input";
-    EXPECT_TRUE(std::get<1>(result)) << "Gamma test mean";
-    EXPECT_TRUE(std::get<2>(result)) << "Gamma test variance";
+    result = bnt.test_mean_variance();
+    EXPECT_TRUE(std::get<0>(result)) << "Mean variance test normed input";
+    EXPECT_TRUE(std::get<1>(result)) << "Mean variance test mean";
+    EXPECT_TRUE(std::get<2>(result)) << "Mean variance test variance";
 
-    EXPECT_TRUE(std::get<0>(result)) << "Beta test normed input";
-    EXPECT_TRUE(std::get<1>(result)) << "Beta test mean";
-    EXPECT_TRUE(std::get<2>(result)) << "Beta test variance";
+    result = bnt.test_gamma_beta();
+    EXPECT_TRUE(std::get<0>(result)) << "Gamma beta test normed input";
+    EXPECT_TRUE(std::get<1>(result)) << "Gamma beta test mean";
+    EXPECT_TRUE(std::get<2>(result)) << "Gamma test variance";
 }
 
-#if 0
 NGRAPH_TEST(${BACKEND_NAME}, batch_norm_training_0_eps_f32)
 {
     using T = float;
     auto& et = element::f32;
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     BatchNormTrainingTesterZeroEpsilon<T> bnt(backend, et);
-    EXPECT_TRUE(bnt.test_gamma()) << "Gamma test";
-    EXPECT_TRUE(bnt.test_beta()) << "Beta test";
-    EXPECT_TRUE(bnt.test_mean()) << "Mean test";
-    EXPECT_TRUE(bnt.test_variance()) << "Variance test";
+    std::tuple<bool, bool, bool> result;
+    result = bnt.test_mean_variance();
+    EXPECT_TRUE(std::get<0>(result)) << "Mean variance test normed input";
+    EXPECT_TRUE(std::get<1>(result)) << "Mean variance test mean";
+    EXPECT_TRUE(std::get<2>(result)) << "Mean variance test variance";
+
+    result = bnt.test_gamma_beta();
+    EXPECT_TRUE(std::get<0>(result)) << "Gamma beta test normed input";
+    EXPECT_TRUE(std::get<1>(result)) << "Gamma beta test mean";
+    EXPECT_TRUE(std::get<2>(result)) << "Gamma beta test variance";
 }
-#endif
 
 NGRAPH_TEST(${BACKEND_NAME}, batch_norm_three_outputs)
 {
