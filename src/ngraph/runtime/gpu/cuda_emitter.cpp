@@ -1781,12 +1781,9 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<element::
                        reduce_strides,
                        reduce_strides_in_input);
 
-    // std::vector<int> reduce_strides_magic;
-    // std::vector<int> reduce_strides_shift;
     std::vector<int> non_reduce_strides_magic;
     std::vector<int> non_reduce_strides_shift;
 
-    // div_to_mul(reduce_strides, reduce_strides_magic, reduce_strides_shift);
     div_to_mul(non_reduce_strides, non_reduce_strides_magic, non_reduce_strides_shift);
 
     uint32_t reduce_count = static_cast<uint32_t>(shape_size(reduce_shape));
@@ -1873,11 +1870,10 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar(const std::vector<eleme
     uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
     uint32_t n = nthreads;
     uint32_t block_size_x = 1;
-    while ((block_size_x << 1) <= n)
+    while ((block_size_x << 1) <= fmin(512, n))
     {
         block_size_x <<= 1;
     }
-    block_size_x = fmin(512, block_size_x);
     uint32_t shared_data_bytes = block_size_x * static_cast<uint32_t>(data_bytes);
     kernel_name += "_b_" + std::to_string(block_size_x);
     auto args = m_primitive_emitter->add_kernel_args();
@@ -1997,9 +1993,9 @@ size_t
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<element::Type>& dtypes,
-                                               NVShape input_shape,
-                                               NVShape output_shape,
-                                               NVShape reduce_axis,
+                                               const NVShape& input_shape,
+                                               const NVShape& output_shape,
+                                               const NVShape& reduce_axis,
                                                const char* op,
                                                const char* kernel,
                                                const bool with_init_value)

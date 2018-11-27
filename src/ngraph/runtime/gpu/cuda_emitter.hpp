@@ -219,9 +219,9 @@ namespace ngraph
                                                     const char* reduce_op,
                                                     bool save_elementwise);
                 size_t build_reduce(const std::vector<element::Type>& dtypes,
-                                    NVShape input_shape,
-                                    NVShape output_shape,
-                                    NVShape reduce_axis,
+                                    const NVShape& input_shape,
+                                    const NVShape& output_shape,
+                                    const NVShape& reduce_axis,
                                     const char* op,
                                     const char* kernel,
                                     const bool with_init_value);
