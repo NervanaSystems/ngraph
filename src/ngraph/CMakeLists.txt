@@ -223,6 +223,8 @@ if (NOT APPLE)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--no-as-needed")
     endif()
+else()
+    set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-rpath,@loader_path")
 endif()
 
 # Defines macro in C++ to load backend plugin
