@@ -268,17 +268,18 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
 
             auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
 
-            std::function<void(void**, void**)> convert = [](void** inputs, void** outputs) {};
-            std::function<void*(void*)> convert_space = [](void* ptr){ return ptr; };
+            std::function<void(void**, void**)> convert_output = [](void** inputs, void** outputs) {
+            };
+            std::function<void*(void*)> convert_output_space = [](void* ptr) { return ptr; };
             if (output_type == element::i64)
             {
                 size_t workspace_indices_idx = allocator.reserve_workspace(indices_size);
                 auto convert_idx = cuda_emitter->template build_elementwise<op::Convert>(
                     {element::i32.c_type_string(), element::i64.c_type_string()}, output_shape);
-                convert = [=](void** inputs, void** outputs) {
+                convert_output = [=](void** inputs, void** outputs) {
                     gpu::invoke_primitive(m_ctx, convert_idx, inputs, outputs);
                 };
-                convert_space = [=](void* ptr) {
+                convert_output_space = [=](void* ptr) {
                     return runtime::gpu::invoke_memory_primitive(m_ctx, workspace_indices_idx);
                 };
             }
@@ -304,7 +305,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
             reduce.reset(new gpu::primitive{[=, &desc, &input_desc, &output_desc](void** inputs,
                                                                                   void** outputs) {
                 void* input_ptr = convert_input_space(inputs[0]);
-                void* workspace_indices_ptr = convert_space(outputs[0]);
+                void* workspace_indices_ptr = convert_output_space(outputs[0]);
                 void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
                 void* reduce_buffer =
                     runtime::gpu::invoke_memory_primitive(m_ctx, reduce_buffer_idx);
@@ -322,7 +323,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
                                                   beta,
                                                   output_desc,
                                                   reduce_buffer));
-                convert(&workspace_indices_ptr, outputs);
+                convert_output(&workspace_indices_ptr, outputs);
                 debug_sync();
             }});
         }

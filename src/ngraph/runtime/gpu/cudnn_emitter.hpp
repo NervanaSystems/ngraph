@@ -50,7 +50,6 @@ namespace ngraph
                 std::vector<int> get_vector_int_from_size_t(const std::vector<size_t>&);
             }
             class GPUPrimitiveEmitter;
-            class GPUAllocator;
 
             class CUDNNEmitter
             {
