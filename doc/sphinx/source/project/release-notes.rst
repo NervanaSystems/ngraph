@@ -32,8 +32,8 @@ frameworks, and we expect performance gains for other workloads due to our
 powerful :doc:`../fusion/index` feature.
 
 
-See also: [API changes]
+See also our recent `API changes`_
 
 
 
-[API changes]: https://github.com/NervanaSystems/ngraph/blob/master/changes.md
+.. _API changes: https://github.com/NervanaSystems/ngraph/blob/master/changes.md
