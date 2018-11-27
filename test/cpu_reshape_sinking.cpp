@@ -59,7 +59,7 @@ TEST(cpu_reshape_sinking, edge_splitting)
     auto absn = make_shared<op::Abs>(reshape);
     auto absn2 = make_shared<op::Abs>(absn);
     auto sum = make_shared<op::Sum>(reshape, AxisSet{0, 1, 2, 3});
-    auto func = make_shared<Function>(NodeVector{absn2, sum}, op::ParameterVector{a});
+    auto func = make_shared<Function>(NodeVector{absn2, sum}, ParameterVector{a});
     pass::Manager pass_manager;
     //size_t before_count = count_ops_of_type<op::Reshape>(func);
     pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
@@ -73,6 +73,43 @@ TEST(cpu_reshape_sinking, edge_splitting)
         std::dynamic_pointer_cast<op::Reshape>(func->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_reshape);
     ASSERT_EQ(new_reshape->get_shape(), shape_nchw);
+}
+
+TEST(cpu_reshape_sinking, broadcast_swimming)
+{
+    Shape shape_nchw{1, 32, 536, 536};
+    Shape shape_nhwc{1, 536, 536, 32};
+    Shape shape_weights{16, 32, 3, 3};
+    Shape conv_nhwc{1, 534, 534, 16};
+    Shape conv_nchw{1, 16, 534, 534};
+    AxisVector to_nhwc{0, 2, 3, 1};
+    AxisVector to_nchw{0, 3, 1, 2};
+
+    size_t channel = 16;
+    auto bias = make_shared<op::Parameter>(element::i32, Shape{channel});
+    auto bias_reshape = make_shared<op::Reshape>(bias, AxisVector{0}, Shape{1, channel});
+    auto bias_broadcast = make_shared<op::Broadcast>(bias_reshape, conv_nhwc, AxisSet{1, 2});
+
+    auto input = make_shared<op::Parameter>(element::i32, shape_nhwc);
+    auto reshape_input = make_shared<op::Reshape>(input, to_nchw, shape_nchw);
+
+    auto weights = make_shared<op::Parameter>(element::i32, shape_weights);
+    auto conv = make_shared<op::Convolution>(reshape_input, weights);
+    auto conv_reshape = make_shared<op::Reshape>(conv, to_nhwc, conv_nhwc);
+    auto add = bias_broadcast + conv_reshape;
+    auto relu = make_shared<op::Relu>(add);
+
+    auto func = make_shared<Function>(NodeVector{relu}, ParameterVector{bias, input, weights});
+    pass::Manager pass_manager;
+
+    pass_manager.register_pass<runtime::cpu::pass::CPUReshapeSinking>();
+    pass_manager.register_pass<pass::ReshapeElimination>();
+    pass_manager.register_pass<pass::CommonSubexpressionElimination>();
+    pass_manager.run_passes(func);
+
+    ASSERT_EQ(add->get_shape(), conv_nchw);
+    ASSERT_EQ(add->get_argument(0)->get_shape(), conv_nchw);
+    ASSERT_EQ(add->get_argument(1), conv);
 }
 
 TEST(cpu_reshape_sinking, mnist_conv)

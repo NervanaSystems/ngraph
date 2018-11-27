@@ -59,6 +59,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -92,16 +93,16 @@ static shared_ptr<Node>
         const auto& output = input.get_output();
         auto tv = output.get_tensor_ptr();
         auto tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout());
-
-        if (input.get_shape() == Shape{})
-        {
-            tvl->set_mkldnn_md(required_mds[index]);
-        }
         if (!tvl)
         {
             throw ngraph_error(
                 "In insert_input_conversions: Expecting Layout descriptor to be already set on " +
                 output.get_node()->get_name());
+        }
+
+        if (input.get_shape() == Shape{})
+        {
+            tvl->set_mkldnn_md(required_mds[index]);
         }
         if (!tvl->is_mkldnn_layout())
         {
@@ -303,7 +304,8 @@ void set_layouts_binaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction* exter
         int select = 0;
         if (std::getenv("NGRAPH_PASS_CPU_LAYOUT_ELTWISE") != nullptr)
         {
-            select = std::atoi(std::getenv("NGRAPH_PASS_CPU_LAYOUT_ELTWISE"));
+            const int user_select = std::atoi(std::getenv("NGRAPH_PASS_CPU_LAYOUT_ELTWISE"));
+            select = (user_select == 0 || user_select == 1) ? user_select : select;
         }
         i_mds.push_back(arg_mds[select]);
         i_mds.push_back(arg_mds[select]);
@@ -1237,6 +1239,10 @@ namespace ngraph
                         {
                             i_mds.push_back(fwd_prim_desc.workspace_primitive_desc().desc());
                         }
+                        else if (node->get_input_size() == 3)
+                        {
+                            i_mds.push_back(diff_dst_desc);
+                        }
 
                         o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
                     }
@@ -1356,7 +1362,18 @@ namespace ngraph
                     }
 
                     if (mkldnn_utils::is_mkldnn_padded_layout(md, squeezed_axis))
+                    {
                         return false;
+                    }
+
+                    if (std::getenv("NGRAPH_CPU_ENABLE_SQUEEZE_PADDED_LAYOUTS") == nullptr)
+                    {
+                        if (mkldnn_utils::is_mkldnn_padded_layout(
+                                md, ngraph::get_default_order(input_shape)))
+                        {
+                            return false;
+                        }
+                    }
 
                     return true;
                 }
@@ -1729,27 +1746,6 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Add)
-                {
-                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
-                    {
-                        auto input0_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-
-                        vector<memory::desc> i_mds;
-                        vector<memory::desc> o_mds;
-                        i_mds.push_back(input0_md);
-                        i_mds.push_back(input0_md);
-                        o_mds.push_back(input0_md);
-                        node = insert_input_conversions(external_function, node, i_mds);
-                        set_output_layouts(node, o_mds);
-                    }
-                    else
-                    {
-                        set_native_layouts(external_function, node);
-                    }
-                }
-
-                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Slice)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
@@ -1878,6 +1874,8 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Softmax)
                 {
+                    // Softmax cannot use the default unary layout method since the kernels
+                    // need to know the reduction dimension
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
@@ -1898,7 +1896,6 @@ namespace ngraph
 #define TI(x) type_index(typeid(x))
 
 static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
-    {TI(ngraph::op::Add), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Add>},
     {TI(ngraph::op::Concat), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Concat>},
     {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop),
