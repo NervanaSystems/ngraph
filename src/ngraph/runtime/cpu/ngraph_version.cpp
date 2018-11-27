@@ -14,34 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-#include "ngraph/pass/graph_rewrite.hpp"
-
-namespace ngraph
+extern "C" const char* get_ngraph_version_string()
 {
-    namespace runtime
-    {
-        namespace cpu
-        {
-            namespace pass
-            {
-                class CPUPostLayoutOptimizations;
-            }
-        }
-    }
+    return NGRAPH_VERSION;
 }
-
-class ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations : public ngraph::pass::GraphRewrite
-{
-public:
-    CPUPostLayoutOptimizations()
-        : GraphRewrite()
-    {
-        construct_weight_fusion();
-        construct_slice_convertLayout_fusion();
-        construct_reshape_convertLayout_fusion();
-    }
-    void construct_weight_fusion();
-    void construct_slice_convertLayout_fusion();
-    void construct_reshape_convertLayout_fusion();
-};

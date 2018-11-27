@@ -13,35 +13,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include "ngraph/runtime/cpu/op/leaky_relu.hpp"
+#include "ngraph/util.hpp"
 
-#pragma once
-#include "ngraph/pass/graph_rewrite.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+op::LeakyRelu::LeakyRelu(shared_ptr<Node> arg, float alpha)
+    : Op("LeakyRelu", check_single_output_args({arg}))
+    , m_alpha(alpha)
 {
-    namespace runtime
+    constructor_validate_and_infer_types();
+    if (alpha < 0)
     {
-        namespace cpu
-        {
-            namespace pass
-            {
-                class CPUPostLayoutOptimizations;
-            }
-        }
+        throw ngraph_error("Leaky Relu expects non-negative alpha");
     }
+    set_output_type(0, arg->get_element_type(), arg->get_shape());
 }
 
-class ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations : public ngraph::pass::GraphRewrite
+shared_ptr<Node> op::LeakyRelu::copy_with_new_args(const NodeVector& new_args) const
 {
-public:
-    CPUPostLayoutOptimizations()
-        : GraphRewrite()
+    if (new_args.size() != 1)
     {
-        construct_weight_fusion();
-        construct_slice_convertLayout_fusion();
-        construct_reshape_convertLayout_fusion();
+        throw ngraph_error("Incorrect number of new arguments");
     }
-    void construct_weight_fusion();
-    void construct_slice_convertLayout_fusion();
-    void construct_reshape_convertLayout_fusion();
-};
+    return make_shared<LeakyRelu>(new_args.at(0), m_alpha);
+}

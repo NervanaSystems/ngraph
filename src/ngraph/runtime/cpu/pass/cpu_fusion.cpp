@@ -60,6 +60,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/util.hpp"
@@ -1291,6 +1292,63 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
     this->add_matcher(m);
 }
 
+void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
+{
+    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto iconst1 = op::Constant::create(element::f32, Shape{}, {1});
+    auto alpha = std::make_shared<pattern::op::Label>(iconst1);
+    auto broadcast_pred = [](std::shared_ptr<Node> n) {
+        return (std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr);
+    };
+    auto skip_broadcast = std::make_shared<pattern::op::Skip>(alpha, broadcast_pred);
+    auto leaky_relu =
+        std::make_shared<op::Maximum>(input, std::make_shared<op::Multiply>(input, skip_broadcast));
+
+    pattern::graph_rewrite_callback callback = [input, alpha](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_leaky_relu against "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+        if (!std::dynamic_pointer_cast<op::Constant>(pattern_map[alpha]))
+        {
+            NGRAPH_DEBUG << "alpha must be constant for leaky relu";
+            return false;
+        }
+
+        if (pattern_map[alpha]->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "Only float negative slope supported for leaky relu";
+            return false;
+        }
+
+        auto alpha_const_op = std::static_pointer_cast<op::Constant>(pattern_map[alpha]);
+        auto alpha_vec = alpha_const_op->get_vector<float>();
+        for (auto val : alpha_vec)
+        {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+            if (val != alpha_vec[0])
+            {
+                NGRAPH_DEBUG << "alpha is not a singular constant";
+                return false;
+            }
+#pragma clang diagnostic pop
+        }
+
+        if (alpha_vec[0] < 0)
+        {
+            NGRAPH_DEBUG << "alpha is not positive";
+            return false;
+        }
+
+        auto cg = std::shared_ptr<Node>(new op::LeakyRelu(pattern_map[input], alpha_vec[0]));
+        ngraph::replace_node(m.get_match_root(), cg);
+        return true;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(leaky_relu, callback);
+    this->add_matcher(m);
+}
 void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
 {
     auto relu_input = std::make_shared<pattern::op::Label>(element::f32, Shape{});
