@@ -240,6 +240,8 @@ namespace ngraph
                                                                    std::string reduced_idx,
                                                                    size_t rank,
                                                                    bool register_arguments = true);
+                static bool stable_sum_check_helper(const std::string& op,
+                                                    const std::string& data_type);
             };
         }
     }

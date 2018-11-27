@@ -508,8 +508,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
     size_t non_reduce_rank,
     size_t reduce_rank)
 {
-    bool stable_sum =
-        ((reduce_op == "add") && (data_types[1] == "float" || data_types[1] == "double"));
+    bool stable_sum = stable_sum_check_helper(reduce_op, data_types[1]);
     auto stable_sum_lambda = [&]() {
         writer << "input_i = in0[input_idx];\n";
         if (stable_sum)
@@ -617,8 +616,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
     const std::string& reduce_op,
     uint32_t block_size_x)
 {
-    bool stable_sum =
-        ((reduce_op == "add") && (data_types[1] == "float" || data_types[1] == "double"));
+    bool stable_sum = stable_sum_check_helper(reduce_op, data_types[1]);
     auto stable_sum_lambda = [&]() {
         writer << "input_i = in[input_idx];\n";
         if (stable_sum)
@@ -734,8 +732,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
     const std::vector<std::string>& data_types,
     const std::string& reduce_op)
 {
-    bool stable_sum =
-        ((reduce_op == "add") && (data_types[1] == "float" || data_types[1] == "double"));
+    bool stable_sum = stable_sum_check_helper(reduce_op, data_types[1]);
     auto stable_sum_lambda = [&]() {
         writer << "input_i = in[input_idx];\n";
         if (stable_sum)
@@ -2065,4 +2062,10 @@ void runtime::gpu::CudaKernelBuilder::add_pod_typedefs(codegen::CodeWriter& writ
     writer << "typedef unsigned int uint32_t;\n";
     writer << "typedef unsigned long int uint64_t;\n";
     writer << "\n";
+}
+
+bool runtime::gpu::CudaKernelBuilder::stable_sum_check_helper(const std::string& op,
+                                                              const std::string& data_type)
+{
+    return ((op == "add") && (data_type == "float" || data_type == "double"));
 }
