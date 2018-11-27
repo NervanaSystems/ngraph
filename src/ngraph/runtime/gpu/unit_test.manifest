@@ -4,12 +4,11 @@ batch_norm_three_outputs
 backwards_batch_norm_three_outputs
 #need to check
 computation_reuse
-#int64 is not supprted
+#cuda does not support throw
 divide_by_zero_int32
 #int64 is not supprted by cuDNN
 dot_matrix_vector_int64
 generate_mask
-#no mkldnn on GPU
 #error throw is not the same on GPU, not supported yet
 one_hot_scalar_fp_nonint_in_3
 one_hot_scalar_oob_in_3
