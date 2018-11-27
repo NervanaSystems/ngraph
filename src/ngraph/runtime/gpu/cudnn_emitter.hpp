@@ -193,11 +193,12 @@ namespace ngraph
                                                      cudnnConvolutionMode_t mode,
                                                      cudnnDataType_t data_type);
 
-                size_t get_cudnn_workspace_size(const cudnnHandle_t& handle,
-                                                const cudnnReduceTensorDescriptor_t& desc,
-                                                const cudnnTensorDescriptor_t& input_desc,
-                                                const cudnnTensorDescriptor_t& output_desc,
-                                                size_t input_buffer_size);
+                size_t
+                    get_cudnn_reduction_workspace_size(const cudnnHandle_t& handle,
+                                                       const cudnnReduceTensorDescriptor_t& desc,
+                                                       const cudnnTensorDescriptor_t& input_desc,
+                                                       const cudnnTensorDescriptor_t& output_desc,
+                                                       size_t input_buffer_size);
 
                 template <typename PERF_TYPE, typename ALGO_TYPE>
                 ALGO_TYPE

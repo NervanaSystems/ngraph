@@ -158,12 +158,12 @@ cudnnDataType_t runtime::gpu::CUDNNEmitter::get_cudnn_datatype(const element::Ty
     return get_cudnn_datatype(dtype.c_type_string());
 }
 
-size_t
-    runtime::gpu::CUDNNEmitter::get_cudnn_workspace_size(const cudnnHandle_t& handle,
-                                                         const cudnnReduceTensorDescriptor_t& desc,
-                                                         const cudnnTensorDescriptor_t& input_desc,
-                                                         const cudnnTensorDescriptor_t& output_desc,
-                                                         size_t input_buffer_size)
+size_t runtime::gpu::CUDNNEmitter::get_cudnn_reduction_workspace_size(
+    const cudnnHandle_t& handle,
+    const cudnnReduceTensorDescriptor_t& desc,
+    const cudnnTensorDescriptor_t& input_desc,
+    const cudnnTensorDescriptor_t& output_desc,
+    size_t input_buffer_size)
 {
     size_t workspace_size = 0;
     CUDNN_SAFE_CALL(
@@ -232,11 +232,11 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
                                                        CUDNN_32BIT_INDICES));
 
         size_t workspace_size =
-            get_cudnn_workspace_size(*m_ctx->cudnn_handle,
-                                     desc,
-                                     input_desc,
-                                     output_desc,
-                                     shape_size(input_shape) * input_type.size());
+            get_cudnn_reduction_workspace_size(*m_ctx->cudnn_handle,
+                                               desc,
+                                               input_desc,
+                                               output_desc,
+                                               shape_size(input_shape) * input_type.size());
 
         size_t workspace_idx = allocator.reserve_workspace(workspace_size);
         // emit reduce operation
@@ -277,11 +277,11 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
                                                            CUDNN_32BIT_INDICES));
 
             size_t workspace_size =
-                get_cudnn_workspace_size(*m_ctx->cudnn_handle,
-                                         desc,
-                                         input_desc,
-                                         output_desc,
-                                         shape_size(input_shape) * input_type.size());
+                get_cudnn_reduction_workspace_size(*m_ctx->cudnn_handle,
+                                                   desc,
+                                                   input_desc,
+                                                   output_desc,
+                                                   shape_size(input_shape) * input_type.size());
 
             size_t workspace_idx = allocator.reserve_workspace(workspace_size);
 
