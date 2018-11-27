@@ -63,7 +63,7 @@ RUN pip install breathe
 RUN pip install numpy
 
 # release notes need this markdown extension 
-RUN python3 -m pip install m2r
+# RUN python3 -m pip install m2r
 
 
 WORKDIR /home
