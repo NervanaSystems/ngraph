@@ -3072,11 +3072,11 @@ void* runtime::gpu::CUDAEmitter::get_init_reduce_val(std::string reduce_op, std:
 {
     if (reduce_op == "fmaxf" || reduce_op == "max")
     {
-        return m_host_parameters->lowest_by_datatype(data_type);
+        return TypeInfo::Get(data_type)->lowest_ptr();
     }
     else if (reduce_op == "fminf" || reduce_op == "min")
     {
-        return m_host_parameters->max_by_datatype(data_type);
+        return TypeInfo::Get(data_type)->max_ptr();
     }
     else if (reduce_op == "mul" || reduce_op == "logical_and")
     {

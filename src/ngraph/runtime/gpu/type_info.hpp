@@ -17,6 +17,7 @@
 #pragma once
 
 #include <limits>
+#include <list>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -39,6 +40,9 @@ namespace ngraph
                 virtual std::string lowest() const = 0;
                 virtual std::string min() const = 0;
                 virtual std::string max() const = 0;
+                virtual void* lowest_ptr() = 0;
+                virtual void* min_ptr() = 0;
+                virtual void* max_ptr() = 0;
 
                 using TypeDispatch = std::unordered_map<std::string, std::shared_ptr<TypeInfo>>;
                 static const std::shared_ptr<TypeInfo>& Get(const element::Type& type)
@@ -80,6 +84,28 @@ namespace ngraph
                 {
                     return to_string<T>(std::numeric_limits<T>::max());
                 }
+                void* lowest_ptr() override
+                {
+                    values.push_back(std::numeric_limits<T>::has_infinity
+                                         ? -std::numeric_limits<T>::infinity()
+                                         : std::numeric_limits<T>::lowest());
+                    return &values.back();
+                }
+                void* min_ptr() override
+                {
+                    values.push_back(std::numeric_limits<T>::min());
+                    return &values.back();
+                }
+                void* max_ptr() override
+                {
+                    values.push_back(std::numeric_limits<T>::has_infinity
+                                         ? std::numeric_limits<T>::infinity()
+                                         : std::numeric_limits<T>::max());
+                    return &values.back();
+                }
+
+            private:
+                std::list<T> values;
             };
         }
     }
