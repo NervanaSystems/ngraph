@@ -88,11 +88,11 @@ namespace ngraph
                 }
 
                 template <typename T>
-                void* getMin()
+                void* getLowest()
                 {
                     return cache(std::numeric_limits<T>::has_infinity
                                      ? -std::numeric_limits<T>::infinity()
-                                     : std::numeric_limits<T>::min());
+                                     : std::numeric_limits<T>::lowest());
                 }
 
                 template <typename T>
@@ -109,51 +109,51 @@ namespace ngraph
                     return cache(static_cast<T1>(val));
                 }
 
-                void* min_by_datatype(const std::string& type)
+                void* lowest_by_datatype(const std::string& type)
                 {
                     if (type == "char")
                     {
-                        return getMin<char>();
+                        return getLowest<char>();
                     }
                     else if (type == "float")
                     {
-                        return getMin<float>();
+                        return getLowest<float>();
                     }
                     else if (type == "double")
                     {
-                        return getMin<double>();
+                        return getLowest<double>();
                     }
                     else if (type == "int8_t")
                     {
-                        return getMin<int8_t>();
+                        return getLowest<int8_t>();
                     }
                     else if (type == "int16_t")
                     {
-                        return getMin<int16_t>();
+                        return getLowest<int16_t>();
                     }
                     else if (type == "int32_t")
                     {
-                        return getMin<int32_t>();
+                        return getLowest<int32_t>();
                     }
                     else if (type == "int64_t")
                     {
-                        return getMin<int64_t>();
+                        return getLowest<int64_t>();
                     }
                     else if (type == "uint8_t")
                     {
-                        return getMin<uint8_t>();
+                        return getLowest<uint8_t>();
                     }
                     else if (type == "uint16_t")
                     {
-                        return getMin<uint16_t>();
+                        return getLowest<uint16_t>();
                     }
                     else if (type == "uint32_t")
                     {
-                        return getMin<uint32_t>();
+                        return getLowest<uint32_t>();
                     }
                     else if (type == "uint64_t")
                     {
-                        return getMin<uint64_t>();
+                        return getLowest<uint64_t>();
                     }
                 }
 

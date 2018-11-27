@@ -279,6 +279,10 @@ namespace ngraph
                                 std::vector<int>& shift);
                 /// \brief Get initial value for reduce op
                 void* get_init_reduce_val(std::string reduce_op, std::string data_type);
+                /// \brief Get vector<string> of datatype from vector<element::Type>
+                std::vector<std::string>
+                    get_string_vector(const std::vector<element::Type>& dtypes);
+
                 std::shared_ptr<GPUHostParameters> m_host_parameters;
                 GPUPrimitiveEmitter* m_primitive_emitter;
                 GPURuntimeContext* m_ctx;
