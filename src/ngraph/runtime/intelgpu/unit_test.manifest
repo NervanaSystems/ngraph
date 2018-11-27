@@ -131,6 +131,7 @@ shape_of_vector
 shape_of_matrix
 shape_of_5d
 sum_stable_acc
+sum_trivial_in_double
 product_2d_to_scalar_int32
 product_to_scalar_int32
 product_to_scalar_int8
@@ -138,3 +139,6 @@ max_matrix_rows_zero_int32
 max_to_scalar_int8
 min_to_scalar_int8
 max_3d_to_scalar_double
+argmin_trivial_in_int32
+argmax_4D_axis_3_i64_in_int32
+argmin_trivial_in_double
