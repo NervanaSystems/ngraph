@@ -3,7 +3,7 @@
 Release Notes
 #############
 
-|release| |version|
+|release|
 
 
 This release focuses on accelerating deep learning inference workloads on 

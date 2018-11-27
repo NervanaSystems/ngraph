@@ -21,6 +21,9 @@
 Welcome
 =======
 
+See the latest :doc:`project/release-notes`. 
+
+
 .. figure:: graphics/599px-Intel-ngraph-ecosystem.png
    :width: 599px
 

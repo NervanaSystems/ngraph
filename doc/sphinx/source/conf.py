@@ -1,3 +1,5 @@
+
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
@@ -65,8 +67,7 @@ project = u'Intel® nGraph Library'
 copyright = '2018, Intel Corporation'
 author = 'Intel Corporation'
 
-# License specifics
-# TBD
+# License specifics see LICENSE of component
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
