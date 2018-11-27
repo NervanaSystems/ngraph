@@ -158,23 +158,6 @@ cudnnDataType_t runtime::gpu::CUDNNEmitter::get_cudnn_datatype(const element::Ty
     return get_cudnn_datatype(dtype.c_type_string());
 }
 
-size_t runtime::gpu::CUDNNEmitter::get_cudnn_reduction_workspace_size(
-    const cudnnHandle_t& handle,
-    const cudnnReduceTensorDescriptor_t& desc,
-    const cudnnTensorDescriptor_t& input_desc,
-    const cudnnTensorDescriptor_t& output_desc,
-    size_t input_buffer_size)
-{
-    size_t workspace_size = 0;
-    CUDNN_SAFE_CALL(
-        cudnnGetReductionWorkspaceSize(handle, desc, input_desc, output_desc, &workspace_size));
-    if (workspace_size < input_buffer_size)
-    {
-        workspace_size = input_buffer_size;
-    }
-    return workspace_size;
-}
-
 size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorOp_t& reduce_op,
                                                         const std::vector<element::Type>& dtypes,
                                                         const Shape& input_shape,
@@ -186,6 +169,11 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
                               ((input_type == element::i32) || (input_type == element::i8)));
     NGRAPH_ASSERT(use_cudnn_reduce)
         << " cudnn reduce for input type int32_t or int8_t currently not supported";
+
+    bool unsupported_int8_type_arg_reduce =
+        ~((reduction_mode == ReductionMode::ArgReduce) && (input_type == element::i8));
+    NGRAPH_ASSERT(unsupported_int8_type_arg_reduce)
+        << " cudnn arg_reduce for input type int8_t currently not supported";
     auto output_type = dtypes[1];
     std::stringstream ss;
     ss << "reduce_" << reduce_op << "_" << input_type.c_type_string() << "_"
@@ -231,12 +219,9 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
                                                        CUDNN_REDUCE_TENSOR_NO_INDICES,
                                                        CUDNN_32BIT_INDICES));
 
-        size_t workspace_size =
-            get_cudnn_reduction_workspace_size(*m_ctx->cudnn_handle,
-                                               desc,
-                                               input_desc,
-                                               output_desc,
-                                               shape_size(input_shape) * input_type.size());
+        size_t workspace_size = 0;
+        CUDNN_SAFE_CALL(cudnnGetReductionWorkspaceSize(
+            *m_ctx->cudnn_handle, desc, input_desc, output_desc, &workspace_size));
 
         size_t workspace_idx = allocator.reserve_workspace(workspace_size);
         // emit reduce operation
@@ -275,13 +260,9 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
                                                            CUDNN_NOT_PROPAGATE_NAN,
                                                            CUDNN_REDUCE_TENSOR_FLATTENED_INDICES,
                                                            CUDNN_32BIT_INDICES));
-
-            size_t workspace_size =
-                get_cudnn_reduction_workspace_size(*m_ctx->cudnn_handle,
-                                                   desc,
-                                                   input_desc,
-                                                   output_desc,
-                                                   shape_size(input_shape) * input_type.size());
+            size_t workspace_size = 0;
+            CUDNN_SAFE_CALL(cudnnGetReductionWorkspaceSize(
+                *m_ctx->cudnn_handle, desc, input_desc, output_desc, &workspace_size));
 
             size_t workspace_idx = allocator.reserve_workspace(workspace_size);
 
