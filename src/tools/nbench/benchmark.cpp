@@ -182,13 +182,9 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
         auto tensor_data =
             make_shared<runtime::HostTensor>(param->get_element_type(), param->get_shape());
         random_init(tensor_data);
-        if (copy_data)
-        {
-            tensor->write(tensor_data->get_data_ptr(),
-                          0,
-                          tensor_data->get_element_count() *
-                              tensor_data->get_element_type().size());
-        }
+        tensor->write(tensor_data->get_data_ptr(),
+                      0,
+                      tensor_data->get_element_count() * tensor_data->get_element_type().size());
         args.push_back(tensor);
         arg_data.push_back(tensor_data);
         args_cacheable.push_back(param->get_cacheable());
