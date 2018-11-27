@@ -50,6 +50,7 @@ namespace ngraph
                 std::vector<int> get_vector_int_from_size_t(const std::vector<size_t>&);
             }
             class GPUPrimitiveEmitter;
+            class GPUAllocator;
 
             class CUDNNEmitter
             {
@@ -191,6 +192,12 @@ namespace ngraph
                                                      const Strides& window_dilation_strides,
                                                      cudnnConvolutionMode_t mode,
                                                      cudnnDataType_t data_type);
+
+                size_t get_cudnn_workspace_size(const cudnnHandle_t& handle,
+                                                const cudnnReduceTensorDescriptor_t& desc,
+                                                const cudnnTensorDescriptor_t& input_desc,
+                                                const cudnnTensorDescriptor_t& output_desc,
+                                                size_t input_buffer_size);
 
                 template <typename PERF_TYPE, typename ALGO_TYPE>
                 ALGO_TYPE

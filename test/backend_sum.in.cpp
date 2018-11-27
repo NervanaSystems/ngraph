@@ -485,6 +485,24 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_2d_to_scalar_int8)
     EXPECT_EQ(std::vector<int8_t>{45}, read_vector<int8_t>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, sum_trivial_in_double)
+{
+    Shape shape{4, 3};
+    Shape rshape{3};
+    auto A = make_shared<op::Parameter>(element::f64, shape);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f64, shape);
+    copy_data(a, vector<double>{12, 2, 10, 9, 8, 4, 6, 1, 5, 3, 11, 7});
+    auto result = backend->create_tensor(element::f64, rshape);
+
+    backend->call_with_validate(f, {result}, {a});
+    EXPECT_EQ((vector<double>{30, 22, 26}), read_vector<double>(result));
+}
+
 #if NGRAPH_INTERPRETER_ENABLE
 
 NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc)
