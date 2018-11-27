@@ -103,7 +103,7 @@ to improve it:
 [Pip package]: https://github.com/NervanaSystems/ngraph-onnx#installing-ngraph-onnx
 [Build from source]: https://github.com/NervanaSystems/ngraph-tf
 [Enable the module]: https://github.com/NervanaSystems/ngraph/blob/mbrookhart/mxnet_tutorial/doc/sphinx/source/shared/mxnet_tutorial.rst
-[Source compile]: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/NGRAPH_README.md
+[Source compile]: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/README.md
 [nGraph-ONNX]: https://github.com/NervanaSystems/ngraph-onnx/blob/master/README.md
 [nGraph-ONNX adaptable]: https://ai.intel.com/adaptable-deep-learning-solutions-with-ngraph-compiler-and-onnx/
 [nGraph for PyTorch developers]: https://ai.intel.com/investing-in-the-pytorch-developer-community
