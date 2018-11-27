@@ -17,8 +17,8 @@
 #pragma once
 
 #include <cinttypes>
-#include <limits>
 #include <list>
+#include "ngraph/except.hpp"
 
 namespace ngraph
 {
