@@ -168,12 +168,12 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
     bool use_cudnn_reduce = ~((reduction_mode == ReductionMode::Reduce) &&
                               ((input_type == element::i32) || (input_type == element::i8)));
     NGRAPH_ASSERT(use_cudnn_reduce)
-        << " cudnn reduce for input type int32_t or int8_t currently not supported";
+        << "cuDNN reduce for input type int32_t or int8_t currently not supported";
 
     bool unsupported_int8_type_arg_reduce =
         ~((reduction_mode == ReductionMode::ArgReduce) && (input_type == element::i8));
     NGRAPH_ASSERT(unsupported_int8_type_arg_reduce)
-        << " cudnn arg_reduce for input type int8_t currently not supported";
+        << "cuDNN arg_reduce for input type int8_t currently not supported";
     auto output_type = dtypes[1];
     std::stringstream ss;
     ss << "reduce_" << reduce_op << "_" << input_type.c_type_string() << "_"
@@ -250,6 +250,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
     {
         if (output_type == element::i32 || output_type == element::i64)
         {
+            // Since cuDNN only outputs int32 indices
             size_t indices_size = shape_size(output_shape) * element::i32.size();
             size_t reduce_buffer_idx =
                 allocator.reserve_workspace(shape_size(output_shape) * modified_input_type.size());
@@ -268,7 +269,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
             auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
 
             std::function<void(void**, void**)> convert = [](void** inputs, void** outputs) {};
-            std::function<void*(void*)> convert_space = [](void* ptr) { return ptr; };
+            std::function<void*(void*)> convert_space = [](void* ptr){ return ptr; };
             if (output_type == element::i64)
             {
                 size_t workspace_indices_idx = allocator.reserve_workspace(indices_size);

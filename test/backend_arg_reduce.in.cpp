@@ -312,7 +312,7 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_4D_axis_3)
               read_vector<int>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, argmin_trivial_in_int32)
+NGRAPH_TEST(${BACKEND_NAME}, argmin_trivial_in_i32)
 {
     Shape shape{4, 3};
     Shape rshape{3};
@@ -330,7 +330,7 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_trivial_in_int32)
     EXPECT_EQ((vector<int>{3, 2, 1}), read_vector<int>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, argmax_4D_axis_3_i64_in_int32)
+NGRAPH_TEST(${BACKEND_NAME}, argmax_4D_axis_3_i64_in_i32)
 {
     Shape shape{2, 2, 5, 5}; // NCHW ->(0,1,2,3)
     Shape rshape{2, 2, 5};
