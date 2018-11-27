@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <climits>
 #include <cmath>
 
 #include "util/all_close_f.hpp"
@@ -26,12 +27,11 @@ union FloatUnion {
     uint32_t i;
 };
 
-bool test::close_f(float a, float b, int mantissa_bits, int tolerance_bits)
+uint32_t test::float_distance(float a, float b)
 {
-    // isfinite(a) => !isinf(a) && !isnan(a)
     if (!isfinite(a) || !isfinite(b))
     {
-        return false;
+        return UINT_MAX;
     }
 
     FloatUnion a_fu{a};
@@ -47,6 +47,18 @@ bool test::close_f(float a, float b, int mantissa_bits, int tolerance_bits)
     b_uint = (sign_mask & b_uint) ? (~b_uint + 1) : (sign_mask | b_uint);
 
     uint32_t distance = (a_uint >= b_uint) ? (a_uint - b_uint) : (b_uint - a_uint);
+    return distance;
+}
+
+bool test::close_f(float a, float b, int mantissa_bits, int tolerance_bits)
+{
+    // isfinite(a) => !isinf(a) && !isnan(a)
+    if (!isfinite(a) || !isfinite(b))
+    {
+        return false;
+    }
+
+    uint32_t distance = float_distance(a, b);
 
     // e.g. for float with 24 bit mantissa, 2 bit accuracy, and hard-coded 8 bit exponent_bits
     // tolerance_bit_shift = 32 -           (1 +  8 + (24 -     1         ) - 2             )
@@ -57,6 +69,64 @@ bool test::close_f(float a, float b, int mantissa_bits, int tolerance_bits)
     return distance <= tolerance;
 }
 
+vector<uint32_t> test::float_distances(const vector<float>& a, const vector<float>& b)
+{
+    if (a.size() != b.size())
+    {
+        throw ngraph_error("a.size() != b.size() for float_distances comparison.");
+    }
+    vector<uint32_t> distances(a.size());
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+        distances[i] = float_distance(a[i], b[i]);
+    }
+
+    return distances;
+}
+
+uint32_t test::matching_mantissa_bits(uint32_t distance)
+{
+    uint32_t tolerance_needed = distance;
+
+    if (tolerance_needed < 0x80000000)
+    {
+        // Set up the dominos - turn on all the bits below maximal bit
+        tolerance_needed |= tolerance_needed >> 1;
+        tolerance_needed |= tolerance_needed >> 2;
+        tolerance_needed |= tolerance_needed >> 4;
+        tolerance_needed |= tolerance_needed >> 8;
+        tolerance_needed |= tolerance_needed >> 16;
+
+        // Tumble the dominos so we end up with next highest bit
+        ++tolerance_needed;
+
+        // all_close_f is <= test for tolerance
+        if ((tolerance_needed >> 1) == distance)
+        {
+            tolerance_needed = distance;
+        }
+    }
+
+    uint32_t tolerance_bit_shift = 0;
+    while (tolerance_needed >>= 1)
+    {
+        ++tolerance_bit_shift;
+    }
+
+    // all_close_f calculation of tolerance_bit_shift:
+    // e.g. for float with 24 bit mantissa, 2 bit accuracy, and hard-coded 8 bit exponent_bits
+    //  tolerance_bit_shift   =     32 -          (1 +  8 + (24 -                    1         ) - 2             )
+    //                              float_length   sign exp  matching_matissa_bits   implicit 1    tolerance_bits
+    //
+    // Assuming 0 tolerance_bits and solving for matching_matissa_bits yields:
+    //  tolerance_bit_shift   =     32 -          (1 +  8 + (matching_matissa_bits - 1         ) - 0             )
+    //  tolerance_bit_shift   =     32 -          (1 +  8 + (matching_matissa_bits - 1         )                 )
+    //  matching_matissa_bits =     32 -          (1 +  8 + (tolerance_bit_shift   - 1         )                 )
+    uint32_t matching_matissa_bits =
+        tolerance_bit_shift < 24 ? (32 - (1 + 8 + (tolerance_bit_shift - 1))) : 0;
+    return matching_matissa_bits;
+}
+
 bool test::all_close_f(const vector<float>& a,
                        const vector<float>& b,
                        int mantissa_bits,
@@ -65,27 +135,70 @@ bool test::all_close_f(const vector<float>& a,
     bool rc = true;
     if (a.size() != b.size())
     {
-        throw ngraph_error("a.size() != b.size() for all_close comparison.");
+        throw ngraph_error("a.size() != b.size() for all_close_f comparison.");
     }
-    size_t count = 0;
+    vector<uint32_t> distances = float_distances(a, b);
+
+    // e.g. for float with 24 bit mantissa, 2 bit accuracy, and hard-coded 8 bit exponent_bits
+    // tolerance_bit_shift = 32 -           (1 +  8 + (24 -     1         ) - 2             )
+    //                       float_length    sign exp  mantissa implicit 1    tolerance_bits
+    uint32_t tolerance_bit_shift = 32 - (1 + 8 + (mantissa_bits - 1) - tolerance_bits);
+    uint32_t tolerance = static_cast<uint32_t>(1U) << tolerance_bit_shift;
+    uint32_t max_distance = 0;
+    uint32_t min_distance = UINT_MAX;
+    size_t max_distance_index = 0;
+    size_t min_distance_index = 0;
+    size_t diff_count = 0;
     for (size_t i = 0; i < a.size(); ++i)
     {
-        bool is_close_f = close_f(a[i], b[i], mantissa_bits, tolerance_bits);
+        if (distances[i] > max_distance)
+        {
+            max_distance = distances[i];
+            max_distance_index = i;
+        }
+        if (distances[i] < min_distance)
+        {
+            min_distance = distances[i];
+            min_distance_index = i;
+        }
+        bool is_close_f = distances[i] <= tolerance;
         if (!is_close_f)
         {
-            if (count < 5)
+            if (diff_count < 5)
             {
                 NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
             }
 
             rc = false;
-            count++;
+            diff_count++;
         }
     }
     if (!rc)
     {
-        NGRAPH_INFO << "diff count: " << count << " out of " << a.size();
+        NGRAPH_INFO << "diff count: " << diff_count << " out of " << a.size();
     }
+    // Find median value via partial sorting
+    size_t middle = distances.size() / 2;
+    std::nth_element(distances.begin(), distances.begin() + middle, distances.end());
+    uint32_t median_distance = distances[middle];
+    if (distances.size() % 2 == 0)
+    {
+        // Find middle-1 value
+        uint64_t median_sum = static_cast<uint64_t>(median_distance) +
+                              *max_element(distances.begin(), distances.begin() + middle);
+        median_distance = median_sum / 2;
+    }
+
+    NGRAPH_INFO << "passing criteria: " << (mantissa_bits - tolerance_bits) << " mantissa bits ("
+                << mantissa_bits << " mantissa bits w/ " << tolerance_bits << " tolerance bits)";
+    NGRAPH_INFO << "tightest match:   " << matching_mantissa_bits(min_distance)
+                << " mantissa bits (" << a[min_distance_index] << " vs " << b[min_distance_index]
+                << " at [" << min_distance_index << "])";
+    NGRAPH_INFO << "loosest match:    " << matching_mantissa_bits(max_distance)
+                << " mantissa bits (" << a[max_distance_index] << " vs " << b[max_distance_index]
+                << " at [" << max_distance_index << "])";
+    NGRAPH_INFO << "median match:     " << matching_mantissa_bits(median_distance)
+                << " mantissa bits";
 
     return rc;
 }
