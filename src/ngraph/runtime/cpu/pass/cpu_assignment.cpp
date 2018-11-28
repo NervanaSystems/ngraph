@@ -73,7 +73,6 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Add)
                 {
-                    auto add = static_cast<op::Add*>(node);
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg1_shape = node->get_input_shape(1);
                     auto arg0_rank = arg0_shape.size();
@@ -94,8 +93,6 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Concat)
                 {
-                    auto concat = static_cast<op::Concat*>(node);
-
                     if (node->get_input_element_type(0) == element::f32 &&
                         ((node->get_input_shape(0)).size() == 4 ||
                          (node->get_input_shape(0)).size() == 2))
@@ -123,8 +120,6 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Convolution)
                 {
-                    auto convolution = static_cast<op::Convolution*>(node);
-
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::Convolution>(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -134,8 +129,6 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::GroupConvolution)
                 {
-                    auto convolution = static_cast<op::GroupConvolution*>(node);
-
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::GroupConvolution>(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -145,8 +138,6 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::GroupConvolutionBias)
                 {
-                    auto convolution = static_cast<op::GroupConvolutionBias*>(node);
-
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::GroupConvolutionBias>(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -156,8 +147,6 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionRelu)
                 {
-                    auto convolution = static_cast<op::ConvolutionRelu*>(node);
-
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionRelu>(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -269,8 +258,6 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionBias)
                 {
-                    auto convolution = static_cast<op::ConvolutionBias*>(node);
-
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionBias>(node))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -443,7 +430,6 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::LRN)
                 {
-                    auto lrn = static_cast<op::LRN*>(node);
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg0_rank = arg0_shape.size();
                     auto result_shape = node->get_output_shape(0);
@@ -457,7 +443,6 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Sigmoid)
                 {
-                    auto sigmoid = static_cast<op::Sigmoid*>(node);
                     if (node->get_input_element_type(0) == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -467,7 +452,6 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::SigmoidBackprop)
                 {
-                    auto sigmoid = static_cast<op::SigmoidBackprop*>(node);
                     if (node->get_input_element_type(0) == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -477,8 +461,6 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ReluBackprop)
                 {
-                    auto relu_bprop = static_cast<op::ReluBackprop*>(node);
-
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg0_rank = arg0_shape.size();
                     auto result_shape = node->get_output_shape(0);
