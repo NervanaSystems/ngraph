@@ -32,7 +32,7 @@ namespace ngraph
     {
         namespace layout
         {
-            /// \brief Interface for describing implementations of tensor views.
+            /// \brief Interface for describing implementations of tensors.
             ///
             /// Kernel selection will need to pay attention to the layout.
             class TensorLayout
@@ -44,7 +44,7 @@ namespace ngraph
 
             public:
                 virtual ~TensorLayout() {}
-                /// Extent of this view in buffer.
+                /// Extent of this tensor in buffer.
                 ///
                 /// When we support non-linear buffers, this will need to be something other than size_t.
                 size_t get_size() const;

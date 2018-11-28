@@ -18,14 +18,12 @@
 
 #include <numeric>
 
+#include "core/node.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node_vector.hpp"
-#include "ngraph/shape.hpp"
-
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/add.hpp"
-
-#include "core/node.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {

@@ -18,12 +18,11 @@
 
 #include <memory>
 
+#include "core/node.hpp"
+#include "ngraph/frontend/onnx_import/op/softmax.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/log.hpp"
-
-#include "core/node.hpp"
-#include "ngraph/frontend/onnx_import/op/softmax.hpp"
 
 namespace ngraph
 {

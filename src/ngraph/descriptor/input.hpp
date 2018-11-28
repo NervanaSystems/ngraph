@@ -60,10 +60,10 @@ namespace ngraph
             void replace_output(Output& output);
 
         protected:
-            /// \return the tensor view for the connected output
+            /// \return the tensor for the connected output
             std::shared_ptr<const Tensor> get_tensor_ptr() const;
 
-            /// \return the tensor view for the connected output
+            /// \return the tensor for the connected output
             std::shared_ptr<Tensor> get_tensor_ptr();
 
         public:
