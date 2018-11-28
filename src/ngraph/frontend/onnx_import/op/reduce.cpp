@@ -22,7 +22,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/shape.hpp"
-
 #include "reduce.hpp"
 #include "utils/broadcasting.hpp"
 

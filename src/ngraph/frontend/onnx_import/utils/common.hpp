@@ -25,7 +25,6 @@
 
 #include "ngraph/op/constant.hpp"
 #include "ngraph/shape.hpp"
-
 #include "utils/broadcasting.hpp"
 
 namespace ngraph
