@@ -172,13 +172,12 @@ namespace ngraph
                     {
                         auto& functors = external_function->get_functors();
 
-                        std::function<decltype(
-                            runtime::cpu::kernel::batch_norm_three_outputs<float>)>
+                        std::function<decltype(runtime::cpu::kernel::batch_norm_training<float>)>
                             kernel;
 
                         SELECT_KERNEL(kernel,
                                       args[0].get_element_type(),
-                                      runtime::cpu::kernel::batch_norm_three_outputs);
+                                      runtime::cpu::kernel::batch_norm_training);
 
                         auto arg2_shape = args[2].get_shape();
                         auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
@@ -207,12 +206,12 @@ namespace ngraph
                     {
                         auto& functors = external_function->get_functors();
 
-                        std::function<decltype(runtime::cpu::kernel::batch_norm_one_output<float>)>
+                        std::function<decltype(runtime::cpu::kernel::batch_norm_inference<float>)>
                             kernel;
 
                         SELECT_KERNEL(kernel,
                                       args[0].get_element_type(),
-                                      runtime::cpu::kernel::batch_norm_one_output);
+                                      runtime::cpu::kernel::batch_norm_inference);
 
                         auto arg2_shape = args[2].get_shape();
                         auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
@@ -255,12 +254,12 @@ namespace ngraph
 
                     auto& functors = external_function->get_functors();
 
-                    std::function<decltype(runtime::cpu::kernel::batch_norm_one_output<float>)>
+                    std::function<decltype(runtime::cpu::kernel::batch_norm_inference<float>)>
                         kernel;
 
                     SELECT_KERNEL(kernel,
                                   args[0].get_element_type(),
-                                  runtime::cpu::kernel::batch_norm_one_output);
+                                  runtime::cpu::kernel::batch_norm_inference);
 
                     auto arg2_shape = args[2].get_shape();
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
