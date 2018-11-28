@@ -352,7 +352,7 @@ with open(os.path.join(PYNGRAPH_SOURCE_DIR, 'requirements.txt')) as req:
     requirements = req.read().splitlines()
 
 setup(
-    name='ngraph',
+    name='ngraph-core',
     version=__version__,
     author='Intel',
     author_email='intelnervana@intel.com',
