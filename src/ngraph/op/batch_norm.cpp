@@ -184,6 +184,23 @@ ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(
     constructor_validate_and_infer_types();
 }
 
+ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(
+    double epsilon,
+    std::shared_ptr<ngraph::Node> gamma,
+    std::shared_ptr<ngraph::Node> beta,
+    std::shared_ptr<ngraph::Node> input,
+    std::shared_ptr<ngraph::Node> mean,
+    std::shared_ptr<ngraph::Node> variance,
+    std::shared_ptr<ngraph::Node> delta)
+    : Op("BatchNormTrainingBackprop",
+         check_single_output_args({gamma, beta, input, mean, variance, delta}))
+    , m_epsilon(epsilon)
+
+{
+    set_output_size(3);
+    constructor_validate_and_infer_types();
+}
+
 void ngraph::op::BatchNormTrainingBackprop::validate_and_infer_types()
 {
     PartialShape input_and_delta_shape{get_input_partial_shape(INPUT_DATA)};

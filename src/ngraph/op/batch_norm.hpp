@@ -160,6 +160,16 @@ namespace ngraph
                                       std::shared_ptr<Node> delta,
                                       double epsilon);
 
+            // DEPRECATED
+            BatchNormTrainingBackprop(double epsilon,
+                                      std::shared_ptr<Node> gamma,
+                                      std::shared_ptr<Node> beta,
+                                      std::shared_ptr<Node> input,
+
+                                      std::shared_ptr<Node> mean,
+                                      std::shared_ptr<Node> variance,
+                                      std::shared_ptr<Node> delta);
+
             void validate_and_infer_types() override;
 
             double get_eps_value() const { return m_epsilon; }

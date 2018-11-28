@@ -1638,7 +1638,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training)
 
     auto make_graph = [&input_shape, &channel_shape, &eps, &et, &goes] {
         auto input = make_shared<op::Parameter>(et, input_shape);
-        auto gamma  = make_shared<op::Parameter>(et, channel_shape);
+        auto gamma = make_shared<op::Parameter>(et, channel_shape);
         auto beta = make_shared<op::Parameter>(et, channel_shape);
         auto BN = make_shared<op::BatchNormTraining>(input, gamma, beta, eps);
         auto normed_input = make_shared<op::Result>(make_shared<op::GetOutputElement>(BN, 0));
@@ -1659,7 +1659,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training)
     auto beta = rng.initialize(backend->create_tensor<T>(channel_shape));
 
     EXPECT_TRUE(
-                autodiff_numeric_compare<T>(backend.get(), make_graph, {input, gamma, beta}, .001, .001));
+        autodiff_numeric_compare<T>(backend.get(), make_graph, {input, gamma, beta}, .001, .001));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n3_c2_h3)
