@@ -16,9 +16,8 @@
 
 #pragma once
 
-#include <vector>
-
 #include <onnx-ml.pb.h>
+#include <vector>
 
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"

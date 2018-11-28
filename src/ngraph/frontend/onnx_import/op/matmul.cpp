@@ -19,6 +19,8 @@
 #include <memory>
 #include <vector>
 
+#include "exceptions.hpp"
+#include "matmul.hpp"
 #include "ngraph/coordinate.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
@@ -26,9 +28,6 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/shape.hpp"
-
-#include "exceptions.hpp"
-#include "matmul.hpp"
 #include "utils/broadcasting.hpp"
 #include "utils/reshape.hpp"
 

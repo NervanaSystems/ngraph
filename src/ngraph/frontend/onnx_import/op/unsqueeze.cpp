@@ -16,11 +16,10 @@
 
 #include <numeric>
 
-#include "ngraph/op/reshape.hpp"
-#include "utils/reshape.hpp"
-
 #include "exceptions.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "unsqueeze.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {
