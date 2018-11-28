@@ -1,3 +1,5 @@
+
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
@@ -42,6 +44,10 @@ extensions = [
     'breathe',
     ]
 
+
+# source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 static_path = ['static']
@@ -60,8 +66,7 @@ project = u'Intel® nGraph Library'
 copyright = '2018, Intel Corporation'
 author = 'Intel Corporation'
 
-# License specifics
-# TBD
+# License specifics see LICENSE of component
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

@@ -282,83 +282,449 @@ NGRAPH_TEST(${BACKEND_NAME}, multiple_result)
     EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(r1));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, batch_norm_one_output)
+template <typename T>
+class BatchNormInferenceTester
 {
-    auto shape_in = Shape{2, 3};
-    auto shape_mean = Shape{3};
+public:
+    BatchNormInferenceTester(const std::unique_ptr<ngraph::runtime::Backend>& backend,
+                             const Shape& input_shape,
+                             element::Type etype,
+                             double epsilon)
+        : m_backend(backend)
+    {
+        Shape channel_shape{input_shape.at(1)};
 
-    auto A = make_shared<op::Parameter>(element::f64, shape_in);
-    auto Mean =
-        op::Constant::create(element::f64, shape_mean, {0.00396654, -1.25294404, 1.16651872});
-    auto Variance =
-        op::Constant::create(element::f64, shape_mean, {2.40871689, 1.44969511, 0.23469392});
-    auto Beta =
-        op::Constant::create(element::f64, shape_mean, {2.14211921, -0.75733924, 0.42210531});
-    auto Gamma =
-        op::Constant::create(element::f64, shape_mean, {1.75437676, 0.37950502, 1.13727544});
+        auto Input = make_shared<op::Parameter>(etype, input_shape);
+        auto Gamma = make_shared<op::Parameter>(etype, channel_shape);
+        auto Beta = make_shared<op::Parameter>(etype, channel_shape);
+        auto Mean = make_shared<op::Parameter>(etype, channel_shape);
+        auto Variance = make_shared<op::Parameter>(etype, channel_shape);
+        auto BN = make_shared<op::BatchNormInference>(Input, Gamma, Beta, Mean, Variance, epsilon);
+        m_function = make_shared<Function>(BN, ParameterVector{Input, Gamma, Beta, Mean, Variance});
 
-    auto BN = make_shared<op::BatchNormInference>(1e-3, Gamma, Beta, A, Mean, Variance);
-    auto f = make_shared<Function>(BN, ParameterVector{A});
+        m_input = backend->create_tensor(etype, input_shape);
+        m_gamma = backend->create_tensor(etype, channel_shape);
+        m_beta = backend->create_tensor(etype, channel_shape);
+        m_mean = backend->create_tensor(etype, channel_shape);
+        m_variance = backend->create_tensor(etype, channel_shape);
+        m_normed_input = backend->create_tensor(etype, input_shape);
+    }
 
+    bool call(const std::vector<T>& input,
+              const std::vector<T>& gamma,
+              const std::vector<T>& beta,
+              const std::vector<T>& mean,
+              const std::vector<T>& variance,
+              const std::vector<T>& normed_input)
+    {
+        copy_data(m_input, input);
+        copy_data(m_gamma, gamma);
+        copy_data(m_beta, beta);
+        copy_data(m_mean, mean);
+        copy_data(m_variance, variance);
+        m_backend->call_with_validate(
+            m_function, {m_normed_input}, {m_input, m_gamma, m_beta, m_mean, m_variance});
+        auto res_normed_input = read_vector<T>(m_normed_input);
+        return test::all_close(normed_input, res_normed_input);
+    }
+
+protected:
+    const std::unique_ptr<ngraph::runtime::Backend>& m_backend;
+    std::shared_ptr<Function> m_function;
+    std::shared_ptr<ngraph::runtime::Tensor> m_input;
+    std::shared_ptr<ngraph::runtime::Tensor> m_gamma;
+    std::shared_ptr<ngraph::runtime::Tensor> m_beta;
+    std::shared_ptr<ngraph::runtime::Tensor> m_mean;
+    std::shared_ptr<ngraph::runtime::Tensor> m_variance;
+    std::shared_ptr<ngraph::runtime::Tensor> m_normed_input;
+};
+
+template <typename T>
+class BatchNormInferenceTesterZeroEpsilon : public BatchNormInferenceTester<T>
+{
+public:
+    // These are for documentation purposes only below
+    using Input = test::NDArray<T, 2>;
+    using Gamma = test::NDArray<T, 1>;
+    using Beta = test::NDArray<T, 1>;
+    using Mean = test::NDArray<T, 1>;
+    using Variance = test::NDArray<T, 1>;
+    using NormedInput = test::NDArray<T, 2>;
+
+    BatchNormInferenceTesterZeroEpsilon(const std::unique_ptr<ngraph::runtime::Backend>& backend,
+                                        element::Type etype)
+        : BatchNormInferenceTester<T>(backend, Shape{2, 3}, etype, 0.0)
+    {
+    }
+
+    bool test(const Input& input,
+              const Gamma& gamma,
+              const Beta& beta,
+              const Mean& mean,
+              const Variance& variance,
+              const NormedInput& normed_input)
+    {
+        return BatchNormInferenceTester<T>::call(input.get_vector(),
+                                                 gamma.get_vector(),
+                                                 beta.get_vector(),
+                                                 mean.get_vector(),
+                                                 variance.get_vector(),
+                                                 normed_input.get_vector());
+    }
+
+    bool test_gamma()
+    {
+        return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
+                    Gamma{2.0, 3.0, 4.0},
+                    Beta{0.0, 0.0, 0.0},
+                    Mean{0.0, 0.0, 0.0},
+                    Variance{1.0, 1.0, 1.0},
+                    NormedInput{{2.0, 6.0, 12.0}, {-2.0, -6.0, -12.0}});
+    }
+
+    bool test_beta()
+    {
+        return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
+                    Gamma{1.0, 1.0, 1.0},
+                    Beta{2.0, -2.0, 3.0},
+                    Mean{0.0, 0.0, 0.0},
+                    Variance{1.0, 1.0, 1.0},
+                    NormedInput{{3.0, 0.0, 6.0}, {1.0, -4.0, 0.0}});
+    }
+
+    bool test_mean()
+    {
+        return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
+                    Gamma{1.0, 1.0, 1.0},
+                    Beta{0.0, 0.0, 0.0},
+                    Mean{-2.0, 2.0, -3.0},
+                    Variance{1.0, 1.0, 1.0},
+                    NormedInput{{3.0, 0.0, 6.0}, {1.0, -4.0, 0.0}});
+    }
+
+    bool test_variance()
+    {
+        return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
+                    Gamma{1.0, 1.0, 1.0},
+                    Beta{0.0, 0.0, 0.0},
+                    Mean{0.0, 0.0, 0.0},
+                    Variance{0.25, .0625, 4.0},
+                    NormedInput{{2.0, 8.0, 1.5}, {-2.0, -8.0, -1.5}});
+    }
+};
+
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_0eps_f64)
+{
+    using T = double;
+    auto& et = element::f64;
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f64, shape_in);
-    copy_data(
-        a,
-        vector<double>{-1.97431703, -2.06521307, 0.54122217, 2.53375939, -0.22342691, 0.45340773});
-
-    auto result = backend->create_tensor(element::f64, shape_in);
-    vector<double> expected_result{
-        -0.09365749, -1.01327395, -1.04269195, 5.00118923, -0.43295258, -1.24840283};
-
-    backend->call_with_validate(f, {result}, {a});
-    EXPECT_TRUE(test::all_close(vector<double>{expected_result}, read_vector<double>(result)));
+    BatchNormInferenceTesterZeroEpsilon<T> bnt(backend, et);
+    EXPECT_TRUE(bnt.test_gamma()) << "Gamma test";
+    EXPECT_TRUE(bnt.test_beta()) << "Beta test";
+    EXPECT_TRUE(bnt.test_mean()) << "Mean test";
+    EXPECT_TRUE(bnt.test_variance()) << "Variance test";
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, batch_norm_three_outputs)
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_0eps_f32)
 {
-    auto shape_in = Shape{2, 3};
-    auto shape_mean = Shape{3};
-
-    auto A = make_shared<op::Parameter>(element::f64, shape_in);
-    auto Beta =
-        op::Constant::create(element::f64, shape_mean, {2.14211921, -0.75733924, 0.42210531});
-    auto Gamma =
-        op::Constant::create(element::f64, shape_mean, {1.75437676, 0.37950502, 1.13727544});
-
-    auto BN = make_shared<op::BatchNormTraining>(1e-3, Gamma, Beta, A);
-
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(BN, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(BN, 1), ParameterVector{A});
-    auto f2 = make_shared<Function>(make_shared<op::GetOutputElement>(BN, 2), ParameterVector{A});
-
+    using T = float;
+    auto& et = element::f32;
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    BatchNormInferenceTesterZeroEpsilon<T> bnt(backend, et);
+    EXPECT_TRUE(bnt.test_gamma()) << "Gamma test";
+    EXPECT_TRUE(bnt.test_beta()) << "Beta test";
+    EXPECT_TRUE(bnt.test_mean()) << "Mean test";
+    EXPECT_TRUE(bnt.test_variance()) << "Variance test";
+}
 
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f64, shape_in);
-    copy_data(
-        a,
-        vector<double>{-1.97431703, -2.06521307, 0.54122217, 2.53375939, -0.22342691, 0.45340773});
+template <typename T>
+class BatchNormInferenceTesterNonZeroEpsilon : public BatchNormInferenceTester<T>
+{
+public:
+    // These are for documentation purposes only below
+    using Input = test::NDArray<T, 2>;
+    using Gamma = test::NDArray<T, 1>;
+    using Beta = test::NDArray<T, 1>;
+    using Mean = test::NDArray<T, 1>;
+    using Variance = test::NDArray<T, 1>;
+    using NormedInput = test::NDArray<T, 2>;
 
-    auto result0 = backend->create_tensor(element::f64, shape_in);
-    vector<double> expected_result0{
-        0.3879149, -1.13662076, 1.34494817, 3.89632344, -0.37805778, -0.50073695};
+    BatchNormInferenceTesterNonZeroEpsilon(const std::unique_ptr<ngraph::runtime::Backend>& backend,
+                                           element::Type etype)
+        : BatchNormInferenceTester<T>(backend, Shape{2, 3}, etype, 0.25)
+    {
+    }
 
-    backend->call_with_validate(f0, {result0}, {a});
-    EXPECT_TRUE(test::all_close(vector<double>{expected_result0}, read_vector<double>(result0)));
+    bool test(const Input& input,
+              const Gamma& gamma,
+              const Beta& beta,
+              const Mean& mean,
+              const Variance& variance,
+              const NormedInput& normed_input)
+    {
+        return BatchNormInferenceTester<T>::call(input.get_vector(),
+                                                 gamma.get_vector(),
+                                                 beta.get_vector(),
+                                                 mean.get_vector(),
+                                                 variance.get_vector(),
+                                                 normed_input.get_vector());
+    }
 
-    auto result1 = backend->create_tensor(element::f64, shape_mean);
-    vector<double> expected_result1{0.27972114, -1.14431989, 0.49731493};
+    bool test_gamma()
+    {
+        return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
+                    Gamma{2.0, 3.0, 4.0},
+                    Beta{0.0, 0.0, 0.0},
+                    Mean{0.0, 0.0, 0.0},
+                    Variance{0.75, 0.75, 0.75},
+                    NormedInput{{2.0, 6.0, 12.0}, {-2.0, -6.0, -12.0}});
+    }
 
-    backend->call_with_validate(f1, {result1}, {a});
-    EXPECT_TRUE(test::all_close(vector<double>{expected_result1}, read_vector<double>(result1)));
+    bool test_beta()
+    {
+        return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
+                    Gamma{1.0, 1.0, 1.0},
+                    Beta{2.0, -2.0, 3.0},
+                    Mean{0.0, 0.0, 0.0},
+                    Variance{0.75, 0.75, 0.75},
+                    NormedInput{{3.0, 0.0, 6.0}, {1.0, -4.0, 0.0}});
+    }
 
-    auto result2 = backend->create_tensor(element::f64, shape_mean);
-    vector<double> expected_result2{5.08068895e+00, 8.48043919e-01, 1.92784308e-03};
+    bool test_mean()
+    {
+        return test(Input{{1.0, 2.0, 3.0}, {-1.0, -2.0, -3.0}},
+                    Gamma{1.0, 1.0, 1.0},
+                    Beta{0.0, 0.0, 0.0},
+                    Mean{-2.0, 2.0, -3.0},
+                    Variance{0.75, 0.75, 0.75},
+                    NormedInput{{3.0, 0.0, 6.0}, {1.0, -4.0, 0.0}});
+    }
 
-    backend->call_with_validate(f2, {result2}, {a});
-    EXPECT_TRUE(test::all_close(vector<double>{expected_result2}, read_vector<double>(result2)));
+    bool test_variance()
+    {
+        return test(Input{{3.0, 5.0, 1.0}, {-3.0, -5.0, -1.0}},
+                    Gamma{1.0, 1.0, 1.0},
+                    Beta{0.0, 0.0, 0.0},
+                    Mean{0.0, 0.0, 0.0},
+                    Variance{2.0, 6.0, 0.0},
+                    NormedInput{{2.0, 2.0, 2.0}, {-2.0, -2.0, -2.0}});
+    }
+};
+
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_f64)
+{
+    using T = double;
+    auto& et = element::f64;
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    BatchNormInferenceTesterNonZeroEpsilon<T> bnt(backend, et);
+    EXPECT_TRUE(bnt.test_gamma()) << "Gamma test";
+    EXPECT_TRUE(bnt.test_beta()) << "Beta test";
+    EXPECT_TRUE(bnt.test_mean()) << "Mean test";
+    EXPECT_TRUE(bnt.test_variance()) << "Variance test";
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_f32)
+{
+    using T = float;
+    auto& et = element::f32;
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    BatchNormInferenceTesterNonZeroEpsilon<T> bnt(backend, et);
+    EXPECT_TRUE(bnt.test_gamma()) << "Gamma test";
+    EXPECT_TRUE(bnt.test_beta()) << "Beta test";
+    EXPECT_TRUE(bnt.test_mean()) << "Mean test";
+    EXPECT_TRUE(bnt.test_variance()) << "Variance test";
+}
+
+template <typename T>
+class BatchNormTrainingTester
+{
+public:
+    BatchNormTrainingTester(const std::unique_ptr<ngraph::runtime::Backend>& backend,
+                            const Shape& input_shape,
+                            element::Type etype,
+                            double epsilon)
+        : m_backend(backend)
+    {
+        Shape channel_shape{input_shape.at(1)};
+
+        auto Input = make_shared<op::Parameter>(etype, input_shape);
+        auto Gamma = make_shared<op::Parameter>(etype, channel_shape);
+        auto Beta = make_shared<op::Parameter>(etype, channel_shape);
+        auto BN = make_shared<op::BatchNormTraining>(Input, Gamma, Beta, epsilon);
+        auto NormedInput = make_shared<op::Result>(make_shared<op::GetOutputElement>(BN, 0));
+        auto Mean = make_shared<op::Result>(make_shared<op::GetOutputElement>(BN, 1));
+        auto Variance = make_shared<op::Result>(make_shared<op::GetOutputElement>(BN, 2));
+        m_function = make_shared<Function>(ResultVector{NormedInput, Mean, Variance},
+                                           ParameterVector{Input, Gamma, Beta});
+
+        m_input = backend->create_tensor(etype, input_shape);
+        m_gamma = backend->create_tensor(etype, channel_shape);
+        m_beta = backend->create_tensor(etype, channel_shape);
+        m_normed_input = backend->create_tensor(etype, input_shape);
+        m_mean = backend->create_tensor(etype, channel_shape);
+        m_variance = backend->create_tensor(etype, channel_shape);
+    }
+
+    std::tuple<bool, bool, bool> call(const std::vector<T>& input,
+                                      const std::vector<T>& gamma,
+                                      const std::vector<T>& beta,
+                                      const std::vector<T>& normed_input,
+                                      const std::vector<T>& mean,
+                                      const std::vector<T>& variance)
+    {
+        copy_data(m_input, input);
+        copy_data(m_gamma, gamma);
+        copy_data(m_beta, beta);
+        m_backend->call_with_validate(
+            m_function, {m_normed_input, m_mean, m_variance}, {m_input, m_gamma, m_beta});
+        auto res_normed_input = read_vector<T>(m_normed_input);
+        bool normed_input_test = test::all_close(normed_input, res_normed_input);
+
+        auto res_mean = read_vector<T>(m_mean);
+        bool mean_test = test::all_close(mean, res_mean);
+
+        auto res_variance = read_vector<T>(m_variance);
+        bool variance_test = test::all_close(variance, res_variance);
+
+        return std::tuple<bool, bool, bool>(normed_input_test, mean_test, variance_test);
+    }
+
+protected:
+    const std::unique_ptr<ngraph::runtime::Backend>& m_backend;
+    std::shared_ptr<Function> m_function;
+    std::shared_ptr<ngraph::runtime::Tensor> m_input;
+    std::shared_ptr<ngraph::runtime::Tensor> m_gamma;
+    std::shared_ptr<ngraph::runtime::Tensor> m_beta;
+    std::shared_ptr<ngraph::runtime::Tensor> m_normed_input;
+    std::shared_ptr<ngraph::runtime::Tensor> m_mean;
+    std::shared_ptr<ngraph::runtime::Tensor> m_variance;
+};
+
+template <typename T>
+class BatchNormTrainingTesterZeroEpsilon : public BatchNormTrainingTester<T>
+{
+public:
+    // These are for documentation purposes only below
+    using Input = test::NDArray<T, 2>;
+    using Gamma = test::NDArray<T, 1>;
+    using Beta = test::NDArray<T, 1>;
+    using NormedInput = test::NDArray<T, 2>;
+    using Mean = test::NDArray<T, 1>;
+    using Variance = test::NDArray<T, 1>;
+
+    BatchNormTrainingTesterZeroEpsilon(const std::unique_ptr<ngraph::runtime::Backend>& backend,
+                                       element::Type etype)
+        : BatchNormTrainingTester<T>(backend, Shape{10, 3}, etype, 0.0)
+    {
+    }
+
+    std::tuple<bool, bool, bool> test(const Input& input,
+                                      const Gamma& gamma,
+                                      const Beta& beta,
+                                      const NormedInput& normed_input,
+                                      const Mean& mean,
+                                      const Variance& variance)
+
+    {
+        return BatchNormTrainingTester<T>::call(input.get_vector(),
+                                                gamma.get_vector(),
+                                                beta.get_vector(),
+                                                normed_input.get_vector(),
+                                                mean.get_vector(),
+                                                variance.get_vector());
+    }
+
+    std::tuple<bool, bool, bool> test_mean_variance()
+    {
+        return test(Input{{0.0, 1.0, 0.0},
+                          {1.0, 2.0, 0.25},
+                          {1.0, 2.0, 0.25},
+                          {3.0, 4.0, 0.75},
+                          {3.0, 4.0, 0.75},
+                          {0.0, 1.0, 0.0},
+                          {-1.0, 0.0, -0.25},
+                          {-1.0, 0.0, -0.25},
+                          {-3.0, -2.0, -0.75},
+                          {-3.0, -2.0, -0.75}},
+                    Gamma{1.0, 1.0, 1.0},
+                    Beta{0.0, 0.0, 0.0},
+                    NormedInput{{0.0, 0.0, 0.0},
+                                {0.5, 0.5, 0.5},
+                                {0.5, 0.5, 0.5},
+                                {1.5, 1.5, 1.5},
+                                {1.5, 1.5, 1.5},
+                                {0.0, 0.0, 0.0},
+                                {-0.5, -0.5, -0.5},
+                                {-0.5, -0.5, -0.5},
+                                {-1.5, -1.5, -1.5},
+                                {-1.5, -1.5, -1.5}},
+                    Mean{0.0, 1.0, 0.0},
+                    Variance{4.0, 4.0, 0.25});
+    }
+
+    std::tuple<bool, bool, bool> test_gamma_beta()
+    {
+        return test(Input{{0.0, 1.0, 0.0},
+                          {1.0, 2.0, 0.25},
+                          {1.0, 2.0, 0.25},
+                          {3.0, 4.0, 0.75},
+                          {3.0, 4.0, 0.75},
+                          {0.0, 1.0, 0.0},
+                          {-1.0, 0.0, -0.25},
+                          {-1.0, 0.0, -0.25},
+                          {-3.0, -2.0, -0.75},
+                          {-3.0, -2.0, -0.75}},
+                    Gamma{2.0, 1.0, 2.0},
+                    Beta{0.0, 1.0, 1.0},
+                    NormedInput{{0.0, 1.0, 1.0},
+                                {1.0, 1.5, 2.0},
+                                {1.0, 1.5, 2.0},
+                                {3.0, 2.5, 4.0},
+                                {3.0, 2.5, 4.0},
+                                {0.0, 1.0, 1.0},
+                                {-1.0, 0.5, 0.0},
+                                {-1.0, 0.5, 0.0},
+                                {-3.0, -0.5, -2.0},
+                                {-3.0, -0.5, -2.0}},
+                    Mean{0.0, 1.0, 0.0},
+                    Variance{4.0, 4.0, 0.25});
+    }
+};
+
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_training_0eps_f64)
+{
+    using T = double;
+    auto& et = element::f64;
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    BatchNormTrainingTesterZeroEpsilon<T> bnt(backend, et);
+    std::tuple<bool, bool, bool> result;
+    result = bnt.test_mean_variance();
+    EXPECT_TRUE(std::get<0>(result)) << "Mean variance test normed input";
+    EXPECT_TRUE(std::get<1>(result)) << "Mean variance test mean";
+    EXPECT_TRUE(std::get<2>(result)) << "Mean variance test variance";
+
+    result = bnt.test_gamma_beta();
+    EXPECT_TRUE(std::get<0>(result)) << "Gamma beta test normed input";
+    EXPECT_TRUE(std::get<1>(result)) << "Gamma beta test mean";
+    EXPECT_TRUE(std::get<2>(result)) << "Gamma test variance";
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_training_0eps_f32)
+{
+    using T = float;
+    auto& et = element::f32;
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    BatchNormTrainingTesterZeroEpsilon<T> bnt(backend, et);
+    std::tuple<bool, bool, bool> result;
+    result = bnt.test_mean_variance();
+    EXPECT_TRUE(std::get<0>(result)) << "Mean variance test normed input";
+    EXPECT_TRUE(std::get<1>(result)) << "Mean variance test mean";
+    EXPECT_TRUE(std::get<2>(result)) << "Mean variance test variance";
+
+    result = bnt.test_gamma_beta();
+    EXPECT_TRUE(std::get<0>(result)) << "Gamma beta test normed input";
+    EXPECT_TRUE(std::get<1>(result)) << "Gamma beta test mean";
+    EXPECT_TRUE(std::get<2>(result)) << "Gamma beta test variance";
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_colwise)
@@ -4691,7 +5057,7 @@ NGRAPH_TEST(${BACKEND_NAME}, logical_or)
     EXPECT_EQ((vector<char>{1, 0, 1, 1, 1, 1, 1, 0}), read_vector<char>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b1c2h2w2)
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_b1c2h2w2)
 {
     auto input_shape = Shape{1, 2, 2, 2};
     auto input = make_shared<op::Parameter>(element::f32, input_shape);
@@ -4703,7 +5069,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b1c2h2w2)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{1, 2, 2, 2};
-    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
+    auto bn = make_shared<op::BatchNormTraining>(input, gamma, beta, eps);
 
     auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
     auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
@@ -4754,7 +5120,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b1c2h2w2)
         test::all_close(expected_variance, read_vector<float>(result_variance), 1e-5f, 1e-6f));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_b2c2h2w1)
 {
     auto input_shape = Shape{2, 2, 2, 1};
     auto input = make_shared<op::Parameter>(element::f32, input_shape);
@@ -4766,7 +5132,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
+    auto bn = make_shared<op::BatchNormTraining>(input, gamma, beta, eps);
 
     auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
     auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
@@ -4808,7 +5174,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2h2w1)
         test::all_close(expected_variance, read_vector<float>(result_variance), 1e-5f, 1e-6f));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, batchnorm_bprop_n4c3h2w2)
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_bprop_n4c3h2w2)
 {
     auto input_shape = Shape{4, 3, 2, 2};
     auto shape_mean = Shape{3};
@@ -4823,7 +5189,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_bprop_n4c3h2w2)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{4, 3, 2, 2};
-    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
+    auto bn = make_shared<op::BatchNormTraining>(input, gamma, beta, eps);
     auto bn_dx = make_shared<op::GetOutputElement>(bn, 0);
     auto bn_dgamma = make_shared<op::GetOutputElement>(bn, 1);
     auto bn_dbeta = make_shared<op::GetOutputElement>(bn, 2);
@@ -4904,7 +5270,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_bprop_n4c3h2w2)
     ASSERT_TRUE(ngraph::test::all_close(read_vector<float>(_dbeta), expected_dbeta, 1e-4f, 1e-8f));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_inference_b2c2h2w1)
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_inference_b2c2h2w1)
 {
     auto input_shape = Shape{2, 2, 2, 1};
     auto input = make_shared<op::Parameter>(element::f32, input_shape);
@@ -4918,7 +5284,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_inference_b2c2h2w1)
     auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNormInference>(eps, gamma, beta, input, mean, var);
+    auto bn = make_shared<op::BatchNormInference>(input, gamma, beta, mean, var, eps);
 
     auto f = make_shared<Function>(bn, ParameterVector{input, gamma, beta, mean, var});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -4951,56 +5317,6 @@ NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_inference_b2c2h2w1)
     ASSERT_TRUE(
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
 }
-
-#if 0
-NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_globalstats_b2c2w2h1)
-{
-    auto input_shape = Shape{2, 2, 2, 1};
-    auto input = make_shared<op::Parameter>(element::f32, input_shape);
-    auto mean_shape = Shape{2};
-    auto mean = make_shared<op::Parameter>(element::f32, mean_shape);
-    auto var_shape = Shape{2};
-    auto var = make_shared<op::Parameter>(element::f32, var_shape);
-    auto gamma_shape = Shape{2};
-    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
-    auto beta_shape = Shape{2};
-    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
-    double eps = 0.001;
-    auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input, mean, var);
-
-    auto f = make_shared<Function>(bn, ParameterVector{gamma, beta, input, mean, var});
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-    // Create some tensors for input/output
-    auto _input = backend->create_tensor(element::f32, input_shape);
-    copy_data(_input,
-              vector<float>{0.54881352f,
-                            0.71518934f,
-                            0.60276335f,
-                            0.54488319f,
-                            0.42365479f,
-                            0.64589411f,
-                            0.4375872f,
-                            0.89177299f});
-
-    auto _gamma = backend->create_tensor(element::f32, gamma_shape);
-    copy_data(_gamma, vector<float>{1.0f, 1.0f});
-    auto _beta = backend->create_tensor(element::f32, beta_shape);
-    copy_data(_beta, vector<float>{0.0f, 0.0f});
-    auto _mean = backend->create_tensor(element::f32, mean_shape);
-    copy_data(_mean, vector<float>{0.583388f, 0.619252f});
-    auto _var = backend->create_tensor(element::f32, var_shape);
-    copy_data(_var, vector<float>{0.0119972f, 0.0282681f});
-    auto bn_output = backend->create_tensor(element::f32, shape_r);
-
-    vector<float> expected_result{
-        -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
-    backend->call_with_validate(f, {bn_output}, {_gamma, _beta, _input, _mean, _var});
-
-    ASSERT_TRUE(
-        ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
-}
-#endif
 
 NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n2c3h4w2)
 {
@@ -6058,81 +6374,6 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_DOWN)
     backend->call_with_validate(f, {y}, {x});
     EXPECT_EQ((vector<output_c_type>{2, 2, 2, -3, -3, -3, 3, 3, 3, -4, -4, -4}),
               read_vector<output_c_type>(y));
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop)
-{
-    Shape sca{1};
-    Shape vec{1, 1, 1, 2};
-    double eps = 1.0e-04;
-
-    auto g = std::make_shared<op::Parameter>(element::f32, sca);
-    auto b = std::make_shared<op::Parameter>(element::f32, sca);
-    auto input = std::make_shared<op::Parameter>(element::f32, vec);
-    auto bn_fp = std::make_shared<op::BatchNormTraining>(eps, g, b, input);
-    auto bnorm = std::make_shared<op::GetOutputElement>(bn_fp, 0);
-    auto mean = std::make_shared<op::GetOutputElement>(bn_fp, 1);
-    auto var = std::make_shared<op::GetOutputElement>(bn_fp, 2);
-
-    auto delta = std::make_shared<op::Parameter>(element::f32, vec);
-    auto bn_bp =
-        std::make_shared<op::BatchNormTrainingBackprop>(eps, g, b, bnorm, mean, var, delta);
-    auto dx = std::make_shared<op::GetOutputElement>(bn_bp, 0);
-
-    std::vector<std::vector<float>> args = {
-        {1.0f},       // gamma
-        {1.0f},       // beta
-        {1.1f, 1.0f}, // x
-        {1.0f, 1.0f}, // dy
-    };
-
-    auto func = std::make_shared<Function>(dx, ParameterVector{g, b, input, delta});
-    auto results = execute(func, args, "${BACKEND_NAME}");
-    EXPECT_TRUE(test::all_close_f(std::vector<float>{350.957f, -388.67f}, results.at(0)));
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop_2step)
-{
-    Shape sca{1};
-    Shape vec{1, 1, 1, 2};
-    double eps = 1.0e-04;
-
-    auto g = std::make_shared<op::Parameter>(element::f32, sca);
-    auto b = std::make_shared<op::Parameter>(element::f32, sca);
-    auto input = std::make_shared<op::Parameter>(element::f32, vec);
-    auto bn_fp = std::make_shared<op::BatchNormTraining>(eps, g, b, input);
-    auto bnorm = std::make_shared<op::GetOutputElement>(bn_fp, 0);
-    auto mean = std::make_shared<op::GetOutputElement>(bn_fp, 1);
-    auto var = std::make_shared<op::GetOutputElement>(bn_fp, 2);
-
-    auto func_bn =
-        std::make_shared<Function>(NodeVector{bnorm, mean, var}, ParameterVector{g, b, input});
-
-    std::vector<std::vector<float>> args = {
-        {1.0f},       // gamma
-        {1.0f},       // beta
-        {1.1f, 1.0f}, // x
-    };
-    auto results = execute(func_bn, args, "${BACKEND_NAME}");
-
-    g = std::make_shared<op::Parameter>(element::f32, sca);
-    b = std::make_shared<op::Parameter>(element::f32, sca);
-    auto bn_output = std::make_shared<op::Parameter>(element::f32, vec);
-    auto m = std::make_shared<op::Parameter>(element::f32, sca);
-    auto v = std::make_shared<op::Parameter>(element::f32, sca);
-    auto delta = std::make_shared<op::Parameter>(element::f32, vec);
-    auto bn_bp = std::make_shared<op::BatchNormTrainingBackprop>(eps, g, b, bn_output, m, v, delta);
-    auto dx = std::make_shared<op::GetOutputElement>(bn_bp, 0);
-
-    args.pop_back();               // remove x
-    args.push_back(results.at(0)); // bn_output
-    args.push_back(results.at(1)); // m
-    args.push_back(results.at(2)); // v
-    args.push_back({1.0f, 1.0f});  // dy
-
-    auto func = std::make_shared<Function>(dx, ParameterVector{g, b, bn_output, m, v, delta});
-    results = execute(func, args, "${BACKEND_NAME}");
-    EXPECT_TRUE(test::all_close_f(std::vector<float>{350.957f, -388.67f}, results.at(0)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar)
