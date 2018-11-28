@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <iostream>
+#include <stdio.h>
 #include "ngraph/runtime/gpu/nvcc/kernels.hpp"
 using namespace ngraph;
 
