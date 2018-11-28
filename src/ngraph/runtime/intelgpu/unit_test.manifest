@@ -15,6 +15,9 @@ backwards_reverse_sequence_n3_c2_h3
 backwards_reverse_sequence_n4d2c3h2w2
 backwards_slice
 backwards_tanh
+batch_norm_inference_0eps_f64
+batch_norm_inference_f64
+batch_norm_training_0eps_f64
 batch_norm_one_output
 batch_norm_three_outputs
 dequantize
