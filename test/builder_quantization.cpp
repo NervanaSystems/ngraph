@@ -24,6 +24,8 @@
 #include "ngraph/builder/quantization.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/pass/constant_folding.hpp"
+#include "ngraph/pass/manager.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
@@ -130,6 +132,13 @@ TEST(builder, scaled_QAP_signed)
     EXPECT_EQ((vector<int8_t>{2, 0, 0, 0, 0, 1}), read_vector<int8_t>(result));
 }
 
+static void constant_fold(std::shared_ptr<Function> f)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+}
+
 TEST(builder, scaled_QC)
 {
     Shape shape_a{1, 1, 3, 4}; // input shape
@@ -159,6 +168,8 @@ TEST(builder, scaled_QC)
                                                           G,
                                                           H);
     auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B});
+    constant_fold(f);
+
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -200,6 +211,7 @@ TEST(builder, scaled_QC_with_relu)
                                                               G,
                                                               H);
     auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B});
+    constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -243,6 +255,7 @@ TEST(builder, scaled_QC_with_bias)
                                                               G,
                                                               H);
     auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias});
+    constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -290,6 +303,7 @@ TEST(builder, scaled_QC_with_bias_and_relu)
                                                               H,
                                                               true);
     auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias});
+    constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -336,6 +350,7 @@ TEST(builder, scaled_QC_with_f32_bias_and_relu)
                                                               H,
                                                               true);
     auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias});
+    constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -360,6 +375,7 @@ TEST(builder, scaled_Q_unsigned)
     auto C = op::Constant::create(element::f32, Shape{}, {127.0f});
     auto QT = ngraph::builder::ScaledQuantize(A, B, C, element::u8, quantization_axes, round_mode);
     auto f = make_shared<Function>(NodeVector{QT}, ParameterVector{A});
+    constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -404,6 +420,7 @@ TEST(builder, scaled_Q_signed)
     auto C = op::Constant::create(element::f32, Shape{}, {127.0f});
     auto QT = ngraph::builder::ScaledQuantize(A, B, C, element::i8, quantization_axes, round_mode);
     auto f = make_shared<Function>(NodeVector{QT}, ParameterVector{A});
+    constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -422,6 +439,7 @@ TEST(builder, scaled_DQ_signed)
     auto C = op::Constant::create(element::f32, Shape{}, {300.0f});
     auto r = ngraph::builder::ScaledDequantize(A, B, C, element::f32, quantization_axes);
     auto f = make_shared<Function>(r, ParameterVector{A});
+    constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i8, Shape{1});
