@@ -46,6 +46,7 @@ RUN c++ --version
 RUN easy_install pip
 RUN pip install virtualenv
 
+
 # Install some pip packages
 
 # need to use sphinx version 1.6 to build docs
@@ -60,5 +61,9 @@ RUN pip install breathe
 
 # need numpy to successfully build docs for python_api
 RUN pip install numpy
+
+# release notes need this markdown extension 
+# RUN python3 -m pip install m2r
+
 
 WORKDIR /home

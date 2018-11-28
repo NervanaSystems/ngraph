@@ -24,6 +24,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "exceptions.hpp"
+#include "lstm.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/concat.hpp"
@@ -34,9 +36,6 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
-
-#include "exceptions.hpp"
-#include "lstm.hpp"
 #include "utils/broadcasting.hpp"
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"

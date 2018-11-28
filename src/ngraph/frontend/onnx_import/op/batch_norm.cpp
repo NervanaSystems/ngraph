@@ -17,11 +17,10 @@
 #include <cstdint>
 #include <memory>
 
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/batch_norm.hpp"
-
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/op/batch_norm.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/batch_norm.hpp"
 
 namespace ngraph
 {
@@ -54,11 +53,11 @@ namespace ngraph
                         mean = inputs.at(3);
                         var = inputs.at(4);
                         return {std::make_shared<ngraph::op::BatchNormInference>(
-                            epsilon, scale, bias, x, mean, var)};
+                            x, scale, bias, mean, var, epsilon)};
                     }
 
                     return {
-                        std::make_shared<ngraph::op::BatchNormTraining>(epsilon, scale, bias, x)};
+                        std::make_shared<ngraph::op::BatchNormTraining>(x, scale, bias, epsilon)};
                 }
 
             } // namespace set_1
