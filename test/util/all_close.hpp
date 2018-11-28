@@ -45,12 +45,13 @@ namespace ngraph
             size_t count = 0;
             for (size_t i = 0; i < a.size(); ++i)
             {
+                
                 if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]) || !std::isfinite(a[i]) ||
                     !std::isfinite(b[i]))
                 {
                     if (count < 5)
                     {
-                        NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
+                        NGRAPH_INFO << std::setprecision(20) << a[i] << " is not close to " << b[i] << " at index " << i;
                     }
                     count++;
                     rc = false;
