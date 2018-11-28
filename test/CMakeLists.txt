@@ -40,6 +40,7 @@ set(SRC
     pass_manager.cpp
     pass_memory_layout.cpp
     pattern.cpp
+    reshape_sinking.cpp
     reshape_elimination.cpp
     serialize.cpp
     shape.cpp
@@ -67,7 +68,7 @@ endif()
 
 if (NGRAPH_CPU_ENABLE)
     set(SRC ${SRC} core_fusion.cpp quantize_cpu.cpp)
-    set(SRC ${SRC} backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp)
+    set(SRC ${SRC} backend_performance.cpp cpu_fusion.cpp cpu_test.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
 endif()
 
