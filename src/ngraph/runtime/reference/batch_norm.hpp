@@ -138,7 +138,6 @@ namespace ngraph
                                      const Shape& input_shape)
             {
                 size_t channel_axis = 1;
-                auto eps_casted = static_cast<T>(eps);
                 auto num_channels = input_shape[channel_axis];
                 Shape moment_shape = Shape{num_channels};
                 auto input_num_elements = shape_size(input_shape);
