@@ -499,22 +499,20 @@ TEST(all_close_f, inf_nan)
     float signaling_nan = numeric_limits<float>::signaling_NaN();
 
     EXPECT_FALSE(test::close_f(zero, infinity));
-    EXPECT_FALSE(test::all_close_f(vector<float>({zero}), vector<float>({infinity}), 24, 2));
+    EXPECT_FALSE(test::all_close_f(vector<float>({zero}), vector<float>({infinity})));
     EXPECT_FALSE(test::close_f(zero, neg_infinity));
-    EXPECT_FALSE(test::all_close_f(vector<float>({zero}), vector<float>({neg_infinity}), 24, 2));
+    EXPECT_FALSE(test::all_close_f(vector<float>({zero}), vector<float>({neg_infinity})));
     EXPECT_FALSE(test::close_f(zero, quiet_nan));
-    EXPECT_FALSE(test::all_close_f(vector<float>({zero}), vector<float>({quiet_nan}), 24, 2));
+    EXPECT_FALSE(test::all_close_f(vector<float>({zero}), vector<float>({quiet_nan})));
     EXPECT_FALSE(test::close_f(zero, signaling_nan));
-    EXPECT_FALSE(test::all_close_f(vector<float>({zero}), vector<float>({signaling_nan}), 24, 2));
+    EXPECT_FALSE(test::all_close_f(vector<float>({zero}), vector<float>({signaling_nan})));
 
     EXPECT_FALSE(test::close_f(infinity, infinity));
-    EXPECT_FALSE(test::all_close_f(vector<float>({infinity}), vector<float>({infinity}), 24, 2));
+    EXPECT_FALSE(test::all_close_f(vector<float>({infinity}), vector<float>({infinity})));
     EXPECT_FALSE(test::close_f(neg_infinity, neg_infinity));
-    EXPECT_FALSE(
-        test::all_close_f(vector<float>({neg_infinity}), vector<float>({neg_infinity}), 24, 2));
+    EXPECT_FALSE(test::all_close_f(vector<float>({neg_infinity}), vector<float>({neg_infinity})));
     EXPECT_FALSE(test::close_f(quiet_nan, quiet_nan));
-    EXPECT_FALSE(test::all_close_f(vector<float>({quiet_nan}), vector<float>({quiet_nan}), 24, 2));
+    EXPECT_FALSE(test::all_close_f(vector<float>({quiet_nan}), vector<float>({quiet_nan})));
     EXPECT_FALSE(test::close_f(signaling_nan, signaling_nan));
-    EXPECT_FALSE(
-        test::all_close_f(vector<float>({signaling_nan}), vector<float>({signaling_nan}), 24, 2));
+    EXPECT_FALSE(test::all_close_f(vector<float>({signaling_nan}), vector<float>({signaling_nan})));
 }
