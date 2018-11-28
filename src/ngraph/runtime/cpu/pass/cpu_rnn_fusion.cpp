@@ -887,7 +887,7 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         size_t sequence_len = rnn_ltor_node->get_src_sequence_length();
         size_t num_rnn_cell_states = rnn_ltor_node->get_num_cell_states();
         size_t rnn_direction = 2;
-        size_t num_fused_rnn_layers = 2;
+        size_t num_fused_rnn_layers = 1;
 
         auto construct_birnn_inputs = [&](int index) {
 

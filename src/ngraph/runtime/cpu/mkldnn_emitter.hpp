@@ -517,7 +517,8 @@ namespace ngraph
                     auto rnn_cell_n_states =
                         static_cast<unsigned long>(rnn_node->get_num_cell_states());
 
-                    if (out[0].get_shape().size() == 2 && (out[0].get_shape()[1] != feature_size))
+                    if (out[0].get_shape().size() == 2 &&
+                        (out[0].get_shape()[1] != direction * feature_size))
                     {
                         throw ngraph_error(
                             "input slc{ht} feature size is not equal to output dlc{ht} feature "
@@ -548,7 +549,7 @@ namespace ngraph
                     Shape wei_iter_tz{
                         num_fused_layers, direction, feature_size, rnn_cell_n_gates, feature_size};
                     Shape bias_tz{num_fused_layers, direction, rnn_cell_n_gates, feature_size};
-                    Shape dst_layer_tz{src_sequence_length_max, batch, feature_size};
+                    Shape dst_layer_tz{src_sequence_length_max, batch, direction * feature_size};
                     Shape dst_iter_tz{
                         num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
 
