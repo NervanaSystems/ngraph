@@ -21,10 +21,10 @@ import setuptools
 import os
 import distutils.ccompiler
 
-__version__ = '0.9.0'
-
+__version__ = os.environ.get('NGRAPH_VERSION', '0.0.0-dev')
 PYNGRAPH_SOURCE_DIR = os.path.abspath(os.path.dirname(__file__))
 NGRAPH_DEFAULT_INSTALL_DIR = os.environ.get('HOME')
+NGRAPH_ONNX_IMPORT_ENABLE = os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE')
 
 
 def find_ngraph_dist_dir():
@@ -149,6 +149,7 @@ sources = [
     'pyngraph/axis_set.cpp',
     'pyngraph/axis_vector.cpp',
     'pyngraph/coordinate.cpp',
+    'pyngraph/parameter_vector.cpp',
     'pyngraph/pyngraph.cpp',
     'pyngraph/util.cpp',
     'pyngraph/ops/util/arithmetic_reduction.cpp',
@@ -201,7 +202,6 @@ sources = [
     'pyngraph/ops/or.cpp',
     'pyngraph/ops/pad.cpp',
     'pyngraph/ops/parameter.cpp',
-    'pyngraph/ops/parameter_vector.cpp',
     'pyngraph/ops/power.cpp',
     'pyngraph/ops/reduce.cpp',
     'pyngraph/ops/regmodule_pyngraph_op.cpp',
@@ -289,7 +289,7 @@ ext_modules = [
     )
 ]
 
-if os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE') == 'TRUE':
+if NGRAPH_ONNX_IMPORT_ENABLE == 'TRUE':
     onnx_sources = [
         'pyngraph/pyngraph_onnx_import.cpp',
         'pyngraph/onnx_import/onnx_import.cpp',
@@ -352,13 +352,13 @@ with open(os.path.join(PYNGRAPH_SOURCE_DIR, 'requirements.txt')) as req:
     requirements = req.read().splitlines()
 
 setup(
-    name='ngraph',
+    name='ngraph-core',
     version=__version__,
     author='Intel',
     author_email='intelnervana@intel.com',
-    url='http://www.intelnervana.com',
+    url='https://ai.intel.com/',
     license='License :: OSI Approved :: Apache Software License',
-    description='Python wrapper for ngraph',
+    description='Python API for nGraph',
     long_description='',
     ext_modules=ext_modules,
     package_dir=package_dir,

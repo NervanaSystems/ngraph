@@ -61,9 +61,13 @@ static std::shared_ptr<pattern::Matcher> create_maxpool_with_indices_matcher()
     Shape window_shape{3};
     auto max_pool = std::make_shared<op::MaxPool>(data, window_shape);
     auto delta = std::make_shared<pattern::op::Label>(element::f32, max_pool->get_shape());
+    auto is_max_pool = pattern::has_class<op::MaxPool>();
+    auto max_pool_label =
+        std::make_shared<pattern::op::Label>(element::f32, max_pool->get_shape(), is_max_pool);
     auto max_pool_bprop =
         std::make_shared<op::MaxPoolBackprop>(data,
                                               delta,
+                                              max_pool_label,
                                               max_pool->get_window_shape(),
                                               max_pool->get_window_movement_strides(),
                                               max_pool->get_padding_below(),
@@ -96,10 +100,12 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
 {
     auto data = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(0));
     auto delta = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(1));
+    auto max_pool = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(2));
     NGRAPH_DEBUG << "In a callback for construct_max_pool_with_indices against "
                  << m.get_match_root()->get_name();
 
     auto pattern_map = m.get_pattern_map();
+    auto m_max_pool = std::static_pointer_cast<op::MaxPool>(pattern_map[max_pool]);
     auto m_max_pool_bprop = std::static_pointer_cast<op::MaxPoolBackprop>(m.get_match_root());
 
     if (m_max_pool_bprop->get_shape().size() != 4 ||
@@ -107,31 +113,6 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
         m_max_pool_bprop->get_input_element_type(0) != element::f32)
     {
         NGRAPH_DEBUG << "MKLDNN doesn't support inputs of given shape type";
-        return false;
-    }
-
-    // find the original MaxPool now
-    std::shared_ptr<op::MaxPool> m_max_pool;
-    for (auto u : pattern_map[data]->get_users())
-    {
-        if (auto mp = std::dynamic_pointer_cast<op::MaxPool>(u))
-        {
-            if (mp->get_window_shape() == m_max_pool_bprop->get_window_shape() &&
-                mp->get_window_movement_strides() ==
-                    m_max_pool_bprop->get_window_movement_strides() &&
-                mp->get_padding_below() == m_max_pool_bprop->get_padding_below() &&
-                mp->get_padding_above() == m_max_pool_bprop->get_padding_above())
-            {
-                m_max_pool = mp;
-                break;
-            }
-        }
-    }
-
-    if (!m_max_pool)
-    {
-        NGRAPH_DEBUG << "MaxPool for " << pattern_map[data]->get_name() << " and "
-                     << m_max_pool_bprop->get_name() << " not found";
         return false;
     }
 

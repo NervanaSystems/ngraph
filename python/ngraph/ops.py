@@ -924,9 +924,9 @@ def batch_norm(eps,             # type: float
     # type: (...) -> Node
     """Return batch normalization node."""
     if mean is None and variance is None:
-        return BatchNormTraining(eps, gamma, beta, data)
+        return BatchNormTraining(data, gamma, beta, eps)
     else:
-        return BatchNormInference(eps, gamma, beta, data, mean, variance)
+        return BatchNormInference(data, gamma, beta, mean, variance, eps)
 
 
 @nameable_op

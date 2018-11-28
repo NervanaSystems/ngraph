@@ -21,7 +21,6 @@
 #include <unordered_map>
 
 #include "ngraph/node_vector.hpp"
-
 #include "node.hpp"
 
 namespace ngraph

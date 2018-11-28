@@ -43,19 +43,19 @@ endif()
 
 # This section sets up MKL as an external project to be used later by MKLDNN
 
-set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.16/")
-set(MKLVERSION "2019.0.20180710")
+set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.17/")
+set(MKLVERSION "2019.0.1.20180928")
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
-    set(MKL_SHA1_HASH e7c34105d486908b87b4b8c667c3a089f079ca51)
+    set(MKL_SHA1_HASH 0d9cc8bfc2c1a1e3df5e0b07e2f363bbf934a7e9)
     set(MKL_LIBS libiomp5.so libmklml_intel.so)
 elseif (APPLE)
     set(MKLPACKAGE "mklml_mac_${MKLVERSION}.tgz")
-    set(MKL_SHA1_HASH c873d2bd36a0100344d1aac1b1e56c8c3a43a845)
+    set(MKL_SHA1_HASH 232787f41cb42f53f5b7e278d8240f6727896133)
     set(MKL_LIBS libmklml.dylib libiomp5.dylib)
 elseif (WIN32)
     set(MKLPACKAGE "mklml_win_${MKLVERSION}.zip")
-    set(MKL_SHA1_HASH 3767d9a1ad679d647b8c6edf1f97c767881d0c5c)
+    set(MKL_SHA1_HASH 97f01ab854d8ee88cc0429f301df84844d7cce6b)
     set(MKL_LIBS mklml.dll libiomp5md.dll)
 endif()
 set(MKLURL ${MKLURLROOT}${MKLPACKAGE})
@@ -82,7 +82,12 @@ foreach(LIB ${MKL_LIBS})
 endforeach()
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
-set(MKLDNN_GIT_TAG "b9558fd")
+set(MKLDNN_GIT_TAG "830a100")
+if(NGRAPH_LIB_VERSIONING_ENABLE)
+    set(MKLDNN_PATCH_FILE mkldnn.patch)
+else()
+    set(MKLDNN_PATCH_FILE mkldnn_no_so_link.patch)
+endif()
 
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
 if(${CMAKE_VERSION} VERSION_LESS 3.2)
@@ -98,7 +103,7 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
         #    --reject-file tells patch to not right a reject file
         #    || exit 0 changes the exit code for the PATCH_COMMAND to zero so it is not an error
         # I don't like it, but it works
-        PATCH_COMMAND patch ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/src/CMakeLists.txt --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/mkldnn.diff || exit 0
+        PATCH_COMMAND patch -p1 --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE} || exit 0
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS
@@ -109,6 +114,7 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
             -DMKLROOT=${MKL_ROOT}
+            "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH}"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
@@ -129,7 +135,7 @@ else()
         #    --reject-file tells patch to not right a reject file
         #    || exit 0 changes the exit code for the PATCH_COMMAND to zero so it is not an error
         # I don't like it, but it works
-        PATCH_COMMAND patch ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/src/CMakeLists.txt --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/mkldnn.diff || exit 0
+        PATCH_COMMAND patch -p1 --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE} || exit 0
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS
@@ -140,6 +146,7 @@ else()
             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
             -DMKLROOT=${MKL_ROOT}
+            "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH}"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"

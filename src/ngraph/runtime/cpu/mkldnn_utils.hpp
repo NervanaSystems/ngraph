@@ -56,7 +56,7 @@ namespace ngraph
                 mkldnn::memory::desc create_blocked_mkldnn_md(const Shape& dims,
                                                               const Strides& strides,
                                                               const ngraph::element::Type type);
-                mkldnn::memory::desc try_get_named_md(mkldnn_memory_desc_t md);
+                mkldnn::memory::desc try_get_named_md(const mkldnn_memory_desc_t& md);
                 mkldnn::memory::desc rotate_blocked_md(const mkldnn::memory::desc& in,
                                                        const AxisVector& axis_order);
                 mkldnn::memory::desc squeeze_blocked_md(const mkldnn::memory::desc& in,

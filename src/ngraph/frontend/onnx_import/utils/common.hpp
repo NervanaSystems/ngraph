@@ -19,8 +19,13 @@
 #include <cmath>       // std::floor
 #include <cstddef>     // std::size_t
 #include <iterator>    // std::begin, std::end
+#include <memory>      // std::shared_ptr, std::make_shared
 #include <type_traits> // std::enable_if, std::is_floating_point, std::is_integral
 #include <vector>
+
+#include "ngraph/op/constant.hpp"
+#include "ngraph/shape.hpp"
+#include "utils/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -98,6 +103,36 @@ namespace ngraph
                 std::vector<T> range(value_count);
                 detail::fill_monotonic_range(std::begin(range), std::end(range), start_value, step);
                 return range;
+            }
+
+            /// \brief      Makes a Constant Ngraph node.
+            ///
+            /// \param[in]  type   The node element type.
+            /// \param[in]  shape  The tensor data shape.
+            /// \param[in]  data   The data to initialize node with.
+            ///
+            /// \tparam     T      Input data value type.
+            ///
+            /// \return     The Ngraph node representing Constant data.
+            ///
+            template <typename T>
+            std::shared_ptr<ngraph::Node> make_constant_node(const ngraph::element::Type& type,
+                                                             const ngraph::Shape& shape,
+                                                             const std::vector<T>& data)
+            {
+                std::shared_ptr<ngraph::Node> node;
+                // Make constant node filled with single value.
+                if (data.size() == 1)
+                {
+                    node = std::make_shared<ngraph::op::Constant>(type, ngraph::Shape{}, data);
+                    node = make_broadcast_node(node, shape);
+                }
+                else
+                {
+                    node = std::make_shared<ngraph::op::Constant>(type, shape, data);
+                }
+
+                return node;
             }
 
         } // namespace  common

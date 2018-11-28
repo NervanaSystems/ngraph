@@ -20,7 +20,6 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/slice.hpp"
-
 #include "slice.hpp"
 #include "utils/common.hpp"
 

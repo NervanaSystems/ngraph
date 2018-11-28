@@ -24,19 +24,19 @@ static int GetNumCores()
     const auto ngraph_intra_op_parallelism = std::getenv("NGRAPH_INTRA_OP_PARALLELISM");
     int count = 0;
 
-    if (omp_num_threads && (count = std::atoi(omp_num_threads)))
+    if (omp_num_threads)
     {
-        return count;
+        count = std::atoi(omp_num_threads);
     }
-    else if (ngraph_intra_op_parallelism && (count = std::atoi(ngraph_intra_op_parallelism)))
+    else if (ngraph_intra_op_parallelism)
     {
-        return count;
+        count = std::atoi(ngraph_intra_op_parallelism);
     }
     else
     {
-        count = std::thread::hardware_concurrency() >> 1;
+        count = std::thread::hardware_concurrency() / 2;
     }
-    return count ? count : 1;
+    return count < 1 ? 1 : count;
 }
 
 static int GetNumThreadPools()
@@ -44,12 +44,12 @@ static int GetNumThreadPools()
     const auto ngraph_inter_op_parallelism = std::getenv("NGRAPH_INTER_OP_PARALLELISM");
     int count = 0;
 
-    if (ngraph_inter_op_parallelism && (count = std::atoi(ngraph_inter_op_parallelism)))
+    if (ngraph_inter_op_parallelism)
     {
-        return count;
+        count = std::atoi(ngraph_inter_op_parallelism);
     }
 
-    return 1;
+    return count < 1 ? 1 : count;
 }
 
 namespace ngraph
@@ -97,7 +97,8 @@ namespace ngraph
 
                 CPUExecutor& GetCPUExecutor()
                 {
-                    static CPUExecutor cpu_executor(GetNumThreadPools());
+                    static int num_thread_pools = GetNumThreadPools();
+                    static CPUExecutor cpu_executor(num_thread_pools < 1 ? 1 : num_thread_pools);
                     return cpu_executor;
                 }
 
