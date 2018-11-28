@@ -126,7 +126,7 @@ def has_flag(compiler, flagname):
 
 
 def cpp_flag(compiler):
-    """Return the -std=c++11/14 compiler flag.
+    """Check and return the -std=c++11 compiler flag.
 
     """
     if has_flag(compiler, '-std=c++11'):
