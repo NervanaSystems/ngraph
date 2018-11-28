@@ -22,7 +22,6 @@
 #include "ngraph/parameter_vector.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
-
 #include "node.hpp"
 #include "tensor.hpp"
 #include "weight.hpp"

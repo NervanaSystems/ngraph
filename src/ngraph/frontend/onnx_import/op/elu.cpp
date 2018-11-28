@@ -18,7 +18,6 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
-
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
@@ -27,7 +26,6 @@
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
-
 #include "utils/broadcasting.hpp"
 
 #include "elu.hpp"
