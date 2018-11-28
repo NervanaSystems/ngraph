@@ -40,9 +40,14 @@ message(STATUS "NGRAPH_API_VERSION ${NGRAPH_API_VERSION}")
 set(NGRAPH_INCLUDE_PATH
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
-# Suppress an OS X-specific warning.
-if (POLICY CMP0042)
-    cmake_policy(SET CMP0042 OLD)
+
+if (APPLE)
+    # Suppress an OS X-specific warning.
+    if (POLICY CMP0042)
+        cmake_policy(SET CMP0042 NEW)
+    else()
+        set(MACOS_RPATH ON)
+    endif()
 endif()
 
 project (ngraph)
@@ -152,10 +157,12 @@ set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
 set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}")
 set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
-if (DEFINED NGRAPH_RPATH)
-    set(CMAKE_INSTALL_RPATH "$ORIGIN:${NGRAPH_RPATH}")
-else()
-    set(CMAKE_INSTALL_RPATH "$ORIGIN")
+if (NOT APPLE)
+    if (DEFINED NGRAPH_RPATH)
+        set(CMAKE_INSTALL_RPATH "$ORIGIN:${NGRAPH_RPATH}")
+    else()
+        set(CMAKE_INSTALL_RPATH "$ORIGIN")
+    endif()
 endif()
 
 #-----------------------------------------------------------------------------------------------

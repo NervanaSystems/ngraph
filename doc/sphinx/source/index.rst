@@ -21,6 +21,9 @@
 Welcome
 =======
 
+See the latest :doc:`project/release-notes`. 
+
+
 .. figure:: graphics/599px-Intel-ngraph-ecosystem.png
    :width: 599px
 
@@ -127,4 +130,4 @@ Indices and tables
 .. _Movidius: https://www.movidius.com/
 .. _contributions: https://github.com/NervanaSystems/ngraph#how-to-contribute
 .. _TensorFlow bridge to nGraph: https://github.com/NervanaSystems/ngraph-tf/blob/master/README.md
-.. _Compiling MXNet with nGraph: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/NGRAPH_README.md
+.. _Compiling MXNet with nGraph: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/README.md
