@@ -18,12 +18,11 @@
 #include <memory>
 #include <vector>
 
+#include "exceptions.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/shape.hpp"
-
-#include "exceptions.hpp"
 #include "reshape.hpp"
 #include "utils/reshape.hpp"
 

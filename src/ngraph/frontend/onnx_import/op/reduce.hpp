@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "core/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/exp.hpp"
@@ -28,8 +29,6 @@
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/sum.hpp"
-
-#include "core/node.hpp"
 #include "utils/broadcasting.hpp"
 #include "utils/reduction.hpp"
 

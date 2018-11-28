@@ -22,10 +22,9 @@
 #include <numeric>
 #include <vector>
 
+#include "exceptions.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
-
-#include "exceptions.hpp"
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
 

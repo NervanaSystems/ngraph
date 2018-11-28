@@ -16,14 +16,12 @@
 
 #pragma once
 
+#include <onnx-ml.pb.h>
 #include <string>
 #include <vector>
 
-#include <onnx-ml.pb.h>
-
-#include "ngraph/parameter_vector.hpp"
-
 #include "model.hpp"
+#include "ngraph/parameter_vector.hpp"
 #include "operator_set.hpp"
 #include "value_info.hpp"
 #include "weight.hpp"
