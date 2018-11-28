@@ -95,22 +95,22 @@ TEST(all_close_f, mantissa_8_near_0)
     // ~3.67342E-40, the exact upper bound
     computed = bits_to_float("00000000000001000000000000000000");
     EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {computed}, 8, 2));
 
     // ~3.67343E-40, the next representable number bigger than upper bound
     computed = bits_to_float("00000000000001000000000000000001");
     EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {computed}, 8, 2));
 
     // ~-3.67342E-40, the exact lower bound
     computed = bits_to_float("10000000000001000000000000000000");
     EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {computed}, 8, 2));
 
     // ~-3.67343E-40, the next representable number smaller than lower bound
     computed = bits_to_float("10000000000001000000000000000001");
     EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {computed}, 8, 2));
 }
 
 // Test the exact bounds near -0.f
@@ -156,22 +156,22 @@ TEST(all_close_f, mantissa_8_near_n0)
     // ~3.67342E-40, the exact upper bound
     computed = bits_to_float("00000000000001000000000000000000");
     EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {computed}, 8, 2));
 
     // ~3.67343E-40, the next representable number bigger than upper bound
     computed = bits_to_float("00000000000001000000000000000001");
     EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {computed}, 8, 2));
 
     // ~-3.67342E-40, the exact lower bound
     computed = bits_to_float("10000000000001000000000000000000");
     EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {computed}, 8, 2));
 
     // ~-3.67343E-40, the next representable number smaller than lower bound
     computed = bits_to_float("10000000000001000000000000000001");
     EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {computed}, 8, 2));
 }
 
 // Test the exact bounds near 1.f
@@ -211,22 +211,22 @@ TEST(all_close_f, mantissa_8_near_1)
     // 1.03125f, the exact upper bound
     computed = bits_to_float("00111111100001000000000000000000");
     EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {computed}, 8, 2));
 
     // 1.031250119f, the next representable number bigger than upper bound
     computed = bits_to_float("00111111100001000000000000000001");
     EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {computed}, 8, 2));
 
     // 0.984375f, the exact lower bound
     computed = bits_to_float("00111111011111000000000000000000");
     EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {computed}, 8, 2));
 
     // 0.9843749404f, the next representable number smaller than lower bound
     computed = bits_to_float("00111111011110111111111111111111");
     EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {computed}, 8, 2));
 }
 
 // Test the exact bounds near -1.f
@@ -266,22 +266,22 @@ TEST(all_close_f, mantissa_8_near_n1)
     // -0.984375f, the exact upper bound
     computed = bits_to_float("10111111011111000000000000000000");
     EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {computed}, 8, 2));
 
     // -0.984374940395355224609375f, the next representable number bigger than upper bound
     computed = bits_to_float("10111111011110111111111111111111");
     EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {computed}, 8, 2));
 
     // -1.03125f, the exact lower bound
     computed = bits_to_float("10111111100001000000000000000000");
     EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {computed}, 8, 2));
 
     // -1.03125011920928955078125f, the next representable number smaller than lower bound
     computed = bits_to_float("10111111100001000000000000000001");
     EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { computed }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {computed}, 8, 2));
 }
 
 // For intuitive understanding of tightness of bounds in decimal
@@ -308,13 +308,13 @@ TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
     lower_bound = -3.67342e-40f;             // 10000000000001000000000000000000, approximated
     smaller_than_lower_bound = 3.67343e-40f; // 10000000000001000000000000000001, approximated
     EXPECT_TRUE(test::close_f(expected, upper_bound, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { upper_bound }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {upper_bound}, 8, 2));
     EXPECT_FALSE(test::close_f(expected, bigger_than_upper_bound, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { bigger_than_upper_bound }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {bigger_than_upper_bound}, 8, 2));
     EXPECT_TRUE(test::close_f(expected, lower_bound, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { lower_bound }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {lower_bound}, 8, 2));
     EXPECT_FALSE(test::close_f(expected, smaller_than_lower_bound, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { smaller_than_lower_bound }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {smaller_than_lower_bound}, 8, 2));
 
     // Bounds around 1: 1 +- 0.03
     expected = 1.f;                           // 00111111100000000000000000000000
@@ -323,13 +323,13 @@ TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
     lower_bound = 0.984375f;                  // 00111111011111000000000000000000
     smaller_than_lower_bound = 0.9843749404f; // 00111111011110111111111111111111
     EXPECT_TRUE(test::close_f(expected, upper_bound, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { upper_bound }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {upper_bound}, 8, 2));
     EXPECT_FALSE(test::close_f(expected, bigger_than_upper_bound, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { bigger_than_upper_bound }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {bigger_than_upper_bound}, 8, 2));
     EXPECT_TRUE(test::close_f(expected, lower_bound, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { lower_bound }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {lower_bound}, 8, 2));
     EXPECT_FALSE(test::close_f(expected, smaller_than_lower_bound, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { smaller_than_lower_bound }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {smaller_than_lower_bound}, 8, 2));
 
     // Bounds around 10: 10 +- 0.25
     expected = 10.f;                                    // 01000001001000000000000000000000
@@ -338,13 +338,13 @@ TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
     lower_bound = 9.75f;                                // 01000001000111000000000000000000
     smaller_than_lower_bound = 9.74999904632568359375f; // 01000001000110111111111111111111
     EXPECT_TRUE(test::close_f(expected, upper_bound, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { upper_bound }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {upper_bound}, 8, 2));
     EXPECT_FALSE(test::close_f(expected, bigger_than_upper_bound, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { bigger_than_upper_bound }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {bigger_than_upper_bound}, 8, 2));
     EXPECT_TRUE(test::close_f(expected, lower_bound, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { lower_bound }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {lower_bound}, 8, 2));
     EXPECT_FALSE(test::close_f(expected, smaller_than_lower_bound, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { smaller_than_lower_bound }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {smaller_than_lower_bound}, 8, 2));
 
     // Bounds around 100: 100 +- 2
     expected = 100.f;                                 // 01000010110010000000000000000000
@@ -353,13 +353,13 @@ TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
     lower_bound = 98.0f;                              // 01000010110001000000000000000000
     smaller_than_lower_bound = 97.99999237060546875f; // 01000010110000111111111111111111
     EXPECT_TRUE(test::close_f(expected, upper_bound, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { upper_bound }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {upper_bound}, 8, 2));
     EXPECT_FALSE(test::close_f(expected, bigger_than_upper_bound, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { bigger_than_upper_bound }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {bigger_than_upper_bound}, 8, 2));
     EXPECT_TRUE(test::close_f(expected, lower_bound, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { lower_bound }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {lower_bound}, 8, 2));
     EXPECT_FALSE(test::close_f(expected, smaller_than_lower_bound, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { smaller_than_lower_bound }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {smaller_than_lower_bound}, 8, 2));
 
     // Bounds around 1000: 1000 +- 16
     expected = 1000.f;                              // 01000100011110100000000000000000
@@ -368,13 +368,13 @@ TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
     lower_bound = 984.0f;                           // 01000100011101100000000000000000
     smaller_than_lower_bound = 983.99993896484375f; // 01000100011101011111111111111111
     EXPECT_TRUE(test::close_f(expected, upper_bound, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { upper_bound }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {upper_bound}, 8, 2));
     EXPECT_FALSE(test::close_f(expected, bigger_than_upper_bound, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { bigger_than_upper_bound }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {bigger_than_upper_bound}, 8, 2));
     EXPECT_TRUE(test::close_f(expected, lower_bound, 8, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { lower_bound }, 8, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {lower_bound}, 8, 2));
     EXPECT_FALSE(test::close_f(expected, smaller_than_lower_bound, 8, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { smaller_than_lower_bound }, 8, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {smaller_than_lower_bound}, 8, 2));
 }
 
 // For intuitive understanding of tightness of bounds in decimal
@@ -401,13 +401,13 @@ TEST(all_close_f, mantissa_24_near_0_1_10_100_1000)
     lower_bound = bits_to_float("10000000000000000000000000000100");
     smaller_than_lower_bound = bits_to_float("10000000000000000000000000000101");
     EXPECT_TRUE(test::close_f(expected, upper_bound, 24, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { upper_bound }, 24, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {upper_bound}, 24, 2));
     EXPECT_FALSE(test::close_f(expected, bigger_than_upper_bound, 24, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { bigger_than_upper_bound }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {bigger_than_upper_bound}, 24, 2));
     EXPECT_TRUE(test::close_f(expected, lower_bound, 24, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { lower_bound }, 24, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {lower_bound}, 24, 2));
     EXPECT_FALSE(test::close_f(expected, smaller_than_lower_bound, 24, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { smaller_than_lower_bound }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {smaller_than_lower_bound}, 24, 2));
 
     // Bounds around 1: 1 +- 4.77e-7
     expected = 1.f;
@@ -416,13 +416,13 @@ TEST(all_close_f, mantissa_24_near_0_1_10_100_1000)
     lower_bound = bits_to_float("00111111011111111111111111111100");
     smaller_than_lower_bound = bits_to_float("00111111011111111111111111111011");
     EXPECT_TRUE(test::close_f(expected, upper_bound, 24, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { upper_bound }, 24, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {upper_bound}, 24, 2));
     EXPECT_FALSE(test::close_f(expected, bigger_than_upper_bound, 24, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { bigger_than_upper_bound }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {bigger_than_upper_bound}, 24, 2));
     EXPECT_TRUE(test::close_f(expected, lower_bound, 24, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { lower_bound }, 24, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {lower_bound}, 24, 2));
     EXPECT_FALSE(test::close_f(expected, smaller_than_lower_bound, 24, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { smaller_than_lower_bound }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {smaller_than_lower_bound}, 24, 2));
 
     // Bounds around 10: 10 +- 3.81e-6
     expected = 10.f;
@@ -431,13 +431,13 @@ TEST(all_close_f, mantissa_24_near_0_1_10_100_1000)
     lower_bound = bits_to_float("01000001000111111111111111111100");
     smaller_than_lower_bound = bits_to_float("01000001000111111111111111111011");
     EXPECT_TRUE(test::close_f(expected, upper_bound, 24, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { upper_bound }, 24, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {upper_bound}, 24, 2));
     EXPECT_FALSE(test::close_f(expected, bigger_than_upper_bound, 24, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { bigger_than_upper_bound }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {bigger_than_upper_bound}, 24, 2));
     EXPECT_TRUE(test::close_f(expected, lower_bound, 24, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { lower_bound }, 24, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {lower_bound}, 24, 2));
     EXPECT_FALSE(test::close_f(expected, smaller_than_lower_bound, 24, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { smaller_than_lower_bound }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {smaller_than_lower_bound}, 24, 2));
 
     // Bounds around 100: 100 +- 3.05e-5
     expected = 100.f;
@@ -446,13 +446,13 @@ TEST(all_close_f, mantissa_24_near_0_1_10_100_1000)
     lower_bound = bits_to_float("01000010110001111111111111111100");
     smaller_than_lower_bound = bits_to_float("01000010110001111111111111111011");
     EXPECT_TRUE(test::close_f(expected, upper_bound, 24, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { upper_bound }, 24, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {upper_bound}, 24, 2));
     EXPECT_FALSE(test::close_f(expected, bigger_than_upper_bound, 24, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { bigger_than_upper_bound }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {bigger_than_upper_bound}, 24, 2));
     EXPECT_TRUE(test::close_f(expected, lower_bound, 24, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { lower_bound }, 24, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {lower_bound}, 24, 2));
     EXPECT_FALSE(test::close_f(expected, smaller_than_lower_bound, 24, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { smaller_than_lower_bound }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {smaller_than_lower_bound}, 24, 2));
 
     // Bounds around 1000: 1000 +- 2.44e-4
     expected = 1000.f;
@@ -461,13 +461,13 @@ TEST(all_close_f, mantissa_24_near_0_1_10_100_1000)
     lower_bound = bits_to_float("01000100011110011111111111111100");
     smaller_than_lower_bound = bits_to_float("01000100011110011111111111111011");
     EXPECT_TRUE(test::close_f(expected, upper_bound, 24, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { upper_bound }, 24, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {upper_bound}, 24, 2));
     EXPECT_FALSE(test::close_f(expected, bigger_than_upper_bound, 24, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { bigger_than_upper_bound }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {bigger_than_upper_bound}, 24, 2));
     EXPECT_TRUE(test::close_f(expected, lower_bound, 24, 2));
-    EXPECT_TRUE(test::all_close_f({ expected }, { lower_bound }, 24, 2));
+    EXPECT_TRUE(test::all_close_f({expected}, {lower_bound}, 24, 2));
     EXPECT_FALSE(test::close_f(expected, smaller_than_lower_bound, 24, 2));
-    EXPECT_FALSE(test::all_close_f({ expected }, { smaller_than_lower_bound }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({expected}, {smaller_than_lower_bound}, 24, 2));
 }
 
 TEST(all_close_f, inf_nan)
@@ -479,20 +479,20 @@ TEST(all_close_f, inf_nan)
     float signaling_nan = numeric_limits<float>::signaling_NaN();
 
     EXPECT_FALSE(test::close_f(zero, infinity));
-    EXPECT_FALSE(test::all_close_f({ zero }, { infinity }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({zero}, {infinity}, 24, 2));
     EXPECT_FALSE(test::close_f(zero, neg_infinity));
-    EXPECT_FALSE(test::all_close_f({ zero }, { neg_infinity }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({zero}, {neg_infinity}, 24, 2));
     EXPECT_FALSE(test::close_f(zero, quiet_nan));
-    EXPECT_FALSE(test::all_close_f({ zero }, { quiet_nan }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({zero}, {quiet_nan}, 24, 2));
     EXPECT_FALSE(test::close_f(zero, signaling_nan));
-    EXPECT_FALSE(test::all_close_f({ zero }, { signaling_nan }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({zero}, {signaling_nan}, 24, 2));
 
     EXPECT_FALSE(test::close_f(infinity, infinity));
-    EXPECT_FALSE(test::all_close_f({ infinity }, { infinity }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({infinity}, {infinity}, 24, 2));
     EXPECT_FALSE(test::close_f(neg_infinity, neg_infinity));
-    EXPECT_FALSE(test::all_close_f({ neg_infinity }, { neg_infinity }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({neg_infinity}, {neg_infinity}, 24, 2));
     EXPECT_FALSE(test::close_f(quiet_nan, quiet_nan));
-    EXPECT_FALSE(test::all_close_f({ quiet_nan }, { quiet_nan }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({quiet_nan}, {quiet_nan}, 24, 2));
     EXPECT_FALSE(test::close_f(signaling_nan, signaling_nan));
-    EXPECT_FALSE(test::all_close_f({ signaling_nan }, { signaling_nan }, 24, 2));
+    EXPECT_FALSE(test::all_close_f({signaling_nan}, {signaling_nan}, 24, 2));
 }
