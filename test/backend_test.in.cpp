@@ -426,7 +426,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_0eps_f64)
     EXPECT_TRUE(bnt.test_variance()) << "Variance test";
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_0_eps_f32)
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_0eps_f32)
 {
     using T = float;
     auto& et = element::f32;
@@ -710,7 +710,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_training_0eps_f64)
     EXPECT_TRUE(std::get<2>(result)) << "Gamma test variance";
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, batch_norm_training_0_eps_f32)
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_training_0eps_f32)
 {
     using T = float;
     auto& et = element::f32;

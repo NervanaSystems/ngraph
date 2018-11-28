@@ -40,7 +40,7 @@ namespace ngraph
                               std::shared_ptr<Node> beta,
                               double epsilon);
 
-            // DEPRECATED
+            // \deprecated
             // In this version of BatchNorm:
             //
             // MEAN AND VARIANCE: computed directly from the content of 'input'.
@@ -60,7 +60,6 @@ namespace ngraph
             //   output[0]: shall have the same shape as 'input'.
             //   output[1]: shall have rank 1, with the same span as input's channel axis.
             //   output[2]: shall have rank 1, with the same span as input's channel axis.
-            // DEPRECATED
             BatchNormTraining(double eps,
                               std::shared_ptr<Node> gamma,
                               std::shared_ptr<Node> beta,
@@ -100,7 +99,7 @@ namespace ngraph
                                std::shared_ptr<ngraph::Node> variance,
                                double epsilon);
 
-            // DEPRECATED
+            // \deprecated
             // In this version of BatchNorm:
             //
             // MEAN AND VARIANCE: provided by the 'mean' and 'variance' parameters.
@@ -118,7 +117,6 @@ namespace ngraph
             //   mean:     must have rank 1, with the same span as input's channel axis.
             //   variance: must have rank 1, with the same span as input's channel axis.
             //   output:   shall have the same shape as 'input'.
-            // DEPRECATED
             BatchNormInference(double eps,
                                std::shared_ptr<ngraph::Node> gamma,
                                std::shared_ptr<ngraph::Node> beta,
@@ -160,7 +158,7 @@ namespace ngraph
                                       std::shared_ptr<Node> delta,
                                       double epsilon);
 
-            // DEPRECATED
+            // \deprecated
             BatchNormTrainingBackprop(double epsilon,
                                       std::shared_ptr<Node> gamma,
                                       std::shared_ptr<Node> beta,
