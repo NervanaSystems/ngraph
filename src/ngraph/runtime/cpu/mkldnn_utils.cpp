@@ -658,3 +658,44 @@ bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
             static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
                 ->is_mkldnn_op());
 }
+
+void runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(Node* node)
+{
+    auto ngraph_op = static_cast<op::Op*>(node);
+    auto op_annotations = std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+    op_annotations->set_mkldnn_op(true);
+    ngraph_op->set_op_annotations(op_annotations);
+}
+
+bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_fprop(const ngraph::Node* node)
+{
+    auto input_rank = node->get_input_shape(2).size();
+    auto input_element_type = node->get_input_element_type(2);
+
+    if (((input_rank == 4 || input_rank == 5) && input_element_type == element::f32))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node)
+{
+    auto input_rank = node->get_input_shape(2).size();
+    auto input_element_type = node->get_input_element_type(2);
+    auto delta_rank = node->get_input_shape(5).size();
+    auto delta_element_type = node->get_input_element_type(5);
+
+    if (((input_rank == 4 && delta_rank == 4) || (input_rank == 5 && delta_rank == 5)) &&
+        (input_element_type == element::f32) && (delta_element_type == element::f32))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}

@@ -86,10 +86,7 @@ namespace ngraph
                         node->get_input_element_type(1) == element::f32 && arg0_rank == 4 &&
                         arg1_rank == 4 && src_size > 64000)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        add->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -117,10 +114,7 @@ namespace ngraph
 
                         if (!any_zero)
                         {
-                            auto op_annotations =
-                                std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                            op_annotations->set_mkldnn_op(true);
-                            concat->set_op_annotations(op_annotations);
+                            runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                         }
                     }
                 }
@@ -132,10 +126,7 @@ namespace ngraph
 
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::Convolution>(node))
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        convolution->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -146,10 +137,7 @@ namespace ngraph
 
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::GroupConvolution>(node))
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        convolution->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -160,10 +148,7 @@ namespace ngraph
 
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::GroupConvolutionBias>(node))
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        convolution->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -174,10 +159,7 @@ namespace ngraph
 
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionRelu>(node))
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        convolution->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -215,32 +197,21 @@ namespace ngraph
                     }
                 }
 
-                static void assign_batchnorm_relu(Node* node)
-                {
-                    auto bn_relu = static_cast<op::Op*>(node);
-                    auto op_annotations =
-                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    op_annotations->set_mkldnn_op(true);
-                    bn_relu->set_op_annotations(op_annotations);
-                }
-
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormInferenceRelu)
                 {
-                    if (mkldnn_utils::can_use_mkldnn_batchnorm<ngraph::op::BatchNormInferenceRelu>(
-                            node))
+                    if (mkldnn_utils::can_use_mkldnn_batchnorm_fprop(node))
                     {
-                        assign_batchnorm_relu(node);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormTrainingRelu)
                 {
-                    if (mkldnn_utils::can_use_mkldnn_batchnorm<ngraph::op::BatchNormTrainingRelu>(
-                            node))
+                    if (mkldnn_utils::can_use_mkldnn_batchnorm_fprop(node))
                     {
-                        assign_batchnorm_relu(node);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -265,10 +236,7 @@ namespace ngraph
                                           (arg0_rank == 5 && arg1_rank == 5)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        convolution->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -293,10 +261,7 @@ namespace ngraph
                                           (arg0_rank == 5 && arg1_rank == 5)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        convolution->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -307,10 +272,7 @@ namespace ngraph
 
                     if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionBias>(node))
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        convolution->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -333,10 +295,7 @@ namespace ngraph
                     if (!data_dilated && data_rank == 4 && delta_rank == 4 &&
                         node->get_input_element_type(0) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        convolution->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -353,10 +312,7 @@ namespace ngraph
                          (arg0_rank == 5 && avg_pool->get_window_shape().size() == 3)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        avg_pool->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -373,10 +329,7 @@ namespace ngraph
                          (arg0_rank == 5 && avg_pool->get_window_shape().size() == 3)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        avg_pool->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -393,10 +346,7 @@ namespace ngraph
                          (arg0_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        max_pool->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -412,10 +362,7 @@ namespace ngraph
                     if (arg0_rank == 4 && max_pool->get_window_shape().size() == 2 &&
                         node->get_input_element_type(0) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        max_pool->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -432,10 +379,7 @@ namespace ngraph
                          (arg1_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
                         node->get_input_element_type(1) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        max_pool->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -451,10 +395,7 @@ namespace ngraph
                     if (arg1_rank == 4 && max_pool->get_window_shape().size() == 2 &&
                         node->get_input_element_type(1) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        max_pool->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -508,10 +449,7 @@ namespace ngraph
 
                     if ((arg0_rank == 4) && node->get_input_element_type(0) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        lrn->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -521,10 +459,7 @@ namespace ngraph
                     auto sigmoid = static_cast<op::Sigmoid*>(node);
                     if (node->get_input_element_type(0) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        sigmoid->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -534,10 +469,7 @@ namespace ngraph
                     auto sigmoid = static_cast<op::SigmoidBackprop*>(node);
                     if (node->get_input_element_type(0) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        sigmoid->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -553,52 +485,34 @@ namespace ngraph
                     if ((arg0_rank == 4 || arg0_rank == 2) &&
                         node->get_input_element_type(0) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        relu_bprop->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
-                }
-
-                static void assign_batchnorm(Node* node)
-                {
-                    auto batchnorm = static_cast<op::Op*>(node);
-                    auto op_annotations =
-                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    op_annotations->set_mkldnn_op(true);
-                    batchnorm->set_op_annotations(op_annotations);
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormTraining)
                 {
-                    if (mkldnn_utils::can_use_mkldnn_batchnorm<ngraph::op::BatchNormTraining>(node))
+                    if (mkldnn_utils::can_use_mkldnn_batchnorm_fprop(node))
                     {
-                        assign_batchnorm(node);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormInference)
                 {
-                    if (mkldnn_utils::can_use_mkldnn_batchnorm<ngraph::op::BatchNormInference>(
-                            node))
+                    if (mkldnn_utils::can_use_mkldnn_batchnorm_fprop(node))
                     {
-                        assign_batchnorm(node);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::BatchNormTrainingBackprop)
                 {
-                    if (mkldnn_utils::can_use_mkldnn_batchnorm<
-                            ngraph::op::BatchNormTrainingBackprop>(node))
+                    if (mkldnn_utils::can_use_mkldnn_batchnorm_bprop(node))
                     {
-                        auto batchnorm = static_cast<op::BatchNormTrainingBackprop*>(node);
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        batchnorm->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -615,11 +529,7 @@ namespace ngraph
                          node->get_input_element_type(0) == element::f32 &&
                          node->get_input_element_type(1) == element::f32))
                     {
-                        auto lstm_node = static_cast<op::Lstm*>(node);
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        lstm_node->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -636,11 +546,7 @@ namespace ngraph
                          node->get_input_element_type(0) == element::f32 &&
                          node->get_input_element_type(1) == element::f32))
                     {
-                        auto rnn_node = static_cast<op::Rnn*>(node);
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        rnn_node->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -657,10 +563,7 @@ namespace ngraph
                         node->get_input_element_type(0) == element::f32 &&
                         softmax->get_axes().size() == 1)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        softmax->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -671,10 +574,7 @@ namespace ngraph
                     auto strides = slice->get_strides();
                     if (!is_strided(strides) && node->get_input_element_type(0) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        slice->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -684,11 +584,7 @@ namespace ngraph
                     if (node->get_input_element_type(0) == element::u8 ||
                         node->get_input_element_type(0) == element::i8)
                     {
-                        auto quantized_mp = static_cast<op::QuantizedMaxPool*>(node);
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        quantized_mp->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -698,11 +594,7 @@ namespace ngraph
                     if (node->get_input_element_type(0) == element::u8 ||
                         node->get_input_element_type(0) == element::i8)
                     {
-                        auto quantized_ap = static_cast<op::QuantizedAvgPool*>(node);
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        quantized_ap->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -718,54 +610,37 @@ namespace ngraph
                     if ((arg0_rank == 4 || arg0_rank == 2) &&
                         node->get_input_element_type(0) == element::f32)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        bounded_relu->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolution)
                 {
-                    auto quantized_conv = static_cast<op::QuantizedConvolution*>(node);
-
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::i8)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        quantized_conv->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolutionRelu)
                 {
-                    auto quantized_conv_relu = static_cast<op::QuantizedConvolutionRelu*>(node);
-
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::i8)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        quantized_conv_relu->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolutionBias)
                 {
-                    auto quantized_conv_bias = static_cast<op::QuantizedConvolutionBias*>(node);
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::i8)
                     {
-                        auto op_annotations =
-                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                        op_annotations->set_mkldnn_op(true);
-                        quantized_conv_bias->set_op_annotations(op_annotations);
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }
 
@@ -787,10 +662,7 @@ namespace ngraph
                         if (offset[0] != 0)
                             return;
                     }
-                    auto op_annotations =
-                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    op_annotations->set_mkldnn_op(true);
-                    dequantize->set_op_annotations(op_annotations);
+                    runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                 }
 
                 template <>
@@ -820,10 +692,7 @@ namespace ngraph
                             return;
                         }
                     }
-                    auto op_annotations =
-                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    op_annotations->set_mkldnn_op(true);
-                    quantize->set_op_annotations(op_annotations);
+                    runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                 }
             }
         }

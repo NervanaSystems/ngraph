@@ -280,54 +280,51 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
     // This completes fprop bn pattern
 
     // Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::graph_rewrite_callback callback = [variance_label,
-                                                        mean_label,
-                                                        input,
-                                                        eps_label,
-                                                        gamma_label,
-                                                        beta_label](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
-                     << m.get_match_root()->get_name();
+    ngraph::pattern::graph_rewrite_callback callback =
+        [variance_label, mean_label, input, eps_label, gamma_label, beta_label](
+            pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
+                         << m.get_match_root()->get_name();
 
-        // TODO - add assert's based on the matched node
-        auto pattern_map = m.get_pattern_map();
-        NGRAPH_DEBUG << "Input: " << pattern_map[input]->get_name() << " "
-                     << pattern_map[input]->get_shape().size();
-        NGRAPH_DEBUG << "Variance: " << pattern_map[variance_label]->get_name() << " "
-                     << pattern_map[variance_label]->get_shape().size();
-        NGRAPH_DEBUG << "Mean: " << pattern_map[mean_label]->get_name() << " "
-                     << pattern_map[mean_label]->get_shape().size();
-        NGRAPH_DEBUG << "eps: " << pattern_map[eps_label]->get_name() << " "
-                     << pattern_map[eps_label]->get_shape().size();
-        NGRAPH_DEBUG << "gamma: " << pattern_map[gamma_label]->get_name() << " "
-                     << pattern_map[gamma_label]->get_shape().size();
-        NGRAPH_DEBUG << "beta: " << pattern_map[beta_label]->get_name() << " "
-                     << pattern_map[beta_label]->get_shape().size();
+            // TODO - add assert's based on the matched node
+            auto pattern_map = m.get_pattern_map();
+            NGRAPH_DEBUG << "Input: " << pattern_map[input]->get_name() << " "
+                         << pattern_map[input]->get_shape().size();
+            NGRAPH_DEBUG << "Variance: " << pattern_map[variance_label]->get_name() << " "
+                         << pattern_map[variance_label]->get_shape().size();
+            NGRAPH_DEBUG << "Mean: " << pattern_map[mean_label]->get_name() << " "
+                         << pattern_map[mean_label]->get_shape().size();
+            NGRAPH_DEBUG << "eps: " << pattern_map[eps_label]->get_name() << " "
+                         << pattern_map[eps_label]->get_shape().size();
+            NGRAPH_DEBUG << "gamma: " << pattern_map[gamma_label]->get_name() << " "
+                         << pattern_map[gamma_label]->get_shape().size();
+            NGRAPH_DEBUG << "beta: " << pattern_map[beta_label]->get_name() << " "
+                         << pattern_map[beta_label]->get_shape().size();
 
-        Shape bn_output_shape{m.get_match_root()->get_shape()};
-        Shape m_bn_mean_shape{pattern_map[mean_label]->get_shape()};
-        Shape m_bn_variance_shape{pattern_map[variance_label]->get_shape()};
+            Shape bn_output_shape{m.get_match_root()->get_shape()};
+            Shape m_bn_mean_shape{pattern_map[mean_label]->get_shape()};
+            Shape m_bn_variance_shape{pattern_map[variance_label]->get_shape()};
 
-        // get epsilon value
-        auto eps_ptr = std::dynamic_pointer_cast<op::Constant>(pattern_map[eps_label]);
-        if (!eps_ptr)
-        {
-            NGRAPH_DEBUG << "Eps must be a constant";
-            return false;
-        }
-        double epsilon = *(reinterpret_cast<const double*>(eps_ptr->get_data_ptr()));
-        auto bn_node = std::make_shared<op::BatchNormTraining>(
-            epsilon, pattern_map[gamma_label], pattern_map[beta_label], pattern_map[input]);
+            // get epsilon value
+            auto eps_ptr = std::dynamic_pointer_cast<op::Constant>(pattern_map[eps_label]);
+            if (!eps_ptr)
+            {
+                NGRAPH_DEBUG << "Eps must be a constant";
+                return false;
+            }
+            double epsilon = *(reinterpret_cast<const double*>(eps_ptr->get_data_ptr()));
+            auto bn_node = std::make_shared<op::BatchNormTraining>(
+                epsilon, pattern_map[gamma_label], pattern_map[beta_label], pattern_map[input]);
 
-        if (!mkldnn_utils::can_use_mkldnn_batchnorm<ngraph::op::BatchNormTraining>(bn_node.get()))
-        {
-            return false;
-        }
-        auto normalized_output = std::shared_ptr<Node>(new op::GetOutputElement(bn_node, 0));
+            if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_node.get()))
+            {
+                return false;
+            }
+            auto normalized_output = std::shared_ptr<Node>(new op::GetOutputElement(bn_node, 0));
 
-        ngraph::replace_node(m.get_match_root(), normalized_output);
-        return true;
-    };
+            ngraph::replace_node(m.get_match_root(), normalized_output);
+            return true;
+        };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(add_beta, callback);
     this->add_matcher(m);
@@ -777,7 +774,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         auto m_bn = std::static_pointer_cast<op::BatchNormTraining>(
             m.get_match_root()->get_argument(0)->get_inputs().at(0).get_output().get_node());
 
-        if (!mkldnn_utils::can_use_mkldnn_batchnorm<ngraph::op::BatchNormTraining>(m_bn.get()))
+        if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(m_bn.get()))
         {
             return false;
         }
@@ -854,8 +851,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
         std::shared_ptr<Node> bn_relu;
         if (auto bn_inference = std::dynamic_pointer_cast<op::BatchNormInference>(bn_match))
         {
-            if (!mkldnn_utils::can_use_mkldnn_batchnorm<ngraph::op::BatchNormInference>(
-                    bn_inference.get()))
+            if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_inference.get()))
             {
                 return false;
             }
