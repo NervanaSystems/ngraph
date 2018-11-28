@@ -728,51 +728,6 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_training_0_eps_f32)
     EXPECT_TRUE(std::get<2>(result)) << "Gamma beta test variance";
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, batch_norm_three_outputs)
-{
-    auto input_shape = Shape{2, 3};
-    auto shape_mean = Shape{3};
-
-    auto A = make_shared<op::Parameter>(element::f64, input_shape);
-    auto Beta =
-        op::Constant::create(element::f64, shape_mean, {2.14211921, -0.75733924, 0.42210531});
-    auto Gamma =
-        op::Constant::create(element::f64, shape_mean, {1.75437676, 0.37950502, 1.13727544});
-
-    auto BN = make_shared<op::BatchNormTraining>(A, Gamma, Beta, 1e-3);
-
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(BN, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(BN, 1), ParameterVector{A});
-    auto f2 = make_shared<Function>(make_shared<op::GetOutputElement>(BN, 2), ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f64, input_shape);
-    copy_data(
-        a,
-        vector<double>{-1.97431703, -2.06521307, 0.54122217, 2.53375939, -0.22342691, 0.45340773});
-
-    auto result0 = backend->create_tensor(element::f64, input_shape);
-    vector<double> expected_result0{
-        0.3879149, -1.13662076, 1.34494817, 3.89632344, -0.37805778, -0.50073695};
-
-    backend->call_with_validate(f0, {result0}, {a});
-    EXPECT_TRUE(test::all_close(vector<double>{expected_result0}, read_vector<double>(result0)));
-
-    auto result1 = backend->create_tensor(element::f64, shape_mean);
-    vector<double> expected_result1{0.27972114, -1.14431989, 0.49731493};
-
-    backend->call_with_validate(f1, {result1}, {a});
-    EXPECT_TRUE(test::all_close(vector<double>{expected_result1}, read_vector<double>(result1)));
-
-    auto result2 = backend->create_tensor(element::f64, shape_mean);
-    vector<double> expected_result2{5.08068895e+00, 8.48043919e-01, 1.92784308e-03};
-
-    backend->call_with_validate(f2, {result2}, {a});
-    EXPECT_TRUE(test::all_close(vector<double>{expected_result2}, read_vector<double>(result2)));
-}
-
 NGRAPH_TEST(${BACKEND_NAME}, concat_matrix_colwise)
 {
     Shape shape_a{2, 2};
@@ -5365,56 +5320,6 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_inference_b2c2h2w1)
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
 }
 
-#if 0
-NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_globalstats_b2c2w2h1)
-{
-    auto input_shape = Shape{2, 2, 2, 1};
-    auto input = make_shared<op::Parameter>(element::f32, input_shape);
-    auto mean_shape = Shape{2};
-    auto mean = make_shared<op::Parameter>(element::f32, mean_shape);
-    auto var_shape = Shape{2};
-    auto var = make_shared<op::Parameter>(element::f32, var_shape);
-    auto gamma_shape = Shape{2};
-    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
-    auto beta_shape = Shape{2};
-    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
-    double eps = 0.001;
-    auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNormTraining>(input, gamma, beta, mean, var, eps);
-
-    auto f = make_shared<Function>(bn, ParameterVector{gamma, beta, input, mean, var});
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-    // Create some tensors for input/output
-    auto _input = backend->create_tensor(element::f32, input_shape);
-    copy_data(_input,
-              vector<float>{0.54881352f,
-                            0.71518934f,
-                            0.60276335f,
-                            0.54488319f,
-                            0.42365479f,
-                            0.64589411f,
-                            0.4375872f,
-                            0.89177299f});
-
-    auto _gamma = backend->create_tensor(element::f32, gamma_shape);
-    copy_data(_gamma, vector<float>{1.0f, 1.0f});
-    auto _beta = backend->create_tensor(element::f32, beta_shape);
-    copy_data(_beta, vector<float>{0.0f, 0.0f});
-    auto _mean = backend->create_tensor(element::f32, mean_shape);
-    copy_data(_mean, vector<float>{0.583388f, 0.619252f});
-    auto _var = backend->create_tensor(element::f32, var_shape);
-    copy_data(_var, vector<float>{0.0119972f, 0.0282681f});
-    auto bn_output = backend->create_tensor(element::f32, shape_r);
-
-    vector<float> expected_result{
-        -0.30327f, 1.1561f, -0.0963782f, -0.434702f, -1.4011f, 0.548275f, -1.06187f, 1.59295f};
-    backend->call_with_validate(f, {bn_output}, {_gamma, _beta, _input, _mean, _var});
-
-    ASSERT_TRUE(
-        ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
-}
-#endif
-
 NGRAPH_TEST(${BACKEND_NAME}, reverse_sequence_n2c3h4w2)
 {
     Shape shape{2, 3, 4, 2};
@@ -6471,60 +6376,6 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_ROUND_DOWN)
     backend->call_with_validate(f, {y}, {x});
     EXPECT_EQ((vector<output_c_type>{2, 2, 2, -3, -3, -3, 3, 3, 3, -4, -4, -4}),
               read_vector<output_c_type>(y));
-}
-
-#include <iostream>
-
-NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_bprop)
-{
-    Shape sca{1};
-    Shape vec{1, 1, 1, 2};
-    double eps = 1.0e-05;
-
-    auto g = std::make_shared<op::Parameter>(element::f32, sca);
-    auto b = std::make_shared<op::Parameter>(element::f32, sca);
-    auto input = std::make_shared<op::Parameter>(element::f32, vec);
-    auto bn_fp = std::make_shared<op::BatchNormTraining>(input, g, b, eps);
-    auto bnorm = std::make_shared<op::GetOutputElement>(bn_fp, 0);
-    auto mean = std::make_shared<op::GetOutputElement>(bn_fp, 1);
-    auto var = std::make_shared<op::GetOutputElement>(bn_fp, 2);
-
-    auto func_bn =
-        std::make_shared<Function>(NodeVector{bnorm, mean, var}, ParameterVector{input, g, b});
-
-    std::vector<float> input_arg{0.0f, 4.0f};
-    std::vector<float> gamma_arg{1.0f};
-    std::vector<float> beta_arg{1.0f};
-    std::vector<std::vector<float>> args = {input_arg, gamma_arg, beta_arg};
-    auto results = execute(func_bn, args, "${BACKEND_NAME}");
-
-    auto rn = results.at(0); // [0, 2]
-    auto rm = results.at(1); // [2]
-    auto rv = results.at(2); // [4]
-    std::cerr << rm.at(0) << " " << rv.at(0) << std::endl;
-    std::cerr << rn.at(0) << " " << rn.at(1) << std::endl;
-
-    g = std::make_shared<op::Parameter>(element::f32, sca);
-    b = std::make_shared<op::Parameter>(element::f32, sca);
-    input = std::make_shared<op::Parameter>(element::f32, vec);
-    auto m = std::make_shared<op::Parameter>(element::f32, sca);
-    auto v = std::make_shared<op::Parameter>(element::f32, sca);
-    auto delta = std::make_shared<op::Parameter>(element::f32, vec);
-
-    auto bn_bp = std::make_shared<op::BatchNormTrainingBackprop>(input, g, b, m, v, delta, eps);
-    auto dx = std::make_shared<op::Result>(std::make_shared<op::GetOutputElement>(bn_bp, 0));
-    auto dg = std::make_shared<op::Result>(std::make_shared<op::GetOutputElement>(bn_bp, 1));
-    auto db = std::make_shared<op::Result>(std::make_shared<op::GetOutputElement>(bn_bp, 2));
-
-    std::vector<std::vector<float>> bpargs = {input_arg, gamma_arg, beta_arg, rm, rv, {1.0f, 1.0f}};
-
-    auto func = std::make_shared<Function>(ResultVector{dx, dg, db},
-                                           ParameterVector{input, g, b, m, v, delta});
-    results = execute(func, bpargs, "${BACKEND_NAME}");
-    std::cerr << "dx: " << results.at(0).at(0) << " " << results.at(0).at(1) << std::endl;
-    std::cerr << "dg: " << results.at(1).at(0) << std::endl;
-    std::cerr << "db: " << results.at(2).at(0) << std::endl;
-    EXPECT_TRUE(test::all_close(std::vector<float>{-0.25f, -1.192e-7}, results.at(0)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar)

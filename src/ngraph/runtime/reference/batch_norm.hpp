@@ -17,7 +17,6 @@
 #pragma once
 
 #include <cmath>
-#include <iostream>
 #include <vector>
 
 #include "ngraph/axis_vector.hpp"
@@ -73,8 +72,6 @@ namespace ngraph
                                      T* variance,
                                      const Shape& input_shape)
             {
-                std::cerr << "REFERENCE!!" << std::endl;
-
                 auto eps_casted = static_cast<T>(eps);
                 auto channels = input_shape[1];
 
@@ -172,11 +169,9 @@ namespace ngraph
                     end_corner[channel_axis] = c + 1;
 
                     CoordinateTransform input_transform(input_shape, start_corner, end_corner);
-                    std::cerr << "Elts per channel: " << elements_per_channel << std::endl;
                     T delta_beta_sum = 0;
                     T var = variance[c];
                     T mu = mean[c];
-                    std::cerr << "mu: " << mu << " var: " << var << std::endl;
                     T var_eps = var + eps;
                     T sqrt_var_eps = std::sqrt(var_eps);
                     T inv_sqrt_var_eps = 1 / sqrt_var_eps;
@@ -186,13 +181,9 @@ namespace ngraph
                     for (Coordinate input_coord : input_transform)
                     {
                         auto idx = input_transform.index(input_coord);
-                        std::cerr << "idx: " << idx << std::endl;
                         auto delta_idx = delta_normed[idx];
-                        std::cerr << "delta_idx: " << delta_idx << std::endl;
                         auto input_idx = input[idx];
-                        std::cerr << "input: " << input_idx << std::endl;
                         auto centered = input_idx - mu;
-                        std::cerr << "centered: " << centered << std::endl;
                         delta_beta_sum += delta_idx;
                         delta_gammad += centered * delta_idx;
                         T delta_centered = gammad * delta_idx;
@@ -201,17 +192,9 @@ namespace ngraph
                     }
                     delta_beta[c] = delta_beta_sum;
                     delta_gamma[c] = delta_gammad * inv_sqrt_var_eps;
-                    std::cerr << "delta_gammad: " << delta_gammad << std::endl;
-
-                    std::cerr << "di: " << delta_input[0] << " " << delta_input[1] << std::endl;
-                    std::cerr << "dm: " << delta_mu << std::endl;
-
                     T delta_inv_sqrt = gamma[c] * delta_gammad;
-                    std::cerr << "delta_inv_sqrt: " << delta_inv_sqrt << std::endl;
                     T delta_var = -delta_inv_sqrt * inv_sqrt_var_eps / (2 * var_eps);
-                    std::cerr << "delta_var: " << delta_var << std::endl;
                     T delta_two_var_sum = 2 * delta_var / elements_per_channel;
-                    std::cerr << "delta_two_var_sum: " << delta_two_var_sum << std::endl;
 
                     for (Coordinate input_coord : input_transform)
                     {
@@ -220,8 +203,6 @@ namespace ngraph
                         delta_input[idx] += two_centered;
                         delta_mu -= two_centered;
                     }
-                    std::cerr << "di: " << delta_input[0] << " " << delta_input[1] << std::endl;
-                    std::cerr << "dm: " << delta_mu << std::endl;
 
                     T delta_mu_over_n = delta_mu / elements_per_channel;
                     for (Coordinate input_coord : input_transform)
@@ -229,8 +210,6 @@ namespace ngraph
                         auto idx = input_transform.index(input_coord);
                         delta_input[idx] += delta_mu_over_n;
                     }
-                    std::cerr << "di: " << delta_input[0] << " " << delta_input[1] << std::endl;
-                    std::cerr << "dm: " << delta_mu << std::endl;
                 }
             }
         }

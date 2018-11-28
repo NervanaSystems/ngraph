@@ -100,7 +100,6 @@ void ngraph::op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoin
     {
         throw ngraph_error("GetOutputElement for variance is missing");
     }
-
     auto bbn = std::make_shared<op::BatchNormTrainingBackprop>(
         input, gamma, beta, mean, var, deltas.at(0), get_eps_value());
     auto dinput = std::make_shared<op::GetOutputElement>(bbn, 0);
