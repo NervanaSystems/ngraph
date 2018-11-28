@@ -14,8 +14,5 @@ shape_of_matrix
 shape_of_5d
 quantize_clamp_int32
 
-# this one just started failing
-batchnorm_bprop_n4c3h2w2
-
 # failing in CI build but passing on local machine
 max_3d_to_scalar_int32

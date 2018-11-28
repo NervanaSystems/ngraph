@@ -16,9 +16,8 @@
 
 #include <numeric>
 
-#include "ngraph/op/softmax.hpp"
-
 #include "exceptions.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "softmax.hpp"
 
 namespace ngraph
