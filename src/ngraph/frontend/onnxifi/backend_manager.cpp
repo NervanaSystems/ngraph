@@ -14,16 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cstdlib>   // std::size_t, std::uintptr_t
-#include <stdexcept> // std::invalid_agrument, std::out_of_rage
-
+#include <cstdlib> // std::size_t, std::uintptr_t
 #include <onnxifi.h>
-
-#include "ngraph/runtime/backend_manager.hpp"
+#include <stdexcept> // std::invalid_agrument, std::out_of_rage
 
 #include "backend.hpp"
 #include "backend_manager.hpp"
 #include "exceptions.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 
 namespace ngraph
 {

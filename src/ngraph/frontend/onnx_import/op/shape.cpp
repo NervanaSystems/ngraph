@@ -17,10 +17,9 @@
 #include <memory>
 
 #include "ngraph/node.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
-
-#include "ngraph/op/constant.hpp"
 
 #include "shape.hpp"
 
