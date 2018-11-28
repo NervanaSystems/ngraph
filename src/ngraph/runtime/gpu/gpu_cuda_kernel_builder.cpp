@@ -538,9 +538,9 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
                                                    "non_reduce_strides_shift",
                                                    "non_reduce_strides_in_input",
                                                    "non_reduce_coordinate",
-                                                   "non_reduce_input_index",
                                                    non_reduce_rank,
-                                                   true);
+                                                   true,
+                                                   "non_reduce_input_index");
             writer << "uint32_t input_idx = non_reduce_input_index;\n";
             writer << "uint32_t step = reduce_strides_in_input" << reduce_rank - 1 << ";\n";
             writer << data_types[1] << " r = in0[non_reduce_input_index];\n";
@@ -1957,7 +1957,7 @@ void runtime::gpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::C
     }
 }
 
-void runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
+std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
     codegen::CodeWriter& writer,
     std::string i_thread_index,
     std::string i_strides,
@@ -1965,9 +1965,9 @@ void runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
     std::string i_stride_shift,
     std::string i_reduced_strides,
     std::string o_coordinates,
-    std::string reduced_idx,
     size_t rank,
-    bool register_arguments)
+    bool register_arguments,
+    std::string reduced_idx)
 {
     coordinate_transform_to_multi_d(writer,
                                     i_strides,
@@ -1988,40 +1988,6 @@ void runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
         writer << reduced_idx << " += " << o_coordinates << i << " * " << i_reduced_strides
                << brace_open << i << brace_close << ";\n";
     }
-}
-
-std::string runtime::gpu::CudaKernelBuilder::collective_coordinate_transform_helper(
-    codegen::CodeWriter& writer,
-    std::string i_thread_index,
-    std::string i_strides,
-    std::string i_stride_magic,
-    std::string i_stride_shift,
-    std::string i_reduced_strides,
-    std::string o_coordinates,
-    size_t rank,
-    bool register_arguments)
-{
-    coordinate_transform_to_multi_d(writer,
-                                    i_strides,
-                                    i_stride_magic,
-                                    i_stride_shift,
-                                    i_thread_index,
-                                    o_coordinates,
-                                    rank,
-                                    register_arguments);
-
-    std::string brace_open = (register_arguments) ? "" : "[";
-    std::string brace_close = (register_arguments) ? "" : "]";
-
-    // index into reduced tensor from coordinates of non-reduced tensor
-    std::string reduced_idx = "reduced_idx";
-    writer << "int " << reduced_idx << " = 0;\n";
-    for (size_t i = 0; i < rank; i++)
-    {
-        writer << "reduced_idx += " << o_coordinates << i << " * " << i_reduced_strides
-               << brace_open << i << brace_close << ";\n";
-    }
-
     return reduced_idx;
 }
 

@@ -210,6 +210,15 @@ namespace ngraph
 
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
 
+                static void coordinate_transform_to_multi_d(codegen::CodeWriter& writer,
+                                                            std::string i_strides,
+                                                            std::string i_stride_magic,
+                                                            std::string i_stride_shift,
+                                                            std::string i_coord_product,
+                                                            std::string o_coordinates,
+                                                            size_t rank,
+                                                            bool register_arguments = false);
+
                 /// \brief Given kernel input variables i_* produce register variables o_coordinates{i}
                 ///        of the non-reduced tensor and return the string name of integer index into reduced tensor
                 static std::string
@@ -221,25 +230,9 @@ namespace ngraph
                                                            std::string i_reduced_strides,
                                                            std::string o_coordinates,
                                                            size_t rank,
-                                                           bool register_arguments = false);
-                static void coordinate_transform_to_multi_d(codegen::CodeWriter& writer,
-                                                            std::string i_strides,
-                                                            std::string i_stride_magic,
-                                                            std::string i_stride_shift,
-                                                            std::string i_coord_product,
-                                                            std::string o_coordinates,
-                                                            size_t rank,
-                                                            bool register_arguments = false);
-                static void collective_coordinate_transform_helper(codegen::CodeWriter& writer,
-                                                                   std::string i_thread_index,
-                                                                   std::string i_strides,
-                                                                   std::string i_stride_magic,
-                                                                   std::string i_stride_shift,
-                                                                   std::string i_reduced_strides,
-                                                                   std::string o_coordinates,
-                                                                   std::string reduced_idx,
-                                                                   size_t rank,
-                                                                   bool register_arguments = true);
+                                                           bool register_arguments = true,
+                                                           std::string reduced_idx = "reduced_idx");
+
                 static bool stable_sum_check_helper(const std::string& op,
                                                     const std::string& data_type);
             };
