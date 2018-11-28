@@ -1,4 +1,4 @@
-.. about: 
+. about: 
 
 
 Architecture, Features, FAQs
@@ -13,7 +13,7 @@ Architecture, Features, FAQs
 .. _architecture:
 
 nGraph Compiler stack architecture
-----------------------------------
+==================================
 
 The diagram below represents our current Beta release stack. In the
 diagram, nGraph components are colored in gray. Please note that the
@@ -21,7 +21,7 @@ stack diagram is simplified to show how nGraph executes deep learning
 workloads with two hardware backends; however, many other deep learning
 frameworks and backends currently are functioning.
 
-.. figure:: doc/sphinx/source/graphics/stackngrknl.png
+.. figure:: ../graphics/stackngrknl.png
    :alt: 
 
 Bridge
@@ -104,7 +104,7 @@ Flow Graph.
 .. _features:
 
 Features
---------
+========
 
 nGraph performs a combination of device-specific and non-device-specific
 optimizations:
