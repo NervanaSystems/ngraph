@@ -108,31 +108,28 @@ namespace ngraph
                                                  const ngraph::CoordinateDiff& padding_above,
                                                  const mkldnn::post_ops& pops = mkldnn::post_ops());
 
-                size_t
-                    build_quantized_convolution(const mkldnn::memory::desc& input_data_desc,
-                                                const mkldnn::memory::desc& weights_desc,
-                                                const mkldnn::memory::desc& result_desc,
-                                                const ngraph::Strides& strides,
-                                                const ngraph::Strides& dilation_strides,
-                                                const ngraph::CoordinateDiff& padding_below,
-                                                const ngraph::CoordinateDiff& padding_above,
-                                                const float scale,
-                                                const mkldnn::post_ops& pops = mkldnn::post_ops());
+                size_t build_quantized_convolution_forward(
+                    const mkldnn::memory::desc& input_data_desc,
+                    const mkldnn::memory::desc& weights_desc,
+                    const mkldnn::memory::desc& result_desc,
+                    const ngraph::Strides& strides,
+                    const ngraph::Strides& dilation_strides,
+                    const ngraph::CoordinateDiff& padding_below,
+                    const ngraph::CoordinateDiff& padding_above,
+                    const float scale,
+                    const mkldnn::post_ops& pops = mkldnn::post_ops());
 
-                /**
-                 * QuantizedConvolution + bias forward
-                 */
-                size_t
-                    build_quantized_convolution(const mkldnn::memory::desc& input_data_desc,
-                                                const mkldnn::memory::desc& weights_desc,
-                                                const mkldnn::memory::desc& bias_desc,
-                                                const mkldnn::memory::desc& result_desc,
-                                                const ngraph::Strides& strides,
-                                                const ngraph::Strides& dilation_strides,
-                                                const ngraph::CoordinateDiff& padding_below,
-                                                const ngraph::CoordinateDiff& padding_above,
-                                                const float scale,
-                                                const mkldnn::post_ops& pops = mkldnn::post_ops());
+                size_t build_quantized_convolution_forward(
+                    const mkldnn::memory::desc& input_data_desc,
+                    const mkldnn::memory::desc& weights_desc,
+                    const mkldnn::memory::desc& bias_desc,
+                    const mkldnn::memory::desc& result_desc,
+                    const ngraph::Strides& strides,
+                    const ngraph::Strides& dilation_strides,
+                    const ngraph::CoordinateDiff& padding_below,
+                    const ngraph::CoordinateDiff& padding_above,
+                    const float scale,
+                    const mkldnn::post_ops& pops = mkldnn::post_ops());
 
                 template <typename OP>
                 size_t build_convolution(const ngraph::Node* node,
@@ -237,7 +234,7 @@ namespace ngraph
 
                         auto scale_val = scale_const_op->get_vector<float>();
 
-                        return build_quantized_convolution(
+                        return build_quantized_convolution_forward(
                             data_desc,
                             weights_desc,
                             result_desc,
@@ -260,7 +257,7 @@ namespace ngraph
 
                         auto scale_val = scale_const_op->get_vector<float>();
 
-                        return build_quantized_convolution(
+                        return build_quantized_convolution_forward(
                             data_desc,
                             weights_desc,
                             result_desc,
@@ -285,7 +282,7 @@ namespace ngraph
 
                         // conv+bias = cvt_to_int8(scale*(dst + bias))
                         auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
-                        return build_quantized_convolution(
+                        return build_quantized_convolution_forward(
                             data_desc,
                             weights_desc,
                             bias_desc,
@@ -601,17 +598,9 @@ namespace ngraph
                                              const mkldnn::memory::desc& result_desc,
                                              int softmax_axis);
 
-                size_t build_bounded_relu(const ngraph::Node* node,
-                                          const std::vector<TensorViewWrapper>& args,
-                                          const std::vector<TensorViewWrapper>& out)
-                {
-                    auto bounded_relu_node = static_cast<const ngraph::op::BoundedRelu*>(node);
-                    float alpha = bounded_relu_node->get_alpha();
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                    return build_bounded_relu(input_desc, result_desc, alpha);
-                }
+                size_t build_leaky_relu(const mkldnn::memory::desc& input_desc,
+                                        const mkldnn::memory::desc& result_desc,
+                                        float alpha);
 
                 size_t build_bounded_relu(const mkldnn::memory::desc& input_desc,
                                           const mkldnn::memory::desc& result_desc,

@@ -16,6 +16,10 @@
 
 
 if (NGRAPH_GPU_ENABLE OR (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY))
+    if (DEFINED NGRAPH_USE_CXX_ABI AND NGRAPH_USE_PREBUILT_LLVM)
+        message(FATAL_ERROR "Unable to use NGRAPH_USE_PREBUILT_LLVM with NGRAPH_USE_CXX_ABI")
+    endif()
+
     set(SRC
         code_writer.cpp
         compiler.cpp
@@ -72,7 +76,11 @@ if (NGRAPH_GPU_ENABLE OR (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY))
         add_dependencies(header_resource ext_eigen ext_mkldnn)
     endif()
 
-    set_target_properties(codegen PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+    if(NGRAPH_LIB_VERSIONING_ENABLE)
+        set_target_properties(codegen PROPERTIES
+            VERSION ${NGRAPH_VERSION}
+            SOVERSION ${NGRAPH_API_VERSION})
+    endif()
     add_dependencies(codegen header_resource)
     if (NGRAPH_CPU_ENABLE)
         add_dependencies(codegen libmkldnn libeigen)

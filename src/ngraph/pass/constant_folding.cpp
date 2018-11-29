@@ -567,7 +567,7 @@ void ngraph::pass::ConstantFolding::construct_constant_quantize()
         make_shared<pattern::op::Label>(element::f32, Shape{2}, pattern::has_class<op::Constant>());
     auto q_scale = op::Constant::create(element::f32, Shape{}, {1});
     auto q_offset = op::Constant::create(element::i8, Shape{}, {0});
-    auto mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
     auto quant_op =
         make_shared<op::Quantize>(constant_label, q_scale, q_offset, element::i8, AxisSet{}, mode);
     auto quant = make_shared<pattern::op::Label>(quant_op, nullptr, NodeVector{quant_op});
@@ -588,11 +588,6 @@ void ngraph::pass::ConstantFolding::construct_constant_quantize()
         auto type = quant_match->get_element_type();
 
         if (constant_match->get_element_type() != element::f32)
-        {
-            return false;
-        }
-
-        if (quantize_op->get_round_mode() != op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO)
         {
             return false;
         }

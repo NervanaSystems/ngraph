@@ -18,6 +18,7 @@
 #include <iterator>
 #include <memory>
 
+#include "core/node.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/add.hpp"
@@ -28,8 +29,6 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reshape.hpp"
-
-#include "core/node.hpp"
 #include "prelu.hpp"
 #include "utils/broadcasting.hpp"
 

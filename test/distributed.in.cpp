@@ -33,7 +33,7 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::AllReduce>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     int comm_size;

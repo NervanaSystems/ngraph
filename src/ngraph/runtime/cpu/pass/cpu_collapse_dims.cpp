@@ -22,6 +22,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/dot.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/product.hpp"
@@ -41,14 +42,13 @@ struct CollapsedShape
 // Fold and collapse axes of shape.
 // Contiguous axes that are not being operated on can be collapsed.
 // Contiguous axes that are being operated on are collapsed optionally.
-// Skip size 1 dimensions.
 // E.g.,
 // Shape{3, 3, 2}, AxisSet{0, 1} -> Shape{9, 2}, AxisSet{0}
 // Shape{2, 4, 6, 6}, AxisSet{2, 3} -> Shape{8, 36}, AxisSet{1}
 static void collapse_dims(std::vector<size_t>& shape,
                           std::set<size_t> operated_axes,
                           struct CollapsedShape& cshape,
-                          bool collapse_operated_axes)
+                          bool skip_unit_size = true)
 {
     size_t collapse_size = 1;
     bool operated_axes_run = false;
@@ -57,11 +57,10 @@ static void collapse_dims(std::vector<size_t>& shape,
     for (int output_idx = static_cast<int>(shape.size()) - 1; output_idx >= 0; output_idx--)
     {
         auto is_operated_axis = operated_axes.count(output_idx) == 1;
-        auto end_run = (operated_axes_run != is_operated_axis) ||
-                       (is_operated_axis && !collapse_operated_axes);
+        auto end_run = (operated_axes_run != is_operated_axis);
         if (collapsing && end_run)
         {
-            if (collapse_size != 1)
+            if (collapse_size != 1 || !skip_unit_size)
             {
                 cshape.fshape.push_back(collapse_size);
                 fshape_operated_axis.push_back(operated_axes_run);
@@ -74,7 +73,7 @@ static void collapse_dims(std::vector<size_t>& shape,
         collapsing = true;
     }
     // Last run
-    if (collapse_size != 1)
+    if (collapse_size != 1 || !skip_unit_size)
     {
         cshape.fshape.push_back(collapse_size);
         fshape_operated_axis.push_back(operated_axes_run);
@@ -105,7 +104,7 @@ static bool collapse_broadcast(std::shared_ptr<Node> n)
 
     struct CollapsedShape cshape;
 
-    collapse_dims(output_shape, operated_axes, cshape, true);
+    collapse_dims(output_shape, operated_axes, cshape);
 
     if (cshape.axis_set.size() == 0)
     {
@@ -154,7 +153,7 @@ static bool collapse_reduction(std::shared_ptr<Node> n)
 
     struct CollapsedShape cshape;
 
-    collapse_dims(input_shape, operated_axes, cshape, true);
+    collapse_dims(input_shape, operated_axes, cshape);
 
     if (cshape.axis_set.size() == 0)
     {
@@ -191,6 +190,55 @@ static bool collapse_reduction(std::shared_ptr<Node> n)
     return replaced;
 }
 
+template <typename T>
+static bool collapse_dot(std::shared_ptr<Node> n)
+{
+    bool replaced = false;
+    auto node = std::static_pointer_cast<T>(n).get();
+    auto A_shape = node->get_argument(0)->get_shape();
+    auto B_shape = node->get_argument(1)->get_shape();
+    auto reduction_count = node->get_reduction_axes_count();
+
+    AxisSet operated_axes_A, operated_axes_B;
+
+    for (size_t i = 0; i < reduction_count; i++)
+    {
+        operated_axes_A.insert(A_shape.size() - i - 1);
+        operated_axes_B.insert(i);
+    }
+
+    struct CollapsedShape cshape_A, cshape_B;
+    collapse_dims(A_shape, operated_axes_A, cshape_A, false);
+    collapse_dims(B_shape, operated_axes_B, cshape_B, false);
+
+    if (A_shape != cshape_A.fshape || B_shape != cshape_B.fshape)
+    {
+        // Reshape A to cshape_A.fshape
+        AxisVector A_axis_order = ngraph::get_default_order(A_shape);
+        auto reshape_A = std::make_shared<op::Reshape>(
+            node->get_argument(0), A_axis_order, Shape(cshape_A.fshape));
+
+        // Reshape B to cshape_B.fshape
+        AxisVector B_axis_order = ngraph::get_default_order(B_shape);
+        auto reshape_B = std::make_shared<op::Reshape>(
+            node->get_argument(1), B_axis_order, Shape(cshape_B.fshape));
+
+        auto cdot =
+            std::make_shared<op::Dot>(reshape_A, reshape_B, reduction_count ? 1 : reduction_count);
+        auto reshape_output = std::make_shared<op::Reshape>(
+            cdot, ngraph::get_default_order(cdot->get_shape()), node->get_shape());
+        ngraph::replace_node(n, reshape_output);
+
+        NGRAPH_DEBUG << "CollapseDims: Replaced dot " << A_shape << " . " << B_shape
+                     << " reduction count: " << reduction_count << " with "
+                     << Shape(cshape_A.fshape) << " . " << Shape(cshape_B.fshape);
+
+        replaced = true;
+    }
+
+    return replaced;
+}
+
 bool runtime::cpu::pass::CPUCollapseDims::run_on_function(std::shared_ptr<ngraph::Function> f)
 {
     bool replaced = false;
@@ -215,6 +263,10 @@ bool runtime::cpu::pass::CPUCollapseDims::run_on_function(std::shared_ptr<ngraph
         else if (std::dynamic_pointer_cast<op::Sum>(n))
         {
             replaced |= collapse_reduction<op::Sum>(n);
+        }
+        else if (std::dynamic_pointer_cast<op::Dot>(n))
+        {
+            replaced |= collapse_dot<op::Dot>(n);
         }
     }
 

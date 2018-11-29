@@ -14,11 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "mean.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
-
-#include "mean.hpp"
 #include "utils/variadic.hpp"
 
 namespace ngraph

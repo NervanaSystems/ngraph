@@ -52,6 +52,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
@@ -216,6 +217,88 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     op_annotations->add_in_place_oi_pair({0, 0, false});
                     concat->set_op_annotations(op_annotations);
                 }
+            }
+        }
+    }
+
+    for (auto n : function->get_ordered_ops())
+    {
+        if (auto slice = std::dynamic_pointer_cast<op::Slice>(n))
+        {
+            auto in_shape = slice->get_input_shape(0);
+            auto out_shape = slice->get_output_shape(0);
+            auto strides = slice->get_strides();
+
+            auto lower_bounds = slice->get_lower_bounds();
+            auto upper_bounds = slice->get_upper_bounds();
+
+            auto arg = slice->get_argument(0);
+            if (std::dynamic_pointer_cast<op::Constant>(arg) ||
+                std::dynamic_pointer_cast<op::Parameter>(arg))
+            {
+                NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
+                             << ": constant or parameter, no in place slice";
+                continue;
+            }
+
+            if (is_strided(strides))
+            {
+                NGRAPH_DEBUG << "cpu_memory_optimization: strided slice, no in place slice";
+                continue;
+            }
+
+            auto product = 1;
+            int axis = in_shape.size() - 1;
+            for (int i = in_shape.size() - 1; i >= 0; i--)
+            {
+                if (in_shape[i] != out_shape[i])
+                {
+                    axis = i;
+                    break;
+                }
+            }
+            for (int i = 0; i < axis; i++)
+            {
+                product *= in_shape[i];
+            }
+            if (product != 1)
+            {
+                NGRAPH_DEBUG << "cpu_memory_optimization: The product of input shape "
+                                "before slice axis is not 1, no in place slice";
+                continue;
+            }
+
+            // check if input and output formats are the same
+            auto output_md = mkldnn_utils::get_output_mkldnn_md(n.get(), 0);
+            auto output_format = static_cast<mkldnn::memory::format>(output_md.data.format);
+            auto input_md = mkldnn_utils::get_input_mkldnn_md(n.get(), 0);
+            auto input_format = static_cast<mkldnn::memory::format>(input_md.data.format);
+            if (output_format != input_format)
+            {
+                NGRAPH_DEBUG << "cpu_memory_optimization: input format is different from "
+                                "output format, no in place slice";
+                continue;
+            }
+
+            // check if input layout is padded
+            AxisVector axis_list = ngraph::get_default_order(in_shape);
+            if (mkldnn_utils::is_mkldnn_padded_layout(input_md, axis_list))
+            {
+                NGRAPH_DEBUG << "cpu_memory_optimization: padded input layout, no in place slice";
+
+                continue;
+            }
+
+            auto op_annotations = slice->get_op_annotations();
+            if (op_annotations)
+            {
+                op_annotations->add_in_place_oi_pair({0, 0, false});
+            }
+            else
+            {
+                op_annotations = std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                op_annotations->add_in_place_oi_pair({0, 0, false});
+                slice->set_op_annotations(op_annotations);
             }
         }
     }

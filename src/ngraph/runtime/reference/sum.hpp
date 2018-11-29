@@ -43,12 +43,14 @@ namespace ngraph
 
                 CoordinateTransform input_transform(in_shape);
 
+                T c = 0;
                 for (const Coordinate& input_coord : input_transform)
                 {
                     Coordinate output_coord = reduce(input_coord, reduction_axes);
-
-                    out[output_transform.index(output_coord)] +=
-                        arg[input_transform.index(input_coord)];
+                    T y = arg[input_transform.index(input_coord)] - c;
+                    T t = out[output_transform.index(output_coord)] + y;
+                    c = (t - out[output_transform.index(output_coord)]) - y;
+                    out[output_transform.index(output_coord)] = t;
                 }
             }
         }

@@ -27,19 +27,7 @@ using namespace std;
 
 #define TI(x) std::type_index(typeid(x))
 
-static void visualize_convert_layout(const Node& node, ostream& ss)
-{
-    auto input_desc = runtime::cpu::mkldnn_utils::get_input_mkldnn_md(&node, 0);
-    auto result_desc = runtime::cpu::mkldnn_utils::get_output_mkldnn_md(&node, 0);
-
-    ss << "in=" << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
-                       static_cast<mkldnn::memory::format>(input_desc.data.format));
-    ss << " out=" << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
-                         static_cast<mkldnn::memory::format>(result_desc.data.format));
-    ss << " ";
-}
-
-static void visualize_reshape(const Node& node, ostream& ss)
+static void visualize_layout_format(const Node& node, ostream& ss)
 {
     try
     {
@@ -80,8 +68,8 @@ namespace ngraph
             const visualize_tree_ops_map_t& get_visualize_tree_ops_map()
             {
                 const static visualize_tree_ops_map_t vtom{
-                    {TI(runtime::cpu::op::ConvertLayout), visualize_convert_layout},
-                    {TI(ngraph::op::Reshape), visualize_reshape}};
+                    {TI(runtime::cpu::op::ConvertLayout), visualize_layout_format},
+                    {TI(ngraph::op::Reshape), visualize_layout_format}};
                 return vtom;
             }
         }

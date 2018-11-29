@@ -16,14 +16,12 @@
 
 #pragma once
 
+#include <onnx-ml.pb.h>
 #include <string>
 #include <vector>
 
-#include <onnx-ml.pb.h>
-
-#include "ngraph/op/parameter_vector.hpp"
-
 #include "model.hpp"
+#include "ngraph/parameter_vector.hpp"
 #include "operator_set.hpp"
 #include "value_info.hpp"
 #include "weight.hpp"
@@ -40,7 +38,7 @@ namespace ngraph
             const std::vector<Node>& get_nodes() const { return m_nodes; }
             const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }
             const std::vector<ValueInfo>& get_outputs() const { return m_outputs; }
-            const op::ParameterVector& get_ng_parameters() const { return m_parameters; }
+            const ParameterVector& get_ng_parameters() const { return m_parameters; }
             std::shared_ptr<ngraph::Node> get_ng_node_from_cache(const std::string& name) const
             {
                 return m_ng_node_cache.at(name);
@@ -57,7 +55,7 @@ namespace ngraph
             std::vector<Node> m_nodes;
             std::vector<ValueInfo> m_inputs;
             std::vector<ValueInfo> m_outputs;
-            op::ParameterVector m_parameters;
+            ParameterVector m_parameters;
             std::map<std::string, std::shared_ptr<ngraph::Node>> m_ng_node_cache;
             std::map<std::string, Tensor> m_initializers;
             const Model* m_model;

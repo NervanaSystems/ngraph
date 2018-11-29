@@ -53,6 +53,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -125,47 +126,12 @@ namespace ngraph
                     }
                 }
 
-                template <typename T>
-                bool can_use_mkldnn_conv(ngraph::Node* node)
-                {
-                    auto convolution = static_cast<const T*>(node);
-                    auto arg0_rank = node->get_input_shape(0).size();
-
-                    for (size_t s : convolution->get_data_dilation_strides())
-                    {
-                        if (s != 1)
-                            return false;
-                    }
-                    if (arg0_rank != 4 && arg0_rank != 5)
-                    {
-                        return false;
-                    }
-                    if (node->get_input_element_type(0) != element::f32)
-                    {
-                        return false;
-                    }
-                    // Temporarily disable MKLDNN for large paddings due to
-                    // a bug in v0.16 - MKFDNN-982
-                    for (auto s : convolution->get_padding_below())
-                    {
-                        if (s >= 7)
-                            return false;
-                    }
-                    for (auto s : convolution->get_padding_above())
-                    {
-                        if (s >= 7)
-                            return false;
-                    }
-
-                    return true;
-                }
-
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Convolution)
                 {
                     auto convolution = static_cast<op::Convolution*>(node);
 
-                    if (can_use_mkldnn_conv<ngraph::op::Convolution>(node))
+                    if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::Convolution>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -179,7 +145,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::GroupConvolution*>(node);
 
-                    if (can_use_mkldnn_conv<ngraph::op::GroupConvolution>(node))
+                    if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::GroupConvolution>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -193,7 +159,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::GroupConvolutionBias*>(node);
 
-                    if (can_use_mkldnn_conv<ngraph::op::GroupConvolutionBias>(node))
+                    if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::GroupConvolutionBias>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -207,7 +173,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::ConvolutionRelu*>(node);
 
-                    if (can_use_mkldnn_conv<ngraph::op::ConvolutionRelu>(node))
+                    if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionRelu>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -221,7 +187,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::ConvolutionBiasAdd*>(node);
 
-                    if (can_use_mkldnn_conv<ngraph::op::ConvolutionBiasAdd>(node))
+                    if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionBiasAdd>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -238,7 +204,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::ConvolutionAdd*>(node);
 
-                    if (can_use_mkldnn_conv<ngraph::op::ConvolutionAdd>(node))
+                    if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionAdd>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -335,20 +301,7 @@ namespace ngraph
                 {
                     auto convolution = static_cast<op::ConvolutionBias*>(node);
 
-                    auto data_shape = node->get_input_shape(0);
-                    auto weights_shape = node->get_input_shape(1);
-                    auto result_shape = node->get_output_shape(0);
-                    auto data_rank = data_shape.size();
-                    auto weights_rank = weights_shape.size();
-
-                    bool data_dilated = false;
-                    for (size_t s : convolution->get_data_dilation_strides())
-                    {
-                        data_dilated = data_dilated || (s != 1);
-                    }
-
-                    if (!data_dilated && data_rank == 4 && weights_rank == 4 &&
-                        node->get_input_element_type(0) == element::f32)
+                    if (mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionBias>(node))
                     {
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
@@ -767,7 +720,36 @@ namespace ngraph
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_mkldnn_op(true);
+                        if (get_user_count(node->get_argument(0).get()) == 1)
+                        {
+                            // Safe to overwrite input
+                            op_annotations->add_in_place_oi_pair({0, 0, true});
+                        }
                         bounded_relu->set_op_annotations(op_annotations);
+                    }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::LeakyRelu)
+                {
+                    auto leaky_relu = static_cast<op::LeakyRelu*>(node);
+
+                    auto arg0_shape = node->get_input_shape(0);
+                    auto arg0_rank = arg0_shape.size();
+                    auto result_shape = node->get_output_shape(0);
+
+                    if ((arg0_rank == 4 || arg0_rank == 2) &&
+                        node->get_input_element_type(0) == element::f32)
+                    {
+                        auto op_annotations =
+                            std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                        op_annotations->set_mkldnn_op(true);
+                        if (get_user_count(node->get_argument(0).get()) == 1)
+                        {
+                            // Safe to overwrite input
+                            op_annotations->add_in_place_oi_pair({0, 0, true});
+                        }
+                        leaky_relu->set_op_annotations(op_annotations);
                     }
                 }
 
@@ -833,6 +815,12 @@ namespace ngraph
                         if (offset[0] != 0)
                             return;
                     }
+                    if (node->get_input_element_type(0) == element::i32)
+                    {
+                        auto offset = offset_const_op->get_vector<int32_t>();
+                        if (offset[0] != 0)
+                            return;
+                    }
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                     op_annotations->set_mkldnn_op(true);
@@ -861,6 +849,14 @@ namespace ngraph
                     if (node->get_output_element_type(0) == element::i8)
                     {
                         auto offset = offset_const_op->get_vector<int8_t>();
+                        if (offset[0] != 0)
+                        {
+                            return;
+                        }
+                    }
+                    if (node->get_output_element_type(0) == element::i32)
+                    {
+                        auto offset = offset_const_op->get_vector<int32_t>();
                         if (offset[0] != 0)
                         {
                             return;
@@ -925,6 +921,7 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Relu), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Relu>},
     {TI(ngraph::op::ReluBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReluBackprop>},
+    {TI(ngraph::op::LeakyRelu), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::LeakyRelu>},
     {TI(ngraph::op::Sigmoid), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Sigmoid>},
     {TI(ngraph::op::SigmoidBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::SigmoidBackprop>},

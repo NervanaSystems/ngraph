@@ -53,7 +53,7 @@ void runtime::Backend::validate_call(shared_ptr<const Function> function,
                                      const vector<shared_ptr<runtime::Tensor>>& outputs,
                                      const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    const op::ParameterVector& input_parameters = function->get_parameters();
+    const ParameterVector& input_parameters = function->get_parameters();
     if (input_parameters.size() != inputs.size())
     {
         stringstream ss;

@@ -39,6 +39,8 @@ namespace ngraph
 
                 vector<reference_wrapper<void*>> arg_tensors;
                 vector<Shape> arg_shapes;
+                vector<size_t> arg_sizes;
+                auto element_size = concat->get_input_element_type(0).size();
                 for (auto& arg : args)
                 {
                     if (shape_size(arg.get_shape()))
@@ -46,6 +48,7 @@ namespace ngraph
                         arg_tensors.emplace_back(
                             external_function->get_tensor_data(arg.get_name()));
                         arg_shapes.emplace_back(arg.get_shape());
+                        arg_sizes.emplace_back(shape_size(arg.get_shape()) * element_size);
                     }
                 }
                 auto nargs = args.size();
@@ -53,19 +56,18 @@ namespace ngraph
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
                 auto out_shape = out[0].get_shape();
 
-                auto element_size = concat->get_input_element_type(0).size();
                 if (auto op_annotations = concat->get_op_annotations())
                 {
                     auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
                     if (in_place_oi_pairs.size() > 0)
                     {
-                        auto functor = [&, arg_tensors, nargs, out_shape, arg_shapes, element_size](
+                        auto out_size = shape_size(out_shape) * element_size;
+
+                        auto functor = [&, arg_tensors, nargs, out_size, arg_sizes](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            auto out_size = shape_size(out_shape) * element_size;
                             auto offset = 0;
                             for (size_t i = 0; i < nargs; i++)
                             {
-                                auto arg_size = shape_size(arg_shapes[i]) * element_size;
                                 // if the argument pointer does not fall within the concat output buffer
                                 // (caused by propagate_in_place_output or propagate_in_place_input), we need to copy the data;
                                 // otherwise, we can skip the copy.
@@ -75,9 +77,9 @@ namespace ngraph
                                 {
                                     memcpy(reinterpret_cast<char*>(out_tensor) + offset,
                                            arg_tensors[i],
-                                           arg_size);
+                                           arg_sizes[i]);
                                 }
-                                offset += arg_size;
+                                offset += arg_sizes[i];
                             }
 
                         };

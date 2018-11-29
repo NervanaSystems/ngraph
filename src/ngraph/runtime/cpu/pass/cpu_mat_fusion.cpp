@@ -331,7 +331,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             for (auto op : op_nodes)
             {
                 const auto old_slice =
-                    std::dynamic_pointer_cast<op::Slice>(op_seg_map[op].at(Type::DATA));
+                    std::static_pointer_cast<op::Slice>(op_seg_map[op].at(Type::DATA));
                 const auto& old_lower_bounds = old_slice->get_lower_bounds();
                 // lower bound matching the current time step
                 const Coordinate lower_bounds{old_lower_bounds[1], 0};
@@ -403,7 +403,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
     std::shared_ptr<Node> data;
     std::shared_ptr<Node> weights;
 
-    auto concat = std::dynamic_pointer_cast<op::Concat>(n);
+    auto concat = std::static_pointer_cast<op::Concat>(n);
     std::shared_ptr<op::Convolution> sconv;
 
     NodeVector slices;
@@ -423,14 +423,14 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
             return {nullptr};
         }
 
-        sconv = std::dynamic_pointer_cast<op::Convolution>(arg);
+        sconv = std::static_pointer_cast<op::Convolution>(arg);
 
         if (arg->get_input_shape(0).size() != 4)
         {
             NGRAPH_DEBUG << "convolution data's rank isn't equal to 4";
             return {nullptr};
         }
-        if (!is_trivial_convolution(std::dynamic_pointer_cast<op::Convolution>(arg)))
+        if (!is_trivial_convolution(sconv))
         {
             NGRAPH_DEBUG << arg->get_name() << " isn't trivial convolution";
             return {nullptr};
