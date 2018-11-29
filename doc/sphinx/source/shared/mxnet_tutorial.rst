@@ -6,14 +6,14 @@ Working with subgraphs on MXNet
 
 One DL framework with advancing efforts on shared graph optimizations is Apache 
 MXNet\*, where Intel has contributed efforts showing how to work with our
-nGraph Compiler stack as an `experimental backend`_. Our approach provides more
-opportunities to start working with different kinds of graph optimizations than 
-would be available to the MXNet framework alone, for reasons outlined in our 
-`features`_ documentation.
+nGraph Compiler stack as an `experimental backend`_. Our approach provides 
+**more opportunities** to start working with different kinds of graph 
+optimizations **than would be available to the MXNet framework alone**, for 
+reasons outlined in our `features`_ documentation.
 
-.. TODO :  link to latest on mxnet when/if they do this instead of linking to PR;
-   keep in mind this will still work without being merged if you already use the
-   ngraph-mxnet Github repo
+.. TODO : Link to latest on mxnet when/if they do this instead of linking to PR;
+   keep in mind this tutorial will still work  regardless of the merge status of 
+   the experimental backend if you already use the ngraph-mxnet Github repo 
 
 The Intel nGraph Compiler provides an in-memory abstraction layer for converting 
 the mathematical representation of a DL model into an optimized-for-execution 
@@ -95,7 +95,7 @@ with the compiled model. At this point, we can test the model's performance.
 
 
 .. _experimental backend: https://github.com/apache/incubator-mxnet/pull/12502
-.. _features: http://ngraph.nervanasys.com/docs/latest/project/about.html
+.. _features: http://ngraph.nervanasys.com/docs/latest/project/about.html#features
 .. _gluon model zoo: https://github.com/apache/incubator-mxnet/blob/master/python/mxnet/gluon/model_zoo/vision/resnet.py#L499
 .. _subgraph acceleration API: https://cwiki.apache.org/confluence/display/MXNET/Unified+integration+with+external+backend+libraries
 .. _nGraph-MXNet: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/NGRAPH_README.md
