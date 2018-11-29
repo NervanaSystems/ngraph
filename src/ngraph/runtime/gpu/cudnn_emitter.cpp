@@ -165,13 +165,13 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
                                                         const ReductionMode& reduction_mode)
 {
     auto input_type = dtypes[0];
-    bool use_cudnn_reduce = ~((reduction_mode == ReductionMode::Reduce) &&
+    bool use_cudnn_reduce = !((reduction_mode == ReductionMode::Reduce) &&
                               ((input_type == element::i32) || (input_type == element::i8)));
     NGRAPH_ASSERT(use_cudnn_reduce)
         << "cuDNN reduce for input type int32_t or int8_t currently not supported";
 
     bool unsupported_int8_type_arg_reduce =
-        ~((reduction_mode == ReductionMode::ArgReduce) && (input_type == element::i8));
+        !((reduction_mode == ReductionMode::ArgReduce) && (input_type == element::i8));
     NGRAPH_ASSERT(unsupported_int8_type_arg_reduce)
         << "cuDNN arg_reduce for input type int8_t currently not supported";
     auto output_type = dtypes[1];
