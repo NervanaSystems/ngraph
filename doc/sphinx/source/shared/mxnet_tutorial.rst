@@ -5,7 +5,7 @@ Working with subgraphs on MXNet
 ################################
 
 One DL framework with advancing efforts on shared graph optimizations is Apache 
-MXNet\*, where Intel has contributed efforts showing how to work with our
+MXNet\*, where `Intel has contributed efforts showing`_ how to work with our
 nGraph Compiler stack as an `experimental backend`_. Our approach provides 
 **more opportunities** to start working with different kinds of graph 
 optimizations **than would be available to the MXNet framework alone**, for 
@@ -95,6 +95,7 @@ with the compiled model. At this point, we can test the model's performance.
 
 
 .. _experimental backend: https://github.com/apache/incubator-mxnet/pull/12502
+.. _Intel has contributed efforts showing: https://cwiki.apache.org/confluence/display/MXNET/MXNet+nGraph+integration+using+subgraph+backend+interface
 .. _features: http://ngraph.nervanasys.com/docs/latest/project/about.html#features
 .. _gluon model zoo: https://github.com/apache/incubator-mxnet/blob/master/python/mxnet/gluon/model_zoo/vision/resnet.py#L499
 .. _subgraph acceleration API: https://cwiki.apache.org/confluence/display/MXNET/Unified+integration+with+external+backend+libraries
