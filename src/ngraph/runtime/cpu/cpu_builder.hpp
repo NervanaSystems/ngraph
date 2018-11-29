@@ -94,6 +94,19 @@
     else                                                                                           \
         throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);
 
+#define SELECT_RANK2(KV, IT, OT, R, K)                                                             \
+    switch (R)                                                                                     \
+    {                                                                                              \
+    case 1: KV = K<IT, OT, 1>; break;                                                              \
+    case 2: KV = K<IT, OT, 2>; break;                                                              \
+    case 3: KV = K<IT, OT, 3>; break;                                                              \
+    case 4: KV = K<IT, OT, 4>; break;                                                              \
+    case 5: KV = K<IT, OT, 5>; break;                                                              \
+    case 6: KV = K<IT, OT, 6>; break;                                                              \
+    case 7: KV = K<IT, OT, 7>; break;                                                              \
+    default: throw ngraph_error("Unsupported rank " + std::to_string(R) + " for kernel " #K);      \
+    }
+
 // Per-type and rank kernel macro
 #define SELECT_KERNEL_BY_RANK(KV, ET, R, K)                                                        \
     if (ET == element::boolean)                                                                    \

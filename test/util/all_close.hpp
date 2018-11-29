@@ -34,16 +34,54 @@ namespace ngraph
         /// \param atol Absolute tolerance
         /// \returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
         template <typename T>
-        bool all_close(const std::vector<T>& a,
-                       const std::vector<T>& b,
-                       T rtol = static_cast<T>(1e-5),
-                       T atol = static_cast<T>(1e-8))
+        typename std::enable_if<std::is_signed<T>::value, bool>::type
+            all_close(const std::vector<T>& a,
+                      const std::vector<T>& b,
+                      T rtol = static_cast<T>(1e-5),
+                      T atol = static_cast<T>(1e-8))
+        {
+            bool rc = true;
+            assert(a.size() == b.size());
+            size_t count = 0;
+            for (size_t i = 0; i < a.size(); ++i)
+            {
+                if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]) || !std::isfinite(a[i]) ||
+                    !std::isfinite(b[i]))
+                {
+                    if (count < 5)
+                    {
+                        NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
+                    }
+                    count++;
+                    rc = false;
+                }
+            }
+            if (!rc)
+            {
+                NGRAPH_INFO << "diff count: " << count << " out of " << a.size();
+            }
+            return rc;
+        }
+
+        /// \brief Same as numpy.allclose
+        /// \param a First tensor to compare
+        /// \param b Second tensor to compare
+        /// \param rtol Relative tolerance
+        /// \param atol Absolute tolerance
+        /// \returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
+        template <typename T>
+        typename std::enable_if<std::is_unsigned<T>::value, bool>::type
+            all_close(const std::vector<T>& a,
+                      const std::vector<T>& b,
+                      T rtol = static_cast<T>(1e-5),
+                      T atol = static_cast<T>(1e-8))
         {
             bool rc = true;
             assert(a.size() == b.size());
             for (size_t i = 0; i < a.size(); ++i)
             {
-                if (std::abs(a[i] - b[i]) > atol + rtol * std::abs(b[i]))
+                T abs_diff = (a[i] > b[i]) ? (a[i] - b[i]) : (b[i] - a[i]);
+                if (abs_diff > atol + rtol * b[i])
                 {
                     NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
                     rc = false;

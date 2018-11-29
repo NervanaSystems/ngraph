@@ -33,7 +33,7 @@ int main()
 
     // Make the function
     auto f = std::make_shared<Function>(NodeVector{t1},
-                                        op::ParameterVector{a, b, c});
+                                        ParameterVector{a, b, c});
 
     // Create the backend
     auto backend = runtime::Backend::create("CPU");

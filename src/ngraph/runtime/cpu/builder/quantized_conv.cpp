@@ -108,7 +108,6 @@ namespace ngraph
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-
                     auto conv_index =
                         mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolutionBias>(
                             node, args, out);

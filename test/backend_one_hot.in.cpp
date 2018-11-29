@@ -40,7 +40,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -59,7 +59,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -78,7 +78,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -97,7 +97,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_fp_nonint_in_3)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{3};
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -126,7 +126,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_oob_in_3)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -155,7 +155,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_0)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3, 8};
     auto r = make_shared<op::OneHot>(A, Shape{3, 8}, 0);
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -176,7 +176,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{8, 3};
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -197,7 +197,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{8, 3};
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -226,7 +226,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_far_oob)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{8, 3};
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -255,7 +255,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_matrix_0)
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     Shape shape_r{3, 3, 3};
     auto r = make_shared<op::OneHot>(A, Shape{3, 3, 3}, 0);
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -282,7 +282,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_fp)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{8, 3};
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -303,7 +303,7 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_fp_nonint)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{8, 3};
     auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
-    auto f = make_shared<Function>(r, op::ParameterVector{A});
+    auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

@@ -24,6 +24,13 @@ include(ExternalProject)
 SET(GTEST_GIT_REPO_URL https://github.com/google/googletest.git)
 SET(GTEST_GIT_LABEL release-1.8.1)
 
+set(COMPILE_FLAGS -fPIC)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (DEFINED NGRAPH_USE_CXX_ABI)
+        set(COMPILE_FLAGS "${COMPILE_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
+    endif()    
+endif()
+
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
     ExternalProject_Add(
@@ -36,7 +43,7 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         UPDATE_COMMAND ""
         CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                   -DCMAKE_CXX_FLAGS="-fPIC"
+                   -DCMAKE_CXX_FLAGS=${COMPILE_FLAGS}
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/download"
@@ -56,7 +63,7 @@ else()
         UPDATE_COMMAND ""
         CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                   -DCMAKE_CXX_FLAGS="-fPIC"
+                   -DCMAKE_CXX_FLAGS=${COMPILE_FLAGS}
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/download"

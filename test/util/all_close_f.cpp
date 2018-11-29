@@ -67,15 +67,26 @@ bool test::all_close_f(const vector<float>& a,
     {
         throw ngraph_error("a.size() != b.size() for all_close comparison.");
     }
+    size_t count = 0;
     for (size_t i = 0; i < a.size(); ++i)
     {
         bool is_close_f = close_f(a[i], b[i], mantissa_bits, tolerance_bits);
         if (!is_close_f)
         {
-            NGRAPH_INFO << a[i] << " is not close to " << b[i];
+            if (count < 5)
+            {
+                NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
+            }
+
             rc = false;
+            count++;
         }
     }
+    if (!rc)
+    {
+        NGRAPH_INFO << "diff count: " << count << " out of " << a.size();
+    }
+
     return rc;
 }
 

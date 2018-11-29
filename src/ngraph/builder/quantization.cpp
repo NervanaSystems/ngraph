@@ -121,13 +121,27 @@ namespace ngraph
                                            std::shared_ptr<Node> max_freezed_output,
                                            const bool with_relu)
         {
+            auto output_et = with_relu ? element::u8 : element::i8;
             auto requantization_scale = quantization_util::get_scale(min_input,
                                                                      max_input,
                                                                      min_filter,
                                                                      max_filter,
                                                                      min_freezed_output,
-                                                                     max_freezed_output);
+                                                                     max_freezed_output,
+                                                                     output_et);
 
+            if (bias->get_element_type() != element::i32)
+            {
+                auto zero = make_constant(element::i32, min_input->get_shape(), 0);
+                AxisSet quantization_axes;
+                auto bias_scale =
+                    quantization_util::get_bias_scale(min_input, max_input, min_filter, max_filter);
+                op::Quantize::RoundMode round_mode =
+                    op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+
+                bias = make_shared<op::Quantize>(
+                    bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
+            }
             return make_shared<op::QuantizedConvolutionBias>(input,
                                                              filters,
                                                              bias,
@@ -160,7 +174,8 @@ namespace ngraph
                                                                      min_filter,
                                                                      max_filter,
                                                                      min_freezed_output,
-                                                                     max_freezed_output);
+                                                                     max_freezed_output,
+                                                                     element::u8);
 
             return make_shared<op::QuantizedConvolutionRelu>(input,
                                                              filters,
@@ -191,7 +206,8 @@ namespace ngraph
                                                                      min_filter,
                                                                      max_filter,
                                                                      min_freezed_output,
-                                                                     max_freezed_output);
+                                                                     max_freezed_output,
+                                                                     element::i8);
 
             return make_shared<op::QuantizedConvolution>(input,
                                                          filters,

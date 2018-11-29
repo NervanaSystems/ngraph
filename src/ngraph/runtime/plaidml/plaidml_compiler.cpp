@@ -22,6 +22,7 @@
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 #include "ngraph/runtime/plaidml/plaidml_logger.hpp"
@@ -58,21 +59,31 @@ namespace
 ngraph::runtime::plaidml::Compiler::Compiler(Config* config)
     : m_config{config}
 {
-    // We apply the same general-purposes passes as the CPU backend.
-    m_pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    m_pass_manager.register_pass<ngraph::pass::NopElimination>();
-    m_pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    m_pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
-    m_pass_manager.register_pass<ngraph::pass::CoreFusion>();
-    // N.B. We'd like to register ngraph::pass::GetOutputElementElimination, but it breaks BatchNorm
-    // backprop
-    m_pass_manager.register_pass<ngraph::pass::Liveness>();
 }
 
 std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     ngraph::runtime::plaidml::Compiler::compile(std::shared_ptr<Function> func)
 {
-    m_pass_manager.run_passes(func);
+    // N.B. ngraph::pass::Manager::run_passes() is *not* a const
+    // method; it mutates the manager, possibly causing corruption if
+    // multiple threads are simultaneously running passes.  So we
+    // build a new manager for each compilation, instead of building
+    // one when we build the Compiler and reusing it for each
+    // compilation.
+
+    ngraph::pass::Manager pass_manager;
+
+    // We apply the same general-purposes passes as the CPU backend.
+    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
+    pass_manager.register_pass<ngraph::pass::NopElimination>();
+    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
+    pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+    pass_manager.register_pass<ngraph::pass::CoreFusion>();
+    // N.B. We'd like to register ngraph::pass::GetOutputElementElimination, but it breaks BatchNorm
+    // backprop
+    pass_manager.register_pass<ngraph::pass::Liveness>();
+
+    pass_manager.run_passes(func);
 
     Build b;
     build(std::move(func), &b);

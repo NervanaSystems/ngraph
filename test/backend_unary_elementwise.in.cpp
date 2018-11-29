@@ -38,7 +38,7 @@ NGRAPH_TEST(${BACKEND_NAME}, abs)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Abs>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Abs>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -55,7 +55,7 @@ NGRAPH_TEST(${BACKEND_NAME}, acos)
 {
     Shape shape{11};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Acos>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Acos>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -83,7 +83,7 @@ NGRAPH_TEST(${BACKEND_NAME}, asin)
 {
     Shape shape{11};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Asin>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Asin>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -111,7 +111,7 @@ NGRAPH_TEST(${BACKEND_NAME}, atan)
 {
     Shape shape{11};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Atan>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Atan>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -139,7 +139,7 @@ NGRAPH_TEST(${BACKEND_NAME}, ceiling)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Ceiling>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Ceiling>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -156,7 +156,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cos)
 {
     Shape shape{11};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Cos>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Cos>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -184,7 +184,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cosh)
 {
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Cosh>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Cosh>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -205,7 +205,7 @@ NGRAPH_TEST(${BACKEND_NAME}, exp)
 {
     Shape shape{8};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Exp>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Exp>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -224,7 +224,7 @@ NGRAPH_TEST(${BACKEND_NAME}, floor)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Floor>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Floor>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -241,7 +241,7 @@ NGRAPH_TEST(${BACKEND_NAME}, log)
 {
     Shape shape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Log>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Log>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -266,7 +266,7 @@ NGRAPH_TEST(${BACKEND_NAME}, negative)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Negative>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Negative>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -283,7 +283,7 @@ NGRAPH_TEST(${BACKEND_NAME}, not)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::Not>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Not>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -300,7 +300,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sign)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sign>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Sign>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -317,7 +317,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sin)
 {
     Shape shape{11};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sin>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Sin>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -345,7 +345,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sinh)
 {
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sinh>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Sinh>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -366,7 +366,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sqrt)
 {
     Shape shape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sqrt>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Sqrt>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -383,7 +383,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tan)
 {
     Shape shape{11};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Tan>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Tan>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -411,7 +411,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tanh)
 {
     Shape shape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Tanh>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Tanh>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

@@ -231,7 +231,7 @@ NGRAPH_TEST (${BACKEND_NAME}, %s)
                                                                   CoordinateDiff{%s}, // below_pads
                                                                   CoordinateDiff{%s}, // above_pads
                                                                   Strides{%s}),       // data_dilation
-                                     op::ParameterVector{A, B});
+                                     ParameterVector{A, B});
     };
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");

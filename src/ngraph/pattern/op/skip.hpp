@@ -34,7 +34,7 @@ namespace ngraph
                 Skip(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
                     : Pattern("Skip", NodeVector{arg}, predicate)
                 {
-                    set_output_type(0, arg->get_element_type(), arg->get_shape());
+                    set_output_type(0, arg->get_element_type(), arg->get_output_partial_shape(0));
                 }
             };
         }

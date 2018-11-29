@@ -65,7 +65,8 @@ function run() {
         fi'
     docker exec "${DOCKER_CONTAINER}" bash -c "${CLONE_CMD}"
     NGRAPH_WHL=$(docker exec ${DOCKER_CONTAINER} find /root/python/dist/ -name "ngraph*.whl")
-    docker exec -e TOX_INSTALL_NGRAPH_FROM="${NGRAPH_WHL}" "${DOCKER_CONTAINER}" tox -c /root/ngraph-onnx/
+    docker exec -e TOX_INSTALL_NGRAPH_FROM="${NGRAPH_WHL}" NGRAPH_BACKEND=CPU "${DOCKER_CONTAINER}" tox -c /root/ngraph-onnx/
+    docker exec -e TOX_INSTALL_NGRAPH_FROM="${NGRAPH_WHL}" NGRAPH_BACKEND=INTEPRETER "${DOCKER_CONTAINER}" tox -c /root/ngraph-onnx/
 }
 
 # Function cleanup() removes items related to nGraph, created during script execution

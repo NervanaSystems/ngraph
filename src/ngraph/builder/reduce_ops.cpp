@@ -22,8 +22,8 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/power.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/util.hpp"
@@ -45,13 +45,10 @@ namespace ngraph
         std::shared_ptr<Node> l2_norm(const std::shared_ptr<Node>& node,
                                       const AxisSet& reduction_axes)
         {
-            const auto& et = node->get_element_type();
             auto x2 = node * node;
             auto x2sum = std::make_shared<op::Sum>(x2, reduction_axes);
 
-            // TODO(mbrookhart): Use Sqrt instead of Power
-            auto half = op::Constant::create(et, x2sum->get_shape(), {0.5});
-            return std::make_shared<op::Power>(x2sum, half);
+            return std::make_shared<op::Sqrt>(x2sum);
         }
 
         std::shared_ptr<Node> mean(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
@@ -70,12 +67,7 @@ namespace ngraph
                                       const AxisSet& reduction_axes,
                                       const bool bessel_correction)
         {
-            auto var = variance(node, reduction_axes, bessel_correction);
-
-            const auto& et = node->get_element_type();
-            // TODO(mbrookhart): Use Sqrt instead of Power
-            auto half = op::Constant::create(et, var->get_shape(), {0.5});
-            return std::make_shared<op::Power>(var, half);
+            return std::make_shared<op::Sqrt>(variance(node, reduction_axes, bessel_correction));
         }
 
         // This currently calculates [E[X^2] - E[X]^2] instead of [E[(X-\mu)^2]]
