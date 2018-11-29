@@ -61,7 +61,9 @@ static std::shared_ptr<pattern::Matcher> create_maxpool_with_indices_matcher()
     Shape window_shape{3};
     auto max_pool = std::make_shared<op::MaxPool>(data, window_shape);
     auto delta = std::make_shared<pattern::op::Label>(element::f32, max_pool->get_shape());
-    auto max_pool_label = std::make_shared<pattern::op::Label>(element::f32, max_pool->get_shape());
+    auto is_max_pool = pattern::has_class<op::MaxPool>();
+    auto max_pool_label =
+        std::make_shared<pattern::op::Label>(element::f32, max_pool->get_shape(), is_max_pool);
     auto max_pool_bprop =
         std::make_shared<op::MaxPoolBackprop>(data,
                                               delta,
