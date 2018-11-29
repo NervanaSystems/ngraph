@@ -16,7 +16,7 @@ workloads on CPU for inference, please refer to the links below.
 
 |  Framework (Version)       | Installation guide                     | Notes  
 |----------------------------|----------------------------------------|-----------------------------------
-| TensorFlow* 1.12           | [Pip package] or [Build from source]   | 17 [Validated workloads]
+| TensorFlow* 1.12           | [Pip package] or [Build from source]   | 20 [Validated workloads]
 | MXNet* 1.4                 | [Enable the module] or [Source compile]| 17 [Validated workloads]   
 | ONNX 1.3                   | [Pip package]                          | 14 [Validated workloads] 
 
@@ -102,7 +102,7 @@ to improve it:
 [PlaidML]: https://github.com/plaidml/plaidml
 [Pip package]: https://github.com/NervanaSystems/ngraph-onnx#installing-ngraph-onnx
 [Build from source]: https://github.com/NervanaSystems/ngraph-tf
-[Enable the module]: https://github.com/NervanaSystems/ngraph/blob/mbrookhart/mxnet_tutorial/doc/sphinx/source/shared/mxnet_tutorial.rst
+[Enable the module]: https://github.com/NervanaSystems/ngraph/blob/shared_subgraph_docs/doc/sphinx/source/shared/mxnet_tutorial.rst
 [Source compile]: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/README.md
 [nGraph-ONNX]: https://github.com/NervanaSystems/ngraph-onnx/blob/master/README.md
 [nGraph-ONNX adaptable]: https://ai.intel.com/adaptable-deep-learning-solutions-with-ngraph-compiler-and-onnx/
