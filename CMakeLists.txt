@@ -105,6 +105,7 @@ option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
+option(NGRAPH_PYTHON_BUILD_ENABLE   "Enable build nGraph python package wheel" FALSE)
 
 message(STATUS "NGRAPH_UNIT_TEST_ENABLE:      ${NGRAPH_UNIT_TEST_ENABLE}")
 message(STATUS "NGRAPH_TOOLS_ENABLE:          ${NGRAPH_TOOLS_ENABLE}")
@@ -311,3 +312,9 @@ endif()
 if (NGRAPH_PYTHON_BUILD_ENABLE)
     add_subdirectory(python)
 endif()
+
+install(DIRECTORY
+    ${CMAKE_CURRENT_SOURCE_DIR}/licenses
+    DESTINATION "${CMAKE_INSTALL_PREFIX}"
+)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX})

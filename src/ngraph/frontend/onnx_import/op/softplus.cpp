@@ -17,12 +17,10 @@
 #include <memory>
 
 #include "ngraph/node.hpp"
-
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/log.hpp"
-
 #include "utils/broadcasting.hpp"
 
 #include "softplus.hpp"
