@@ -19,11 +19,13 @@
 #include <cstddef>
 #include <string>
 
+#include "ngraph/visibility.h"
+
 namespace ngraph
 {
     namespace runtime
     {
-        class PerformanceCounter
+        class NGRAPH_API PerformanceCounter
         {
         public:
             PerformanceCounter(const char* n, size_t us, size_t calls)

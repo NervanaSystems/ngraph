@@ -35,6 +35,7 @@
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/placement.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -72,7 +73,7 @@ namespace ngraph
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
     /// view or a (possibly empty) tuple of values.
-    class Node : public std::enable_shared_from_this<Node>
+    class NGRAPH_API Node : public std::enable_shared_from_this<Node>
     {
         // So Adjoints can call generate_adjoints
         friend class autodiff::Adjoints;

@@ -27,6 +27,7 @@
 
 #include "ngraph/pass/manager_state.hpp"
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -36,7 +37,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::VisualizeTree : public ModulePass
+class NGRAPH_API ngraph::pass::VisualizeTree : public ModulePass
 {
 public:
     VisualizeTree(const std::string& file_name);

@@ -21,6 +21,7 @@
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -34,7 +35,7 @@ namespace ngraph
     namespace descriptor
     {
         // Describes an output tensor of an op
-        class Output
+        class NGRAPH_API Output
         {
         public:
             /// \param node Node that owns this output.

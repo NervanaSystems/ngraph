@@ -27,6 +27,7 @@
 
 #include "ngraph/except.hpp"
 #include "ngraph/type/bfloat16.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -34,21 +35,21 @@ namespace ngraph
     {
         class Type;
 
-        extern const Type dynamic;
-        extern const Type boolean;
-        extern const Type bf16;
-        extern const Type f32;
-        extern const Type f64;
-        extern const Type i8;
-        extern const Type i16;
-        extern const Type i32;
-        extern const Type i64;
-        extern const Type u8;
-        extern const Type u16;
-        extern const Type u32;
-        extern const Type u64;
+        extern NGRAPH_API const Type dynamic;
+        extern NGRAPH_API const Type boolean;
+        extern NGRAPH_API const Type bf16;
+        extern NGRAPH_API const Type f32;
+        extern NGRAPH_API const Type f64;
+        extern NGRAPH_API const Type i8;
+        extern NGRAPH_API const Type i16;
+        extern NGRAPH_API const Type i32;
+        extern NGRAPH_API const Type i64;
+        extern NGRAPH_API const Type u8;
+        extern NGRAPH_API const Type u16;
+        extern NGRAPH_API const Type u32;
+        extern NGRAPH_API const Type u64;
 
-        class Type
+        class NGRAPH_API Type
         {
         public:
             Type() {}

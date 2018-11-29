@@ -24,6 +24,7 @@
 #include "ngraph/pass/manager_state.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/pass_config.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -34,7 +35,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::Manager
+class NGRAPH_API ngraph::pass::Manager
 {
 public:
     Manager();

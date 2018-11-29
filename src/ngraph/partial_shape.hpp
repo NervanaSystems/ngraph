@@ -21,6 +21,7 @@
 #include "ngraph/dimension.hpp"
 #include "ngraph/rank.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -35,7 +36,7 @@ namespace ngraph
     ///     (Informal notation examples: `{1,2,?,4}`, `{?,?,?}`)
     /// \li Static rank, and dynamic dimensions on all axes.
     ///     (Informal notation examples: `{1,2,3,4}`, `{6}`, `{}`)
-    class PartialShape
+    class NGRAPH_API PartialShape
     {
     public:
         /// \brief Constructs a shape with static rank from an initializer list of Dimension.

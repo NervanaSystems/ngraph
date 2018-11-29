@@ -21,10 +21,11 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
-    class CoordinateTransform
+    class NGRAPH_API CoordinateTransform
     {
     public:
         CoordinateTransform(const Shape& source_shape,

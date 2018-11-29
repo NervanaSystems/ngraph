@@ -26,11 +26,12 @@
 #include "ngraph/node.hpp"
 #include "ngraph/parameter_vector.hpp"
 #include "ngraph/result_vector.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     /// A user-defined function.
-    class Function
+    class NGRAPH_API Function
     {
     public:
         Function(const NodeVector& results,

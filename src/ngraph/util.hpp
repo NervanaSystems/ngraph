@@ -29,6 +29,7 @@
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -77,7 +78,7 @@ namespace ngraph
     std::string trim(const std::string& s);
     std::vector<std::string> split(const std::string& s, char delimiter, bool trim = false);
 
-    class stopwatch
+    class NGRAPH_API stopwatch
     {
     public:
         void start()

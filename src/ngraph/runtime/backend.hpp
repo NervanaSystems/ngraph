@@ -22,6 +22,7 @@
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -36,7 +37,7 @@ namespace ngraph
 /// \brief Interface to a generic backend.
 ///
 /// Backends are responsible for function execution and value allocation.
-class ngraph::runtime::Backend
+class NGRAPH_API ngraph::runtime::Backend
 {
 public:
     virtual ~Backend();

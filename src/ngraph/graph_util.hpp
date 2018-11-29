@@ -28,6 +28,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/placement.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -42,21 +43,21 @@ namespace ngraph
         class Parameter;
     }
 
-    void traverse_nodes(const std::shared_ptr<const Function> p,
-                        std::function<void(std::shared_ptr<Node>)> f,
-                        bool include_control_deps = false);
-    void traverse_nodes(const Function* p,
-                        std::function<void(std::shared_ptr<Node>)> f,
-                        bool include_control_deps);
+    NGRAPH_API void traverse_nodes(const std::shared_ptr<const Function> p,
+                                   std::function<void(std::shared_ptr<Node>)> f,
+                                   bool include_control_deps = false);
+    NGRAPH_API void traverse_nodes(const Function* p,
+                                   std::function<void(std::shared_ptr<Node>)> f,
+                                   bool include_control_deps);
 
-    void traverse_nodes(const NodeVector& io_nodes,
-                        std::function<void(std::shared_ptr<Node>)> f,
-                        bool include_control_deps);
+    NGRAPH_API void traverse_nodes(const NodeVector& io_nodes,
+                                   std::function<void(std::shared_ptr<Node>)> f,
+                                   bool include_control_deps);
 
-    void traverse_functions(std::shared_ptr<Function> p,
-                            std::function<void(std::shared_ptr<Function>)> f);
+    NGRAPH_API void traverse_functions(std::shared_ptr<Function> p,
+                                       std::function<void(std::shared_ptr<Function>)> f);
 
-    void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
+    NGRAPH_API void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
     template <typename T>
     std::list<std::shared_ptr<Node>> topological_sort(const T& nodes,

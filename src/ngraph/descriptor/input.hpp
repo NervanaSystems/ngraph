@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -29,7 +30,7 @@ namespace ngraph
         class Output;
 
         // Describes a tensor that is an input to an op, directly or indirectly via a tuple
-        class Input
+        class NGRAPH_API Input
         {
             friend class Node;
 
