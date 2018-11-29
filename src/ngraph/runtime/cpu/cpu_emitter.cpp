@@ -521,7 +521,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Lstm)
             {
-                const ngraph::op::Lstm* lstm_node = static_cast<const ngraph::op::Lstm*>(node);
                 if (args.size() != 5)
                 {
                     throw ngraph_error(

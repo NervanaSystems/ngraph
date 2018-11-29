@@ -398,10 +398,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         const size_t lstm_n_gates = 4;
         const size_t batch_size = rnn_src_layer->get_shape()[0] / sequence_len;
-        const size_t src_layer_feature_size = rnn_weights_layer->get_shape()[0];
         const size_t src_iter_feature_size = rnn_weights_iter->get_shape()[0];
-        const size_t dlc = rnn_weights_layer->get_shape()[1] / lstm_n_gates;
-        const size_t dic = rnn_weights_iter->get_shape()[1] / lstm_n_gates;
         const size_t num_cell_states = 2;
         const size_t direction = 1;
         const size_t num_fused_rnn_layers = 1;
@@ -628,7 +625,6 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         size_t lstm_n_gates = rnn_nodes[0]->get_gates_per_cell();
         size_t batch_size = rnn_nodes[0]->get_batch_size();
         size_t sequence_len = rnn_nodes[0]->get_src_sequence_length();
-        size_t src_layer_feature_size = rnn_nodes[0]->get_src_layer_feature_size();
         size_t src_iter_feature_size = rnn_nodes[0]->get_src_iter_feature_size();
         size_t num_rnn_cell_states = rnn_nodes[0]->get_num_cell_states();
         size_t rnn_direction = rnn_nodes[0]->get_direction();
