@@ -78,8 +78,10 @@ set(MKL_SOURCE_DIR ${source_dir})
 add_library(libmkl INTERFACE)
 add_dependencies(libmkl ext_mkl)
 foreach(LIB ${MKL_LIBS})
-    target_link_libraries(libmkl INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${LIB})
+    list(APPEND TMP_PATHS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${LIB})
 endforeach()
+set(MKL_LIBS ${TMP_PATHS})
+target_link_libraries(libmkl INTERFACE ${MKL_LIBS})
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
 set(MKLDNN_GIT_TAG "830a100")
@@ -88,6 +90,7 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
 else()
     set(MKLDNN_PATCH_FILE mkldnn_no_so_link.patch)
 endif()
+set(MKLDNN_LIBS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX})
 
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
 if(${CMAKE_VERSION} VERSION_LESS 3.2)
@@ -153,7 +156,7 @@ else()
         SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/src"
         BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/build"
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn"
-        BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/mkldnn/include/mkldnn.hpp"
+        BUILD_BYPRODUCTS ${MKLDNN_LIBS} ${MKL_LIBS}
         EXCLUDE_FROM_ALL TRUE
         )
 endif()

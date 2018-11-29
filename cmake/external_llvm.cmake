@@ -68,37 +68,6 @@ else()
     set(LLVM_CMAKE_ASM_COMPILER ${CMAKE_C_COMPILER})
 endif()
 
-ExternalProject_Add(
-    ext_llvm
-    DEPENDS ext_clang ext_openmp
-    GIT_REPOSITORY https://github.com/llvm-mirror/llvm.git
-    GIT_TAG da4a2839d80ac52958be0129b871beedfe90136e
-    CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                -DCMAKE_ASM_COMPILER=${LLVM_CMAKE_ASM_COMPILER}
-                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                -DCMAKE_CXX_FLAGS=${COMPILE_FLAGS}
-                -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/llvm
-                -DCMAKE_BUILD_TYPE=Release
-                -DLLVM_ENABLE_ASSERTIONS=OFF
-                -DLLVM_INCLUDE_TESTS=OFF
-                -DLLVM_INCLUDE_EXAMPLES=OFF
-                -DLLVM_BUILD_TOOLS=ON
-                -DLLVM_TARGETS_TO_BUILD=X86
-                -DLLVM_EXTERNAL_CLANG_SOURCE_DIR=${CLANG_SOURCE_DIR}
-                -DLLVM_EXTERNAL_OPENMP_SOURCE_DIR=${OPENMP_SOURCE_DIR}
-    UPDATE_COMMAND ""
-    TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/tmp"
-    STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/stamp"
-    DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/download"
-    SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/src"
-    BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/build"
-    INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm"
-    BUILD_BYPRODUCTS ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/libLLVMCore.a
-    EXCLUDE_FROM_ALL TRUE
-)
-
-ExternalProject_Get_Property(ext_llvm INSTALL_DIR)
-
 set(LLVM_LINK_LIBS
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/libclangTooling.a
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/libclangFrontendTool.a
@@ -174,6 +143,37 @@ set(LLVM_LINK_LIBS
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/libLLVMSupport.a
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/libLLVMDemangle.a
 )
+
+ExternalProject_Add(
+    ext_llvm
+    DEPENDS ext_clang ext_openmp
+    GIT_REPOSITORY https://github.com/llvm-mirror/llvm.git
+    GIT_TAG da4a2839d80ac52958be0129b871beedfe90136e
+    CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                -DCMAKE_ASM_COMPILER=${LLVM_CMAKE_ASM_COMPILER}
+                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                -DCMAKE_CXX_FLAGS=${COMPILE_FLAGS}
+                -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/llvm
+                -DCMAKE_BUILD_TYPE=Release
+                -DLLVM_ENABLE_ASSERTIONS=OFF
+                -DLLVM_INCLUDE_TESTS=OFF
+                -DLLVM_INCLUDE_EXAMPLES=OFF
+                -DLLVM_BUILD_TOOLS=ON
+                -DLLVM_TARGETS_TO_BUILD=X86
+                -DLLVM_EXTERNAL_CLANG_SOURCE_DIR=${CLANG_SOURCE_DIR}
+                -DLLVM_EXTERNAL_OPENMP_SOURCE_DIR=${OPENMP_SOURCE_DIR}
+    UPDATE_COMMAND ""
+    TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/tmp"
+    STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/stamp"
+    DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/download"
+    SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/src"
+    BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm/build"
+    INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/llvm"
+    BUILD_BYPRODUCTS ${LLVM_LINK_LIBS}
+    EXCLUDE_FROM_ALL TRUE
+)
+
+ExternalProject_Get_Property(ext_llvm INSTALL_DIR)
 
 if(APPLE)
     set(LLVM_LINK_LIBS ${LLVM_LINK_LIBS} curses z m)
