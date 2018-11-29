@@ -1311,7 +1311,18 @@ namespace ngraph
                     }
 
                     if (mkldnn_utils::is_mkldnn_padded_layout(md, squeezed_axis))
+                    {
                         return false;
+                    }
+
+                    if (std::getenv("NGRAPH_CPU_ENABLE_SQUEEZE_PADDED_LAYOUTS") == nullptr)
+                    {
+                        if (mkldnn_utils::is_mkldnn_padded_layout(
+                                md, ngraph::get_default_order(input_shape)))
+                        {
+                            return false;
+                        }
+                    }
 
                     return true;
                 }

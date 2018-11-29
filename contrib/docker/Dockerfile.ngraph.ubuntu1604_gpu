@@ -58,4 +58,6 @@ RUN pip install breathe
 # need numpy to successfully build docs for python_api
 RUN pip install numpy
 
+# RUN python3 -m pip install m2r
+
 WORKDIR /home
