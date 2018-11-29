@@ -18,6 +18,7 @@ what optimizations can be done.
    :caption: Tutorials
 
    
-   onnx_ssg.rst    
+   onnx_ssg.rst
+   mxnet_tutorial.rst 
 
 
