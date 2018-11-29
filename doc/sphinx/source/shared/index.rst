@@ -3,13 +3,9 @@
 Subgraphs 
 =========
 
-As the toolbox for Deep Learning (DL) developers becomes more powerful and 
-better able to target workloads with both local and remote data, it becomes 
-increasingly important to be able to work in collaborative spaces like 
-subgraphs.  
-
-Intel nGraph Library is designed to allow the framework considerable leverage in 
-what optimizations can be done.  
+Intel nGraph Compiler stack is designed to allow the framework 
+considerable leverage in what optimizations can be done via 
+shared subgraph customizations.  
 
 
 

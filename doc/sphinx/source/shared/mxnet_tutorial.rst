@@ -15,13 +15,13 @@ reasons outlined in our `features`_ documentation.
    keep in mind this tutorial will still work  regardless of the merge status of 
    the experimental backend if you already use the ngraph-mxnet Github repo 
 
-The Intel nGraph Compiler provides an in-memory abstraction layer for converting 
+The Intel nGraph Compiler provides an abstraction layer for converting 
 the mathematical representation of a DL model into an optimized-for-execution 
-format that can be understood *by* and run *on* multiple hardware backends. A 
+format that can be understood by and run on multiple hardware backends. A 
 primary goal of this integration is to provide a seamless development and 
 deployment experience to Data Scientists and Machine Learning Engineers. It 
-simplifies development by providing a common API for framework and hardware 
-developers to jointly optimize a Deep Learning model; deployment is simplified 
+simplifies development by providing a common API for framework or hardware 
+developers to optimize a Deep Learning model; deployment is simplified 
 by bringing highly-optimized CPU performance to a wide range of MXNet models, 
 especially in inference.
 
@@ -29,7 +29,7 @@ Future releases of the nGraph Library will improve training support and add
 other hardware backends currently under development, including Nvidia\* GPU, 
 Intel GPU, and custom silicon like the Intel® Nervana™ NNP. Future releases are 
 planned to further simplify installation with ``pip``, and to offer support for 
-the MS Windows\* operating system.
+the Microsot\* Windows\* operating system.
 
 
 
@@ -61,24 +61,24 @@ shouldn't need to do anything special. If you run into trouble, you can disable
 nGraph by setting ``MXNET_SUBGRAPH_BACKEND=1``. If you do see trouble, please 
 report it and we'll address it as soon as possible.
 
-Running Resnet-50-V2 Inference
+Running ResNet-50-V2 Inference
 ------------------------------
 
 To show a working example, we'll demonstrate how MXNet may be used to run 
-Resnet-50 Inference. For ease, we'll consider the standard MXNet Resnet-50-V2 
-model from the `gluon model zoo`_, and we'll test with latency at ``batch_size=1``. 
+ResNet-50 Inference. For ease, we'll consider the standard MXNet ResNet-50-V2 00
+model from the `gluon model zoo`_, and we'll test with ``batch_size=1``. 
 Note that the nGraph-MXNet bridge supports static graphs only (dynamic graphs 
 are in the works); so for this example, we begin by converting the gluon model 
 into a static graph. Also note that any model with a saved checkpoint can be 
 considered a "static graph" in nGraph. For this example, we'll presume that the 
-model has been deemed "trained".   
+model is pre-trained.   
 
 .. literalinclude:: ../../../examples/subgraph_snippets/mxnet-gluon-example.py
    :language: python
    :lines: 17-32
 
 
-To load the model into nGraph, we simply bind the symbol into a Executor. 
+To load the model into nGraph, we simply bind the symbol into an Executor. 
 
 .. literalinclude:: ../../../examples/subgraph_snippets/mxnet-gluon-example.py
    :language: python
