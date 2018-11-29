@@ -131,6 +131,7 @@
 #include "ngraph/runtime/reference/topk.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/rng_state.hpp"
+#include "ngraph/visibility.h"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/runtime/reference/allreduce.hpp"
@@ -147,7 +148,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::interpreter::INTBackend : public Backend
+class NGRAPH_API ngraph::runtime::interpreter::INTBackend : public Backend
 {
 public:
     std::shared_ptr<Tensor>
@@ -170,7 +171,7 @@ public:
     bool is_supported(const Node& node) const override { return true; }
 private:
     static const int m_alignment;
-    class FunctionInstance
+    class NGRAPH_LOCAL FunctionInstance
     {
     public:
         bool m_is_compiled = false;
