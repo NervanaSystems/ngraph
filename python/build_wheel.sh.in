@@ -51,3 +51,5 @@ if [ "${PYTHON3_DETECTED}" == 1  ]; then
     python ${SOURCE_DIR}/setup.py bdist_wheel
     deactivate
 fi
+
+for distwhl in ${BUILD_DIR}/dist/*whl; do mv "$distwhl" "${distwhl//linux/manylinux1}"; done
