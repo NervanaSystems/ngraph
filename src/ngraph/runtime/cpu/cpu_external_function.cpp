@@ -1354,6 +1354,10 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_concat(
                 for (auto arg : it->get_arguments())
                 {
                     auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
+                    if (!input_node)
+                    {
+                        break;
+                    }
                     auto input_tensor = &input_node->get_output_tensor();
                     auto old_offset = input_tensor->get_pool_offset();
                     input_tensor->set_pool_offset(offset);
@@ -1388,6 +1392,10 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
                     auto arg = input->get_output().get_node();
                     auto index = input->get_output().get_index();
                     auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
+                    if (!input_node)
+                    {
+                        continue;
+                    }
                     auto input_tensor = &input_node->get_output_tensor(index);
                     if (m_tensor_roles[input_tensor->get_name()] == CPUTensorRole::INPUT)
                     {
