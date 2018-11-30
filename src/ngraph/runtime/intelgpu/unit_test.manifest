@@ -134,6 +134,7 @@ shape_of_vector
 shape_of_matrix
 shape_of_5d
 sum_stable_acc
+sum_stable_acc_double
 product_2d_to_scalar_int32
 product_to_scalar_int32
 product_to_scalar_int8
