@@ -19,6 +19,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/log.hpp"
+#include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/all_close.hpp"

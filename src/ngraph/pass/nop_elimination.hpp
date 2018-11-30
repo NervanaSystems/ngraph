@@ -18,7 +18,6 @@
 
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/visibility.h"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {
