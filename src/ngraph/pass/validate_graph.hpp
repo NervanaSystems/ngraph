@@ -28,7 +28,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::ValidateGraph : public ModulePass
+class NGRAPH_API ngraph::pass::ValidateGraph : public ModulePass
 {
 public:
     bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;

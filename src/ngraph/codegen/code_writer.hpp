@@ -19,6 +19,8 @@
 #include <sstream>
 #include <string>
 
+#include "ngraph/visibility.h"
+
 namespace ngraph
 {
     namespace codegen
@@ -27,7 +29,7 @@ namespace ngraph
     }
 }
 
-class ngraph::codegen::CodeWriter
+class NGRAPH_API ngraph::codegen::CodeWriter
 {
 public:
     CodeWriter();

@@ -20,6 +20,7 @@
 #include <memory>
 
 #include "ngraph/codegen/compiler.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -35,7 +36,7 @@ namespace llvm
     class ExecutionEngine;
 }
 
-class ngraph::codegen::ExecutionEngine
+class NGRAPH_API ngraph::codegen::ExecutionEngine
 {
 public:
     ExecutionEngine();

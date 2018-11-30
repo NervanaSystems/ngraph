@@ -21,6 +21,8 @@
 #include <set>
 #include <vector>
 
+#include "ngraph/visibility.h"
+
 namespace ngraph
 {
     /// \brief A set of axes.
@@ -61,5 +63,5 @@ namespace ngraph
         }
     };
 
-    std::ostream& operator<<(std::ostream& s, const AxisSet& axis_set);
+    NGRAPH_API std::ostream& operator<<(std::ostream& s, const AxisSet& axis_set);
 }

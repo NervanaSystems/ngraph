@@ -223,9 +223,10 @@ namespace ngraph
     }
 
     // Check if all paths from X to a result go through Y
-    bool is_post_dominated(Node* X, Node* Y);
+    NGRAPH_API bool is_post_dominated(Node* X, Node* Y);
 
-    bool is_equal_to_const_value(std::string const_value, std::shared_ptr<Node> reduce_constant);
+    NGRAPH_API bool is_equal_to_const_value(std::string const_value,
+                                            std::shared_ptr<Node> reduce_constant);
 
     // maps original to replacement nodes e.g. for clone utilities
     // performs index checking on access
@@ -313,20 +314,21 @@ namespace ngraph
                                                const NodeVector& exclusions,
                                                bool ignore_unused = false);
 
-    bool is_one(std::shared_ptr<Node> reduce_constant);
+    NGRAPH_API bool is_one(std::shared_ptr<Node> reduce_constant);
 
     // Returns true if `node` is live in the graph i.e. a result op
     // transitively uses this `node`
-    bool is_used(Node* node);
+    NGRAPH_API bool is_used(Node* node);
 
     // Returns count of `node` users that are still live in the graph
-    size_t get_user_count(Node* node);
+    NGRAPH_API size_t get_user_count(Node* node);
 
     // Return true if a node's user could potentially overwrite
     // the output of this node with in-place kernels
-    bool possibly_overwritten(Node* node);
+    NGRAPH_API bool possibly_overwritten(Node* node);
 
-    bool is_strided(const Strides& strides);
+    NGRAPH_API bool is_strided(const Strides& strides);
 
-    bool is_valid_rank(const std::shared_ptr<Node>& node, std::vector<size_t> valid_ranks);
+    NGRAPH_API bool is_valid_rank(const std::shared_ptr<Node>& node,
+                                  std::vector<size_t> valid_ranks);
 }

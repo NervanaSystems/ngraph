@@ -43,7 +43,7 @@ namespace ngraph
         class Value;
     }
 
-    std::string to_cplusplus_sourcecode_literal(bool val);
+    NGRAPH_API std::string to_cplusplus_sourcecode_literal(bool val);
 
     template <typename T>
     std::string join(const T& v, const std::string& sep = ", ")
@@ -187,10 +187,10 @@ namespace ngraph
     template <typename T>
     T apply_permutation(T input, ngraph::AxisVector order);
 
-    AxisVector get_default_order(size_t rank);
-    AxisVector get_default_order(const Shape& shape);
+    NGRAPH_API AxisVector get_default_order(size_t rank);
+    NGRAPH_API AxisVector get_default_order(const Shape& shape);
 
-    AxisVector get_permutation_to_default_order(const AxisVector& axis_order);
+    NGRAPH_API AxisVector get_permutation_to_default_order(const AxisVector& axis_order);
 
     /*
     * Return type struct for cache_fprop, with the modified fprop and bprop
@@ -218,4 +218,4 @@ namespace ngraph
                                       std::shared_ptr<Function> bprop);
 } // end namespace ngraph
 
-std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);
+NGRAPH_API std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);

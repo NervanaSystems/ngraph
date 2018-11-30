@@ -51,28 +51,28 @@ private:
     ManagerState* m_state;
 };
 
-class ngraph::pass::ModulePass : public PassBase
+class NGRAPH_API ngraph::pass::ModulePass : public PassBase
 {
 public:
     virtual ~ModulePass() {}
     virtual bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) = 0;
 };
 
-class ngraph::pass::FunctionPass : public PassBase
+class NGRAPH_API ngraph::pass::FunctionPass : public PassBase
 {
 public:
     virtual ~FunctionPass() {}
     virtual bool run_on_function(std::shared_ptr<ngraph::Function>) = 0;
 };
 
-class ngraph::pass::NodePass : public PassBase
+class NGRAPH_API ngraph::pass::NodePass : public PassBase
 {
 public:
     virtual ~NodePass() {}
     virtual bool run_on_node(std::shared_ptr<ngraph::Node>) = 0;
 };
 
-class ngraph::pass::CallGraphPass : public PassBase
+class NGRAPH_API ngraph::pass::CallGraphPass : public PassBase
 {
 public:
     virtual ~CallGraphPass() {}

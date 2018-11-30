@@ -38,7 +38,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::ManagerState
+class NGRAPH_API ngraph::pass::ManagerState
 {
 public:
     const std::vector<std::shared_ptr<Function>>& get_functions();

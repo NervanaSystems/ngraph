@@ -21,6 +21,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -73,5 +74,5 @@ namespace ngraph
         }
     };
 
-    std::ostream& operator<<(std::ostream& s, const Coordinate& coordinate);
+    NGRAPH_API std::ostream& operator<<(std::ostream& s, const Coordinate& coordinate);
 }
