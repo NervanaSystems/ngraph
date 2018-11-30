@@ -40,9 +40,14 @@ message(STATUS "NGRAPH_API_VERSION ${NGRAPH_API_VERSION}")
 set(NGRAPH_INCLUDE_PATH
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
-# Suppress an OS X-specific warning.
-if (POLICY CMP0042)
-    cmake_policy(SET CMP0042 OLD)
+
+if (APPLE)
+    # Suppress an OS X-specific warning.
+    if (POLICY CMP0042)
+        cmake_policy(SET CMP0042 NEW)
+    else()
+        set(MACOS_RPATH ON)
+    endif()
 endif()
 
 project (ngraph)
@@ -99,6 +104,8 @@ option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
+option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
+option(NGRAPH_PYTHON_BUILD_ENABLE   "Enable build nGraph python package wheel" FALSE)
 
 message(STATUS "NGRAPH_UNIT_TEST_ENABLE:      ${NGRAPH_UNIT_TEST_ENABLE}")
 message(STATUS "NGRAPH_TOOLS_ENABLE:          ${NGRAPH_TOOLS_ENABLE}")
@@ -113,6 +120,7 @@ message(STATUS "NGRAPH_DEBUG_ENABLE:          ${NGRAPH_DEBUG_ENABLE}")
 message(STATUS "NGRAPH_ONNX_IMPORT_ENABLE:    ${NGRAPH_ONNX_IMPORT_ENABLE}")
 message(STATUS "NGRAPH_DEX_ONLY:              ${NGRAPH_DEX_ONLY}")
 message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:  ${NGRAPH_CODE_COVERAGE_ENABLE}")
+message(STATUS "NGRAPH_LIB_VERSIONING_ENABLE: ${NGRAPH_LIB_VERSIONING_ENABLE}")
 message(STATUS "NGRAPH_PYTHON_BUILD_ENABLE:   ${NGRAPH_PYTHON_BUILD_ENABLE}")
 
 if (NGRAPH_HYBRID_ENABLE)
@@ -149,10 +157,12 @@ set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
 set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}")
 set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
-if (DEFINED NGRAPH_RPATH)
-    set(CMAKE_INSTALL_RPATH "$ORIGIN:${NGRAPH_RPATH}")
-else()
-    set(CMAKE_INSTALL_RPATH "$ORIGIN")
+if (NOT APPLE)
+    if (DEFINED NGRAPH_RPATH)
+        set(CMAKE_INSTALL_RPATH "$ORIGIN:${NGRAPH_RPATH}")
+    else()
+        set(CMAKE_INSTALL_RPATH "$ORIGIN")
+    endif()
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -302,3 +312,9 @@ endif()
 if (NGRAPH_PYTHON_BUILD_ENABLE)
     add_subdirectory(python)
 endif()
+
+install(DIRECTORY
+    ${CMAKE_CURRENT_SOURCE_DIR}/licenses
+    DESTINATION "${CMAKE_INSTALL_PREFIX}"
+)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX})

@@ -18,11 +18,10 @@
 #include <numeric>
 #include <vector>
 
+#include "broadcasting.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/reshape.hpp"
-
-#include "broadcasting.hpp"
 #include "reshape.hpp"
 
 /// \brief Calculate output shape of numpy - style broadcast operation.
