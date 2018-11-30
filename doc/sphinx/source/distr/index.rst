@@ -49,9 +49,9 @@ across all workers with an op that performs "allreduce", and applied to update
 the weights.
 
 Using multiple machines helps to scale and speed up deep learning. With large 
-mini-batch training, `one could train ResNet-50 with Imagenet-1k data`_ to the 
-*Top 5* classifier in minutes using thousands of CPU nodes. See also: 
-`arxiv.org/pdf/1709.05011.pdf`_. 
+mini-batch training, one could train ResNet-50 with Imagenet-1k data to the 
+*Top 5* classifier in minutes using thousands of CPU nodes. See 
+`arxiv.org/abs/1709.05011`_. 
 
 
 
@@ -96,7 +96,6 @@ communication collective ops such as allgather, scatter, gather, etc. in
 the future. 
 
 
-.. _based on the synchronous: https://arxiv.org/pdf/1602.06709.pdf 
-.. _one could train ResNet-50 with Imagenet-1k data: https://blog.surf.nl/en/imagenet-1k-training-on-intel-xeon-phi-in-less-than-40-minutes/
-.. _arxiv.org/pdf/1709.05011.pdf: https://arxiv.org/pdf/1709.05011.pdf
+.. _arxiv.org/abs/1709.05011: https://arxiv.org/format/1709.05011
+.. _based on the synchronous: https://arxiv.org/format/1602.06709 
 .. _Intel MLSL: https://github.com/intel/MLSL/releases

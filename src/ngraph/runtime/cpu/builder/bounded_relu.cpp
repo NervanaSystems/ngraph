@@ -38,10 +38,15 @@ namespace ngraph
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
                 size_t count = out[0].get_size();
 
+                auto alpha = static_cast<const op::BoundedRelu*>(node)->get_alpha();
+
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto bounded_relu_index = mkldnn_emitter->build_bounded_relu(node, args, out);
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto bounded_relu_index =
+                        mkldnn_emitter->build_bounded_relu(input_desc, result_desc, alpha);
                     auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
                     auto functor = [&, bounded_relu_index](CPURuntimeContext* ctx,
                                                            CPUExecutionContext* ectx) {
@@ -58,7 +63,6 @@ namespace ngraph
                     SELECT_KERNEL(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::bounded_relu);
 
-                    auto alpha = static_cast<const op::BoundedRelu*>(node)->get_alpha();
                     auto functor = [&, kernel, alpha, count](CPURuntimeContext* ctx,
                                                              CPUExecutionContext* ectx) {
                         kernel(input_tensor, out_tensor, alpha, count, ectx->arena);

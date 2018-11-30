@@ -229,11 +229,10 @@ namespace ngraph
                                     {input_desc, executor::global_cpu_engine},
                                     {result_desc, executor::global_cpu_engine},
                                     attr);
-                                ctx->mkldnn_primitives[quantize_index]->reset(
-                                    (new mkldnn::reorder(reorder_desc,
-                                                         *ctx->mkldnn_primitives[deps[0]],
-                                                         *ctx->mkldnn_primitives[deps[1]]))
-                                        ->get());
+                                *ctx->mkldnn_primitives[quantize_index] =
+                                    mkldnn::reorder(reorder_desc,
+                                                    *ctx->mkldnn_primitives[deps[0]],
+                                                    *ctx->mkldnn_primitives[deps[1]]);
                             }
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);

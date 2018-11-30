@@ -50,25 +50,24 @@ Node::Node(const std::string& node_type, const NodeVector& arguments, size_t out
 }
 
 // While we are still doing validation and type inference in the constructor, this is true
-// It can be set to false to debug doing validation/inference after construction. When that
-// is working, these two functions will be removed.
-static bool in_transition = true;
+// The #define can be commented out to debug doing validation/inference after construction.
+// When that is working, these two functions will be removed.
+#define IN_TRANSITION
 
 void Node::constructor_validate_and_infer_types()
 {
-    if (in_transition)
-    {
-        validate_and_infer_types();
-    }
+#ifdef IN_TRANSITION
+    validate_and_infer_types();
+#endif
 }
 
 void Node::delayed_validate_and_infer_types()
 {
-    if (!in_transition)
-    {
-        validate_and_infer_types();
-    }
+#ifndef IN_TRANSITION
+    validate_and_infer_types();
+#endif
 }
+#undef IN_TRANSITION
 
 void Node::set_output_size(size_t n)
 {

@@ -267,6 +267,10 @@ void pass::MemoryManager::dump(ostream& out)
 
 size_t pass::MemoryManager::align(size_t size, size_t alignment)
 {
+    if (alignment == 0)
+    {
+        throw invalid_argument("alignment must be > 0");
+    }
     if (size == 0)
     {
         size = alignment;

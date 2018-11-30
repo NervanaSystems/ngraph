@@ -21,10 +21,10 @@ import setuptools
 import os
 import distutils.ccompiler
 
-__version__ = '0.9.0'
-
+__version__ = os.environ.get('NGRAPH_VERSION', '0.0.0-dev')
 PYNGRAPH_SOURCE_DIR = os.path.abspath(os.path.dirname(__file__))
 NGRAPH_DEFAULT_INSTALL_DIR = os.environ.get('HOME')
+NGRAPH_ONNX_IMPORT_ENABLE = os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE')
 
 
 def find_ngraph_dist_dir():
@@ -126,16 +126,13 @@ def has_flag(compiler, flagname):
 
 
 def cpp_flag(compiler):
-    """Return the -std=c++[11/14] compiler flag.
+    """Check and return the -std=c++11 compiler flag.
 
-    The c++14 is prefered over c++11 (when it is available).
     """
-    if has_flag(compiler, '-std=c++14'):
-        return '-std=c++14'
-    elif has_flag(compiler, '-std=c++11'):
+    if has_flag(compiler, '-std=c++11'):
         return '-std=c++11'
     else:
-        raise RuntimeError('Unsupported compiler -- at least C++11 support is needed!')
+        raise RuntimeError('Unsupported compiler -- C++11 support is needed!')
 
 
 sources = [
@@ -273,6 +270,17 @@ data_files = [
             NGRAPH_CPP_LIBRARY_DIR + "/" + library
             for library in os.listdir(NGRAPH_CPP_LIBRARY_DIR)
         ],
+    ),
+    (
+        'licenses',
+        [
+            PYNGRAPH_SOURCE_DIR + "/../licenses/" + license
+            for license in os.listdir(PYNGRAPH_SOURCE_DIR + "/../licenses")
+        ],
+    ),
+    (
+        '',
+        [PYNGRAPH_SOURCE_DIR + "/../LICENSE"],
     )
 ]
 
@@ -289,7 +297,7 @@ ext_modules = [
     )
 ]
 
-if os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE') == 'TRUE':
+if NGRAPH_ONNX_IMPORT_ENABLE == 'TRUE':
     onnx_sources = [
         'pyngraph/pyngraph_onnx_import.cpp',
         'pyngraph/onnx_import/onnx_import.cpp',
@@ -321,29 +329,33 @@ class BuildExt(build_ext):
     """
 
     def build_extensions(self):
+        if sys.platform == 'win32':
+            raise RuntimeError('Unsupported platform: win32!')
+        """-Wstrict-prototypes is not a valid option for c++"""
+        try:
+            self.compiler.compiler_so.remove("-Wstrict-prototypes")
+        except (AttributeError, ValueError):
+            pass
         for ext in self.extensions:
             ext.extra_compile_args += [cpp_flag(self.compiler)]
             if has_flag(self.compiler, '-fstack-protector-strong'):
                 ext.extra_compile_args += ['-fstack-protector-strong']
-            else:
+            elif has_flag(self.compiler, '-fstack-protector'):
                 ext.extra_compile_args += ['-fstack-protector']
-            if has_flag(self.compiler, '-frtti'):
-                ext.extra_compile_args += ['-frtti']
-            if sys.platform == 'darwin':
-                ext.extra_compile_args += [
-                    '-stdlib=libc++',
-                    '-mmacosx-version-min=10.7',
-                ]
-                ext.extra_link_args += ["-Wl,-rpath,@loader_path/../.."]
-            else:
-                if has_flag(self.compiler, '-fvisibility=hidden'):
-                    ext.extra_compile_args += ['-fvisibility=hidden']
+            if has_flag(self.compiler, '-fvisibility=hidden'):
+                ext.extra_compile_args += ['-fvisibility=hidden']
+            if has_flag(self.compiler, '-flto'):
+                ext.extra_compile_args += ['-flto']
+            if has_flag(self.compiler, '-fPIC'):
+                ext.extra_compile_args += ['-fPIC']
+            if sys.platform.startswith('linux'):
                 ext.extra_link_args += ['-Wl,-rpath,$ORIGIN/../..']
-            if sys.platform != 'darwin':
                 ext.extra_link_args += ['-z', 'noexecstack']
                 ext.extra_link_args += ['-z', 'relro']
                 ext.extra_link_args += ['-z', 'now']
-            ext.extra_compile_args += ['-Wformat', '-Wformat-security', '-Wno-comment']
+            elif sys.platform == 'darwin':
+                ext.extra_link_args += ["-Wl,-rpath,@loader_path/../.."]
+            ext.extra_compile_args += ['-Wformat', '-Wformat-security']
             ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
         build_ext.build_extensions(self)
 
@@ -352,13 +364,13 @@ with open(os.path.join(PYNGRAPH_SOURCE_DIR, 'requirements.txt')) as req:
     requirements = req.read().splitlines()
 
 setup(
-    name='ngraph',
+    name='ngraph-core',
     version=__version__,
     author='Intel',
     author_email='intelnervana@intel.com',
-    url='http://www.intelnervana.com',
+    url='https://ai.intel.com/',
     license='License :: OSI Approved :: Apache Software License',
-    description='Python wrapper for ngraph',
+    description='Python API for nGraph',
     long_description='',
     ext_modules=ext_modules,
     package_dir=package_dir,
