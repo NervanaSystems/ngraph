@@ -17,7 +17,7 @@
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/type/element_type.hpp"
-
+#include "ngraph/assertion.hpp"
 #include "ngraph/log.hpp"
 
 using namespace ngraph;
@@ -73,11 +73,10 @@ void runtime::Tensor::set_stale(bool val)
     m_stale = val;
 }
 
-void runtime::Tensor::copy_to(shared_ptr<runtime::Tensor>  destination_tensor, size_t offset, size_t m)
+void runtime::Tensor::copy_to(shared_ptr<runtime::Tensor> d)
 {
     size_t n = get_size_in_bytes();
-    NGRAPH_INFO << "the  value of get element count is :: " << n << "\nwhere as input m is :: " << m ;   
     void* copy = malloc(n);
     read(copy, 0, n);
-    destination_tensor->write(copy, 0, n);
+    d->write(copy, 0, n);
 }

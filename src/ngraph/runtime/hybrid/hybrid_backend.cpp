@@ -173,7 +173,7 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
                                                            parameter_node->get_shape());
 
                 auto size_bytes = result_tv->get_size_in_bytes();
-                result_tv->copy_to(parameter_tv, 0, size_bytes);
+                result_tv->copy_to(parameter_tv);
 
                 map_node_to_tensor_view[parameter_node] = parameter_tv;
                 parameter_tvs.push_back(parameter_tv);

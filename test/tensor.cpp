@@ -107,18 +107,21 @@ void test_copy_to_same_backend(const vector<T>& x)
     auto backend_int = runtime::Backend::create("INTERPRETER");
     auto a = backend_int->create_tensor(element::from<T>(), Shape{(x.size() / 2), (x.size() / 2)});
     auto b = backend_int->create_tensor(element::from<T>(), Shape{(x.size() / 2), (x.size() / 2)});
-
+    auto c = backend_int->create_tensor(element::from<T>(), Shape{((x.size() / 2) -1), ((x.size() / 2) +1)});
     vector<T> result(x.size());
 
     a->write(&x[0], 0, x.size() * sizeof(T));
     a->read(result.data(), 0, result.size() * sizeof(T));
 
     auto s = a->get_size_in_bytes();
-    a->copy_to(b, 0, s);
+    a->copy_to(b);
 
     vector<T> af_vector(x.size());
     b->read(af_vector.data(), 0, af_vector.size() * sizeof(T));
     ASSERT_EQ(af_vector, result);
+
+    // EXPECT_THROW(a->copy_to(c), ngraph_error);
+    
 }
 
 template <typename T>
@@ -135,7 +138,7 @@ void test_copy_to_other_backend(const vector<T>& x)
     a->read(result.data(), 0, result.size() * sizeof(T));
 
     auto s = a->get_size_in_bytes();
-    a->copy_to(b, 0, s);
+    a->copy_to(b);
 
     vector<T> af_vector(x.size());
     b->read(af_vector.data(), 0, af_vector.size() * sizeof(T));
