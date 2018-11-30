@@ -1276,15 +1276,25 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_concat(
                 {
                     auto output_tensor = &concat->get_output_tensor();
                     auto offset = output_tensor->get_pool_offset();
+                    bool no_in_place_concat = false;
                     for (auto arg : concat->get_arguments())
                     {
                         auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
+                        if (!input_node)
+                        {
+                            no_in_place_concat = true;
+                            break;
+                        }
                         auto input_tensor = &input_node->get_output_tensor();
                         auto old_offset = input_tensor->get_pool_offset();
                         input_tensor->set_pool_offset(offset);
                         NGRAPH_DEBUG << "cpu_external_function: change offset, old offset is "
                                      << old_offset << ", new offset is " << offset << std::endl;
                         offset += input_tensor->size();
+                    }
+                    if (no_in_place_concat)
+                    {
+                        continue;
                     }
 
                     bool found_last_concat = true;
