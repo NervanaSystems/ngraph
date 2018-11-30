@@ -16,18 +16,15 @@
 
 #include <memory>
 
+#include "core/node.hpp"
+#include "hard_sigmoid.hpp"
 #include "ngraph/node.hpp"
-
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
-
-#include "core/node.hpp"
 #include "utils/broadcasting.hpp"
-
-#include "hard_sigmoid.hpp"
 
 namespace ngraph
 {
