@@ -365,7 +365,7 @@ with open(os.path.join(PYNGRAPH_SOURCE_DIR, 'requirements.txt')) as req:
 
 setup(
     name='ngraph-core',
-    description=open(os.path.join('../README.md')).read()
+    description=open(os.path.join('../README.md')).read(),
     version=__version__,
     author='Intel',
     author_email='intelnervana@intel.com',
