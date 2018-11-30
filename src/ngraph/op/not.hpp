@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise logical negation operation.
-        class Not : public Op
+        class NGRAPH_API Not : public Op
         {
         public:
             /// \brief Constructs a logical negation operation.

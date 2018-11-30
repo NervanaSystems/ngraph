@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "ngraph/op/util/binary_elementwise_logical.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -26,7 +27,7 @@ namespace ngraph
     {
         /// \brief Elementwise logical-or operation.
         ///
-        class Or : public util::BinaryElementwiseLogical
+        class NGRAPH_API Or : public util::BinaryElementwiseLogical
         {
         public:
             /// \brief Constructs a logical-or operation.

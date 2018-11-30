@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/assertion.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {

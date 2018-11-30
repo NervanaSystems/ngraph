@@ -19,13 +19,14 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         // \brief Computes minimum index along a specified axis for a given tensor
-        class ArgMax : public op::util::IndexReduction
+        class NGRAPH_API ArgMax : public op::util::IndexReduction
         {
         public:
             /// \brief Constructs a ArgMax operation.

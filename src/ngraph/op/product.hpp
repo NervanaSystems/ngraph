@@ -18,6 +18,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/arithmetic_reduction.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -26,7 +27,7 @@ namespace ngraph
         /// \brief Product reduction operation.
         ///
         /// Reduces the tensor, eliminating the specified reduction axes by taking the product.
-        class Product : public util::ArithmeticReduction
+        class NGRAPH_API Product : public util::ArithmeticReduction
         {
         public:
             /// \brief Constructs a product reduction operation.

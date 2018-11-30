@@ -20,12 +20,13 @@
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
-        class Sigmoid : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Sigmoid : public util::UnaryElementwiseArithmetic
         {
         public:
             Sigmoid(std::shared_ptr<Node> arg);
@@ -37,7 +38,7 @@ namespace ngraph
 
         /// \brief Elementwise SigmoidBackprop operation.
         ///
-        class SigmoidBackprop : public util::BinaryElementwiseArithmetic
+        class NGRAPH_API SigmoidBackprop : public util::BinaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a SigmoidBackprop operation.

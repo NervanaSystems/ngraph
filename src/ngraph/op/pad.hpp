@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Generic constant-padding operation.
-        class Pad : public Op
+        class NGRAPH_API Pad : public Op
         {
         public:
             /// \brief Constructs a generic padding operation.

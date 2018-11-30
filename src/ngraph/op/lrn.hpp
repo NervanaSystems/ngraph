@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -35,7 +36,7 @@ namespace ngraph
         /// | Type                   | Description                                                                          |
         /// | ---------------------- | ------------------------------------------------------------------------------------ |
         /// | \f$N[n, c, d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[n, c, d_1,\dots,d_n] = \frac{N[n,i,d_1,\dots,d_n]}{ (bias + alpha * (\sum_{i=max(0,(nsize-1)/2)}^{min(C, (nsize-1)/2)+1} N[n,i,d_1,\dots,d_n]^{2}) ^ {2})}\f$ |
-        class LRN : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API LRN : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a LRN operation.

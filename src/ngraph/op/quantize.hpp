@@ -19,6 +19,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -27,7 +28,7 @@ namespace ngraph
         /// \brief Quantize operation
         ///        Maps real input (r) to quantized output (q) using scale (s), offset (o) and round mode:
         ///        q = ROUND(r / s) + o
-        class Quantize : public ngraph::op::Op
+        class NGRAPH_API Quantize : public ngraph::op::Op
         {
         public:
             enum class RoundMode

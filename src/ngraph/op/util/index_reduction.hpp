@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -24,7 +25,7 @@ namespace ngraph
     {
         namespace util
         {
-            class IndexReduction : public Op
+            class NGRAPH_API IndexReduction : public Op
             {
             public:
                 size_t get_reduction_axis() const { return m_axis; }

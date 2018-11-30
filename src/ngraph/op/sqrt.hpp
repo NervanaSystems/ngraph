@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -35,7 +36,7 @@ namespace ngraph
         /// | Type                   | Description                                                                           |
         /// | ---------------------- | ------------------------------------------------------------------------------------- |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \sqrt{\texttt{arg}[i_1,\dots,i_n]}\f$ |
-        class Sqrt : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Sqrt : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a square operation.

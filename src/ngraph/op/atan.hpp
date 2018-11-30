@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -26,7 +27,7 @@ namespace ngraph
     {
         /// \brief Elementwise inverse tangent (arctan) operation.
         ///
-        class Atan : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Atan : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs an arctan operation.

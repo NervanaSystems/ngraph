@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/util/arithmetic_reduction.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Min-reduction operation.
-        class Min : public util::ArithmeticReduction
+        class NGRAPH_API Min : public util::ArithmeticReduction
         {
         public:
             /// \brief Constructs a min-reduction operation.

@@ -18,6 +18,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -25,7 +26,7 @@ namespace ngraph
     {
         /// \brief Batched average pooling operation, with optional padding and window stride.
         ///
-        class QuantizedAvgPool : public Op
+        class NGRAPH_API QuantizedAvgPool : public Op
         {
         public:
             /// \brief Constructs a batched average pooling operation.

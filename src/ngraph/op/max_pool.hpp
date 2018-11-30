@@ -18,13 +18,14 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Batched max pooling operation, with optional padding and window stride.
-        class MaxPool : public Op
+        class NGRAPH_API MaxPool : public Op
         {
         public:
             /// \brief Constructs a batched max pooling operation.
@@ -84,7 +85,7 @@ namespace ngraph
             Shape m_padding_above;
         };
 
-        class MaxPoolBackprop : public Op
+        class NGRAPH_API MaxPoolBackprop : public Op
         {
         public:
             MaxPoolBackprop(const std::shared_ptr<Node>& arg_forward,

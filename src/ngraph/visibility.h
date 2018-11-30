@@ -33,7 +33,8 @@
 #endif
 
 // Now we use the generic helper definitions above to define NGRAPH_API and NGRAPH_LOCAL.
-// NGRAPH_API is used for the public API symbols. It either DLL imports or DLL exports (or does nothing for static build)
+// NGRAPH_API is used for the public API symbols. It either DLL imports or DLL exports
+//    (or does nothing for static build)
 // NGRAPH_LOCAL is used for non-api symbols.
 
 #ifdef NGRAPH_DLL         // defined if NGRAPH is compiled as a DLL

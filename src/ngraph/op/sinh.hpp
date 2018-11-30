@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise hyperbolic sine (sinh) operation.
-        class Sinh : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Sinh : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a hyperbolic sine operation.

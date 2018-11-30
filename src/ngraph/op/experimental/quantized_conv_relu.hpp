@@ -18,13 +18,14 @@
 
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Relu(Convolution) forward prop for batched convolution operation.
-        class QuantizedConvolutionRelu : public Op
+        class NGRAPH_API QuantizedConvolutionRelu : public Op
         {
         public:
             QuantizedConvolutionRelu(const std::shared_ptr<op::QuantizedConvolution>& qconv);

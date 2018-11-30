@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/util/binary_elementwise_comparison.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise less-than operation.
-        class Less : public util::BinaryElementwiseComparison
+        class NGRAPH_API Less : public util::BinaryElementwiseComparison
         {
         public:
             /// \brief Constructs a less-than operation.

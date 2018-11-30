@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise floor operation.
-        class Floor : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Floor : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a floor operation.

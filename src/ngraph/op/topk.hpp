@@ -21,13 +21,14 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         //brief Computes indices of top k maximum/minimum index along a specified axis for a given tensor
-        class TopK : public Op
+        class NGRAPH_API TopK : public Op
         {
         public:
             /// \brief Constructs a TopK operation.

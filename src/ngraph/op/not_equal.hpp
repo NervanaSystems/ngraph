@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/util/binary_elementwise_comparison.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise not-equal operation.
-        class NotEqual : public util::BinaryElementwiseComparison
+        class NGRAPH_API NotEqual : public util::BinaryElementwiseComparison
         {
         public:
             /// \brief Constructs a not-equal operation.

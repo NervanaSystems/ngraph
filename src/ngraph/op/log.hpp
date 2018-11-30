@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise natural log operation.
-        class Log : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Log : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a natural log operation.

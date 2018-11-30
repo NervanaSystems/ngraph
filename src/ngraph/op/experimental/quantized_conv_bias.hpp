@@ -18,13 +18,14 @@
 
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Convolution + bias forward prop for batched convolution operation.
-        class QuantizedConvolutionBias : public Op
+        class NGRAPH_API QuantizedConvolutionBias : public Op
         {
         public:
             QuantizedConvolutionBias(const std::shared_ptr<op::QuantizedConvolution>& qconv,

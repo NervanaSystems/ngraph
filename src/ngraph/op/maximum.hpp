@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise maximum operation.
-        class Maximum : public util::BinaryElementwiseArithmetic
+        class NGRAPH_API Maximum : public util::BinaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a maximum operation.

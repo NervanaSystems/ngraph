@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise cosine operation.
-        class Cos : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Cos : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a cosine operation.

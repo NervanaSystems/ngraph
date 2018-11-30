@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Operation that returns the shape of its input argument as a tensor.
-        class ShapeOf : public Op
+        class NGRAPH_API ShapeOf : public Op
         {
         public:
             /// \brief Constructs a shape-of operation.

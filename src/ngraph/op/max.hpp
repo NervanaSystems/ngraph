@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/util/arithmetic_reduction.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Max-reduction operation.
-        class Max : public util::ArithmeticReduction
+        class NGRAPH_API Max : public util::ArithmeticReduction
         {
         public:
             /// \brief Constructs a max-reduction operation.

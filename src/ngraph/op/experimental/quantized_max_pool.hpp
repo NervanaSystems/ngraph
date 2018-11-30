@@ -18,12 +18,13 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
-        class QuantizedMaxPool : public Op
+        class NGRAPH_API QuantizedMaxPool : public Op
         {
         public:
             /// \brief Constructs a batched max pooling operation.

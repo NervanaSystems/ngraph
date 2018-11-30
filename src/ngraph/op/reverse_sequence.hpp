@@ -19,12 +19,13 @@
 #include <memory>
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
-        class ReverseSequence : public Op
+        class NGRAPH_API ReverseSequence : public Op
         {
         public:
             /// \brief Constructs an arcsin operation.

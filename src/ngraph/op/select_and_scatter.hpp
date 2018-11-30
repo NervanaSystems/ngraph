@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -68,7 +69,7 @@ namespace ngraph
         /// | Type                   | Description          |
         /// | ---------------------- | -------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | See above algorithm. |
-        class SelectAndScatter : public Op
+        class NGRAPH_API SelectAndScatter : public Op
         {
         public:
             /// \brief Constructs a select-and-scatter operation.

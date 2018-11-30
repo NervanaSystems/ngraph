@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/node.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief %Function call operation.
-        class FunctionCall : public Node
+        class NGRAPH_API FunctionCall : public Node
         {
         public:
             /// \brief Constructs a function call operation.

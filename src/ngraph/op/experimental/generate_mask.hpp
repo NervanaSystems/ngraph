@@ -20,13 +20,15 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/state/rng_state.hpp"
+#include "ngraph/visibility.h"
+
 namespace ngraph
 {
     namespace op
     {
         /// \brief GenerateMask
         ///
-        class GenerateMask : public op::Op
+        class NGRAPH_API GenerateMask : public op::Op
         {
         public:
             /// \brief Constructs a GenerateMask node with a given shape, sed,

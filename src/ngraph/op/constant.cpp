@@ -173,7 +173,8 @@ shared_ptr<op::Constant> op::ScalarConstantLikeBase::as_constant() const
 // We have to open up namespace blocks here to work around a problem with gcc:
 //
 // https://stackoverflow.com/questions/25594644/warning-specialization-of-template-in-different-namespace
-//
+//#include "ngraph/visibility.h"
+
 namespace ngraph
 {
     namespace op

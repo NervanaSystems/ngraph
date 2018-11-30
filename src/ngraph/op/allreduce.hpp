@@ -18,12 +18,13 @@
 
 #include <memory>
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
-        class AllReduce : public Op
+        class NGRAPH_API AllReduce : public Op
         {
         public:
             AllReduce(const std::shared_ptr<Node>& arg);

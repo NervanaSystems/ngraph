@@ -22,13 +22,14 @@
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         // \brief Batchnorm for training operation
-        class BatchNormTraining : public Op
+        class NGRAPH_API BatchNormTraining : public Op
         {
         public:
             // \param input Must have rank >= 2, [., C, ...]
@@ -83,7 +84,7 @@ namespace ngraph
             double m_epsilon;
         };
 
-        class BatchNormInference : public Op
+        class NGRAPH_API BatchNormInference : public Op
         {
         public:
             // \param input [., C, ...]
@@ -147,7 +148,7 @@ namespace ngraph
             double m_epsilon;
         };
 
-        class BatchNormTrainingBackprop : public Op
+        class NGRAPH_API BatchNormTrainingBackprop : public Op
         {
         public:
             BatchNormTrainingBackprop(std::shared_ptr<Node> input,

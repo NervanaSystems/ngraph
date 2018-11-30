@@ -19,13 +19,14 @@
 #include <memory>
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Concatenation operation.
-        class Concat : public Op
+        class NGRAPH_API Concat : public Op
         {
         public:
             /// \brief Constructs a concatenation operation.

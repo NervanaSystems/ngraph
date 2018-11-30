@@ -18,12 +18,13 @@
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
-        class QuantizedConvolution : public Op
+        class NGRAPH_API QuantizedConvolution : public Op
         {
         public:
             QuantizedConvolution(const std::shared_ptr<Node>& data_batch,

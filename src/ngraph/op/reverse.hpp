@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -43,7 +44,7 @@ namespace ngraph
         /// | Type                   | Description                                                                                                                                                               |
         /// | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg}[j_1,\dots,j_n]\f$ and \f$j_k = d_k - i_k - 1\f$ if axis \f$k\f$ is in the reverse set; else \f$j_k = i_k\f$. |
-        class Reverse : public Op
+        class NGRAPH_API Reverse : public Op
         {
         public:
             /// \brief Constructs a reverse operation.

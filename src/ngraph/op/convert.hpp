@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise type conversion operation.
-        class Convert : public Op
+        class NGRAPH_API Convert : public Op
         {
         public:
             /// \brief Constructs a conversion operation.

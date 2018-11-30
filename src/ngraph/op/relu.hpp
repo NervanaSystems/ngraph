@@ -23,6 +23,7 @@
 #include "ngraph/util.hpp"
 
 #include <memory>
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -30,7 +31,7 @@ namespace ngraph
     {
         /// \brief Elementwise Relu operation.
         ///
-        class Relu : public ngraph::op::util::UnaryElementwiseArithmetic
+        class NGRAPH_API Relu : public ngraph::op::util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a Relu operation.
@@ -47,7 +48,7 @@ namespace ngraph
 
         /// \brief Elementwise ReluBackprop operation.
         ///
-        class ReluBackprop : public ngraph::op::util::BinaryElementwiseArithmetic
+        class NGRAPH_API ReluBackprop : public ngraph::op::util::BinaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a ReluBackprop operation.

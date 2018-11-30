@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief create StopGrdient op
-        class StopGradient : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API StopGradient : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs StopGradient

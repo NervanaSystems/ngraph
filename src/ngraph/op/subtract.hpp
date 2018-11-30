@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise subtraction operation.
-        class Subtract : public util::BinaryElementwiseArithmetic
+        class NGRAPH_API Subtract : public util::BinaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs an subtraction operation.
@@ -39,6 +40,6 @@ namespace ngraph
                                            const NodeVector& deltas) override;
         };
     }
-    std::shared_ptr<ngraph::Node> operator-(const std::shared_ptr<ngraph::Node> arg0,
+    NGRAPH_API std::shared_ptr<ngraph::Node> operator-(const std::shared_ptr<ngraph::Node> arg0,
                                             const std::shared_ptr<ngraph::Node> arg1);
 }

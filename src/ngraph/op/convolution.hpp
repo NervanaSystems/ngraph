@@ -19,6 +19,7 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -26,7 +27,7 @@ namespace ngraph
     {
         /// \brief Batched convolution operation, with optional window dilation and stride.
         ///
-        class Convolution : public Op
+        class NGRAPH_API Convolution : public Op
         {
         public:
             /// \brief Constructs a batched convolution operation.
@@ -164,7 +165,7 @@ namespace ngraph
         };
 
         /// \brief Data batch backprop for batched convolution operation.
-        class ConvolutionBackpropData : public Op
+        class NGRAPH_API ConvolutionBackpropData : public Op
         {
         public:
             /// \brief Constructs a batched-convolution data batch-backprop operation.
@@ -262,7 +263,7 @@ namespace ngraph
         };
 
         /// \brief Filters backprop for batched convolution operation.
-        class ConvolutionBackpropFilters : public Op
+        class NGRAPH_API ConvolutionBackpropFilters : public Op
         {
         public:
             /// \brief Constructs a batched-convolution filter-backprop operation.

@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Elementwise natural exponential (exp) operation.
-        class Exp : public util::UnaryElementwiseArithmetic
+        class NGRAPH_API Exp : public util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs an exponential operation.

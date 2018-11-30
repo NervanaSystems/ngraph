@@ -20,6 +20,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/arithmetic_reduction.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -73,7 +74,7 @@ namespace ngraph
         /// | Type                                      | Description                                                                                                      |
         /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
         /// | \f$N[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by summation. |
-        class Sum : public util::ArithmeticReduction
+        class NGRAPH_API Sum : public util::ArithmeticReduction
         {
         public:
             /// \brief Constructs a summation operation.

@@ -19,6 +19,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -27,7 +28,7 @@ namespace ngraph
         /// \brief Dequantize operation
         ///        Maps quantized input (q) to real output (r) using scale (s) and offset (o):
         ///        r = (q - o) * s
-        class Dequantize : public ngraph::op::Op
+        class NGRAPH_API Dequantize : public ngraph::op::Op
         {
         public:
             /// \brief Constructs a Dequantize operation

@@ -18,6 +18,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -25,7 +26,7 @@ namespace ngraph
     {
         /// \brief Batched average pooling operation, with optional padding and window stride.
         ///
-        class AvgPool : public Op
+        class NGRAPH_API AvgPool : public Op
         {
         public:
             /// \brief Constructs a batched average pooling operation.
@@ -104,7 +105,7 @@ namespace ngraph
             bool m_include_padding_in_avg_computation;
         };
 
-        class AvgPoolBackprop : public Op
+        class NGRAPH_API AvgPoolBackprop : public Op
         {
         public:
             AvgPoolBackprop(const Shape& forward_arg_shape,

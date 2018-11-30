@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -43,7 +44,7 @@ namespace ngraph
             /// | Type                               | Description                                                                                                                                                                                                        |
             /// | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
             /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape as the input tensors, and the element type `bool`. |
-            class BinaryElementwiseComparison : public Op
+            class NGRAPH_API BinaryElementwiseComparison : public Op
             {
             public:
                 /// \brief Constructs a binary elementwise comparison operation.

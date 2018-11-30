@@ -19,13 +19,14 @@
 #include "ngraph/coordinate.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a bounding box, optionally with stride.
-        class Slice : public Op
+        class NGRAPH_API Slice : public Op
         {
         public:
             /// \brief Constructs a tensor slice operation.
