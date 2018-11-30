@@ -78,7 +78,7 @@ namespace ngraph
                                 : std::numeric_limits<T>::max())
                     , m_lowest(std::numeric_limits<T>::has_infinity
                                    ? -std::numeric_limits<T>::infinity()
-                                   : std::numeric_limits<T>::lowest()){};
+                                   : std::numeric_limits<T>::lowest()){}
 
                 std::string lowest() const override
                 {
