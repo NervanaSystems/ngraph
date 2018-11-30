@@ -19,10 +19,9 @@
 #include <iostream>
 #include <string>
 
-#include "ngraph/function.hpp"
-
 #include "core/operator_set.hpp"
 #include "core/weight.hpp"
+#include "ngraph/function.hpp"
 
 namespace ngraph
 {

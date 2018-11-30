@@ -150,10 +150,6 @@ if (NGRAPH_TBB_ENABLE)
         DESTINATION ${NGRAPH_INSTALL_LIB}
         FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
-    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
-        DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
-    )
     add_library(libtbb INTERFACE)
     target_link_libraries(libtbb INTERFACE
         ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
