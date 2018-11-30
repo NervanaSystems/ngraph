@@ -18,6 +18,7 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -45,7 +46,7 @@ namespace ngraph
         /// | Type                                                                         | Description                                                                                                      |
         /// | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_{n-1},\dots,d_0)]\textit{ or }E[d_{order[0]},\dots,d_{order[n-1]}]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the axes reordered via Numpy Transpose rules          |
-        std::shared_ptr<Node> numpy_transpose(const std::shared_ptr<Node>& node,
-                                              AxisVector order = {});
+        NGRAPH_API std::shared_ptr<Node> numpy_transpose(const std::shared_ptr<Node>& node,
+                                                         AxisVector order = {});
     } // namespace builder
 } // namespace ngraph

@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -35,7 +36,7 @@ namespace ngraph
             /// \brief Interface for describing implementations of tensors.
             ///
             /// Kernel selection will need to pay attention to the layout.
-            class TensorLayout
+            class NGRAPH_API TensorLayout
             {
             protected:
                 TensorLayout(const ngraph::descriptor::Tensor& tensor);

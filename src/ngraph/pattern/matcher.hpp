@@ -26,6 +26,7 @@
 #include "ngraph/pattern/op/any_of.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -57,7 +58,7 @@ namespace ngraph
 
         /// \brief Matcher matches (compares) two graphs
         ///
-        class Matcher
+        class NGRAPH_API Matcher
         {
         public:
             using PatternMap = std::map<std::shared_ptr<op::Label>, std::shared_ptr<Node>>;
@@ -173,7 +174,7 @@ namespace ngraph
             std::string m_name;
         };
 
-        class RecurrentMatcher
+        class NGRAPH_API RecurrentMatcher
         {
         public:
             /// \brief Constructs a RecurrentMatcher object. Reccurent Matchers are used to match

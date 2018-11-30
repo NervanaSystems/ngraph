@@ -23,6 +23,7 @@
 #include "ngraph/coordinate.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -37,7 +38,7 @@ namespace ngraph
 
     namespace autodiff
     {
-        class Adjoints
+        class NGRAPH_API Adjoints
         {
         public:
             /// \brief (dy/dx)(c) for all x used to compute y

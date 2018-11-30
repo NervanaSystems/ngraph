@@ -19,6 +19,8 @@
 #include <memory>
 #include <unordered_map>
 
+#include "ngraph/visibility.h"
+
 namespace ngraph
 {
     class Function;
@@ -28,6 +30,6 @@ namespace ngraph
         /// \brief Returns a FunctionSpec for the backprop derivative of its argument.
         /// \param f is f(X_i...)
         /// \returns f'(X_i..., c) where f'(x_i, ..., c)_j is backprop for X_j
-        std::shared_ptr<Function> backprop_function(const std::shared_ptr<Function>& f);
+        NGRAPH_API std::shared_ptr<Function> backprop_function(const std::shared_ptr<Function>& f);
     }
 }

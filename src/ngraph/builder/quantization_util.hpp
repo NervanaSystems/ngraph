@@ -30,6 +30,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -37,14 +38,15 @@ namespace ngraph
     {
         namespace quantization_util
         {
-            std::shared_ptr<Node> max_abs(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+            NGRAPH_API std::shared_ptr<Node> max_abs(std::shared_ptr<Node> a,
+                                                     std::shared_ptr<Node> b)
             {
                 auto abs_a = std::make_shared<op::Abs>(a);
                 auto abs_b = std::make_shared<op::Abs>(b);
                 return std::make_shared<op::Maximum>(abs_a, abs_b);
             }
 
-            std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
+            NGRAPH_API std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
                 quantization_range_for_multiplication(std::shared_ptr<Node> min_a,
                                                       std::shared_ptr<Node> max_a,
                                                       std::shared_ptr<Node> min_b,
@@ -87,13 +89,13 @@ namespace ngraph
                 return std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>(min_c, max_c);
             }
 
-            std::shared_ptr<Node> get_scale(std::shared_ptr<Node> min_input,
-                                            std::shared_ptr<Node> max_input,
-                                            std::shared_ptr<Node> min_filter,
-                                            std::shared_ptr<Node> max_filter,
-                                            std::shared_ptr<Node> min_freezed_output,
-                                            std::shared_ptr<Node> max_freezed_output,
-                                            const ngraph::element::Type& output_type)
+            NGRAPH_API std::shared_ptr<Node> get_scale(std::shared_ptr<Node> min_input,
+                                                       std::shared_ptr<Node> max_input,
+                                                       std::shared_ptr<Node> min_filter,
+                                                       std::shared_ptr<Node> max_filter,
+                                                       std::shared_ptr<Node> min_freezed_output,
+                                                       std::shared_ptr<Node> max_freezed_output,
+                                                       const ngraph::element::Type& output_type)
             {
                 auto type = min_input->get_element_type();
                 if (type != max_input->get_element_type() ||
@@ -147,10 +149,10 @@ namespace ngraph
                        (max_abs32 / max_abs8);
             }
 
-            std::shared_ptr<Node> get_bias_scale(std::shared_ptr<Node> min_input,
-                                                 std::shared_ptr<Node> max_input,
-                                                 std::shared_ptr<Node> min_filter,
-                                                 std::shared_ptr<Node> max_filter)
+            NGRAPH_API std::shared_ptr<Node> get_bias_scale(std::shared_ptr<Node> min_input,
+                                                            std::shared_ptr<Node> max_input,
+                                                            std::shared_ptr<Node> min_filter,
+                                                            std::shared_ptr<Node> max_filter)
             {
                 auto type = min_input->get_element_type();
                 if (type != max_input->get_element_type() ||
@@ -177,10 +179,10 @@ namespace ngraph
                 return range / (max_abs_input_range * max_abs_filter_range);
             }
 
-            std::shared_ptr<Node> get_scale(std::shared_ptr<Node> input_min_range,
-                                            std::shared_ptr<Node> input_max_range,
-                                            const ngraph::element::Type& quant_type,
-                                            bool bump_by_eps = false)
+            NGRAPH_API std::shared_ptr<Node> get_scale(std::shared_ptr<Node> input_min_range,
+                                                       std::shared_ptr<Node> input_max_range,
+                                                       const ngraph::element::Type& quant_type,
+                                                       bool bump_by_eps = false)
             {
                 auto type = input_min_range->get_element_type();
                 if (type != input_max_range->get_element_type())

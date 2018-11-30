@@ -19,10 +19,9 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
-#include "ngraph/log.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -45,14 +44,16 @@ namespace ngraph
         PLAIDML,
     };
 
-    std::string placement_to_string(Placement placement);
+    NGRAPH_API std::string placement_to_string(Placement placement);
 
     // Split function to function(s) with unique placement
+    NGRAPH_API
     std::pair<std::vector<std::shared_ptr<Function>>,
               std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Result>>>
         split_function_by_placement(const std::shared_ptr<Function>& f);
 
     // Split function to function(s) with unique placement
+    NGRAPH_API
     std::pair<std::vector<std::shared_ptr<Function>>,
               std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Result>>>
         split_function_by_placement_size(const std::shared_ptr<Function>& f);

@@ -43,8 +43,8 @@ namespace ngraph
         /// | Type                                      | Description                                                                                                      |
         /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by reduction. |
-        std::shared_ptr<Node> l2_norm(const std::shared_ptr<Node>& node,
-                                      const AxisSet& reduction_axes);
+        NGRAPH_API std::shared_ptr<Node> l2_norm(const std::shared_ptr<Node>& node,
+                                                 const AxisSet& reduction_axes);
 
         /// \brief Sum-based Mean of a Tensor.
         ///
@@ -66,8 +66,8 @@ namespace ngraph
         /// | Type                                      | Description                                                                                                      |
         /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by reduction. |
-        std::shared_ptr<Node> mean(const std::shared_ptr<Node>& node,
-                                   const AxisSet& reduction_axes);
+        NGRAPH_API std::shared_ptr<Node> mean(const std::shared_ptr<Node>& node,
+                                              const AxisSet& reduction_axes);
 
         /// \brief Sum-based Standard Deviation of a Tensor.
         ///
@@ -94,9 +94,9 @@ namespace ngraph
         /// | Type                                      | Description                                                                                                      |
         /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by reduction. |
-        std::shared_ptr<Node> std_dev(const std::shared_ptr<Node>& node,
-                                      const AxisSet& reduction_axes,
-                                      const bool bessel_correction = false);
+        NGRAPH_API std::shared_ptr<Node> std_dev(const std::shared_ptr<Node>& node,
+                                                 const AxisSet& reduction_axes,
+                                                 const bool bessel_correction = false);
 
         /// \brief Sum-based Variance of a Tensor.
         ///
@@ -123,9 +123,9 @@ namespace ngraph
         /// | Type                                      | Description                                                                                                      |
         /// | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[\textit{delete}(A,d_1,\dots,d_n)]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the `reduction_axes` \f$A\f$ eliminated by reduction. |
-        std::shared_ptr<Node> variance(const std::shared_ptr<Node>& node,
-                                       const AxisSet& reduction_axes,
-                                       const bool bessel_correction = false);
+        NGRAPH_API std::shared_ptr<Node> variance(const std::shared_ptr<Node>& node,
+                                                  const AxisSet& reduction_axes,
+                                                  const bool bessel_correction = false);
 
     } // namespace builder
 } // namespace ngraph

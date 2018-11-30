@@ -29,6 +29,7 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -36,8 +37,8 @@ namespace ngraph
     class Function;
 }
 
-bool validate_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes);
-std::shared_ptr<ngraph::Function> make_test_graph();
+NGRAPH_API bool validate_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes);
+NGRAPH_API std::shared_ptr<ngraph::Function> make_test_graph();
 
 template <typename T>
 void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& data)

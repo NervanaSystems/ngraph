@@ -22,12 +22,13 @@
 
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/placement.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace pass
     {
-        class AssignPlacement : public NodePass
+        class NGRAPH_API AssignPlacement : public NodePass
         {
         public:
             // TODO: make policy a class

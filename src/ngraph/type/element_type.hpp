@@ -73,7 +73,7 @@ namespace ngraph
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
             bool operator<(const Type& other) const;
-            friend std::ostream& operator<<(std::ostream&, const Type&);
+            NGRAPH_API friend std::ostream& operator<<(std::ostream&, const Type&);
             static std::vector<const Type*> get_known_types();
 
             /// Returns true if the type is floating point, else false.
@@ -117,31 +117,31 @@ namespace ngraph
             throw std::invalid_argument("Unknown type");
         }
         template <>
-        const Type& from<char>();
+        NGRAPH_API const Type& from<char>();
         template <>
-        const Type& from<bool>();
+        NGRAPH_API const Type& from<bool>();
         template <>
-        const Type& from<float>();
+        NGRAPH_API const Type& from<float>();
         template <>
-        const Type& from<double>();
+        NGRAPH_API const Type& from<double>();
         template <>
-        const Type& from<int8_t>();
+        NGRAPH_API const Type& from<int8_t>();
         template <>
-        const Type& from<int16_t>();
+        NGRAPH_API const Type& from<int16_t>();
         template <>
-        const Type& from<int32_t>();
+        NGRAPH_API const Type& from<int32_t>();
         template <>
-        const Type& from<int64_t>();
+        NGRAPH_API const Type& from<int64_t>();
         template <>
-        const Type& from<uint8_t>();
+        NGRAPH_API const Type& from<uint8_t>();
         template <>
-        const Type& from<uint16_t>();
+        NGRAPH_API const Type& from<uint16_t>();
         template <>
-        const Type& from<uint32_t>();
+        NGRAPH_API const Type& from<uint32_t>();
         template <>
-        const Type& from<uint64_t>();
+        NGRAPH_API const Type& from<uint64_t>();
         template <>
-        const Type& from<ngraph::bfloat16>();
+        NGRAPH_API const Type& from<ngraph::bfloat16>();
 
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
     }

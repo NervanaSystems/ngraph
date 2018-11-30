@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -26,7 +27,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::ReshapeElimination : public ngraph::pass::GraphRewrite
+class NGRAPH_API ngraph::pass::ReshapeElimination : public ngraph::pass::GraphRewrite
 {
 public:
     ReshapeElimination()

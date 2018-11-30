@@ -19,6 +19,7 @@
 #include <string>
 
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -28,7 +29,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::DumpSorted : public ModulePass
+class NGRAPH_API ngraph::pass::DumpSorted : public ModulePass
 {
 public:
     DumpSorted(const std::string& output_file);

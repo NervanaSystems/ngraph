@@ -20,20 +20,22 @@
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
-    PartialShape infer_windowed_reduction_output_shape(const Node* node,
-                                                       const PartialShape& data_shape,
-                                                       const Strides& data_dilation,
-                                                       const CoordinateDiff& data_padding_below,
-                                                       const CoordinateDiff& data_padding_above,
-                                                       const PartialShape& window_shape,
-                                                       const Strides& window_strides,
-                                                       const Strides& window_dilation,
-                                                       bool is_window_all_in_padding_allowed);
+    NGRAPH_API PartialShape
+        infer_windowed_reduction_output_shape(const Node* node,
+                                              const PartialShape& data_shape,
+                                              const Strides& data_dilation,
+                                              const CoordinateDiff& data_padding_below,
+                                              const CoordinateDiff& data_padding_above,
+                                              const PartialShape& window_shape,
+                                              const Strides& window_strides,
+                                              const Strides& window_dilation,
+                                              bool is_window_all_in_padding_allowed);
 
-    std::tuple<element::Type, PartialShape>
+    NGRAPH_API std::tuple<element::Type, PartialShape>
         infer_convolution_forward(const Node* node,
                                   element::Type et_batch,
                                   element::Type et_filters,
@@ -45,15 +47,15 @@ namespace ngraph
                                   const Strides& filter_strides,
                                   const Strides& filter_dilation);
 
-    PartialShape infer_batched_pooling_forward(const Node* node,
-                                               const PartialShape& data_batch_shape,
-                                               const CoordinateDiff& data_padding_below,
-                                               const CoordinateDiff& data_padding_above,
-                                               const PartialShape& window_shape,
-                                               const Strides& window_strides,
-                                               bool is_window_all_in_padding_allowed);
+    NGRAPH_API PartialShape infer_batched_pooling_forward(const Node* node,
+                                                          const PartialShape& data_batch_shape,
+                                                          const CoordinateDiff& data_padding_below,
+                                                          const CoordinateDiff& data_padding_above,
+                                                          const PartialShape& window_shape,
+                                                          const Strides& window_strides,
+                                                          bool is_window_all_in_padding_allowed);
 
-    std::tuple<element::Type, PartialShape, PartialShape>
+    NGRAPH_API std::tuple<element::Type, PartialShape, PartialShape>
         infer_batch_norm_forward(const Node* node,
                                  element::Type input_element_type,
                                  element::Type gamma_element_type,
@@ -66,7 +68,7 @@ namespace ngraph
                                  const PartialShape& mean_shape,
                                  const PartialShape& variance_shape);
 
-    std::tuple<element::Type, PartialShape, PartialShape>
+    NGRAPH_API std::tuple<element::Type, PartialShape, PartialShape>
         infer_batch_norm_forward(const Node* node,
                                  element::Type input_element_type,
                                  element::Type gamma_element_type,

@@ -71,12 +71,13 @@ namespace ngraph
     }
 
     size_t hash_combine(const std::vector<size_t>& list);
-    void dump(std::ostream& out, const void*, size_t);
+    NGRAPH_API void dump(std::ostream& out, const void*, size_t);
 
-    std::string to_lower(const std::string& s);
-    std::string to_upper(const std::string& s);
-    std::string trim(const std::string& s);
-    std::vector<std::string> split(const std::string& s, char delimiter, bool trim = false);
+    NGRAPH_API std::string to_lower(const std::string& s);
+    NGRAPH_API std::string to_upper(const std::string& s);
+    NGRAPH_API std::string trim(const std::string& s);
+    NGRAPH_API std::vector<std::string>
+        split(const std::string& s, char delimiter, bool trim = false);
 
     class NGRAPH_API stopwatch
     {
@@ -146,9 +147,9 @@ namespace ngraph
     /// template specializations for float and double to handle INFINITY, -INFINITY
     /// and NaN values.
     template <>
-    float parse_string<float>(const std::string& s);
+    NGRAPH_API float parse_string<float>(const std::string& s);
     template <>
-    double parse_string<double>(const std::string& s);
+    NGRAPH_API double parse_string<double>(const std::string& s);
 
     /// Parses a list of strings containing literals of the underlying type.
     template <typename T>
@@ -181,9 +182,9 @@ namespace ngraph
     void check_fp_values_isnan(const char* name, const float* array, size_t n);
     void check_fp_values_isnan(const char* name, const double* array, size_t n);
 
-    void* aligned_alloc(size_t alignment, size_t size);
-    void aligned_free(void*);
-    size_t round_up(size_t size, size_t alignment);
+    NGRAPH_API void* aligned_alloc(size_t alignment, size_t size);
+    NGRAPH_API void aligned_free(void*);
+    NGRAPH_API size_t round_up(size_t size, size_t alignment);
     template <typename T>
     T apply_permutation(T input, ngraph::AxisVector order);
 
@@ -214,7 +215,8 @@ namespace ngraph
     * The last argument is the adjoints coming into the bprop function, the output
     * bprop function will have these nodes as the first N input parameters
     **/
-    FpropCache cache_fprop(std::shared_ptr<Function> fprop, std::shared_ptr<Function> bprop);
+    NGRAPH_API FpropCache cache_fprop(std::shared_ptr<Function> fprop,
+                                      std::shared_ptr<Function> bprop);
 } // end namespace ngraph
 
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);

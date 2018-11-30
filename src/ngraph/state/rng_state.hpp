@@ -20,12 +20,13 @@
 #include <memory>
 #include <random>
 
+#include "ngraph/visibility.h"
 #include "state.hpp"
 
 namespace ngraph
 {
     //can be based on TensorSate to cache values instead of just caching seed
-    class RNGState : public State
+    class NGRAPH_API RNGState : public State
     {
     public:
         static RNGState* create_rng_state(unsigned int seed, double probability)

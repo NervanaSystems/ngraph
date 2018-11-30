@@ -21,6 +21,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "ngraph/visibility.h"
+
 namespace ngraph
 {
     class ConstString
@@ -68,7 +70,7 @@ namespace ngraph
         _LOG_TYPE_DEBUG,
     };
 
-    class LogHelper
+    class NGRAPH_API LogHelper
     {
     public:
         LogHelper(LOG_TYPE,
@@ -100,9 +102,9 @@ namespace ngraph
         static std::deque<std::string> m_queue;
     };
 
-    extern std::ostream& get_nil_stream();
+    NGRAPH_API extern std::ostream& get_nil_stream();
 
-    void default_logger_handler_func(const std::string& s);
+    NGRAPH_API void default_logger_handler_func(const std::string& s);
 
 #define NGRAPH_ERR                                                                                 \
     ngraph::LogHelper(ngraph::LOG_TYPE::_LOG_TYPE_ERROR,                                           \

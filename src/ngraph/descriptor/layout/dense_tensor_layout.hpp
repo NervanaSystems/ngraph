@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -32,7 +33,7 @@ namespace ngraph
             /// \brief The standard strided layout, used for row-major and column-major, their permutations and slices.
             ///
             /// The linearized offset of an index I is dot(I, strides) + offset.
-            class DenseTensorLayout : public TensorLayout
+            class NGRAPH_API DenseTensorLayout : public TensorLayout
             {
             public:
                 ~DenseTensorLayout() override {}

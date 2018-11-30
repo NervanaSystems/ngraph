@@ -17,12 +17,14 @@
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/visibility.h"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace pass
     {
-        class NopElimination : public FunctionPass
+        class NGRAPH_API NopElimination : public FunctionPass
         {
         public:
             bool run_on_function(std::shared_ptr<ngraph::Function> function) override;

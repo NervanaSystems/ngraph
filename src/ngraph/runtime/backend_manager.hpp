@@ -30,6 +30,8 @@
 #define DL_HANDLE void*
 #endif
 
+#include "ngraph/visibility.h"
+
 namespace ngraph
 {
     namespace runtime
@@ -41,7 +43,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::BackendManager
+class NGRAPH_API ngraph::runtime::BackendManager
 {
     friend class Backend;
 

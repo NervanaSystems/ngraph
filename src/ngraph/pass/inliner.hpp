@@ -19,8 +19,10 @@
 #include <functional>
 #include <memory>
 #include <vector>
+
 #include "ngraph/op/function_call.hpp"
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -32,7 +34,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::InliningHeuristics
+class NGRAPH_API ngraph::pass::InliningHeuristics
 {
 public:
     virtual std::vector<std::shared_ptr<ngraph::op::FunctionCall>>
@@ -40,7 +42,7 @@ public:
     virtual ~InliningHeuristics() {}
 };
 
-class ngraph::pass::InlineSmallCalls : public ngraph::pass::InliningHeuristics
+class NGRAPH_API ngraph::pass::InlineSmallCalls : public ngraph::pass::InliningHeuristics
 {
 public:
     InlineSmallCalls(size_t call_size_limit, size_t depth)
@@ -58,7 +60,7 @@ private:
     size_t m_depth;
 };
 
-class ngraph::pass::Inliner : public ModulePass
+class NGRAPH_API ngraph::pass::Inliner : public ModulePass
 {
 public:
     Inliner(std::shared_ptr<InliningHeuristics> ih)

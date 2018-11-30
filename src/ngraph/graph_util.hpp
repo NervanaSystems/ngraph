@@ -230,7 +230,7 @@ namespace ngraph
 
     // maps original to replacement nodes e.g. for clone utilities
     // performs index checking on access
-    class NodeMap
+    class NGRAPH_API NodeMap
     {
     public:
         // map original node to replacement node
@@ -273,21 +273,21 @@ namespace ngraph
     // input nodes are cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
     // NodeMap output (by reference) fully maps input and cloned nodes
-    std::list<std::shared_ptr<ngraph::Node>>
+    NGRAPH_API std::list<std::shared_ptr<ngraph::Node>>
         clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map);
 
     // input function is cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
     // NodeMap output (by reference) fully maps input and cloned function ops
-    std::shared_ptr<ngraph::Function> clone_function(const ngraph::Function& func,
-                                                     NodeMap& node_map);
+    NGRAPH_API std::shared_ptr<ngraph::Function> clone_function(const ngraph::Function& func,
+                                                                NodeMap& node_map);
 
     // input function is cloned and returned
-    std::shared_ptr<ngraph::Function> clone_function(const ngraph::Function& func);
+    NGRAPH_API std::shared_ptr<ngraph::Function> clone_function(const ngraph::Function& func);
 
     // Assert that nodes in the function is colocated and return that placement
-    Placement get_colocated_function_placement(std::shared_ptr<Function> func);
-    size_t get_colocated_function_placement_size(std::shared_ptr<Function> func);
+    NGRAPH_API Placement get_colocated_function_placement(std::shared_ptr<Function> func);
+    NGRAPH_API size_t get_colocated_function_placement_size(std::shared_ptr<Function> func);
 
     std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
         insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
@@ -301,17 +301,18 @@ namespace ngraph
                                  const std::shared_ptr<Node>& dst_node,
                                  const std::shared_ptr<Node>& new_node);
 
-    std::shared_ptr<Node> make_zero(const element::Type& element_type, const Shape& shape);
+    NGRAPH_API std::shared_ptr<Node> make_zero(const element::Type& element_type,
+                                               const Shape& shape);
 
-    std::shared_ptr<Node> make_constant_from_string(std::string val,
-                                                    const element::Type& element_type,
-                                                    const Shape& shape);
+    NGRAPH_API std::shared_ptr<Node> make_constant_from_string(std::string val,
+                                                               const element::Type& element_type,
+                                                               const Shape& shape);
 
-    bool is_zero(std::shared_ptr<Node> reduce_constant);
+    NGRAPH_API bool is_zero(std::shared_ptr<Node> reduce_constant);
 
-    NodeVector get_subgraph_outputs(const NodeVector& nodes,
-                                    const NodeVector& exclusions,
-                                    bool ignore_unused = false);
+    NGRAPH_API NodeVector get_subgraph_outputs(const NodeVector& nodes,
+                                               const NodeVector& exclusions,
+                                               bool ignore_unused = false);
 
     bool is_one(std::shared_ptr<Node> reduce_constant);
 

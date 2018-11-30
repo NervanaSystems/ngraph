@@ -39,5 +39,5 @@ namespace ngraph
                                            const NodeVector& deltas) override;
         };
     }
-    std::shared_ptr<ngraph::Node> operator-(const std::shared_ptr<ngraph::Node> arg0);
+    NGRAPH_API std::shared_ptr<ngraph::Node> operator-(const std::shared_ptr<ngraph::Node> arg0);
 }

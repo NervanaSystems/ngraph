@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -26,7 +27,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::CommonSubexpressionElimination : public FunctionPass
+class NGRAPH_API ngraph::pass::CommonSubexpressionElimination : public FunctionPass
 {
 public:
     CommonSubexpressionElimination()

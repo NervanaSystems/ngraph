@@ -60,15 +60,15 @@ namespace ngraph
                                  const std::shared_ptr<Node>& dst_node,
                                  const std::shared_ptr<Node>& new_node);
 
-    std::string node_validation_assertion_string(const Node* node);
+    NGRAPH_API std::string node_validation_assertion_string(const Node* node);
 
-    const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
-                                                         size_t i);
-    const NodeVector& check_single_output_args(const NodeVector& args);
+    NGRAPH_API const std::shared_ptr<Node>&
+        check_single_output_arg(const std::shared_ptr<Node>& node, size_t i);
+    NGRAPH_API const NodeVector& check_single_output_args(const NodeVector& args);
 
-    const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
-                                                         size_t i);
-    const NodeVector& check_single_output_args(const NodeVector& args);
+    NGRAPH_API const std::shared_ptr<Node>&
+        check_single_output_arg(const std::shared_ptr<Node>& node, size_t i);
+    NGRAPH_API const NodeVector& check_single_output_args(const NodeVector& args);
 
     /// Nodes are the backbone of the graph of Value dataflow. Every node has
     /// zero or more nodes as arguments and one value, which is either a tensor
@@ -143,7 +143,7 @@ namespace ngraph
         virtual bool is_constant() const;
         virtual bool is_commutative() { return false; }
         size_t get_instance_id() const { return m_instance_id; }
-        friend std::ostream& operator<<(std::ostream&, const Node&);
+        NGRAPH_API friend std::ostream& operator<<(std::ostream&, const Node&);
         virtual std::ostream& write_short_description(std::ostream&) const;
         virtual std::ostream& write_long_description(std::ostream&) const;
 
@@ -299,7 +299,7 @@ namespace ngraph
         bool m_is_short;
     };
 
-    void check_new_args_count(const Node* node, const NodeVector& new_args);
+    NGRAPH_API void check_new_args_count(const Node* node, const NodeVector& new_args);
 }
 
 #define NODE_VALIDATION_ASSERT(node, cond)                                                         \

@@ -16,17 +16,18 @@
 
 #pragma once
 
-#include "ngraph/except.hpp"
-#include "ngraph/node.hpp"
-
 #include <memory>
 #include <utility>
+
+#include "ngraph/except.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     namespace builder
     {
-        class autobroadcast_incompatible_shapes : public ngraph::ngraph_error
+        class NGRAPH_API autobroadcast_incompatible_shapes : public ngraph::ngraph_error
         {
         public:
             autobroadcast_incompatible_shapes(const ngraph::Shape& shape1,
@@ -70,7 +71,7 @@ namespace ngraph
         ///   elements point to ngraph::Node objects whose output values have the same shape.
         ///
         /// \exception ngraph::builder::autobroadcast_incompatible_shapes
-        std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
+        NGRAPH_API std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
             numpy_broadcast(const std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>& args);
 
         /// Create a new \p NodeType node, and any additional nodes required to simulate NumPy-style autobroadcast

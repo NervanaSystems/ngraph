@@ -21,6 +21,7 @@
 #include <sstream>
 
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -32,7 +33,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::MemoryLayout : public FunctionPass
+class NGRAPH_API ngraph::pass::MemoryLayout : public FunctionPass
 {
 public:
     MemoryLayout(size_t alignment = 1, bool disable_memory_sharing = false);
@@ -43,7 +44,7 @@ private:
     bool m_disable_memory_sharing;
 };
 
-class ngraph::pass::MemoryManager
+class NGRAPH_API ngraph::pass::MemoryManager
 {
 public:
     enum class block_state

@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/partial_shape.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -37,7 +38,7 @@ namespace ngraph
     }
 
     template <>
-    PartialShape project(const PartialShape& shape, const AxisSet& axes);
+    NGRAPH_API PartialShape project(const PartialShape& shape, const AxisSet& axes);
 
     // Removes some values from a vector of axis values
     template <typename AXIS_VALUES>
@@ -57,7 +58,7 @@ namespace ngraph
     }
 
     template <>
-    PartialShape reduce(const PartialShape& shape, const AxisSet& deleted_axes);
+    NGRAPH_API PartialShape reduce(const PartialShape& shape, const AxisSet& deleted_axes);
 
     // TODO: check validity, i.e. that the new axis indices are all < axis_values.size()+num_new_axes.
     // Add new values at particular axis positions
@@ -100,8 +101,9 @@ namespace ngraph
     }
 
     template <>
-    PartialShape inject_pairs(const PartialShape& shape,
-                              std::vector<std::pair<size_t, Dimension>> new_axis_pos_value_pairs);
+    NGRAPH_API PartialShape
+        inject_pairs(const PartialShape& shape,
+                     std::vector<std::pair<size_t, Dimension>> new_axis_pos_value_pairs);
 
     // Add a new value at a particular axis position
     template <typename AXIS_VALUES, typename AXIS_VALUE>

@@ -17,17 +17,18 @@
 #include <string>
 
 #include "gtest/gtest.h"
+#include "ngraph/visibility.h"
 
 // Copied from gtest
 
 namespace ngraph
 {
-    std::string prepend_disabled(const std::string& backend_name,
-                                 const std::string& test_name,
-                                 const std::string& manifest);
+    NGRAPH_API std::string prepend_disabled(const std::string& backend_name,
+                                            const std::string& test_name,
+                                            const std::string& manifest);
 
-    std::string combine_test_backend_and_case(const std::string& backend_name,
-                                              const std::string& test_casename);
+    NGRAPH_API std::string combine_test_backend_and_case(const std::string& backend_name,
+                                                         const std::string& test_casename);
 }
 
 #define NGRAPH_GTEST_TEST_CLASS_NAME_(backend_name, test_case_name, test_name)                     \

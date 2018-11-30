@@ -25,9 +25,11 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/visibility.h"
+
 namespace ngraph
 {
-    class bfloat16
+    class NGRAPH_API bfloat16
     {
     public:
         bfloat16() {}

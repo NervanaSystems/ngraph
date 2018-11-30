@@ -21,11 +21,12 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/visibility.h"
 
 namespace ngraph
 {
     /// \brief Shape for a tensor.
-    class Shape : public std::vector<size_t>
+    class NGRAPH_API Shape : public std::vector<size_t>
     {
     public:
         Shape(const std::initializer_list<size_t>& axis_lengths)
@@ -106,5 +107,5 @@ namespace ngraph
         return 1 == shape.size();
     }
 
-    std::ostream& operator<<(std::ostream& s, const Shape& shape);
+    NGRAPH_API std::ostream& operator<<(std::ostream& s, const Shape& shape);
 }
