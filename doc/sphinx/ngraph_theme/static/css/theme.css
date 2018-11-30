@@ -1634,7 +1634,7 @@ body {
   color: #38403f;
   min-height: 100%;
   overflow-x: hidden;
-  background: #edf0f2;
+  background: #fcfcfc;
 }
 
 .wy-text-left {
@@ -3193,7 +3193,7 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
 }
 @media screen and (min-width: 1400px) {
   .wy-nav-content-wrap {
-    background: #0C7881;
+    background: #fcfcfc;
   }
 
   .wy-nav-content {
