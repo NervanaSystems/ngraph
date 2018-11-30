@@ -20,7 +20,6 @@
 #include <set>
 
 #include "ngraph/pass/pass.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

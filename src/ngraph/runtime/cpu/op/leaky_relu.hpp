@@ -27,7 +27,7 @@ namespace ngraph
         /// \brief Elementwise Maximum(arg, arg * alpha) operation
         ///        alpha > 0
         ///
-        class LeakyRelu : public Op
+        class NGRAPH_API LeakyRelu : public Op
         {
         public:
             /// \brief Constructs a LeakyRelu operation.

@@ -26,7 +26,7 @@ namespace ngraph
     {
         /// \brief Elementwise Minimum(Relu(arg, 0), alpha) operation.
         ///
-        class BoundedRelu : public Op
+        class NGRAPH_API BoundedRelu : public Op
         {
         public:
             /// \brief Constructs a BoundedRelu operation.

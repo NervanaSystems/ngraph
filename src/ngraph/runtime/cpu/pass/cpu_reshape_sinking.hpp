@@ -26,7 +26,7 @@ namespace ngraph
         {
             namespace pass
             {
-                class CPUReshapeSinking : public ngraph::pass::FunctionPass
+                class NGRAPH_API CPUReshapeSinking : public ngraph::pass::FunctionPass
                 {
                 public:
                     bool run_on_function(std::shared_ptr<ngraph::Function> function) override;

@@ -26,7 +26,6 @@
 #include "ngraph/pattern/op/any_of.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

@@ -20,7 +20,6 @@
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

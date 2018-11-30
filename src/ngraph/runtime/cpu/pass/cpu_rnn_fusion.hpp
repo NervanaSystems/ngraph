@@ -35,7 +35,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::cpu::pass::LSTMFusion : public ngraph::pass::GraphRewrite
+class NGRAPH_API ngraph::runtime::cpu::pass::LSTMFusion : public ngraph::pass::GraphRewrite
 {
 public:
     LSTMFusion()
@@ -50,7 +50,7 @@ private:
     void construct_lstm_fprop();
 };
 
-class ngraph::runtime::cpu::pass::RNNFusion : public ngraph::pass::RecurrentGraphRewrite
+class NGRAPH_API ngraph::runtime::cpu::pass::RNNFusion : public ngraph::pass::RecurrentGraphRewrite
 {
 public:
     RNNFusion()
@@ -63,7 +63,8 @@ private:
     void construct_rnn_lstm_fprop();
 };
 
-class ngraph::runtime::cpu::pass::MultiLayerRNNFusion : public ngraph::pass::RecurrentGraphRewrite
+class NGRAPH_API ngraph::runtime::cpu::pass::MultiLayerRNNFusion
+    : public ngraph::pass::RecurrentGraphRewrite
 {
 public:
     MultiLayerRNNFusion()

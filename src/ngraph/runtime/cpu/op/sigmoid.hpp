@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace op
     {
-        class Sigmoid : public Op
+        class NGRAPH_API Sigmoid : public Op
         {
         public:
             Sigmoid(std::shared_ptr<Node> input);
@@ -39,7 +39,7 @@ namespace ngraph
 
         /// \brief Elementwise SigmoidBackprop operation.
         ///
-        class SigmoidBackprop : public Op
+        class NGRAPH_API SigmoidBackprop : public Op
         {
         public:
             /// \brief Constructs a SigmoidBackprop operation.

@@ -19,6 +19,8 @@
 #include <cudnn.h>
 #include <vector>
 
+#include "ngraph/visibility.h"
+
 namespace ngraph
 {
     namespace runtime
@@ -29,9 +31,9 @@ namespace ngraph
             void check_cuda_errors(CUresult err);
             void* create_gpu_buffer(size_t buffer_size, const void* data = nullptr);
             void free_gpu_buffer(void* buffer);
-            void cuda_memcpyDtD(void* dst, const void* src, size_t buffer_size);
-            void cuda_memcpyHtD(void* dst, const void* src, size_t buffer_size);
-            void cuda_memcpyDtH(void* dst, const void* src, size_t buffer_size);
+            NGRAPH_API void cuda_memcpyDtD(void* dst, const void* src, size_t buffer_size);
+            NGRAPH_API void cuda_memcpyHtD(void* dst, const void* src, size_t buffer_size);
+            NGRAPH_API void cuda_memcpyDtH(void* dst, const void* src, size_t buffer_size);
             void cuda_memset(void* dst, int value, size_t buffer_size);
             std::pair<uint64_t, uint64_t> idiv_magic_u32(uint64_t max_numerator, uint64_t divisor);
             std::pair<uint64_t, uint64_t> idiv_magic_u64(uint64_t divisor);

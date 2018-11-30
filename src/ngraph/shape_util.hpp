@@ -17,7 +17,6 @@
 #pragma once
 
 #include "ngraph/partial_shape.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

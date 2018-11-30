@@ -19,8 +19,6 @@
 #include <cstddef>
 #include <string>
 
-#include "ngraph/visibility.h"
-
 namespace ngraph
 {
     namespace runtime

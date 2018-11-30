@@ -25,7 +25,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Relu(Convolution) forward prop for batched convolution operation.
-        class ConvolutionRelu : public Op
+        class NGRAPH_API ConvolutionRelu : public Op
         {
         public:
             ConvolutionRelu(const std::shared_ptr<op::Convolution>& conv);

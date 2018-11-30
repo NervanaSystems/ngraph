@@ -249,7 +249,8 @@ void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine
 }
 
 template <>
-void print_results(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results)
+NGRAPH_API void
+    print_results(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results)
 {
     size_t num_results = std::min(static_cast<size_t>(max_results), ref_data.size());
     std::cout << "First " << num_results << " results";

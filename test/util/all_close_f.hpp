@@ -19,7 +19,6 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/visibility.h"
 #include "test_tools.hpp"
 
 namespace ngraph

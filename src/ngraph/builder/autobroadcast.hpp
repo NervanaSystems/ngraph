@@ -21,7 +21,6 @@
 
 #include "ngraph/except.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

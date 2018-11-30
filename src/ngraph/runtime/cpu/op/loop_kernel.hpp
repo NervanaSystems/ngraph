@@ -29,7 +29,7 @@ namespace ngraph
             {
                 /// \brief LoopKernel represents graphs consisting
                 /// of arithmetic operations that can be executed in the same loop
-                class LoopKernel : public ngraph::op::Op
+                class NGRAPH_API LoopKernel : public ngraph::op::Op
                 {
                 public:
                     LoopKernel(const NodeVector& node_list,

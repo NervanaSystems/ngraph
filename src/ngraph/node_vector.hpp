@@ -19,17 +19,14 @@
 #include <memory>
 #include <vector>
 
+#include "ngraph/visibility.h"
+
 namespace ngraph
 {
     class Node;
 
-    namespace op
-    {
-        class Result;
-    }
-
     /// \brief Zero or more nodes.
-    class NodeVector : public std::vector<std::shared_ptr<Node>>
+    class NGRAPH_API NodeVector : public std::vector<std::shared_ptr<Node>>
     {
     public:
         NodeVector(const std::initializer_list<std::shared_ptr<Node>>& nodes)

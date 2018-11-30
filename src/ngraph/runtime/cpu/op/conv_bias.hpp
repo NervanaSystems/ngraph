@@ -24,7 +24,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Convolution + bias forward prop for batched convolution operation.
-        class ConvolutionBias : public Op
+        class NGRAPH_API ConvolutionBias : public Op
         {
         public:
             ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
@@ -66,7 +66,7 @@ namespace ngraph
 
         /// \brief Filters and bias backprop for batched convolution operation. Data backprop is
         /// the same as regular convolution backprop for data.
-        class ConvolutionBiasBackpropFiltersBias : public Op
+        class NGRAPH_API ConvolutionBiasBackpropFiltersBias : public Op
         {
         public:
             ConvolutionBiasBackpropFiltersBias(const std::shared_ptr<Node>& data_batch,
@@ -154,7 +154,7 @@ namespace ngraph
             Strides m_data_dilation_strides_backward;
         };
 
-        class ConvolutionBiasAdd : public Op
+        class NGRAPH_API ConvolutionBiasAdd : public Op
         {
         public:
             ConvolutionBiasAdd(const std::shared_ptr<op::ConvolutionBias>& conv,

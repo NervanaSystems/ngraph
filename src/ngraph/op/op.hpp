@@ -20,7 +20,6 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/op_annotations.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

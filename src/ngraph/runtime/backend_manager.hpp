@@ -30,8 +30,6 @@
 #define DL_HANDLE void*
 #endif
 
-#include "ngraph/visibility.h"
-
 namespace ngraph
 {
     namespace runtime

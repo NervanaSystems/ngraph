@@ -24,7 +24,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Group Convolution
-        class GroupConvolution : public Op
+        class NGRAPH_API GroupConvolution : public Op
         {
         public:
             GroupConvolution(const std::shared_ptr<Node>& data_batch,

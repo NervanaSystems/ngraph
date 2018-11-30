@@ -24,7 +24,7 @@ namespace ngraph
     {
         /// \brief GroupConvolution + Bias + Relu forward prop for
         ///  batched GroupConvolution operation.
-        class GroupConvolutionBias : public Op
+        class NGRAPH_API GroupConvolutionBias : public Op
         {
         public:
             GroupConvolutionBias(const std::shared_ptr<op::GroupConvolution>& conv,

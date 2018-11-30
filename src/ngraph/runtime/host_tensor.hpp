@@ -20,7 +20,6 @@
 
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

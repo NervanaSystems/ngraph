@@ -29,7 +29,6 @@
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

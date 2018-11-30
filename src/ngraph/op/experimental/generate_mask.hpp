@@ -20,7 +20,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/state/rng_state.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

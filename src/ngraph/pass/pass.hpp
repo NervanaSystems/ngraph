@@ -23,7 +23,6 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/pass/manager_state.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

@@ -24,7 +24,6 @@
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

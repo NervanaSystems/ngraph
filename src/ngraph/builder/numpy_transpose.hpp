@@ -18,7 +18,6 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

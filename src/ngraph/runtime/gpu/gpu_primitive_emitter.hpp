@@ -29,7 +29,7 @@ namespace ngraph
     {
         namespace gpu
         {
-            class GPUPrimitiveEmitter
+            class NGRAPH_API GPUPrimitiveEmitter
             {
             public:
                 GPUPrimitiveEmitter();

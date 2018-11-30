@@ -27,7 +27,7 @@ namespace ngraph
 {
     namespace op
     {
-        class BatchNormTrainingRelu : public Op
+        class NGRAPH_API BatchNormTrainingRelu : public Op
         {
         public:
             BatchNormTrainingRelu(double eps,

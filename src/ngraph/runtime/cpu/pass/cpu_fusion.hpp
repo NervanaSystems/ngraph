@@ -32,7 +32,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
+class NGRAPH_API ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
 {
 public:
     // 30 different fusion groups that we can nest/mix&match/etc

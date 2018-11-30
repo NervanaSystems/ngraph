@@ -22,7 +22,6 @@
 
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/placement.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

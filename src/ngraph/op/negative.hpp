@@ -17,7 +17,6 @@
 #pragma once
 
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

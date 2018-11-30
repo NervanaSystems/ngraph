@@ -29,7 +29,7 @@ namespace ngraph
         {
             namespace op
             {
-                class HalideOp : public ngraph::op::Op
+                class NGRAPH_API HalideOp : public ngraph::op::Op
                 {
                 public:
                     HalideOp(const NodeVector& args,

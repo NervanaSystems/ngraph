@@ -43,7 +43,7 @@ namespace ngraph
         //   [0] - ht, output tensor with shape (sequence_length*batch_size, feature_size) .
         //   [1] - {ht | ct} output recurrent state tensor with the same shape as states i.e (sequence_length*batch_size, feature_size)
 
-        class Rnn : public Op
+        class NGRAPH_API Rnn : public Op
         {
         public:
             Rnn(std::shared_ptr<Node> src_layer,

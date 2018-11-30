@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace op
     {
-        class MatmulBias : public Op
+        class NGRAPH_API MatmulBias : public Op
         {
         public:
             MatmulBias(std::shared_ptr<Node> W,

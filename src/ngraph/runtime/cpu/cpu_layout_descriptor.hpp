@@ -32,7 +32,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            class LayoutDescriptor : public ngraph::descriptor::layout::TensorLayout
+            class NGRAPH_API LayoutDescriptor : public ngraph::descriptor::layout::TensorLayout
             {
             public:
                 LayoutDescriptor(const ngraph::descriptor::Tensor& tv);

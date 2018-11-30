@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/visibility.h"
+
 namespace ngraph
 {
     namespace codegen
@@ -41,7 +43,7 @@ namespace llvm
     class Module;
 }
 
-class ngraph::codegen::Module
+class NGRAPH_API ngraph::codegen::Module
 {
 public:
     Module(std::unique_ptr<llvm::Module> module);
@@ -52,7 +54,7 @@ private:
     std::unique_ptr<llvm::Module> m_module;
 };
 
-class ngraph::codegen::Compiler
+class NGRAPH_API ngraph::codegen::Compiler
 {
 public:
     Compiler();

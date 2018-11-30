@@ -17,7 +17,6 @@
 #include <string>
 
 #include "gtest/gtest.h"
-#include "ngraph/visibility.h"
 
 // Copied from gtest
 

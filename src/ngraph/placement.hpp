@@ -21,8 +21,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "ngraph/visibility.h"
-
 namespace ngraph
 {
     class Function;

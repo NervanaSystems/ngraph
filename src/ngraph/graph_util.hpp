@@ -28,7 +28,6 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/placement.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

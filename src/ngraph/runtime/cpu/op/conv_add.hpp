@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace op
     {
-        class ConvolutionAdd : public Op
+        class NGRAPH_API ConvolutionAdd : public Op
         {
         public:
             ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,

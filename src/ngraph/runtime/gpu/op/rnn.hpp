@@ -46,7 +46,7 @@ namespace ngraph
             //   [1] - hf, layer-wise output tensor with shape (num_fused_layers*batch_size, feature_size) .
             //   [2] - ct output cell state tensor with the same shape as states i.e (sequence_length*batch_size, feature_size)
 
-            class Rnn : public Op
+            class NGRAPH_API Rnn : public Op
             {
             public:
                 Rnn(std::shared_ptr<Node> src_layer, // x

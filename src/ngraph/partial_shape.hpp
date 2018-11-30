@@ -21,7 +21,6 @@
 #include "ngraph/dimension.hpp"
 #include "ngraph/rank.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace op
     {
-        class BatchDot : public Op
+        class NGRAPH_API BatchDot : public Op
         {
         public:
             BatchDot(std::shared_ptr<Node> a,

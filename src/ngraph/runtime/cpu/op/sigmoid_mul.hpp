@@ -26,7 +26,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Fused Sigmoid functions (logistic and tanh) with multiplication forward prop.
-        class SigmoidMultiply : public Op
+        class NGRAPH_API SigmoidMultiply : public Op
         {
         public:
             /// Defines valid function types

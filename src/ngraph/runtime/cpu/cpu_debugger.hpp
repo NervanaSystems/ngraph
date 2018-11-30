@@ -36,7 +36,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            class CPU_CountTracepoint
+            class NGRAPH_API CPU_CountTracepoint
             {
             public:
                 /// \brief A convenience class that wraps user's callback to run it every *count* iterations
@@ -56,7 +56,7 @@ namespace ngraph
                 size_t m_iteration;
             };
 
-            class CPU_Debugger
+            class NGRAPH_API CPU_Debugger
             {
             public:
                 CPU_Debugger(CPU_CallFrame& callframe);

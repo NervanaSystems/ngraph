@@ -22,7 +22,6 @@
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

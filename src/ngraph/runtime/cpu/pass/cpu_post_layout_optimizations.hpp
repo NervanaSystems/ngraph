@@ -31,7 +31,8 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations : public ngraph::pass::GraphRewrite
+class NGRAPH_API ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations
+    : public ngraph::pass::GraphRewrite
 {
 public:
     CPUPostLayoutOptimizations()

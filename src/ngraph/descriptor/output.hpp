@@ -21,7 +21,6 @@
 
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

@@ -29,7 +29,6 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {
@@ -61,7 +60,7 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
     return rc;
 }
 
-std::vector<float> read_float_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
+NGRAPH_API std::vector<float> read_float_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
 
 template <typename T>
 void write_vector(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& values)
@@ -125,7 +124,7 @@ void init_real_tv(ngraph::runtime::Tensor* tv, std::default_random_engine& engin
     tv->write(vec.data(), 0, vec.size() * sizeof(T));
 }
 
-void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine);
+NGRAPH_API void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine);
 
 template <typename T, typename T1 = T>
 std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& function,

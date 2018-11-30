@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace op
     {
-        class Lstm : public Op
+        class NGRAPH_API Lstm : public Op
         {
         public:
             // INPUTS:

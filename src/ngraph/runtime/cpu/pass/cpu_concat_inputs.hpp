@@ -32,7 +32,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::cpu::pass::ConcatInputs : public ngraph::pass::GraphRewrite
+class NGRAPH_API ngraph::runtime::cpu::pass::ConcatInputs : public ngraph::pass::GraphRewrite
 {
 public:
     ConcatInputs()

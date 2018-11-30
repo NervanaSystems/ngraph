@@ -30,7 +30,7 @@ namespace ngraph
             class CPU_ExternalFunction;
             class CPU_CallFrame;
 
-            class CPU_Backend : public runtime::Backend
+            class NGRAPH_API CPU_Backend : public runtime::Backend
             {
             public:
                 std::shared_ptr<CPU_CallFrame>

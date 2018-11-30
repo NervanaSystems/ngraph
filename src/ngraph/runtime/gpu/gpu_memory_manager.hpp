@@ -32,7 +32,7 @@ namespace ngraph
             class GPUPrimitiveEmitter;
             class GPUMemoryManager;
 
-            class GPUAllocator
+            class NGRAPH_API GPUAllocator
             {
             public:
                 GPUAllocator() = delete;
@@ -56,7 +56,7 @@ namespace ngraph
                 std::stack<size_t> m_active;
             };
 
-            class GPUMemoryManager
+            class NGRAPH_API GPUMemoryManager
             {
                 friend class GPUPrimitiveEmitter;
                 friend class GPUAllocator;

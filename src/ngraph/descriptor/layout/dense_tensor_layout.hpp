@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {

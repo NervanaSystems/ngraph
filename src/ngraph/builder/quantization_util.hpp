@@ -30,7 +30,6 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/visibility.h"
 
 namespace ngraph
 {
