@@ -1,0 +1,14 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d70fdc79d..60aa4c3b7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -131,7 +131,8 @@ function(check_llvm_target TARGET HAS_TARGET)
+     set(_llvm_required_version ${ARGV2})
+   endif()
+   if (NOT LLVM_VERSION LESS _llvm_required_version)
+-    list(FIND LLVM_TARGETS_TO_BUILD ${TARGET} _found_target)
++    set(NGRAPH_TARGETS_TO_BUILD "X86")
++    list(FIND NGRAPH_TARGETS_TO_BUILD ${TARGET} _found_target)
+     if (_found_target GREATER -1)
+       set(${HAS_TARGET} ON PARENT_SCOPE)
+     else()
