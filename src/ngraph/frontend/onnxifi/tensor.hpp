@@ -17,7 +17,6 @@
 #pragma once
 
 #include <memory>
-
 #include <onnxifi.h>
 
 #include "ngraph/runtime/backend.hpp"

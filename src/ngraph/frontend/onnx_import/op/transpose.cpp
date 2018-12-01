@@ -18,7 +18,6 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
-
 #include "transpose.hpp"
 #include "utils/reshape.hpp"
 
