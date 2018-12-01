@@ -30,6 +30,7 @@
 #include <CPP/input_layout.hpp>
 #include <CPP/layout.hpp>
 #include <CPP/lrn.hpp>
+#include <CPP/mutable_data.hpp>
 #include <CPP/permute.hpp>
 #include <CPP/pooling.hpp>
 #include <CPP/reorder.hpp>
@@ -384,7 +385,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         return true;
     }
 
-    vector<cldnn::primitive_id> function_output_names;
+    set<cldnn::primitive_id> func_output_names;
     cldnn::topology topology;
 
     if (m_dump_graph_enable)
@@ -438,7 +439,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             arguments_check(op, 1, 1);
 
-            function_output_names.push_back(get_input_name(op));
+            func_output_names.insert(get_input_name(op));
             break;
         }
         case OP_TYPEID::GetOutputElement:
@@ -1195,71 +1196,14 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
         case OP_TYPEID::BatchNormInference:
         {
-            const shared_ptr<op::BatchNormInference> batch_norm =
+            const shared_ptr<op::BatchNormInference> bnorm =
                 static_pointer_cast<op::BatchNormInference>(op);
-            const double eps = batch_norm->get_eps_value();
-            string mean_name;
-            string variance_name;
+            const double eps = bnorm->get_eps_value();
 
             arguments_check(op, 5, 1);
 
-            do_batch_norm_operation(topology,
-                                    get_output_name(op),
-                                    get_output_type(op),
-                                    eps,
-                                    get_input_name(op, 2),
-                                    get_input_shape(op, 2),
-                                    get_input_name(op, 0),
-                                    get_input_name(op, 1),
-                                    get_input_name(op, 3),
-                                    get_input_name(op, 4));
-            break;
-        }
-        case OP_TYPEID::BatchNormTraining:
-        {
-            const shared_ptr<op::BatchNormTraining> batch_norm =
-                static_pointer_cast<op::BatchNormTraining>(op);
-            const double eps = batch_norm->get_eps_value();
-            string mean_name;
-            string variance_name;
-
-            if (op->get_inputs().size() < 3 || op->get_outputs().empty())
+            if (get_input_name(op, 2).size() != 4)
             {
-                arguments_check(op, 3, 1); // throw exception in this case
-            }
-
-            if (op->get_outputs().size() == 3)
-            {
-                arguments_check(op, 3, 3);
-
-                mean_name = get_output_name(op, 1);
-                variance_name = get_output_name(op, 2);
-
-                do_create_mean(topology,
-                               mean_name,
-                               get_output_type(op),
-                               get_input_name(op, 2),
-                               get_input_shape(op, 2),
-                               false);
-
-                do_create_variance(topology,
-                                   variance_name,
-                                   get_output_type(op),
-                                   get_input_name(op, 2),
-                                   get_input_shape(op, 2),
-                                   mean_name);
-            }
-
-            if (op->get_outputs().size() == 1 || op->get_outputs().size() == 3)
-            {
-                if (mean_name.empty() || variance_name.empty())
-                {
-                    arguments_check(op, 5, 1);
-
-                    mean_name = get_input_name(op, 3);
-                    variance_name = get_input_name(op, 4);
-                }
-
                 do_batch_norm_operation(topology,
                                         get_output_name(op),
                                         get_output_type(op),
@@ -1268,12 +1212,138 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                         get_input_shape(op, 2),
                                         get_input_name(op, 0),
                                         get_input_name(op, 1),
-                                        mean_name,
-                                        variance_name);
+                                        get_input_name(op, 3),
+                                        get_input_name(op, 4));
             }
             else
             {
-                arguments_check(op, 5, 1); // throw exception in this case
+                const cldnn::batch_norm batchnorm(get_output_name(op),
+                                                  get_input_name(op, 2), // input
+                                                  get_input_name(op, 3), // mean
+                                                  get_input_name(op, 4), // variance
+                                                  get_input_name(op, 0), // gamma
+                                                  get_input_name(op, 1), // beta
+                                                  eps);                  // epsilon (float)
+                topology.add(batchnorm);
+            }
+            break;
+        }
+        case OP_TYPEID::BatchNormTraining:
+        {
+            const shared_ptr<op::BatchNormTraining> bnorm =
+                static_pointer_cast<op::BatchNormTraining>(op);
+            const double eps = bnorm->get_eps_value();
+
+            if (get_input_name(op, 2).size() != 4)
+            {
+                string mean_name;
+                string variance_name;
+
+                if (op->get_inputs().size() < 3 || op->get_outputs().empty())
+                {
+                    arguments_check(op, 3, 1); // throw exception in this case
+                }
+
+                if (op->get_outputs().size() == 3)
+                {
+                    arguments_check(op, 3, 3);
+
+                    mean_name = get_output_name(op, 1);
+                    variance_name = get_output_name(op, 2);
+
+                    do_create_mean(topology,
+                                   mean_name,
+                                   get_output_type(op),
+                                   get_input_name(op, 2),
+                                   get_input_shape(op, 2),
+                                   false);
+
+                    do_create_variance(topology,
+                                       variance_name,
+                                       get_output_type(op),
+                                       get_input_name(op, 2),
+                                       get_input_shape(op, 2),
+                                       mean_name);
+                }
+
+                if (op->get_outputs().size() == 1 || op->get_outputs().size() == 3)
+                {
+                    if (mean_name.empty() || variance_name.empty())
+                    {
+                        arguments_check(op, 5, 1);
+
+                        mean_name = get_input_name(op, 3);
+                        variance_name = get_input_name(op, 4);
+                    }
+
+                    do_batch_norm_operation(topology,
+                                            get_output_name(op),
+                                            get_output_type(op),
+                                            eps,
+                                            get_input_name(op, 2),
+                                            get_input_shape(op, 2),
+                                            get_input_name(op, 0),
+                                            get_input_name(op, 1),
+                                            mean_name,
+                                            variance_name);
+                }
+                else
+                {
+                    arguments_check(op, 5, 1); // throw exception in this case
+                }
+            }
+            else
+            {
+                if (op->get_inputs().size() == 5 && op->get_outputs().size() == 1)
+                {
+                    const cldnn::batch_norm batchnorm(get_output_name(op),
+                                                      get_input_name(op, 2), // input
+                                                      get_input_name(op, 3), // mean
+                                                      get_input_name(op, 4), // variance
+                                                      get_input_name(op, 0), // gamma
+                                                      get_input_name(op, 1), // beta
+                                                      eps);                  // epsilon (float)
+                    topology.add(batchnorm);
+                }
+                else if (op->get_inputs().size() == 3 && op->get_outputs().size() == 3)
+                {
+                    const string mean_name = get_output_name(op, 1);
+                    const string variance_name = get_output_name(op, 2);
+
+                    // Create a memory for mean as mutable_data to treat it as constant
+                    const cldnn::layout mean_layout = IntelGPULayout::create_cldnn_layout(
+                        get_output_type(op, 1), get_output_shape(op, 1));
+                    const cldnn::memory mean_mem(cldnn::memory::allocate(*ocl_engine, mean_layout));
+
+                    const cldnn::mutable_data mean_const(mean_name, mean_mem);
+                    topology.add(mean_const);
+
+                    // Create a memory for variance as mutable_data to treat it as constant
+                    const cldnn::layout variance_layout = IntelGPULayout::create_cldnn_layout(
+                        get_output_type(op, 2), get_output_shape(op, 2));
+                    const cldnn::memory variance_mem(
+                        cldnn::memory::allocate(*ocl_engine, variance_layout));
+
+                    const cldnn::mutable_data variance_const(variance_name, variance_mem);
+                    topology.add(variance_const);
+
+                    const cldnn::batch_norm batchnorm(get_output_name(op),
+                                                      get_input_name(op, 2), // input
+                                                      eps,                   // epsilon (float)
+                                                      mean_name,
+                                                      variance_name,
+                                                      get_input_name(op, 0),  // gamma
+                                                      get_input_name(op, 1)); // beta
+                    topology.add(batchnorm);
+
+                    // Need to mark this operation as "output" to keep mean and variance
+                    // in cldnn::network
+                    func_output_names.insert(get_output_name(op));
+                }
+                else
+                {
+                    arguments_check(op, 5, 1); // throw exception in this case
+                }
             }
             break;
         }
@@ -1538,9 +1608,10 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
     network_build_options.set_option(cldnn::build_option::optimize_data(m_cldnn_graph_optimize));
 
-    if (!function_output_names.empty())
+    if (!func_output_names.empty())
     {
-        network_build_options.set_option(cldnn::build_option::outputs(function_output_names));
+        vector<cldnn::primitive_id> names_vec(func_output_names.begin(), func_output_names.end());
+        network_build_options.set_option(cldnn::build_option::outputs(names_vec));
     }
 
     if (m_cldnn_dump_enable)
