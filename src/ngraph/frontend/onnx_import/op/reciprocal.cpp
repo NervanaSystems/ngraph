@@ -20,7 +20,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/shape.hpp"
-
 #include "utils/broadcasting.hpp"
 
 #include "reciprocal.hpp"
