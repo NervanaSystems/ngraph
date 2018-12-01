@@ -16,7 +16,7 @@ workloads on CPU for inference, please refer to the links below.
 
 |  Framework (Version)       | Installation guide                     | Notes  
 |----------------------------|----------------------------------------|-----------------------------------
-| TensorFlow* 1.12           | [Pip install](https://github.com/NervanaSystems/ngraph-tf) or [Build from source](https://github.com/NervanaSystems/ngraph-tf)   | 20 [Validated workloads]
+| TensorFlow* 1.12           | [Pip install](https://github.com/NervanaSystems/ngraph-tf/tree/v0.8.0#option-1-use-a-pre-built-ngraph-tensorflow-bridge) or [Build from source](https://github.com/NervanaSystems/ngraph-tf/tree/v0.8.0#option-2-build-ngraph-bridge-from-source-using-tensorflow-source)   | 20 [Validated workloads]
 | MXNet* 1.3                 | [Pip install](https://github.com/NervanaSystems/ngraph-mxnet#Installation) or [Build from source](https://github.com/NervanaSystems/ngraph-mxnet#building-with-ngraph-support)| 18 [Validated workloads]   
 | ONNX 1.3                   | [Pip install](https://github.com/NervanaSystems/ngraph-onnx#installation)                          | 14 [Validated workloads] 
 
@@ -93,7 +93,7 @@ to improve it:
 [contrib guide]: https://ngraph.nervanasys.com/docs/latest/project/code-contributor-README.html
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
 [how to import]: https://ngraph.nervanasys.com/docs/latest/howto/import.html
-[ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/ngraph_wireframes_with_notice.png "nGraph wireframe"
+[ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/ngraph_wireframes_with_notice_updated.png "nGraph wireframe"
 [ngraph-compiler-stack-readme]: doc/sphinx/source/graphics/ngraph-compiler-stack-readme.png "nGraph Compiler Stack"
 [build-status]: https://travis-ci.org/NervanaSystems/ngraph/branches
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
