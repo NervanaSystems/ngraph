@@ -2,11 +2,6 @@
 backwards_reverse_sequence_n3_c2_h3     # No plans to implement ReverseSequence
 backwards_reverse_sequence_n4d2c3h2w2   # No plans to implement ReverseSequence
 divide_by_zero_int32                    # PlaidML does not die.
-product_matrix_rows_zero                # Out-of-range for PlaidML
-product_matrix_cols_zero                # Out-of-range for PlaidML
-product_vector_zero                     # Out-of-range for PlaidML
-product_matrix_to_scalar_zero_by_zero   # Out-of-range for PlaidML
-product_3d_eliminate_zero_dim           # Out-of-range for PlaidML
 max_matrix_rows_zero                    # Out-of-range for PlaidML
 max_matrix_rows_zero_int32              # Out-of-range for PlaidML
 max_matrix_cols_zero                    # Out-of-range for PlaidML
@@ -104,14 +99,6 @@ quantize_clamp_uint8                    # Quantization/Dequantization is unimple
 dequantize                              # Quantization/Dequantization is unimplemented
 dequantize_axes                         # Quantization/Dequantization is unimplemented
 dequantize_int8                         # Quantization/Dequantization is unimplemented
-sum_matrix_rows_zero                    # Empty dims apparently should produce shaped 0s
-sum_matrix_cols_zero                    # Empty dims apparently should produce shaped 0s
-sum_vector_zero                         # Empty dims apparently should produce shaped 0s
-sum_matrix_to_scalar_zero_by_zero       # Empty dims apparently should produce shaped 0s
-sum_3d_eliminate_zero_dim               # Empty dims apparently should produce shaped 0s
-dot_0_0                                 # Empty dims apparently should produce shaped 0s
-dot_matrix_2x0_0x2                      # Empty dims apparently should produce shaped 0s
-dot_2x0_0                               # Empty dims apparently should produce shaped 0s
 numeric_float_nan
 numeric_double_nan
 shape_of_scalar
