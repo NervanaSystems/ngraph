@@ -1202,76 +1202,8 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             arguments_check(op, 5, 1);
 
-#if USE_INTELGPU_CUSTOM_KERNELS
-            do_batch_norm_operation(topology,
-                                    get_output_name(op),
-                                    get_output_type(op),
-                                    eps,
-                                    get_input_name(op, 2),
-                                    get_input_shape(op, 2),
-                                    get_input_name(op, 0),
-                                    get_input_name(op, 1),
-                                    get_input_name(op, 3),
-                                    get_input_name(op, 4));
-#else
-            const cldnn::batch_norm batchnorm(get_output_name(op),
-                                              get_input_name(op, 2), // input
-                                              get_input_name(op, 3), // mean
-                                              get_input_name(op, 4), // variance
-                                              get_input_name(op, 0), // gamma
-                                              get_input_name(op, 1), // beta
-                                              eps);                  // epsilon (float)
-            topology.add(batchnorm);
-#endif
-            break;
-        }
-        case OP_TYPEID::BatchNormTraining:
-        {
-            const shared_ptr<op::BatchNormTraining> bnorm =
-                static_pointer_cast<op::BatchNormTraining>(op);
-            const double eps = bnorm->get_eps_value();
-
-#if USE_INTELGPU_CUSTOM_KERNELS
-            string mean_name;
-            string variance_name;
-
-            if (op->get_inputs().size() < 3 || op->get_outputs().empty())
+            if (get_input_name(op, 2).size() != 4)
             {
-                arguments_check(op, 3, 1); // throw exception in this case
-            }
-
-            if (op->get_outputs().size() == 3)
-            {
-                arguments_check(op, 3, 3);
-
-                mean_name = get_output_name(op, 1);
-                variance_name = get_output_name(op, 2);
-
-                do_create_mean(topology,
-                               mean_name,
-                               get_output_type(op),
-                               get_input_name(op, 2),
-                               get_input_shape(op, 2),
-                               false);
-
-                do_create_variance(topology,
-                                   variance_name,
-                                   get_output_type(op),
-                                   get_input_name(op, 2),
-                                   get_input_shape(op, 2),
-                                   mean_name);
-            }
-
-            if (op->get_outputs().size() == 1 || op->get_outputs().size() == 3)
-            {
-                if (mean_name.empty() || variance_name.empty())
-                {
-                    arguments_check(op, 5, 1);
-
-                    mean_name = get_input_name(op, 3);
-                    variance_name = get_input_name(op, 4);
-                }
-
                 do_batch_norm_operation(topology,
                                         get_output_name(op),
                                         get_output_type(op),
@@ -1280,11 +1212,10 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                         get_input_shape(op, 2),
                                         get_input_name(op, 0),
                                         get_input_name(op, 1),
-                                        mean_name,
-                                        variance_name);
+                                        get_input_name(op, 3),
+                                        get_input_name(op, 4));
             }
-#else
-            if (op->get_inputs().size() == 5 && op->get_outputs().size() == 1)
+            else
             {
                 const cldnn::batch_norm batchnorm(get_output_name(op),
                                                   get_input_name(op, 2), // input
@@ -1295,45 +1226,124 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                                   eps);                  // epsilon (float)
                 topology.add(batchnorm);
             }
-            else if (op->get_inputs().size() == 3 && op->get_outputs().size() == 3)
+            break;
+        }
+        case OP_TYPEID::BatchNormTraining:
+        {
+            const shared_ptr<op::BatchNormTraining> bnorm =
+                static_pointer_cast<op::BatchNormTraining>(op);
+            const double eps = bnorm->get_eps_value();
+
+            if (get_input_name(op, 2).size() != 4)
             {
-                const string mean_name = get_output_name(op, 1);
-                const string variance_name = get_output_name(op, 2);
+                string mean_name;
+                string variance_name;
 
-                // Create a memory for mean as mutable_data to treat it as constant
-                const cldnn::layout mean_layout = IntelGPULayout::create_cldnn_layout(
-                    get_output_type(op, 1), get_output_shape(op, 1));
-                const cldnn::memory mean_mem(cldnn::memory::allocate(*ocl_engine, mean_layout));
+                if (op->get_inputs().size() < 3 || op->get_outputs().empty())
+                {
+                    arguments_check(op, 3, 1); // throw exception in this case
+                }
 
-                const cldnn::mutable_data mean_const(mean_name, mean_mem);
-                topology.add(mean_const);
+                if (op->get_outputs().size() == 3)
+                {
+                    arguments_check(op, 3, 3);
 
-                // Create a memory for variance as mutable_data to treat it as constant
-                const cldnn::layout variance_layout = IntelGPULayout::create_cldnn_layout(
-                    get_output_type(op, 2), get_output_shape(op, 2));
-                const cldnn::memory variance_mem(
-                    cldnn::memory::allocate(*ocl_engine, variance_layout));
+                    mean_name = get_output_name(op, 1);
+                    variance_name = get_output_name(op, 2);
 
-                const cldnn::mutable_data variance_const(variance_name, variance_mem);
-                topology.add(variance_const);
+                    do_create_mean(topology,
+                                   mean_name,
+                                   get_output_type(op),
+                                   get_input_name(op, 2),
+                                   get_input_shape(op, 2),
+                                   false);
 
-                const cldnn::batch_norm batchnorm(get_output_name(op),
-                                                  get_input_name(op, 2), // input
-                                                  eps,                   // epsilon (float)
-                                                  mean_name,
-                                                  variance_name,
-                                                  get_input_name(op, 0),  // gamma
-                                                  get_input_name(op, 1)); // beta
-                topology.add(batchnorm);
+                    do_create_variance(topology,
+                                       variance_name,
+                                       get_output_type(op),
+                                       get_input_name(op, 2),
+                                       get_input_shape(op, 2),
+                                       mean_name);
+                }
 
-                // Need to mark this operation as "output" to keep mean and variance
-                // in cldnn::network
-                func_output_names.insert(get_output_name(op));
+                if (op->get_outputs().size() == 1 || op->get_outputs().size() == 3)
+                {
+                    if (mean_name.empty() || variance_name.empty())
+                    {
+                        arguments_check(op, 5, 1);
+
+                        mean_name = get_input_name(op, 3);
+                        variance_name = get_input_name(op, 4);
+                    }
+
+                    do_batch_norm_operation(topology,
+                                            get_output_name(op),
+                                            get_output_type(op),
+                                            eps,
+                                            get_input_name(op, 2),
+                                            get_input_shape(op, 2),
+                                            get_input_name(op, 0),
+                                            get_input_name(op, 1),
+                                            mean_name,
+                                            variance_name);
+                }
+                else
+                {
+                    arguments_check(op, 5, 1); // throw exception in this case
+                }
             }
-#endif
             else
             {
-                arguments_check(op, 5, 1); // throw exception in this case
+                if (op->get_inputs().size() == 5 && op->get_outputs().size() == 1)
+                {
+                    const cldnn::batch_norm batchnorm(get_output_name(op),
+                                                      get_input_name(op, 2), // input
+                                                      get_input_name(op, 3), // mean
+                                                      get_input_name(op, 4), // variance
+                                                      get_input_name(op, 0), // gamma
+                                                      get_input_name(op, 1), // beta
+                                                      eps);                  // epsilon (float)
+                    topology.add(batchnorm);
+                }
+                else if (op->get_inputs().size() == 3 && op->get_outputs().size() == 3)
+                {
+                    const string mean_name = get_output_name(op, 1);
+                    const string variance_name = get_output_name(op, 2);
+
+                    // Create a memory for mean as mutable_data to treat it as constant
+                    const cldnn::layout mean_layout = IntelGPULayout::create_cldnn_layout(
+                        get_output_type(op, 1), get_output_shape(op, 1));
+                    const cldnn::memory mean_mem(cldnn::memory::allocate(*ocl_engine, mean_layout));
+
+                    const cldnn::mutable_data mean_const(mean_name, mean_mem);
+                    topology.add(mean_const);
+
+                    // Create a memory for variance as mutable_data to treat it as constant
+                    const cldnn::layout variance_layout = IntelGPULayout::create_cldnn_layout(
+                        get_output_type(op, 2), get_output_shape(op, 2));
+                    const cldnn::memory variance_mem(
+                        cldnn::memory::allocate(*ocl_engine, variance_layout));
+
+                    const cldnn::mutable_data variance_const(variance_name, variance_mem);
+                    topology.add(variance_const);
+
+                    const cldnn::batch_norm batchnorm(get_output_name(op),
+                                                      get_input_name(op, 2), // input
+                                                      eps,                   // epsilon (float)
+                                                      mean_name,
+                                                      variance_name,
+                                                      get_input_name(op, 0),  // gamma
+                                                      get_input_name(op, 1)); // beta
+                    topology.add(batchnorm);
+
+                    // Need to mark this operation as "output" to keep mean and variance
+                    // in cldnn::network
+                    func_output_names.insert(get_output_name(op));
+                }
+                else
+                {
+                    arguments_check(op, 5, 1); // throw exception in this case
+                }
             }
             break;
         }
