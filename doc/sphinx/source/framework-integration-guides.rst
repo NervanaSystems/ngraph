@@ -50,4 +50,4 @@ nGraph-TensorFlow bridge.
 .. _MXNet: http://mxnet.incubator.apache.org
 .. _DSO: http://csweb.cs.wfu.edu/%7Etorgerse/Kokua/More_SGI/007-2360-010/sgi_html/ch03.html
 .. _being the fastest: https://github.com/soumith/convnet-benchmarks
-.. _ngraph tensorflow bridge README: https://github.com/NervanaSystems/ngraph-tf
+.. _ngraph tensorflow bridge README: https://github.com/NervanaSystems/ngraph-tf/blob/master/README.md
