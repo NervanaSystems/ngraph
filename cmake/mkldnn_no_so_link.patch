@@ -1,0 +1,46 @@
+diff --git a/cmake/OpenMP.cmake b/cmake/OpenMP.cmake
+index f9c3620e..ed1ad6c2 100644
+--- a/cmake/OpenMP.cmake
++++ b/cmake/OpenMP.cmake
+@@ -30,14 +30,19 @@ if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+     # But we still want to build the library.
+     set(_omp_severity "WARNING")
+ else()
+-    set(_omp_severity "FATAL_ERROR")
++    set(_omp_severity "WARNING")
+ endif()
+ 
+ 
+ macro(forbid_link_compiler_omp_rt)
+     if (NOT WIN32)
+-        set_if(OpenMP_C_FOUND CMAKE_C_CREATE_SHARED_LIBRARY_FORBIDDEN_FLAGS ${OpenMP_C_FLAGS})
+-        set_if(OpenMP_CXX_FOUND CMAKE_CXX_CREATE_SHARED_LIBRARY_FORBIDDEN_FLAGS ${OpenMP_CXX_FLAGS})
++        if (OpenMP_C_FOUND)
++            set(CMAKE_C_CREATE_SHARED_LIBRARY_FORBIDDEN_FLAGS ${OpenMP_C_FLAGS})
++        endif()
++        if (OpenMP_CXX_FOUND)
++            set(CMAKE_CXX_CREATE_SHARED_LIBRARY_FORBIDDEN_FLAGS ${OpenMP_CXX_FLAGS})
++        endif()
++
+         if (NOT APPLE)
+             set (CMAKE_SHARED_LINKER_FLAGS "-Wl,--as-needed")
+         endif()
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 83ed499..d7f4ea0 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -98,10 +98,12 @@ else()
+     set(CTESTCONFIG_PATH "${CTESTCONFIG_PATH}\;${CMAKE_CURRENT_BINARY_DIR}" PARENT_SCOPE)
+ endif()
+ target_link_libraries(${TARGET_NAME} ${${TARGET_NAME}_LINKER_LIBS} ${EXTRA_LIBS})
++if(NOT APPLE)
++    set_property(TARGET ${TARGET_NAME} APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
++    set_target_properties(${TARGET_NAME} PROPERTIES INSTALL_RPATH "$ORIGIN")
++endif()
+ set_property(TARGET ${TARGET_NAME} PROPERTY CXX_STANDARD 11)
+ set_property(TARGET ${TARGET_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
+-set_property(TARGET ${TARGET_NAME} PROPERTY VERSION "${PROJECT_VERSION}.0")
+-set_property(TARGET ${TARGET_NAME} PROPERTY SOVERSION "0")
+
+ if(MINGW)
+     # We need to install *.dll into bin/ and *.a into lib/.

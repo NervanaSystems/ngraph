@@ -18,9 +18,8 @@
 
 #include <memory>
 
-#include "ngraph/node_vector.hpp"
-
 #include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
 
 namespace ngraph
 {

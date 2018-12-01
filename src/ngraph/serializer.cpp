@@ -531,21 +531,24 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::BatchNormTraining:
             {
                 auto epsilon = node_js.at("eps").get<double>();
-                node = make_shared<op::BatchNormTraining>(epsilon, args[0], args[1], args[2]);
+                // Odd order for back-compatibility
+                node = make_shared<op::BatchNormTraining>(args[2], args[0], args[1], epsilon);
                 break;
             }
             case OP_TYPEID::BatchNormInference:
             {
                 auto epsilon = node_js.at("eps").get<double>();
+                // Odd order for back-compatibility
                 node = make_shared<op::BatchNormInference>(
-                    epsilon, args[0], args[1], args[2], args[3], args[4]);
+                    args[2], args[0], args[1], args[3], args[4], epsilon);
                 break;
             }
             case OP_TYPEID::BatchNormTrainingBackprop:
             {
                 auto epsilon = node_js.at("eps").get<double>();
+                // Odd order for back-compatibility
                 node = make_shared<op::BatchNormTrainingBackprop>(
-                    epsilon, args[0], args[1], args[2], args[3], args[4], args[5]);
+                    args[2], args[0], args[1], args[3], args[4], args[5], epsilon);
                 break;
             }
             case OP_TYPEID::Broadcast:
