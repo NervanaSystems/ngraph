@@ -24,25 +24,20 @@ namespace ngraph
     {
         namespace plaidml
         {
-            // Convert views a tensor as a new type.
-            template <>
-            void Impl<op::Convert>::operator()()
-            {
-                check_inputs(1);
-                check_outputs(1);
-                set_output(
-                    start_tile_function()
-                        .add(builder::Input{op_input(), "I"})
-                        .add(builder::Output{"O"})
-                        .add(builder::Elementwise{
-                            "O", tile_converter("I", to_plaidml(op().get_convert_element_type()))})
-                        .finalize());
-            }
-
-            namespace
-            {
-                Impl<op::Convert>::Registration register_convert;
-            }
+            NGRAPH_PLAIDML_OP_CLASS(ImplConvert, OpImpl<op::Convert>);
         }
     }
+}
+
+// Convert views a tensor as a new type.
+void ngraph::runtime::plaidml::ImplConvert::Apply()
+{
+    check_inputs(1);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(), "I"})
+                   .add(builder::Output{"O"})
+                   .add(builder::Elementwise{
+                       "O", tile_converter("I", to_plaidml(op().get_convert_element_type()))})
+                   .finalize());
 }

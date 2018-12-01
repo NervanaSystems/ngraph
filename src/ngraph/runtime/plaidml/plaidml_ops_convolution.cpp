@@ -26,14 +26,9 @@ namespace ngraph
         namespace plaidml
         {
             template <typename O>
-            class ConvolutionImpl : public BaseImpl<O>
+            class ConvolutionBase : public OpImpl<O>
             {
-            public:
-                ConvolutionImpl(Build* build, const O& op)
-                    : BaseImpl<O>{build, op}
-                {
-                }
-
+            protected:
                 void LogConvolution(vertexai::plaidml::variable image,
                                     vertexai::plaidml::variable filter,
                                     std::size_t image_dims,
@@ -51,188 +46,8 @@ namespace ngraph
                                     bool rotate_filter);
             };
 
-            template <>
-            struct ParentImpl<op::Convolution>
-            {
-                using Type = ConvolutionImpl<op::Convolution>;
-            };
-
-            template <>
-            struct ParentImpl<op::ConvolutionBackpropFilters>
-            {
-                using Type = ConvolutionImpl<op::ConvolutionBackpropFilters>;
-            };
-
-            template <>
-            struct ParentImpl<op::ConvolutionBackpropData>
-            {
-                using Type = ConvolutionImpl<op::ConvolutionBackpropData>;
-            };
-
-            // Convolution implements a standard ML convolultion, with optional striding, padding, and dilation.
-            template <>
-            void Impl<op::Convolution>::operator()()
-            {
-                this->check_inputs(2);
-                this->check_outputs(1);
-
-                LogConvolution(op_input(0),
-                               op_input(1),
-                               op().get_inputs()[0].get_shape().size() - 2,
-                               op().get_window_movement_strides(),
-                               op().get_window_dilation_strides(),
-                               op().get_padding_below(),
-                               op().get_padding_above(),
-                               op().get_data_dilation_strides(),
-                               0,
-                               1,
-                               1,
-                               0,
-                               0,
-                               1,
-                               false);
-
-                const auto& image = op_input(0);
-                const auto& filter = op_input(1);
-                auto image_dims = op().get_inputs()[0].get_shape().size() - 2;
-                const auto& padding_above = op().get_padding_above();
-                const auto& padding_below = op().get_padding_below();
-                const auto& strides = op().get_window_movement_strides();
-                const auto& filter_dilation = op().get_window_dilation_strides();
-                const auto& data_dilation = op().get_data_dilation_strides();
-
-                ConvPoolFormatter cpf(image_dims,
-                                      padding_below,
-                                      padding_above,
-                                      strides,
-                                      filter_dilation,
-                                      data_dilation,
-                                      ConvPoolFormatter::OpType::Conv,
-                                      ConvPoolFormatter::DerivType::None);
-
-                this->set_output(start_tile_function()
-                                     .add(cpf.I_in_header(image))
-                                     .add(cpf.F_in_header(filter))
-                                     .add(cpf.O_out_header())
-                                     .add(builder::BinaryContraction{"+", "*"}
-                                              .set(cpf.O_out_body())
-                                              .set_lhs(cpf.I_in_body())
-                                              .set_rhs(cpf.F_in_body()))
-                                     .finalize());
-            }
-
-            // ConvolutionBackpropFilters implements the derivative of a convolution with respect to its filter
-            // input.
-            template <>
-            void Impl<op::ConvolutionBackpropFilters>::operator()()
-            {
-                this->check_inputs(2);
-                this->check_outputs(1);
-
-                LogConvolution(op_input(0),
-                               op_input(1),
-                               op().get_inputs()[0].get_shape().size() - 2,
-                               op().get_window_movement_strides_backward(),
-                               op().get_window_dilation_strides_backward(),
-                               op().get_padding_below_backward(),
-                               op().get_padding_above_backward(),
-                               op().get_data_dilation_strides_backward(),
-                               1,
-                               0,
-                               0,
-                               1,
-                               1,
-                               0,
-                               false);
-
-                const auto& image = op_input(0);
-                const auto& output = op_input(1);
-                auto image_dims = op().get_inputs()[0].get_shape().size() - 2;
-                const auto& padding_above = op().get_padding_above_forward();
-                const auto& padding_below = op().get_padding_below_forward();
-                const auto& strides = op().get_window_movement_strides_forward();
-                const auto& filter_dilation = op().get_window_dilation_strides_forward();
-                const auto& data_dilation = op().get_data_dilation_strides_forward();
-                const auto& filters_shape = op().get_filters_shape();
-
-                ConvPoolFormatter cpf(image_dims,
-                                      padding_below,
-                                      padding_above,
-                                      strides,
-                                      filter_dilation,
-                                      data_dilation,
-                                      ConvPoolFormatter::OpType::Conv,
-                                      ConvPoolFormatter::DerivType::Filter,
-                                      filters_shape);
-
-                this->set_output(start_tile_function()
-                                     .add(cpf.I_in_header(image))
-                                     .add(cpf.O_in_header(output))
-                                     .add(cpf.F_out_header())
-                                     .add(builder::BinaryContraction{"+", "*"}
-                                              .set(cpf.F_out_body())
-                                              .set_lhs(cpf.O_in_body())
-                                              .set_rhs(cpf.I_in_body()))
-                                     .finalize());
-            }
-
-            // ConvolutionBackpropData implements the derivative of a convolution with respect to its data
-            // input.
-            template <>
-            void Impl<op::ConvolutionBackpropData>::operator()()
-            {
-                this->check_inputs(2);
-                this->check_outputs(1);
-
-                LogConvolution(op_input(0),
-                               op_input(1),
-                               op().get_inputs()[1].get_shape().size() - 2,
-                               op().get_window_movement_strides_backward(),
-                               op().get_window_dilation_strides_backward(),
-                               op().get_padding_below_backward(),
-                               op().get_padding_above_backward(),
-                               op().get_data_dilation_strides_backward(),
-                               0,
-                               1,
-                               0,
-                               1,
-                               0,
-                               1,
-                               true);
-
-                auto image_dims = op().get_inputs()[0].get_shape().size() - 2;
-                const auto& filter = op_input(0);
-                const auto& output = op_input(1);
-                const auto& padding_above = op().get_padding_above_forward();
-                const auto& padding_below = op().get_padding_below_forward();
-                const auto& strides = op().get_window_movement_strides_forward();
-                const auto& filter_dilation = op().get_window_dilation_strides_forward();
-                const auto& data_dilation = op().get_data_dilation_strides_forward();
-                const auto& data_batch_shape = op().get_data_batch_shape();
-
-                ConvPoolFormatter cpf(image_dims,
-                                      padding_below,
-                                      padding_above,
-                                      strides,
-                                      filter_dilation,
-                                      data_dilation,
-                                      ConvPoolFormatter::OpType::Conv,
-                                      ConvPoolFormatter::DerivType::Data,
-                                      data_batch_shape);
-
-                this->set_output(start_tile_function()
-                                     .add(cpf.F_in_header(filter))
-                                     .add(cpf.O_in_header(output))
-                                     .add(cpf.I_out_header())
-                                     .add(builder::BinaryContraction{"+", "*"}
-                                              .set(cpf.I_out_body())
-                                              .set_lhs(cpf.O_in_body())
-                                              .set_rhs(cpf.F_in_body()))
-                                     .finalize());
-            }
-
             template <typename O>
-            inline void ConvolutionImpl<O>::LogConvolution(vertexai::plaidml::variable image,
+            inline void ConvolutionBase<O>::LogConvolution(vertexai::plaidml::variable image,
                                                            vertexai::plaidml::variable filter,
                                                            std::size_t image_dims,
                                                            const Strides& window_movement_strides,
@@ -269,13 +84,170 @@ namespace ngraph
                 NGRAPH_DEBUG << "rotate_filter: " << rotate_filter;
             }
 
-            namespace
-            {
-                Impl<op::Convolution>::Registration register_convolution;
-                Impl<op::ConvolutionBackpropFilters>::Registration
-                    register_convolution_backprop_filters;
-                Impl<op::ConvolutionBackpropData>::Registration register_convolution_backprop_data;
-            }
+            NGRAPH_PLAIDML_OP_CLASS(ImplConvolution, ConvolutionBase<op::Convolution>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplConvolutionBackpropFilters,
+                                    ConvolutionBase<op::ConvolutionBackpropFilters>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplConvolutionBackpropData,
+                                    ConvolutionBase<op::ConvolutionBackpropData>);
         }
     }
+}
+
+// Convolution implements a standard ML convolultion, with optional striding, padding, and dilation.
+void ngraph::runtime::plaidml::ImplConvolution::Apply()
+{
+    this->check_inputs(2);
+    this->check_outputs(1);
+
+    LogConvolution(op_input(0),
+                   op_input(1),
+                   op().get_inputs()[0].get_shape().size() - 2,
+                   op().get_window_movement_strides(),
+                   op().get_window_dilation_strides(),
+                   op().get_padding_below(),
+                   op().get_padding_above(),
+                   op().get_data_dilation_strides(),
+                   0,
+                   1,
+                   1,
+                   0,
+                   0,
+                   1,
+                   false);
+
+    const auto& image = op_input(0);
+    const auto& filter = op_input(1);
+    auto image_dims = op().get_inputs()[0].get_shape().size() - 2;
+    const auto& padding_above = op().get_padding_above();
+    const auto& padding_below = op().get_padding_below();
+    const auto& strides = op().get_window_movement_strides();
+    const auto& filter_dilation = op().get_window_dilation_strides();
+    const auto& data_dilation = op().get_data_dilation_strides();
+
+    ConvPoolFormatter cpf(image_dims,
+                          padding_below,
+                          padding_above,
+                          strides,
+                          filter_dilation,
+                          data_dilation,
+                          ConvPoolFormatter::OpType::Conv,
+                          ConvPoolFormatter::DerivType::None);
+
+    this->set_output(start_tile_function()
+                         .add(cpf.I_in_header(image))
+                         .add(cpf.F_in_header(filter))
+                         .add(cpf.O_out_header())
+                         .add(builder::BinaryContraction{"+", "*"}
+                                  .set(cpf.O_out_body())
+                                  .set_lhs(cpf.I_in_body())
+                                  .set_rhs(cpf.F_in_body()))
+                         .finalize());
+}
+
+// ConvolutionBackpropFilters implements the derivative of a convolution with respect to its filter
+// input.
+void ngraph::runtime::plaidml::ImplConvolutionBackpropFilters::Apply()
+{
+    this->check_inputs(2);
+    this->check_outputs(1);
+
+    LogConvolution(op_input(0),
+                   op_input(1),
+                   op().get_inputs()[0].get_shape().size() - 2,
+                   op().get_window_movement_strides_backward(),
+                   op().get_window_dilation_strides_backward(),
+                   op().get_padding_below_backward(),
+                   op().get_padding_above_backward(),
+                   op().get_data_dilation_strides_backward(),
+                   1,
+                   0,
+                   0,
+                   1,
+                   1,
+                   0,
+                   false);
+
+    const auto& image = op_input(0);
+    const auto& output = op_input(1);
+    auto image_dims = op().get_inputs()[0].get_shape().size() - 2;
+    const auto& padding_above = op().get_padding_above_forward();
+    const auto& padding_below = op().get_padding_below_forward();
+    const auto& strides = op().get_window_movement_strides_forward();
+    const auto& filter_dilation = op().get_window_dilation_strides_forward();
+    const auto& data_dilation = op().get_data_dilation_strides_forward();
+    const auto& filters_shape = op().get_filters_shape();
+
+    ConvPoolFormatter cpf(image_dims,
+                          padding_below,
+                          padding_above,
+                          strides,
+                          filter_dilation,
+                          data_dilation,
+                          ConvPoolFormatter::OpType::Conv,
+                          ConvPoolFormatter::DerivType::Filter,
+                          filters_shape);
+
+    this->set_output(start_tile_function()
+                         .add(cpf.I_in_header(image))
+                         .add(cpf.O_in_header(output))
+                         .add(cpf.F_out_header())
+                         .add(builder::BinaryContraction{"+", "*"}
+                                  .set(cpf.F_out_body())
+                                  .set_lhs(cpf.O_in_body())
+                                  .set_rhs(cpf.I_in_body()))
+                         .finalize());
+}
+
+// ConvolutionBackpropData implements the derivative of a convolution with respect to its data
+// input.
+void ngraph::runtime::plaidml::ImplConvolutionBackpropData::Apply()
+{
+    this->check_inputs(2);
+    this->check_outputs(1);
+
+    LogConvolution(op_input(0),
+                   op_input(1),
+                   op().get_inputs()[1].get_shape().size() - 2,
+                   op().get_window_movement_strides_backward(),
+                   op().get_window_dilation_strides_backward(),
+                   op().get_padding_below_backward(),
+                   op().get_padding_above_backward(),
+                   op().get_data_dilation_strides_backward(),
+                   0,
+                   1,
+                   0,
+                   1,
+                   0,
+                   1,
+                   true);
+
+    auto image_dims = op().get_inputs()[0].get_shape().size() - 2;
+    const auto& filter = op_input(0);
+    const auto& output = op_input(1);
+    const auto& padding_above = op().get_padding_above_forward();
+    const auto& padding_below = op().get_padding_below_forward();
+    const auto& strides = op().get_window_movement_strides_forward();
+    const auto& filter_dilation = op().get_window_dilation_strides_forward();
+    const auto& data_dilation = op().get_data_dilation_strides_forward();
+    const auto& data_batch_shape = op().get_data_batch_shape();
+
+    ConvPoolFormatter cpf(image_dims,
+                          padding_below,
+                          padding_above,
+                          strides,
+                          filter_dilation,
+                          data_dilation,
+                          ConvPoolFormatter::OpType::Conv,
+                          ConvPoolFormatter::DerivType::Data,
+                          data_batch_shape);
+
+    this->set_output(start_tile_function()
+                         .add(cpf.F_in_header(filter))
+                         .add(cpf.O_in_header(output))
+                         .add(cpf.I_out_header())
+                         .add(builder::BinaryContraction{"+", "*"}
+                                  .set(cpf.I_out_body())
+                                  .set_lhs(cpf.O_in_body())
+                                  .set_rhs(cpf.F_in_body()))
+                         .finalize());
 }

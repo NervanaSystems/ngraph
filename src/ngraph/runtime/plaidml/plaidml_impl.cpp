@@ -16,20 +16,8 @@
 
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 
-namespace ngraph
+ngraph::runtime::plaidml::OpImplMap* ngraph::runtime::plaidml::GlobalOpImplMap()
 {
-    namespace runtime
-    {
-        namespace plaidml
-        {
-            std::unordered_map<std::type_index, std::function<void(Build*, const ngraph::Node&)>>*
-                OpImplMap()
-            {
-                static std::unordered_map<std::type_index,
-                                          std::function<void(Build*, const ngraph::Node&)>>
-                    op_impl_map;
-                return &op_impl_map;
-            }
-        }
-    }
+    static OpImplMap op_impl_map;
+    return &op_impl_map;
 }

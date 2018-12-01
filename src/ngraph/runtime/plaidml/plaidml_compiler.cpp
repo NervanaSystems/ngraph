@@ -98,7 +98,7 @@ void ngraph::runtime::plaidml::Compiler::build(std::shared_ptr<Function> func, B
     b->config = m_config;
     b->func = func;
 
-    const auto* op_map = OpImplMap();
+    const auto* op_map = GlobalOpImplMap();
 
     for (const auto& op_ptr : func->get_ordered_ops())
     {
@@ -114,6 +114,6 @@ void ngraph::runtime::plaidml::Compiler::build(std::shared_ptr<Function> func, B
                 std::string{"The PlaidML backend doesn't currently implement the '"} +
                 op->description() + "' operation"};
         }
-        it->second(b, *op);
+        it->second->Apply(b, op);
     }
 }
