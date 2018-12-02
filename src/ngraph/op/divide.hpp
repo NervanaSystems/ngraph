@@ -42,5 +42,5 @@ namespace ngraph
     }
 
     NGRAPH_API std::shared_ptr<ngraph::Node> operator/(const std::shared_ptr<ngraph::Node> arg0,
-                                            const std::shared_ptr<ngraph::Node> arg1);
+                                                       const std::shared_ptr<ngraph::Node> arg1);
 }
