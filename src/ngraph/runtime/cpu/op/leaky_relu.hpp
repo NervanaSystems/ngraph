@@ -19,6 +19,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 
 namespace ngraph
 {
@@ -27,7 +28,7 @@ namespace ngraph
         /// \brief Elementwise Maximum(arg, arg * alpha) operation
         ///        alpha > 0
         ///
-        class NGRAPH_API LeakyRelu : public Op
+        class CPU_API LeakyRelu : public Op
         {
         public:
             /// \brief Constructs a LeakyRelu operation.

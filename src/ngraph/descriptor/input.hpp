@@ -85,9 +85,9 @@ namespace ngraph
             Output* m_output;
 
         private:
-            Input(const Input&) = delete;
-            Input(Input&&) = delete;
-            Input& operator=(const Input&) = delete;
+            // Input(const Input&) = delete;
+            // Input(Input&&) = delete;
+            // Input& operator=(const Input&) = delete;
         };
     }
 }

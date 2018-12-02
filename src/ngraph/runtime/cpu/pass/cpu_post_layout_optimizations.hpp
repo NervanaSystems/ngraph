@@ -15,7 +15,9 @@
 //*****************************************************************************
 
 #pragma once
+
 #include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 
 namespace ngraph
 {
@@ -31,7 +33,7 @@ namespace ngraph
     }
 }
 
-class NGRAPH_API ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations
+class CPU_API ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations
     : public ngraph::pass::GraphRewrite
 {
 public:

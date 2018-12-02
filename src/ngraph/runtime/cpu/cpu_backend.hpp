@@ -20,6 +20,7 @@
 #include <memory>
 
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 
 namespace ngraph
 {
@@ -30,7 +31,7 @@ namespace ngraph
             class CPU_ExternalFunction;
             class CPU_CallFrame;
 
-            class NGRAPH_API CPU_Backend : public runtime::Backend
+            class CPU_API CPU_Backend : public runtime::Backend
             {
             public:
                 std::shared_ptr<CPU_CallFrame>

@@ -18,12 +18,13 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
-        class NGRAPH_API MatmulBias : public Op
+        class CPU_API MatmulBias : public Op
         {
         public:
             MatmulBias(std::shared_ptr<Node> W,

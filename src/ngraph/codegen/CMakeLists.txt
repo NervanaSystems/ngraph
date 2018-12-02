@@ -27,6 +27,13 @@ if (NGRAPH_GPU_ENABLE OR (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY))
     )
     add_library(codegen SHARED ${SRC})
 
+
+    # Symbol visibility flags
+    # https://gcc.gnu.org/wiki/Visibility
+    target_compile_definitions(codegen
+        PRIVATE
+            CODEGEN_DLL_EXPORTS)
+
     # LLVM binary builds are typically built without RTTI
     # The built-in headers are in a version-specific directory
     # This must be kept in sync with the LLVM + Clang version in use

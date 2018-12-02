@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 
 namespace ngraph
 {
@@ -26,12 +27,12 @@ namespace ngraph
         {
             namespace pass
             {
-                class NGRAPH_API CPURnnMatFusion : public ngraph::pass::FunctionPass
+                class CPU_API CPURnnMatFusion : public ngraph::pass::FunctionPass
                 {
                 public:
                     bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
                 };
-                class NGRAPH_API CPUBatchFusion : public ngraph::pass::FunctionPass
+                class CPU_API CPUBatchFusion : public ngraph::pass::FunctionPass
                 {
                 public:
                     bool run_on_function(std::shared_ptr<ngraph::Function> function) override;

@@ -242,6 +242,10 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     target_link_libraries(ngraph PRIVATE onnx_import)
 endif()
 
+# Symbol visibility flags
+# https://gcc.gnu.org/wiki/Visibility
+target_compile_definitions(ngraph PRIVATE NGRAPH_DLL NGRAPH_DLL_EXPORTS)
+
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------

@@ -19,6 +19,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 
 namespace ngraph
 {
@@ -26,7 +27,7 @@ namespace ngraph
     {
         /// \brief Elementwise Minimum(Relu(arg, 0), alpha) operation.
         ///
-        class NGRAPH_API BoundedRelu : public Op
+        class CPU_API BoundedRelu : public Op
         {
         public:
             /// \brief Constructs a BoundedRelu operation.

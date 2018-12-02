@@ -18,13 +18,14 @@
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
         /// \brief Group Convolution
-        class NGRAPH_API GroupConvolution : public Op
+        class CPU_API GroupConvolution : public Op
         {
         public:
             GroupConvolution(const std::shared_ptr<Node>& data_batch,

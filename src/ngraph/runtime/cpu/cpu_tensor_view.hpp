@@ -18,6 +18,7 @@
 
 #include <string>
 
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -30,7 +31,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            class NGRAPH_API CPUTensorView : public ngraph::runtime::Tensor
+            class CPU_API CPUTensorView : public ngraph::runtime::Tensor
             {
             public:
                 CPUTensorView(const ngraph::element::Type& element_type,

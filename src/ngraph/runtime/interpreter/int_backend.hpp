@@ -58,6 +58,7 @@
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/interpreter/int_visibility.h"
 #include "ngraph/runtime/interpreter/node_wrapper.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
@@ -131,7 +132,6 @@
 #include "ngraph/runtime/reference/topk.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/rng_state.hpp"
-#include "ngraph/visibility.h"
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/runtime/reference/allreduce.hpp"
@@ -148,7 +148,7 @@ namespace ngraph
     }
 }
 
-class NGRAPH_API ngraph::runtime::interpreter::INTBackend : public Backend
+class INTERPRETER_API ngraph::runtime::interpreter::INTBackend : public Backend
 {
 public:
     std::shared_ptr<Tensor>
@@ -170,8 +170,8 @@ public:
 
     bool is_supported(const Node& node) const override { return true; }
 private:
-    static const int m_alignment;
-    class NGRAPH_LOCAL FunctionInstance
+    int get_alignment() const { return 64; }
+    class INTERPRETER_LOCAL FunctionInstance
     {
     public:
         bool m_is_compiled = false;
@@ -179,8 +179,8 @@ private:
         bool m_performance_counters_enabled = false;
         std::unordered_map<const Node*, stopwatch> m_timer_map;
         std::vector<NodeWrapper> m_wrapped_nodes;
-        std::unordered_map<const Node*, std::unique_ptr<RNGState>> m_states;
-        std::unique_ptr<AlignedBuffer> m_temporary_memory;
+        std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
+        std::shared_ptr<AlignedBuffer> m_temporary_memory;
 
         void* get_temporary_pointer(size_t offset) { return m_temporary_memory->get_ptr(offset); }
     };

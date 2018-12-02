@@ -177,6 +177,12 @@ if (NGRAPH_CPU_ENABLE)
         add_dependencies(cpu_backend ext_halide)
     endif()
 
+    # Symbol visibility flags
+    # https://gcc.gnu.org/wiki/Visibility
+    target_compile_definitions(cpu_backend
+        PRIVATE
+            CPU_DLL_EXPORTS)
+
     if(OPENMP_FOUND)
         target_compile_options(cpu_backend PRIVATE "${OpenMP_CXX_FLAGS}")
         target_compile_definitions(cpu_backend PRIVATE EIGEN_OPENMP)

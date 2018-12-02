@@ -18,6 +18,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 
 namespace ngraph
 {
@@ -28,7 +29,7 @@ namespace ngraph
         // The second one contains the indices of the maximum numbers
         // for each window in input (arg)
         // These indices are used by MKLDNN for a back propagation pass
-        class NGRAPH_API MaxPoolWithIndices : public Op
+        class CPU_API MaxPoolWithIndices : public Op
         {
         public:
             MaxPoolWithIndices(const std::shared_ptr<Node>& arg,
@@ -61,7 +62,7 @@ namespace ngraph
 
         // MaxPoolWithIndicesBackprop takes MaxPoolWithIndices' outputs and
         // pass the indices directly to MKLDNN to avoid max indices recomputation
-        class NGRAPH_API MaxPoolWithIndicesBackprop : public Op
+        class CPU_API MaxPoolWithIndicesBackprop : public Op
         {
         public:
             MaxPoolWithIndicesBackprop(const std::shared_ptr<Node>& arg_forward,

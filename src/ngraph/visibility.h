@@ -37,14 +37,14 @@
 //    (or does nothing for static build)
 // NGRAPH_LOCAL is used for non-api symbols.
 
-#ifdef NGRAPH_DLL         // defined if NGRAPH is compiled as a DLL
+// #ifdef NGRAPH_DLL         // defined if NGRAPH is compiled as a DLL
 #ifdef NGRAPH_DLL_EXPORTS // defined if we are building the NGRAPH DLL (instead of using it)
 #define NGRAPH_API NGRAPH_HELPER_DLL_EXPORT
 #else
 #define NGRAPH_API NGRAPH_HELPER_DLL_IMPORT
 #endif // NGRAPH_DLL_EXPORTS
 #define NGRAPH_LOCAL NGRAPH_HELPER_DLL_LOCAL
-#else // NGRAPH_DLL is not defined: this means NGRAPH is a static lib.
-#define NGRAPH_API
-#define NGRAPH_LOCAL
-#endif // NGRAPH_DLL
+// #else // NGRAPH_DLL is not defined: this means NGRAPH is a static lib.
+// #define NGRAPH_API
+// #define NGRAPH_LOCAL
+// #endif // NGRAPH_DLL

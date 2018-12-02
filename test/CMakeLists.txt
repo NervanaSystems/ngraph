@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+# Symbol visibility flags
+# https://gcc.gnu.org/wiki/Visibility
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DLL")
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.0.0")
         # gtest has issues with this with v1.8.x
@@ -186,7 +190,10 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
 endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
-target_link_libraries(unit-test PRIVATE ngraph libgtest libjson pthread)
+target_link_libraries(unit-test PRIVATE ngraph libgtest libjson)
+if(NOT WIN32)
+    target_link_libraries(unit-test PRIVATE pthread)
+endif()
 target_link_libraries(unit-test PRIVATE ${CMAKE_DL_LIBS})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")

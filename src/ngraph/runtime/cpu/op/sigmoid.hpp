@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 #include "ngraph/util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class NGRAPH_API Sigmoid : public Op
+        class CPU_API Sigmoid : public Op
         {
         public:
             Sigmoid(std::shared_ptr<Node> input);
@@ -39,7 +40,7 @@ namespace ngraph
 
         /// \brief Elementwise SigmoidBackprop operation.
         ///
-        class NGRAPH_API SigmoidBackprop : public Op
+        class CPU_API SigmoidBackprop : public Op
         {
         public:
             /// \brief Constructs a SigmoidBackprop operation.

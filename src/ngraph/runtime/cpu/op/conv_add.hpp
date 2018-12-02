@@ -18,12 +18,13 @@
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 
 namespace ngraph
 {
     namespace op
     {
-        class NGRAPH_API ConvolutionAdd : public Op
+        class CPU_API ConvolutionAdd : public Op
         {
         public:
             ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,

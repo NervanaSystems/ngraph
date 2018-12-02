@@ -182,4 +182,5 @@ void print_results(std::vector<T>& ref_data, std::vector<T>& actual_data, size_t
 }
 
 template <>
-void print_results(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results);
+NGRAPH_API void
+    print_results(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results);

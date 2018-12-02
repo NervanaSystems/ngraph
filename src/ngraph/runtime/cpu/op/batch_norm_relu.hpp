@@ -21,13 +21,14 @@
 #include "ngraph/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 #include "ngraph/util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class NGRAPH_API BatchNormTrainingRelu : public Op
+        class CPU_API BatchNormTrainingRelu : public Op
         {
         public:
             BatchNormTrainingRelu(double eps,

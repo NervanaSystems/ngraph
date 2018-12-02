@@ -52,13 +52,13 @@ namespace ngraph
     void replace_node_users_arguments(std::shared_ptr<Node> target,
                                       std::shared_ptr<Node> replacement);
 
-    std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
+    NGRAPH_API std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
         insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
                                       const std::shared_ptr<Node>& dst_node);
 
-    void insert_new_node_between(const std::shared_ptr<Node>& src_node,
-                                 const std::shared_ptr<Node>& dst_node,
-                                 const std::shared_ptr<Node>& new_node);
+    NGRAPH_API void insert_new_node_between(const std::shared_ptr<Node>& src_node,
+                                            const std::shared_ptr<Node>& dst_node,
+                                            const std::shared_ptr<Node>& new_node);
 
     NGRAPH_API std::string node_validation_assertion_string(const Node* node);
 

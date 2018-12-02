@@ -33,8 +33,6 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-const int runtime::interpreter::INTBackend::m_alignment = 64;
-
 extern "C" const char* get_ngraph_version_string()
 {
     return NGRAPH_VERSION;
@@ -45,7 +43,7 @@ extern "C" runtime::Backend* new_backend(const char* configuration_string)
     return new runtime::interpreter::INTBackend();
 }
 
-static class NGRAPH_LOCAL RegisterBackend
+static class RegisterBackend
 {
 public:
     RegisterBackend() { runtime::BackendManager::register_backend("INTERPRETER", new_backend); }
@@ -74,11 +72,11 @@ bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
         pass_manager.register_pass<pass::LikeReplacement>();
         pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
         pass_manager.register_pass<pass::Liveness>();
-        pass_manager.register_pass<pass::MemoryLayout>(m_alignment);
+        pass_manager.register_pass<pass::MemoryLayout>(get_alignment());
         pass_manager.run_passes(function);
 
         size_t memory_pool_size = function->get_temporary_pool_size();
-        instance.m_temporary_memory.reset(new AlignedBuffer(memory_pool_size, m_alignment));
+        instance.m_temporary_memory.reset(new AlignedBuffer(memory_pool_size, get_alignment()));
 
         for (const shared_ptr<Node>& node : function->get_ordered_ops())
         {

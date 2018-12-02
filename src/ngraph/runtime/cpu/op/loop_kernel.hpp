@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -29,7 +30,7 @@ namespace ngraph
             {
                 /// \brief LoopKernel represents graphs consisting
                 /// of arithmetic operations that can be executed in the same loop
-                class NGRAPH_API LoopKernel : public ngraph::op::Op
+                class CPU_API LoopKernel : public ngraph::op::Op
                 {
                 public:
                     LoopKernel(const NodeVector& node_list,

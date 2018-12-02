@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -43,7 +44,7 @@ namespace ngraph
         //   [0] - ht, output tensor with shape (sequence_length*batch_size, feature_size) .
         //   [1] - {ht | ct} output recurrent state tensor with the same shape as states i.e (sequence_length*batch_size, feature_size)
 
-        class NGRAPH_API Rnn : public Op
+        class CPU_API Rnn : public Op
         {
         public:
             Rnn(std::shared_ptr<Node> src_layer,

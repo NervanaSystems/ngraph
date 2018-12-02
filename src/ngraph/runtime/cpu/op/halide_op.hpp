@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 
 namespace ngraph
 {
@@ -29,7 +30,7 @@ namespace ngraph
         {
             namespace op
             {
-                class NGRAPH_API HalideOp : public ngraph::op::Op
+                class CPU_API HalideOp : public ngraph::op::Op
                 {
                 public:
                     HalideOp(const NodeVector& args,

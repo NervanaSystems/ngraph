@@ -24,6 +24,7 @@
 #include <mkldnn.hpp>
 
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -32,7 +33,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            class NGRAPH_API LayoutDescriptor : public ngraph::descriptor::layout::TensorLayout
+            class CPU_API LayoutDescriptor : public ngraph::descriptor::layout::TensorLayout
             {
             public:
                 LayoutDescriptor(const ngraph::descriptor::Tensor& tv);

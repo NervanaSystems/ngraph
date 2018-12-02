@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 #include "ngraph/util.hpp"
 
 #include <array>
@@ -26,7 +27,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Fused Sigmoid functions (logistic and tanh) with multiplication forward prop.
-        class NGRAPH_API SigmoidMultiply : public Op
+        class CPU_API SigmoidMultiply : public Op
         {
         public:
             /// Defines valid function types

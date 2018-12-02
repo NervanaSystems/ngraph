@@ -17,13 +17,14 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 #include "ngraph/util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class NGRAPH_API Lstm : public Op
+        class CPU_API Lstm : public Op
         {
         public:
             // INPUTS:

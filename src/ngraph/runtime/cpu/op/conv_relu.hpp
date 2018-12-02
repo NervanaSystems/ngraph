@@ -18,6 +18,7 @@
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 
 namespace ngraph
@@ -25,7 +26,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Relu(Convolution) forward prop for batched convolution operation.
-        class NGRAPH_API ConvolutionRelu : public Op
+        class CPU_API ConvolutionRelu : public Op
         {
         public:
             ConvolutionRelu(const std::shared_ptr<op::Convolution>& conv);

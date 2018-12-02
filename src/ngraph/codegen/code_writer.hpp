@@ -19,7 +19,7 @@
 #include <sstream>
 #include <string>
 
-#include "ngraph/visibility.h"
+#include "ngraph/codegen/codegen_visibility.h"
 
 namespace ngraph
 {
@@ -29,7 +29,7 @@ namespace ngraph
     }
 }
 
-class NGRAPH_API ngraph::codegen::CodeWriter
+class CODEGEN_API ngraph::codegen::CodeWriter
 {
 public:
     CodeWriter();

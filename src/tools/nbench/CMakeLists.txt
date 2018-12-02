@@ -21,6 +21,10 @@ set (SRC
 
 add_executable(nbench ${SRC})
 
+# Symbol visibility flags
+# https://gcc.gnu.org/wiki/Visibility
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DLL")
+
 if (APPLE)
     set_property(TARGET nbench APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-rpath,@loader_path/../lib")
 endif()

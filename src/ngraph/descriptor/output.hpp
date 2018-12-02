@@ -67,9 +67,9 @@ namespace ngraph
             std::set<Input*> m_inputs;
 
         private:
-            Output(const Output&) = delete;
-            Output(Output&&) = delete;
-            Output& operator=(const Output&) = delete;
+            // Output(const Output&) = delete;
+            // Output(Output&&) = delete;
+            // Output& operator=(const Output&) = delete;
         };
     }
 }

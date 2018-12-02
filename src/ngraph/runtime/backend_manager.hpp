@@ -30,11 +30,16 @@
 #define DL_HANDLE void*
 #endif
 
+#include "ngraph/runtime/aligned_buffer.hpp"
+#include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/performance_counter.hpp"
+#include "ngraph/runtime/tensor.hpp"
+
 namespace ngraph
 {
     namespace runtime
     {
-        class Backend;
         class BackendManager;
 
         using new_backend_t = std::function<Backend*(const char* config)>;

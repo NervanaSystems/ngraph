@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 
 namespace ngraph
 {
@@ -31,7 +32,7 @@ namespace ngraph
                 /// \brief Layout Conversion
                 ///
                 /// Converts an input tensor to a tensor with the given layout descriptor
-                class NGRAPH_API ConvertLayout : public ngraph::op::Op
+                class CPU_API ConvertLayout : public ngraph::op::Op
                 {
                 public:
                     ConvertLayout(

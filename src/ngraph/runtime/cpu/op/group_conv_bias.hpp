@@ -17,6 +17,7 @@
 #pragma once
 #include "group_conv.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_visibility.h"
 
 namespace ngraph
 {
@@ -24,7 +25,7 @@ namespace ngraph
     {
         /// \brief GroupConvolution + Bias + Relu forward prop for
         ///  batched GroupConvolution operation.
-        class NGRAPH_API GroupConvolutionBias : public Op
+        class CPU_API GroupConvolutionBias : public Op
         {
         public:
             GroupConvolutionBias(const std::shared_ptr<op::GroupConvolution>& conv,
