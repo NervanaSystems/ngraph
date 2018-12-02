@@ -38,12 +38,11 @@ void ngraph::runtime::plaidml::ImplAnd::Apply()
     check_inputs(2);
     check_outputs(1);
     set_output(start_tile_function()
-                   .add(builder::Input{op_input(0, TensorContents::LOGICAL), "A"})
-                   .add(builder::Input{op_input(1, TensorContents::LOGICAL), "B"})
+                   .add(builder::Input{op_input(0), "A"})
+                   .add(builder::Input{op_input(1), "B"})
                    .add(builder::Output{"C"})
                    .add(builder::Elementwise{"C", "A ? B : A"})
-                   .finalize(),
-               TensorContents::LOGICAL);
+                   .finalize());
 }
 
 // Not performs a simple elementwise logical not.
@@ -52,11 +51,10 @@ void ngraph::runtime::plaidml::ImplNot::Apply()
     check_inputs(1);
     check_outputs(1);
     set_output(start_tile_function()
-                   .add(builder::Input{op_input(0, TensorContents::LOGICAL), "I"})
+                   .add(builder::Input{op_input(0), "I"})
                    .add(builder::Output{"O"})
                    .add(builder::Elementwise{"O", "cmp_eq(I, 0)"})
-                   .finalize(),
-               TensorContents::LOGICAL);
+                   .finalize());
 }
 
 // Or performs a simple elementwise logical or.
@@ -65,10 +63,9 @@ void ngraph::runtime::plaidml::ImplOr::Apply()
     check_inputs(2);
     check_outputs(1);
     set_output(start_tile_function()
-                   .add(builder::Input{op_input(0, TensorContents::LOGICAL), "A"})
-                   .add(builder::Input{op_input(1, TensorContents::LOGICAL), "B"})
+                   .add(builder::Input{op_input(0), "A"})
+                   .add(builder::Input{op_input(1), "B"})
                    .add(builder::Output{"C"})
                    .add(builder::Elementwise{"C", "A ? A : B"})
-                   .finalize(),
-               TensorContents::LOGICAL);
+                   .finalize());
 }

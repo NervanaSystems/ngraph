@@ -63,25 +63,15 @@ namespace ngraph
                 const Op& op() const { return *m_op; }
                 void set_op(const Op* op) { m_op = op; }
                 // Returns the indicated operation input as a PlaidML variable.
-                vertexai::plaidml::variable
-                    op_input(std::size_t idx,
-                             TensorContents as_contents = TensorContents::DATA) const
+                vertexai::plaidml::variable op_input(std::size_t idx) const
                 {
                     const auto& ti = m_build->bindings.at(
                         op().get_inputs()[idx].get_output().get_tensor_ptr().get());
-                    if (as_contents == TensorContents::DATA &&
-                        ti.contents == TensorContents::LOGICAL)
-                    {
-                        return plaidml_logical_to_data(ti.var, m_build->config->debug);
-                    }
                     return ti.var;
                 }
 
                 // Returns the 0th operation input as a PlaidML variable.
-                vertexai::plaidml::variable op_input() const
-                {
-                    return op_input(0, TensorContents::DATA);
-                }
+                vertexai::plaidml::variable op_input() const { return op_input(0); }
                 // Validates that the number of operation inputs matches the expected operation
                 // input count.
                 void check_inputs(std::size_t expected_input_count) const

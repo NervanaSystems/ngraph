@@ -28,6 +28,7 @@
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 #include "ngraph/runtime/plaidml/plaidml_logger.hpp"
+#include "ngraph/runtime/plaidml/plaidml_pass_explicit_logicals.hpp"
 
 namespace
 {
@@ -86,6 +87,7 @@ std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     // N.B. We'd like to register ngraph::pass::GetOutputElementElimination, but it breaks BatchNorm
     // backprop
     pass_manager.register_pass<ngraph::pass::Liveness>();
+    pass_manager.register_pass<ngraph::runtime::plaidml::pass::ExplicitLogicals>();
 
     pass_manager.run_passes(func);
 

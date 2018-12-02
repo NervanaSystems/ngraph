@@ -44,7 +44,9 @@ set(SRC
     plaidml_ops_reverse.cpp
     plaidml_ops_slice.cpp
     plaidml_ops_softmax.cpp
+    plaidml_ops_tile.cpp
     plaidml_ops_transcendental.cpp
+    plaidml_pass_explicit_logicals.cpp
     plaidml_tensor.cpp
     plaidml_translate.cpp
 )

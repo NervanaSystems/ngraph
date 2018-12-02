@@ -48,12 +48,11 @@ void ngraph::runtime::plaidml::ImplEqual::Apply()
     check_inputs(2);
     check_outputs(1);
     set_output(start_tile_function()
-                   .add(builder::Input{op_input(0, TensorContents::LOGICAL), "A"})
-                   .add(builder::Input{op_input(1, TensorContents::LOGICAL), "B"})
+                   .add(builder::Input{op_input(0), "A"})
+                   .add(builder::Input{op_input(1), "B"})
                    .add(builder::Output{"C"})
                    .add(builder::Elementwise{"C", "A == B"})
-                   .finalize(),
-               TensorContents::LOGICAL);
+                   .finalize());
 }
 
 // Greater performs a simple elementwise greater-than comparison.
@@ -66,8 +65,7 @@ void ngraph::runtime::plaidml::ImplGreater::Apply()
                    .add(builder::Input{op_input(1), "B"})
                    .add(builder::Output{"C"})
                    .add(builder::Elementwise{"C", "A > B"})
-                   .finalize(),
-               TensorContents::LOGICAL);
+                   .finalize());
 }
 
 // GreaterEq performs a simple elementwise greater-than-or-equal-to comparison.
@@ -80,8 +78,7 @@ void ngraph::runtime::plaidml::ImplGreaterEq::Apply()
                    .add(builder::Input{op_input(1), "B"})
                    .add(builder::Output{"C"})
                    .add(builder::Elementwise{"C", "A >= B"})
-                   .finalize(),
-               TensorContents::LOGICAL);
+                   .finalize());
 }
 
 // Less performs a simple elementwise less-than comparison.
@@ -94,8 +91,7 @@ void ngraph::runtime::plaidml::ImplLess::Apply()
                    .add(builder::Input{op_input(1), "B"})
                    .add(builder::Output{"C"})
                    .add(builder::Elementwise{"C", "A < B"})
-                   .finalize(),
-               TensorContents::LOGICAL);
+                   .finalize());
 }
 
 // LessEq performs a simple elementwise less-than-or-equal-to comparison.
@@ -108,8 +104,7 @@ void ngraph::runtime::plaidml::ImplLessEq::Apply()
                    .add(builder::Input{op_input(1), "B"})
                    .add(builder::Output{"C"})
                    .add(builder::Elementwise{"C", "A <= B"})
-                   .finalize(),
-               TensorContents::LOGICAL);
+                   .finalize());
 }
 
 // Maximum performs a simple elementwise maximum.
@@ -144,10 +139,9 @@ void ngraph::runtime::plaidml::ImplNotEqual::Apply()
     check_inputs(2);
     check_outputs(1);
     set_output(start_tile_function()
-                   .add(builder::Input{op_input(0, TensorContents::LOGICAL), "A"})
-                   .add(builder::Input{op_input(1, TensorContents::LOGICAL), "B"})
+                   .add(builder::Input{op_input(0), "A"})
+                   .add(builder::Input{op_input(1), "B"})
                    .add(builder::Output{"C"})
                    .add(builder::Elementwise{"C", "A != B"})
-                   .finalize(),
-               TensorContents::LOGICAL);
+                   .finalize());
 }
