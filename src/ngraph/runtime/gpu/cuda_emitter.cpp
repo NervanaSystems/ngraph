@@ -1705,8 +1705,8 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<element::Type>
         }});
         return this->m_primitive_emitter->register_primitive(memset, hash);
     }
-    // if reduce not include last axis, this is a trival condition to choose by reduce axis for better cache
-    // a better way is to tune with actual kernel
+    // if reduce not include last axis, this is a heuristic to choose by reduce axis for better cache
+    // a more accurate but slow way is to tune with actual kernel
     else if (reduce_strides_in_input.back() != 1)
     {
         // TODO: currently we set it to 64, will add tuning method later
