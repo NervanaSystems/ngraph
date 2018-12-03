@@ -33,6 +33,7 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
 
+#include "halide_generators.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 
@@ -47,79 +48,13 @@ namespace ngraph
     {
         namespace cpu
         {
-            namespace halide
-            {
-                static const std::unordered_map<std::type_index,
-                                                std::function<Halide::Func(vector<Halide::Func>)>>
-                    generators{{TI(ngraph::op::Add),
-                                [](vector<Halide::Func> in) {
-                                    Halide::Var x;
-                                    Halide::Func func;
-                                    func(x) = in[0](x) + in[1](x);
-                                    return func;
-                                }},
-                               {TI(ngraph::op::Multiply),
-                                [](vector<Halide::Func> in) {
-                                    Halide::Var x;
-                                    Halide::Func func;
-                                    func(x) = in[0](x) * in[1](x);
-                                    return func;
-                                }},
-                               {TI(ngraph::op::Negative),
-                                [](vector<Halide::Func> in) {
-                                    Halide::Var x;
-                                    Halide::Func func;
-                                    func(x) = -in[0](x);
-                                    return func;
-                                }},
-                               {TI(ngraph::op::Abs),
-                                [](vector<Halide::Func> in) {
-                                    Halide::Var x;
-                                    Halide::Func func;
-                                    func(x) = Halide::abs(in[0](x));
-                                    return func;
-                                }},
-                               // {TI(ngraph::op::Abs), abse},
-                               // {TI(ngraph::op::Minimum), mine},
-                               // {TI(ngraph::op::Relu), maxe},
-                               // {TI(ngraph::op::Maximum), maxe},
-                               // {TI(ngraph::op::Add), adde},
-                               // {TI(ngraph::op::Negative), nege},
-                               // {TI(ngraph::op::Subtract), sube},
-                               {TI(ngraph::op::Divide),
-                                [](vector<Halide::Func> in) {
-                                    Halide::Var x;
-                                    Halide::Func func;
-                                    func(x) = in[0](x) / in[1](x);
-                                    return func;
-                                }},
-                               {TI(ngraph::op::Maximum),
-                                [](vector<Halide::Func> in) {
-                                    Halide::Var x;
-                                    Halide::Func func;
-                                    func(x) = Halide::max(in[0](x), 0);
-                                    return func;
-                                }},
-                               {TI(ngraph::op::Minimum),
-                                [](vector<Halide::Func> in) {
-                                    Halide::Var x;
-                                    Halide::Func func;
-                                    func(x) = Halide::min(in[0](x), 0);
-                                    return func;
-                                }},
-                               {TI(ngraph::op::Relu), [](vector<Halide::Func> in) {
-                                    Halide::Var x;
-                                    Halide::Func func;
-                                    func(x) = Halide::max(in[0](x), 0);
-                                    return func;
-                                }}};
-            }
-
             template <>
             void Builder::BUILDER_DECL(ngraph::runtime::cpu::op::LoopKernel)
             {
                 const ngraph::runtime::cpu::op::LoopKernel* hs =
                     static_cast<const ngraph::runtime::cpu::op::LoopKernel*>(node);
+
+                const auto& generators = ngraph::runtime::cpu::halide::get_halide_generators();
 
                 auto& halide_functions = external_function->get_halide_functions();
                 auto& subgraph_params = external_function->get_subgraph_params();
@@ -129,7 +64,7 @@ namespace ngraph
                 std::set<std::string> param_names;
                 for (const auto& op : hs->get_node_list())
                 {
-                    if (!halide::generators.count(TI(*op)))
+                    if (!generators.count(TI(*op)))
                     {
                         throw ngraph_error("Invalid op in halide subgraph");
                     }
@@ -167,7 +102,7 @@ namespace ngraph
                         throw ngraph_error("no multi-output ops in a LoopKernel");
                     }
                     halide_functions[op->get_output_tensor_ptr()->get_name()] =
-                        halide::generators.at(TI(*op))(inputs);
+                        generators.at(TI(*op))(inputs);
                 }
 
                 auto& functors = external_function->get_functors();

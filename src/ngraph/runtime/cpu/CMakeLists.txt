@@ -129,6 +129,7 @@ if (NGRAPH_HALIDE)
         ${SRC}
         builder/halide_op.cpp
         builder/loop_kernel.cpp
+        builder/halide_generators.cpp
         pass/halide_subgraph_extraction.cpp
         )
 endif()
