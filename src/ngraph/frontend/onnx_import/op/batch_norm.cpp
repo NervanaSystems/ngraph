@@ -40,7 +40,6 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> var{nullptr};
 
                     std::int64_t is_test{node.get_attribute_value<std::int64_t>("is_test", 1)};
-                    std::int64_t spatial{node.get_attribute_value<std::int64_t>("spatial", 1)};
                     double epsilon{node.get_attribute_value<double>("epsilon", 1e-5)};
 
                     // TODO: Implement learning mode support
