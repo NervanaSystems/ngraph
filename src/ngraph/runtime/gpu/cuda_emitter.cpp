@@ -1654,7 +1654,6 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<element::Type>
     ss << kernel_name << "_s_" << join(simplified_input_shape, "_") << "_axis_"
        << join(simplified_reduce_axis, "_");
     auto hash = ss.str();
-    NGRAPH_INFO << hash;
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
     if (primitive_index != std::numeric_limits<size_t>::max())

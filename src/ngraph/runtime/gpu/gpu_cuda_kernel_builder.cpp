@@ -519,9 +519,9 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
                                                "reduce_strides_shift",
                                                "reduce_strides_in_input",
                                                "reduce_coordinate",
-                                               "reduce_input_index",
                                                reduce_rank,
-                                               true);
+                                               true,
+                                               "reduce_input_index");
         writer << "input_idx = reduce_input_index + non_reduce_input_index;\n";
         writer << "input_i = in[input_idx];\n";
     };
@@ -555,9 +555,9 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
                                                "non_reduce_strides_shift",
                                                "non_reduce_strides_in_input",
                                                "non_reduce_coordinate",
-                                               "non_reduce_input_index",
                                                non_reduce_rank,
-                                               true);
+                                               true,
+                                               "non_reduce_input_index");
         writer << "uint32_t input_idx;\n";
         writer << "uint32_t reduce_idx = tid;\n";
         writer << data_types[1] << " r_max;\n";
