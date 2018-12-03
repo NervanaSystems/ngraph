@@ -365,13 +365,14 @@ with open(os.path.join(PYNGRAPH_ROOT_DIR, 'requirements.txt')) as req:
 
 setup(
     name='ngraph-core',
-    description=open(os.path.join(PYNGRAPH_ROOT_DIR, 'README.md')).read(),
+    description='nGraph - Intel\'s graph compiler and runtime for Neural Networks',
     version=__version__,
     author='Intel',
     author_email='intelnervana@intel.com',
-    url='https://ai.intel.com/',
+    url='https://github.com/NervanaSystems/ngraph/',
     license='License :: OSI Approved :: Apache Software License',
-    long_description='',
+    long_description=open(os.path.join(PYNGRAPH_ROOT_DIR, 'README.md')).read(),
+    long_description_content_type='text/markdown',
     ext_modules=ext_modules,
     package_dir=package_dir,
     packages=packages,
