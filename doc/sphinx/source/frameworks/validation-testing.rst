@@ -15,19 +15,22 @@ TensorFlow
    :widths: 27, 53
    :escape: ~
 
-   Resnet50 v1 and v2, Image recognition
-   Inception V3 and V4, Image recognition
+   Resnet50 v1, Image recognition
+   Resnet50 v2, Image recognition
+   Inception V3, Image recognition
+   Inception V4, Image recognition
    Inception-ResNetv2, Image recognition
    MobileNet v1, Image recognition
-   SqueezeNet v1.1, Image recognition
-   DenseNet-121, Image recognition
+   MobileNet v2, Image recognition
+   VGG16, Image recognition
    SSD-VGG16, Object detection
    SSD-MobileNetv1, Object detection
+   R-FCN, Object detection
    Faster RCNN, Object detection
    Yolo v2, Object detection
+   Transformer-LT, Language translation
    Wide & Deep, Recommender system
    NCF, Recommender system
-   WaveNet, Speech generation
    U-Net, Image segmentation
    DCGAN, Generative adversarial network
    DRAW, Image generation
@@ -41,7 +44,8 @@ MXNet
    :widths: 27, 53
    :escape: ~
 
-   Resnet50 v1 and v2, Image recognition
+   Resnet50 v1, Image recognition
+   Resnet50 v2, Image recognition
    DenseNet-121, Image recognition
    InceptionV3, Image recognition
    InceptionV4, Image recognition
@@ -70,10 +74,10 @@ Additionally, we validated the following workloads are functional through nGraph
    :widths: 27, 53
    :escape: ~
 
+   ResNet-50, Image recognition
    DenseNet-121, Image recognition
    Inception-v1, Image recognition
    Inception-v2, Image recognition
-   ResNet-50, Image recognition
    Shufflenet, Image recognition
    SqueezeNet, Image recognition
    VGG-19, Image recognition
