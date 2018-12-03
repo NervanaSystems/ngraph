@@ -18,11 +18,15 @@ include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
 
 # Add sources for the GPU backend
 # and all its dependencies
+
+set(
+    GPU_BACKEND_SRC
+    gpu_backend.cpp
+    )
 set(SRC
     cuda_emitter.cpp
     cudnn_emitter.cpp
     cublas_emitter.cpp
-    gpu_backend.cpp
     gpu_cuda_context_manager.cpp
     gpu_cuda_function_builder.cpp
     gpu_cuda_function_pool.cpp
@@ -46,6 +50,13 @@ set(SRC
     op/batch_norm.cpp
     op/rnn.cpp
     )
+
+if (NGRAPH_HYBRID_ENABLE)
+    set(HYBRID_GPU_BACKEND_SRC 
+        hybrid_gpu.cpp
+        )
+endif()
+
 set(CUDA_INC
     ${PROJECT_SOURCE_DIR}/src/
     )
@@ -135,7 +146,7 @@ if (NGRAPH_GPU_ENABLE)
         message(STATUS "Not precompiling static CUDA kernels via NVCC; runtime compilation via NVRTC will be used.")
     endif()
 
-    add_library(gpu_backend SHARED ${SRC} ${CUDA_OBJ})
+    add_library(gpu_backend SHARED ${SRC} ${GPU_BACKEND_SRC} ${CUDA_OBJ})
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(gpu_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}
@@ -156,12 +167,33 @@ if (NGRAPH_GPU_ENABLE)
             ${CUDA_LIBRARIES}
             ${CUDA_CUBLAS_LIBRARIES}
             ${CUDNN_LIBRARIES})
-    if (NGRAPH_HYBRID_ENABLE)
-        target_link_libraries(gpu_backend
-            PRIVATE
-                hybrid_backend)
-    endif()
+
     set_target_properties(gpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     install(TARGETS gpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+
+
+    if (NGRAPH_HYBRID_ENABLE)
+        add_library(hybrid_gpu_backend SHARED ${SRC} ${HYBRID_GPU_BACKEND_SRC} ${CUDA_OBJ})
+        if(NGRAPH_LIB_VERSIONING_ENABLE)
+            set_target_properties(hybrid_gpu_backend PROPERTIES
+                VERSION ${NGRAPH_VERSION}
+                SOVERSION ${NGRAPH_API_VERSION})
+        endif()
+        target_link_libraries(hybrid_gpu_backend PUBLIC ngraph codegen)
+        target_include_directories(hybrid_gpu_backend SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
+        target_link_libraries(hybrid_gpu_backend
+            PUBLIC
+                ${CUDA_cuda_LIBRARY}
+                ${CUDA_nvrtc_LIBRARY}
+                ${CUDA_cudart_LIBRARY}
+                ${CUDA_LIBRARIES}
+                ${CUDA_CUBLAS_LIBRARIES}
+                ${CUDNN_LIBRARIES})
+
+        set_target_properties(hybrid_gpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+
+        install(TARGETS hybrid_gpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+
+    endif()
 endif()

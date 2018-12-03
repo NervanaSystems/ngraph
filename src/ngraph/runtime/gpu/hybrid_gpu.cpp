@@ -14,22 +14,33 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/hybrid/hybrid_backend.hpp"
+#include "ngraph/runtime/gpu/hybrid_gpu.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/pass/assign_placement.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/runtime/tensor.hpp"
-
-#if defined(NGRAPH_CPU_ENABLE)
-#include "ngraph/runtime/cpu/cpu_backend.hpp"
-#endif
-
-#if defined(NGRAPH_INTERPRETER_ENABLE)
+#include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
-#endif
+#include "ngraph/runtime/tensor.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;
+
+extern "C" const char* get_ngraph_version_string()
+{
+    return NGRAPH_VERSION;
+}
+
+extern "C" runtime::Backend* new_backend(const char* configuration_string)
+{
+    vector<pair<string, shared_ptr<runtime::Backend>>> backend_list{
+        {"GPU", make_shared<runtime::gpu::GPU_Backend>()},
+        {"INTERPRETER", make_shared<runtime::interpreter::INTBackend>()}};
+
+    auto wrapper = new runtime::hybrid::HybridGPUBackend(backend_list);
+    return wrapper;
+}
 
 template <typename T>
 void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& data)
@@ -52,37 +63,36 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
     return rc;
 }
 
-runtime::hybrid::HybridBackend::HybridBackend(
+runtime::hybrid::HybridGPUBackend::HybridGPUBackend(
     const std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>>& backend_list)
     : m_backend_list{backend_list}
 {
-// TODO: add a priority queue to manipulate backend lists based on priority
-#if defined(NGRAPH_CPU_ENABLE)
-    m_backend_list.push_back(make_pair("CPU", make_shared<runtime::cpu::CPU_Backend>()));
-#endif
+    // // TODO: add a priority queue to manipulate backend lists based on priority
+    // #if defined(NGRAPH_CPU_ENABLE)
+    //     m_backend_list.push_back(make_pair("CPU", make_shared<runtime::cpu::CPU_Backend>()));
+    // #endif
 
-#if defined(NGRAPH_INTERPRETER_ENABLE)
-    m_backend_list.push_back(
-        make_pair("INTERPRETER", make_shared<runtime::interpreter::INTBackend>()));
-#endif
+    // #if defined(NGRAPH_INTERPRETER_ENABLE)
+    //     m_backend_list.push_back(make_pair("INTERPRETER", make_shared<runtime::interpreter::INTBackend>()));
+    // #endif
 }
 
 shared_ptr<runtime::Tensor>
-    runtime::hybrid::HybridBackend::create_tensor(const element::Type& element_type,
-                                                  const Shape& shape)
+    runtime::hybrid::HybridGPUBackend::create_tensor(const element::Type& element_type,
+                                                     const Shape& shape)
 {
     auto it = m_backend_list.begin();
     return it->second->create_tensor(element_type, shape);
 }
 
-shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
+shared_ptr<runtime::Tensor> runtime::hybrid::HybridGPUBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     auto it = m_backend_list.begin();
     return it->second->create_tensor(element_type, shape, memory_pointer);
 }
 
-bool runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
+bool runtime::hybrid::HybridGPUBackend::compile(shared_ptr<Function> func)
 {
     if (m_function_map.find(func) == m_function_map.end())
     {
@@ -119,9 +129,9 @@ bool runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
     return true;
 }
 
-bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
-                                          const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                          const vector<shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::hybrid::HybridGPUBackend::call(shared_ptr<Function> func,
+                                             const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                             const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     // Get FunctionInstance
     bool rc = true;
@@ -204,7 +214,7 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
     return rc;
 }
 
-bool runtime::hybrid::HybridBackend::is_supported(const Node& node) const
+bool runtime::hybrid::HybridGPUBackend::is_supported(const Node& node) const
 {
     return true;
 }
