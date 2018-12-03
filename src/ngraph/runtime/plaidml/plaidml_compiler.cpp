@@ -25,6 +25,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 #include "ngraph/runtime/plaidml/plaidml_logger.hpp"
@@ -88,6 +89,10 @@ std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     // backprop
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ExplicitLogicals>();
+    if (!m_config->graphviz.empty())
+    {
+        pass_manager.register_pass<ngraph::pass::VisualizeTree>(m_config->graphviz);
+    }
 
     pass_manager.run_passes(func);
 
