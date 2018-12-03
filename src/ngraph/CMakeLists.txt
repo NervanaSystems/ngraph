@@ -172,11 +172,7 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC distributed.cpp)
 endif()
 
-if(WIN32)
-    add_library(ngraph STATIC ${SRC})
-else()
-    add_library(ngraph SHARED ${SRC})
-endif()
+add_library(ngraph SHARED ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     find_package(MPI REQUIRED)
