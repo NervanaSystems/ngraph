@@ -39,7 +39,7 @@ namespace ngraph
         public:
             /// \param node Node that owns this output.
             /// \param index Position of the output tensor in all output tensors
-            /// \param tensor The view of this tensor; where the value will be written
+            /// \param tensor The tensor where the value will be written
             Output(Node* node, size_t index, const std::shared_ptr<Tensor>& tensor);
 
             std::shared_ptr<Node> get_node() const;

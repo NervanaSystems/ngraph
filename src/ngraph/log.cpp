@@ -28,26 +28,6 @@
 using namespace std;
 using namespace ngraph;
 
-namespace
-{
-    class NilStreamBuf final : public streambuf
-    {
-        // N.B. We derive from the base streambuf implementation, in
-        //      which underflow() and overflow() both return
-        //      Traits::eof() -- any access returns a failure.
-    };
-}
-
-ostream& ngraph::get_nil_stream()
-{
-    // N.B. When debug logging is disabled, multiple threads may
-    //      access the nil stream simultaneously, so it's important to
-    //      return a threadsafe nil stream implementation.
-    static NilStreamBuf nil_buf;
-    static ostream nil{&nil_buf};
-    return nil;
-}
-
 void ngraph::default_logger_handler_func(const string& s)
 {
     cout << s << endl;
@@ -69,9 +49,12 @@ LogHelper::LogHelper(LOG_TYPE type,
 
     time_t tt = chrono::system_clock::to_time_t(chrono::system_clock::now());
     auto tm = gmtime(&tt);
-    char buffer[256];
-    strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%Sz", tm);
-    m_stream << buffer << " ";
+    if (tm)
+    {
+        char buffer[256];
+        strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%Sz", tm);
+        m_stream << buffer << " ";
+    }
 
     m_stream << file;
     m_stream << " " << line;

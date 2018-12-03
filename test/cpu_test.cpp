@@ -54,6 +54,28 @@ public:
     }
 };
 
+static void compare_backends(std::shared_ptr<Function>& f1,
+                             std::shared_ptr<Function>& f2,
+                             const string backend1,
+                             const string backend2)
+{
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : f1->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto f1_results = execute(f1, args, backend1);
+    auto f2_results = execute(f2, args, backend2);
+
+    for (size_t i = 0; i < f1_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(f1_results.at(i), f2_results.at(i)));
+    }
+}
+
 TEST(cpu_test, unhandled_op)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{});
@@ -577,4 +599,44 @@ TEST(cpu_test, convert_layout)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
     }
+}
+
+TEST(cpu_test, post_layout_reshape_convertlayout)
+{
+    auto make_function = []() -> std::shared_ptr<Function> {
+        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+        auto B = make_shared<op::Parameter>(element::f32, Shape{5, 2, 1, 1});
+        auto conv = make_shared<op::Convolution>(A,
+                                                 B,
+                                                 Strides{1, 1},
+                                                 Strides{1, 1},
+                                                 CoordinateDiff{0, 0},
+                                                 CoordinateDiff{0, 0},
+                                                 Strides{1, 1});
+        auto reshape = make_shared<op::Reshape>(conv, AxisVector{0, 2, 3, 1}, Shape{1, 3, 4, 5});
+        return make_shared<Function>(NodeVector{reshape}, ParameterVector{A, B});
+    };
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+    compare_backends(int_f, cpu_f, "INTERPRETER", "CPU");
+}
+
+TEST(cpu_test, mkldnn_layouts_eltwise)
+{
+    Shape input_shape{3, 11, 14, 14};
+    Shape filter_shape{5, 11, 2, 2};
+
+    auto make_function = [&]() {
+        auto input = std::make_shared<op::Parameter>(element::f32, input_shape);
+        auto filter = std::make_shared<op::Parameter>(element::f32, filter_shape);
+        auto conv = std::make_shared<op::Convolution>(input, filter, Strides{2, 2}, Strides{1, 1});
+        auto sigmoid = std::make_shared<op::Sigmoid>(conv);
+        auto f = make_shared<Function>(NodeVector{sigmoid}, ParameterVector{input, filter});
+        return f;
+    };
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+    compare_backends(int_f, cpu_f, "INTERPRETER", "CPU");
 }

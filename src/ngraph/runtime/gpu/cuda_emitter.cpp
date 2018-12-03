@@ -229,11 +229,7 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
         << " The axis along which topk is computed should be the last axis";
     size_t num_cols = input_shape[rank - 1];
     size_t num_rows = ((rank == 2) ? input_shape[0] : 1);
-    std::vector<std::string> dtypes_string;
-    for (auto& dtype : dtypes)
-    {
-        dtypes_string.push_back(dtype.c_type_string());
-    }
+    std::vector<std::string> dtypes_string = get_string_vector(dtypes);
 
     /*  The struct 'Entry' used in the kernel looks like this:
     struct Entry
@@ -1826,11 +1822,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<element::
                                                      const char* op,
                                                      const char* kernel)
 {
-    std::vector<std::string> dtypes_str;
-    for (auto a : dtypes)
-    {
-        dtypes_str.push_back(a.c_type_string());
-    }
+    std::vector<std::string> dtypes_str = get_string_vector(dtypes);
     //if call from reduce, this is duplicated
     NVShape simplified_reduce_axis;
     NVShape simplified_input_shape;
@@ -1871,12 +1863,9 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<element::
                        reduce_strides,
                        reduce_strides_in_input);
 
-    // std::vector<int> reduce_strides_magic;
-    // std::vector<int> reduce_strides_shift;
     std::vector<int> non_reduce_strides_magic;
     std::vector<int> non_reduce_strides_shift;
 
-    // div_to_mul(reduce_strides, reduce_strides_magic, reduce_strides_shift);
     div_to_mul(non_reduce_strides, non_reduce_strides_magic, non_reduce_strides_shift);
 
     uint32_t reduce_count = static_cast<uint32_t>(shape_size(reduce_shape));
@@ -1940,11 +1929,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar(const std::vector<eleme
                                                          const char* op,
                                                          const char* kernel)
 {
-    std::vector<std::string> dtypes_str;
-    for (auto a : dtypes)
-    {
-        dtypes_str.push_back(a.c_type_string());
-    }
+    std::vector<std::string> dtypes_str = get_string_vector(dtypes);
     uint32_t data_bytes = dtypes[0].size();
     // assumes NC{d1,...,dn} format
     std::string kernel_name = "reduce_scalar_" + join(dtypes_str, "_") + "_" + op;
@@ -1963,11 +1948,10 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar(const std::vector<eleme
     uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
     uint32_t n = nthreads;
     uint32_t block_size_x = 1;
-    while ((block_size_x << 1) <= n)
+    while ((block_size_x << 1) <= fmin(512, n))
     {
         block_size_x <<= 1;
     }
-    block_size_x = fmin(512, block_size_x);
     uint32_t shared_data_bytes = block_size_x * static_cast<uint32_t>(data_bytes);
     kernel_name += "_b_" + std::to_string(block_size_x);
     auto args = m_primitive_emitter->add_kernel_args();
@@ -2022,11 +2006,7 @@ size_t
                                                           const char* op,
                                                           const char* kernel)
 {
-    std::vector<std::string> dtypes_str;
-    for (auto a : dtypes)
-    {
-        dtypes_str.push_back(a.c_type_string());
-    }
+    std::vector<std::string> dtypes_str = get_string_vector(dtypes);
     // assumes NC{d1,...,dn} format
     std::string kernel_name = "reduce_acc_" + join(dtypes_str, "_") + "_" + op;
     std::replace(kernel_name.begin(), kernel_name.end(), ' ', '_');
@@ -2087,9 +2067,9 @@ size_t
 }
 
 size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<element::Type>& dtypes,
-                                               NVShape input_shape,
-                                               NVShape output_shape,
-                                               NVShape reduce_axis,
+                                               const NVShape& input_shape,
+                                               const NVShape& output_shape,
+                                               const NVShape& reduce_axis,
                                                const char* op,
                                                const char* kernel,
                                                const bool with_init_value)
@@ -2104,11 +2084,7 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<element::Type>&
     size_t non_reduce_rank = rank - reduce_rank;
     uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
     uint32_t data_bytes = dtypes[0].size();
-    std::vector<std::string> dtypes_str;
-    for (auto a : dtypes)
-    {
-        dtypes_str.push_back(a.c_type_string());
-    }
+    std::vector<std::string> dtypes_str = get_string_vector(dtypes);
     // assumes NC{d1,...,dn} format
     std::string kernel_name = "reduce_" + join(dtypes_str, "_") + "_" + op;
     if (non_reduce_rank != 0)
@@ -3184,25 +3160,36 @@ void runtime::gpu::CUDAEmitter::div_to_mul(const NVShape& shape,
 
 void* runtime::gpu::CUDAEmitter::get_init_reduce_val(std::string reduce_op, std::string data_type)
 {
-    if (reduce_op == "max")
+    if (reduce_op == "fmaxf" || reduce_op == "max")
     {
-        return m_host_parameters->min_by_datatype(data_type);
+        return TypeInfo::Get(data_type)->lowest_ptr();
     }
-    else if (reduce_op == "min")
+    else if (reduce_op == "fminf" || reduce_op == "min")
     {
-        return m_host_parameters->max_by_datatype(data_type);
+        return TypeInfo::Get(data_type)->max_ptr();
     }
-    else if (reduce_op == "mul" || reduce_op == "and")
+    else if (reduce_op == "mul" || reduce_op == "logical_and")
     {
         return m_host_parameters->val_by_datatype(data_type, static_cast<int64_t>(1));
     }
-    else if (reduce_op == "add" || reduce_op == "or")
+    else if (reduce_op == "add" || reduce_op == "logical_or")
     {
         return m_host_parameters->val_by_datatype(data_type, static_cast<int64_t>(0));
     }
     else
     {
         //not defined.
-        return nullptr;
+        throw std::runtime_error(data_type + "currently not supportted with init value.");
     }
+}
+
+std::vector<std::string>
+    runtime::gpu::CUDAEmitter::get_string_vector(const std::vector<element::Type>& dtypes)
+{
+    std::vector<std::string> str;
+    for (auto const& a : dtypes)
+    {
+        str.push_back(a.c_type_string());
+    }
+    return str;
 }

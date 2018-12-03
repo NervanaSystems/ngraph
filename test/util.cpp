@@ -382,6 +382,7 @@ TEST(graph_util, test_subgraph_topological_sort)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto add = A + B;
     auto mul = C * add;
+    auto result = make_shared<op::Result>(mul);
     auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A});
     std::list<std::shared_ptr<Node>> expected{A, add, mul};
     ASSERT_EQ(expected, sorted);
@@ -399,6 +400,7 @@ TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
     add->add_control_dependency(D);
     add->add_control_dependency(E);
     auto mul = C * add;
+    auto result = make_shared<op::Result>(mul);
     auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D}, true);
     std::list<std::shared_ptr<Node>> expected{A, D, add, mul};
     ASSERT_EQ(expected, sorted);

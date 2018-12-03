@@ -265,8 +265,7 @@ namespace ngraph
             Shape m_shape{};
             void* m_data{nullptr};
             Constant(const Constant&) = delete;
-            Constant(Constant&&) = delete;
-            Constant operator=(const Constant*) = delete;
+            Constant operator=(const Constant&) = delete;
         };
 
         class ScalarConstantLikeBase : public Constant

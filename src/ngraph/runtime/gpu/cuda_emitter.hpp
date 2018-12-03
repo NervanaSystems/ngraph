@@ -218,10 +218,11 @@ namespace ngraph
                                                     const char* kernel,
                                                     const char* reduce_op,
                                                     bool save_elementwise);
+
                 size_t build_reduce(const std::vector<element::Type>& dtypes,
-                                    NVShape input_shape,
-                                    NVShape output_shape,
-                                    NVShape reduce_axis,
+                                    const NVShape& input_shape,
+                                    const NVShape& output_shape,
+                                    const NVShape& reduce_axis,
                                     const char* op,
                                     const char* kernel,
                                     const bool with_init_value);
@@ -234,7 +235,6 @@ namespace ngraph
                                               NVShape input_shape,
                                               const char* op,
                                               const char* kernel);
-
                 /// \brief This is the preprocess for reduce to scalar if the data size is large than a number.
                 /// The number can be tuned based on hardware.
                 /// This cuda kernel will accumulate reduction to a certain number of bins depends on hardware.
@@ -244,7 +244,6 @@ namespace ngraph
                                                   uint32_t block_size_x,
                                                   const char* op,
                                                   const char* kernel);
-
                 /// \brief Simplifed reduce shape and reduce axis, remove dimsion size 1,
                 /// combine two or more adjacent reduce/nonreduce axis.
                 /// the simplified reduce shape and reduce axis will make index caculation simplier in cuda kernel.
@@ -252,7 +251,6 @@ namespace ngraph
                 /// {1 1 2 2} with reduce axis {3} simplifiy to: {2 2} with reduce_axis {1};
                 /// {2 3 4} with reduce axis {0 1} simplify to {6 4} with reduce_axis {0};
                 /// {2 3 4} with reduce axis {0} simplify to {2 12} with reduce_axis {0};
-
                 void simplify_reduce_shape(NVShape in,
                                            NVShape reduce_axis,
                                            NVShape& simplified_shape,
@@ -272,6 +270,7 @@ namespace ngraph
                                         NVShape& reduce_shape,
                                         NVShape& reduce_strides,
                                         NVShape& reduce_strides_in_input);
+
                 /// \brief Calculate magic and shift part of an shape vector (denomitor), change divide to multiply
                 ///        in cuda kernel.
                 void div_to_mul(const NVShape& shape,
@@ -279,6 +278,10 @@ namespace ngraph
                                 std::vector<int>& shift);
                 /// \brief Get initial value for reduce op
                 void* get_init_reduce_val(std::string reduce_op, std::string data_type);
+                /// \brief Get vector<string> of datatype from vector<element::Type>
+                std::vector<std::string>
+                    get_string_vector(const std::vector<element::Type>& dtypes);
+
                 std::shared_ptr<GPUHostParameters> m_host_parameters;
                 GPUPrimitiveEmitter* m_primitive_emitter;
                 GPURuntimeContext* m_ctx;

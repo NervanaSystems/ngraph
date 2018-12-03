@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "flatten.hpp"
-
 #include "exceptions.hpp"
 #include "utils/reshape.hpp"
 
