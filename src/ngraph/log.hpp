@@ -100,8 +100,6 @@ namespace ngraph
         static std::deque<std::string> m_queue;
     };
 
-    extern std::ostream& get_nil_stream();
-
     void default_logger_handler_func(const std::string& s);
 
 #define NGRAPH_ERR                                                                                 \
@@ -133,6 +131,33 @@ namespace ngraph
                       ngraph::default_logger_handler_func)                                         \
         .stream()
 #else
-#define NGRAPH_DEBUG ngraph::get_nil_stream()
+
+    struct NullLogger
+    {
+    };
+
+    template <typename T>
+    NullLogger&& operator<<(NullLogger&& logger, T&&)
+    {
+        return std::move(logger);
+    }
+
+    template <typename T>
+    NullLogger&& operator<<(NullLogger&& logger, const T&)
+    {
+        return std::move(logger);
+    }
+
+    inline NullLogger&&
+        operator<<(NullLogger&& logger,
+                   std::basic_ostream<char, std::char_traits<char>>& (&)(std::basic_ostream<
+                                                                         char,
+                                                                         std::char_traits<char>>&))
+    {
+        return std::move(logger);
+    }
+
+#define NGRAPH_DEBUG                                                                               \
+    ::ngraph::NullLogger {}
 #endif
 }
