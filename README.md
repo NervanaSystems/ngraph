@@ -79,7 +79,7 @@ to improve it:
   accepted, your pull request will be merged to the repository.
 
 
-[Ecosystem]: ecosystem-overview
+[Ecosystem]: ./ecosystem-overview
 [Architecture and features]:https://ngraph.nervanasys.com/docs/latest/project/about.html
 [Documentation]: https://ngraph.nervanasys.com/docs/latest
 [build the Library]: https://ngraph.nervanasys.com/docs/latest/buildlb.html
