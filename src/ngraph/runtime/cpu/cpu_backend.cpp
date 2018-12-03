@@ -14,7 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#if defined(NGRAPH_TBB_ENABLE)
 #include <tbb/tbb_stddef.h>
+#endif
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
@@ -29,8 +31,10 @@ using namespace std;
 
 extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
+#if defined(NGRAPH_TBB_ENABLE)
     // Force TBB to link to the backend
     tbb::TBB_runtime_interface_version();
+#endif
     return new runtime::cpu::CPU_Backend();
 }
 

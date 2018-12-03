@@ -75,10 +75,13 @@ namespace ngraph
                             new Eigen::ThreadPool(num_threads_per_pool)));
                         m_thread_pool_devices.push_back(std::unique_ptr<Eigen::ThreadPoolDevice>(
                             new Eigen::ThreadPoolDevice(m_thread_pools[i].get(), GetNumCores())));
+#if defined(NGRAPH_TBB_ENABLE)
                         m_tbb_arenas.emplace_back(1);
+#endif
                     }
                 }
 
+#if defined(NGRAPH_TBB_ENABLE)
                 void CPUExecutor::execute(CPUKernelFunctor& f,
                                           CPURuntimeContext* ctx,
                                           CPUExecutionContext* ectx,
@@ -94,6 +97,14 @@ namespace ngraph
                         f(ctx, ectx);
                     }
                 }
+#else
+                void CPUExecutor::execute(CPUKernelFunctor& f,
+                                          CPURuntimeContext* ctx,
+                                          CPUExecutionContext* ectx)
+                {
+                    f(ctx, ectx);
+                }
+#endif
 
                 CPUExecutor& GetCPUExecutor()
                 {

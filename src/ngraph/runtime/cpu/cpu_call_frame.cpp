@@ -132,6 +132,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
     ctx->states = m_external_function->m_states.data();
 
+#if defined(NGRAPH_TBB_ENABLE)
     if (std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
     {
         ctx->G = new tbb::flow::graph;
@@ -139,6 +140,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         const auto parallelism = envParallelism == nullptr ? 1 : std::atoi(envParallelism);
         ctx->c = new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
     }
+#endif
 }
 
 void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
@@ -149,6 +151,7 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
     {
         delete buffer;
     }
+#if defined(NGRAPH_TBB_ENABLE)
     if (std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
     {
         // delete graph G and nodes in G
@@ -165,5 +168,6 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
         }
         delete ctx->c;
     }
+#endif
     delete ctx;
 }
