@@ -16,12 +16,10 @@
 
 #include <fstream>
 
-#include "ngraph/except.hpp"
-
 #include "core/graph.hpp"
 #include "core/model.hpp"
 #include "core/node.hpp"
-
+#include "ngraph/except.hpp"
 #include "onnx.hpp"
 #include "ops_bridge.hpp"
 

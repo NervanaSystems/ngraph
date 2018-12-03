@@ -25,15 +25,14 @@
 #include <type_traits> // std::enable_if, std::is_base_of
 #include <vector>
 
+#include "core/node.hpp"
+#include "exceptions.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/util/arithmetic_reduction.hpp"
 #include "ngraph/shape.hpp"
-
-#include "core/node.hpp"
-#include "exceptions.hpp"
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
 

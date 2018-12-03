@@ -112,6 +112,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
@@ -4120,6 +4121,39 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::LeakyRelu)
+            {
+                auto leaky_relu_node = static_cast<const ngraph::op::LeakyRelu*>(node);
+                float alpha = leaky_relu_node->get_alpha();
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto leaky_relu_index =
+                        mkldnn_emitter->build_leaky_relu(input_desc, result_desc, alpha);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(leaky_relu_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(leaky_relu_index) << ");\n";
+                }
+                else
+                {
+                    writer << "#pragma omp parallel for\n";
+                    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                    writer.block_begin();
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > 0 ? "
+                           << args[0].get_name() << "[i] : (" << alpha << " * "
+                           << args[0].get_name() << "[i]);\n";
+                    writer.block_end();
+                }
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BoundedRelu)
             {
                 auto bounded_relu_node = static_cast<const ngraph::op::BoundedRelu*>(node);
@@ -4127,7 +4161,10 @@ namespace ngraph
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto bounded_relu_index = mkldnn_emitter->build_bounded_relu(node, args, out);
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto bounded_relu_index =
+                        mkldnn_emitter->build_bounded_relu(input_desc, result_desc, alpha);
                     auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
