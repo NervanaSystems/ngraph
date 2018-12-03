@@ -1,81 +1,53 @@
 # Building the Python API for nGraph
 
-## Build the nGraph Library
+## Building nGraph Python Wheels
 
-Follow the [build instructions] to build nGraph. When you get to the `cmake` 
-command, be sure to specify the option that enables ONNX support in the Library: 
+[nGraph's build instructions][ngraph_build] give detailed instructions on building nGraph on different operating systems. Please make sure you specify the options `-DNGRAPH_PYTHON_BUILD_ENABLE=ON` and `-DNGRAPH_ONNX_IMPORT_ENABLE=ON` when building nGraph. Use the `make python_wheel` command to build nGraph and create Python packages. 
 
-    $ cmake ../ -DNGRAPH_ONNX_IMPORT_ENABLE=ON 
+Basic build procedure on an Ubuntu system: 
+    
+    # apt-get install build-essential cmake clang-3.9 clang-format-3.9 git curl zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool
+    # apt-get install python3 python3-dev python python-dev python-virtualenv
+    
+    $ git clone https://github.com/NervanaSystems/ngraph.git
+    $ cd ngraph/
+    $ mkdir build
+    $ cd build/
+    $ cmake ../ -DNGRAPH_PYTHON_BUILD_ENABLE=ON -DNGRAPH_ONNX_IMPORT_ENABLE=ON -DNGRAPH_USE_PREBUILT_LLVM=ON
+    $ make python_wheel
+
+After this procedure completes, the `ngraph/build/python/dist` directory should contain Python packages. 
+
+    $ ls python/dist/
+    ngraph-core-0.10.0.tar.gz  
+    ngraph_core-0.10.0-cp27-cp27mu-linux_x86_64.whl  
+    ngraph_core-0.10.0-cp35-cp35m-linux_x86_64.whl
+
+### Using a virtualenv (optional)
+
+You may wish to use a virutualenv for your installation.
+
+    $ virtualenv -p $(which python3) venv
+    $ source venv/bin/activate
+    (venv) $
+
+### Installing the wheel
+
+You may wish to use a virutualenv for your installation.
+
+    (venv) $ pip install ngraph/build/python/dist/ngraph_core-0.10.0-cp35-cp35m-linux_x86_64.whl
 
 
-Next, clone the `pybind11` repository:
-
-    $ cd ngraph/python
-    $ git clone --recursive https://github.com/pybind/pybind11.git
-
-
-Set the environment variables:
-
-    export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist
-    export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib
-    export DYLD_LIBRARY_PATH=$HOME/ngraph_dist/lib # (Only needed on MacOS)
-    export PYBIND_HEADERS_PATH=pybind11
-
-
-Install the wrapper (Python binding):
-
-    $ python setup.py install
-
+## Running tests
 
 Unit tests require additional packages be installed:
 
-    $ pip install -r test_requirements.txt
+    (venv) $ cd ngraph/python
+    (venv) $ pip install -r test_requirements.txt
+
+Then run tests:
+
+    (venv) $ pytest test/ngraph/
 
 
-Then run a test:
-
-    $ pytest test/test_ops.py
-    $ pytest test/ngraph/
-
-
-## Running tests with tox
-
-[Tox] is a Python [virtualenv] management and test command line tool. In our 
-project it automates:
-
-* running of unit tests with [pytest]
-* checking that code style is compliant with [PEP8] using [Flake8]
-* static type checking using [MyPy]
-* testing across Python 2 and 3
-
-
-Installing and running test with Tox:
-
-    $ pip install tox
-    $ tox
-
-
-You can run tests using only Python 3 or 2 using the `-e` (environment) switch:
-
-    $ tox -e py36
-    $ tox -e py27
-
-
-You can check styles in a particular code directory by specifying the path:
-
-    $ tox ngraph/
-
-
-If you run into any problems, try recreating the virtual environments by 
-deleting the `.tox` directory:
-
-    $ rm -rf .tox
-    $ tox
-
-[build instructions]:http://ngraph.nervanasys.com/docs/latest/buildlb.html
-[Tox]:https://tox.readthedocs.io/
-[virtualenv]:https://virtualenv.pypa.io/
-[pytest]:https://docs.pytest.org/
-[PEP8]:https://www.python.org/dev/peps/pep-0008
-[Flake8]:http://flake8.pycqa.org
-[MyPy]:http://mypy.readthedocs.io
+[ngraph_build]: http://ngraph.nervanasys.com/docs/latest/buildlb.html

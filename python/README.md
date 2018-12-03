@@ -1,6 +1,6 @@
 ## nGraph Neural Network compiler
 
-[nGraph][ngraph_github] is Intel's open-source graph compiler and runtime for Neural Network models. Frameworks using nGraph to execute workloads have shown up to 45X performance boost compared to native implementations.
+[nGraph][ngraph_github] is Intel's open-source graph compiler and runtime for Neural Network models. Frameworks using nGraph to execute workloads have shown up to [45X](https://ai.intel.com/ngraph-compiler-stack-beta-release/) performance boost compared to native implementations.
 
 nGraph can be used directly thought it's [Python API][api_python] or [C++ API][api_cpp]. Alternatively it can be used through one of its frontends, e.g. [TensorFlow][frontend_tf], [MXNet][frontend_mxnet] and [ONNX][frontend_onnx].
 

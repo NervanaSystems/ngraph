@@ -297,7 +297,7 @@ ext_modules = [
     )
 ]
 
-if NGRAPH_ONNX_IMPORT_ENABLE == 'TRUE':
+if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
     onnx_sources = [
         'pyngraph/pyngraph_onnx_import.cpp',
         'pyngraph/onnx_import/onnx_import.cpp',
