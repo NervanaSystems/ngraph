@@ -238,11 +238,15 @@ endif()
 # )
 
 add_custom_target(style-check
-    COMMAND ${CMAKE_COMMAND} -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}" -P ${CMAKE_MODULE_PATH}style_check.cmake
+    COMMAND ${CMAKE_COMMAND}
+    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    -P ${CMAKE_MODULE_PATH}style_check.cmake
 )
 
 add_custom_target(style-apply
-    COMMAND ${CMAKE_COMMAND} -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}" -P ${CMAKE_MODULE_PATH}style_apply.cmake
+    COMMAND ${CMAKE_COMMAND}
+    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    -P ${CMAKE_MODULE_PATH}style_apply.cmake
 )
 
 #-----------------------------------------------------------------------------------------------

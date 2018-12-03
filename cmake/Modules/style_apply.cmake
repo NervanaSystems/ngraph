@@ -14,9 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-set(CLANG_FORMAT_FILENAME clang-format-3.9)
-find_program(CLANG_FORMAT ${CLANG_FORMAT_FILENAME} PATHS ENV PATH)
-
 function(STYLE_APPLY_FILE PATH)
     execute_process(COMMAND ${CLANG_FORMAT} -style=file -i ${PATH}
         OUTPUT_VARIABLE STYLE_CHECK_RESULT)
@@ -28,6 +25,9 @@ set(DIRECTORIES_OF_INTEREST
     test
     python/pyngraph
 )
+
+set(CLANG_FORMAT_FILENAME clang-format-3.9)
+find_program(CLANG_FORMAT ${CLANG_FORMAT_FILENAME} PATHS ENV PATH)
 
 if (CLANG_FORMAT)
     foreach(DIRECTORY ${DIRECTORIES_OF_INTEREST})
