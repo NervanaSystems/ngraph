@@ -20,6 +20,18 @@ include(ExternalProject)
 # Fetch and install MKL-DNN
 #------------------------------------------------------------------------------
 
+set(MKLDNN_LIB libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX})
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    set(MKLML_LIB libmklml_intel.so)
+    set(OMP_LIB libiomp5.so)
+elseif (APPLE)
+    set(MKLML_LIB libmklml.dylib)
+    set(OMP_LIB libiomp5.dylib)
+elseif (WIN32)
+    set(MKLML_LIB mklml.dll)
+    set(OMP_LIB libiomp5md.dll)
+endif()
+
 if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
     ExternalProject_Add(
         ext_mkldnn
@@ -32,9 +44,9 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
     add_library(libmkldnn INTERFACE)
     target_include_directories(libmkldnn SYSTEM INTERFACE ${MKLDNN_INCLUDE_DIR})
     target_link_libraries(libmkldnn INTERFACE
-        ${MKLDNN_LIB_DIR}/libmkldnn.so
-        ${MKLDNN_LIB_DIR}/libmklml_intel.so
-        ${MKLDNN_LIB_DIR}/libiomp5.so
+        ${MKLDNN_LIB_DIR}/${MKLDNN_LIB}
+        ${MKLDNN_LIB_DIR}/${MKLML_LIB}
+        ${MKLDNN_LIB_DIR}/${OMP_LIB}
         )
 
     install(DIRECTORY ${MKLDNN_LIB_DIR}/ DESTINATION ${NGRAPH_INSTALL_LIB})
@@ -48,16 +60,14 @@ set(MKLVERSION "2019.0.1.20180928")
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
     set(MKL_SHA1_HASH 0d9cc8bfc2c1a1e3df5e0b07e2f363bbf934a7e9)
-    set(MKL_LIBS libiomp5.so libmklml_intel.so)
 elseif (APPLE)
     set(MKLPACKAGE "mklml_mac_${MKLVERSION}.tgz")
     set(MKL_SHA1_HASH 232787f41cb42f53f5b7e278d8240f6727896133)
-    set(MKL_LIBS libmklml.dylib libiomp5.dylib)
 elseif (WIN32)
     set(MKLPACKAGE "mklml_win_${MKLVERSION}.zip")
     set(MKL_SHA1_HASH 97f01ab854d8ee88cc0429f301df84844d7cce6b)
-    set(MKL_LIBS mklml.dll libiomp5md.dll)
 endif()
+set(MKL_LIBS ${MKLML_LIB} ${OMP_LIB})
 set(MKLURL ${MKLURLROOT}${MKLPACKAGE})
 
 ExternalProject_Add(
@@ -175,7 +185,7 @@ add_library(libmkldnn INTERFACE)
 add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 target_link_libraries(libmkldnn INTERFACE
-    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB}
     libmkl
     )
 
