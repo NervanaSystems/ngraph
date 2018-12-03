@@ -46,7 +46,6 @@ namespace ngraph
                     // TODO: Implement learning mode support
                     // float momentum{node.get_attribute_value<float>("momentum", 0.9f)};
                     ASSERT_IS_SUPPORTED(node, is_test) << "only 'is_test' mode is supported.";
-                    ASSERT_IS_SUPPORTED(node, spatial) << "only 'spatial' mode is supported.";
 
                     if (inputs.size() >= 5)
                     {
