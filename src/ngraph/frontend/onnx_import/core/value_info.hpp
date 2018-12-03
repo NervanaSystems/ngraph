@@ -19,10 +19,9 @@
 #include <onnx-ml.pb.h>
 
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/parameter_vector.hpp"
+#include "ngraph/parameter_vector.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
-
 #include "node.hpp"
 #include "tensor.hpp"
 #include "weight.hpp"
@@ -104,7 +103,7 @@ namespace ngraph
             }
 
             std::shared_ptr<ngraph::Node>
-                get_ng_node(op::ParameterVector& parameters,
+                get_ng_node(ParameterVector& parameters,
                             const std::map<std::string, Tensor>& initializers,
                             const Weights& weights = {}) const
             {

@@ -40,14 +40,14 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_trivial)
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape{2, 2};
     auto g_A = make_shared<op::Parameter>(element::f32, shape);
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{}),
-                                   op::ParameterVector{g_A, g_B});
+                                   ParameterVector{g_A, g_B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -67,14 +67,14 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_to_scalar)
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape{2, 2};
     auto g_A = make_shared<op::Parameter>(element::f32, shape);
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0, 1}),
-                                   op::ParameterVector{g_A, g_B});
+                                   ParameterVector{g_A, g_B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -100,7 +100,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_matrix_columns)
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{3, 2};
@@ -109,7 +109,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_matrix_columns)
     Shape shape_rt{2};
 
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0}),
-                                   op::ParameterVector{g_A, g_B});
+                                   ParameterVector{g_A, g_B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -135,7 +135,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_matrix_rows)
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{3, 2};
@@ -143,7 +143,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_matrix_rows)
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     Shape shape_rt{3};
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{1}),
-                                   op::ParameterVector{g_A, g_B});
+                                   ParameterVector{g_A, g_B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -168,7 +168,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{3, 0};
@@ -176,7 +176,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_matrix_rows_zero)
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     Shape shape_rt{3};
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{1}),
-                                   op::ParameterVector{g_A, g_B});
+                                   ParameterVector{g_A, g_B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -201,7 +201,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 2};
@@ -209,7 +209,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_matrix_cols_zero)
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     Shape shape_rt{2};
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0}),
-                                   op::ParameterVector{g_A, g_B});
+                                   ParameterVector{g_A, g_B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -234,7 +234,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_vector_zero)
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0};
@@ -242,7 +242,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_vector_zero)
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     Shape shape_rt{};
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0}),
-                                   op::ParameterVector{g_A, g_B});
+                                   ParameterVector{g_A, g_B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -267,7 +267,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
     // First, the reduction function (f(x:float32[],y:float32[]) = x+y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), op::ParameterVector{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Add>(f_A, f_B), ParameterVector{f_A, f_B});
 
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 0};
@@ -275,7 +275,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_matrix_to_scalar_zero_by_zero)
     auto g_B = make_shared<op::Parameter>(element::f32, Shape{});
     Shape shape_rt{};
     auto g = make_shared<Function>(make_shared<op::Reduce>(g_A, g_B, f, AxisSet{0, 1}),
-                                   op::ParameterVector{g_A, g_B});
+                                   ParameterVector{g_A, g_B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -300,8 +300,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_3d_to_vector)
     // First, the reduction function (f(x:float32[],y:float32[]) = x*y).
     auto f_A = make_shared<op::Parameter>(element::f32, Shape{});
     auto f_B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto f =
-        make_shared<Function>(make_shared<op::Multiply>(f_A, f_B), op::ParameterVector{f_A, f_B});
+    auto f = make_shared<Function>(make_shared<op::Multiply>(f_A, f_B), ParameterVector{f_A, f_B});
 
     Shape shape_a{3, 3, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -309,7 +308,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_3d_to_vector)
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_rt{3};
     auto g = make_shared<Function>(make_shared<op::Reduce>(A, B, f, AxisSet{0, 1}),
-                                   op::ParameterVector{A, B});
+                                   ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -337,7 +336,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_1image
     auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
     Shape shape_rb{};
     auto RB = make_shared<op::Parameter>(element::f32, shape_rb);
-    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::ParameterVector{RA, RB});
+    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), ParameterVector{RA, RB});
 
     Shape shape_a{1, 1, 14};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -348,7 +347,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_1image
     auto window_movement_strides = Strides{1, 1, 1};
     auto f = make_shared<Function>(
         make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -374,7 +373,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_2image
     auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
     Shape shape_rb{};
     auto RB = make_shared<op::Parameter>(element::f32, shape_rb);
-    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::ParameterVector{RA, RB});
+    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), ParameterVector{RA, RB});
 
     Shape shape_a{2, 1, 14};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -385,7 +384,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_1channel_2image
     auto window_movement_strides = Strides{1, 1, 1};
     auto f = make_shared<Function>(
         make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -415,7 +414,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_2channel_2image
     auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
     Shape shape_rb{};
     auto RB = make_shared<op::Parameter>(element::f32, shape_rb);
-    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::ParameterVector{RA, RB});
+    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), ParameterVector{RA, RB});
 
     Shape shape_a{2, 2, 14};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -426,7 +425,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_1d_2channel_2image
     auto window_movement_strides = Strides{1, 1, 1};
     auto f = make_shared<Function>(
         make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -461,7 +460,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_2channel_2image
     auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
     Shape shape_rb{};
     auto RB = make_shared<op::Parameter>(element::f32, shape_rb);
-    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::ParameterVector{RA, RB});
+    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), ParameterVector{RA, RB});
 
     Shape shape_a{2, 2, 5, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -472,7 +471,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_2channel_2image
     auto window_movement_strides = Strides{1, 1, 1, 1};
     auto f = make_shared<Function>(
         make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -540,7 +539,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image
     auto RA = make_shared<op::Parameter>(element::f32, shape_ra);
     Shape shape_rb{};
     auto RB = make_shared<op::Parameter>(element::f32, shape_rb);
-    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), op::ParameterVector{RA, RB});
+    auto rf = make_shared<Function>(make_shared<op::Maximum>(RA, RB), ParameterVector{RA, RB});
 
     Shape shape_a{1, 1, 8, 8};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -551,7 +550,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_window_emulating_max_pool_2d_1channel_1image
     auto window_movement_strides = Strides{1, 1, 3, 2};
     auto f = make_shared<Function>(
         make_shared<op::ReduceWindow>(A, B, rf, window_shape, window_movement_strides),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

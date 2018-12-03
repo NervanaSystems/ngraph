@@ -16,7 +16,7 @@
 // and approved by Intel in writing.
 STAGES_STATUS_MAP = [:]
 
-def GetDockerEnvList(String projectName, String dockerContainerNamePrefix, String projectRoot = projectName) {
+def getDockerEnvList(String projectName, String dockerContainerNamePrefix, String projectRoot = projectName) {
     /**
     * This method generates configuration map list using dockerfiles available in dockerfiles directory
     *
@@ -38,7 +38,7 @@ def GetDockerEnvList(String projectName, String dockerContainerNamePrefix, Strin
     return envList
 }
 
-def GenerateMap(Closure method, configurationMaps) {
+def generateMap(Closure method, configurationMaps) {
     /**
     * Generates map for method using configurationMaps.
     *
@@ -56,7 +56,7 @@ def GenerateMap(Closure method, configurationMaps) {
     return executionMap
 }
 
-def CreateStage(String stageName, Closure method, configurationMaps) {
+def createStage(String stageName, Closure method, configurationMaps) {
     /**
     * Create pipeline stage.
     * 
@@ -79,12 +79,12 @@ def CreateStage(String stageName, Closure method, configurationMaps) {
                 status = "FAILURE"
                 throw e
             } finally {
-                UTILS.SetConfigurationStatus(configMap["stageName"], configMap["name"], status)
+                UTILS.setConfigurationStatus(configMap["stageName"], configMap["name"], status)
             }
         }
 
         try {
-            def prepareEnvMap = GenerateMap(genericBodyMethod, configurationMaps)
+            def prepareEnvMap = generateMap(genericBodyMethod, configurationMaps)
             parallel prepareEnvMap
         } catch(e) {
             // Set result to ABORTED if exception contains exit code of a process interrupted by SIGTERM
@@ -97,7 +97,7 @@ def CreateStage(String stageName, Closure method, configurationMaps) {
     }
 }
 
-def SetConfigurationStatus(String stageName, String configurationName, String status) {
+def setConfigurationStatus(String stageName, String configurationName, String status) {
     /**
     * Set stage status.
     * 
@@ -115,7 +115,7 @@ def SetConfigurationStatus(String stageName, String configurationName, String st
     }
 }
 
-def PropagateStatus(String parentStageName, String parentConfigurationName) {
+def propagateStatus(String parentStageName, String parentConfigurationName) {
     /**
     * Popagate status in parent configuration fails.
     * This method will throw exeption "Propagating status of $parentStageName"
@@ -131,7 +131,7 @@ def PropagateStatus(String parentStageName, String parentConfigurationName) {
     }
 }
 
-def ShowStatusMap() {
+def showStatusMap() {
     /**
     * Display status map for every defined stage.
     */

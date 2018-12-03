@@ -22,7 +22,11 @@ set (SRC
 )
 
 add_library(ngraph_test_util SHARED ${SRC})
-set_target_properties(ngraph_test_util PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+if(NGRAPH_LIB_VERSIONING_ENABLE)
+    set_target_properties(ngraph_test_util PROPERTIES
+        VERSION ${NGRAPH_VERSION}
+        SOVERSION ${NGRAPH_API_VERSION})
+endif()
 target_include_directories(ngraph_test_util PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_link_libraries(ngraph_test_util ngraph libgtest)
 

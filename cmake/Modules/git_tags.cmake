@@ -30,7 +30,7 @@ endfunction()
 function(NGRAPH_GET_TAG_OF_CURRENT_HASH)
     find_package(Git REQUIRED)
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} ls-remote --tags
+        COMMAND ${GIT_EXECUTABLE} show-ref
         RESULT_VARIABLE RESULT
         OUTPUT_VARIABLE TAG_LIST
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

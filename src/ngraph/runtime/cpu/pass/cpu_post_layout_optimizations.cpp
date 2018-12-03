@@ -170,3 +170,96 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
     auto m = make_shared<pattern::Matcher>(cvt_lt, callback);
     this->add_matcher(m);
 }
+
+// Reshape(transpose) + ConvertLayout
+// MKLDNN has more efficient ConvertLayout kernels for named/non-padded formats
+// If a transpose is converting a padded format into a generic padded/blocked format, it is better
+// to ConvertLayout first and then do the transpose
+// E.g.,
+// Shape{10, 20, 30, 40} --(Reshape)--> Shape{10, 40, 20, 30} --(ConvertLayout)--> Shape{10, 40, 20, 30}
+// is changed to
+// Shape{10, 20, 30, 40} --(ConvertLayout)--> Shape{10, 20, 30, 40} --(Reshape)--> Shape{10, 40, 20, 30}
+// The new ConvertLayout op computes the desired output layout (out_md) directly from
+// input layout using a rotated out_md
+void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
+    construct_reshape_convertLayout_fusion()
+{
+    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
+    auto reshape =
+        std::make_shared<ngraph::op::Reshape>(input, AxisVector{0, 1, 2, 3}, Shape{1, 1, 1, 1});
+    auto lt_desc =
+        std::make_shared<runtime::cpu::LayoutDescriptor>(*reshape->get_output_tensor_ptr());
+    auto cvt_lt = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape, lt_desc);
+
+    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_reshape_converLayout against "
+                     << m.get_match_root()->get_name();
+
+        auto cvt_lt_m = static_pointer_cast<runtime::cpu::op::ConvertLayout>(m.get_match_root());
+        auto reshape_m = static_pointer_cast<ngraph::op::Reshape>(cvt_lt_m->get_argument(0));
+
+        if (reshape_m->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "ReshapeConvertLayout: Reshape has multiple users";
+            return false;
+        }
+
+        if (!reshape_m->get_is_transpose())
+        {
+            NGRAPH_DEBUG << "ReshapeConvertLayout: Reshape is not a transpose";
+            return false;
+        }
+
+        if (reshape_m->get_op_annotations()->get_in_place_oi_pairs().size() == 0)
+        {
+            NGRAPH_DEBUG << "ReshapeConvertLayout: Reshape is not pass-through";
+            return false;
+        }
+
+        auto reshape_m_md = runtime::cpu::mkldnn_utils::get_output_mkldnn_md(reshape_m.get(), 0);
+        if (reshape_m_md.data.format != mkldnn_blocked ||
+            !runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(
+                reshape_m_md, ngraph::get_default_order(reshape_m->get_shape())))
+        {
+            NGRAPH_DEBUG << "ReshapeConvertLayout: Reshape is not creating a blocked/padded layout";
+            return false;
+        }
+
+        // Rotate output layout to the pre-transposed order
+        auto out_md = runtime::cpu::mkldnn_utils::get_output_mkldnn_md(cvt_lt_m.get(), 0);
+        auto reshape_order = reshape_m->get_input_order();
+        // Get the inverse of the original transpose order
+        // E.g., [0, 3, 1, 2] -> [0, 2, 3, 1]
+        AxisVector inverse_order;
+        for (int i = 0; i < reshape_order.size(); i++)
+        {
+            inverse_order.push_back(std::find(reshape_order.begin(), reshape_order.end(), i) -
+                                    reshape_order.begin());
+        }
+        auto rotated_md = runtime::cpu::mkldnn_utils::rotate_blocked_md(out_md, inverse_order);
+        auto rotated_lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(
+            *reshape_m->get_argument(0)->get_output_tensor_ptr());
+        rotated_lt_desc->set_mkldnn_md(rotated_md);
+
+        auto cvt_lt_n = std::make_shared<runtime::cpu::op::ConvertLayout>(
+            reshape_m->get_argument(0), 0, rotated_lt_desc);
+        cvt_lt_n->set_op_annotations(cvt_lt_m->get_op_annotations());
+
+        auto reshape_n =
+            std::make_shared<ngraph::op::Reshape>(cvt_lt_n, reshape_order, cvt_lt_m->get_shape());
+        auto reshape_n_layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(
+            *reshape_n->get_output_tensor_ptr());
+        reshape_n_layout->set_mkldnn_md(out_md);
+        reshape_n->get_output_tensor_ptr()->set_tensor_layout(reshape_n_layout);
+        reshape_n->set_op_annotations(reshape_m->get_op_annotations());
+
+        ngraph::replace_node(cvt_lt_m, reshape_n);
+        NGRAPH_DEBUG << "ReshapeConvertLayout: Reordering reshape and convertlayout for faster "
+                        "MKLDNN kernels";
+
+        return true;
+    };
+
+    auto m = make_shared<pattern::Matcher>(cvt_lt, callback);
+    this->add_matcher(m);
+}

@@ -28,7 +28,7 @@ shared_ptr<runtime::Tensor>
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(func(A, {0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(func(A, {0}), ParameterVector{A});
     auto backend = runtime::Backend::create("INTERPRETER");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -45,7 +45,7 @@ shared_ptr<runtime::Tensor> make_reduce_result_true(
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(func(A, {0}, true), op::ParameterVector{A});
+    auto f = make_shared<Function>(func(A, {0}, true), ParameterVector{A});
     auto backend = runtime::Backend::create("INTERPRETER");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -62,7 +62,7 @@ shared_ptr<runtime::Tensor> make_reduce_result_false(
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(func(A, {0}, false), op::ParameterVector{A});
+    auto f = make_shared<Function>(func(A, {0}, false), ParameterVector{A});
     auto backend = runtime::Backend::create("INTERPRETER");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -140,7 +140,7 @@ TEST(builder, tensor_mask)
     Shape mask_shape{3, 5};
     auto f =
         make_shared<Function>(builder::tensor_mask<op::Less>(sequence_lengths, 1, 0, mask_shape, 0),
-                              op::ParameterVector{sequence_lengths});
+                              ParameterVector{sequence_lengths});
 
     auto backend = runtime::Backend::create("INTERPRETER");
 

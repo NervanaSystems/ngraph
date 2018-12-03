@@ -179,14 +179,17 @@ namespace ngraph
             result_list.push_back(node_map[independent_node]);
             independent_nodes.pop_front();
 
-            for (auto user_sp : independent_node->get_users())
+            for (auto& output : independent_node->get_outputs())
             {
-                Node* user = user_sp.get();
-                node_dependency_count[user] -= 1;
-                size_t count = node_dependency_count[user];
-                if (count == 0)
+                for (auto& input : output.get_inputs())
                 {
-                    independent_nodes.push_back(user);
+                    auto user = input->get_raw_pointer_node();
+                    node_dependency_count[user] -= 1;
+                    size_t count = node_dependency_count[user];
+                    if (count == 0)
+                    {
+                        independent_nodes.push_back(user);
+                    }
                 }
             }
 
