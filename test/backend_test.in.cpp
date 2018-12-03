@@ -6453,3 +6453,80 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
     vector<uint64_t> expected{2, 4, 8, 16, 32};
     EXPECT_EQ(expected, read_vector<uint64_t>(result));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop)
+{
+    Shape sca{1};
+    Shape vec{1, 1, 1, 2};
+    double eps = 1.0e-04;
+
+    auto g = std::make_shared<op::Parameter>(element::f32, sca);
+    auto b = std::make_shared<op::Parameter>(element::f32, sca);
+    auto input = std::make_shared<op::Parameter>(element::f32, vec);
+    auto bn_fp = std::make_shared<op::BatchNormTraining>(input, g, b, eps);
+    auto bnorm = std::make_shared<op::GetOutputElement>(bn_fp, 0);
+    auto mean = std::make_shared<op::GetOutputElement>(bn_fp, 1);
+    auto var = std::make_shared<op::GetOutputElement>(bn_fp, 2);
+
+    auto delta = std::make_shared<op::Parameter>(element::f32, vec);
+    auto bn_bp =
+        std::make_shared<op::BatchNormTrainingBackprop>(bnorm, g, b, mean, var, delta, eps);
+    auto dx = std::make_shared<op::GetOutputElement>(bn_bp, 0);
+
+    std::vector<std::vector<float>> args = {
+        {1.1f, 1.0f}, // x
+        {1.0f},       // gamma
+        {1.0f},       // beta
+        {1.0f, 1.0f}, // dy
+    };
+
+    auto func = std::make_shared<Function>(dx, ParameterVector{input, g, b, delta});
+    auto results = execute(func, args, "${BACKEND_NAME}");
+    EXPECT_TRUE(test::all_close_f(std::vector<float>{350.957, -388.67}, results.at(0)));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_bprop_2step)
+{
+    Shape sca{1};
+    Shape vec{1, 1, 1, 2};
+    double eps = 1.0e-04;
+
+    auto g = std::make_shared<op::Parameter>(element::f32, sca);
+    auto b = std::make_shared<op::Parameter>(element::f32, sca);
+    auto input = std::make_shared<op::Parameter>(element::f32, vec);
+    auto bn_fp = std::make_shared<op::BatchNormTraining>(input, g, b, eps);
+    auto bnorm = std::make_shared<op::GetOutputElement>(bn_fp, 0);
+    auto mean = std::make_shared<op::GetOutputElement>(bn_fp, 1);
+    auto var = std::make_shared<op::GetOutputElement>(bn_fp, 2);
+
+    auto func_bn =
+        std::make_shared<Function>(NodeVector{bnorm, mean, var}, ParameterVector{input, g, b});
+
+    std::vector<std::vector<float>> args = {
+        {1.1f, 1.0f}, // x
+        {1.0f},       // gamma
+        {1.0f},       // beta
+    };
+    auto results = execute(func_bn, args, "${BACKEND_NAME}");
+
+    g = std::make_shared<op::Parameter>(element::f32, sca);
+    b = std::make_shared<op::Parameter>(element::f32, sca);
+    auto bn_output = std::make_shared<op::Parameter>(element::f32, vec);
+    auto m = std::make_shared<op::Parameter>(element::f32, sca);
+    auto v = std::make_shared<op::Parameter>(element::f32, sca);
+    auto delta = std::make_shared<op::Parameter>(element::f32, vec);
+    auto bn_bp = std::make_shared<op::BatchNormTrainingBackprop>(bn_output, g, b, m, v, delta, eps);
+    auto dx = std::make_shared<op::GetOutputElement>(bn_bp, 0);
+
+    args.clear();
+    args.push_back(results.at(0)); // bn_output
+    args.push_back({1.0f});        // g
+    args.push_back({1.0f});        // b
+    args.push_back(results.at(1)); // m
+    args.push_back(results.at(2)); // v
+    args.push_back({1.0f, 1.0f});  // dy
+
+    auto func = std::make_shared<Function>(dx, ParameterVector{bn_output, g, b, m, v, delta});
+    results = execute(func, args, "${BACKEND_NAME}");
+    EXPECT_TRUE(test::all_close_f(std::vector<float>{350.957, -388.67}, results.at(0)));
+}
