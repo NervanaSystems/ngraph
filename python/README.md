@@ -12,7 +12,6 @@ Installing nGraph Python API from PyPI is simple:
 
     pip install ngraph-core
 
-
 ## Usage example
 
 Using nGraph's Python API to construct a computation graph and execute a computation is simple. The following example shows how to create a simple `(A + B) * C` computation graph and calculate a result using 3 numpy arrays as input.
@@ -50,7 +49,6 @@ result = computation(value_a, value_b, value_c)
 
 print('Result = ', result)
 ```
-
 
 [frontend_onnx]: https://pypi.org/project/ngraph-onnx/
 [frontend_mxnet]: https://pypi.org/project/ngraph-mxnet/ 

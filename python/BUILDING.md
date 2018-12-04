@@ -37,7 +37,6 @@ You may wish to use a virutualenv for your installation.
 
     (venv) $ pip install ngraph/build/python/dist/ngraph_core-0.10.0-cp35-cp35m-linux_x86_64.whl
 
-
 ## Running tests
 
 Unit tests require additional packages be installed:
@@ -48,6 +47,5 @@ Unit tests require additional packages be installed:
 Then run tests:
 
     (venv) $ pytest test/ngraph/
-
 
 [ngraph_build]: http://ngraph.nervanasys.com/docs/latest/buildlb.html
