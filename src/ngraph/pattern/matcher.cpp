@@ -178,6 +178,9 @@ namespace ngraph
             add_node(graph_node);
             size_t watermark = m_matched_list.size() - 1;
 
+            // This env var allows one to specify node name patterns to abort pattern matching
+            // at particular nodes. The upshot is that one can quickly zero in on an offending fusion by
+            // disabling individual fusions or optimizations that use Matcher.
             static const char* node_skip_cregex = std::getenv("NGRAPH_MATCHER_SKIP");
             if (node_skip_cregex)
             {
@@ -185,7 +188,7 @@ namespace ngraph
                 if (std::regex_match(graph_node->get_name(), node_skip_regex))
                 {
                     NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
-                              << " due to NGRAPH_MATCHER_SKIP set to " << node_skip_cregex;
+                                 << " due to NGRAPH_MATCHER_SKIP set to " << node_skip_cregex;
                     return abort_match(watermark, false);
                 }
             }
