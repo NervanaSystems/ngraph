@@ -6,9 +6,9 @@ nGraph can be used directly thought it's [Python API][api_python] or [C++ API][a
 
 ## Installation
 
-nGraph is available as binary wheels you can install from PyPI. nGraph binary wheels are currently tested on Ubuntu 16.04 and require a CPU with AVX-512 instructions, if you're using a different system, you may want to [build](BUILDING.md) nGraph from sources.
+nGraph is available as binary wheels you can install from PyPI. nGraph binary wheels are currently tested on Ubuntu 16.04 and require a CPU with AVX-512 instructions, if you're using a different system, you may want to [build][ngraph_building] nGraph from sources.
 
-Installing nGraph Python API from PyPI is simple:
+Installing nGraph Python API from PyPI is easy:
 
     pip install ngraph-core
 
@@ -53,6 +53,7 @@ print('Result = ', result)
 [frontend_onnx]: https://pypi.org/project/ngraph-onnx/
 [frontend_mxnet]: https://pypi.org/project/ngraph-mxnet/ 
 [frontend_tf]: https://pypi.org/project/ngraph-tensorflow-bridge/
-[ngraph_github]: github.com/NervanaSystems/ngraph "nGraph on GitHub"
+[ngraph_github]: https://github.com/NervanaSystems/ngraph "nGraph on GitHub"
+[ngraph_building]: https://github.com/NervanaSystems/ngraph/blob/master/python/BUILDING.md "Building nGraph"
 [api_python]: https://ngraph.nervanasys.com/docs/latest/python_api/ "nGraph's Python API documentation"
 [api_cpp]: https://ngraph.nervanasys.com/docs/latest/howto/ 
