@@ -19,6 +19,7 @@
 #include <memory>
 #include <vector>
 
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
@@ -78,12 +79,12 @@ namespace ngraph
             /// \param layout Layout to set
             void set_tensor_layout(const std::shared_ptr<descriptor::layout::TensorLayout>& layout);
 
-            /// \brief Get the stale value of the tensor. A tensor is stale if it's data is
+            /// \brief Get the stale value of the tensor. A tensor is stale if its data is
             /// changed.
             /// \return true if there is new data in this tensor
             bool get_stale() const;
 
-            /// \brief Set the stale value of the tensor. A tensor is stale if it's data is
+            /// \brief Set the stale value of the tensor. A tensor is stale if its data is
             /// changed.
             void set_stale(bool val);
 

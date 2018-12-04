@@ -44,6 +44,8 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -148,6 +150,64 @@ static json write(const ngraph::Function&, bool binary_constant_data);
 static json write(const ngraph::Node&, bool binary_constant_data);
 static string
     serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data);
+
+static json write_dimension(Dimension d)
+{
+    if (d.is_dynamic())
+    {
+        return nullptr;
+    }
+    else
+    {
+        return static_cast<size_t>(d);
+    }
+}
+
+static Dimension read_dimension(const json& j)
+{
+    if (j.is_null())
+    {
+        return Dimension::dynamic();
+    }
+    else
+    {
+        return Dimension(static_cast<size_t>(j));
+    }
+}
+
+static json write_partial_shape(const PartialShape& s)
+{
+    if (s.rank().is_dynamic())
+    {
+        return nullptr;
+    }
+    else
+    {
+        std::vector<json> vals(static_cast<size_t>(s.rank()));
+        for (size_t i = 0; i < vals.size(); i++)
+        {
+            vals[i] = write_dimension(s[i]);
+        }
+        return vals;
+    }
+}
+
+static PartialShape read_partial_shape(const json& j)
+{
+    if (j.is_null())
+    {
+        return PartialShape::dynamic();
+    }
+    else
+    {
+        std::vector<Dimension> dims(j.size());
+        for (size_t i = 0; i < j.size(); i++)
+        {
+            dims[i] = read_dimension(j[i]);
+        }
+        return PartialShape(dims);
+    }
+}
 
 static json write_element_type(const ngraph::element::Type& n)
 {
@@ -468,31 +528,27 @@ static shared_ptr<ngraph::Function>
                                                         include_padding_in_avg_computation);
                 break;
             }
-            case OP_TYPEID::BatchNorm:
+            case OP_TYPEID::BatchNormTraining:
             {
                 auto epsilon = node_js.at("eps").get<double>();
-                bool training = get_or_default<bool>(node_js, "training", true);
-                if (training && args.size() == 3)
-                {
-                    node = make_shared<op::BatchNorm>(epsilon, args[0], args[1], args[2]);
-                }
-                else if (training && args.size() == 5)
-                {
-                    node = make_shared<op::BatchNorm>(
-                        epsilon, args[0], args[1], args[2], args[3], args[4], true);
-                }
-                else
-                {
-                    node = make_shared<op::BatchNorm>(
-                        epsilon, args[0], args[1], args[2], args[3], args[4]);
-                }
+                // Odd order for back-compatibility
+                node = make_shared<op::BatchNormTraining>(args[2], args[0], args[1], epsilon);
                 break;
             }
-            case OP_TYPEID::BatchNormBackprop:
+            case OP_TYPEID::BatchNormInference:
             {
                 auto epsilon = node_js.at("eps").get<double>();
-                node = make_shared<op::BatchNormBackprop>(
-                    epsilon, args[0], args[1], args[2], args[3], args[4], args[5]);
+                // Odd order for back-compatibility
+                node = make_shared<op::BatchNormInference>(
+                    args[2], args[0], args[1], args[3], args[4], epsilon);
+                break;
+            }
+            case OP_TYPEID::BatchNormTrainingBackprop:
+            {
+                auto epsilon = node_js.at("eps").get<double>();
+                // Odd order for back-compatibility
+                node = make_shared<op::BatchNormTrainingBackprop>(
+                    args[2], args[0], args[1], args[3], args[4], args[5], epsilon);
                 break;
             }
             case OP_TYPEID::Broadcast:
@@ -680,6 +736,17 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::FunctionCall>(f_ptr, args);
                 break;
             }
+            case OP_TYPEID::GenerateMask:
+            {
+                auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
+                auto type = read_element_type(node_js.at("type"));
+                auto seed = node_js.at("seed").get<unsigned int>();
+                auto probability = node_js.at("probability").get<double>();
+
+                node =
+                    make_shared<op::GenerateMask>(args[0], output_shape, type, seed, probability);
+                break;
+            }
             case OP_TYPEID::GetOutputElement:
             {
                 node = make_shared<op::GetOutputElement>(args[0], node_js.at("n").get<size_t>());
@@ -767,12 +834,25 @@ static shared_ptr<ngraph::Function>
                     node_js.at("window_movement_strides").get<vector<size_t>>();
                 auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
                 auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
-                node = make_shared<op::MaxPoolBackprop>(args[0],
-                                                        args[1],
-                                                        window_shape,
-                                                        window_movement_strides,
-                                                        padding_below,
-                                                        padding_above);
+                if (args.size() == 3)
+                {
+                    node = make_shared<op::MaxPoolBackprop>(args[0],
+                                                            args[1],
+                                                            args[2],
+                                                            window_shape,
+                                                            window_movement_strides,
+                                                            padding_below,
+                                                            padding_above);
+                }
+                else
+                {
+                    node = make_shared<op::MaxPoolBackprop>(args[0],
+                                                            args[1],
+                                                            window_shape,
+                                                            window_movement_strides,
+                                                            padding_below,
+                                                            padding_above);
+                }
                 break;
             }
             case OP_TYPEID::Maximum:
@@ -815,7 +895,7 @@ static shared_ptr<ngraph::Function>
             {
                 auto shape = node_js.at("shape").get<vector<size_t>>();
                 auto one_hot_axis = node_js.at("one_hot_axis").get<size_t>();
-                node = make_shared<op::OneHot>(args[0], shape, one_hot_axis);
+                node = make_shared<op::OneHot>(args[0], read_partial_shape(shape), one_hot_axis);
                 break;
             }
             case OP_TYPEID::Or:
@@ -839,7 +919,8 @@ static shared_ptr<ngraph::Function>
                 auto element_type = read_element_type(type_node_js.at("element_type"));
                 auto shape = type_node_js.at("shape");
                 auto cacheable = get_or_default<bool>(node_js, "cacheable", false);
-                node = make_shared<op::Parameter>(element_type, shape, cacheable);
+                node =
+                    make_shared<op::Parameter>(element_type, read_partial_shape(shape), cacheable);
                 break;
             }
             case OP_TYPEID::Power:
@@ -948,6 +1029,11 @@ static shared_ptr<ngraph::Function>
                                                          scatter_f_ptr,
                                                          window_shape,
                                                          window_movement_strides);
+                break;
+            }
+            case OP_TYPEID::ShapeOf:
+            {
+                node = make_shared<op::ShapeOf>(args[0]);
                 break;
             }
             case OP_TYPEID::Sigmoid:
@@ -1195,16 +1281,21 @@ static json write(const Node& n, bool binary_constant_data)
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
         break;
     }
-    case OP_TYPEID::BatchNorm:
+    case OP_TYPEID::BatchNormTraining:
     {
-        auto tmp = dynamic_cast<const op::BatchNorm*>(&n);
+        auto tmp = dynamic_cast<const op::BatchNormTraining*>(&n);
         node["eps"] = tmp->get_eps_value();
-        node["training"] = tmp->get_training_flag();
         break;
     }
-    case OP_TYPEID::BatchNormBackprop:
+    case OP_TYPEID::BatchNormInference:
     {
-        auto tmp = dynamic_cast<const op::BatchNormBackprop*>(&n);
+        auto tmp = dynamic_cast<const op::BatchNormInference*>(&n);
+        node["eps"] = tmp->get_eps_value();
+        break;
+    }
+    case OP_TYPEID::BatchNormTrainingBackprop:
+    {
+        auto tmp = dynamic_cast<const op::BatchNormTrainingBackprop*>(&n);
         node["eps"] = tmp->get_eps_value();
         break;
     }
@@ -1308,6 +1399,15 @@ static json write(const Node& n, bool binary_constant_data)
         node["n"] = tmp->get_n();
         break;
     }
+    case OP_TYPEID::GenerateMask:
+    {
+        auto tmp = dynamic_cast<const op::GenerateMask*>(&n);
+        node["output_shape"] = tmp->get_shape();
+        node["type"] = write_element_type(tmp->get_element_type());
+        node["seed"] = tmp->get_seed();
+        node["probability"] = tmp->get_probability();
+        break;
+    }
     case OP_TYPEID::Greater: { break;
     }
     case OP_TYPEID::GreaterEq: { break;
@@ -1372,7 +1472,7 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::OneHot:
     {
         auto tmp = dynamic_cast<const op::OneHot*>(&n);
-        node["shape"] = tmp->get_shape();
+        node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
         node["one_hot_axis"] = tmp->get_one_hot_axis();
         break;
     }
@@ -1389,7 +1489,7 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Parameter:
     {
         auto tmp = dynamic_cast<const op::Parameter*>(&n);
-        node["shape"] = tmp->get_shape();
+        node["shape"] = write_partial_shape(tmp->get_output_partial_shape(0));
         node["cacheable"] = tmp->get_cacheable();
         node["element_type"] = write_element_type(tmp->get_element_type());
         break;
@@ -1469,6 +1569,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["window_shape"] = tmp->get_window_shape();
         node["window_movement_strides"] = tmp->get_window_movement_strides();
         break;
+    }
+    case OP_TYPEID::ShapeOf: { break;
     }
     case OP_TYPEID::Sigmoid: { break;
     }

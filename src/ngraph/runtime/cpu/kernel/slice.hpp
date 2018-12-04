@@ -20,7 +20,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include "ngraph/coordinate.hpp"
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -36,7 +36,8 @@ namespace ngraph
                            void* output,
                            const Shape& input_shape,
                            const Shape& output_shape,
-                           const Coordinate& lower_bounds)
+                           const Coordinate& lower_bounds,
+                           int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> out_dims, in_dims;
                     Eigen::array<Eigen::Index, Rank> indices;
@@ -53,7 +54,8 @@ namespace ngraph
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
                         static_cast<ElementType*>(input), in_dims);
 
-                    out.device(eigen::global_thread_pool_device) = in.slice(indices, out_dims);
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
+                        in.slice(indices, out_dims);
                 }
 
                 template <typename ElementType, unsigned int Rank>
@@ -63,7 +65,8 @@ namespace ngraph
                                    const Shape& output_shape,
                                    const Coordinate& lower_bounds,
                                    const Coordinate& upper_bounds,
-                                   const Strides& slice_strides)
+                                   const Strides& slice_strides,
+                                   int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> out_dims, in_dims;
                     Eigen::array<Eigen::Index, Rank> start_indices, stop_indices, strides;
@@ -82,7 +85,7 @@ namespace ngraph
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
                         static_cast<ElementType*>(input), in_dims);
 
-                    out.device(eigen::global_thread_pool_device) =
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         in.stridedSlice(start_indices, stop_indices, strides);
                 }
             }

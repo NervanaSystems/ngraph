@@ -231,7 +231,7 @@ NGRAPH_TEST (${BACKEND_NAME}, %s)
                                                                   CoordinateDiff{%s}, // below_pads
                                                                   CoordinateDiff{%s}, // above_pads
                                                                   Strides{%s}),       // data_dilation
-                                     op::ParameterVector{A, B});
+                                     ParameterVector{A, B});
     };
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -249,7 +249,7 @@ NGRAPH_TEST (${BACKEND_NAME}, %s)
     backend->call_with_validate(function, {result}, {a, b});
     EXPECT_TRUE(test::all_close<float>(vector<float>{expected_result}, read_vector<float>(result), 1.0e-4f, 1.0e-6f));
     // only test backprop for certain cases as it takes significant compute resources
-    %sEXPECT_TRUE(autodiff_numeric_compare<float>(backend, make_graph, {a, b}, .01f, .01f));
+    %sEXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {a, b}, .01f, .01f));
 }
 '''
     f.write (template % (test_name,

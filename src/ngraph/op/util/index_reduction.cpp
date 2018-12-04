@@ -30,19 +30,41 @@ op::util::IndexReduction::IndexReduction(const std::string& node_type,
     , m_index_element_type(index_element_type)
 {
     constructor_validate_and_infer_types();
-    auto rank = arg->get_shape().size();
+}
 
-    NODE_VALIDATION_ASSERT(this, rank >= 1) << "Argument rank must be at least 1";
-    NODE_VALIDATION_ASSERT(this, axis < rank) << "Axis " << axis << " is greater than rank of "
-                                              << rank;
-    NODE_VALIDATION_ASSERT(this,
-                           index_element_type == element::i32 || index_element_type == element::i64)
-        << "Index element type must be i64 or i32";
+void op::util::IndexReduction::validate_and_infer_types()
+{
+    const PartialShape& arg_shape = get_input_partial_shape(0);
+    Rank rank = arg_shape.rank();
 
-    Shape output_shape = arg->get_shape();
-    output_shape.erase(output_shape.begin() + axis);
+    NODE_VALIDATION_ASSERT(this, rank.is_dynamic() || size_t(rank) >= 1)
+        << "Argument rank is zero.";
+    NODE_VALIDATION_ASSERT(this, rank.is_dynamic() || m_axis < size_t(rank))
+        << "Reduction axis (" << m_axis << ") is not less than argument rank (" << rank << ").";
+    NODE_VALIDATION_ASSERT(
+        this, m_index_element_type == element::i32 || m_index_element_type == element::i64)
+        << "Index element is neither i64 or i32.";
 
-    set_output_type(0, index_element_type, output_shape);
+    PartialShape output_shape{PartialShape::dynamic()};
+
+    if (!rank.is_dynamic())
+    {
+        std::vector<Dimension> output_dims(size_t(rank) - 1);
+        size_t j = 0;
+
+        for (size_t i = 0; i < size_t(rank) - 1; i++)
+        {
+            if (j == m_axis)
+            {
+                j++;
+            }
+            output_dims[i] = arg_shape[j++];
+        }
+
+        output_shape = PartialShape(output_dims);
+    }
+
+    set_output_type(0, m_index_element_type, output_shape);
 }
 
 void op::util::IndexReduction::generate_adjoints(autodiff::Adjoints& adjoints,

@@ -75,13 +75,13 @@ namespace ngraph
             {
                 for (auto cd : node->get_control_dependencies())
                 {
+                    control_deps_count++;
                     control_deps_users[cd.get()].insert(node.get());
                 }
-                control_deps_count = node->get_control_dependencies().size();
             }
 
             node_map[node.get()] = node;
-            size_t deps_count = node->get_arguments().size() + control_deps_count;
+            size_t deps_count = node->get_inputs().size() + control_deps_count;
             node_dependency_count[node.get()] = deps_count;
             if (deps_count == 0)
             {
@@ -96,14 +96,17 @@ namespace ngraph
             result_list.push_back(node_map[independent_node]);
             independent_nodes.pop_front();
 
-            for (auto user_sp : independent_node->get_users())
+            for (auto& output : independent_node->get_outputs())
             {
-                Node* user = user_sp.get();
-                node_dependency_count[user] -= 1;
-                size_t count = node_dependency_count[user];
-                if (count == 0)
+                for (auto& input : output.get_inputs())
                 {
-                    independent_nodes.push_back(user);
+                    auto user = input->get_raw_pointer_node();
+                    node_dependency_count[user] -= 1;
+                    size_t count = node_dependency_count[user];
+                    if (count == 0)
+                    {
+                        independent_nodes.push_back(user);
+                    }
                 }
             }
 
@@ -176,14 +179,17 @@ namespace ngraph
             result_list.push_back(node_map[independent_node]);
             independent_nodes.pop_front();
 
-            for (auto user_sp : independent_node->get_users())
+            for (auto& output : independent_node->get_outputs())
             {
-                Node* user = user_sp.get();
-                node_dependency_count[user] -= 1;
-                size_t count = node_dependency_count[user];
-                if (count == 0)
+                for (auto& input : output.get_inputs())
                 {
-                    independent_nodes.push_back(user);
+                    auto user = input->get_raw_pointer_node();
+                    node_dependency_count[user] -= 1;
+                    size_t count = node_dependency_count[user];
+                    if (count == 0)
+                    {
+                        independent_nodes.push_back(user);
+                    }
                 }
             }
 
@@ -280,10 +286,15 @@ namespace ngraph
 
     // Assert that nodes in the function is colocated and return that placement
     Placement get_colocated_function_placement(std::shared_ptr<Function> func);
+    size_t get_colocated_function_placement_size(std::shared_ptr<Function> func);
 
     std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
         insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
                                       const std::shared_ptr<Node>& dst_node);
+
+    std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::Parameter>>
+        insert_result_parameter_split_size(const std::shared_ptr<Node>& src_node,
+                                           const std::shared_ptr<Node>& dst_node);
 
     void insert_new_node_between(const std::shared_ptr<Node>& src_node,
                                  const std::shared_ptr<Node>& dst_node,

@@ -38,25 +38,40 @@ op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
 
 void op::ReverseSequence::validate_and_infer_types()
 {
-    NODE_VALIDATION_ASSERT(this, get_input_shape(1).size() == 1)
-        << "Sequence indices must be a 1-dimensional tensor (sequence indices shape: "
-        << get_input_shape(1) << ").";
+    auto input_shape = get_input_partial_shape(0);
+    auto input_rank = input_shape.rank();
 
-    NODE_VALIDATION_ASSERT(this, m_batch_axis < get_input_shape(0).size())
+    NODE_VALIDATION_ASSERT(this, input_rank.is_dynamic() || m_batch_axis < size_t(input_rank))
         << "Batch axis index (" << m_batch_axis
-        << ") is out of bounds (argument shape: " << get_input_shape(0) << ").";
+        << ") is out of bounds (argument shape: " << input_shape << ").";
 
-    NODE_VALIDATION_ASSERT(this, m_seq_axis < get_input_shape(0).size())
+    NODE_VALIDATION_ASSERT(this, input_rank.is_dynamic() || m_seq_axis < size_t(input_rank))
         << "Sequence axis index (" << m_seq_axis
-        << ") is out of bounds (argument shape: " << get_input_shape(0) << ").";
+        << ") is out of bounds (argument shape: " << input_shape << ").";
 
-    NODE_VALIDATION_ASSERT(this, get_input_shape(0)[m_batch_axis] == get_input_shape(1)[0])
-        << "Sequence length (" << get_input_shape(1)[0] << ") is not equal to batch axis "
-        << "dimension (" << get_input_shape(0)[m_batch_axis]
-        << ") (argument shape: " << get_input_shape(0)
-        << ", sequence indices shape: " << get_input_shape(1) << ").";
+    auto indices_shape = get_input_partial_shape(1);
+    auto indices_rank = indices_shape.rank();
 
-    set_output_type(0, get_input_element_type(0), get_input_shape(0));
+    NODE_VALIDATION_ASSERT(this, indices_rank.is_dynamic() || size_t(indices_rank) == 1)
+        << "Sequence indices must be a 1-dimensional tensor (sequence indices shape: "
+        << get_input_partial_shape(1) << ").";
+
+    PartialShape output_shape{input_shape};
+
+    if (input_rank.is_static() && indices_rank.is_static())
+    {
+        Dimension merged_sequence_length;
+
+        NODE_VALIDATION_ASSERT(
+            this,
+            Dimension::merge(merged_sequence_length, input_shape[m_batch_axis], indices_shape[0]))
+            << "Sequence length (" << indices_shape[0] << ") is not equal to batch axis "
+            << "dimension (" << input_shape[m_batch_axis] << ") (argument shape: " << input_shape
+            << ", sequence indices shape: " << indices_shape << ").";
+        output_shape[m_batch_axis] = merged_sequence_length;
+    }
+
+    set_output_type(0, get_input_element_type(0), output_shape);
 }
 
 shared_ptr<Node> op::ReverseSequence::copy_with_new_args(const NodeVector& new_args) const

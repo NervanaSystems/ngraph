@@ -20,7 +20,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include "ngraph/axis_vector.hpp"
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/shape.hpp"
 
@@ -37,7 +37,8 @@ namespace ngraph
                              ElementType* output,
                              const Shape& input_shape,
                              const AxisVector& input_axis_order,
-                             const Shape& output_shape)
+                             const Shape& output_shape,
+                             int arena)
                 {
                     Eigen::array<Eigen::Index, OutRank> out_dims;
                     Eigen::array<Eigen::Index, InRank> in_dims;
@@ -59,7 +60,7 @@ namespace ngraph
                     Eigen::TensorMap<Eigen::Tensor<ElementType, InRank, Eigen::RowMajor>> in(
                         input, in_dims);
 
-                    out.device(eigen::global_thread_pool_device) =
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         in.shuffle(axis_order).reshape(out_dims);
                 }
 
@@ -68,13 +69,15 @@ namespace ngraph
                              void* output,
                              const Shape& input_shape,
                              const AxisVector& input_axis_order,
-                             const Shape& output_shape)
+                             const Shape& output_shape,
+                             int arena)
                 {
                     reshape<ElementType, InRank, OutRank>(static_cast<ElementType*>(input),
                                                           static_cast<ElementType*>(output),
                                                           input_shape,
                                                           input_axis_order,
-                                                          output_shape);
+                                                          output_shape,
+                                                          arena);
                 }
 
                 template <typename ElementType, unsigned int OutRank>
@@ -82,13 +85,15 @@ namespace ngraph
                                 void* output,
                                 const Shape& input_shape,
                                 const AxisVector& input_axis_order,
-                                const Shape& output_shape)
+                                const Shape& output_shape,
+                                int arena)
                 {
                     reshape<ElementType, 1, OutRank>(static_cast<ElementType*>(input),
                                                      static_cast<ElementType*>(output),
                                                      input_shape,
                                                      input_axis_order,
-                                                     output_shape);
+                                                     output_shape,
+                                                     arena);
                 }
 
                 template <typename ElementType, unsigned int OutRank>
@@ -96,13 +101,15 @@ namespace ngraph
                                 void* output,
                                 const Shape& input_shape,
                                 const AxisVector& input_axis_order,
-                                const Shape& output_shape)
+                                const Shape& output_shape,
+                                int arena)
                 {
                     reshape<ElementType, 2, OutRank>(static_cast<ElementType*>(input),
                                                      static_cast<ElementType*>(output),
                                                      input_shape,
                                                      input_axis_order,
-                                                     output_shape);
+                                                     output_shape,
+                                                     arena);
                 }
 
                 template <typename ElementType, unsigned int OutRank>
@@ -110,13 +117,15 @@ namespace ngraph
                                 void* output,
                                 const Shape& input_shape,
                                 const AxisVector& input_axis_order,
-                                const Shape& output_shape)
+                                const Shape& output_shape,
+                                int arena)
                 {
                     reshape<ElementType, 3, OutRank>(static_cast<ElementType*>(input),
                                                      static_cast<ElementType*>(output),
                                                      input_shape,
                                                      input_axis_order,
-                                                     output_shape);
+                                                     output_shape,
+                                                     arena);
                 }
 
                 template <typename ElementType, unsigned int OutRank>
@@ -124,13 +133,15 @@ namespace ngraph
                                 void* output,
                                 const Shape& input_shape,
                                 const AxisVector& input_axis_order,
-                                const Shape& output_shape)
+                                const Shape& output_shape,
+                                int arena)
                 {
                     reshape<ElementType, 4, OutRank>(static_cast<ElementType*>(input),
                                                      static_cast<ElementType*>(output),
                                                      input_shape,
                                                      input_axis_order,
-                                                     output_shape);
+                                                     output_shape,
+                                                     arena);
                 }
 
                 template <typename ElementType>
@@ -138,7 +149,8 @@ namespace ngraph
                              void* out,
                              const Shape& in_shape,
                              const AxisVector& in_axis_order,
-                             const Shape& out_shape)
+                             const Shape& out_shape,
+                             int arena)
                 {
                     reference::reshape(static_cast<const ElementType*>(arg),
                                        static_cast<ElementType*>(out),

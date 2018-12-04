@@ -38,14 +38,12 @@ runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
     cleanup_runtime_context();
 }
 
-void runtime::cpu::CPU_CallFrame::call(
+void runtime::cpu::CPU_CallFrame::inner_call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
 {
     vector<void*> inputs;
     vector<void*> outputs;
-
-    propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
 
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
@@ -79,6 +77,15 @@ void runtime::cpu::CPU_CallFrame::call(
     }
 }
 
+void runtime::cpu::CPU_CallFrame::call(
+    const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
+{
+    ctx->pc = 0;
+    propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
+    inner_call(output_tvs, input_tvs);
+}
+
 void runtime::cpu::CPU_CallFrame::propagate_layouts(
     const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
     const LayoutDescriptorPtrs& layouts) const
@@ -103,6 +110,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 {
     ctx = new CPURuntimeContext;
 
+    ctx->pc = 0;
     ctx->op_durations = nullptr;
     if (runtime::cpu::IsTracingEnabled())
     {
@@ -122,6 +130,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
     const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
     ctx->mkldnn_primitives = mkldnn_emitter->get_mkldnn_primitives().data();
     ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces().data();
+    ctx->states = m_external_function->m_states.data();
 
     if (std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
     {
@@ -129,7 +138,6 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         const auto envParallelism = std::getenv("NGRAPH_INTER_OP_PARALLELISM");
         const auto parallelism = envParallelism == nullptr ? 1 : std::atoi(envParallelism);
         ctx->c = new tbb::global_control(tbb::global_control::max_allowed_parallelism, parallelism);
-        ctx->init = new tbb::task_scheduler_init(parallelism);
     }
 }
 
@@ -156,7 +164,6 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
             delete node;
         }
         delete ctx->c;
-        delete ctx->init;
     }
     delete ctx;
 }

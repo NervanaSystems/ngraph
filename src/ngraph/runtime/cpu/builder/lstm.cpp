@@ -59,7 +59,7 @@ namespace ngraph
                 auto lstm_index = mkldnn_emitter->build_rnn<ngraph::op::Lstm>(node, args, out);
                 auto& deps = mkldnn_emitter->get_primitive_deps(lstm_index);
 
-                auto functor = [&, lstm_index](CPURuntimeContext* ctx) {
+                auto functor = [&, lstm_index](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], src_layer_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], src_iter_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], weights_layer_tensor);

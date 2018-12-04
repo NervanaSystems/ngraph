@@ -14,12 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <ostream>
-#include <set>
-
 #include <onnx-ml.pb.h>
-
-#include "assertion.hpp"
 
 #include "model.hpp"
 #include "ops_bridge.hpp"
@@ -31,30 +26,49 @@ namespace ngraph
         Model::Model(const onnx::ModelProto& model_proto)
             : m_model_proto{&model_proto}
         {
-            // Verify that the ONNX graph contains only nodes of supported op_type
-            assert_all_op_types_supported();
+            // Walk through the elements of opset_import field and register operator sets
+            // for each domain. An exception UnknownDomain() will raise if the domain is
+            // unknown or invalid.
+            for (const auto& id : m_model_proto->opset_import())
+            {
+                m_opset.emplace(id.domain(),
+                                OperatorsBridge::get_operator_set(
+                                    id.version(), (id.domain() == "ai.onnx" ? "" : id.domain())));
+            }
+            // onnx.proto(.3): the empty string ("") for domain or absence of opset_import field
+            // implies the operator set that is defined as part of the ONNX specification.
+            const auto dm = m_opset.find("");
+            if (dm == std::end(m_opset))
+            {
+                m_opset.emplace("", OperatorsBridge::get_operator_set(ONNX_OPSET_VERSION, ""));
+            }
         }
 
-        void Model::assert_all_op_types_supported()
+        const Operator& Model::get_operator(const std::string& name,
+                                            const std::string& domain) const
         {
-            std::set<std::string> unsupported_ops;
-            for (const auto& node_proto : get_graph().node())
+            const auto dm = m_opset.find(domain);
+            if (dm == std::end(m_opset))
             {
-                std::string op_type = node_proto.op_type();
-                if (!ops_bridge::is_op_type_supported(op_type))
-                {
-                    unsupported_ops.insert(op_type);
-                }
+                throw error::UnknownDomain{domain};
             }
+            const auto op = dm->second.find(name);
+            if (op == std::end(dm->second))
+            {
+                throw error::UnknownOperator{name, domain};
+            }
+            return op->second;
+        }
 
-            std::string unsupported_ops_str;
-            std::size_t index = 0;
-            for (const auto& op_type : unsupported_ops)
+        bool Model::is_operator_available(const onnx::NodeProto& node_proto) const
+        {
+            const auto dm = m_opset.find(node_proto.domain());
+            if (dm == std::end(m_opset))
             {
-                unsupported_ops_str += (index++ != 0 ? ", " : "");
-                unsupported_ops_str += op_type;
+                return false;
             }
-            NGRAPH_ASSERT(unsupported_ops.empty()) << "unknown operations: " << unsupported_ops_str;
+            const auto op = dm->second.find(node_proto.op_type());
+            return (op != std::end(dm->second));
         }
 
     } // namespace onnx_import

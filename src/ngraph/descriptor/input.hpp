@@ -42,6 +42,8 @@ namespace ngraph
             /// \return the node that this is an input of
             std::shared_ptr<Node> get_node() const;
 
+            /// \return the raw pointer to the node that this is an input of
+            Node* get_raw_pointer_node() const { return m_node; }
             /// \return the position within all supplied tensors of this input
             size_t get_index() const { return m_index; }
             /// \return the connected output
@@ -58,10 +60,10 @@ namespace ngraph
             void replace_output(Output& output);
 
         protected:
-            /// \return the tensor view for the connected output
+            /// \return the tensor for the connected output
             std::shared_ptr<const Tensor> get_tensor_ptr() const;
 
-            /// \return the tensor view for the connected output
+            /// \return the tensor for the connected output
             std::shared_ptr<Tensor> get_tensor_ptr();
 
         public:

@@ -25,7 +25,7 @@
 //       derivative does not work with int types
 // TODO: Always compute the numerical derivatives in double
 template <typename T>
-bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Backend>& backend,
+bool autodiff_numeric_compare(ngraph::runtime::Backend* backend,
                               std::shared_ptr<ngraph::Function> f,
                               std::shared_ptr<ngraph::Function> g,
                               const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
@@ -55,7 +55,7 @@ bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Backend>& b
         interpreter_args.push_back(interpreter_arg);
     }
     auto results_num = ngraph::autodiff::numeric_derivative<T>(
-        interpreter_backend, f, interpreter_args, delta, f->get_parameters());
+        interpreter_backend.get(), f, interpreter_args, delta, f->get_parameters());
 
     // Use the backend being tested to compute symbolic derivatives
     auto results_sym =
@@ -75,7 +75,7 @@ bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Backend>& b
 }
 
 template <typename T>
-bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Backend>& backend,
+bool autodiff_numeric_compare(ngraph::runtime::Backend* backend,
                               std::function<std::shared_ptr<ngraph::Function>()> make_graph,
                               const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
                               T rtol,
@@ -86,7 +86,7 @@ bool autodiff_numeric_compare(const std::shared_ptr<ngraph::runtime::Backend>& b
 
 template <typename T>
 bool autodiff_numeric_compare_selective(
-    const std::shared_ptr<ngraph::runtime::Backend>& backend,
+    ngraph::runtime::Backend* backend,
     std::shared_ptr<ngraph::Function> f,
     std::shared_ptr<ngraph::Function> g,
     const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
@@ -128,7 +128,7 @@ bool autodiff_numeric_compare_selective(
         interpreter_args.push_back(interpreter_arg);
     }
     auto results_num = ngraph::autodiff::numeric_derivative<T>(
-        interpreter_backend, f, interpreter_args, .001f, f_indep_params);
+        interpreter_backend.get(), f, interpreter_args, .001f, f_indep_params);
 
     // Use the backend being tested to compute symbolic derivatives
     std::vector<std::shared_ptr<ngraph::op::Parameter>> g_indep_params;
@@ -161,7 +161,7 @@ bool autodiff_numeric_compare_selective(
 
 template <typename T>
 bool autodiff_numeric_compare_selective(
-    const std::shared_ptr<ngraph::runtime::Backend>& backend,
+    ngraph::runtime::Backend* backend,
     std::function<std::shared_ptr<ngraph::Function>()> make_graph,
     const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
     T rtol,

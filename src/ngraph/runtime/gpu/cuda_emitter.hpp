@@ -44,12 +44,18 @@ namespace ngraph
                 friend class GPUPrimitiveEmitter;
 
             public:
-                size_t build_primitive(const op::Softmax* node);
                 size_t build_primitive(const op::Convolution* node);
                 size_t build_primitive(const op::MaxPool* node);
                 size_t build_primitive(const op::ReplaceSlice* node, bool in_place_op);
 
             public:
+                size_t build_topk(const std::vector<element::Type>& dtypes,
+                                  const NVShape& input_shape,
+                                  const size_t topk_axis,
+                                  size_t topk_k,
+                                  const element::Type index_elem_type,
+                                  bool compute_max);
+
                 size_t build_pad(const std::vector<std::string>& dtypes,
                                  NVShape input_shape,
                                  NVShape output_shape,
@@ -114,11 +120,15 @@ namespace ngraph
                         dtypes, tensor_shape, CudaOpMap<T>::op, CudaOpMap<T>::math_kernel);
                 }
 
+                size_t build_cudnn_bn_inv_var(const std::vector<std::string>& dtypes,
+                                              NVShape tensor_shape,
+                                              const double& eps);
+
                 template <typename T>
                 size_t build_reduce(const std::vector<std::string>& dtypes,
                                     const size_t data_bytes,
-                                    NVShape input_shape,
-                                    NVShape reduce_axis)
+                                    const NVShape& input_shape,
+                                    const NVShape& reduce_axis)
                 {
                     return build_reduce(dtypes,
                                         data_bytes,
@@ -170,15 +180,14 @@ namespace ngraph
                                          NVShape input_dilation,
                                          NVDiff input_pad_below);
 
-                size_t build_concat(const std::vector<std::string>& dtypes,
+                size_t build_concat(const std::string& dtype,
                                     std::vector<NVShape> input_shapes,
                                     size_t concat_axis,
                                     NVShape output_shape);
 
-                size_t build_softmax_divide(const std::vector<std::string>& dtypes,
-                                            NVShape input_shape,
-                                            NVShape reduce_shape,
-                                            std::vector<size_t> axes_flag);
+                size_t build_softmax(const std::vector<std::string>& dtypes,
+                                     NVShape input_shape,
+                                     NVShape reduce_axis);
 
                 void debug_sync();
                 void sync();
@@ -204,8 +213,8 @@ namespace ngraph
                                                     bool save_elementwise);
                 size_t build_reduce(const std::vector<std::string>& dtypes,
                                     const size_t data_bytes,
-                                    NVShape input_shape,
-                                    NVShape reduce_axis,
+                                    const NVShape& input_shape,
+                                    const NVShape& reduce_axis,
                                     const char* op,
                                     const char* kernel);
                 size_t build_reduce_to_nd(const std::vector<std::string>& dtypes,

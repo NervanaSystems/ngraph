@@ -27,7 +27,7 @@ namespace ngraph
         class Result : public Op
         {
         public:
-            /// \brief Constructs an arcsin operation.
+            /// \brief Allows a value to be used as a function result.
             ///
             /// \param arg Node that produces the input tensor.
             Result(const std::shared_ptr<Node>& arg);

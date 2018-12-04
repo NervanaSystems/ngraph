@@ -18,7 +18,7 @@
       {%- if hasdoc('copyright') %}
         {% trans path=pathto('copyright'), copyright=copyright|e %}&copy; <a href="{{ path }}">Copyright</a> {{ copyright }}. {% endtrans %}
       {%- else %}
-        <span class="crt-size">{% trans copyright=copyright|e %}&copy; Copyright {{ copyright }}.</span> <br/><div class="brandnote"> Intel nGraph library contains trademarks of Intel Corporation or its subsidiaries in the U.S. and/or other countries. * Other names and brands may be claimed as the property of others; see <a href="http://ngraph.nervanasys.com/docs/latest/branding-notice.html">branding notice</a> for more information.</class>{% endtrans %}
+        <span class="crt-size">{% trans copyright=copyright|e %}&copy; Copyright {{ copyright }}.</span> <br/><div class="brandnote"> Intel nGraph Library contains trademarks of Intel Corporation or its subsidiaries in the U.S. and/or other countries. * Other names and brands may be claimed as the property of others; see <a href="http://ngraph.nervanasys.com/docs/latest/branding-notice.html">branding notice</a> for more information.</class>{% endtrans %}
       {%- endif %}
     {%- endif %}
 

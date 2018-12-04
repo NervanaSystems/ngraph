@@ -30,7 +30,8 @@ namespace ngraph
                                     const Shape& input_shape,
                                     const Shape& output_shape,
                                     const Shape& padding_below,
-                                    const Shape& padding_above)
+                                    const Shape& padding_above,
+                                    int arena)
                 {
                     pad<float, 4>(input,
                                   output,
@@ -38,7 +39,8 @@ namespace ngraph
                                   input_shape,
                                   output_shape,
                                   padding_below,
-                                  padding_above);
+                                  padding_above,
+                                  arena);
                 }
             }
         }

@@ -34,7 +34,7 @@ namespace ngraph
         /// \returns vector of dy/dvar, where each dy/dvar's shape is concat(y.shape(), var.shape())
         template <typename T>
         std::vector<std::shared_ptr<runtime::Tensor>>
-            numeric_derivative(const std::shared_ptr<runtime::Backend>& backend,
+            numeric_derivative(runtime::Backend* backend,
                                const std::shared_ptr<Function>& f,
                                const std::vector<std::shared_ptr<runtime::Tensor>>& args,
                                T delta,

@@ -14,6 +14,14 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.0.0")
+        # gtest has issues with this with v1.8.x
+        # gtest issue is supposed to be addressed after v1.8.x
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-zero-as-null-pointer-constant")
+    endif()
+endif()
+
 set(SRC
     algebraic_simplification.cpp
     all_close_f.cpp
@@ -56,28 +64,48 @@ set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND SRC onnx_import.cpp)
     if (NGRAPH_ONNXIFI_ENABLE)
-        list(APPEND SRC onnxifi.cpp)
+        list(APPEND SRC onnxifi.cpp onnxifi_span.cpp)
     endif()
 endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
-    set(SRC ${SRC} backend_debug_api.cpp builder.cpp backend_api.cpp)
+    list(APPEND SRC
+        backend_debug_api.cpp
+        builder.cpp
+        backend_api.cpp
+        hybrid_backend.cpp
+        hybrid_utils.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
+if (NGRAPH_HYBRID_ENABLE)
+    set(SRC ${SRC} hybrid_backend.cpp)
+endif()
+
 if (NGRAPH_CPU_ENABLE)
-    set(SRC ${SRC} core_fusion.cpp quantize_cpu.cpp)
-    set(SRC ${SRC} backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp)
+    list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
+    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp cpu_debugger.cpp)
+    if (NGRAPH_HALIDE)
+        list(APPEND SRC halide.cpp)
+    endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
 endif()
 
 if(NGRAPH_GPU_ENABLE)
-    set(SRC ${SRC} cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
+    list(APPEND SRC cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
 endif()
 
 if (NGRAPH_INTELGPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
+endif()
+
+if (NGRAPH_HYBRID_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} HYBRID)
+endif()
+
+if (NGRAPH_PLAIDML_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
 endif()
 
 add_subdirectory(models)
@@ -92,11 +120,26 @@ add_subdirectory(util)
 # such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
 set(MULTI_TEST_SRC
     autodiff.in.cpp
+    backend_binary_elementwise.in.cpp
+    backend_broadcast.in.cpp
+    backend_comparison.in.cpp
+    backend_dot.in.cpp
+    backend_one_hot.in.cpp
+    backend_pool.in.cpp
+    backend_reduce.in.cpp
+    backend_reshape.in.cpp
+    backend_sum.in.cpp
+    backend_topk.in.cpp
+    backend_arg_reduce.in.cpp
     backend_test.in.cpp
+    backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
 )
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    set(MULTI_TEST_SRC ${MULTI_TEST_SRC} distributed.in.cpp)
+    list(APPEND MULTI_TEST_SRC distributed.in.cpp)
+endif()
+if (NGRAPH_CPU_ENABLE)
+    list(APPEND MULTI_TEST_SRC backend_graph_comparison.in.cpp)
 endif()
 
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
@@ -123,7 +166,9 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
 endforeach()
 
-include_directories(".")
+add_executable(unit-test ${SRC})
+
+target_include_directories(unit-test PRIVATE ".")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
@@ -135,16 +180,15 @@ endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     find_package(MPI REQUIRED)
-    add_definitions(-DNGRAPH_DISTRIBUTED)
-    include_directories(SYSTEM ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    link_directories(${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    link_libraries(${MPI_CXX_LIBRARIES})
+    target_compile_definitions(unit-test PRIVATE NGRAPH_DISTRIBUTED)
+    target_include_directories(unit-test
+        SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    target_link_libraries(unit-test PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 endif()
 
-add_executable(unit-test ${SRC})
-target_link_libraries(unit-test ngraph_test_util)
-target_link_libraries(unit-test ngraph libgtest libjson pthread)
-target_link_libraries(unit-test ${CMAKE_DL_LIBS})
+target_link_libraries(unit-test PRIVATE ngraph_test_util)
+target_link_libraries(unit-test PRIVATE ngraph libgtest libjson pthread)
+target_link_libraries(unit-test PRIVATE ${CMAKE_DL_LIBS})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro)
@@ -152,26 +196,42 @@ endif()
 
 if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
-    target_link_libraries(unit-test cpu_backend interpreter_backend)
-    target_link_libraries(unit-test libmkldnn)
+    target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
+    target_link_libraries(unit-test PRIVATE libmkldnn)
+endif()
+
+if (NGRAPH_PLAIDML_ENABLE)
+    target_link_libraries(unit-test PRIVATE plaidml_backend)
 endif()
 
 if (NGRAPH_TBB_ENABLE)
-    add_definitions(-DNGRAPH_TBB_ENABLE)
+    target_compile_definitions(unit-test PRIVATE NGRAPH_TBB_ENABLE)
+endif()
+
+if (NGRAPH_HALIDE)
+    target_compile_definitions(unit-test PRIVATE "NGRAPH_HALIDE")
 endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
-    add_definitions(-DNGRAPH_INTERPRETER_ENABLE)
-    target_link_libraries(unit-test interpreter_backend)
+    target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
+    target_link_libraries(unit-test PRIVATE interpreter_backend)
+endif()
+
+if (NGRAPH_HYBRID_ENABLE)
+    target_link_libraries(unit-test PRIVATE hybrid_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)
-    target_link_libraries(unit-test gpu_backend)
+    target_link_libraries(unit-test PRIVATE gpu_backend)
+endif()
+
+if (NGRAPH_NOP_ENABLE)
+    target_link_libraries(unit-test PRIVATE nop_backend)
 endif()
 
 if (NGRAPH_ONNXIFI_ENABLE)
     target_include_directories(unit-test SYSTEM PUBLIC ${ONNX_INCLUDE_DIR})
-    target_link_libraries(unit-test onnxifi-ngraph)
+    target_link_libraries(unit-test PRIVATE onnxifi-ngraph)
 endif()
 
 add_custom_target(unit-test-check

@@ -15,14 +15,12 @@
 //*****************************************************************************
 
 #include <memory>
-
 #include <onnx-ml.pb.h>
-
-#include "ngraph/op/convert.hpp"
-#include "ngraph/type/element_type.hpp"
 
 #include "cast.hpp"
 #include "exceptions.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
@@ -52,9 +50,7 @@ namespace ngraph
                     case onnx::TensorProto_DataType_UINT16: elem_type = element::u16; break;
                     case onnx::TensorProto_DataType_UINT32: elem_type = element::u32; break;
                     case onnx::TensorProto_DataType_UINT64: elem_type = element::u64; break;
-                    case onnx::TensorProto_DataType_UNDEFINED:
-                        elem_type = element::unspecified;
-                        break;
+                    case onnx::TensorProto_DataType_UNDEFINED: elem_type = element::dynamic; break;
                     default: ASSERT_IS_SUPPORTED(node, false) << "unsupported type";
                     }
 

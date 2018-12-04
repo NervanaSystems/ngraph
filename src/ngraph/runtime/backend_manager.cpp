@@ -66,9 +66,9 @@ vector<string> runtime::BackendManager::get_registered_backends()
     return rc;
 }
 
-shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::string& config)
+unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::string& config)
 {
-    shared_ptr<runtime::Backend> rc;
+    runtime::Backend* backend = nullptr;
     string type = config;
 
     // strip off attributes, IE:CPU becomes IE
@@ -83,7 +83,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     if (it != registry.end())
     {
         new_backend_t new_backend = it->second;
-        rc = shared_ptr<runtime::Backend>(new_backend(config.c_str()));
+        backend = new_backend(config.c_str());
     }
     else
     {
@@ -111,21 +111,9 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
             throw runtime_error("Backend '" + type + "' does not implement new_backend");
         }
 
-        function<void(runtime::Backend*)> delete_backend =
-            reinterpret_cast<void (*)(runtime::Backend*)>(DLSYM(handle, "delete_backend"));
-        if (!delete_backend)
-        {
-            CLOSE_LIBRARY(handle);
-            throw runtime_error("Backend '" + type + "' does not implement delete_backend");
-        }
-
-        runtime::Backend* backend = new_backend(config.c_str());
-        rc = shared_ptr<runtime::Backend>(backend, [=](runtime::Backend* b) {
-            delete_backend(b);
-            // CLOSE_LIBRARY(handle);
-        });
+        backend = new_backend(config.c_str());
     }
-    return rc;
+    return unique_ptr<runtime::Backend>(backend);
 }
 
 // This doodad finds the full path of the containing shared library

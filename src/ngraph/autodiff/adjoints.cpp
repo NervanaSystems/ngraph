@@ -45,9 +45,17 @@ std::shared_ptr<Node> make_zero(const std::shared_ptr<Node>& node)
 NodeVector make_zeros(std::shared_ptr<Node> x)
 {
     NodeVector zeros;
-    for (size_t i = 0; i < x->get_outputs().size(); ++i)
+    if (x->get_outputs().size() > 1)
     {
-        zeros.push_back(make_zero(get_output_element(x, i)));
+        auto goes = op::get_output_elements(x);
+        for (size_t i = 0; i < goes.size(); ++i)
+        {
+            zeros.push_back(make_zero(goes.at(i)));
+        }
+    }
+    else
+    {
+        zeros.push_back(make_zero(x));
     }
     return zeros;
 }
@@ -169,8 +177,9 @@ void autodiff::Adjoints::add_delta_to_slice(const std::shared_ptr<Node>& x,
                                             const Coordinate& upper_bounds,
                                             const Strides& strides)
 {
-    if (x->get_output_element_type(0) != delta->get_output_element_type(0) ||
-        x->get_output_shape(0).size() != delta->get_output_shape(0).size())
+    if (!(x->get_output_element_type(0).compatible(delta->get_output_element_type(0))) ||
+        !(x->get_output_partial_shape(0).rank().compatible(
+            delta->get_output_partial_shape(0).rank())))
     {
         throw ngraph_error(
             "Autodiff internal error: Mismatch on backprop and op in add_delta_to_slice.");

@@ -24,6 +24,7 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor.hpp"
+#include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -36,7 +37,15 @@ extern "C" const char* get_ngraph_version_string()
 
 extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
+#ifdef NGRAPH_HYBRID_ENABLE
+    vector<pair<string, shared_ptr<runtime::Backend>>> backend_list{
+        {"GPU", make_shared<runtime::gpu::GPU_Backend>()}};
+
+    auto wrapper = new runtime::hybrid::HybridBackend(backend_list);
+    return wrapper;
+#else
     return new runtime::gpu::GPU_Backend();
+#endif
 }
 
 extern "C" void delete_backend(runtime::Backend* backend)
@@ -216,5 +225,36 @@ vector<runtime::PerformanceCounter>
             }
         }
     }
+    return rc;
+}
+
+bool runtime::gpu::GPU_Backend::is_supported(const Node& node) const
+{
+    bool rc = true;
+
+    // get op type
+    element::Type type;
+    if (node.description() == "Select")
+    {
+        type = node.get_input_element_type(1);
+    }
+    else if (node.description() == "Constant")
+    {
+        type = node.get_outputs().at(0).get_element_type();
+    }
+    else if (node.description() == "Parameter")
+    {
+        type = node.get_outputs().at(0).get_element_type();
+    }
+    else
+    {
+        type = node.get_input_element_type(0);
+    }
+
+    if (type != element::f32)
+    {
+        rc = false;
+    }
+
     return rc;
 }

@@ -20,7 +20,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -32,7 +32,7 @@ namespace ngraph
             namespace kernel
             {
                 template <typename ElementType, unsigned int Rank>
-                void softmax_all(void* input, void* output, const Shape& input_shape)
+                void softmax_all(void* input, void* output, const Shape& input_shape, int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> in_dims, rdims;
                     rdims.fill(1);
@@ -46,9 +46,9 @@ namespace ngraph
                         static_cast<ElementType *>(output), in_dims),
                         in(static_cast<ElementType *>(input), in_dims);
 
-                    out.device(eigen::global_thread_pool_device) =
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         (in - in.maximum().eval().reshape(rdims).broadcast(in_dims)).exp();
-                    out.device(eigen::global_thread_pool_device) =
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         out * out.sum().inverse().eval().reshape(rdims).broadcast(in_dims);
                 }
 
@@ -56,7 +56,8 @@ namespace ngraph
                 void softmax(void* input,
                              void* output,
                              const Shape& input_shape,
-                             const AxisSet& softmax_axes)
+                             const AxisSet& softmax_axes,
+                             int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> in_dims, rdims, bcast;
                     Eigen::array<Eigen::Index, AxisCount> axes;
@@ -93,14 +94,17 @@ namespace ngraph
                         static_cast<ElementType *>(output), in_dims),
                         in(static_cast<ElementType *>(input), in_dims);
 
-                    out.device(eigen::global_thread_pool_device) =
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         (in - in.maximum(axes).eval().reshape(rdims).broadcast(bcast)).exp();
-                    out.device(eigen::global_thread_pool_device) =
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         out * out.sum(axes).inverse().eval().reshape(rdims).broadcast(bcast);
                 }
 
                 template <typename ElementType, unsigned int Rank>
-                void softmax_innermost_1rd(void* input, void* output, const Shape& input_shape)
+                void softmax_innermost_1rd(void* input,
+                                           void* output,
+                                           const Shape& input_shape,
+                                           int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> in_dims, rdims, bcast;
                     Eigen::IndexList<Eigen::type2index<Rank - 1>> axis;
@@ -125,9 +129,9 @@ namespace ngraph
                         static_cast<ElementType *>(output), in_dims),
                         in(static_cast<ElementType *>(input), in_dims);
 
-                    out.device(eigen::global_thread_pool_device) =
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         (in - in.maximum(axis).eval().reshape(rdims).broadcast(bcast)).exp();
-                    out.device(eigen::global_thread_pool_device) =
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         out * out.sum(axis).inverse().eval().reshape(rdims).broadcast(bcast);
                 }
 
@@ -135,27 +139,30 @@ namespace ngraph
                 void softmax_1rd(void* input,
                                  void* output,
                                  const Shape& input_shape,
-                                 const AxisSet& softmax_axes)
+                                 const AxisSet& softmax_axes,
+                                 int arena)
                 {
-                    softmax<ElementType, Rank, 1>(input, output, input_shape, softmax_axes);
+                    softmax<ElementType, Rank, 1>(input, output, input_shape, softmax_axes, arena);
                 }
 
                 template <typename ElementType>
                 void softmax_3d_2rd(void* input,
                                     void* output,
                                     const Shape& input_shape,
-                                    const AxisSet& softmax_axes)
+                                    const AxisSet& softmax_axes,
+                                    int arena)
                 {
-                    softmax<ElementType, 3, 2>(input, output, input_shape, softmax_axes);
+                    softmax<ElementType, 3, 2>(input, output, input_shape, softmax_axes, arena);
                 }
 
                 template <typename ElementType>
                 void softmax_4d_3rd(void* input,
                                     void* output,
                                     const Shape& input_shape,
-                                    const AxisSet& softmax_axes)
+                                    const AxisSet& softmax_axes,
+                                    int arena)
                 {
-                    softmax<ElementType, 4, 3>(input, output, input_shape, softmax_axes);
+                    softmax<ElementType, 4, 3>(input, output, input_shape, softmax_axes, arena);
                 }
             }
         }

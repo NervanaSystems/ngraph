@@ -62,6 +62,8 @@ namespace ngraph
                 std::vector<PerformanceCounter>
                     get_performance_data(std::shared_ptr<Function> func) const override;
 
+                bool is_supported(const Node& node) const override;
+
                 class BackendContext
                 {
                 public:

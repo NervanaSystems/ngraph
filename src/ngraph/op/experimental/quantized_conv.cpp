@@ -45,11 +45,6 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& data_batc
     auto& data_batch_shape = data_batch->get_shape();
     auto& filters_shape = filters->get_shape();
 
-    auto scale_const_op = std::static_pointer_cast<ngraph::op::Constant>(scale);
-    float scale_val = *(static_cast<float const*>(scale_const_op->get_data_ptr()));
-
-    this->m_scale = scale_val;
-
     set_output_type(0,
                     element::i8,
                     util::infer_convolution_output_shape(this,

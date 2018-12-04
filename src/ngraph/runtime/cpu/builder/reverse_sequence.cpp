@@ -59,15 +59,16 @@ namespace ngraph
                                        " requires a kernel instantiation to handle this type");
                 }
 
-                auto functor =
-                    [&, kernel, arg_shape, batch_axis, sequence_axis](CPURuntimeContext* ctx) {
-                        kernel(arg_tensor,
-                               out_tensor,
-                               arg_shape,
-                               batch_axis,
-                               sequence_axis,
-                               seq_len_tensor);
-                    };
+                auto functor = [&, kernel, arg_shape, batch_axis, sequence_axis](
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    kernel(arg_tensor,
+                           out_tensor,
+                           arg_shape,
+                           batch_axis,
+                           sequence_axis,
+                           seq_len_tensor,
+                           ectx->arena);
+                };
                 functors.emplace_back(functor);
             }
 

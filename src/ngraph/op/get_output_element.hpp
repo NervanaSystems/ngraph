@@ -36,6 +36,7 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+            void validate_and_infer_types() override;
 
             /// \return The index of the tuple element to get.
             size_t get_n() const { return m_n; }

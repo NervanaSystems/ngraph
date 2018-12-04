@@ -46,7 +46,7 @@ namespace ngraph
     {
         template <typename T>
         std::vector<std::shared_ptr<runtime::Tensor>>
-            get_autodiff(const std::shared_ptr<runtime::Backend>& backend,
+            get_autodiff(runtime::Backend* backend,
                          std::shared_ptr<Function>& df,
                          const std::vector<std::shared_ptr<runtime::Tensor>>& df_input_args,
                          const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
@@ -126,7 +126,7 @@ namespace ngraph
 
         template <typename T>
         std::vector<std::shared_ptr<runtime::Tensor>>
-            backprop_derivative(const std::shared_ptr<runtime::Backend>& backend,
+            backprop_derivative(runtime::Backend* backend,
                                 const std::shared_ptr<Function>& f,
                                 const std::vector<std::shared_ptr<runtime::Tensor>>& f_input_args,
                                 const std::vector<std::shared_ptr<op::Parameter>>& indep_params)

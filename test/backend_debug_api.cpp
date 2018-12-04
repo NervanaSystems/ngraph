@@ -33,9 +33,9 @@ TEST(INTERPRETER, nan_check_input)
     Shape shape{4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), ParameterVector{A, B});
 
-    auto backend = runtime::Backend::create("INTERPRETER");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("INTERPRETER");
 
     shared_ptr<runtime::interpreter::INTBackend> ibackend =
         static_pointer_cast<runtime::interpreter::INTBackend>(backend);
@@ -56,9 +56,9 @@ TEST(INTERPRETER, nan_check_output)
     Shape shape{4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Divide>(A, B), ParameterVector{A, B});
 
-    auto backend = runtime::Backend::create("INTERPRETER");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("INTERPRETER");
 
     shared_ptr<runtime::interpreter::INTBackend> ibackend =
         static_pointer_cast<runtime::interpreter::INTBackend>(backend);

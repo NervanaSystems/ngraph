@@ -27,9 +27,20 @@ namespace ngraph
 {
     namespace op
     {
-        class BatchNorm : public Op
+        // \brief Batchnorm for training operation
+        class BatchNormTraining : public Op
         {
         public:
+            // \param input Must have rank >= 2, [., C, ...]
+            // \param gamma gamma scaling for normalized value. [C]
+            // \param beta bias added to the scaled normalized value [C]
+            // \param epsilon Avoids divsion by 0 if input has 0 variance
+            BatchNormTraining(std::shared_ptr<Node> input,
+                              std::shared_ptr<Node> gamma,
+                              std::shared_ptr<Node> beta,
+                              double epsilon);
+
+            // \deprecated
             // In this version of BatchNorm:
             //
             // MEAN AND VARIANCE: computed directly from the content of 'input'.
@@ -49,11 +60,46 @@ namespace ngraph
             //   output[0]: shall have the same shape as 'input'.
             //   output[1]: shall have rank 1, with the same span as input's channel axis.
             //   output[2]: shall have rank 1, with the same span as input's channel axis.
-            BatchNorm(double eps,
-                      std::shared_ptr<Node> gamma,
-                      std::shared_ptr<Node> beta,
-                      std::shared_ptr<Node> input);
+            BatchNormTraining(double eps,
+                              std::shared_ptr<Node> gamma,
+                              std::shared_ptr<Node> beta,
+                              std::shared_ptr<Node> input);
 
+            void validate_and_infer_types() override;
+
+            double get_eps_value() const { return m_epsilon; }
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+        protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const NodeVector& deltas) override;
+
+        private:
+            static constexpr size_t INPUT_GAMMA = 0;
+            static constexpr size_t INPUT_BETA = 1;
+            static constexpr size_t INPUT_DATA = 2;
+
+            double m_epsilon;
+        };
+
+        class BatchNormInference : public Op
+        {
+        public:
+            // \param input [., C, ...]
+            // \param gamma gamma scaling for normalized value. [C]
+            // \param beta bias added to the scaled normalized value [C]
+            // \param mean value for mean normalization [C]
+            // \param variance value for variance normalization [C]
+            // \param epsilon Avoids divsion by 0 if input has 0 variance
+            BatchNormInference(std::shared_ptr<ngraph::Node> input,
+                               std::shared_ptr<ngraph::Node> gamma,
+                               std::shared_ptr<ngraph::Node> beta,
+                               std::shared_ptr<ngraph::Node> mean,
+                               std::shared_ptr<ngraph::Node> variance,
+                               double epsilon);
+
+            // \deprecated
             // In this version of BatchNorm:
             //
             // MEAN AND VARIANCE: provided by the 'mean' and 'variance' parameters.
@@ -61,8 +107,7 @@ namespace ngraph
             // OUTPUT VALUE: a single tensor with the normalized value of 'input'.
             //
             // AUTODIFF SUPPORT:
-            //   - when 'training' is true, yes: 'generate_adjoints(...)' works as expected.
-            //   - when 'training' is false, no: 'generate_adjoints(...) may throw an exception.
+            //   - 'generate_adjoints(...) may throw an exception.
             //
             // SHAPE DETAILS:
             //   gamma:    must have rank 1, with the same span as input's channel axis.
@@ -72,75 +117,72 @@ namespace ngraph
             //   mean:     must have rank 1, with the same span as input's channel axis.
             //   variance: must have rank 1, with the same span as input's channel axis.
             //   output:   shall have the same shape as 'input'.
-            BatchNorm(double eps,
-                      std::shared_ptr<ngraph::Node> gamma,
-                      std::shared_ptr<ngraph::Node> beta,
-                      std::shared_ptr<ngraph::Node> input,
-                      std::shared_ptr<ngraph::Node> mean,
-                      std::shared_ptr<ngraph::Node> variance,
-                      bool training = false);
+            BatchNormInference(double eps,
+                               std::shared_ptr<ngraph::Node> gamma,
+                               std::shared_ptr<ngraph::Node> beta,
+                               std::shared_ptr<ngraph::Node> input,
+                               std::shared_ptr<ngraph::Node> mean,
+                               std::shared_ptr<ngraph::Node> variance);
 
             void validate_and_infer_types() override;
 
-            const Shape& get_inputs_shape() const { return m_bn_input_shape; }
-            const Shape& get_variance_shape() const { return m_bn_variance_shape; }
-            const Shape& get_mean_shape() const { return m_bn_mean_shape; }
             double get_eps_value() const { return m_epsilon; }
-            bool get_training_flag() const { return m_training; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                                           const NodeVector& deltas) override
+            {
+                throw ngraph_error("Invalid operation");
+            }
 
         private:
-            enum
-            {
-                GAMMA,
-                BETA,
-                INPUT,
-                MEAN,
-                VARIANCE,
-                DELTA
-            };
+            static constexpr size_t INPUT_GAMMA = 0;
+            static constexpr size_t INPUT_BETA = 1;
+            static constexpr size_t INPUT_DATA = 2;
+            static constexpr size_t INPUT_MEAN = 3;
+            static constexpr size_t INPUT_VARIANCE = 4;
 
-            Shape m_bn_input_shape;
-            Shape m_bn_variance_shape;
-            Shape m_bn_mean_shape;
             double m_epsilon;
-            bool m_training;
         };
 
-        class BatchNormBackprop : public Op
+        class BatchNormTrainingBackprop : public Op
         {
         public:
-            BatchNormBackprop(double eps,
-                              std::shared_ptr<Node> gamma,
-                              std::shared_ptr<Node> beta,
-                              std::shared_ptr<Node> input,
-                              std::shared_ptr<Node> mean,
-                              std::shared_ptr<Node> variance,
-                              std::shared_ptr<Node> delta);
+            BatchNormTrainingBackprop(std::shared_ptr<Node> input,
+                                      std::shared_ptr<Node> gamma,
+                                      std::shared_ptr<Node> beta,
+                                      std::shared_ptr<Node> mean,
+                                      std::shared_ptr<Node> variance,
+                                      std::shared_ptr<Node> delta,
+                                      double epsilon);
+
+            // \deprecated
+            BatchNormTrainingBackprop(double epsilon,
+                                      std::shared_ptr<Node> gamma,
+                                      std::shared_ptr<Node> beta,
+                                      std::shared_ptr<Node> input,
+
+                                      std::shared_ptr<Node> mean,
+                                      std::shared_ptr<Node> variance,
+                                      std::shared_ptr<Node> delta);
 
             void validate_and_infer_types() override;
 
-            double get_eps_value() const { return epsilon; }
+            double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         private:
-            enum
-            {
-                GAMMA,
-                BETA,
-                INPUT,
-                MEAN,
-                VARIANCE,
-                DELTA
-            };
+            static constexpr size_t INPUT_GAMMA = 0;
+            static constexpr size_t INPUT_BETA = 1;
+            static constexpr size_t INPUT_DATA = 2;
+            static constexpr size_t INPUT_MEAN = 3;
+            static constexpr size_t INPUT_VARIANCE = 4;
+            static constexpr size_t INPUT_DELTA = 5;
 
-            double epsilon;
+            double m_epsilon;
         };
     }
 }

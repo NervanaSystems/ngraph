@@ -41,27 +41,27 @@ op::Broadcast::Broadcast(const shared_ptr<Node>& arg,
 void op::Broadcast::validate_and_infer_types()
 {
     infer_shape();
-    Shape target_shape = m_shape;
+
+    for (auto axis : m_broadcast_axes)
+    {
+        NODE_VALIDATION_ASSERT(this, axis < m_shape.size())
+            << "Broadcast axis index (" << axis << ") exceeds specified output shape rank "
+            << "(broadcast axes: " << m_broadcast_axes << ", output shape: " << m_shape << ").";
+    }
+
+    Shape required_input_shape = m_shape;
     for (auto i = m_broadcast_axes.rbegin(); i != m_broadcast_axes.rend(); ++i)
     {
-        NODE_VALIDATION_ASSERT(this, *i < target_shape.size())
-            << "Broadcast axis index (" << *i << ") exceeds target shape rank "
-            << "(broadcast axes: " << m_broadcast_axes << ", target shape: " << target_shape
-            << ").";
-
-        target_shape.erase(target_shape.begin() + *i);
+        required_input_shape.erase(required_input_shape.begin() + *i);
     }
 
     // TODO(amprocte): We can probably have a more helpful error message here.
     // There are two things that can go wrong, which are being picked up in
     // one fell swoop by this check: either the number of broadcast axes is not
-    // enough (arg->get_shape().size() + broadcast_axes.size() != shape.size())
-    // or there is a mismatch with one of the pre-broadcast axis lengths
-    // (i.e. target_shape.size() == arg->get_shape.size() but there is some i
-    // where target_shape[i] != arg->get_shape[i]).
-    NODE_VALIDATION_ASSERT(this, target_shape == get_input_shape(0))
-        << "Broadcast argument shape, target shape, and axes are incompatible "
-        << "(argument shape: " << get_input_shape(0) << ", target shape: " << m_shape
+    // enough, or there is a mismatch with one of the pre-broadcast axis lengths.
+    NODE_VALIDATION_ASSERT(this, get_input_partial_shape(0).compatible(required_input_shape))
+        << "Broadcast argument shape, specified output shape, and axes are incompatible "
+        << "(argument shape: " << get_input_partial_shape(0) << ", output shape: " << m_shape
         << ", broadcast axes: " << m_broadcast_axes << ").";
 
     set_output_type(0, get_input_element_type(0), m_shape);

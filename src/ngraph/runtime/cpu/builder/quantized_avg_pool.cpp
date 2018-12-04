@@ -42,7 +42,8 @@ namespace ngraph
                     size_t qavg_pool_index = mkldnn_emitter->build_quantized_avg_pool(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(qavg_pool_index);
 
-                    auto functor = [&, qavg_pool_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, qavg_pool_index](CPURuntimeContext* ctx,
+                                                        CPUExecutionContext* ectx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, qavg_pool_index);

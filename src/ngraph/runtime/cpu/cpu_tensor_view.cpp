@@ -20,6 +20,7 @@
 #include "cpu_tensor_view.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/shape.hpp"
@@ -145,8 +146,8 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
         auto output_desc = mkldnn_utils::create_blocked_mkldnn_md(
             this->get_shape(), cpu_tvl->get_strides(), this->get_element_type());
 
-        memory input{{input_desc, mkldnn_utils::global_cpu_engine}, aligned_buffer};
-        memory output{{output_desc, mkldnn_utils::global_cpu_engine}, target};
+        memory input{{input_desc, executor::global_cpu_engine}, aligned_buffer};
+        memory output{{output_desc, executor::global_cpu_engine}, target};
         reorder prim{input, output};
         mkldnn::stream s(mkldnn::stream::kind::eager);
         s.submit({prim}).wait();

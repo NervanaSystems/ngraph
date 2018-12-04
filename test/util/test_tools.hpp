@@ -17,8 +17,11 @@
 #pragma once
 
 #include <exception>
+#include <iomanip>
+#include <iostream>
 #include <list>
 #include <memory>
+#include <random>
 
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/file_util.hpp"
@@ -95,6 +98,34 @@ size_t count_ops_of_type(std::shared_ptr<ngraph::Function> f)
     return count;
 }
 
+template <typename T>
+void init_int_tv(ngraph::runtime::Tensor* tv, std::default_random_engine& engine, T min, T max)
+{
+    size_t size = tv->get_element_count();
+    std::uniform_int_distribution<T> dist(min, max);
+    std::vector<T> vec(size);
+    for (T& element : vec)
+    {
+        element = dist(engine);
+    }
+    tv->write(vec.data(), 0, vec.size() * sizeof(T));
+}
+
+template <typename T>
+void init_real_tv(ngraph::runtime::Tensor* tv, std::default_random_engine& engine, T min, T max)
+{
+    size_t size = tv->get_element_count();
+    std::uniform_real_distribution<T> dist(min, max);
+    std::vector<T> vec(size);
+    for (T& element : vec)
+    {
+        element = dist(engine);
+    }
+    tv->write(vec.data(), 0, vec.size() * sizeof(T));
+}
+
+void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine);
+
 template <typename T, typename T1 = T>
 std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& function,
                                      std::vector<std::vector<T>> args,
@@ -135,3 +166,20 @@ std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& fu
     }
     return result_vectors;
 }
+
+template <typename T>
+void print_results(std::vector<T>& ref_data, std::vector<T>& actual_data, size_t max_results = 16)
+{
+    size_t num_results = std::min(static_cast<size_t>(max_results), ref_data.size());
+    std::cout << "First " << num_results << " results";
+    for (size_t i = 0; i < num_results; ++i)
+    {
+        std::cout << "\n"
+                  << std::setw(4) << i << " ref: " << std::setw(16) << std::left << ref_data[i]
+                  << "  actual: " << std::setw(16) << std::left << actual_data[i];
+    }
+    std::cout << std::endl;
+}
+
+template <>
+void print_results(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results);

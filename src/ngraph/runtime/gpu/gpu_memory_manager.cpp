@@ -26,7 +26,7 @@ constexpr const uint32_t initial_buffer_size = 10 * 1024 * 1024;
 
 runtime::gpu::GPUMemoryManager::GPUMemoryManager(GPUPrimitiveEmitter* emitter)
     : m_buffer_offset(0)
-    , m_buffered_mem(initial_buffer_size)
+    , m_buffered_mem(initial_buffer_size, 0)
     , m_workspace_manager(new pass::MemoryManager(runtime::gpu::GPUMemoryManager::alignment))
     , m_argspace_mem(1, {nullptr, 0})
     , m_workspace_mem(1, {nullptr, 0})
@@ -80,6 +80,8 @@ void runtime::gpu::GPUMemoryManager::allocate()
             m_argspace_mem.back().ptr, m_buffered_mem.data(), m_buffer_offset);
         // add an empty node to the end of the list and zero offset
         m_argspace_mem.push_back({nullptr, 0});
+        m_buffered_mem.clear();
+        m_buffered_mem.resize(initial_buffer_size, 0);
         m_buffer_offset = 0;
     }
 
@@ -97,7 +99,9 @@ void runtime::gpu::GPUMemoryManager::allocate()
 size_t runtime::gpu::GPUMemoryManager::queue_for_transfer(const void* data, size_t size)
 {
     // if the current allocation will overflow the host buffer
-    size_t new_size = m_buffer_offset + size;
+    size_t aligned_size =
+        ngraph::pass::MemoryManager::align(size, runtime::gpu::GPUMemoryManager::alignment);
+    size_t new_size = m_buffer_offset + aligned_size;
     size_t buffer_size = m_buffered_mem.size();
     bool need_resize = false;
     while (buffer_size < new_size)
@@ -109,12 +113,12 @@ size_t runtime::gpu::GPUMemoryManager::queue_for_transfer(const void* data, size
 
     if (need_resize)
     {
-        m_buffered_mem.resize(buffer_size);
+        m_buffered_mem.resize(buffer_size, 0);
     }
 
     size_t offset = m_buffer_offset;
     std::memcpy(m_buffered_mem.data() + offset, data, size);
-    m_buffer_offset += size;
+    m_buffer_offset += aligned_size;
 
     return offset;
 }
@@ -133,7 +137,6 @@ runtime::gpu::GPUAllocator::GPUAllocator(const GPUAllocator& g)
 size_t runtime::gpu::GPUAllocator::reserve_argspace(const void* data, size_t size)
 {
     // add parameter data to host buffer that will be transfered to device
-    size = ngraph::pass::MemoryManager::align(size, runtime::gpu::GPUMemoryManager::alignment);
     size_t offset = m_manager->queue_for_transfer(data, size);
     auto local = std::prev(m_manager->m_argspace_mem.end());
     // return a lambda that will yield the gpu memory address. this

@@ -28,7 +28,17 @@ namespace ngraph
             class GPUOpAnnotations : public ngraph::op::util::OpAnnotations
             {
             public:
-                GPUOpAnnotations() {}
+                virtual ~GPUOpAnnotations() = default;
+            };
+
+            class BatchNormBackpropAnnotations : public GPUOpAnnotations
+            {
+            public:
+                ~BatchNormBackpropAnnotations() = default;
+                bool has_inverted_variance() { return m_inv_variance; }
+                void set_inverted_variance(bool b) { m_inv_variance = b; }
+            private:
+                bool m_inv_variance = false;
             };
         }
     }

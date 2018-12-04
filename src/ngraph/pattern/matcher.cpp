@@ -135,6 +135,36 @@ namespace ngraph
             }
         }
 
+        bool Matcher::match_any_of(const std::shared_ptr<op::AnyOf>& any,
+                                   const std::shared_ptr<Node>& graph_node,
+                                   PatternMap& pattern_map)
+        {
+            auto predicate = any->get_predicate();
+            if (!predicate)
+            {
+                throw ngraph_error("predicate is required");
+            }
+
+            if (predicate(graph_node))
+            {
+                for (auto arg : graph_node->get_arguments())
+                {
+                    PatternMap copy{pattern_map};
+                    if (match_node(any->get_argument(0), arg, copy))
+                    {
+                        pattern_map.insert(begin(copy), end(copy));
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         bool Matcher::match_node(const std::shared_ptr<Node>& pattern_node,
                                  const std::shared_ptr<Node>& graph_node,
                                  PatternMap& pattern_map)
@@ -165,6 +195,11 @@ namespace ngraph
             if (auto any_node = std::dynamic_pointer_cast<op::Any>(pattern_node))
             {
                 return abort_match(watermark, match_any(any_node, graph_node, pattern_map));
+            }
+
+            if (auto any_of_node = std::dynamic_pointer_cast<op::AnyOf>(pattern_node))
+            {
+                return abort_match(watermark, match_any_of(any_of_node, graph_node, pattern_map));
             }
 
             auto p_pattern_node = pattern_node.get();

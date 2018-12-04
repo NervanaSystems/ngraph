@@ -43,9 +43,9 @@ public:
     /// \brief Create a new Backend object
     /// \param type The name of a registered backend, such as "CPU" or "GPU".
     ///   To select a subdevice use "GPU:N" where s`N` is the subdevice number.
-    /// \returns shared_ptr to a new Backend or nullptr if the named backend
+    /// \returns unique_ptr to a new Backend or nullptr if the named backend
     ///   does not exist.
-    static std::shared_ptr<Backend> create(const std::string& type);
+    static std::unique_ptr<Backend> create(const std::string& type);
 
     /// \brief Query the list of registered devices
     /// \returns A vector of all registered devices.
@@ -54,7 +54,7 @@ public:
     /// \brief Create a tensor specific to this backend
     /// \param element_type The type of the tensor element
     /// \param shape The shape of the tensor
-    /// \returns shared_ptr to a new backend specific tensor
+    /// \returns shared_ptr to a new backend-specific tensor
     virtual std::shared_ptr<ngraph::runtime::Tensor>
         create_tensor(const ngraph::element::Type& element_type, const Shape& shape) = 0;
 
@@ -64,7 +64,7 @@ public:
     /// \param memory_pointer A pointer to a buffer used for this tensor. The size of the buffer
     ///     must be sufficient to contain the tensor. The lifetime of the buffer is the
     ///     responsibility of the caller.
-    /// \returns shared_ptr to a new backend specific tensor
+    /// \returns shared_ptr to a new backend-specific tensor
     virtual std::shared_ptr<ngraph::runtime::Tensor> create_tensor(
         const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer) = 0;
 
@@ -107,8 +107,8 @@ public:
     /// \param func The function to execute
     virtual void remove_compiled_function(std::shared_ptr<Function> func);
 
-    /// \brief Enable the collection of per op performance information on a specified Function.
-    ///     Data is collection via the `get_performance_data` method.
+    /// \brief Enable the collection of per-op performance information on a specified Function.
+    ///     Data collection is via the `get_performance_data` method.
     /// \param func The function to collect perfomance data on.
     /// \param enable Set to true to enable or false to disable data collection
     virtual void enable_performance_data(std::shared_ptr<Function> func, bool enable) {}
@@ -117,6 +117,11 @@ public:
     /// \returns Vector of PerformanceCounter information.
     virtual std::vector<PerformanceCounter>
         get_performance_data(std::shared_ptr<Function> func) const;
+
+    /// \brief Test if a backend is capable of supporting an op
+    /// \param node is the op to test.
+    /// \returns true if the op is supported, false otherwise.
+    virtual bool is_supported(const Node& node) const;
 
 protected:
     void validate_call(std::shared_ptr<const Function> func,

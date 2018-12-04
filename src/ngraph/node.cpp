@@ -21,6 +21,7 @@
 
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
@@ -49,25 +50,24 @@ Node::Node(const std::string& node_type, const NodeVector& arguments, size_t out
 }
 
 // While we are still doing validation and type inference in the constructor, this is true
-// It can be set to false to debug doing validation/inference after construction. When that
-// is working, these two functions will be removed.
-static bool in_transition = true;
+// The #define can be commented out to debug doing validation/inference after construction.
+// When that is working, these two functions will be removed.
+#define IN_TRANSITION
 
 void Node::constructor_validate_and_infer_types()
 {
-    if (in_transition)
-    {
-        validate_and_infer_types();
-    }
+#ifdef IN_TRANSITION
+    validate_and_infer_types();
+#endif
 }
 
 void Node::delayed_validate_and_infer_types()
 {
-    if (!in_transition)
-    {
-        validate_and_infer_types();
-    }
+#ifndef IN_TRANSITION
+    validate_and_infer_types();
+#endif
 }
+#undef IN_TRANSITION
 
 void Node::set_output_size(size_t n)
 {
@@ -75,7 +75,7 @@ void Node::set_output_size(size_t n)
     for (size_t i = m_outputs.size(); i < n; ++i)
     {
         auto tensor_descriptor = make_shared<descriptor::Tensor>(
-            element::unspecified, Shape(), get_name() + "_" + to_string(i));
+            element::dynamic, PartialShape::dynamic(), get_name() + "_" + to_string(i));
         m_outputs.emplace_back(this, i, tensor_descriptor);
     }
 }
@@ -84,9 +84,9 @@ void Node::validate_and_infer_types()
 {
 }
 
-void Node::set_output_type(size_t i, const element::Type& element_type, const Shape& shape)
+void Node::set_output_type(size_t i, const element::Type& element_type, const PartialShape& pshape)
 {
-    m_outputs.at(i).get_tensor_ptr()->set_tensor_type(element_type, shape);
+    m_outputs.at(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
 }
 
 std::deque<descriptor::Output>& Node::get_outputs()
@@ -150,6 +150,16 @@ void Node::set_placement(Placement placement)
     m_placement = placement;
 }
 
+size_t Node::get_placement_size() const
+{
+    return m_placement_size;
+}
+
+void Node::set_placement(size_t placement)
+{
+    m_placement_size = placement;
+}
+
 std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     for (auto& i : get_inputs())
@@ -208,13 +218,27 @@ std::ostream& Node::write_short_description(std::ostream& out) const
     return out << get_name();
 }
 
+static std::string pretty_element_type(const element::Type& et)
+{
+    if (et.is_dynamic())
+    {
+        return "?";
+    }
+    else
+    {
+        return et.c_type_string();
+    }
+}
+
 std::ostream& Node::write_long_description(std::ostream& out) const
 {
     out << description() << '[' << get_name() << "](";
     string sep = "";
     for (auto arg : get_arguments())
     {
-        out << sep << NodeDescription(*arg, true);
+        out << sep << NodeDescription(*arg, true) << ": "
+            << pretty_element_type(arg->get_output_element_type(0))
+            << arg->get_output_partial_shape(0) << "";
         sep = ", ";
     }
     out << ")";
@@ -358,7 +382,7 @@ descriptor::Output* Node::get_output_to(const shared_ptr<Node>& dst)
     throw ngraph_error("Error: dst is not one of self's output Node");
 }
 
-NodeVector Node::get_users() const
+NodeVector Node::get_users(bool check_is_used) const
 {
     NodeVector result;
 
@@ -366,7 +390,17 @@ NodeVector Node::get_users() const
     {
         for (auto input : get_output_inputs(i))
         {
-            result.push_back(input->get_node());
+            if (check_is_used)
+            {
+                if (is_used(input->get_node().get()))
+                {
+                    result.push_back(input->get_node());
+                }
+            }
+            else
+            {
+                result.push_back(input->get_node());
+            }
         }
     }
 
@@ -404,39 +438,73 @@ const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
     return args;
 }
 
-void Node::validate_and_infer_elementwise(element::Type result_type)
+std::tuple<element::Type, PartialShape> Node::validate_and_infer_elementwise_args()
 {
-    const element::Type& element_type = get_input_element_type(0);
-    const Shape& shape = get_input_shape(0);
+    element::Type element_type = get_input_element_type(0);
+    PartialShape pshape = get_input_partial_shape(0);
+
     if (get_input_size() > 1)
     {
         for (size_t i = 1; i < get_input_size(); ++i)
         {
-            NODE_VALIDATION_ASSERT(this, get_input_element_type(i) == element_type)
-                << "Argument 0 element type " << element_type
-                << " differs in element type from argument " << i << " " << *get_argument(i)
-                << " element type " << get_input_element_type(i);
+            NODE_VALIDATION_ASSERT(
+                this, element::Type::merge(element_type, element_type, get_input_element_type(i)))
+                << "Argument element types are inconsistent.";
 
-            NODE_VALIDATION_ASSERT(this, get_input_shape(i) == shape)
-                << "Argument 0 shape " << shape << " differs in shape from argument " << i << " "
-                << *get_argument(i) << " shape " << get_input_shape(i);
+            NODE_VALIDATION_ASSERT(this,
+                                   PartialShape::merge_into(pshape, get_input_partial_shape(i)))
+                << "Argument shapes are inconsistent.";
         }
     }
-    set_output_type(0, result_type, shape);
+
+    return std::make_tuple(element_type, pshape);
 }
 
 void Node::validate_and_infer_elementwise_arithmetic()
 {
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(0) != element::boolean)
-        << "Arguments cannot have boolean element type (argument element type: "
-        << get_input_element_type(0) << ").";
-    validate_and_infer_elementwise(get_input_element_type(0));
+    auto args_et_pshape = validate_and_infer_elementwise_args();
+    element::Type& args_et = std::get<0>(args_et_pshape);
+    PartialShape& args_pshape = std::get<1>(args_et_pshape);
+
+    NODE_VALIDATION_ASSERT(this, args_et.is_dynamic() || args_et != element::boolean)
+        << "Arguments cannot have boolean element type (argument element type: " << args_et << ").";
+
+    set_output_type(0, args_et, args_pshape);
 }
 
 void Node::validate_and_infer_elementwise_logical()
 {
-    NODE_VALIDATION_ASSERT(this, get_input_element_type(0) == element::boolean)
+    auto args_et_pshape = validate_and_infer_elementwise_args();
+    element::Type& args_et = std::get<0>(args_et_pshape);
+    PartialShape& args_pshape = std::get<1>(args_et_pshape);
+
+    NODE_VALIDATION_ASSERT(this, args_et.is_dynamic() || args_et == element::boolean)
         << "Operands for logical operators must have boolean element type but have element type "
-        << get_input_element_type(0) << ".";
-    validate_and_infer_elementwise(get_input_element_type(0));
+        << args_et << ".";
+
+    set_output_type(0, element::boolean, args_pshape);
+}
+
+bool Node::validate_punt_if_dynamic()
+{
+    bool any_dynamic = false;
+
+    for (auto& input : m_inputs)
+    {
+        any_dynamic |= input.get_partial_shape().is_dynamic();
+        any_dynamic |= input.get_element_type().is_dynamic();
+    }
+
+    if (any_dynamic)
+    {
+        for (size_t i = 0; i < get_output_size(); i++)
+        {
+            set_output_type(i, element::dynamic, PartialShape::dynamic());
+        }
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }

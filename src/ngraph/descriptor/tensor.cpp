@@ -25,7 +25,7 @@ descriptor::Tensor::Tensor(const element::Type& element_type,
                            const PartialShape& pshape,
                            const std::string& name)
     : m_element_type(element_type)
-    , m_shape(pshape.is_complete() ? pshape.to_shape() : Shape{})
+    , m_shape(pshape.is_static() ? pshape.to_shape() : Shape{})
     , m_partial_shape(pshape)
     , m_name(name)
 {
@@ -34,7 +34,7 @@ descriptor::Tensor::Tensor(const element::Type& element_type,
 void descriptor::Tensor::set_tensor_type(const element::Type& element_type,
                                          const PartialShape& pshape)
 {
-    if (pshape.is_complete())
+    if (pshape.is_static())
     {
         m_shape = pshape.to_shape();
     }
@@ -48,14 +48,14 @@ void descriptor::Tensor::set_tensor_type(const element::Type& element_type,
 
 const Shape& descriptor::Tensor::get_shape() const
 {
-    if (m_partial_shape.is_complete())
+    if (m_partial_shape.is_static())
     {
         return m_shape;
     }
     else
     {
         throw std::invalid_argument(
-            "get_shape was called on a descriptor::Tensor with incomplete shape");
+            "get_shape was called on a descriptor::Tensor with dynamic shape");
     }
 }
 

@@ -577,7 +577,7 @@ a .fa, a .rst-content .admonition-title, .rst-content a .admonition-title, a .rs
   display: block;
   background: #638470;
   margin: -5px;
-  font-family: 'Faustina', sans;
+  font-family: 'RobotoSlab', sans;
   padding: 0.43em 0.74em;
   margin-bottom: 0.33em;
 }
@@ -709,7 +709,7 @@ button[disabled] {
   background-color: #27AE60;
   text-decoration: none;
   font-weight: normal;
-  font-family: "NeoSansIntel", "Nanum Gothic", Arial, sans;
+  font-family: "NeoSansIntel", "RobotoSlab", Arial, sans;
   box-shadow: 0px 1px 2px -1px rgba(255, 255, 255, 0.5) inset, 0px -2px 0px 0px rgba(0, 0, 0, 0.1) inset;
   outline-none: false;
   vertical-align: middle;
@@ -1147,7 +1147,7 @@ input {
 input[type="button"], input[type="reset"], input[type="submit"] {
   -webkit-appearance: button;
   cursor: pointer;
-  font-family: "NeoSansIntel", "Nanum Gothic", Arial, sans;
+  font-family: "NeoSansIntel", "RobotoSlab", Arial, sans;
   *overflow: visible;
 }
 input[type="text"], input[type="password"], input[type="email"], input[type="url"], input[type="date"], input[type="month"], input[type="time"], input[type="datetime"], input[type="datetime-local"], input[type="week"], input[type="number"], input[type="search"], input[type="tel"], input[type="color"] {
@@ -1156,7 +1156,7 @@ input[type="text"], input[type="password"], input[type="email"], input[type="url
   display: inline-block;
   border: 1px solid #ccc;
   font-size: 80%;
-  font-family: "NeoSansIntel", "Nanum Gothic", Arial, sans;
+  font-family: "NeoSansIntel", "RobotoSlab", Arial, sans;
   box-shadow: inset 0 1px 3px #ddd;
   border-radius: 0;
   -webkit-transition: border 0.3s linear;
@@ -1225,7 +1225,7 @@ textarea {
   overflow: auto;
   vertical-align: top;
   width: 100%;
-  font-family: "Nanum Gothic", Arial, sans;
+  font-family: "RobotoSlab", Arial, sans;
 }
 
 select, textarea {
@@ -1610,17 +1610,17 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
 }
 
 a {
-  color: #5c8583;
+  color: #a08105;
   text-decoration: none;
   cursor: pointer;
 }
 a:hover {
-  color: #5c8583;
-  background-color: #dce7e6;
+  color: #a08105;
+  text-decoration: underline;
 
 }
 a:visited {
-  color: #5c8583;
+  color: #a08105;
 }
 
 html {
@@ -1629,9 +1629,9 @@ html {
 }
 
 body {
-  font-family: "Nanum Gothic", Arial, sans-serif;
+  font-family: "RobotoSlab", Sans, sans-serif;
   font-weight: normal;
-  color: #404040;
+  color: #38403f;
   min-height: 100%;
   overflow-x: hidden;
   background: #edf0f2;
@@ -1709,7 +1709,7 @@ a.wy-text-neutral:hover {
 h1, h2, .rst-content .toctree-wrapper p.caption, h3, h4, h5, h6, legend {
   margin-top: 0.33em;
   font-weight: 700;
-  font-family: "NeoSansIntel", "Nanum Gothic", arial, sans;
+  font-family: "NeoSansIntel", "RobotoSlab", arial, sans;
 }
 
 p {
@@ -1764,8 +1764,8 @@ code, .rst-content tt, .rst-content code {
   max-width: 100%;
   font-size: 100%;
   padding: 0 5px;
-  font-family: Monaco, Consolas, "Menlo", "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", "Courier New", Courier, monospace;
-  color: #E74C3C;
+  font-family: Inconsolata-Regular, "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", "Courier New", Courier, monospace;
+  color: #253237;
   overflow-x: auto;
 }
 code.code-large, .rst-content tt.code-large {
@@ -1816,9 +1816,8 @@ code.code-large, .rst-content tt.code-large {
   list-style: disc;
 }
 
-pre, .codeblock, pre.literal-block, .rst-content .literal-block, .rst-content pre.literal-block, div[class^='highlight'] {
-  border: 0.05em solid #dfeef1;
-  padding: 0.01em;
+pre, .codeblock, .rst-content .literal-block, .rst-content pre.literal-block, div[class^='highlight'] {
+  border: 0.079em solid #ebe9e0;
   caption-side: bottom; 
   overflow-x: auto;
   font-size: 0.97em;
@@ -1847,7 +1846,7 @@ div[class^='highlight'] td.code {
 }
 
 code, p.caption { 
-  font-family: Consolas, sans, monospace;
+  font-family: "NeoSansIntel-Light", sans, monospace;
   color: #A79992;
   font-size: 0.99em;
   line-height: 1.39em;
@@ -1855,7 +1854,7 @@ code, p.caption {
 
 
 caption-text {
-   font-family: 'Nanum Gothic Coding', monospace;
+   font-family: 'RobotoSlab Coding', monospace;
    font-family: monospace;
    font-size: 1.03em;
    line-height: 1.43em;
@@ -1880,7 +1879,7 @@ div[class^='highlight'] pre {
   line-height: 1.13;
   display: block;
   overflow: wrap;
-  color: #615f5e;
+  color: #83827d;
 }
 
   .linenodiv pre {
@@ -2223,7 +2222,7 @@ div[class^='highlight'] pre {
   color: #fcfcfc;
   background: #1f1d1d;
   border-top: solid 10px #5f5f5f;
-  font-family: "NeoSansIntel", "Nanum Gothic", "Helvetica Neue", Arial, sans;
+  font-family: "NeoSansIntel", "RobotoSlab", "Helvetica Neue", Arial, sans;
   z-index: 400;
 }
 .rst-versions a {
@@ -2435,7 +2434,7 @@ div[class^='highlight'] pre {
 }
 .rst-content .sidebar .sidebar-title {
   display: block;
-  font-family: "NeoSansIntel", 'Nanum Gothic', arial, sans-serif;
+  font-family: "NeoSansIntel", 'RobotoSlab', arial, sans-serif;
   font-weight: bold;
   background: #e1e4e5;
   padding: 6px 12px;
@@ -2507,7 +2506,7 @@ div[class^='highlight'] pre {
 }
 .rst-content tt.literal, .rst-content tt.literal, .rst-content code.literal {
   font-size: 103% !important;
-  color: #528481;
+  color: #0C7881;
   line-height: 0.93em;
 }
 .rst-content tt.xref, a .rst-content tt, .rst-content tt.xref, .rst-content code.xref, a .rst-content tt, a .rst-content code {
@@ -2705,13 +2704,13 @@ span[id*='MathJax-Span'] {
   src: local("NeoSansIntel Bold"), local("NeoSansIntel-Bold"), url(../fonts/NeoSansIntel-Bold.ttf) format("truetype");
 }
 @font-face {
-  font-family: "Nanum Gothic";
+  font-family: "RobotoSlab";
   font-style: normal;
   font-weight: 500;
-  src: local("NanumGothic Regular"), local("NanumGothic-Regular"), url(../fonts/NanumGothic-Regular.ttf) format("truetype");
+  src: local("RobotoSlab Regular"), local("RobotoSlab-Regular"), url(../fonts/RobotoSlab-Regular.ttf) format("truetype");
 }
 @font-face {
-  font-family: "Nanum Gothic Coding";
+  font-family: "NanumGothic Coding";
   font-style: normal;
   font-weight: 700;
   src: local("NanumGothicCoding Bold"), local("NanumGothicCoding-Bold"), url(../fonts/NanumGothicCoding-Bold.ttf) format("truetype");
@@ -2765,6 +2764,7 @@ span[id*='MathJax-Span'] {
   padding: 0 1.618em;
   margin-bottom: 0;
   display: block;
+  font-family: "Neo Sans Intel", sans;
   font-weight: bold;
   text-transform: uppercase;
   font-size: 80%;
@@ -2784,7 +2784,7 @@ span[id*='MathJax-Span'] {
   background: #e3e3e3;
 }
 .wy-menu-vertical li.current a {
-  color: gray;
+  color: #959595;
   border-right: solid 1px #c9c9c9;
   padding: 0.4045em 2.427em;
 }
@@ -2904,7 +2904,7 @@ span[id*='MathJax-Span'] {
   color: #e8e8e8;
 }
 .wy-menu-vertical a:active {
-  background-color: #8eb0af;
+  background-color: #84AEAD;
   cursor: pointer;
   color: #fff;
 }
@@ -2918,7 +2918,7 @@ span[id*='MathJax-Span'] {
   padding: 0.809em;
   margin-bottom: 0.809em;
   z-index: 200;
-  background-color: #8eb0af;
+  background-color: #84AEAD;
   text-align: center;
   padding: 0.809em;
   display: block;
@@ -3008,9 +3008,8 @@ span[id*='MathJax-Span'] {
 }
 
 .wy-body-for-nav {
-  background: left repeat-y #fff;
-  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyRpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoTWFjaW50b3NoKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDoxOERBMTRGRDBFMUUxMUUzODUwMkJCOThDMEVFNURFMCIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDoxOERBMTRGRTBFMUUxMUUzODUwMkJCOThDMEVFNURFMCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjE4REExNEZCMEUxRTExRTM4NTAyQkI5OEMwRUU1REUwIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjE4REExNEZDMEUxRTExRTM4NTAyQkI5OEMwRUU1REUwIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+EwrlwAAAAA5JREFUeNpiMDU0BAgwAAE2AJgB9BnaAAAAAElFTkSuQmCC);
-  background-size: 300px 1px;
+  background-color: #72716f; 
+  background-width: 300px;
 }
 
 .wy-grid-for-nav {
@@ -3194,7 +3193,7 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
 }
 @media screen and (min-width: 1400px) {
   .wy-nav-content-wrap {
-    background: #fcfcfc;
+    background: #0C7881;
   }
 
   .wy-nav-content {

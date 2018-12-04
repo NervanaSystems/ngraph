@@ -19,7 +19,7 @@
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 
 namespace ngraph
 {
@@ -30,7 +30,7 @@ namespace ngraph
             namespace kernel
             {
                 template <typename ElementType>
-                void tanh(void* input0, void* output, size_t count)
+                void tanh(void* input0, void* output, size_t count, int arena)
                 {
                     Eigen::array<Eigen::Index, 1> out_dims, in_dims;
 
@@ -41,7 +41,8 @@ namespace ngraph
                     Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> in0(
                         static_cast<ElementType*>(input0), in_dims);
 
-                    out.device(eigen::global_thread_pool_device) = in0.tanh();
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
+                        in0.tanh();
                 }
             }
         }

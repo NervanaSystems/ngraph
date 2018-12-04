@@ -32,15 +32,18 @@ op::Reverse::Reverse(const shared_ptr<Node>& arg, const AxisSet& reversed_axes)
 
 void op::Reverse::validate_and_infer_types()
 {
-    auto input_shape = get_input_shape(0);
-    auto input_rank = input_shape.size();
+    auto input_shape = get_input_partial_shape(0);
+    Dimension input_rank = input_shape.rank();
 
-    // Make sure all reversed axis indices are valid.
-    for (size_t axis : m_reversed_axes)
+    if (input_rank.is_static())
     {
-        NODE_VALIDATION_ASSERT(this, axis < input_rank)
-            << "Reverse axis (" << axis << ") is out of bounds (argument shape: " << input_shape
-            << ").";
+        // Make sure all reversed axis indices are valid.
+        for (size_t axis : m_reversed_axes)
+        {
+            NODE_VALIDATION_ASSERT(this, axis < size_t(input_rank))
+                << "Reverse axis (" << axis << ") is out of bounds (argument shape: " << input_shape
+                << ").";
+        }
     }
 
     set_output_type(0, get_input_element_type(0), input_shape);

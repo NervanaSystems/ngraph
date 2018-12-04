@@ -32,13 +32,15 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Concat)
             {
-                auto axis =
-                    (static_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
+                auto concat = static_cast<const ngraph::op::Concat*>(node);
+                auto axis = concat->get_concatenation_axis();
 
                 auto& functors = external_function->get_functors();
 
                 vector<reference_wrapper<void*>> arg_tensors;
                 vector<Shape> arg_shapes;
+                vector<size_t> arg_sizes;
+                auto element_size = concat->get_input_element_type(0).size();
                 for (auto& arg : args)
                 {
                     if (shape_size(arg.get_shape()))
@@ -46,11 +48,46 @@ namespace ngraph
                         arg_tensors.emplace_back(
                             external_function->get_tensor_data(arg.get_name()));
                         arg_shapes.emplace_back(arg.get_shape());
+                        arg_sizes.emplace_back(shape_size(arg.get_shape()) * element_size);
                     }
                 }
+                auto nargs = args.size();
 
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
                 auto out_shape = out[0].get_shape();
+
+                if (auto op_annotations = concat->get_op_annotations())
+                {
+                    auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                    if (in_place_oi_pairs.size() > 0)
+                    {
+                        auto out_size = shape_size(out_shape) * element_size;
+
+                        auto functor = [&, arg_tensors, nargs, out_size, arg_sizes](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            auto offset = 0;
+                            for (size_t i = 0; i < nargs; i++)
+                            {
+                                // if the argument pointer does not fall within the concat output buffer
+                                // (caused by propagate_in_place_output or propagate_in_place_input), we need to copy the data;
+                                // otherwise, we can skip the copy.
+                                if (arg_tensors[i] < out_tensor ||
+                                    arg_tensors[i] >=
+                                        reinterpret_cast<char*>(out_tensor) + out_size)
+                                {
+                                    memcpy(reinterpret_cast<char*>(out_tensor) + offset,
+                                           arg_tensors[i],
+                                           arg_sizes[i]);
+                                }
+                                offset += arg_sizes[i];
+                            }
+
+                        };
+
+                        functors.emplace_back(functor);
+                        return;
+                    }
+                }
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -65,12 +102,12 @@ namespace ngraph
 
                     size_t concat_dim =
                         (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
-                    auto nargs = args.size();
                     auto concat_index =
                         mkldnn_emitter->build_concat(inputs_data_desc, result_desc, concat_dim);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 
-                    auto functor = [&, arg_tensors, nargs, concat_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, arg_tensors, nargs, concat_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         for (size_t i = 0; i < nargs; i++)
                         {
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[i], arg_tensors[i]);
@@ -91,7 +128,7 @@ namespace ngraph
                                           runtime::cpu::kernel::concat);
 
                     auto functor = [&, kernel, arg_tensors, arg_shapes, out_shape, axis](
-                        CPURuntimeContext* ctx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         kernel(arg_tensors, arg_shapes, out_tensor, out_shape, axis);
                     };
                     functors.emplace_back(functor);

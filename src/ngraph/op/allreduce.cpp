@@ -28,12 +28,13 @@ op::AllReduce::AllReduce(const shared_ptr<Node>& arg)
 void op::AllReduce::validate_and_infer_types()
 {
     NODE_VALIDATION_ASSERT(this,
-                           get_input_element_type(0) == element::f32 ||
+                           get_input_element_type(0).is_dynamic() ||
+                               get_input_element_type(0) == element::f32 ||
                                get_input_element_type(0) == element::f64)
         << "Only element types f32 and f64 are supported (argument element type: "
         << get_input_element_type(0) << ").";
 
-    set_output_type(0, get_input_element_type(0), get_input_shape(0));
+    set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
 shared_ptr<Node> op::AllReduce::copy_with_new_args(const NodeVector& new_args) const

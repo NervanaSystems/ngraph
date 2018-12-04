@@ -98,6 +98,7 @@
 #include "ngraph/runtime/cpu/kernel/tan.hpp"
 #include "ngraph/runtime/cpu/kernel/tanh.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/halide_op.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -179,9 +180,10 @@ namespace ngraph
                 auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                 auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                auto functor = [&, element_count](CPURuntimeContext* ctx) {
+                auto functor = [&, element_count](CPURuntimeContext* ctx,
+                                                  CPUExecutionContext* ectx) {
                     runtime::cpu::kernel::logical_and(
-                        arg0_tensor, arg1_tensor, out0_tensor, element_count);
+                        arg0_tensor, arg1_tensor, out0_tensor, element_count, ectx->arena);
                 };
                 functors.emplace_back(functor);
             }
@@ -196,9 +198,10 @@ namespace ngraph
                 auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                 auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                auto functor = [&, element_count](CPURuntimeContext* ctx) {
+                auto functor = [&, element_count](CPURuntimeContext* ctx,
+                                                  CPUExecutionContext* ectx) {
                     runtime::cpu::kernel::logical_or(
-                        arg0_tensor, arg1_tensor, out0_tensor, element_count);
+                        arg0_tensor, arg1_tensor, out0_tensor, element_count, ectx->arena);
                 };
                 functors.emplace_back(functor);
             }
@@ -351,7 +354,8 @@ namespace ngraph
                 auto& src =
                     external_function->get_tensor_data(node->get_output_tensor(0).get_name());
                 auto size = node->get_output_tensor(0).size();
-                auto functor = [&, dest, src, size](CPURuntimeContext* ctx) {
+                auto functor = [&, dest, src, size](CPURuntimeContext* ctx,
+                                                    CPUExecutionContext* ectx) {
                     for (auto p : dest)
                     {
                         memcpy(*p, src, size);
@@ -367,7 +371,9 @@ namespace ngraph
                 static BuildOpMap build_dispatcher{
                     {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
                     {TI(ngraph::runtime::cpu::op::ConvertLayout),
-                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::ConvertLayout>}};
+                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::ConvertLayout>},
+                    {TI(ngraph::runtime::cpu::op::HalideOp),
+                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::HalideOp>}};
 
                 return build_dispatcher;
             }

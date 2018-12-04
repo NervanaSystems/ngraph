@@ -44,7 +44,7 @@ In working with nGraph-based construction of graphs, updating takes
 the same approach. During training, we include all the weights as 
 arguments to the training function and return the updated weights 
 along with any other results. For more complex forms of training, 
-such as those using momentum, we would add the momementum tensors 
+such as those using momentum, we would add the momentum tensors 
 as additional arguments and include their updated values as additional 
 results. A simple case is illustrated in the documentation for how 
 to :doc:`derive-for-training`.

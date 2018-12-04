@@ -70,6 +70,13 @@ vector<PerfShape> to_perf_shape(shared_ptr<Function> f,
     for (const runtime::PerformanceCounter& p : perf_data)
     {
         auto node = node_map[p.name()];
+        if (node == nullptr)
+        {
+            ostringstream os;
+            os << "Can't find \"" << p.name() << "\" in Function \"" << f->get_name() << "\".";
+            throw runtime_error(os.str());
+        }
+
         Shape shape = node->get_outputs()[0].get_shape();
         result.push_back(PerfShape(p, shape));
     }

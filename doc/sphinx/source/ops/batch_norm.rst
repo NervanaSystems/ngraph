@@ -4,9 +4,6 @@
 BatchNorm
 #########
 
-NOTE: This describes what the ``BatchNorm`` op should look like. The current 
-version will be made a CPU transformer op.
-
 .. code-block:: cpp
 
    BatchNorm  // Produces a normalized output
@@ -50,6 +47,7 @@ Attributes
 
 Outputs
 -------
+
 +---------------------+-------------------------+-----------------------------+
 | Name                | Element Type            | Shape                       |
 +=====================+=========================+=============================+
@@ -60,38 +58,48 @@ Outputs
 | ``batch_variance``  | same as ``gamma``       | \(C\)                       |
 +---------------------+-------------------------+-----------------------------+
 
-The ``batch_mean`` and ``batch_variance`` are computed per-channel from ``input``.
-The values only need to be computed if ``use_global`` is ``false`` or they are used.
+The ``batch_mean`` and ``batch_variance`` outputs are computed per-channel from 
+``input``. The values only need to be computed if ``use_global`` is ``false``, 
+or if they are used.
 
 
 Mathematical Definition
 =======================
 
-The axes of the input fall into two categories, positional and
-channel, with channel being axis 1. For each position, there are
-:math:`C` channel values, each normalized independently.
+The axes of the input fall into two categories: positional and channel, with 
+channel being axis 1. For each position, there are :math:`C` channel values, 
+each normalized independently.
 
-Normalization of a channel sample is controlled by two values, the
-mean :math:`\mu`, and the variance :math:`\sigma^2`, and two scaling
-attributes, :math:`\gamma` and :math:`\beta`. The values for :math:`\mu`
-and :math:`\sigma^2` come from either compuing the mean and variance of
-``input`` or from ``global_mean`` and ``global_variance``, depending on
-the value of ``use_global``.
+Normalization of a channel sample is controlled by two values:
+
+*  the mean :math:`\mu`, and 
+*  the variance :math:`\sigma^2`; 
+
+and by two scaling attributes: :math:`\gamma` and :math:`\beta`. 
+
+The values for :math:`\mu` and :math:`\sigma^2` come either from computing the 
+mean and variance of ``input``, or from ``global_mean`` and ``global_variance``, 
+depending on the value of ``use_global``.
 
 .. math::
 
    y_c = \frac{x_c-\mu_c}{\sqrt{\sigma^2_c+\epsilon}}\gamma_c+\beta_c
 
-The mean and variance can be arguments or computed for each channel of
-``input`` over the positional axes. When computed from ``input``, the
-mean and variance per channel are available as outputs.
+The mean and variance can be arguments, or they may be computed for each channel 
+of ``input`` over the positional axes. When computed from ``input``, the mean 
+and variance per-channel are available as outputs.
 
-Backprop
-========
 
 C++ Interface
-=============
+==============
 
-.. doxygenclass:: ngraph::op::BatchNorm
+.. doxygenclass:: ngraph::op::BatchNormTraining
    :project: ngraph
    :members:
+
+
+.. doxygenclass:: ngraph::op::BatchNormInference
+   :project: ngraph
+   :members:
+
+
