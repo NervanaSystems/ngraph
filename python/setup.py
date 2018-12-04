@@ -377,6 +377,7 @@ setup(
     packages=packages,
     cmdclass={'build_ext': BuildExt},
     data_files=data_files,
+    setup_requires=['numpy'],
     install_requires=requirements,
     zip_safe=False,
 )
