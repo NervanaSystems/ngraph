@@ -22,7 +22,7 @@ import os
 import distutils.ccompiler
 
 __version__ = os.environ.get('NGRAPH_VERSION', '0.0.0-dev')
-PYNGRAPH_SOURCE_DIR = os.path.abspath(os.path.dirname(__file__))
+PYNGRAPH_ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 NGRAPH_DEFAULT_INSTALL_DIR = os.environ.get('HOME')
 NGRAPH_ONNX_IMPORT_ENABLE = os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE')
 
@@ -50,7 +50,7 @@ def find_pybind_headers_dir():
     if os.environ.get('PYBIND_HEADERS_PATH'):
         pybind_headers_dir = os.environ.get('PYBIND_HEADERS_PATH')
     else:
-        pybind_headers_dir = os.path.join(PYNGRAPH_SOURCE_DIR, 'pybind11')
+        pybind_headers_dir = os.path.join(PYNGRAPH_ROOT_DIR, 'pybind11')
 
     found = os.path.exists(os.path.join(pybind_headers_dir, 'include/pybind11'))
     if not found:
@@ -235,13 +235,13 @@ sources = [
 ]
 
 package_dir = {
-    'ngraph': PYNGRAPH_SOURCE_DIR + "/ngraph",
-    'ngraph.utils': PYNGRAPH_SOURCE_DIR + "/ngraph/utils",
-    'ngraph.impl': PYNGRAPH_SOURCE_DIR + "/ngraph/impl",
-    'ngraph.impl.op': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/op",
-    'ngraph.impl.op.util': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/op/util",
-    'ngraph.impl.passes': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/passes",
-    'ngraph.impl.runtime': PYNGRAPH_SOURCE_DIR + "/ngraph/impl/runtime",
+    'ngraph': PYNGRAPH_ROOT_DIR + "/ngraph",
+    'ngraph.utils': PYNGRAPH_ROOT_DIR + "/ngraph/utils",
+    'ngraph.impl': PYNGRAPH_ROOT_DIR + "/ngraph/impl",
+    'ngraph.impl.op': PYNGRAPH_ROOT_DIR + "/ngraph/impl/op",
+    'ngraph.impl.op.util': PYNGRAPH_ROOT_DIR + "/ngraph/impl/op/util",
+    'ngraph.impl.passes': PYNGRAPH_ROOT_DIR + "/ngraph/impl/passes",
+    'ngraph.impl.runtime': PYNGRAPH_ROOT_DIR + "/ngraph/impl/runtime",
 }
 packages = [
     'ngraph',
@@ -253,9 +253,9 @@ packages = [
     'ngraph.impl.runtime',
 ]
 
-sources = [PYNGRAPH_SOURCE_DIR + "/" + source for source in sources]
+sources = [PYNGRAPH_ROOT_DIR + "/" + source for source in sources]
 
-include_dirs = [PYNGRAPH_SOURCE_DIR, NGRAPH_CPP_INCLUDE_DIR, PYBIND11_INCLUDE_DIR]
+include_dirs = [PYNGRAPH_ROOT_DIR, NGRAPH_CPP_INCLUDE_DIR, PYBIND11_INCLUDE_DIR]
 
 library_dirs = [NGRAPH_CPP_LIBRARY_DIR]
 
@@ -276,13 +276,13 @@ data_files = [
     (
         'licenses',
         [
-            PYNGRAPH_SOURCE_DIR + "/../licenses/" + license
-            for license in os.listdir(PYNGRAPH_SOURCE_DIR + "/../licenses")
+            PYNGRAPH_ROOT_DIR + "/../licenses/" + license
+            for license in os.listdir(PYNGRAPH_ROOT_DIR + "/../licenses")
         ],
     ),
     (
         '',
-        [PYNGRAPH_SOURCE_DIR + "/../LICENSE"],
+        [PYNGRAPH_ROOT_DIR + "/../LICENSE"],
     )
 ]
 
@@ -304,10 +304,10 @@ if NGRAPH_ONNX_IMPORT_ENABLE == 'TRUE':
         'pyngraph/pyngraph_onnx_import.cpp',
         'pyngraph/onnx_import/onnx_import.cpp',
     ]
-    onnx_sources = [PYNGRAPH_SOURCE_DIR + "/" + source for source in onnx_sources]
+    onnx_sources = [PYNGRAPH_ROOT_DIR + "/" + source for source in onnx_sources]
 
     package_dir['ngraph.impl.onnx_import'] = (
-        PYNGRAPH_SOURCE_DIR + "/ngraph/impl/onnx_import"
+        PYNGRAPH_ROOT_DIR + "/ngraph/impl/onnx_import"
     )
     packages.append('ngraph.impl.onnx_import')
 
@@ -362,17 +362,17 @@ class BuildExt(build_ext):
         build_ext.build_extensions(self)
 
 
-with open(os.path.join(PYNGRAPH_SOURCE_DIR, 'requirements.txt')) as req:
+with open(os.path.join(PYNGRAPH_ROOT_DIR, 'requirements.txt')) as req:
     requirements = req.read().splitlines()
 
 setup(
     name='ngraph-core',
+    description=open(os.path.join(PYNGRAPH_ROOT_DIR, 'README.md')).read(),
     version=__version__,
     author='Intel',
     author_email='intelnervana@intel.com',
     url='https://ai.intel.com/',
     license='License :: OSI Approved :: Apache Software License',
-    description='Python API for nGraph',
     long_description='',
     ext_modules=ext_modules,
     package_dir=package_dir,
