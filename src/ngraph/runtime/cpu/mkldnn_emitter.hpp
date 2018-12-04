@@ -227,12 +227,11 @@ namespace ngraph
                         auto qc = dynamic_cast<const ngraph::op::QuantizedConvolution*>(node);
                         auto scale_const_op =
                             std::dynamic_pointer_cast<ngraph::op::Constant>(qc->get_arguments()[2]);
-                        if (scale_const_op == nullptr)
+                        std::vector<float> scale_val = {1.0f};
+                        if (scale_const_op != nullptr)
                         {
-                            throw ngraph_error("QuantizedConvolution scale must be a Constant");
+                            scale_val = scale_const_op->get_vector<float>();
                         }
-
-                        auto scale_val = scale_const_op->get_vector<float>();
 
                         return build_quantized_convolution_forward(
                             data_desc,
@@ -250,12 +249,11 @@ namespace ngraph
                         auto qcr = dynamic_cast<const ngraph::op::QuantizedConvolutionRelu*>(node);
                         auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
                             qcr->get_arguments()[2]);
-                        if (scale_const_op == nullptr)
+                        std::vector<float> scale_val = {1.0f};
+                        if (scale_const_op != nullptr)
                         {
-                            throw ngraph_error("QuantizedConvolutionRelu scale must be a Constant");
+                            scale_val = scale_const_op->get_vector<float>();
                         }
-
-                        auto scale_val = scale_const_op->get_vector<float>();
 
                         return build_quantized_convolution_forward(
                             data_desc,
@@ -273,12 +271,11 @@ namespace ngraph
                         auto qcb = dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node);
                         auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
                             qcb->get_arguments()[3]);
-                        if (scale_const_op == nullptr)
+                        std::vector<float> scale_val = {1.0f};
+                        if (scale_const_op != nullptr)
                         {
-                            throw ngraph_error("QuantizedConvolutionBias scale must be a Constant");
+                            scale_val = scale_const_op->get_vector<float>();
                         }
-
-                        auto scale_val = scale_const_op->get_vector<float>();
 
                         // conv+bias = cvt_to_int8(scale*(dst + bias))
                         auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);

@@ -148,10 +148,14 @@ size_t MKLDNNEmitter::build_dequantization(const ngraph::Node* node,
 {
     auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
     auto scale_const_op =
-        std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(1));
-    float scale = *(static_cast<float const*>(scale_const_op->get_data_ptr()));
+        std::dynamic_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(1));
+    std::vector<float> scale = {1.0f};
+    if (scale_const_op != nullptr)
+    {
+        scale = scale_const_op->get_vector<float>();
+    }
     std::vector<float> scales;
-    scales.push_back(scale);
+    scales.push_back(scale[0]);
     size_t dequantize_index = 0;
     dequantize_index = this->build_quantize_reorder(input_desc, result_desc, scales);
     return dequantize_index;
