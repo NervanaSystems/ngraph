@@ -640,3 +640,26 @@ TEST(cpu_test, mkldnn_layouts_eltwise)
     auto cpu_f = make_function();
     compare_backends(int_f, cpu_f, "INTERPRETER", "CPU");
 }
+
+TEST(cpu_test, convolution_large_padding)
+{
+    Shape input_shape{1, 1, 100, 100};
+    Shape filter_shape{1, 1, 3, 3};
+
+    auto make_function = [&]() {
+        auto input = std::make_shared<op::Parameter>(element::f32, input_shape);
+        auto filter = std::make_shared<op::Parameter>(element::f32, filter_shape);
+        auto conv = std::make_shared<op::Convolution>(input,
+                                                      filter,
+                                                      Strides{1, 1},
+                                                      Strides{9, 9},
+                                                      CoordinateDiff{9, 9},
+                                                      CoordinateDiff{9, 9});
+        auto f = make_shared<Function>(NodeVector{conv}, ParameterVector{input, filter});
+        return f;
+    };
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+    compare_backends(int_f, cpu_f, "INTERPRETER", "CPU");
+}
