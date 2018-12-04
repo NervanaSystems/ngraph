@@ -27,6 +27,11 @@ union FloatUnion {
     uint32_t i;
 };
 
+union DoubleUnion {
+    double d;
+    uint64_t i;
+};
+
 uint32_t test::float_distance(float a, float b)
 {
     if (!isfinite(a) || !isfinite(b))
@@ -50,6 +55,29 @@ uint32_t test::float_distance(float a, float b)
     return distance;
 }
 
+uint64_t test::float_distance(double a, double b)
+{
+    if (!isfinite(a) || !isfinite(b))
+    {
+        return UINT_MAX;
+    }
+
+    DoubleUnion a_du{a};
+    DoubleUnion b_du{b};
+    uint64_t a_uint = a_du.i;
+    uint64_t b_uint = b_du.i;
+
+    // A trick to handle both positive and negative numbers, see https://goo.gl/YbdnFQ
+    // - If negative: convert to two's complement
+    // - If positive: mask with sign bit
+    uint64_t sign_mask = static_cast<uint64_t>(1U) << 63;
+    a_uint = (sign_mask & a_uint) ? (~a_uint + 1) : (sign_mask | a_uint);
+    b_uint = (sign_mask & b_uint) ? (~b_uint + 1) : (sign_mask | b_uint);
+
+    uint64_t distance = (a_uint >= b_uint) ? (a_uint - b_uint) : (b_uint - a_uint);
+    return distance;
+}
+
 bool test::close_f(float a, float b, int mantissa_bits, int tolerance_bits)
 {
     // isfinite(a) => !isinf(a) && !isnan(a)
@@ -65,6 +93,25 @@ bool test::close_f(float a, float b, int mantissa_bits, int tolerance_bits)
     //                       float_length    sign exp  mantissa implicit 1    tolerance_bits
     uint32_t tolerance_bit_shift = 32 - (1 + 8 + (mantissa_bits - 1) - tolerance_bits);
     uint32_t tolerance = static_cast<uint32_t>(1U) << tolerance_bit_shift;
+
+    return distance <= tolerance;
+}
+
+bool test::close_f(double a, double b, int mantissa_bits, int tolerance_bits)
+{
+    // isfinite(a) => !isinf(a) && !isnan(a)
+    if (!isfinite(a) || !isfinite(b))
+    {
+        return false;
+    }
+
+    uint64_t distance = float_distance(a, b);
+
+    // e.g. for double with 52 bit mantissa, 2 bit accuracy, and hard-coded 11 bit exponent_bits
+    // tolerance_bit_shift = 64 -           (1 +  11 + (52 -     1         ) - 2             )
+    //                       double_length   sign exp   mantissa implicit 1    tolerance_bits
+    uint64_t tolerance_bit_shift = 64 - (1 + 11 + (mantissa_bits - 1) - tolerance_bits);
+    uint64_t tolerance = static_cast<uint64_t>(1U) << tolerance_bit_shift;
 
     return distance <= tolerance;
 }

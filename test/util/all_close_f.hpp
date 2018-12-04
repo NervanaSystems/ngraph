@@ -46,6 +46,24 @@ namespace ngraph
         /// bfloat and f32.
         uint32_t float_distance(float a, float b);
 
+        /// \brief Determine distance between two f64 numbers
+        /// \param a First number to compare
+        /// \param b Second number to compare
+        /// \returns Distance
+        ///
+        /// References:
+        /// - https://en.wikipedia.org/wiki/Unit_in_the_last_place
+        /// - https://randomascii.wordpress.com/2012/01/23/stupid-float-tricks-2
+        /// - https://github.com/google/googletest/blob/master/googletest/docs/AdvancedGuide.md#floating-point-comparison
+        ///
+        /// s e e e e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m
+        /// |----------------------------double-------------------------------------------------------------------------------------------|
+        ///
+        /// double (s1, e11, m52) has 52 + 1 = 53 bits of mantissa or bit_precision
+        ///
+        /// This function uses hard-coded value of 11 bit exponent_bits, so it's only valid for f64.
+        uint64_t float_distance(double a, double b);
+
         /// \brief Check if the two f32 numbers are close
         /// \param a First number to compare
         /// \param b Second number to compare
@@ -56,7 +74,7 @@ namespace ngraph
         /// References:
         /// - https://en.wikipedia.org/wiki/Unit_in_the_last_place
         /// - https://randomascii.wordpress.com/2012/01/23/stupid-float-tricks-2
-        /// - https://github.com/google/googletest/blob/master/googletest/docs/AdvancedGuide.md#floating-point-comparison
+        /// - https://github.com/abseil/googletest/blob/master/googletest/docs/advanced.md#floating-point-comparison
         ///
         /// s e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m
         /// |------------bfloat-----------|
@@ -68,6 +86,26 @@ namespace ngraph
         /// This function uses hard-coded value of 8 bit exponent_bits, so it's only valid for
         /// bfloat and f32.
         bool close_f(float a, float b, int mantissa_bits = 8, int tolerance_bits = 2);
+
+        /// \brief Check if the two f64 numbers are close
+        /// \param a First number to compare
+        /// \param b Second number to compare
+        /// \param mantissa_bits The mantissa width of the underlying number before casting to float
+        /// \param tolerance_bits Bit tolerance error
+        /// \returns True iff the distance between a and b is within 2 ^ tolerance_bits ULP
+        ///
+        /// References:
+        /// - https://en.wikipedia.org/wiki/Unit_in_the_last_place
+        /// - https://randomascii.wordpress.com/2012/01/23/stupid-float-tricks-2
+        /// - https://github.com/abseil/googletest/blob/master/googletest/docs/advanced.md#floating-point-comparison
+        ///
+        /// s e e e e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m
+        /// |----------------------------double-------------------------------------------------------------------------------------------|
+        ///
+        /// double (s1, e11, m52) has 52 + 1 = 53 bits of mantissa or bit_precision
+        ///
+        /// This function uses hard-coded value of 11 bit exponent_bits, so it's only valid for f64.
+        bool close_f(double a, double b, int mantissa_bits = 53, int tolerance_bits = 2);
 
         /// \brief Determine distances between two vectors of f32 numbers
         /// \param a Vector of floats to compare

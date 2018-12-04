@@ -28,8 +28,19 @@ using namespace std;
 using namespace ngraph;
 
 union FloatUnion {
+    FloatUnion() { i = 0; }
+    FloatUnion(float val) { f = val; }
+    FloatUnion(uint32_t val) { i = val; }
     float f;
     uint32_t i;
+};
+
+union DoubleUnion {
+    DoubleUnion() { i = 0; }
+    DoubleUnion(double val) { d = val; }
+    DoubleUnion(uint64_t val) { i = val; }
+    double d;
+    uint64_t i;
 };
 
 string float_to_bits(float f)
@@ -37,6 +48,14 @@ string float_to_bits(float f)
     FloatUnion fu{f};
     stringstream ss;
     ss << bitset<32>(fu.i);
+    return ss.str();
+}
+
+string double_to_bits(double d)
+{
+    DoubleUnion du{d};
+    stringstream ss;
+    ss << bitset<64>(du.i);
     return ss.str();
 }
 
@@ -52,6 +71,211 @@ float bits_to_float(const string& s)
     return fu.f;
 }
 
+double bits_to_double(const string& s)
+{
+    if (s.size() != 64)
+    {
+        throw ngraph_error("Input length must be 64");
+    }
+    bitset<64> bs(s);
+    DoubleUnion du;
+    du.i = static_cast<uint64_t>(bs.to_ullong());
+    return du.d;
+}
+
+class all_close_f_param_test : public testing::TestWithParam<::std::tuple<float, int, int>>
+{
+protected:
+    all_close_f_param_test() { std::tie(expected, mantissa_bits, tolerance_bits) = GetParam(); }
+    void SetUp() override
+    {
+        uint32_t expected_as_int = FloatUnion(expected).i;
+
+        // Turn on targeted bit
+        // e.g. for float with 24 bit mantissa, 2 bit accuracy, and hard-coded 8 bit exponent_bits
+        // tolerance_bit_shift = 32 -           (1 +  8 + (24 -     1         ) - 2             )
+        //                       float_length    sign exp  mantissa implicit 1    tolerance_bits
+        uint32_t tolerance_bit_shift = 32 - (1 + 8 + (mantissa_bits - 1) - tolerance_bits);
+        uint32_t targeted_bit = (1u << tolerance_bit_shift);
+
+        if (expected > 0.f)
+        {
+            uint32_t upper_bound_as_int = expected_as_int + targeted_bit;
+            upper_bound = FloatUnion(upper_bound_as_int).f;
+            past_upper_bound = FloatUnion(upper_bound_as_int + 1).f;
+
+            uint32_t lower_bound_as_int = expected_as_int - targeted_bit;
+            lower_bound = FloatUnion(lower_bound_as_int).f;
+            past_lower_bound = FloatUnion(lower_bound_as_int - 1).f;
+        }
+        else if (expected < 0.f)
+        {
+            // Same logic/math as above, but reversed variable name order
+            uint32_t lower_bound_as_int = expected_as_int + targeted_bit;
+            lower_bound = FloatUnion(lower_bound_as_int).f;
+            past_lower_bound = FloatUnion(lower_bound_as_int + 1).f;
+
+            uint32_t upper_bound_as_int = expected_as_int - targeted_bit;
+            upper_bound = FloatUnion(upper_bound_as_int).f;
+            past_upper_bound = FloatUnion(upper_bound_as_int - 1).f;
+        }
+        else // (expected == 0.f) || (expected == -0.f)
+        {
+            // Special handling of 0 / -0 which get same bounds
+            uint32_t upper_bound_as_int = targeted_bit;
+            upper_bound = FloatUnion(upper_bound_as_int).f;
+            uint32_t past_upper_bound_as_int = upper_bound_as_int + 1;
+            past_upper_bound = FloatUnion(past_upper_bound_as_int).f;
+
+            lower_bound = FloatUnion(upper_bound_as_int | 0x80000000).f;
+            past_lower_bound = FloatUnion(past_upper_bound_as_int | 0x80000000).f;
+        }
+    }
+
+    float expected;
+    int mantissa_bits;
+    int tolerance_bits;
+    float upper_bound;
+    float lower_bound;
+    float past_upper_bound;
+    float past_lower_bound;
+};
+
+TEST_P(all_close_f_param_test, test_boundaries)
+{
+    NGRAPH_INFO << "Testing target of: " << expected << " (" << float_to_bits(expected) << ")";
+    NGRAPH_INFO << "Matching to targets with: " << mantissa_bits << " mantissa_bits and "
+                << tolerance_bits << " tolerance_bits";
+    NGRAPH_INFO << "upper_bound: " << upper_bound << " (" << float_to_bits(upper_bound) << ")";
+    NGRAPH_INFO << "lower_bound: " << lower_bound << " (" << float_to_bits(lower_bound) << ")";
+    NGRAPH_INFO << "past_upper_bound: " << past_upper_bound << " ("
+                << float_to_bits(past_upper_bound) << ")";
+    NGRAPH_INFO << "past_lower_bound: " << past_lower_bound << " ("
+                << float_to_bits(past_lower_bound) << ")";
+
+    EXPECT_TRUE(test::close_f(expected, upper_bound, mantissa_bits, tolerance_bits));
+    EXPECT_TRUE(test::close_f(expected, lower_bound, mantissa_bits, tolerance_bits));
+    EXPECT_FALSE(test::close_f(expected, past_upper_bound, mantissa_bits, tolerance_bits));
+    EXPECT_FALSE(test::close_f(expected, past_lower_bound, mantissa_bits, tolerance_bits));
+}
+
+extern int gtest_test_simple_floats_with_range_of_precisionsall_close_f_param_test_dummy_;
+INSTANTIATE_TEST_CASE_P(test_simple_floats_with_range_of_precisions,
+                        all_close_f_param_test,
+                        testing::Combine(testing::Values(0.f,
+                                                         -0.f,
+                                                         1.f,
+                                                         -1.f,
+                                                         10.f,
+                                                         -10.f,
+                                                         0.75f,
+                                                         -0.75f,
+                                                         0.5f,
+                                                         -0.5f,
+                                                         0.25f,
+                                                         -0.25f,
+                                                         0.125f,
+                                                         -0.125f),
+                                         testing::Range(4, 25),
+                                         testing::Range(0, 4)), );
+
+class all_close_f_double_param_test : public testing::TestWithParam<::std::tuple<double, int, int>>
+{
+protected:
+    all_close_f_double_param_test()
+    {
+        std::tie(expected, mantissa_bits, tolerance_bits) = GetParam();
+    }
+    void SetUp() override
+    {
+        uint64_t expected_as_int = DoubleUnion(expected).i;
+        // Turn on targeted bit
+        // e.g. for double with 52 bit mantissa, 2 bit accuracy, and hard-coded 11 bit exponent_bits
+        // tolerance_bit_shift = 64 -           (1 +  11 + (52 -     1         ) - 2             )
+        //                       double_length   sign exp   mantissa implicit 1    tolerance_bits
+        uint64_t tolerance_bit_shift = 64 - (1 + 11 + (mantissa_bits - 1) - tolerance_bits);
+        uint64_t targeted_bit = (1ull << tolerance_bit_shift);
+
+        if (expected > 0.)
+        {
+            uint64_t upper_bound_as_int = expected_as_int + targeted_bit;
+            upper_bound = DoubleUnion(upper_bound_as_int).d;
+            past_upper_bound = DoubleUnion(upper_bound_as_int + 1).d;
+
+            uint64_t lower_bound_as_int = expected_as_int - targeted_bit;
+            lower_bound = DoubleUnion(lower_bound_as_int).d;
+            past_lower_bound = DoubleUnion(lower_bound_as_int - 1).d;
+        }
+        else if (expected < 0.)
+        {
+            // Same logic/math as above, but reversed variable name order
+            uint64_t lower_bound_as_int = expected_as_int + targeted_bit;
+            lower_bound = DoubleUnion(lower_bound_as_int).d;
+            past_lower_bound = DoubleUnion(lower_bound_as_int + 1).d;
+
+            uint64_t upper_bound_as_int = expected_as_int - targeted_bit;
+            upper_bound = DoubleUnion(upper_bound_as_int).d;
+            past_upper_bound = DoubleUnion(upper_bound_as_int - 1).d;
+        }
+        else // (expected == 0.) || (expected == -0.)
+        {
+            // Special handling of 0 / -0 which get same bounds
+            uint64_t upper_bound_as_int = targeted_bit;
+            upper_bound = DoubleUnion(upper_bound_as_int).d;
+            uint64_t past_upper_bound_as_int = upper_bound_as_int + 1;
+            past_upper_bound = DoubleUnion(past_upper_bound_as_int).d;
+
+            lower_bound = DoubleUnion(upper_bound_as_int | 0x8000000000000000).d;
+            past_lower_bound = DoubleUnion(past_upper_bound_as_int | 0x8000000000000000).d;
+        }
+    }
+
+    double expected;
+    int mantissa_bits;
+    int tolerance_bits;
+    double upper_bound;
+    double lower_bound;
+    double past_upper_bound;
+    double past_lower_bound;
+};
+
+TEST_P(all_close_f_double_param_test, test_boundaries)
+{
+    NGRAPH_INFO << "Testing target of: " << expected << " (" << double_to_bits(expected) << ")";
+    NGRAPH_INFO << "Matching to targets with: " << mantissa_bits << " mantissa_bits and "
+                << tolerance_bits << " tolerance_bits";
+    NGRAPH_INFO << "upper_bound: " << upper_bound << " (" << double_to_bits(upper_bound) << ")";
+    NGRAPH_INFO << "lower_bound: " << lower_bound << " (" << double_to_bits(lower_bound) << ")";
+    NGRAPH_INFO << "past_upper_bound: " << past_upper_bound << " ("
+                << double_to_bits(past_upper_bound) << ")";
+    NGRAPH_INFO << "past_lower_bound: " << past_lower_bound << " ("
+                << double_to_bits(past_lower_bound) << ")";
+
+    EXPECT_TRUE(test::close_f(expected, upper_bound, mantissa_bits, tolerance_bits));
+    EXPECT_TRUE(test::close_f(expected, lower_bound, mantissa_bits, tolerance_bits));
+    EXPECT_FALSE(test::close_f(expected, past_upper_bound, mantissa_bits, tolerance_bits));
+    EXPECT_FALSE(test::close_f(expected, past_lower_bound, mantissa_bits, tolerance_bits));
+}
+
+extern int gtest_test_simple_doubles_with_range_of_precisionsall_close_f_double_param_test_dummy_;
+INSTANTIATE_TEST_CASE_P(test_simple_doubles_with_range_of_precisions,
+                        all_close_f_double_param_test,
+                        testing::Combine(testing::Values(0.,
+                                                         -0.,
+                                                         1.,
+                                                         -1.,
+                                                         10.,
+                                                         -10.,
+                                                         0.75,
+                                                         -0.75,
+                                                         0.5,
+                                                         -0.5,
+                                                         0.25,
+                                                         -0.25,
+                                                         0.125,
+                                                         -0.125),
+                                         testing::Range(8, 54),
+                                         testing::Range(0, 4)), );
 // Test the exact bounds near +0.f
 //
 // With mantissa_bits = 8, tolerance_bits = 2
@@ -111,6 +335,68 @@ TEST(all_close_f, mantissa_8_near_0)
     computed = bits_to_float("10000000000001000000000000000001");
     EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
     EXPECT_FALSE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+}
+
+// Test the exact bounds near +0.d
+//
+// With mantissa_bits = 8, tolerance_bits = 2
+//
+//                                 Targeted bit
+//                                 |
+//                                 v
+// s e e e e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m
+//                     =>|      8      |
+//                                 | 2 |<=
+//
+// [Upper bound]
+//                                 Add 1 at this bit
+//                                 |
+//                                 v
+// 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// +                               1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// -------------------------------------------------------------------------------------------------------------------------------
+// 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+//
+// [Lower bound]
+//                                 Minus 1 at this bit
+//                                 |
+//                                 v
+// 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// -                               1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// -------------------------------------------------------------------------------------------------------------------------------
+// 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+//
+// Convert to 2's compliment
+// 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+//
+// Mask the sign bit
+// 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+TEST(all_close_f, double_mantissa_8_near_0)
+{
+    // 0.d, the ground-truth value
+    double expected =
+        bits_to_double("0000000000000000000000000000000000000000000000000000000000000000");
+    double computed;
+
+    // ~6.95335580783500E-310, the exact upper bound
+    computed = bits_to_double("0000000000000000100000000000000000000000000000000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_TRUE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+
+    // ~6.95335580783505-310, the next representable number bigger than upper bound
+    computed = bits_to_double("0000000000000000100000000000000000000000000000000000000000000001");
+    EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_FALSE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+
+    // ~-6.95335580783500E-310 , the exact lower bound
+    computed = bits_to_double("1000000000000000100000000000000000000000000000000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_TRUE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+
+    // ~-6.95335580783505E-310, the next representable number smaller than lower bound
+    computed = bits_to_double("1000000000000000100000000000000000000000000000000000000000000001");
+    EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_FALSE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
 }
 
 // Test the exact bounds near -0.f
@@ -174,6 +460,68 @@ TEST(all_close_f, mantissa_8_near_n0)
     EXPECT_FALSE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
 }
 
+// Test the exact bounds near -0.d
+//
+// With mantissa_bits = 8, tolerance_bits = 2
+//
+//                                 Targeted bit
+//                                 |
+//                                 v
+// s e e e e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m
+//                     =>|      8      |
+//                                 | 2 |<=
+//
+// [Upper bound]
+//                                 Minus 1 at this bit
+//                                 |
+//                                 v
+// 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// -                               1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// -------------------------------------------------------------------------------------------------------------------------------
+// 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+//
+// Convert to 2's compliment
+// 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+//
+// Mask off sign bit
+// 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+//
+// [Lower bound]
+//                           Add 1 at this bit
+//                           |
+//                           v
+// 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// +                         1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// -------------------------------------------------------------------------------------------------------------------------------
+// 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+TEST(all_close_f, double_mantissa_8_near_n0)
+{
+    // 0.d, the ground-truth value
+    double expected =
+        bits_to_double("1000000000000000000000000000000000000000000000000000000000000000");
+    double computed;
+
+    // ~6.95335580783500E-310, the exact upper bound
+    computed = bits_to_double("0000000000000000100000000000000000000000000000000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_TRUE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+
+    // ~6.95335580783505-310, the next representable number bigger than upper bound
+    computed = bits_to_double("0000000000000000100000000000000000000000000000000000000000000001");
+    EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_FALSE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+
+    // ~-6.95335580783500E-310 , the exact lower bound
+    computed = bits_to_double("1000000000000000100000000000000000000000000000000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_TRUE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+
+    // ~-6.95335580783505E-310, the next representable number smaller than lower bound
+    computed = bits_to_double("1000000000000000100000000000000000000000000000000000000000000001");
+    EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_FALSE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+}
+
 // Test the exact bounds near 1.f
 //
 // With mantissa_bits = 8, tolerance_bits = 2
@@ -229,6 +577,62 @@ TEST(all_close_f, mantissa_8_near_1)
     EXPECT_FALSE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
 }
 
+// Test the exact bounds near 1.d
+//
+// With mantissa_bits = 8, tolerance_bits = 2
+//
+//                                 Targeted bit
+//                                 |
+//                                 v
+// s e e e e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m
+//                     =>|      8      |
+//                                 | 2 |<=
+//
+// [Upper bound]
+//                                 Add 1 at this bit to get upper bound
+//                                 |
+//                                 v
+// 0 0 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// +                               1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// -------------------------------------------------------------------------------------------------------------------------------
+// 0 0 1 1 1 1 1 1 1 1 1 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+//
+// [Lower bound]
+//                                 Minus 1 at this bit to get lower bound
+//                                 |
+//                                 v
+// 0 0 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// -                               1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// -------------------------------------------------------------------------------------------------------------------------------
+// 0 0 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+TEST(all_close_f, double_mantissa_8_near_1)
+{
+    // 1.f, the ground-truth value
+    double expected =
+        bits_to_double("0011111111110000000000000000000000000000000000000000000000000000");
+    double computed;
+
+    // 1.03125f, the exact upper bound
+    computed = bits_to_double("0011111111110000100000000000000000000000000000000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_TRUE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+
+    // 1.031250119f, the next representable number bigger than upper bound
+    computed = bits_to_double("0011111111110000100000000000000000000000000000000000000000000001");
+    EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_FALSE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+
+    // 0.984375f, the exact lower bound
+    computed = bits_to_double("0011111111101111100000000000000000000000000000000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_TRUE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+
+    // 0.9843749404f, the next representable number smaller than lower bound
+    computed = bits_to_double("0011111111101111011111111111111111111111111111111111111111111111");
+    EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_FALSE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+}
+
 // Test the exact bounds near -1.f
 //
 // With mantissa_bits = 8, tolerance_bits = 2
@@ -282,6 +686,62 @@ TEST(all_close_f, mantissa_8_near_n1)
     computed = bits_to_float("10111111100001000000000000000001");
     EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
     EXPECT_FALSE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+}
+
+// Test the exact bounds near -1.d
+//
+// With mantissa_bits = 8, tolerance_bits = 2
+//
+//                                 Targeted bit
+//                                 |
+//                                 v
+// s e e e e e e e e e e e m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m m
+//                     =>|      8      |
+//                                 | 2 |<=
+//
+// [Upper bound]
+//                                 Minus 1 at this bit
+//                                 |
+//                                 v
+// 1 0 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// -                               1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// -------------------------------------------------------------------------------------------------------------------------------
+// 1 0 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+//
+// [Lower bound]
+//                                 Add 1 at this bit
+//                                 |
+//                                 v
+// 1 0 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// +                               1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+// -------------------------------------------------------------------------------------------------------------------------------
+// 1 0 1 1 1 1 1 1 1 1 1 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+TEST(all_close_f, double_mantissa_8_near_n1)
+{
+    // -1.f, the ground-truth value
+    double expected =
+        bits_to_double("1011111111110000000000000000000000000000000000000000000000000000");
+    double computed;
+
+    // -0.984375f, the exact upper bound
+    computed = bits_to_double("1011111111101111100000000000000000000000000000000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_TRUE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+
+    // -0.984374940395355224609375f, the next representable number bigger than upper bound
+    computed = bits_to_double("1011111111101111011111111111111111111111111111111111111111111111");
+    EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_FALSE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+
+    // -1.03125f, the exact lower bound
+    computed = bits_to_double("1011111111110000100000000000000000000000000000000000000000000000");
+    EXPECT_TRUE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_TRUE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
+
+    // -1.03125011920928955078125f, the next representable number smaller than lower bound
+    computed = bits_to_double("1011111111110000100000000000000000000000000000000000000000000001");
+    EXPECT_FALSE(test::close_f(expected, computed, 8, 2));
+    //EXPECT_FALSE(test::all_close_f(vector<float>({expected}), vector<float>({computed}), 8, 2));
 }
 
 // For intuitive understanding of tightness of bounds in decimal
@@ -515,4 +975,31 @@ TEST(all_close_f, inf_nan)
     EXPECT_FALSE(test::all_close_f(vector<float>({quiet_nan}), vector<float>({quiet_nan})));
     EXPECT_FALSE(test::close_f(signaling_nan, signaling_nan));
     EXPECT_FALSE(test::all_close_f(vector<float>({signaling_nan}), vector<float>({signaling_nan})));
+}
+
+TEST(all_close_f, double_inf_nan)
+{
+    double zero = 0.f;
+    double infinity = numeric_limits<double>::infinity();
+    double neg_infinity = -numeric_limits<double>::infinity();
+    double quiet_nan = numeric_limits<double>::quiet_NaN();
+    double signaling_nan = numeric_limits<double>::signaling_NaN();
+
+    EXPECT_FALSE(test::close_f(zero, infinity));
+    //EXPECT_FALSE(test::all_close_f(vector<double>({zero}), vector<double>({infinity})));
+    EXPECT_FALSE(test::close_f(zero, neg_infinity));
+    //EXPECT_FALSE(test::all_close_f(vector<double>({zero}), vector<double>({neg_infinity})));
+    EXPECT_FALSE(test::close_f(zero, quiet_nan));
+    //EXPECT_FALSE(test::all_close_f(vector<double>({zero}), vector<double>({quiet_nan})));
+    EXPECT_FALSE(test::close_f(zero, signaling_nan));
+    //EXPECT_FALSE(test::all_close_f(vector<double>({zero}), vector<double>({signaling_nan})));
+
+    EXPECT_FALSE(test::close_f(infinity, infinity));
+    //EXPECT_FALSE(test::all_close_f(vector<double>({infinity}), vector<double>({infinity})));
+    EXPECT_FALSE(test::close_f(neg_infinity, neg_infinity));
+    //EXPECT_FALSE(test::all_close_f(vector<double>({neg_infinity}), vector<double>({neg_infinity})));
+    EXPECT_FALSE(test::close_f(quiet_nan, quiet_nan));
+    //EXPECT_FALSE(test::all_close_f(vector<double>({quiet_nan}), vector<double>({quiet_nan})));
+    EXPECT_FALSE(test::close_f(signaling_nan, signaling_nan));
+    //EXPECT_FALSE(test::all_close_f(vector<double>({signaling_nan}), vector<double>({signaling_nan})));
 }
