@@ -184,8 +184,8 @@ namespace ngraph
                 static const std::regex node_skip_regex(node_skip_cregex);
                 if (std::regex_match(graph_node->get_name(), node_skip_regex))
                 {
-                    NGRAPH_DEBUG << "[MATCHER] Aborting due at " << graph_node->get_name()
-                              << " due  to regex " << node_skip_cregex;
+                    NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
+                              << " due to NGRAPH_MATCHER_SKIP set to " << node_skip_cregex;
                     return abort_match(watermark, false);
                 }
             }
