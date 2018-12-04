@@ -37,12 +37,12 @@ def find_ngraph_dist_dir():
     found = os.path.exists(os.path.join(ngraph_dist_dir, 'include/ngraph'))
     if not found:
         print(
-            "Cannot find nGraph library in {} make sure that "
-            "NGRAPH_CPP_BUILD_PATH is set correctly".format(ngraph_dist_dir)
+            'Cannot find nGraph library in {} make sure that '
+            'NGRAPH_CPP_BUILD_PATH is set correctly'.format(ngraph_dist_dir)
         )
         sys.exit(1)
     else:
-        print("nGraph library found in {}".format(ngraph_dist_dir))
+        print('nGraph library found in {}'.format(ngraph_dist_dir))
         return ngraph_dist_dir
 
 
@@ -55,19 +55,19 @@ def find_pybind_headers_dir():
     found = os.path.exists(os.path.join(pybind_headers_dir, 'include/pybind11'))
     if not found:
         print(
-            "Cannot find pybind11 library in {} make sure that "
-            "PYBIND_HEADERS_PATH is set correctly".format(pybind_headers_dir)
+            'Cannot find pybind11 library in {} make sure that '
+            'PYBIND_HEADERS_PATH is set correctly'.format(pybind_headers_dir)
         )
         sys.exit(1)
     else:
-        print("pybind11 library found in {}".format(pybind_headers_dir))
+        print('pybind11 library found in {}'.format(pybind_headers_dir))
         return pybind_headers_dir
 
 
 NGRAPH_CPP_DIST_DIR = find_ngraph_dist_dir()
-PYBIND11_INCLUDE_DIR = find_pybind_headers_dir() + "/include"
-NGRAPH_CPP_INCLUDE_DIR = NGRAPH_CPP_DIST_DIR + "/include"
-NGRAPH_CPP_LIBRARY_DIR = NGRAPH_CPP_DIST_DIR + "/lib"
+PYBIND11_INCLUDE_DIR = find_pybind_headers_dir() + '/include'
+NGRAPH_CPP_INCLUDE_DIR = NGRAPH_CPP_DIST_DIR + '/include'
+NGRAPH_CPP_LIBRARY_DIR = NGRAPH_CPP_DIST_DIR + '/lib'
 
 
 # Parallel build from:
@@ -233,13 +233,13 @@ sources = [
 ]
 
 package_dir = {
-    'ngraph': PYNGRAPH_ROOT_DIR + "/ngraph",
-    'ngraph.utils': PYNGRAPH_ROOT_DIR + "/ngraph/utils",
-    'ngraph.impl': PYNGRAPH_ROOT_DIR + "/ngraph/impl",
-    'ngraph.impl.op': PYNGRAPH_ROOT_DIR + "/ngraph/impl/op",
-    'ngraph.impl.op.util': PYNGRAPH_ROOT_DIR + "/ngraph/impl/op/util",
-    'ngraph.impl.passes': PYNGRAPH_ROOT_DIR + "/ngraph/impl/passes",
-    'ngraph.impl.runtime': PYNGRAPH_ROOT_DIR + "/ngraph/impl/runtime",
+    'ngraph': PYNGRAPH_ROOT_DIR + '/ngraph',
+    'ngraph.utils': PYNGRAPH_ROOT_DIR + '/ngraph/utils',
+    'ngraph.impl': PYNGRAPH_ROOT_DIR + '/ngraph/impl',
+    'ngraph.impl.op': PYNGRAPH_ROOT_DIR + '/ngraph/impl/op',
+    'ngraph.impl.op.util': PYNGRAPH_ROOT_DIR + '/ngraph/impl/op/util',
+    'ngraph.impl.passes': PYNGRAPH_ROOT_DIR + '/ngraph/impl/passes',
+    'ngraph.impl.runtime': PYNGRAPH_ROOT_DIR + '/ngraph/impl/runtime',
 }
 packages = [
     'ngraph',
@@ -251,13 +251,13 @@ packages = [
     'ngraph.impl.runtime',
 ]
 
-sources = [PYNGRAPH_ROOT_DIR + "/" + source for source in sources]
+sources = [PYNGRAPH_ROOT_DIR + '/' + source for source in sources]
 
 include_dirs = [PYNGRAPH_ROOT_DIR, NGRAPH_CPP_INCLUDE_DIR, PYBIND11_INCLUDE_DIR]
 
 library_dirs = [NGRAPH_CPP_LIBRARY_DIR]
 
-libraries = ["ngraph"]
+libraries = ['ngraph']
 
 extra_compile_args = []
 
@@ -267,20 +267,20 @@ data_files = [
     (
         'lib',
         [
-            NGRAPH_CPP_LIBRARY_DIR + "/" + library
+            NGRAPH_CPP_LIBRARY_DIR + '/' + library
             for library in os.listdir(NGRAPH_CPP_LIBRARY_DIR)
         ],
     ),
     (
         'licenses',
         [
-            PYNGRAPH_ROOT_DIR + "/../licenses/" + license
-            for license in os.listdir(PYNGRAPH_ROOT_DIR + "/../licenses")
+            PYNGRAPH_ROOT_DIR + '/../licenses/' + license
+            for license in os.listdir(PYNGRAPH_ROOT_DIR + '/../licenses')
         ],
     ),
     (
         '',
-        [PYNGRAPH_ROOT_DIR + "/../LICENSE"],
+        [PYNGRAPH_ROOT_DIR + '/../LICENSE'],
     )
 ]
 
@@ -289,11 +289,11 @@ ext_modules = [
         '_pyngraph',
         sources=sources,
         include_dirs=include_dirs,
-        define_macros=[("VERSION_INFO", __version__)],
+        define_macros=[('VERSION_INFO', __version__)],
         library_dirs=library_dirs,
         libraries=libraries,
         extra_link_args=extra_link_args,
-        language="c++",
+        language='c++',
     )
 ]
 
@@ -302,10 +302,10 @@ if NGRAPH_ONNX_IMPORT_ENABLE == 'TRUE':
         'pyngraph/pyngraph_onnx_import.cpp',
         'pyngraph/onnx_import/onnx_import.cpp',
     ]
-    onnx_sources = [PYNGRAPH_ROOT_DIR + "/" + source for source in onnx_sources]
+    onnx_sources = [PYNGRAPH_ROOT_DIR + '/' + source for source in onnx_sources]
 
     package_dir['ngraph.impl.onnx_import'] = (
-        PYNGRAPH_ROOT_DIR + "/ngraph/impl/onnx_import"
+        PYNGRAPH_ROOT_DIR + '/ngraph/impl/onnx_import'
     )
     packages.append('ngraph.impl.onnx_import')
 
@@ -314,11 +314,11 @@ if NGRAPH_ONNX_IMPORT_ENABLE == 'TRUE':
             '_pyngraph_onnx_import',
             sources=onnx_sources,
             include_dirs=include_dirs,
-            define_macros=[("VERSION_INFO", __version__)],
+            define_macros=[('VERSION_INFO', __version__)],
             library_dirs=library_dirs,
             libraries=libraries,
             extra_link_args=extra_link_args,
-            language="c++",
+            language='c++',
         )
     )
 
@@ -333,7 +333,7 @@ class BuildExt(build_ext):
             raise RuntimeError('Unsupported platform: win32!')
         """-Wstrict-prototypes is not a valid option for c++"""
         try:
-            self.compiler.compiler_so.remove("-Wstrict-prototypes")
+            self.compiler.compiler_so.remove('-Wstrict-prototypes')
         except (AttributeError, ValueError):
             pass
         for ext in self.extensions:
@@ -354,7 +354,7 @@ class BuildExt(build_ext):
                 ext.extra_link_args += ['-z', 'relro']
                 ext.extra_link_args += ['-z', 'now']
             elif sys.platform == 'darwin':
-                ext.extra_link_args += ["-Wl,-rpath,@loader_path/../.."]
+                ext.extra_link_args += ['-Wl,-rpath,@loader_path/../..']
             ext.extra_compile_args += ['-Wformat', '-Wformat-security']
             ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
         build_ext.build_extensions(self)
