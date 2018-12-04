@@ -16,6 +16,7 @@
 
 #include "matcher.hpp"
 #include <algorithm>
+#include <regex>
 #include <typeindex>
 #include <typeinfo>
 
@@ -176,6 +177,20 @@ namespace ngraph
 
             add_node(graph_node);
             size_t watermark = m_matched_list.size() - 1;
+
+            static const char* node_skip_cregex = std::getenv("NGRAPH_MATCHER_SKIP");
+            if (node_skip_cregex)
+            {
+                static const std::regex node_skip_regex(node_skip_cregex);
+                std::cout << "Trying " << node_skip_cregex << " against " << graph_node->get_name()
+                          << std::endl;
+                if (std::regex_match(graph_node->get_name(), node_skip_regex))
+                {
+                    std::cout << "[MATCHER] Aborting due at " << graph_node->get_name()
+                              << " due  to regex " << node_skip_cregex << std::endl;
+                    return abort_match(watermark, false);
+                }
+            }
 
             NGRAPH_DEBUG << pad(2 * m_depth) << "[MATCHER] in match_node : "
                          << "pattern = " << pattern_node->get_name() << " matched "
