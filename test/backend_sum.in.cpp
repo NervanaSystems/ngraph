@@ -566,4 +566,75 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc_double)
 
     EXPECT_TRUE(test::all_close(ref_results.at(0), bk_results.at(0), 0.0, 1e-5));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, sum_stable_simple_float)
+{
+    std::string backend_name = "${BACKEND_NAME}";
+    if (backend_name == "INTERPRETER")
+    {
+        return;
+    }
+    Shape shape_a{20};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+
+    Shape shape_rt{};
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), ParameterVector{A});
+
+    vector<vector<float>> args;
+    args.push_back(vector<float>{10000000.0f, 0.9f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f,
+                                 0.8f,        0.1f, 0.9f, 0.5f, 0.2f, 0.3f, 0.4f,
+                                 0.5f,        0.6f, 0.7f, 0.8f, 0.9f, 0.1f});
+
+    auto ref_func = clone_function(*f);
+    auto bk_func = clone_function(*f);
+
+    auto ref_results = execute(ref_func, args, "INTERPRETER");
+    auto bk_results = execute(bk_func, args, "${BACKEND_NAME}");
+
+    EXPECT_TRUE(test::all_close_f(ref_results.at(0), bk_results.at(0), 24, 1));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, sum_stable_simple_double)
+{
+    std::string backend_name = "${BACKEND_NAME}";
+    if (backend_name == "INTERPRETER")
+    {
+        return;
+    }
+    Shape shape_a{20};
+    auto A = make_shared<op::Parameter>(element::f64, shape_a);
+
+    Shape shape_rt{};
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), ParameterVector{A});
+
+    vector<vector<double>> args;
+    args.push_back(vector<double>{10000000000000000.0L,
+                                  0.2L,
+                                  0.3L,
+                                  0.4L,
+                                  0.5L,
+                                  0.6L,
+                                  0.7L,
+                                  0.8L,
+                                  0.9L,
+                                  0.7L,
+                                  0.9L,
+                                  0.7L,
+                                  0.3L,
+                                  0.6L,
+                                  0.8L,
+                                  0.4L,
+                                  0.6L,
+                                  0.5L,
+                                  0.8L,
+                                  0.7L});
+
+    auto ref_func = clone_function(*f);
+    auto bk_func = clone_function(*f);
+
+    auto ref_results = execute(ref_func, args, "INTERPRETER");
+    auto bk_results = execute(bk_func, args, "${BACKEND_NAME}");
+
+    EXPECT_TRUE(test::all_close(ref_results.at(0), bk_results.at(0), 0.0, 2.0));
+}
 #endif
