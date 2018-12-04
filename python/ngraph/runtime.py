@@ -85,7 +85,7 @@ class Computation(object):
         params_string = ', '.join([param.name for param in self.parameters])
         return '<Computation: {}({})>'.format(self.function.get_name(), params_string)
 
-    def __call__(self, *input_values):  # type: (*NumericData) -> NumericData
+    def __call__(self, *input_values):  # type: (*NumericData) -> List[NumericData]
         """Run computation on input values and return result."""
         for tensor_view, value in zip(self.tensor_views, input_values):
             if not isinstance(value, np.ndarray):
