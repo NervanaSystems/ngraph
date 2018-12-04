@@ -93,6 +93,7 @@ option(NGRAPH_INTELGPU_ENABLE "Control the building of the Intel GPU backend wit
 option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
 option(NGRAPH_HYBRID_ENABLE "Control the building of the HYBRID backend" FALSE)
+option(NGRAPH_HYBRID_GPU_ENABLE "Control the building of the only HYBRID GPU backend" FALSE)
 option(NGRAPH_NOP_ENABLE "Control the building of the NOP backend" TRUE)
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
@@ -101,6 +102,27 @@ option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 
+if (NGRAPH_HYBRID_ENABLE)
+    # hybrid configurations : 
+    if (NOT NGRAPH_INTERPRETER_ENABLE)
+        # always build Interpreter for hybrid 
+        set(NGRAPH_INTERPRETER_ENABLE TRUE)
+    endif()
+endif()
+
+if (NGRAPH_HYBRID_GPU_ENABLE)
+    # hybrid GPU configurations : 
+    if (NOT NGRAPH_INTERPRETER_ENABLE)
+        # always build Interpreter for hybrid gpu
+        set(NGRAPH_INTERPRETER_ENABLE TRUE)
+    endif()
+
+    if (NOT NGRAPH_GPU_ENABLE)
+        # always build GPU for hybrid gpu
+        set(NGRAPH_GPU_ENABLE TRUE)
+    endif()
+endif()
+
 message(STATUS "NGRAPH_UNIT_TEST_ENABLE:      ${NGRAPH_UNIT_TEST_ENABLE}")
 message(STATUS "NGRAPH_TOOLS_ENABLE:          ${NGRAPH_TOOLS_ENABLE}")
 message(STATUS "NGRAPH_CPU_ENABLE:            ${NGRAPH_CPU_ENABLE}")
@@ -108,6 +130,7 @@ message(STATUS "NGRAPH_INTELGPU_ENABLE:       ${NGRAPH_INTELGPU_ENABLE}")
 message(STATUS "NGRAPH_GPU_ENABLE:            ${NGRAPH_GPU_ENABLE}")
 message(STATUS "NGRAPH_INTERPRETER_ENABLE:    ${NGRAPH_INTERPRETER_ENABLE}")
 message(STATUS "NGRAPH_HYBRID_ENABLE:         ${NGRAPH_HYBRID_ENABLE}")
+message(STATUS "NGRAPH_HYBRID_GPU_ENABLE:     ${NGRAPH_HYBRID_GPU_ENABLE}")
 message(STATUS "NGRAPH_NOP_ENABLE:            ${NGRAPH_NOP_ENABLE}")
 message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:    ${NGRAPH_DISTRIBUTED_ENABLE}")
 message(STATUS "NGRAPH_DEBUG_ENABLE:          ${NGRAPH_DEBUG_ENABLE}")
@@ -221,22 +244,20 @@ if (NGRAPH_INTERPRETER_ENABLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_INTERPRETER_ENABLE")
 endif()
 
-if (NGRAPH_HYBRID_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_HYBRID_ENABLE")
-    
-    # hybrid configurations : 
-    if (NOT NGRAPH_INTERPRETER_ENABLE)
-        # always build Interpreter for hybrid 
-        set(NGRAPH_INTERPRETER_ENABLE TRUE)
-    endif()
+if (NOT DEFINED NGRAPH_TBB_ENABLE)
+    set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
 if (NGRAPH_GPU_ENABLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_GPU_ENABLE")
 endif()
 
-if (NOT DEFINED NGRAPH_TBB_ENABLE)
-    set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
+if (NGRAPH_HYBRID_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_HYBRID_ENABLE")
+endif()
+
+if (NGRAPH_HYBRID_GPU_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_HYBRID_GPU_ENABLE")
 endif()
 
 add_custom_target(style-check

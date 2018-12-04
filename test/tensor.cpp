@@ -107,7 +107,8 @@ void test_copy_to_same_backend(const vector<T>& x)
     auto backend_int = runtime::Backend::create("INTERPRETER");
     auto a = backend_int->create_tensor(element::from<T>(), Shape{(x.size() / 2), (x.size() / 2)});
     auto b = backend_int->create_tensor(element::from<T>(), Shape{(x.size() / 2), (x.size() / 2)});
-    auto c = backend_int->create_tensor(element::from<T>(), Shape{((x.size() / 2) -1), ((x.size() / 2) +1)});
+    auto c = backend_int->create_tensor(element::from<T>(),
+                                        Shape{((x.size() / 2) - 1), ((x.size() / 2) + 1)});
     vector<T> result(x.size());
 
     a->write(&x[0], 0, x.size() * sizeof(T));
@@ -121,7 +122,6 @@ void test_copy_to_same_backend(const vector<T>& x)
     ASSERT_EQ(af_vector, result);
 
     // EXPECT_THROW(a->copy_to(c), ngraph_error);
-    
 }
 
 template <typename T>

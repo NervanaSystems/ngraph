@@ -15,10 +15,10 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/tensor.hpp"
-#include "ngraph/descriptor/layout/tensor_layout.hpp"
-#include "ngraph/type/element_type.hpp"
 #include "ngraph/assertion.hpp"
+#include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/type/element_type.hpp"
 
 using namespace ngraph;
 using namespace std;

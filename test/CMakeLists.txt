@@ -94,7 +94,12 @@ endif()
 if(NGRAPH_GPU_ENABLE)
     list(APPEND SRC cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
+    if (NGRAPH_HYBRID_GPU_ENABLE)
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} HybridGPU)
+    endif()
 endif()
+
+
 
 if (NGRAPH_INTELGPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
@@ -223,6 +228,10 @@ endif()
 
 if (NGRAPH_GPU_ENABLE)
     target_link_libraries(unit-test PRIVATE gpu_backend)
+endif()
+
+if (NGRAPH_HYBRID_GPU_ENABLE)
+    target_link_libraries(unit-test PRIVATE hybrid_gpu_backend)
 endif()
 
 if (NGRAPH_NOP_ENABLE)

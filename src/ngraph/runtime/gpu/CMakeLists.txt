@@ -173,7 +173,7 @@ if (NGRAPH_GPU_ENABLE)
     install(TARGETS gpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 
 
-    if (NGRAPH_HYBRID_ENABLE)
+    if (NGRAPH_HYBRID_GPU_ENABLE)
         add_library(hybrid_gpu_backend SHARED ${SRC} ${HYBRID_GPU_BACKEND_SRC} ${CUDA_OBJ})
         if(NGRAPH_LIB_VERSIONING_ENABLE)
             set_target_properties(hybrid_gpu_backend PROPERTIES
