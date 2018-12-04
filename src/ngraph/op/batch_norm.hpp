@@ -27,9 +27,20 @@ namespace ngraph
 {
     namespace op
     {
+        // \brief Batchnorm for training operation
         class BatchNormTraining : public Op
         {
         public:
+            // \param input Must have rank >= 2, [., C, ...]
+            // \param gamma gamma scaling for normalized value. [C]
+            // \param beta bias added to the scaled normalized value [C]
+            // \param epsilon Avoids divsion by 0 if input has 0 variance
+            BatchNormTraining(std::shared_ptr<Node> input,
+                              std::shared_ptr<Node> gamma,
+                              std::shared_ptr<Node> beta,
+                              double epsilon);
+
+            // \deprecated
             // In this version of BatchNorm:
             //
             // MEAN AND VARIANCE: computed directly from the content of 'input'.
@@ -75,6 +86,20 @@ namespace ngraph
         class BatchNormInference : public Op
         {
         public:
+            // \param input [., C, ...]
+            // \param gamma gamma scaling for normalized value. [C]
+            // \param beta bias added to the scaled normalized value [C]
+            // \param mean value for mean normalization [C]
+            // \param variance value for variance normalization [C]
+            // \param epsilon Avoids divsion by 0 if input has 0 variance
+            BatchNormInference(std::shared_ptr<ngraph::Node> input,
+                               std::shared_ptr<ngraph::Node> gamma,
+                               std::shared_ptr<ngraph::Node> beta,
+                               std::shared_ptr<ngraph::Node> mean,
+                               std::shared_ptr<ngraph::Node> variance,
+                               double epsilon);
+
+            // \deprecated
             // In this version of BatchNorm:
             //
             // MEAN AND VARIANCE: provided by the 'mean' and 'variance' parameters.
@@ -125,10 +150,20 @@ namespace ngraph
         class BatchNormTrainingBackprop : public Op
         {
         public:
-            BatchNormTrainingBackprop(double eps,
+            BatchNormTrainingBackprop(std::shared_ptr<Node> input,
+                                      std::shared_ptr<Node> gamma,
+                                      std::shared_ptr<Node> beta,
+                                      std::shared_ptr<Node> mean,
+                                      std::shared_ptr<Node> variance,
+                                      std::shared_ptr<Node> delta,
+                                      double epsilon);
+
+            // \deprecated
+            BatchNormTrainingBackprop(double epsilon,
                                       std::shared_ptr<Node> gamma,
                                       std::shared_ptr<Node> beta,
                                       std::shared_ptr<Node> input,
+
                                       std::shared_ptr<Node> mean,
                                       std::shared_ptr<Node> variance,
                                       std::shared_ptr<Node> delta);
