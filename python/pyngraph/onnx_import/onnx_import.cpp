@@ -28,34 +28,19 @@
 
 namespace py = pybind11;
 
-static std::vector<std::shared_ptr<ngraph::Function>>
-    load_onnx_model(const std::string& model_proto)
+static std::shared_ptr<ngraph::Function> import_onnx_model(const std::string& model_proto)
 {
     std::istringstream iss(model_proto, std::ios_base::binary | std::ios_base::in);
-    return ngraph::onnx_import::load_onnx_model(iss);
+    return ngraph::onnx_import::import_onnx_model(iss);
 }
 
-static std::shared_ptr<ngraph::Function> import_onnx_function(const std::string& model_proto)
+static std::shared_ptr<ngraph::Function> import_onnx_model_file(const std::string& filename)
 {
-    std::istringstream iss(model_proto, std::ios_base::binary | std::ios_base::in);
-    return ngraph::onnx_import::import_onnx_function(iss);
-}
-
-static std::vector<std::shared_ptr<ngraph::Function>>
-    load_onnx_model_file(const std::string& filename)
-{
-    return ngraph::onnx_import::load_onnx_model(filename);
-}
-
-static std::shared_ptr<ngraph::Function> import_onnx_function_file(const std::string& filename)
-{
-    return ngraph::onnx_import::import_onnx_function(filename);
+    return ngraph::onnx_import::import_onnx_model(filename);
 }
 
 void regmodule_pyngraph_onnx_import(py::module mod)
 {
-    mod.def("load_onnx_model", &load_onnx_model);
-    mod.def("import_onnx_function", &import_onnx_function);
-    mod.def("load_onnx_model_file", &load_onnx_model_file);
-    mod.def("import_onnx_function_file", &import_onnx_function_file);
+    mod.def("import_onnx_model", &import_onnx_model);
+    mod.def("import_onnx_model_file", &import_onnx_model_file);
 }
