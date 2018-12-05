@@ -148,7 +148,7 @@ namespace ngraph
     }
 }
 
-class INTERPRETER_API ngraph::runtime::interpreter::INTBackend : public Backend
+class ngraph::runtime::interpreter::INTBackend : public Backend
 {
 public:
     std::shared_ptr<Tensor>
@@ -171,7 +171,7 @@ public:
     bool is_supported(const Node& node) const override { return true; }
 private:
     int get_alignment() const { return 64; }
-    class INTERPRETER_LOCAL FunctionInstance
+    class FunctionInstance
     {
     public:
         bool m_is_compiled = false;

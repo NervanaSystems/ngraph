@@ -31,6 +31,8 @@ vector<float> read_float_vector(shared_ptr<runtime::Tensor> tv)
     if (element_type == element::boolean)
     {
         vector<char> vec = read_vector<char>(tv);
+        // Changed from vector ctor to explicit for loop to add static_cast
+        // This silences MSVC warnings
         for (char value : vec)
         {
             float_vec.push_back(static_cast<float>(value));
