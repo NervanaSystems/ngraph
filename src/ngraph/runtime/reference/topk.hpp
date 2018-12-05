@@ -28,6 +28,8 @@ namespace ngraph
     {
         namespace reference
         {
+            // Had to split out these two functions. They used to be lambda expressions but
+            // MSVC had difficulty compiling. This way is more explicit.
             template <typename T, typename U>
             static bool compare_max(const std::tuple<T, U>& a, const std::tuple<T, U>& b)
             {
