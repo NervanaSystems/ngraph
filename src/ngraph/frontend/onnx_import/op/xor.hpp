@@ -16,12 +16,11 @@
 
 #pragma once
 
+#include "core/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/and.hpp"
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/or.hpp"
-
-#include "core/node.hpp"
 #include "utils/broadcasting.hpp"
 
 namespace ngraph

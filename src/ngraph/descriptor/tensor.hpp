@@ -35,7 +35,7 @@ namespace ngraph
             class TensorLayout;
         }
 
-        /// \brief Compile-time descriptor of a first-class value that is a view of a tensor.
+        /// \brief Compile-time descriptor of a first-class value that is a tensor.
         class Tensor
         {
             Tensor(const Tensor&) = delete;

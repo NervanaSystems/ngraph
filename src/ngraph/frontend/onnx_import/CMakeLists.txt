@@ -88,6 +88,8 @@ add_library(onnx_import STATIC
         op/log_softmax.hpp
         op/lrn.cpp
         op/lrn.hpp
+        op/lstm.cpp
+        op/lstm.hpp
         op/matmul.cpp
         op/matmul.hpp
         op/max_pool.cpp
@@ -100,6 +102,8 @@ add_library(onnx_import STATIC
         op/neg.hpp
         op/not.hpp
         op/or.hpp
+        op/pad.cpp
+        op/pad.hpp
         op/pow.hpp
         op/prelu.cpp
         op/prelu.hpp
