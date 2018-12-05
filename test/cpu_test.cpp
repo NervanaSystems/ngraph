@@ -74,7 +74,7 @@ static void compare_backends(std::shared_ptr<Function>& f1,
 
     for (size_t i = 0; i < f1_results.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(f1_results.at(i), f2_results.at(i)));
+        EXPECT_TRUE(test::all_close(f1_results.at(i), f2_results.at(i), rtol, atol));
     }
 }
 
