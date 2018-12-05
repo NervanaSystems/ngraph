@@ -41,6 +41,8 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/replace_slice.hpp"
+#include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
@@ -1751,5 +1753,31 @@ void ngraph::runtime::cpu::pass::CPUFusion::
         };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(prelu, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
+{
+    Shape shape_a{2, 32, 2};
+    Shape shape_b{1, 32, 2};
+
+    auto input = std::make_shared<pattern::op::Label>(element::f32, shape_a);
+    auto slice = std::make_shared<op::Slice>(input, Coordinate{1, 0, 0}, Coordinate{2, 32, 2});
+    auto update_input = std::make_shared<pattern::op::Label>(element::f32, shape_b);
+    auto update = std::make_shared<op::Add>(update_input, slice);
+    auto replace_slice = std::make_shared<op::ReplaceSlice>(input, update, Coordinate{1, 0, 0}, Coordinate{2, 32, 2});
+
+    ngraph::pattern::graph_rewrite_callback callback =
+        [input, update_input](pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In callback for update_slice = "
+                         << m.get_match_root()->get_name();
+            auto pattern_map = m.get_pattern_map();
+            auto replace = std::static_pointer_cast<op::ReplaceSlice>(m.get_match_root());
+            auto update_slice = std::make_shared<op::UpdateSlice>(pattern_map[input], pattern_map[update_input], replace->get_lower_bounds(), replace->get_upper_bounds());
+            ngraph::replace_node(m.get_match_root(), update_slice);
+            return true;
+        };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(replace_slice, callback, "update_slice");
     this->add_matcher(m);
 }
