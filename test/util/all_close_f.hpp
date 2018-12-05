@@ -90,7 +90,6 @@ namespace ngraph
         /// \brief Check if the two f64 numbers are close
         /// \param a First number to compare
         /// \param b Second number to compare
-        /// \param mantissa_bits The mantissa width of the underlying number before casting to float
         /// \param tolerance_bits Bit tolerance error
         /// \returns True iff the distance between a and b is within 2 ^ tolerance_bits ULP
         ///
@@ -105,7 +104,7 @@ namespace ngraph
         /// double (s1, e11, m52) has 52 + 1 = 53 bits of mantissa or bit_precision
         ///
         /// This function uses hard-coded value of 11 bit exponent_bits, so it's only valid for f64.
-        bool close_f(double a, double b, int mantissa_bits = 53, int tolerance_bits = 2);
+        bool close_f(double a, double b, int tolerance_bits = 2);
 
         /// \brief Determine distances between two vectors of f32 numbers
         /// \param a Vector of floats to compare
@@ -116,12 +115,28 @@ namespace ngraph
         std::vector<uint32_t> float_distances(const std::vector<float>& a,
                                               const std::vector<float>& b);
 
+        /// \brief Determine distances between two vectors of f64 numbers
+        /// \param a Vector of doubles to compare
+        /// \param b Vector of doubles to compare
+        /// \returns Vector of distances
+        ///
+        /// See float_distance for limitations and assumptions.
+        std::vector<uint64_t> float_distances(const std::vector<double>& a,
+                                              const std::vector<double>& b);
+
         /// \brief Determine number of matching mantissa bits given a distance
         /// \param distance Distance calculated by float_distance
         /// \returns Number of matching mantissa bits
         ///
         /// See float_distance for limitations and assumptions.
         uint32_t matching_mantissa_bits(uint32_t distance);
+
+        /// \brief Determine number of matching mantissa bits given a distance
+        /// \param distance Distance calculated by float_distance
+        /// \returns Number of matching mantissa bits
+        ///
+        /// See float_distance for limitations and assumptions.
+        uint64_t matching_mantissa_bits(uint64_t distance);
 
         /// \brief Check if the two floating point vectors are all close
         /// \param a First number to compare
@@ -132,6 +147,15 @@ namespace ngraph
         bool all_close_f(const std::vector<float>& a,
                          const std::vector<float>& b,
                          int mantissa_bits = 8,
+                         int tolerance_bits = 2);
+
+        /// \brief Check if the two double floating point vectors are all close
+        /// \param a First number to compare
+        /// \param b Second number to compare
+        /// \param tolerance_bits Bit tolerance error
+        /// \returns true iff the two floating point vectors are close
+        bool all_close_f(const std::vector<double>& a,
+                         const std::vector<double>& b,
                          int tolerance_bits = 2);
 
         /// \brief Check if the two TensorViews are all close in float
