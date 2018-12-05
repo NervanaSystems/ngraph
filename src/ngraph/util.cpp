@@ -476,9 +476,8 @@ T ngraph::apply_permutation(T input, AxisVector order)
     return output;
 }
 
-template NGRAPH_API AxisVector ngraph::apply_permutation<AxisVector>(AxisVector input,
-                                                                     AxisVector order);
-template NGRAPH_API Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
+template AxisVector ngraph::apply_permutation<AxisVector>(AxisVector input, AxisVector order);
+template Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
 
 AxisVector ngraph::get_default_order(const Shape& shape)
 {

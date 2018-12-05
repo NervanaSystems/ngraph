@@ -193,8 +193,8 @@ endif()
 
 # These can be uncommented once we have visibility fully in place
 if (NOT WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden")
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden")
 endif()
 
 ngraph_var(NGRAPH_WARNINGS_AS_ERRORS DEFAULT "OFF")
