@@ -36,10 +36,8 @@ def find_ngraph_dist_dir():
 
     found = os.path.exists(os.path.join(ngraph_dist_dir, 'include/ngraph'))
     if not found:
-        print(
-            'Cannot find nGraph library in {} make sure that '
-            'NGRAPH_CPP_BUILD_PATH is set correctly'.format(ngraph_dist_dir)
-        )
+        print('Cannot find nGraph library in {} make sure that '
+              'NGRAPH_CPP_BUILD_PATH is set correctly'.format(ngraph_dist_dir))
         sys.exit(1)
     else:
         print('nGraph library found in {}'.format(ngraph_dist_dir))
@@ -47,6 +45,7 @@ def find_ngraph_dist_dir():
 
 
 def find_pybind_headers_dir():
+    """Return location of pybind11 headers."""
     if os.environ.get('PYBIND_HEADERS_PATH'):
         pybind_headers_dir = os.environ.get('PYBIND_HEADERS_PATH')
     else:
@@ -54,10 +53,8 @@ def find_pybind_headers_dir():
 
     found = os.path.exists(os.path.join(pybind_headers_dir, 'include/pybind11'))
     if not found:
-        print(
-            'Cannot find pybind11 library in {} make sure that '
-            'PYBIND_HEADERS_PATH is set correctly'.format(pybind_headers_dir)
-        )
+        print('Cannot find pybind11 library in {} make sure that '
+              'PYBIND_HEADERS_PATH is set correctly'.format(pybind_headers_dir))
         sys.exit(1)
     else:
         print('pybind11 library found in {}'.format(pybind_headers_dir))
@@ -70,9 +67,6 @@ NGRAPH_CPP_INCLUDE_DIR = NGRAPH_CPP_DIST_DIR + '/include'
 NGRAPH_CPP_LIBRARY_DIR = NGRAPH_CPP_DIST_DIR + '/lib'
 
 
-# Parallel build from:
-# http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
-# monkey-patch for parallel compilation
 def parallelCCompile(
     self,
     sources,
@@ -84,10 +78,15 @@ def parallelCCompile(
     extra_postargs=None,
     depends=None,
 ):
+    """Build sources in parallel.
+
+    Reference link:
+    http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
+    Monkey-patch for parallel compilation.
+    """
     # those lines are copied from distutils.ccompiler.CCompiler directly
     macros, objects, extra_postargs, pp_opts, build = self._setup_compile(
-        output_dir, macros, include_dirs, sources, depends, extra_postargs
-    )
+        output_dir, macros, include_dirs, sources, depends, extra_postargs)
     cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
     # parallel code
     import multiprocessing.pool
@@ -107,12 +106,11 @@ def parallelCCompile(
 distutils.ccompiler.CCompiler.compile = parallelCCompile
 
 
-# As of Python 3.6, CCompiler has a `has_flag` method.
-# cf http://bugs.python.org/issue26689
 def has_flag(compiler, flagname):
-    """
-    Return a boolean indicating whether a flag name is supported on
-    the specified compiler.
+    """Check whether a flag is supported by the specified compiler.
+
+    As of Python 3.6, CCompiler has a `has_flag` method.
+    cf http://bugs.python.org/issue26689
     """
     import tempfile
 
@@ -126,9 +124,7 @@ def has_flag(compiler, flagname):
 
 
 def cpp_flag(compiler):
-    """Check and return the -std=c++11 compiler flag.
-
-    """
+    """Check and return the -std=c++11 compiler flag."""
     if has_flag(compiler, '-std=c++11'):
         return '-std=c++11'
     else:
@@ -281,7 +277,7 @@ data_files = [
     (
         '',
         [PYNGRAPH_ROOT_DIR + '/../LICENSE'],
-    )
+    ),
 ]
 
 ext_modules = [
@@ -294,7 +290,7 @@ ext_modules = [
         libraries=libraries,
         extra_link_args=extra_link_args,
         language='c++',
-    )
+    ),
 ]
 
 if NGRAPH_ONNX_IMPORT_ENABLE == 'TRUE':
@@ -319,16 +315,31 @@ if NGRAPH_ONNX_IMPORT_ENABLE == 'TRUE':
             libraries=libraries,
             extra_link_args=extra_link_args,
             language='c++',
-        )
+        ),
     )
 
 
 class BuildExt(build_ext):
-    """
-    A custom build extension for adding compiler-specific options.
-    """
+    """A custom build extension for adding compiler-specific options."""
+
+    def _add_extra_compile_arg(self, flag, compile_args):
+        """Return True if successfully added given flag to compiler args."""
+        if has_flag(self.compiler, flag):
+            compile_args += [flag]
+            return True
+        return False
+
+    def _add_platform_specific_link_args(self, link_args):
+        if sys.platform.startswith('linux'):
+            link_args += ['-Wl,-rpath,$ORIGIN/../..']
+            link_args += ['-z', 'noexecstack']
+            link_args += ['-z', 'relro']
+            link_args += ['-z', 'now']
+        elif sys.platform == 'darwin':
+            link_args += ['-Wl,-rpath,@loader_path/../..']
 
     def build_extensions(self):
+        """Build extension providing extra compiler flags."""
         if sys.platform == 'win32':
             raise RuntimeError('Unsupported platform: win32!')
         # -Wstrict-prototypes is not a valid option for c++
@@ -338,23 +349,15 @@ class BuildExt(build_ext):
             pass
         for ext in self.extensions:
             ext.extra_compile_args += [cpp_flag(self.compiler)]
-            if has_flag(self.compiler, '-fstack-protector-strong'):
-                ext.extra_compile_args += ['-fstack-protector-strong']
-            elif has_flag(self.compiler, '-fstack-protector'):
-                ext.extra_compile_args += ['-fstack-protector']
-            if has_flag(self.compiler, '-fvisibility=hidden'):
-                ext.extra_compile_args += ['-fvisibility=hidden']
-            if has_flag(self.compiler, '-flto'):
-                ext.extra_compile_args += ['-flto']
-            if has_flag(self.compiler, '-fPIC'):
-                ext.extra_compile_args += ['-fPIC']
-            if sys.platform.startswith('linux'):
-                ext.extra_link_args += ['-Wl,-rpath,$ORIGIN/../..']
-                ext.extra_link_args += ['-z', 'noexecstack']
-                ext.extra_link_args += ['-z', 'relro']
-                ext.extra_link_args += ['-z', 'now']
-            elif sys.platform == 'darwin':
-                ext.extra_link_args += ['-Wl,-rpath,@loader_path/../..']
+
+            if not self._add_extra_compile_arg('-fstack-protector-strong', ext.extra_compile_args):
+                self._add_extra_compile_arg('-fstack-protector', ext.extra_compile_args)
+
+            self._add_extra_compile_arg('-fvisibility=hidden', ext.extra_compile_args)
+            self._add_extra_compile_arg('-flto', ext.extra_compile_args)
+            self._add_extra_compile_arg('-fPIC', ext.extra_compile_args)
+            self._add_platform_specific_link_args(ext.extra_link_args)
+
             ext.extra_compile_args += ['-Wformat', '-Wformat-security']
             ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
         build_ext.build_extensions(self)
