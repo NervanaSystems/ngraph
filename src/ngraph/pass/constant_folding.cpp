@@ -616,6 +616,7 @@ void ngraph::pass::ConstantFolding::construct_constant_quantize()
         return false;
     };
 
-    auto quantize_matcher = make_shared<pattern::Matcher>(quant, constant_quantize_callback);
-    this->add_matcher(quantize_matcher, "ConstantFolding.ConstantQuantize");
+    auto quantize_matcher = make_shared<pattern::Matcher>(
+        quant, constant_quantize_callback, "ConstantFolding.ConstantQuantize");
+    this->add_matcher(quantize_matcher);
 }
