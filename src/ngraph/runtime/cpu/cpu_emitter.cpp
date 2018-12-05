@@ -698,8 +698,8 @@ namespace ngraph
 
                     if (args.size() == 3)
                     {
-                        writer << "reference::batch_norm_training("
-                               << batchnorm->get_eps_value() << ",\n";
+                        writer << "reference::batch_norm_training(" << batchnorm->get_eps_value()
+                               << ",\n";
                         writer << "            " << args[0].get_name() << ",\n";
                         writer << "            " << args[1].get_name() << ",\n";
                         writer << "            " << args[2].get_name() << ",\n";
