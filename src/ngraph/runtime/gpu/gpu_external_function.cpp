@@ -796,8 +796,6 @@ void runtime::gpu::GPU_ExternalFunction::propagate_in_place_input(
 void runtime::gpu::GPU_ExternalFunction::propagate_in_place_output(
     ngraph::descriptor::Output* res_src_output, std::string output_name)
 {
-    // we start with a particular output
-    // which is an argument to a given op::Result
     size_t offset = res_src_output->get_tensor().get_pool_offset();
     auto it = res_src_output;
 
