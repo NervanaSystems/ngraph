@@ -305,7 +305,6 @@ TEST(builder, dynamic_scaled_QC_with_relu)
                                                               G,
                                                               H);
     auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, C, D, E, F, G, H});
-    constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -622,7 +621,6 @@ TEST(builder, dynamic_scaled_DQ_signed)
     auto C = make_shared<op::Parameter>(element::f32, Shape{});
     auto r = ngraph::builder::ScaledDequantize(A, B, C, element::f32, quantization_axes);
     auto f = make_shared<Function>(r, ParameterVector{A, B, C});
-    constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i8, Shape{1});
