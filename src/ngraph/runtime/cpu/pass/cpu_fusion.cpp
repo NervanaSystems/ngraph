@@ -303,12 +303,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
             NGRAPH_DEBUG << "beta: " << pattern_map[beta_label]->get_name() << " "
                          << pattern_map[beta_label]->get_shape().size();
 
-            // dont fuse if the inout doesnt have 4dims
-            if (pattern_map[input]->get_shape().size() != 4)
-            {
-                NGRAPH_DEBUG << "Input to bn doesnt not have a rank=4, so not fusing";
-                return false;
-            }
             Shape bn_output_shape{m.get_match_root()->get_shape()};
             Shape m_bn_mean_shape{pattern_map[mean_label]->get_shape()};
             Shape m_bn_variance_shape{pattern_map[variance_label]->get_shape()};
@@ -324,6 +318,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
             auto bn_node = std::make_shared<op::BatchNormTraining>(
                 epsilon, pattern_map[gamma_label], pattern_map[beta_label], pattern_map[input]);
 
+            if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_node.get()))
+            {
+                return false;
+            }
             auto normalized_output = std::shared_ptr<Node>(new op::GetOutputElement(bn_node, 0));
 
             ngraph::replace_node(m.get_match_root(), normalized_output);
@@ -778,15 +776,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         auto m_bn = std::static_pointer_cast<op::BatchNormTraining>(
             m.get_match_root()->get_argument(0)->get_inputs().at(0).get_output().get_node());
 
-        // as of now, only MKLDNN supports this fusion
-        // and it requires input data's rank to be equal to 4
-        if (pattern_map[input]->get_shape().size() != 4)
+        if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(m_bn.get()))
         {
-            NGRAPH_DEBUG << " Input data's rank isn't equal to 4. Shape = "
-                         << pattern_map[input]->get_shape().size();
             return false;
         }
-
         std::vector<std::shared_ptr<Node>> mgoes(m_bn->get_outputs().size());
         for (auto bn_in : m_bn->get_output_inputs(0))
         {
@@ -850,15 +843,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
 
         auto pattern_map = m.get_pattern_map();
 
-        // as of now, only MKLDNN supports this fusion
-        // and it requires input data's rank to be equal to 4
-        if (pattern_map[input]->get_shape().size() != 4)
-        {
-            NGRAPH_DEBUG << " Input data's rank isn't equal to 4. Shape = "
-                         << pattern_map[input]->get_shape().size();
-            return false;
-        }
-
         auto bn_match = m.get_match_root()->get_inputs().at(0).get_output().get_node();
         if (bn_match->get_users().size() > 1)
         {
@@ -869,6 +853,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
         std::shared_ptr<Node> bn_relu;
         if (auto bn_inference = std::dynamic_pointer_cast<op::BatchNormInference>(bn_match))
         {
+            if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_inference.get()))
+            {
+                return false;
+            }
             bn_relu = std::make_shared<op::BatchNormInferenceRelu>(bn_inference->get_eps_value(),
                                                                    pattern_map[gamma],
                                                                    pattern_map[beta],
