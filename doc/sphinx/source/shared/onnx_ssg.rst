@@ -1,9 +1,7 @@
-onnx_ssg.rst
-
+.. onnx_ssg:
 
 Shared subgraphs with ONNX 
 ==========================
-
 
 
 ShuffleNet Example
@@ -11,31 +9,14 @@ ShuffleNet Example
 
 
 `ShuffleNet`_ describes itself as "deep convolutional networks for classification",
-and has a ``model.onnx`` format available for testing.  
-
-To use nGraph's "import a model" feature to load ShuffleNet and enable working 
-with subgraphs, build the library as described in :doc:`../howto/import`. Be sure to 
-append the :command:`cmake` with correct ``DNGRAPH_ONNX_IMPORT_ENABLE=TRUE`` 
-option 
+and has a ``model.onnx`` format available for testing.  This example assumes that 
+you have installed the ``ngraph-onnx`` package and the accompanying ``ngraph-core`` 
+from pip:
 
 .. code-block:: console
 
-    cmake ../ -DCMAKE_INSTALL_PREFIX=~/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE
-
-
-And, after running ``make``, export the environment variables as follows:
-
-.. code-block:: console
-
-    export NGRAPH_CPP_BUILD_PATH=~/ngraph_dist/
-    export LD_LIBRARY_PATH=~/ngraph_dist/lib
-
-If you already have your ``onnx`` virtual environment set from the install, reactivate it. 
-
-
-.. code-block:: console
-
-   /opt/libraries/ngraph/onnx$ . bin/activate
+   (venv) $ pip install ngraph-core
+   (venv) $ pip install ngraph-onnx
 
 
 .. code-block:: python
