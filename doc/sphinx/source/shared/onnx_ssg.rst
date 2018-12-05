@@ -47,13 +47,19 @@ The output should look something like this:
 	More than one different shape in input nodes [<Constant: 'Constant_14379' ([])>, <BatchNormInference: 'gpu_0/gconv1_31_bn_1' ([1, 544, 7, 7])>].
 
 
-The "shape" (...)
+These outputs can now be used with the nGraph Python API to start working with 
+`broadcast shapes`_ 
 
 .. code-block:: python
 
-	import ngraph as ng
-	runtime = ng.runtime(backend_name='CPU')
-	shufflenet = runtime.computation(ng_model['output'], *ng_model['inputs'])
+   import ngraph as ng
+   runtime = ng.runtime(backend_name='CPU')
+   print(runtime)
+   <Runtime: Backend='CPU'>
+   import numpy as np
+   input_node = ng.constant([1, 136, 28, 28])
+   current_shape = [28]
+   new_shape = [14, 14]
 
 
 
@@ -72,3 +78,4 @@ The "shape" (...)
 
 
 .. _ShuffleNet: https://github.com/onnx/models/blob/master/shufflenet/README.md
+.. _broadcast shapes: https://ngraph.nervanasys.com/docs/latest/python_api/_autosummary/ngraph.html#ngraph.ops.broadcast_to
