@@ -88,7 +88,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(
+        divide_1_over_exp, callback, "LSTMFusion::Sigmoid");
     this->add_matcher(m);
 }
 
@@ -265,7 +266,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         ngraph::replace_node(m.get_match_root(), ht_output);
         return true;
     };
-    auto m = std::make_shared<pattern::Matcher>(ht, callback);
+    auto m = std::make_shared<pattern::Matcher>(ht, callback, "LSTMFusion.LSTMFprop");
     this->add_matcher(m);
 }
 

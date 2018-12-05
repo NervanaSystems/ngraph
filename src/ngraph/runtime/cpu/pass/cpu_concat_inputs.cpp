@@ -142,6 +142,7 @@ void ngraph::runtime::cpu::pass::ConcatInputs::concat_lstm_inputs()
             }
             return true;
         };
-    auto m = std::make_shared<pattern::Matcher>(lstm_node_label, callback);
+    auto m = std::make_shared<pattern::Matcher>(
+        lstm_node_label, callback, "ConcatInputs.ConcatLSTMInputs");
     this->add_matcher(m);
 }
