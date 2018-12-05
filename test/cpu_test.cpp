@@ -57,7 +57,9 @@ public:
 static void compare_backends(std::shared_ptr<Function>& f1,
                              std::shared_ptr<Function>& f2,
                              const string backend1,
-                             const string backend2)
+                             const string backend2,
+                             float rtol = 1e-5,
+                             float atol = 1e-8)
 {
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
@@ -661,5 +663,5 @@ TEST(cpu_test, convolution_large_padding)
 
     auto int_f = make_function();
     auto cpu_f = make_function();
-    compare_backends(int_f, cpu_f, "INTERPRETER", "CPU");
+    compare_backends(int_f, cpu_f, "INTERPRETER", "CPU", 1e-4, 1e-4);
 }
