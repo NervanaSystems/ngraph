@@ -187,7 +187,10 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
 endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
-target_link_libraries(unit-test PRIVATE ngraph libgtest libjson pthread)
+target_link_libraries(unit-test PRIVATE ngraph libgtest libjson)
+if(NOT WIN32)
+    target_link_libraries(unit-test PRIVATE pthread)
+endif()
 target_link_libraries(unit-test PRIVATE ${CMAKE_DL_LIBS})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")

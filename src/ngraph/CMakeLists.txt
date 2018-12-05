@@ -196,7 +196,11 @@ endif()
 add_subdirectory(codegen)
 add_subdirectory(runtime)
 
-target_compile_definitions(ngraph PRIVATE SHARED_LIB_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}")
+target_compile_definitions(ngraph
+    PRIVATE
+        SHARED_LIB_EXT="${CMAKE_SHARED_LIBRARY_SUFFIX}"
+        NGRAPH_DLL_EXPORTS
+)
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(ngraph PROPERTIES
         VERSION ${NGRAPH_VERSION}
