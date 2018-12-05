@@ -1,0 +1,66 @@
+[tox]
+envlist = py27,py3
+
+[testenv]
+skipdist=True
+skip_install=True
+deps =
+  -r${CMAKE_CURRENT_SOURCE_DIR}/requirements.txt
+  -r${CMAKE_CURRENT_SOURCE_DIR}/test_requirements.txt
+setenv =
+  LD_LIBRARY_PATH = ${NGRAPH_BUILD_DIR}
+  DYLD_LIBRARY_PATH = ${NGRAPH_BUILD_DIR}
+
+[testenv:py3]
+deps =
+  -r${CMAKE_CURRENT_SOURCE_DIR}/requirements.txt
+  -r${CMAKE_CURRENT_SOURCE_DIR}/test_requirements.txt
+  mypy
+  flake8-bugbear
+commands=
+  {envbindir}/python setup.py develop
+  flake8 --config=tox.ini {posargs:${CMAKE_CURRENT_SOURCE_DIR}/pyngraph/ ${CMAKE_CURRENT_SOURCE_DIR}/ngraph/ ${CMAKE_CURRENT_SOURCE_DIR}/examples/}
+  flake8 --config=tox.ini --ignore=D100,D101,D102,D103,D104,D105,D107,W503 ${CMAKE_CURRENT_SOURCE_DIR}/test/  # ignore lack of docs in tests
+  mypy --config-file=tox.ini {posargs:${CMAKE_CURRENT_SOURCE_DIR}/pyngraph/ ${CMAKE_CURRENT_SOURCE_DIR}/ngraph/ ${CMAKE_CURRENT_SOURCE_DIR}/examples/} # Use MyPy in Python 3 only
+  pytest --ignore=${CMAKE_CURRENT_SOURCE_DIR}/test/ngraph/test_onnx_import.py {posargs:${CMAKE_CURRENT_SOURCE_DIR}/test/}
+
+[testenv:py27]
+commands=
+  {envbindir}/python setup.py develop
+  flake8 --config=tox.ini {posargs:${CMAKE_CURRENT_SOURCE_DIR}/pyngraph/ ${CMAKE_CURRENT_SOURCE_DIR}/ngraph/ ${CMAKE_CURRENT_SOURCE_DIR}/examples/}
+  flake8 --config=tox.ini --ignore=D100,D101,D102,D103,D104,D105,D107,W503 ${CMAKE_CURRENT_SOURCE_DIR}/test/  # ignore lack of docs in tests
+  pytest --ignore=${CMAKE_CURRENT_SOURCE_DIR}/test/ngraph/test_onnx_import.py {posargs:${CMAKE_CURRENT_SOURCE_DIR}/test/}
+
+[testenv:devenv]
+envdir = devenv
+usedevelop = True
+deps = -r${CMAKE_CURRENT_SOURCE_DIR}/requirements.txt
+
+[flake8]
+max-line-length=100
+max-complexity=7
+# ignore:
+# D100 - Missing docstring in public module
+# D104 - Missing docstring in public package
+# D105 - Missing docstring in magic method
+# D107 - Missing docstring in __init__
+# F401 - module imported but unused
+# W503 - line break before binary operator (prefer line breaks before op, not after)
+ignore=D100,D104,D105,D107,F401,W503
+
+[mypy]
+strict_optional = True
+ignore_missing_imports=True
+follow_imports=normal
+disallow_untyped_defs = True
+disallow_untyped_calls = True
+check_untyped_defs = True
+show_error_context = False
+show_column_numbers = True
+show_none_errors  = True
+
+# put custom per-file options here in sections that map their names into filenames, e.g. gta_workflow/filename.py is
+# [mypy-ngraph/filename]
+
+[mypy-test.*]
+disallow_untyped_defs = False

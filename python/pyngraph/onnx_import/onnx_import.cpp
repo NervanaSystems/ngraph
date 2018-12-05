@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#if defined(NGRAPH_ONNX_IMPORT_ENABLE)
 #include <istream>
 #include <memory>
 #include <string>
@@ -59,3 +60,4 @@ void regmodule_pyngraph_onnx_import(py::module mod)
     mod.def("load_onnx_model_file", &load_onnx_model_file);
     mod.def("import_onnx_function_file", &import_onnx_function_file);
 }
+#endif
