@@ -89,7 +89,7 @@ namespace ngraph
 
             // get adjoint and force to all elements to zero
             auto c_vec = read_vector<T>(c_arg);
-            fill(c_vec.begin(), c_vec.end(), 0);
+            fill(c_vec.begin(), c_vec.end(), static_cast<T>(0));
 
             // for each element of the adjoint
             // same as saying for each element of y

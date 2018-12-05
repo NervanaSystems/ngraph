@@ -164,6 +164,8 @@ void* ngraph::aligned_alloc(size_t alignment, size_t size)
 {
 #ifdef __APPLE__
     return new uint64_t[round_up(size, sizeof(uint64_t)) / sizeof(uint64_t)];
+#elif defined _WIN32
+    return new uint64_t[round_up(size, sizeof(uint64_t)) / sizeof(uint64_t)];
 #else
     return ::aligned_alloc(alignment, size);
 #endif
@@ -474,8 +476,9 @@ T ngraph::apply_permutation(T input, AxisVector order)
     return output;
 }
 
-template AxisVector ngraph::apply_permutation<AxisVector>(AxisVector input, AxisVector order);
-template Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
+template NGRAPH_API AxisVector ngraph::apply_permutation<AxisVector>(AxisVector input,
+                                                                     AxisVector order);
+template NGRAPH_API Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
 
 AxisVector ngraph::get_default_order(const Shape& shape)
 {

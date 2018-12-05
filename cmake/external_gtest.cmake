@@ -28,8 +28,10 @@ set(COMPILE_FLAGS -fPIC)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (DEFINED NGRAPH_USE_CXX_ABI)
         set(COMPILE_FLAGS "${COMPILE_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
-    endif()    
+    endif()
 endif()
+
+set(GTEST_OUTPUT_DIR ${EXTERNAL_PROJECTS_ROOT}/gtest/build/googlemock/gtest)
 
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
 if (${CMAKE_VERSION} VERSION_LESS 3.2)
@@ -44,6 +46,8 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
         CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                    -DCMAKE_CXX_FLAGS=${COMPILE_FLAGS}
+                   -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=${GTEST_OUTPUT_DIR}
+                   -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG=${GTEST_OUTPUT_DIR}
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/download"
@@ -64,6 +68,8 @@ else()
         CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                    -DCMAKE_CXX_FLAGS=${COMPILE_FLAGS}
+                   -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=${GTEST_OUTPUT_DIR}
+                   -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG=${GTEST_OUTPUT_DIR}
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/download"
@@ -82,4 +88,4 @@ ExternalProject_Get_Property(ext_gtest SOURCE_DIR BINARY_DIR)
 add_library(libgtest INTERFACE)
 add_dependencies(libgtest ext_gtest)
 target_include_directories(libgtest SYSTEM INTERFACE ${SOURCE_DIR}/googletest/include)
-target_link_libraries(libgtest INTERFACE ${BINARY_DIR}/googlemock/gtest/libgtest.a)
+target_link_libraries(libgtest INTERFACE ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
