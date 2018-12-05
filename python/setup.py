@@ -318,6 +318,16 @@ if NGRAPH_ONNX_IMPORT_ENABLE == 'TRUE':
         ),
     )
 
+def add_platform_specific_link_args(self, link_args):
+    """Add linker flags specific for actual OS."""
+    if sys.platform.startswith('linux'):
+        link_args += ['-Wl,-rpath,$ORIGIN/../..']
+        link_args += ['-z', 'noexecstack']
+        link_args += ['-z', 'relro']
+        link_args += ['-z', 'now']
+    elif sys.platform == 'darwin':
+        link_args += ['-Wl,-rpath,@loader_path/../..']
+
 
 class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
@@ -328,15 +338,6 @@ class BuildExt(build_ext):
             compile_args += [flag]
             return True
         return False
-
-    def _add_platform_specific_link_args(self, link_args):
-        if sys.platform.startswith('linux'):
-            link_args += ['-Wl,-rpath,$ORIGIN/../..']
-            link_args += ['-z', 'noexecstack']
-            link_args += ['-z', 'relro']
-            link_args += ['-z', 'now']
-        elif sys.platform == 'darwin':
-            link_args += ['-Wl,-rpath,@loader_path/../..']
 
     def build_extensions(self):
         """Build extension providing extra compiler flags."""
@@ -356,7 +357,7 @@ class BuildExt(build_ext):
             self._add_extra_compile_arg('-fvisibility=hidden', ext.extra_compile_args)
             self._add_extra_compile_arg('-flto', ext.extra_compile_args)
             self._add_extra_compile_arg('-fPIC', ext.extra_compile_args)
-            self._add_platform_specific_link_args(ext.extra_link_args)
+            add_platform_specific_link_args(ext.extra_link_args)
 
             ext.extra_compile_args += ['-Wformat', '-Wformat-security']
             ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
