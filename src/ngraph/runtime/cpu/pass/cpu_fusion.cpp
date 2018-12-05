@@ -1769,35 +1769,35 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
     auto replace_slice = std::make_shared<op::ReplaceSlice>(
         input, update, Coordinate{1, 0, 0}, Coordinate{2, 32, 2});
 
-    ngraph::pattern::graph_rewrite_callback callback =
-        [input, update_input, slice_label](pattern::Matcher& m) {
-            NGRAPH_DEBUG << "In callback for update_slice = " << m.get_match_root()->get_name();
-            auto pattern_map = m.get_pattern_map();
-            auto slice = std::static_pointer_cast<op::Slice>(pattern_map[slice_label]);
-            auto replace = std::static_pointer_cast<op::ReplaceSlice>(m.get_match_root());
-            if (replace->get_lower_bounds() != slice->get_lower_bounds() ||
-                replace->get_upper_bounds() != slice->get_upper_bounds() ||
-                replace->get_strides() != slice->get_strides())
-            {
-                NGRAPH_DEBUG
-                    << "Update slice cannot be created, slice and replace_slice are not compatible";
-                return false;
-            }
+    ngraph::pattern::graph_rewrite_callback callback = [input, update_input, slice_label](
+        pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for update_slice = " << m.get_match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
+        auto slice_m = std::static_pointer_cast<op::Slice>(pattern_map[slice_label]);
+        auto replace_m = std::static_pointer_cast<op::ReplaceSlice>(m.get_match_root());
+        if (replace_m->get_lower_bounds() != slice_m->get_lower_bounds() ||
+            replace_m->get_upper_bounds() != slice_m->get_upper_bounds() ||
+            replace_m->get_strides() != slice_m->get_strides())
+        {
+            NGRAPH_DEBUG
+                << "Update slice cannot be created, slice and replace_slice are not compatible";
+            return false;
+        }
 
-            if (slice->get_users().size() > 1 || replace->get_argument(1)->get_users().size() > 1)
-            {
-                NGRAPH_DEBUG << "Update slice cannot be created, intermediate values required";
-                return false;
-            }
+        if (slice_m->get_users().size() > 1 || replace_m->get_argument(1)->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Update slice cannot be created, intermediate values required";
+            return false;
+        }
 
-            auto update_slice = std::make_shared<op::UpdateSlice>(pattern_map[input],
-                                                                  pattern_map[update_input],
-                                                                  replace->get_lower_bounds(),
-                                                                  replace->get_upper_bounds(),
-                                                                  replace->get_strides());
-            ngraph::replace_node(m.get_match_root(), update_slice);
-            return true;
-        };
+        auto update_slice = std::make_shared<op::UpdateSlice>(pattern_map[input],
+                                                              pattern_map[update_input],
+                                                              replace_m->get_lower_bounds(),
+                                                              replace_m->get_upper_bounds(),
+                                                              replace_m->get_strides());
+        ngraph::replace_node(m.get_match_root(), update_slice);
+        return true;
+    };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(replace_slice, callback, "update_slice");
     this->add_matcher(m);
