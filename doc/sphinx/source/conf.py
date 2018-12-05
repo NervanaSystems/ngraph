@@ -74,6 +74,7 @@ author = 'Intel Corporation'
 #
 # The short X.Y version.
 version = '0.10'
+
 # The Documentation full version, including alpha/beta/rc tags. Some features
 # available in the latest code will not necessarily be documented first
 release = '0.10.1'
