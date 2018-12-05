@@ -37,6 +37,7 @@
 #include "op/concat.hpp"
 #include "op/constant.hpp"
 #include "op/conv.hpp"
+#include "op/conv_transpose.hpp"
 #include "op/cos.hpp"
 #include "op/div.hpp"
 #include "op/elu.hpp"
@@ -55,6 +56,7 @@
 #include "op/log.hpp"
 #include "op/log_softmax.hpp"
 #include "op/lrn.hpp"
+#include "op/lstm.hpp"
 #include "op/matmul.hpp"
 #include "op/max.hpp"
 #include "op/max_pool.hpp"
@@ -64,6 +66,8 @@
 #include "op/neg.hpp"
 #include "op/not.hpp"
 #include "op/or.hpp"
+#include "op/pad.cpp"
+#include "op/pad.hpp"
 #include "op/pow.hpp"
 #include "op/prelu.hpp"
 #include "op/reciprocal.hpp"
@@ -74,6 +78,7 @@
 #include "op/shape.hpp"
 #include "op/sigmoid.hpp"
 #include "op/sin.hpp"
+#include "op/size.hpp"
 #include "op/slice.hpp"
 #include "op/softmax.hpp"
 #include "op/softplus.hpp"
@@ -160,6 +165,7 @@ namespace ngraph
             REGISTER_OPERATOR("Concat", 1, concat);
             REGISTER_OPERATOR("Constant", 1, constant);
             REGISTER_OPERATOR("Conv", 1, conv);
+            REGISTER_OPERATOR("ConvTranspose", 1, conv_transpose);
             REGISTER_OPERATOR("Cos", 1, cos);
             REGISTER_OPERATOR("Div", 1, div);
             REGISTER_OPERATOR("Div", 7, div);
@@ -180,6 +186,7 @@ namespace ngraph
             REGISTER_OPERATOR("Log", 1, log);
             REGISTER_OPERATOR("LogSoftmax", 1, log_softmax);
             REGISTER_OPERATOR("LRN", 1, lrn);
+            REGISTER_OPERATOR("LSTM", 1, lstm);
             REGISTER_OPERATOR("MatMul", 1, matmul);
             REGISTER_OPERATOR("MaxPool", 1, max_pool);
             REGISTER_OPERATOR("Max", 1, max);
@@ -190,6 +197,7 @@ namespace ngraph
             REGISTER_OPERATOR("Neg", 1, neg);
             REGISTER_OPERATOR("Not", 1, logical_not);
             REGISTER_OPERATOR("Or", 1, logical_or);
+            REGISTER_OPERATOR("Pad", 1, pad);
             REGISTER_OPERATOR("Pow", 1, pow);
             REGISTER_OPERATOR("PRelu", 1, prelu);
             REGISTER_OPERATOR("Reciprocal", 1, reciprocal);
@@ -209,6 +217,7 @@ namespace ngraph
             REGISTER_OPERATOR("Shape", 1, shape);
             REGISTER_OPERATOR("Sigmoid", 1, sigmoid);
             REGISTER_OPERATOR("Sin", 1, sin);
+            REGISTER_OPERATOR("Size", 1, size);
             REGISTER_OPERATOR("Slice", 1, slice);
             REGISTER_OPERATOR("Softmax", 1, softmax);
             REGISTER_OPERATOR("Softplus", 1, softplus);

@@ -64,7 +64,7 @@ set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND SRC onnx_import.cpp)
     if (NGRAPH_ONNXIFI_ENABLE)
-        list(APPEND SRC onnxifi.cpp)
+        list(APPEND SRC onnxifi.cpp onnxifi_span.cpp)
     endif()
 endif()
 

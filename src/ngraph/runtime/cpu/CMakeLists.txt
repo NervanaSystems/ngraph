@@ -47,6 +47,7 @@ set(SRC
     builder/convolution.cpp
     builder/dot.cpp
     builder/function_call.cpp
+    builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
     builder/matmul_bias.cpp
@@ -91,6 +92,7 @@ set(SRC
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
+    op/leaky_relu.cpp
     op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
@@ -111,6 +113,7 @@ set(SRC
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
     pass/cpu_reshape_sinking.cpp
+    ngraph_version.cpp
 )
 
 if (NOT NGRAPH_DEX_ONLY)
@@ -148,10 +151,6 @@ if (NGRAPH_TBB_ENABLE)
         DESTINATION ${NGRAPH_INSTALL_LIB}
         FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
-    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
-        DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
-    )
     add_library(libtbb INTERFACE)
     target_link_libraries(libtbb INTERFACE
         ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
@@ -163,7 +162,11 @@ if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
     add_library(cpu_backend SHARED ${SRC})
-    set_target_properties(cpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+    if(NGRAPH_LIB_VERSIONING_ENABLE)
+        set_target_properties(cpu_backend PROPERTIES
+            VERSION ${NGRAPH_VERSION}
+            SOVERSION ${NGRAPH_API_VERSION})
+    endif()
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     endif()

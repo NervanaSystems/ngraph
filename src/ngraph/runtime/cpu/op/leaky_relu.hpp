@@ -16,8 +16,30 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/op.hpp"
 
-namespace py = pybind11;
+namespace ngraph
+{
+    namespace op
+    {
+        /// \brief Elementwise Maximum(arg, arg * alpha) operation
+        ///        alpha > 0
+        ///
+        class LeakyRelu : public Op
+        {
+        public:
+            /// \brief Constructs a LeakyRelu operation.
+            ///
+            /// \param arg Node input to the Relu.
+            LeakyRelu(std::shared_ptr<ngraph::Node> arg, float alpha);
+            float get_alpha() const { return m_alpha; }
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
 
-void regclass_pyngraph_op_ParameterVector(py::module m);
+        private:
+            float m_alpha;
+        };
+    }
+}

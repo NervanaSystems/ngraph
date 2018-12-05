@@ -364,42 +364,28 @@ private:
         {
             const ngraph::op::BatchNormTraining* bn =
                 static_cast<const ngraph::op::BatchNormTraining*>(&node);
-            if (bn->get_output_size() == 3)
-            {
-                reference::batch_norm_three_outputs<T>(bn->get_eps_value(),
-                                                       static_cast<const T*>(args[0]),
-                                                       static_cast<const T*>(args[1]),
-                                                       static_cast<const T*>(args[2]),
-                                                       static_cast<T*>(out[0]),
-                                                       static_cast<T*>(out[1]),
-                                                       static_cast<T*>(out[2]),
-                                                       node.get_input_shape(2));
-            }
-            else
-            {
-                reference::batch_norm_one_output<T>(bn->get_eps_value(),
-                                                    static_cast<const T*>(args[0]),
-                                                    static_cast<const T*>(args[1]),
-                                                    static_cast<const T*>(args[2]),
-                                                    static_cast<const T*>(args[3]),
-                                                    static_cast<const T*>(args[4]),
-                                                    static_cast<T*>(out[0]),
-                                                    node.get_input_shape(2));
-            }
+            reference::batch_norm_training<T>(bn->get_eps_value(),
+                                              static_cast<const T*>(args[0]),
+                                              static_cast<const T*>(args[1]),
+                                              static_cast<const T*>(args[2]),
+                                              static_cast<T*>(out[0]),
+                                              static_cast<T*>(out[1]),
+                                              static_cast<T*>(out[2]),
+                                              node.get_input_shape(2));
             break;
         }
         case OP_TYPEID::BatchNormInference:
         {
             const ngraph::op::BatchNormInference* bn =
                 static_cast<const ngraph::op::BatchNormInference*>(&node);
-            reference::batch_norm_one_output<T>(bn->get_eps_value(),
-                                                static_cast<const T*>(args[0]),
-                                                static_cast<const T*>(args[1]),
-                                                static_cast<const T*>(args[2]),
-                                                static_cast<const T*>(args[3]),
-                                                static_cast<const T*>(args[4]),
-                                                static_cast<T*>(out[0]),
-                                                node.get_input_shape(2));
+            reference::batch_norm_inference<T>(bn->get_eps_value(),
+                                               static_cast<const T*>(args[0]),
+                                               static_cast<const T*>(args[1]),
+                                               static_cast<const T*>(args[2]),
+                                               static_cast<const T*>(args[3]),
+                                               static_cast<const T*>(args[4]),
+                                               static_cast<T*>(out[0]),
+                                               node.get_input_shape(2));
             break;
         }
         case OP_TYPEID::BatchNormTrainingBackprop:
@@ -966,6 +952,17 @@ private:
                                        static_cast<const T*>(args[1]),
                                        static_cast<const int8_t*>(args[2]),
                                        static_cast<int8_t*>(out[0]),
+                                       node.get_input_shape(0),
+                                       node.get_input_shape(1),
+                                       quantize->get_axes(),
+                                       quantize->get_round_mode());
+            }
+            else if (type == element::i32)
+            {
+                reference::quantize<T>(static_cast<const T*>(args[0]),
+                                       static_cast<const T*>(args[1]),
+                                       static_cast<const int32_t*>(args[2]),
+                                       static_cast<int32_t*>(out[0]),
                                        node.get_input_shape(0),
                                        node.get_input_shape(1),
                                        quantize->get_axes(),

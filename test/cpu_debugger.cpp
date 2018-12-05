@@ -48,7 +48,7 @@ TEST(debugger, add_breakpoint)
     auto absn = make_shared<op::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
-    auto f = make_shared<Function>(neg, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
@@ -84,7 +84,7 @@ TEST(debugger, stepping)
     auto absn = make_shared<op::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
-    auto f = make_shared<Function>(neg, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
@@ -121,7 +121,7 @@ TEST(debugger, delete_breakpoint)
     auto absn = make_shared<op::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
-    auto f = make_shared<Function>(neg, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
@@ -161,7 +161,7 @@ TEST(debugger, while_stepping)
     auto absn = make_shared<op::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
-    auto f = make_shared<Function>(neg, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
@@ -199,7 +199,7 @@ TEST(debugger, resume)
     auto absn = make_shared<op::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
-    auto f = make_shared<Function>(neg, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
@@ -235,7 +235,7 @@ TEST(tracer, basic)
     auto absn = make_shared<op::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
-    auto f = make_shared<Function>(neg, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
@@ -273,7 +273,7 @@ TEST(tracer, count_tracepoint)
 
     auto add = make_shared<op::Add>(A, B);
 
-    auto f = make_shared<Function>(add, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(add, ParameterVector{A, B});
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 
@@ -314,7 +314,7 @@ TEST(tracer, conditional_tracepoint)
 
     auto add = make_shared<op::Add>(A, B);
 
-    auto f = make_shared<Function>(add, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(add, ParameterVector{A, B});
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
 

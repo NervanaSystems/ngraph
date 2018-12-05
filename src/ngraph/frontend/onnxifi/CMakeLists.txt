@@ -19,7 +19,10 @@ add_library(onnxifi-ngraph SHARED
     backend.hpp
     backend_manager.hpp
     backend_manager.cpp
-    exceptions.hpp)
+    exceptions.hpp
+    span.hpp
+    tensor.hpp
+    tensor.cpp)
 
 target_link_libraries(onnxifi-ngraph PRIVATE ngraph)
 
@@ -29,6 +32,10 @@ target_include_directories(onnxifi-ngraph SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${O
 set(ONNXIFI_VERSION ${NGRAPH_VERSION})
 set(ONNXIFI_ABI_VERSION 1)
 
-set_target_properties(onnxifi-ngraph PROPERTIES VERSION ${ONNXIFI_VERSION} SOVERSION ${ONNXIFI_ABI_VERSION})
+if(NGRAPH_LIB_VERSIONING_ENABLE)
+    set_target_properties(onnxifi-ngraph PROPERTIES
+        VERSION ${ONNXIFI_VERSION}
+        SOVERSION ${ONNXIFI_ABI_VERSION})
+endif()
 
 install(TARGETS onnxifi-ngraph DESTINATION ${NGRAPH_INSTALL_LIB})

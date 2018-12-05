@@ -61,6 +61,8 @@ add_library(onnx_import STATIC
         op/constant.hpp
         op/conv.cpp
         op/conv.hpp
+        op/conv_transpose.cpp
+        op/conv_transpose.hpp
         op/div.hpp
         op/elu.cpp
         op/elu.hpp
@@ -86,6 +88,8 @@ add_library(onnx_import STATIC
         op/log_softmax.hpp
         op/lrn.cpp
         op/lrn.hpp
+        op/lstm.cpp
+        op/lstm.hpp
         op/matmul.cpp
         op/matmul.hpp
         op/max_pool.cpp
@@ -98,6 +102,8 @@ add_library(onnx_import STATIC
         op/neg.hpp
         op/not.hpp
         op/or.hpp
+        op/pad.cpp
+        op/pad.hpp
         op/pow.hpp
         op/prelu.cpp
         op/prelu.hpp
@@ -114,6 +120,8 @@ add_library(onnx_import STATIC
         op/shape.cpp
         op/sigmoid.hpp
         op/sin.hpp
+        op/size.cpp
+        op/size.hpp
         op/slice.cpp
         op/slice.hpp
         op/softmax.cpp
