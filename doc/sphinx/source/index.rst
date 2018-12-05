@@ -34,11 +34,9 @@ nGraph Library
 Welcome to the nGraph documentation site. nGraph is an open-source C++ library 
 and runtime / compiler suite for :abbr:`Deep Learning (DL)` ecosystems. Our goal 
 is to empower algorithm designers, data scientists, framework architects, 
-software engineers, and others with the means to make their work :ref:`portable`, 
-:ref:`adaptable`, and :ref:`deployable` across the most modern 
-:abbr:`Machine Learning (ML)` hardware available today: optimized Deep Learning
-computation devices.
->>>>>>> devguide_quantz
+software engineers, and others with the means to make their work portable, 
+adaptable, and deployable across the most modern :abbr:`Machine Learning (ML)` 
+hardware available today: optimized Deep Learning computation devices.
 
 .. figure:: graphics/599px-Intel-ngraph-ecosystem.png
    :width: 599px

@@ -39,6 +39,17 @@ Glossary
       of a graph's functional operations (``ops``) into one or more of
       nGraph's core ops.   
 
+   International System of Units 
+
+      Often abbreviated as "SI", the "Système Internationale d'Unités", 
+      was officially adopted in 1960. The SI is based on the 
+      original metric system from the 1950's with some additional 
+      features and simplifications. Scientific notation, which is widely 
+      used in SI, is a helpful abstraction for understanding many kinds of 
+      :term:`quantization` operations which can still be considered accurate 
+      at lower precisions. 
+
+
    op
 
       An op represents an operation. Ops are stateless and have zero
@@ -55,7 +66,14 @@ Glossary
 
    quantization
 
-      Quantization refers to the conversion of numerical data into a lower-precision representation. Quantization is often used in deep learning to reduce the time and energy needed to perform computations by reducing the size of data transfers and the number of steps needed to perform a computation. This improvement in speed and energy usage comes at a cost in terms of numerical accuracy, but deep learning models are often able to function well in spite of this reduced accuracy. 
+      Quantization refers to the conversion of numerical data into a 
+      lower-precision representation. Quantization is often used in deep 
+      learning to reduce the time and energy needed to perform computations 
+      by reducing the size of data transfers and the number of steps needed 
+      to perform a computation. This improvement in speed and energy usage 
+      comes at a cost in terms of numerical accuracy, but deep learning 
+      models are often able to function well in spite of this reduced 
+      accuracy. 
 
    result
 
@@ -66,6 +84,10 @@ Glossary
 
       The shape of a tensor is a tuple of non-negative integers that
       represents an exclusive upper bound for coordinate values.
+
+   SI  
+   
+      See :term:`International System of Units`.   
 
    shared pointer
 

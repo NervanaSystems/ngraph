@@ -170,7 +170,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'IntelnGraphlibrary.tex', 'Intel nGraph library',
+    (master_doc, 'IntelnGraphlibrary.tex', 'Intel nGraph Library',
      'Intel Corporation', 'manual'),
 ]
 
@@ -180,7 +180,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'intelngraphlibrary', 'Intel nGraph library',
+    (master_doc, 'intelngraphlibrary', 'Intel nGraph Library',
      [author], 1)
 ]
 
@@ -192,7 +192,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'IntelnGraphlibrary', 'Intel nGraph library',
-     author, 'IntelnGraphlibrary', 'Documentation for Intel nGraph library code base',
+     author, 'IntelnGraphlibrary', 'Documentation for Intel nGraph Library code base',
      'Miscellaneous'),
 ]
 
@@ -217,7 +217,14 @@ rst_epilog = u"""
    :ltrim:
 .. |reg|    unicode:: U+000AE .. REGISTERED TRADEMARK SIGN
    :ltrim:
-   
+.. |wavenum| unicode:: U+03A3 .. Big Sigma
+   :ltrim:
+.. |lmbd|  unicode:: U+039B .. Big Lambda
+   :ltrim:
+.. |wavelen|  unicode:: U+1D6CC .. lambda math
+   :ltrim:
+.. |sigm|  unicode:: U+1D6D4 .. sigma math
+
 """
 
 # -- autodoc Extension configuration --------------------------------------
