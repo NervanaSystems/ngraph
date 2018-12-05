@@ -28,12 +28,13 @@ See the latest :doc:`project/release-notes`.
    :width: 599px
 
 
-nGraph is an open-source C++ library, compiler, and runtime accelerator for 
-software engineering in the :abbr:`Deep Learning (DL)` ecosystem. nGraph 
+nGraph is an open-source C++ library, compiler stack, and runtime accelerator 
+for software engineering in the :abbr:`Deep Learning (DL)` ecosystem. nGraph 
 simplifies development and makes it possible to design, write, compile, and
-deploy :abbr:`Deep Neural Network (DNN)`-based solutions. A more detailed 
-explanation of the feature set of nGraph Compiler, as well as a high-level 
-overview, can be found on our project :doc:`project/about`. 
+deploy :abbr:`Deep Neural Network (DNN)`-based solutions that can be adapted and 
+deployed across many frameworks and backends. A more detailed explanation, as
+well as a high-level overview, can be found on our project :doc:`project/about`.  
+For more generalized discussion on the ecosystem, see the `ecosystem`_ document.
 
 
 .. _quickstart:
@@ -89,7 +90,7 @@ We have many documentation pages to help you get started.
    Intel Movidius™ Myriad™ 2 (VPU), Coming soon, Yes
 
 
-.. note:: The Library code is under active development as we're continually 
+.. note:: The code in this repo is under active development as we're continually 
    adding support for more kinds of DL models and ops, compiler optimizations, 
    and backend optimizations.
 
@@ -131,3 +132,4 @@ Indices and tables
 .. _contributions: https://github.com/NervanaSystems/ngraph#how-to-contribute
 .. _TensorFlow bridge to nGraph: https://github.com/NervanaSystems/ngraph-tf/blob/master/README.md
 .. _Compiling MXNet with nGraph: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/README.md
+.. _ecosystem: https://github.com/NervanaSystems/ngraph/blob/master/ecosystem-overview.md

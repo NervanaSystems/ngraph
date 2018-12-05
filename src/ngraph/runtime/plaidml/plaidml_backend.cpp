@@ -52,11 +52,7 @@ bool ngraph::runtime::plaidml::PlaidML_Backend::call(
     const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
 {
-    auto cfunc = m_cache.try_lookup(func);
-    if (!cfunc)
-    {
-        cfunc = m_compiler.compile(func);
-    }
+    auto cfunc = m_cache.compile(func, &m_compiler);
     cfunc->schedule_invocation(inputs, outputs);
     return true;
 }
