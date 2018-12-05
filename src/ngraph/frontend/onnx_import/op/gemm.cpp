@@ -15,16 +15,14 @@
 //*****************************************************************************
 
 #include "op/gemm.hpp"
-
+#include "ngraph/frontend/onnx_import/exceptions.hpp"
+#include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
+#include "ngraph/frontend/onnx_import/utils/reshape.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/multiply.hpp"
-
-#include "ngraph/frontend/onnx_import/exceptions.hpp"
-#include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
-#include "ngraph/frontend/onnx_import/utils/reshape.hpp"
 
 namespace ngraph
 {

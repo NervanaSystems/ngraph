@@ -1910,8 +1910,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_scalar_acc(const std::vector<s
 
 size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<std::string>& dtypes,
                                                const size_t data_bytes,
-                                               NVShape input_shape,
-                                               NVShape reduce_axis,
+                                               const NVShape& input_shape,
+                                               const NVShape& reduce_axis,
                                                const char* op,
                                                const char* kernel)
 {

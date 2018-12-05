@@ -60,6 +60,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/util.hpp"
@@ -301,12 +302,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
             NGRAPH_DEBUG << "beta: " << pattern_map[beta_label]->get_name() << " "
                          << pattern_map[beta_label]->get_shape().size();
 
-            // dont fuse if the inout doesnt have 4dims
-            if (pattern_map[input]->get_shape().size() != 4)
-            {
-                NGRAPH_DEBUG << "Input to bn doesnt not have a rank=4, so not fusing";
-                return false;
-            }
             Shape bn_output_shape{m.get_match_root()->get_shape()};
             Shape m_bn_mean_shape{pattern_map[mean_label]->get_shape()};
             Shape m_bn_variance_shape{pattern_map[variance_label]->get_shape()};
@@ -322,6 +317,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
             auto bn_node = std::make_shared<op::BatchNormTraining>(
                 epsilon, pattern_map[gamma_label], pattern_map[beta_label], pattern_map[input]);
 
+            if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_node.get()))
+            {
+                return false;
+            }
             auto normalized_output = std::shared_ptr<Node>(new op::GetOutputElement(bn_node, 0));
 
             ngraph::replace_node(m.get_match_root(), normalized_output);
@@ -776,15 +775,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         auto m_bn = std::static_pointer_cast<op::BatchNormTraining>(
             m.get_match_root()->get_argument(0)->get_inputs().at(0).get_output().get_node());
 
-        // as of now, only MKLDNN supports this fusion
-        // and it requires input data's rank to be equal to 4
-        if (pattern_map[input]->get_shape().size() != 4)
+        if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(m_bn.get()))
         {
-            NGRAPH_DEBUG << " Input data's rank isn't equal to 4. Shape = "
-                         << pattern_map[input]->get_shape().size();
             return false;
         }
-
         std::vector<std::shared_ptr<Node>> mgoes(m_bn->get_outputs().size());
         for (auto bn_in : m_bn->get_output_inputs(0))
         {
@@ -848,15 +842,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
 
         auto pattern_map = m.get_pattern_map();
 
-        // as of now, only MKLDNN supports this fusion
-        // and it requires input data's rank to be equal to 4
-        if (pattern_map[input]->get_shape().size() != 4)
-        {
-            NGRAPH_DEBUG << " Input data's rank isn't equal to 4. Shape = "
-                         << pattern_map[input]->get_shape().size();
-            return false;
-        }
-
         auto bn_match = m.get_match_root()->get_inputs().at(0).get_output().get_node();
         if (bn_match->get_users().size() > 1)
         {
@@ -867,6 +852,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
         std::shared_ptr<Node> bn_relu;
         if (auto bn_inference = std::dynamic_pointer_cast<op::BatchNormInference>(bn_match))
         {
+            if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_inference.get()))
+            {
+                return false;
+            }
             bn_relu = std::make_shared<op::BatchNormInferenceRelu>(bn_inference->get_eps_value(),
                                                                    pattern_map[gamma],
                                                                    pattern_map[beta],
@@ -1291,6 +1280,63 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
     this->add_matcher(m);
 }
 
+void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
+{
+    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto iconst1 = op::Constant::create(element::f32, Shape{}, {1});
+    auto alpha = std::make_shared<pattern::op::Label>(iconst1);
+    auto broadcast_pred = [](std::shared_ptr<Node> n) {
+        return (std::dynamic_pointer_cast<op::Broadcast>(n) != nullptr);
+    };
+    auto skip_broadcast = std::make_shared<pattern::op::Skip>(alpha, broadcast_pred);
+    auto leaky_relu =
+        std::make_shared<op::Maximum>(input, std::make_shared<op::Multiply>(input, skip_broadcast));
+
+    pattern::graph_rewrite_callback callback = [input, alpha](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_leaky_relu against "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+        if (!std::dynamic_pointer_cast<op::Constant>(pattern_map[alpha]))
+        {
+            NGRAPH_DEBUG << "alpha must be constant for leaky relu";
+            return false;
+        }
+
+        if (pattern_map[alpha]->get_element_type() != element::f32)
+        {
+            NGRAPH_DEBUG << "Only float negative slope supported for leaky relu";
+            return false;
+        }
+
+        auto alpha_const_op = std::static_pointer_cast<op::Constant>(pattern_map[alpha]);
+        auto alpha_vec = alpha_const_op->get_vector<float>();
+        for (auto val : alpha_vec)
+        {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+            if (val != alpha_vec[0])
+            {
+                NGRAPH_DEBUG << "alpha is not a singular constant";
+                return false;
+            }
+#pragma clang diagnostic pop
+        }
+
+        if (alpha_vec[0] < 0)
+        {
+            NGRAPH_DEBUG << "alpha is not positive";
+            return false;
+        }
+
+        auto cg = std::shared_ptr<Node>(new op::LeakyRelu(pattern_map[input], alpha_vec[0]));
+        ngraph::replace_node(m.get_match_root(), cg);
+        return true;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(leaky_relu, callback);
+    this->add_matcher(m);
+}
 void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
 {
     auto relu_input = std::make_shared<pattern::op::Label>(element::f32, Shape{});

@@ -205,7 +205,8 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
             // Select has bool for first input and the type we are interested in for the second
             type = op->get_input_element_type(1);
             break;
-        default: type = op->get_outputs().at(0).get_element_type(); break;
+        case OP_TYPEID::TopK: type = op->get_output_element_type(1); break;
+        default: type = op->get_output_element_type(0); break;
         }
 #pragma GCC diagnostic pop
 
