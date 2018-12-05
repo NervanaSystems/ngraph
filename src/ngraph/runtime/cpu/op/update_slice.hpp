@@ -25,7 +25,7 @@ namespace ngraph
     namespace op
     {
         /// \brief Takes two input tensors of identical rank, with the second tensor no larger than the first in any dimension, and returns a copy of
-        ///        the first input tensor with the specified slice overwritten by the second input tensor.
+        ///        the first input tensor with the specified slice incremented by the second input tensor.
         ///
         /// ## Parameters
         ///
@@ -46,35 +46,35 @@ namespace ngraph
         ///
         /// | Type                   | Description                                                                                                                                                                                                                 |
         /// | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-        /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$ where \f$T[i_1,\dots,i_n] = \texttt{arg1}[j_1,\dots,j_n]\f$ if \f$j_1,\dots,j_n\f$ is in bounds for `arg1` and for all \f$m\f$, \f$i_m = l_m + j_m s_m\f$, otherwise \f$\texttt{arg0}[i_1,\dots,i_n]\f$. |
+        /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$ where \f$T[i_1,\dots,i_n] += \texttt{arg1}[j_1,\dots,j_n]\f$ if \f$j_1,\dots,j_n\f$ is in bounds for `arg1` and for all \f$m\f$, \f$i_m = l_m + j_m s_m\f$, otherwise \f$\texttt{arg0}[i_1,\dots,i_n]\f$. |
         class UpdateSlice : public Op
         {
         public:
-            /// \brief Constructs a tensor slice replacement operation.
+            /// \brief Constructs a tensor slice update operation.
             ///
             /// \param arg0 The tensor view to overwrite into.
-            /// \param arg1 The tensor view to write into `arg0`.
+            /// \param arg1 The tensor view to increment into `arg0`.
             /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
             /// \param strides The slicing strides; for example, strides of `{n,m}` means to take
             ///                every nth row and every mth column of `arg0` as part of the
             ///                slice to be replaced.
             UpdateSlice(const std::shared_ptr<Node>& arg0,
-                         const std::shared_ptr<Node>& arg1,
-                         const Coordinate& lower_bounds,
-                         const Coordinate& upper_bounds,
-                         const Strides& strides);
+                        const std::shared_ptr<Node>& arg1,
+                        const Coordinate& lower_bounds,
+                        const Coordinate& upper_bounds,
+                        const Strides& strides);
 
             /// \brief Constructs a tensor slice replacement operation with unit strides; i.e., every element inside the bounding box will be overwritten.
             ///
             /// \param arg0 The tensor view to overwrite into.
-            /// \param arg1 The tensor view to write into `arg0`.
+            /// \param arg1 The tensor view to increment into `arg0`.
             /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
             UpdateSlice(const std::shared_ptr<Node>& arg0,
-                         const std::shared_ptr<Node>& arg1,
-                         const Coordinate& lower_bounds,
-                         const Coordinate& upper_bounds);
+                        const std::shared_ptr<Node>& arg1,
+                        const Coordinate& lower_bounds,
+                        const Coordinate& upper_bounds);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

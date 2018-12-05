@@ -41,9 +41,8 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
-#include "ngraph/op/replace_slice.hpp"
-#include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/slice.hpp"
@@ -65,6 +64,7 @@
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
+#include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/util.hpp"
 
 extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
@@ -1763,17 +1763,38 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
 
     auto input = std::make_shared<pattern::op::Label>(element::f32, shape_a);
     auto slice = std::make_shared<op::Slice>(input, Coordinate{1, 0, 0}, Coordinate{2, 32, 2});
+    auto slice_label = std::make_shared<pattern::op::Label>(slice, nullptr, NodeVector{slice});
     auto update_input = std::make_shared<pattern::op::Label>(element::f32, shape_b);
-    auto update = std::make_shared<op::Add>(update_input, slice);
-    auto replace_slice = std::make_shared<op::ReplaceSlice>(input, update, Coordinate{1, 0, 0}, Coordinate{2, 32, 2});
+    auto update = std::make_shared<op::Add>(update_input, slice_label);
+    auto replace_slice = std::make_shared<op::ReplaceSlice>(
+        input, update, Coordinate{1, 0, 0}, Coordinate{2, 32, 2});
 
     ngraph::pattern::graph_rewrite_callback callback =
-        [input, update_input](pattern::Matcher& m) {
-            NGRAPH_DEBUG << "In callback for update_slice = "
-                         << m.get_match_root()->get_name();
+        [input, update_input, slice_label](pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In callback for update_slice = " << m.get_match_root()->get_name();
             auto pattern_map = m.get_pattern_map();
+            auto slice = std::static_pointer_cast<op::Slice>(pattern_map[slice_label]);
             auto replace = std::static_pointer_cast<op::ReplaceSlice>(m.get_match_root());
-            auto update_slice = std::make_shared<op::UpdateSlice>(pattern_map[input], pattern_map[update_input], replace->get_lower_bounds(), replace->get_upper_bounds());
+            if (replace->get_lower_bounds() != slice->get_lower_bounds() ||
+                replace->get_upper_bounds() != slice->get_upper_bounds() ||
+                replace->get_strides() != slice->get_strides())
+            {
+                NGRAPH_DEBUG
+                    << "Update slice cannot be created, slice and replace_slice are not compatible";
+                return false;
+            }
+
+            if (slice->get_users().size() > 1 || replace->get_argument(1)->get_users().size() > 1)
+            {
+                NGRAPH_DEBUG << "Update slice cannot be created, intermediate values required";
+                return false;
+            }
+
+            auto update_slice = std::make_shared<op::UpdateSlice>(pattern_map[input],
+                                                                  pattern_map[update_input],
+                                                                  replace->get_lower_bounds(),
+                                                                  replace->get_upper_bounds(),
+                                                                  replace->get_strides());
             ngraph::replace_node(m.get_match_root(), update_slice);
             return true;
         };

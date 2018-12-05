@@ -120,6 +120,7 @@
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
+#include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -2497,6 +2498,49 @@ namespace ngraph
                        << args[1].get_name() << "[i]);\n";
                 writer.block_end();
 #endif
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::UpdateSlice)
+            {
+                auto update_slice = static_cast<const ngraph::op::UpdateSlice*>(node);
+                const Shape& arg0_shape = args[0].get_shape();
+                const Shape& arg1_shape = args[1].get_shape();
+                auto strides = update_slice->get_strides();
+                writer.block_begin();
+                if (!ngraph::is_strided(strides))
+                {
+                    writer << "cpu::kernel::update_slice<"
+                           << args[0].get_element_type().c_type_string() << ", "
+                           << arg0_shape.size() << ">(\n"
+                           << "                                " << args[0].get_name() << ",\n"
+                           << "                                " << args[1].get_name() << ",\n"
+                           << "                                " << out[0].get_name() << ",\n"
+                           << "                               {" << join(arg0_shape) << "},\n"
+                           << "                               {" << join(arg1_shape) << "},\n"
+                           << "                               {"
+                           << join(update_slice->get_lower_bounds()) << "},\n"
+                           << "0);\n";
+                }
+                else
+                {
+                    writer << "cpu::kernel::strided_update_slice<"
+                           << args[0].get_element_type().c_type_string() << ", "
+                           << arg0_shape.size() << ">(\n"
+                           << "                                " << args[0].get_name() << ",\n"
+                           << "                                " << args[1].get_name() << ",\n"
+                           << "                                " << out[0].get_name() << ",\n"
+                           << "                               {" << join(arg0_shape) << "},\n"
+                           << "                               {" << join(arg1_shape) << "},\n"
+                           << "                               {"
+                           << join(update_slice->get_lower_bounds()) << "},\n"
+                           << "                               {"
+                           << join(update_slice->get_upper_bounds()) << "},\n"
+                           << "                               {"
+                           << join(update_slice->get_strides()) << "},\n"
+                           << "0);\n";
+                }
                 writer.block_end();
             }
 

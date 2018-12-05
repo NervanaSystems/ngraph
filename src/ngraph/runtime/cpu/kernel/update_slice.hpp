@@ -33,12 +33,12 @@ namespace ngraph
             {
                 template <typename ElementType, unsigned int Rank>
                 void update_slice(void* input0,
-                                   void* input1,
-                                   void* output,
-                                   const Shape& input0_shape,
-                                   const Shape& input1_shape,
-                                   const Coordinate& lower_bounds,
-                                   int arena)
+                                  void* input1,
+                                  void* output,
+                                  const Shape& input0_shape,
+                                  const Shape& input1_shape,
+                                  const Coordinate& lower_bounds,
+                                  int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> in0_dims, in1_dims;
                     Eigen::array<Eigen::Index, Rank> indices;
@@ -57,8 +57,11 @@ namespace ngraph
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in1(
                         static_cast<ElementType*>(input1), in1_dims);
 
-                    // out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
-                    //    in0;
+                    if (input0 != output)
+                    {
+                        out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = in0;
+                    }
                     out.slice(indices, in1_dims)
                         .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                             arena)) = in0.slice(indices, in1_dims) + in1;
@@ -66,14 +69,14 @@ namespace ngraph
 
                 template <typename ElementType, unsigned int Rank>
                 void strided_update_slice(void* input0,
-                                           void* input1,
-                                           void* output,
-                                           const Shape& input0_shape,
-                                           const Shape& input1_shape,
-                                           const Coordinate& lower_bounds,
-                                           const Coordinate& upper_bounds,
-                                           const Strides& slice_strides,
-                                           int arena)
+                                          void* input1,
+                                          void* output,
+                                          const Shape& input0_shape,
+                                          const Shape& input1_shape,
+                                          const Coordinate& lower_bounds,
+                                          const Coordinate& upper_bounds,
+                                          const Strides& slice_strides,
+                                          int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> in0_dims, in1_dims;
                     Eigen::array<Eigen::Index, Rank> start_indices, stop_indices, strides;
@@ -94,11 +97,14 @@ namespace ngraph
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in1(
                         static_cast<ElementType*>(input1), in1_dims);
 
-                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
-                        in0;
+                    if (input0 != output)
+                    {
+                        out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = in0;
+                    }
                     out.stridedSlice(start_indices, stop_indices, strides)
                         .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                            arena)) = in0 + in1;
+                            arena)) = in0.stridedSlice(start_indices, stop_indices, strides) + in1;
                 }
             }
         }

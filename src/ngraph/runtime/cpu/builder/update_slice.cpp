@@ -16,9 +16,9 @@
 
 #include <cstring>
 
-#include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/kernel/update_slice.hpp"
+#include "ngraph/runtime/cpu/op/update_slice.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -48,16 +48,6 @@ namespace ngraph
                 auto lower_bounds = update_slice->get_lower_bounds();
                 auto upper_bounds = update_slice->get_upper_bounds();
 
-                bool strided = false;
-                for (auto stride : strides)
-                {
-                    if (stride != 1)
-                    {
-                        strided = true;
-                        break;
-                    }
-                }
-
                 if (!arg0_shape.size())
                 {
                     size_t size = args[0].get_element_type().size();
@@ -68,7 +58,7 @@ namespace ngraph
                     return;
                 }
 
-                if (strided)
+                if (ngraph::is_strided(strides))
                 {
                     std::function<decltype(runtime::cpu::kernel::strided_update_slice<float, 2>)>
                         kernel;
