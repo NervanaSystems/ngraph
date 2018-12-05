@@ -65,7 +65,7 @@ public:
                 }
             }
 
-            // Sanity check testing code
+            // Ensure the element types and shapes match between reference and backend
             ASSERT_EQ(ref_data->get_element_type(), bk_data->get_element_type());
             ASSERT_EQ(ref_data->get_element_type(), bk_isolated_data->get_element_type());
             ASSERT_EQ(ref_data->get_element_count(), bk_data->get_element_count());
