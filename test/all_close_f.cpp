@@ -150,32 +150,44 @@ protected:
 
 TEST_P(all_close_f_param_test, test_boundaries)
 {
-    NGRAPH_INFO << "Testing target of: " << expected << " (" << float_to_bits(expected) << ")";
-    NGRAPH_INFO << "Matching to targets with: " << mantissa_bits << " mantissa_bits and "
-                << tolerance_bits << " tolerance_bits";
-    NGRAPH_INFO << "upper_bound: " << upper_bound << " (" << float_to_bits(upper_bound) << ")";
-    NGRAPH_INFO << "lower_bound: " << lower_bound << " (" << float_to_bits(lower_bound) << ")";
-    NGRAPH_INFO << "past_upper_bound: " << past_upper_bound << " ("
-                << float_to_bits(past_upper_bound) << ")";
-    NGRAPH_INFO << "past_lower_bound: " << past_lower_bound << " ("
-                << float_to_bits(past_lower_bound) << ")";
+    // Print short string documenting which test is being run
+    std::cout << "[   INFO   ] Test params: (" << expected << ", " << mantissa_bits << ", "
+              << tolerance_bits << ")\n";
 
-    EXPECT_TRUE(test::close_f(expected, upper_bound, mantissa_bits, tolerance_bits));
+    // Format verbose info to only print out in case of test failure
+    stringstream ss;
+    ss << "Testing target of: " << expected << " (" << float_to_bits(expected) << ")\n";
+    ss << "Matching to targets with: " << mantissa_bits << " mantissa_bits and " << tolerance_bits
+       << " tolerance_bits\n";
+    ss << "upper_bound: " << upper_bound << " (" << float_to_bits(upper_bound) << ")\n";
+    ss << "lower_bound: " << lower_bound << " (" << float_to_bits(lower_bound) << ")\n";
+    ss << "past_upper_bound: " << past_upper_bound << " (" << float_to_bits(past_upper_bound)
+       << ")\n";
+    ss << "past_lower_bound: " << past_lower_bound << " (" << float_to_bits(past_lower_bound)
+       << ")\n";
+
+    EXPECT_TRUE(test::close_f(expected, upper_bound, mantissa_bits, tolerance_bits)) << ss.str();
     EXPECT_TRUE(test::all_close_f(
-        vector<float>({expected}), vector<float>({upper_bound}), mantissa_bits, tolerance_bits));
-    EXPECT_TRUE(test::close_f(expected, lower_bound, mantissa_bits, tolerance_bits));
+        vector<float>({expected}), vector<float>({upper_bound}), mantissa_bits, tolerance_bits))
+        << ss.str();
+    EXPECT_TRUE(test::close_f(expected, lower_bound, mantissa_bits, tolerance_bits)) << ss.str();
     EXPECT_TRUE(test::all_close_f(
-        vector<float>({expected}), vector<float>({lower_bound}), mantissa_bits, tolerance_bits));
-    EXPECT_FALSE(test::close_f(expected, past_upper_bound, mantissa_bits, tolerance_bits));
+        vector<float>({expected}), vector<float>({lower_bound}), mantissa_bits, tolerance_bits))
+        << ss.str();
+    EXPECT_FALSE(test::close_f(expected, past_upper_bound, mantissa_bits, tolerance_bits))
+        << ss.str();
     EXPECT_FALSE(test::all_close_f(vector<float>({expected}),
                                    vector<float>({past_upper_bound}),
                                    mantissa_bits,
-                                   tolerance_bits));
-    EXPECT_FALSE(test::close_f(expected, past_lower_bound, mantissa_bits, tolerance_bits));
+                                   tolerance_bits))
+        << ss.str();
+    EXPECT_FALSE(test::close_f(expected, past_lower_bound, mantissa_bits, tolerance_bits))
+        << ss.str();
     EXPECT_FALSE(test::all_close_f(vector<float>({expected}),
                                    vector<float>({past_lower_bound}),
                                    mantissa_bits,
-                                   tolerance_bits));
+                                   tolerance_bits))
+        << ss.str();
 }
 
 // Avoid warning with how gtest defines INSTANTIATE_TEST_CASE_P
@@ -270,28 +282,38 @@ protected:
 
 TEST_P(all_close_f_double_param_test, test_boundaries)
 {
-    NGRAPH_INFO << "Testing target of: " << expected << " (" << double_to_bits(expected) << ")";
-    NGRAPH_INFO << "Matching to targets with: " << mantissa_bits << " mantissa_bits and "
-                << tolerance_bits << " tolerance_bits";
-    NGRAPH_INFO << "upper_bound: " << upper_bound << " (" << double_to_bits(upper_bound) << ")";
-    NGRAPH_INFO << "lower_bound: " << lower_bound << " (" << double_to_bits(lower_bound) << ")";
-    NGRAPH_INFO << "past_upper_bound: " << past_upper_bound << " ("
-                << double_to_bits(past_upper_bound) << ")";
-    NGRAPH_INFO << "past_lower_bound: " << past_lower_bound << " ("
-                << double_to_bits(past_lower_bound) << ")";
+    // Print short string documenting which test is being run
+    std::cout << "[   INFO   ] Test params: (" << expected << ", " << tolerance_bits << ")\n";
 
-    EXPECT_TRUE(test::close_f(expected, upper_bound, tolerance_bits));
+    // Format verbose info to only print out in case of test failure
+
+    stringstream ss;
+    ss << "Testing target of: " << expected << " (" << double_to_bits(expected) << ")\n";
+    ss << "Matching to targets with: " << mantissa_bits << " mantissa_bits and " << tolerance_bits
+       << " tolerance_bits\n";
+    ss << "upper_bound: " << upper_bound << " (" << double_to_bits(upper_bound) << ")\n";
+    ss << "lower_bound: " << lower_bound << " (" << double_to_bits(lower_bound) << ")\n";
+    ss << "past_upper_bound: " << past_upper_bound << " (" << double_to_bits(past_upper_bound)
+       << ")\n";
+    ss << "past_lower_bound: " << past_lower_bound << " (" << double_to_bits(past_lower_bound)
+       << ")\n";
+
+    EXPECT_TRUE(test::close_f(expected, upper_bound, tolerance_bits)) << ss.str();
     EXPECT_TRUE(test::all_close_f(
-        vector<double>({expected}), vector<double>({upper_bound}), tolerance_bits));
-    EXPECT_TRUE(test::close_f(expected, lower_bound, tolerance_bits));
+        vector<double>({expected}), vector<double>({upper_bound}), tolerance_bits))
+        << ss.str();
+    EXPECT_TRUE(test::close_f(expected, lower_bound, tolerance_bits)) << ss.str();
     EXPECT_TRUE(test::all_close_f(
-        vector<double>({expected}), vector<double>({lower_bound}), tolerance_bits));
-    EXPECT_FALSE(test::close_f(expected, past_upper_bound, tolerance_bits));
+        vector<double>({expected}), vector<double>({lower_bound}), tolerance_bits))
+        << ss.str();
+    EXPECT_FALSE(test::close_f(expected, past_upper_bound, tolerance_bits)) << ss.str();
     EXPECT_FALSE(test::all_close_f(
-        vector<double>({expected}), vector<double>({past_upper_bound}), tolerance_bits));
-    EXPECT_FALSE(test::close_f(expected, past_lower_bound, tolerance_bits));
+        vector<double>({expected}), vector<double>({past_upper_bound}), tolerance_bits))
+        << ss.str();
+    EXPECT_FALSE(test::close_f(expected, past_lower_bound, tolerance_bits)) << ss.str();
     EXPECT_FALSE(test::all_close_f(
-        vector<double>({expected}), vector<double>({past_lower_bound}), tolerance_bits));
+        vector<double>({expected}), vector<double>({past_lower_bound}), tolerance_bits))
+        << ss.str();
 }
 
 // Avoid warning with how gtest defines INSTANTIATE_TEST_CASE_P
