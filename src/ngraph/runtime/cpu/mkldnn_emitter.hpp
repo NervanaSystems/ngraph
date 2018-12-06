@@ -411,6 +411,8 @@ namespace ngraph
                             convolution->get_padding_below_forward(),
                             convolution->get_padding_above_forward());
                     }
+
+                    throw ngraph_error(std::string("Unknown op ") + convolution->get_name());
                 }
 
                 size_t build_pooling_forward(mkldnn::algorithm pooling_algorithm,
