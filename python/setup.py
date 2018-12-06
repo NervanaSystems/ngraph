@@ -318,6 +318,7 @@ if NGRAPH_ONNX_IMPORT_ENABLE == 'TRUE':
         ),
     )
 
+
 def add_platform_specific_link_args(link_args):
     """Add linker flags specific for actual OS."""
     if sys.platform.startswith('linux'):
