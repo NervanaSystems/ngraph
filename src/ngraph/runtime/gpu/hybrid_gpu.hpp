@@ -29,15 +29,15 @@ namespace ngraph
     {
         namespace hybrid
         {
-            class HybridGPU_Backend;
+            class HGPU_Backend;
         }
     }
 }
 
-class ngraph::runtime::hybrid::HybridGPU_Backend : public ngraph::runtime::Backend
+class ngraph::runtime::hybrid::HGPU_Backend : public ngraph::runtime::Backend
 {
 public:
-    HybridGPU_Backend(
+    HGPU_Backend(
         const std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>>& backend_list);
 
     std::shared_ptr<ngraph::runtime::Tensor>

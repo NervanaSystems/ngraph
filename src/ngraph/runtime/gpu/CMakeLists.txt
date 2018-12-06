@@ -51,7 +51,7 @@ set(SRC
     op/rnn.cpp
     )
 
-if (NGRAPH_HYBRID_ENABLE)
+if (NGRAPH_HYBRID_GPU_ENABLE)
     set(HYBRID_GPU_BACKEND_SRC 
         hybrid_gpu.cpp
         )
@@ -64,7 +64,7 @@ set(CUDA_SRC
     nvcc/example.cu.cpp
     )
 
-if (NGRAPH_GPU_ENABLE)
+if (NGRAPH_GPU_ENABLE OR NGRAPH_HYBRID_GPU_ENABLE) 
     find_package(CUDA 9 QUIET)
     if (CUDA_FOUND)
         set(CUDA9_FOUND TRUE)
@@ -174,15 +174,15 @@ if (NGRAPH_GPU_ENABLE)
 
 
     if (NGRAPH_HYBRID_GPU_ENABLE)
-        add_library(hybrid_gpu_backend SHARED ${SRC} ${HYBRID_GPU_BACKEND_SRC} ${CUDA_OBJ})
+        add_library(hgpu_backend SHARED ${SRC} ${HYBRID_GPU_BACKEND_SRC} ${CUDA_OBJ})
         if(NGRAPH_LIB_VERSIONING_ENABLE)
-            set_target_properties(hybrid_gpu_backend PROPERTIES
+            set_target_properties(hgpu_backend PROPERTIES
                 VERSION ${NGRAPH_VERSION}
                 SOVERSION ${NGRAPH_API_VERSION})
         endif()
-        target_link_libraries(hybrid_gpu_backend PUBLIC ngraph codegen)
-        target_include_directories(hybrid_gpu_backend SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
-        target_link_libraries(hybrid_gpu_backend
+        target_link_libraries(hgpu_backend PUBLIC ngraph codegen)
+        target_include_directories(hgpu_backend SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
+        target_link_libraries(hgpu_backend
             PUBLIC
                 ${CUDA_cuda_LIBRARY}
                 ${CUDA_nvrtc_LIBRARY}
@@ -191,9 +191,9 @@ if (NGRAPH_GPU_ENABLE)
                 ${CUDA_CUBLAS_LIBRARIES}
                 ${CUDNN_LIBRARIES})
 
-        set_target_properties(hybrid_gpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+        set_target_properties(hgpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
-        install(TARGETS hybrid_gpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+        install(TARGETS hgpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 
     endif()
 endif()
