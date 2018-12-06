@@ -72,14 +72,6 @@ runtime::hybrid::HGPU_Backend::HGPU_Backend(
     const std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>>& backend_list)
     : m_backend_list{backend_list}
 {
-    // TODO: add a priority queue to manipulate backend lists based on priority
-    // #if defined(NGRAPH_CPU_ENABLE)
-    //     m_backend_list.push_back(make_pair("CPU", make_shared<runtime::cpu::CPU_Backend>()));
-    // #endif
-
-    // #if defined(NGRAPH_INTERPRETER_ENABLE)
-    //     m_backend_list.push_back(make_pair("INTERPRETER", make_shared<runtime::interpreter::INTBackend>()));
-    // #endif
 }
 
 shared_ptr<runtime::Tensor>
