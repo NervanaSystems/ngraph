@@ -16,31 +16,23 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/frontend/onnx_import/core/node.hpp"
+#include "ngraph/node_vector.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace cpu
+        namespace op
         {
-            namespace pass
+            namespace set_1
             {
-                class ConcatInputs;
-            }
-        }
-    }
-}
+                NodeVector pad(const Node& node);
 
-class ngraph::runtime::cpu::pass::ConcatInputs : public ngraph::pass::GraphRewrite
-{
-public:
-    ConcatInputs()
-        : GraphRewrite()
-    {
-        concat_lstm_inputs();
-    }
+            } // namespace set_1
 
-private:
-    void concat_lstm_inputs();
-};
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
