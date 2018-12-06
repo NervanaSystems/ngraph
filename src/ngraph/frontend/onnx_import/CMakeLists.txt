@@ -102,6 +102,8 @@ add_library(onnx_import STATIC
         op/neg.hpp
         op/not.hpp
         op/or.hpp
+        op/pad.cpp
+        op/pad.hpp
         op/pow.hpp
         op/prelu.cpp
         op/prelu.hpp
