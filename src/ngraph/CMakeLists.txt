@@ -209,7 +209,7 @@ endif()
 target_link_libraries(ngraph PRIVATE libjson)
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 
-if (NOT APPLE)
+if (LINUX)
     set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--rpath,$ORIGIN")
 
     # nGraph links against one or more libraries (ex. LLVM) but we don't want to
@@ -227,7 +227,7 @@ if (NOT APPLE)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--no-as-needed")
     endif()
-else()
+elseif(APPLE)
     set_property(TARGET ngraph APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-rpath,@loader_path")
 endif()
 
