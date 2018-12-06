@@ -15,6 +15,7 @@ RUN yum -y update && \
     python python-devel python-setuptools \
     doxygen graphviz \
     which \
+    patchelf \
     'perl(Data::Dumper)'
 
 RUN ln -s /usr/bin/cmake3 /usr/bin/cmake

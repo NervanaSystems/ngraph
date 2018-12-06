@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y \
         wget patch diffutils zlib1g-dev libtinfo-dev \
         doxygen graphviz \
         python-sphinx python3-sphinx \
-        python-pip  
+        python-pip patchelf
 
 RUN apt-get clean autoclean && \
     apt-get autoremove -y
@@ -38,7 +38,7 @@ RUN pip install breathe
 # need numpy to successfully build docs for python_api
 RUN pip install numpy
 
-# release notes need this markdown extension 
+# release notes need this markdown extension
 # RUN python3 -m pip install m2r
 
 WORKDIR /home
