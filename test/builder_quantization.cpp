@@ -357,6 +357,7 @@ TEST(builder, scaled_QC_with_bias_add_and_relu)
                                                                  J,
                                                                  true);
     auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias, Add});
+    constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -414,6 +415,7 @@ TEST(builder, scaled_QC_with_bias_signed_add_and_relu)
                                                                  J,
                                                                  true);
     auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias, Add});
+    constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
