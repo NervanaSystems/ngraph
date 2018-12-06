@@ -502,8 +502,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Lstm)
             {
-                const ngraph::op::Lstm* lstm_node = static_cast<const ngraph::op::Lstm*>(node);
-                if (args.size() != 5 || !lstm_node->get_fused_inputs())
+                if (args.size() != 5)
                 {
                     throw ngraph_error(
                         "Lstm op doesnt have the required number of inputs to emit MKLDNN kernel");
@@ -679,8 +678,8 @@ namespace ngraph
 
                     if (args.size() == 3)
                     {
-                        writer << "reference::batch_norm_three_outputs("
-                               << batchnorm->get_eps_value() << ",\n";
+                        writer << "reference::batch_norm_training(" << batchnorm->get_eps_value()
+                               << ",\n";
                         writer << "            " << args[0].get_name() << ",\n";
                         writer << "            " << args[1].get_name() << ",\n";
                         writer << "            " << args[2].get_name() << ",\n";
@@ -691,7 +690,7 @@ namespace ngraph
                     }
                     else
                     {
-                        writer << "reference::batch_norm_one_output(" << batchnorm->get_eps_value()
+                        writer << "reference::batch_norm_inference(" << batchnorm->get_eps_value()
                                << ",\n";
                         writer << "            " << args[0].get_name() << ",\n";
                         writer << "            " << args[1].get_name() << ",\n";
@@ -717,7 +716,7 @@ namespace ngraph
                     const ngraph::op::BatchNormInference* batchnorm =
                         static_cast<const ngraph::op::BatchNormInference*>(node);
 
-                    writer << "reference::batch_norm_one_output(" << batchnorm->get_eps_value()
+                    writer << "reference::batch_norm_inference(" << batchnorm->get_eps_value()
                            << ",\n";
                     writer << "            " << args[0].get_name() << ",\n";
                     writer << "            " << args[1].get_name() << ",\n";

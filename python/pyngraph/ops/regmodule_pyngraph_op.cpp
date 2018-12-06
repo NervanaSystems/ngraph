@@ -93,5 +93,4 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Tan(m_op);
     regclass_pyngraph_op_Tanh(m_op);
     regclass_pyngraph_op_TopK(m_op);
-    regclass_pyngraph_op_Result(m_op);
 }
