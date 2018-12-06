@@ -18,7 +18,6 @@
 
 #include <cinttypes>
 #include <list>
-#include "ngraph/except.hpp"
 
 #include "ngraph/except.hpp"
 

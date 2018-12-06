@@ -545,7 +545,10 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
     writer.block_begin();
     {
         writer << "extern __shared__ " << data_types[1] << " sdata[];\n";
-        writer << "uint32_t bid = blockIdx.x;\n";
+        if (non_reduce_rank > 0)
+        {
+            writer << "uint32_t bid = blockIdx.x;\n";
+        }
         writer << "uint32_t tid = threadIdx.x;\n";
         writer << "uint32_t step = blockDim.x; \n";
         collective_coordinate_transform_helper(writer,
