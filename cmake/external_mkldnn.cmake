@@ -57,6 +57,8 @@ endif()
 
 set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.17/")
 set(MKLVERSION "2019.0.1.20180928")
+set(NGRAPH_USE_MKLML FALSE)
+
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
     set(MKL_SHA1_HASH 0d9cc8bfc2c1a1e3df5e0b07e2f363bbf934a7e9)
@@ -69,6 +71,11 @@ elseif (WIN32)
 endif()
 set(MKL_LIBS ${MKLML_LIB} ${OMP_LIB})
 set(MKLURL ${MKLURLROOT}${MKLPACKAGE})
+
+SET(MKLDNN_FLAG "-Wno-error=strict-overflow -Wno-error=unused-result -Wno-error=array-bounds")
+SET(MKLDNN_FLAG "${MKLDNN_FLAG} -Wno-unused-result -Wno-unused-value")
+SET(MKLDNN_CFLAG "${CMAKE_C_FLAGS} ${MKLDNN_FLAG}")
+SET(MKLDNN_CXXFLAG "${CMAKE_CXX_FLAGS} ${MKLDNN_FLAG}")
 
 ExternalProject_Add(
     ext_mkl
@@ -88,8 +95,19 @@ set(MKL_SOURCE_DIR ${source_dir})
 add_library(libmkl INTERFACE)
 add_dependencies(libmkl ext_mkl)
 foreach(LIB ${MKL_LIBS})
-    target_link_libraries(libmkl INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${LIB})
+    target_link_libraries(libmkl INTERFACE ${MKL_SOURCE_DIR}/src/ext_mkl/lib/${LIB})
 endforeach()
+set_target_properties(libmkl PROPERTIES INSTALL_RPATH "$ORIGIN")
+
+if(NGRAPH_USE_MKLML)
+    set(MKLDNN_USE_MKL DEF)
+    set(MKLDNN_DEPENDS ext_mkl)
+    set(MKLML_LIB libmkl)
+else()
+    set(MKLDNN_USE_MKL NONE)
+    set(MKLDNN_DEPENDS "")
+    set(MKLML_LIB "")
+endif()
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
 set(MKLDNN_GIT_TAG "830a100")
@@ -103,7 +121,7 @@ endif()
 if(${CMAKE_VERSION} VERSION_LESS 3.2)
     ExternalProject_Add(
         ext_mkldnn
-        DEPENDS ext_mkl
+        DEPENDS ${MKLDNN_DEPENDS}
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         GIT_TAG ${MKLDNN_GIT_TAG}
         UPDATE_COMMAND ""
@@ -117,8 +135,8 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS
-            -DWITH_TEST=FALSE
-            -DWITH_EXAMPLE=FALSE
+            -DWITH_TEST=OFF
+            -DWITH_EXAMPLE=OFF
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -126,6 +144,11 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
             -DMKLROOT=${MKL_ROOT}
             "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH}"
+            -DMKLDNN_USE_MKL=${MKLDNN_USE_MKL}
+            -DCMAKE_C_FLAGS=${MKLDNN_CFLAG}
+            -DCMAKE_CXX_FLAGS=${MKLDNN_CXXFLAG}
+            -DMKLDNN_USE_MKL=NONE
+            -DMKLDNN_THREADING=TBB
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
@@ -137,7 +160,7 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
 else()
     ExternalProject_Add(
         ext_mkldnn
-        DEPENDS ext_mkl
+        DEPENDS ${MKLDNN_DEPENDS}
         GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
         GIT_TAG ${MKLDNN_GIT_TAG}
         UPDATE_COMMAND ""
@@ -150,8 +173,8 @@ else()
         # Uncomment below with any in-flight MKL-DNN patches
         # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
         CMAKE_ARGS
-            -DWITH_TEST=FALSE
-            -DWITH_EXAMPLE=FALSE
+            -DWITH_TEST=OFF
+            -DWITH_EXAMPLE=OFF
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -159,6 +182,11 @@ else()
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
             -DMKLROOT=${MKL_ROOT}
             "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH}"
+            -DMKLDNN_USE_MKL=${MKLDNN_USE_MKL}
+            -DCMAKE_C_FLAGS=${MKLDNN_CFLAG}
+            -DCMAKE_CXX_FLAGS=${MKLDNN_CXXFLAG}
+            -DMKLDNN_USE_MKL=NONE
+            -DMKLDNN_THREADING=TBB
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
@@ -170,6 +198,7 @@ else()
         )
 endif()
 
+# CPU backend has dependency on CBLAS
 ExternalProject_Add_Step(
     ext_mkldnn
     PrepareMKL
@@ -188,7 +217,7 @@ add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 target_link_libraries(libmkldnn INTERFACE
     ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB}
-    libmkl
+    ${MKLML_LIB}
     )
 
 install(DIRECTORY ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/ DESTINATION ${NGRAPH_INSTALL_LIB} OPTIONAL)

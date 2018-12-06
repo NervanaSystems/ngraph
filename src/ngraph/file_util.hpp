@@ -86,10 +86,12 @@ namespace ngraph
                            bool recurse = false,
                            bool include_links = false);
 
+#if !defined(NGRAPH_DEX_ONLY)
         /// \brief Create a temporary file
         /// \param extension Optional extension for the temporary file
         /// \return Name of the temporary file
         std::string tmp_filename(const std::string& extension = "");
+#endif
 
         /// \brief Test for the existence of a path or file
         /// \param path The path to test
