@@ -116,7 +116,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(conv, callback);
+    auto m = make_shared<pattern::Matcher>(
+        conv, callback, "CPUPostLayoutOptimizations.ConstructWeight_fusion");
     this->add_matcher(m);
 }
 
@@ -167,7 +168,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(cvt_lt, callback);
+    auto m = make_shared<pattern::Matcher>(
+        cvt_lt, callback, "CPUPostLayoutOptimizations.ConstructSliceConvertLayoutFusion");
     this->add_matcher(m);
 }
 
@@ -260,6 +262,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(cvt_lt, callback);
+    auto m = make_shared<pattern::Matcher>(
+        cvt_lt, callback, "CPUPostLayoutOptimizations.ConstructReshapeConvertLayoutFusion");
     this->add_matcher(m);
 }

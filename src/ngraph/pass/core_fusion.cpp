@@ -80,7 +80,7 @@ void pass::CoreFusion::construct_relu()
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(max, callback);
+    auto m = make_shared<pattern::Matcher>(max, callback, "CoreFusion.Relu");
     this->add_matcher(m);
 }
 
@@ -123,7 +123,8 @@ void pass::CoreFusion::construct_sigmoid()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(
+        divide_1_over_exp, callback, "CoreFusion.Sigmoid");
     this->add_matcher(m);
 }
 
@@ -175,7 +176,8 @@ void pass::CoreFusion::construct_sigmoid_bprop()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(negtive_2, callback);
+    auto m =
+        std::make_shared<ngraph::pattern::Matcher>(negtive_2, callback, "CoreFusion.SigmoidBprop");
     this->add_matcher(m);
 }
 
@@ -256,7 +258,7 @@ void pass::CoreFusion::construct_folded_batch_norm()
 
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(bn, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(bn, callback, "CoreFusion.FoldedBatchNorm");
     this->add_matcher(m);
 }
 
@@ -367,7 +369,8 @@ void pass::CoreFusion::construct_conv_affine_folding()
 
         };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(add, callback);
+    auto m =
+        std::make_shared<ngraph::pattern::Matcher>(add, callback, "CoreFusion.ConvAffineFolding");
     this->add_matcher(m);
 }
 
@@ -615,6 +618,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(eltwise_conv, callback);
+    auto m =
+        make_shared<pattern::Matcher>(eltwise_conv, callback, "CoreFusion.OptimizedStridedConv");
     this->add_matcher(m);
 }
