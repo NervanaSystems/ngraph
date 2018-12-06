@@ -49,5 +49,6 @@ if [ "${PYTHON3_DETECTED}" == 1  ]; then
     source build/venv3/bin/activate
     pip install --upgrade setuptools pip wheel
     python ${SOURCE_DIR}/setup.py bdist_wheel
+    python ${SOURCE_DIR}/setup.py sdist
     deactivate
 fi
