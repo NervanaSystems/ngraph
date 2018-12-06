@@ -135,8 +135,6 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
 {
     string lib_prefix = SHARED_LIB_PREFIX;
     string lib_suffix = SHARED_LIB_SUFFIX;
-    NGRAPH_INFO << lib_prefix;
-    NGRAPH_INFO << lib_suffix;
 
     DL_HANDLE handle = nullptr;
 
@@ -148,7 +146,6 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
     }
 
     string library_name = lib_prefix + to_lower(type) + "_backend" + lib_suffix;
-    NGRAPH_INFO << "looking for " << library_name;
     string my_directory = file_util::get_directory(find_my_file());
     string library_path = file_util::path_join(my_directory, library_name);
 #ifdef _WIN32
