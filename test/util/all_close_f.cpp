@@ -166,7 +166,8 @@ bool test::all_close_f(const vector<float>& a,
         {
             if (diff_count < 5)
             {
-                NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
+                NGRAPH_INFO << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
+                            << a[i] << " is not close to " << b[i] << " at index " << i;
             }
 
             rc = false;
@@ -191,10 +192,12 @@ bool test::all_close_f(const vector<float>& a,
 
     NGRAPH_INFO << "passing criteria: " << (mantissa_bits - tolerance_bits) << " mantissa bits ("
                 << mantissa_bits << " mantissa bits w/ " << tolerance_bits << " tolerance bits)";
-    NGRAPH_INFO << "tightest match:   " << matching_mantissa_bits(min_distance)
+    NGRAPH_INFO << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
+                << "tightest match:   " << matching_mantissa_bits(min_distance)
                 << " mantissa bits (" << a[min_distance_index] << " vs " << b[min_distance_index]
                 << " at [" << min_distance_index << "])";
-    NGRAPH_INFO << "loosest match:    " << matching_mantissa_bits(max_distance)
+    NGRAPH_INFO << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
+                << "loosest match:    " << matching_mantissa_bits(max_distance)
                 << " mantissa bits (" << a[max_distance_index] << " vs " << b[max_distance_index]
                 << " at [" << max_distance_index << "])";
     NGRAPH_INFO << "median match:     " << matching_mantissa_bits(median_distance)
