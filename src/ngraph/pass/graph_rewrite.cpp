@@ -94,7 +94,7 @@ bool ngraph::pass::GraphRewrite::run_on_function(std::shared_ptr<ngraph::Functio
 
 static const std::vector<std::regex> initialize_fusion_regexes()
 {
-    const char* cnsf = std::getenv("NGRAPH_SKIP_FUSION");
+    const char* cnsf = std::getenv("NGRAPH_DISABLED_FUSIONS");
     std::vector<std::regex> regexes;
     if (cnsf)
     {
