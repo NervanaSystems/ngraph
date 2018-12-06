@@ -306,7 +306,7 @@ void file_util::iterate_files(const string& path,
     {
         do
         {
-            std::cout << data.cFileName << std::endl;
+            func(data.cFileName, (data.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY));
         } while (FindNextFile(hFind, &data));
         FindClose(hFind);
     }

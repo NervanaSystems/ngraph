@@ -123,7 +123,15 @@ unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
 static string find_my_file()
 {
 #ifdef _WIN32
-    return ".";
+    HMODULE hModule = GetModuleHandleW(NULL);
+    WCHAR wpath[MAX_PATH];
+    GetModuleFileNameW(hModule, wpath, MAX_PATH);
+    wstring ws(wpath);
+    string path(ws.begin(), ws.end());
+    replace(path.begin(), path.end(), '\\', '/');
+    path = file_util::get_directory(path);
+    path += "/";
+    return path;
 #else
     Dl_info dl_info;
     dladdr(reinterpret_cast<void*>(find_my_file), &dl_info);
@@ -163,11 +171,14 @@ map<string, string> runtime::BackendManager::get_registered_device_map()
     vector<string> backend_list;
 
     auto f = [&](const string& file, bool is_dir) {
-        string name = file_util::get_file_name(file);
-        string backend_name;
-        if (is_backend_name(name, backend_name))
+        if (!is_dir)
         {
-            rc.insert({to_upper(backend_name), file});
+            string name = file_util::get_file_name(file);
+            string backend_name;
+            if (is_backend_name(name, backend_name))
+            {
+                rc.insert({to_upper(backend_name), file});
+            }
         }
     };
     file_util::iterate_files(my_directory, f, false, true);
@@ -176,18 +187,19 @@ map<string, string> runtime::BackendManager::get_registered_device_map()
 
 bool runtime::BackendManager::is_backend_name(const string& file, string& backend_name)
 {
+    bool rc = false;
     string name = file_util::get_file_name(file);
     string lib_prefix = SHARED_LIB_PREFIX;
     string lib_suffix = SHARED_LIB_SUFFIX;
-    bool rc = false;
-    if (!name.compare(0, lib_prefix.size(), lib_prefix))
+    if ((name.size() > lib_prefix.size() + lib_suffix.size()) &
+        !name.compare(0, lib_prefix.size(), lib_prefix))
     {
         if (!name.compare(name.size() - lib_suffix.size(), lib_suffix.size(), lib_suffix))
         {
             auto pos = name.find("_backend");
             if (pos != name.npos)
             {
-                backend_name = name.substr(3, pos - 3);
+                backend_name = name.substr(lib_prefix.size(), pos - lib_prefix.size());
                 rc = true;
             }
         }
