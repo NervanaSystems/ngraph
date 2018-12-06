@@ -20,6 +20,8 @@
 #include <list>
 #include "ngraph/except.hpp"
 
+#include "ngraph/except.hpp"
+
 namespace ngraph
 {
     namespace runtime

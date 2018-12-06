@@ -1632,11 +1632,7 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<element::Type>
                                                 NVShape input_shape,
                                                 NVShape reduce_axis)
 {
-    std::vector<std::string> dtypes_str;
-    for (auto a : dtypes)
-    {
-        dtypes_str.push_back(a.c_type_string());
-    }
+    std::vector<std::string> dtypes_str = get_string_vector(dtypes);
     NVShape simplified_reduce_axis;
     NVShape simplified_input_shape;
     simplify_reduce_shape(input_shape, reduce_axis, simplified_input_shape, simplified_reduce_axis);

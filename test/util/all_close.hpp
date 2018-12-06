@@ -50,8 +50,9 @@ namespace ngraph
                 {
                     if (count < 5)
                     {
-                        NGRAPH_INFO << std::setprecision(20) << a[i] << " is not close to " << b[i]
-                                    << " at index " << i;
+                        NGRAPH_INFO
+                            << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
+                            << a[i] << " is not close to " << b[i] << " at index " << i;
                     }
                     count++;
                     rc = false;
