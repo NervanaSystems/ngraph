@@ -19,6 +19,8 @@
 #include <cinttypes>
 #include <list>
 
+#include "ngraph/except.hpp"
+
 namespace ngraph
 {
     namespace runtime
@@ -84,6 +86,110 @@ namespace ngraph
                 {
                     m_uint64_t_params.push_back(value);
                     return &m_uint64_t_params.back();
+                }
+
+                template <typename T1, typename T2>
+                void* getVal(T2 val)
+                {
+                    return cache(static_cast<T1>(val));
+                }
+
+                void* val_by_datatype(const std::string& type, double val)
+                {
+                    if (type == "char")
+                    {
+                        return getVal<char>(val);
+                    }
+                    else if (type == "float")
+                    {
+                        return getVal<float>(val);
+                    }
+                    else if (type == "double")
+                    {
+                        return getVal<double>(val);
+                    }
+                    else if (type == "int8_t")
+                    {
+                        return getVal<int8_t>(val);
+                    }
+                    else if (type == "int16_t")
+                    {
+                        return getVal<int16_t>(val);
+                    }
+                    else if (type == "int32_t")
+                    {
+                        return getVal<int32_t>(val);
+                    }
+                    else if (type == "int64_t")
+                    {
+                        return getVal<int64_t>(val);
+                    }
+                    else if (type == "uint8_t")
+                    {
+                        return getVal<uint8_t>(val);
+                    }
+                    else if (type == "uint16_t")
+                    {
+                        return getVal<uint16_t>(val);
+                    }
+                    else if (type == "uint32_t")
+                    {
+                        return getVal<uint32_t>(val);
+                    }
+                    else if (type == "uint64_t")
+                    {
+                        return getVal<uint64_t>(val);
+                    }
+                    throw ngraph_error("Cast requested for invalid dtype");
+                }
+
+                void* val_by_datatype(const std::string& type, int64_t val)
+                {
+                    if (type == "char")
+                    {
+                        return getVal<char>(val);
+                    }
+                    else if (type == "float")
+                    {
+                        return getVal<float>(val);
+                    }
+                    else if (type == "double")
+                    {
+                        return getVal<double>(val);
+                    }
+                    else if (type == "int8_t")
+                    {
+                        return getVal<int8_t>(val);
+                    }
+                    else if (type == "int16_t")
+                    {
+                        return getVal<int16_t>(val);
+                    }
+                    else if (type == "int32_t")
+                    {
+                        return getVal<int32_t>(val);
+                    }
+                    else if (type == "int64_t")
+                    {
+                        return getVal<int64_t>(val);
+                    }
+                    else if (type == "uint8_t")
+                    {
+                        return getVal<uint8_t>(val);
+                    }
+                    else if (type == "uint16_t")
+                    {
+                        return getVal<uint16_t>(val);
+                    }
+                    else if (type == "uint32_t")
+                    {
+                        return getVal<uint32_t>(val);
+                    }
+                    else if (type == "uint64_t")
+                    {
+                        return getVal<uint64_t>(val);
+                    }
+                    throw ngraph_error("Cast requested for invalid dtype");
                 }
 
             private:
