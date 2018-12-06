@@ -86,7 +86,14 @@ double bits_to_double(const string& s)
 class all_close_f_param_test : public testing::TestWithParam<::std::tuple<float, int, int>>
 {
 protected:
-    all_close_f_param_test() { std::tie(expected, mantissa_bits, tolerance_bits) = GetParam(); }
+    all_close_f_param_test()
+        : upper_bound(FLT_MAX)
+        , lower_bound(-FLT_MAX)
+        , past_upper_bound(FLT_MAX)
+        , past_lower_bound(-FLT_MAX)
+    {
+        std::tie(expected, mantissa_bits, tolerance_bits) = GetParam();
+    }
     void SetUp() override
     {
         uint32_t expected_as_int = FloatUnion(expected).i;
@@ -201,6 +208,10 @@ class all_close_f_double_param_test : public testing::TestWithParam<::std::tuple
 protected:
     all_close_f_double_param_test()
         : mantissa_bits(53)
+        , upper_bound(DBL_MAX)
+        , lower_bound(-DBL_MAX)
+        , past_upper_bound(DBL_MAX)
+        , past_lower_bound(-DBL_MAX)
     {
         std::tie(expected, tolerance_bits) = GetParam();
     }
