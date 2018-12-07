@@ -262,3 +262,25 @@ void print_results(std::vector<char>& ref_data, std::vector<char>& actual_data, 
     }
     std::cout << std::endl;
 }
+
+cout_redirect::cout_redirect()
+    : m_ss()
+    , m_old_rdbuf(std::cout.rdbuf(m_ss.rdbuf()))
+{
+}
+
+cout_redirect::~cout_redirect()
+{
+    if (m_old_rdbuf)
+    {
+        std::cout.rdbuf(m_old_rdbuf);
+    }
+}
+
+std::string cout_redirect::release()
+{
+    std::string rc = m_ss.str();
+    std::cout.rdbuf(m_old_rdbuf);
+    m_old_rdbuf = nullptr;
+    return rc;
+}

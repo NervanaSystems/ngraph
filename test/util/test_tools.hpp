@@ -183,3 +183,16 @@ void print_results(std::vector<T>& ref_data, std::vector<T>& actual_data, size_t
 
 template <>
 void print_results(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results);
+
+// originally from https://stackoverflow.com/questions/5419356/redirect-stdout-stderr-to-a-string
+class cout_redirect
+{
+public:
+    cout_redirect();
+    ~cout_redirect();
+    std::string release();
+
+private:
+    std::stringstream m_ss;
+    std::streambuf* m_old_rdbuf;
+};

@@ -150,6 +150,8 @@ protected:
 
 TEST_P(all_close_f_param_test, test_boundaries)
 {
+    cout_redirect co;
+
     // Print short string documenting which test is being run
     std::cout << "[   INFO   ] Test params: (" << expected << ", " << mantissa_bits << ", "
               << tolerance_bits << ")\n";
@@ -169,25 +171,31 @@ TEST_P(all_close_f_param_test, test_boundaries)
     EXPECT_TRUE(test::close_f(expected, upper_bound, mantissa_bits, tolerance_bits)) << ss.str();
     EXPECT_TRUE(test::all_close_f(
         vector<float>({expected}), vector<float>({upper_bound}), mantissa_bits, tolerance_bits))
-        << ss.str();
+        << ss.str() << "\n"
+        << co.release();
     EXPECT_TRUE(test::close_f(expected, lower_bound, mantissa_bits, tolerance_bits)) << ss.str();
     EXPECT_TRUE(test::all_close_f(
         vector<float>({expected}), vector<float>({lower_bound}), mantissa_bits, tolerance_bits))
-        << ss.str();
+        << ss.str() << "\n"
+        << co.release();
     EXPECT_FALSE(test::close_f(expected, past_upper_bound, mantissa_bits, tolerance_bits))
-        << ss.str();
+        << ss.str() << "\n"
+        << co.release();
     EXPECT_FALSE(test::all_close_f(vector<float>({expected}),
                                    vector<float>({past_upper_bound}),
                                    mantissa_bits,
                                    tolerance_bits))
-        << ss.str();
+        << ss.str() << "\n"
+        << co.release();
     EXPECT_FALSE(test::close_f(expected, past_lower_bound, mantissa_bits, tolerance_bits))
-        << ss.str();
+        << ss.str() << "\n"
+        << co.release();
     EXPECT_FALSE(test::all_close_f(vector<float>({expected}),
                                    vector<float>({past_lower_bound}),
                                    mantissa_bits,
                                    tolerance_bits))
-        << ss.str();
+        << ss.str() << "\n"
+        << co.release();
 }
 
 // Avoid warning with how gtest defines INSTANTIATE_TEST_CASE_P
@@ -282,6 +290,8 @@ protected:
 
 TEST_P(all_close_f_double_param_test, test_boundaries)
 {
+    cout_redirect co;
+
     // Print short string documenting which test is being run
     std::cout << "[   INFO   ] Test params: (" << expected << ", " << tolerance_bits << ")\n";
 
@@ -301,19 +311,23 @@ TEST_P(all_close_f_double_param_test, test_boundaries)
     EXPECT_TRUE(test::close_f(expected, upper_bound, tolerance_bits)) << ss.str();
     EXPECT_TRUE(test::all_close_f(
         vector<double>({expected}), vector<double>({upper_bound}), tolerance_bits))
-        << ss.str();
+        << ss.str() << "\n"
+        << co.release();
     EXPECT_TRUE(test::close_f(expected, lower_bound, tolerance_bits)) << ss.str();
     EXPECT_TRUE(test::all_close_f(
         vector<double>({expected}), vector<double>({lower_bound}), tolerance_bits))
-        << ss.str();
+        << ss.str() << "\n"
+        << co.release();
     EXPECT_FALSE(test::close_f(expected, past_upper_bound, tolerance_bits)) << ss.str();
     EXPECT_FALSE(test::all_close_f(
         vector<double>({expected}), vector<double>({past_upper_bound}), tolerance_bits))
-        << ss.str();
+        << ss.str() << "\n"
+        << co.release();
     EXPECT_FALSE(test::close_f(expected, past_lower_bound, tolerance_bits)) << ss.str();
     EXPECT_FALSE(test::all_close_f(
         vector<double>({expected}), vector<double>({past_lower_bound}), tolerance_bits))
-        << ss.str();
+        << ss.str() << "\n"
+        << co.release();
 }
 
 // Avoid warning with how gtest defines INSTANTIATE_TEST_CASE_P
