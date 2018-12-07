@@ -139,6 +139,21 @@ static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t out
     }
 }
 
+static void
+    memory_size_check(size_t memory_size, const shared_ptr<Node>& node, const string& function_name)
+{
+    const size_t tensor_size = shape_size(node->get_shape()) * node->get_element_type().size();
+
+    if (memory_size != tensor_size)
+    {
+        ostringstream os;
+        os << "IntelGPU backend failed memory check. In \"" << function_name << "\" with Node \""
+           << node->get_name() << "\" and " << node->get_shape() << " mismatched memory sizes "
+           << tensor_size << " and " << memory_size;
+        throw invalid_argument(os.str());
+    }
+}
+
 static const string& get_input_name(const shared_ptr<Node>& op, size_t num = 0)
 {
     return op->get_inputs().at(num).get_tensor().get_name();
@@ -685,28 +700,30 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
 
             if (get_input_type(op) == element::f32 && get_input_type(op, 1) == element::f32 &&
                 get_output_type(op) == element::f32 && input0_elem_count && input1_elem_count &&
-                (axes_count == 1) && (input0_shape.size() < 3) && (input1_shape.size() < 3) &&
-                !input0_shape.empty() && !input1_shape.empty())
+                (axes_count < 2) && (input0_shape.size() < 3) && (input1_shape.size() < 3))
             {
-                string input1_name = get_input_name(op, 1);
+                bool transpose0 = false;
+                bool transpose1 = false;
+
+                // If we have A[5] and B[] here, in cldnn we have A[1, 1, 1, 5] and B[1, 1, 1, 1]
+                // it needs to be reshaped into A[1, 1, 5, 1] and B[1, 1, 1, 1]
+                if ((input0_shape.size() == 1) && input1_shape.empty())
+                {
+                    transpose0 = true;
+                }
 
                 // If we have A[5] and B[5] here, in cldnn we have A[1, 1, 1, 5] and B[1, 1, 1, 5]
                 // it needs to be reshaped into A[1, 1, 1, 5] and B[1, 1, 5, 1]
                 if (!input0_shape.empty() && (input1_shape.size() == 1))
                 {
-                    const string new_name = input1_name + "_reshaped";
-                    Shape new_shape = input1_shape;
-                    new_shape.push_back(1);
-                    const cldnn::tensor reshaped_tensor =
-                        intelgpu_space::create_cldnn_tensor(new_shape);
-
-                    const cldnn::reshape reshape_op(new_name, input1_name, reshaped_tensor);
-                    topology.add(reshape_op);
-
-                    input1_name = new_name;
+                    transpose1 = true;
                 }
 
-                const cldnn::gemm dot_op(get_output_name(op), get_input_name(op, 0), input1_name);
+                const cldnn::gemm dot_op(get_output_name(op),
+                                         get_input_name(op, 0),
+                                         get_input_name(op, 1),
+                                         transpose0,
+                                         transpose1);
                 topology.add(dot_op);
             }
             else
@@ -1782,11 +1799,22 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     // we try to match them by index number in vectors.
     for (size_t i = 0; i < func->get_output_size(); i++)
     {
+        const shared_ptr<Node>& dst_node = func->get_output_op(i);
+        const size_t dst_shape_size = shape_size(dst_node->get_shape());
+
+        // We should not touch destination memory if it is not existed
+        if (!dst_shape_size)
+        {
+            continue;
+        }
+
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> ngraph_res =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(outputs[i]);
-        const string& tensor_name = get_input_name(func->get_output_op(i));
-
+        const string& tensor_name = get_input_name(dst_node);
         auto result_memory = result.at(tensor_name).get_memory().pointer<char>();
+
+        memory_size_check(result_memory.size(), dst_node, func->get_name());
+
         ngraph_res->write(result_memory.data(), 0, result_memory.size());
     }
 

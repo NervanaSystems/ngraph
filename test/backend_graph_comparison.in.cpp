@@ -45,98 +45,178 @@ class serialized_graph_files : public ::testing::TestWithParam<string>
 public:
     void compare_results(NodeVector& result_nodes,
                          vector<shared_ptr<runtime::Tensor>> ref_results,
-                         vector<shared_ptr<runtime::Tensor>> bk_results)
+                         vector<shared_ptr<runtime::Tensor>> bk_results,
+                         vector<shared_ptr<runtime::Tensor>> bk_isolated_results)
     {
         for (int i = 0; i < ref_results.size(); ++i)
         {
             const shared_ptr<runtime::Tensor>& ref_data = ref_results.at(i);
             const shared_ptr<runtime::Tensor>& bk_data = bk_results.at(i);
+            const shared_ptr<runtime::Tensor>& bk_isolated_data = bk_isolated_results.at(i);
 
-            cout << "Comparing results for " << result_nodes.at(i)->get_name() << endl;
-            if (auto node = dynamic_pointer_cast<op::GetOutputElement>(result_nodes.at(i)))
+            std::shared_ptr<ngraph::Node> result_node = result_nodes.at(i);
+            cout << "Comparing results for " << result_node->get_name() << endl;
+            if (result_node->get_arguments().size() > 0)
             {
-                cout << "  Parent node: ";
-                for (auto& p : node->get_arguments())
+                cout << "  inputs:" << endl;
+                for (auto& p : result_node->get_arguments())
                 {
-                    cout << " " << p->get_name() << endl;
-                    cout << "   nargs: " << p->get_arguments().size() << endl;
+                    cout << "    " << p->get_name() << " " << p->get_element_type() << endl;
                 }
             }
 
+            // Ensure the element types and shapes match between reference and backend
             ASSERT_EQ(ref_data->get_element_type(), bk_data->get_element_type());
+            ASSERT_EQ(ref_data->get_element_type(), bk_isolated_data->get_element_type());
             ASSERT_EQ(ref_data->get_element_count(), bk_data->get_element_count());
+            ASSERT_EQ(ref_data->get_element_count(), bk_isolated_data->get_element_count());
             ASSERT_EQ(ref_data->get_shape(), bk_data->get_shape());
+            ASSERT_EQ(ref_data->get_shape(), bk_isolated_data->get_shape());
+
+            cout << "  output type:       " << ref_data->get_element_type() << endl;
+            cout << "  output shape:      " << ref_data->get_shape() << endl;
+            cout << "  output # elements: " << ref_data->get_element_count() << endl;
 
             element::Type et = ref_data->get_element_type();
             if (et == element::boolean)
             {
                 vector<char> ref_data_vector = read_vector<char>(ref_data);
                 vector<char> bk_data_vector = read_vector<char>(bk_data);
+                vector<char> bk_isolated_data_vector = read_vector<char>(bk_isolated_data);
+                cout << "Test backed op run w/ original graph dependencies:" << endl;
                 print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<char>(ref_data_vector, bk_data_vector));
+                bool all_close_graph = test::all_close<char>(ref_data_vector, bk_data_vector);
+                cout << "Test backed op run isolated w/ inputs from ref graph run:" << endl;
+                print_results(ref_data_vector, bk_isolated_data_vector);
+                bool all_close_isolated =
+                    test::all_close<char>(ref_data_vector, bk_isolated_data_vector);
+                EXPECT_TRUE(all_close_graph && all_close_isolated);
             }
             else if ((et == element::f32) || (et == element::f64))
             {
                 vector<float> ref_data_vector = read_float_vector(ref_data);
                 vector<float> bk_data_vector = read_float_vector(bk_data);
+                vector<float> bk_isolated_data_vector = read_float_vector(bk_isolated_data);
+                cout << "Test backed op run w/ original graph dependencies:" << endl;
                 print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close_f(ref_data_vector, bk_data_vector));
+                bool all_close_graph = test::all_close_f(ref_data_vector, bk_data_vector);
+                cout << "Test backed op run isolated w/ inputs from ref graph run:" << endl;
+                print_results(ref_data_vector, bk_isolated_data_vector);
+                bool all_close_isolated =
+                    test::all_close_f(ref_data_vector, bk_isolated_data_vector);
+                EXPECT_TRUE(all_close_graph && all_close_isolated);
             }
             else if (et == element::i8)
             {
                 vector<int8_t> ref_data_vector = read_vector<int8_t>(ref_data);
                 vector<int8_t> bk_data_vector = read_vector<int8_t>(bk_data);
+                vector<int8_t> bk_isolated_data_vector = read_vector<int8_t>(bk_isolated_data);
+                cout << "Test backed op run w/ original graph dependencies:" << endl;
                 print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<int8_t>(ref_data_vector, bk_data_vector));
+                bool all_close_graph = test::all_close<int8_t>(ref_data_vector, bk_data_vector);
+                cout << "Test backed op run isolated w/ inputs from ref graph run:" << endl;
+                print_results(ref_data_vector, bk_isolated_data_vector);
+                bool all_close_isolated =
+                    test::all_close<int8_t>(ref_data_vector, bk_isolated_data_vector);
+                EXPECT_TRUE(all_close_graph && all_close_isolated);
             }
             else if (et == element::i16)
             {
                 vector<int16_t> ref_data_vector = read_vector<int16_t>(ref_data);
                 vector<int16_t> bk_data_vector = read_vector<int16_t>(bk_data);
+                vector<int16_t> bk_isolated_data_vector = read_vector<int16_t>(bk_isolated_data);
+                cout << "Test backed op run w/ original graph dependencies:" << endl;
                 print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<int16_t>(ref_data_vector, bk_data_vector));
+                bool all_close_graph = test::all_close<int16_t>(ref_data_vector, bk_data_vector);
+                cout << "Test backed op run isolated w/ inputs from ref graph run:" << endl;
+                print_results(ref_data_vector, bk_isolated_data_vector);
+                bool all_close_isolated =
+                    test::all_close<int16_t>(ref_data_vector, bk_isolated_data_vector);
+                EXPECT_TRUE(all_close_graph && all_close_isolated);
             }
             else if (et == element::i32)
             {
                 vector<int32_t> ref_data_vector = read_vector<int32_t>(ref_data);
                 vector<int32_t> bk_data_vector = read_vector<int32_t>(bk_data);
+                vector<int32_t> bk_isolated_data_vector = read_vector<int32_t>(bk_isolated_data);
+                cout << "Test backed op run w/ original graph dependencies:" << endl;
                 print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<int32_t>(ref_data_vector, bk_data_vector));
+                bool all_close_graph = test::all_close<int32_t>(ref_data_vector, bk_data_vector);
+                cout << "Test backed op run isolated w/ inputs from ref graph run:" << endl;
+                print_results(ref_data_vector, bk_isolated_data_vector);
+                bool all_close_isolated =
+                    test::all_close<int32_t>(ref_data_vector, bk_isolated_data_vector);
+                EXPECT_TRUE(all_close_graph && all_close_isolated);
             }
             else if (et == element::i64)
             {
                 vector<int64_t> ref_data_vector = read_vector<int64_t>(ref_data);
                 vector<int64_t> bk_data_vector = read_vector<int64_t>(bk_data);
+                vector<int64_t> bk_isolated_data_vector = read_vector<int64_t>(bk_isolated_data);
+                cout << "Test backed op run w/ original graph dependencies:" << endl;
                 print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<int64_t>(ref_data_vector, bk_data_vector));
+                bool all_close_graph = test::all_close<int64_t>(ref_data_vector, bk_data_vector);
+                cout << "Test backed op run isolated w/ inputs from ref graph run:" << endl;
+                print_results(ref_data_vector, bk_isolated_data_vector);
+                bool all_close_isolated =
+                    test::all_close<int64_t>(ref_data_vector, bk_isolated_data_vector);
+                EXPECT_TRUE(all_close_graph && all_close_isolated);
             }
             else if (et == element::u8)
             {
                 vector<uint8_t> ref_data_vector = read_vector<uint8_t>(ref_data);
                 vector<uint8_t> bk_data_vector = read_vector<uint8_t>(bk_data);
+                vector<uint8_t> bk_isolated_data_vector = read_vector<uint8_t>(bk_isolated_data);
+                cout << "Test backed op run w/ original graph dependencies:" << endl;
                 print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<uint8_t>(ref_data_vector, bk_data_vector));
+                bool all_close_graph = test::all_close<uint8_t>(ref_data_vector, bk_data_vector);
+                cout << "Test backed op run isolated w/ inputs from ref graph run:" << endl;
+                print_results(ref_data_vector, bk_isolated_data_vector);
+                bool all_close_isolated =
+                    test::all_close<uint8_t>(ref_data_vector, bk_isolated_data_vector);
+                EXPECT_TRUE(all_close_graph && all_close_isolated);
             }
             else if (et == element::u16)
             {
                 vector<uint16_t> ref_data_vector = read_vector<uint16_t>(ref_data);
                 vector<uint16_t> bk_data_vector = read_vector<uint16_t>(bk_data);
+                vector<uint16_t> bk_isolated_data_vector = read_vector<uint16_t>(bk_isolated_data);
+                cout << "Test backed op run w/ original graph dependencies:" << endl;
                 print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<uint16_t>(ref_data_vector, bk_data_vector));
+                bool all_close_graph = test::all_close<uint16_t>(ref_data_vector, bk_data_vector);
+                cout << "Test backed op run isolated w/ inputs from ref graph run:" << endl;
+                print_results(ref_data_vector, bk_isolated_data_vector);
+                bool all_close_isolated =
+                    test::all_close<uint16_t>(ref_data_vector, bk_isolated_data_vector);
+                EXPECT_TRUE(all_close_graph && all_close_isolated);
             }
             else if (et == element::u32)
             {
                 vector<uint32_t> ref_data_vector = read_vector<uint32_t>(ref_data);
                 vector<uint32_t> bk_data_vector = read_vector<uint32_t>(bk_data);
+                vector<uint32_t> bk_isolated_data_vector = read_vector<uint32_t>(bk_isolated_data);
+                cout << "Test backed op run w/ original graph dependencies:" << endl;
                 print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<uint32_t>(ref_data_vector, bk_data_vector));
+                bool all_close_graph = test::all_close<uint32_t>(ref_data_vector, bk_data_vector);
+                cout << "Test backed op run isolated w/ inputs from ref graph run:" << endl;
+                print_results(ref_data_vector, bk_isolated_data_vector);
+                bool all_close_isolated =
+                    test::all_close<uint32_t>(ref_data_vector, bk_isolated_data_vector);
+                EXPECT_TRUE(all_close_graph && all_close_isolated);
             }
             else if (et == element::u64)
             {
                 vector<uint64_t> ref_data_vector = read_vector<uint64_t>(ref_data);
                 vector<uint64_t> bk_data_vector = read_vector<uint64_t>(bk_data);
+                vector<uint64_t> bk_isolated_data_vector = read_vector<uint64_t>(bk_isolated_data);
+                cout << "Test backed op run w/ original graph dependencies:" << endl;
                 print_results(ref_data_vector, bk_data_vector);
-                EXPECT_TRUE(test::all_close<uint64_t>(ref_data_vector, bk_data_vector));
+                bool all_close_graph = test::all_close<uint64_t>(ref_data_vector, bk_data_vector);
+                cout << "Test backed op run isolated w/ inputs from ref graph run:" << endl;
+                print_results(ref_data_vector, bk_isolated_data_vector);
+                bool all_close_isolated =
+                    test::all_close<uint64_t>(ref_data_vector, bk_isolated_data_vector);
+                EXPECT_TRUE(all_close_graph && all_close_isolated);
             }
             else
             {
@@ -173,6 +253,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     stringstream ss(frozen_graph_path);
     shared_ptr<Function> func = ngraph::deserialize(ss);
 
+    // Collect set of results to run two back ends with intermediate results set as outputs
     NodeVector new_results;
     for (auto n : func->get_ordered_ops())
     {
@@ -185,7 +266,42 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
         }
     }
 
-    //no need to include original results they are subsumed by new_results
+    // Collect set of parameters and results to run test backend with isolated
+    // inputs which will be copied from the reference backend outputs
+    ParameterVector isolated_parameters = func->get_parameters();
+    NodeVector isolated_results;
+    unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>> isolated_node_to_original_node;
+    for (auto n : func->get_ordered_ops())
+    {
+        // Don't include op::Results otherwise Function c-tor will complain
+        if (!n->is_output() && !n->is_parameter() && !n->is_constant() &&
+            !(n->get_outputs().size() > 1))
+        {
+            NodeVector isolated_op_args;
+            for (auto arg : n->get_arguments())
+            {
+                if (!arg->is_output() && !arg->is_parameter() && !arg->is_constant() &&
+                    !(arg->get_outputs().size() > 1))
+                {
+                    // Create new isolated arg which we'll fill in with reference results
+                    auto isolated_param =
+                        make_shared<op::Parameter>(arg->get_element_type(), arg->get_shape());
+                    isolated_op_args.push_back(isolated_param);
+                    isolated_parameters.push_back(isolated_param);
+                    isolated_node_to_original_node[isolated_param.get()] = arg;
+                }
+                else
+                {
+                    // It's not an output in the reference results - use the original arg
+                    isolated_op_args.push_back(arg);
+                }
+            }
+            auto isolated_op = n->copy_with_new_args(isolated_op_args);
+            isolated_results.push_back(isolated_op);
+        }
+    }
+
+    // No need to include original results they are subsumed by new_results
     auto new_func = make_shared<Function>(new_results, func->get_parameters());
 
     auto ref_func = clone_function(*new_func);
@@ -211,6 +327,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
 
     vector<shared_ptr<runtime::Tensor>> ref_results;
     vector<shared_ptr<runtime::Tensor>> bk_results;
+    unordered_map<ngraph::Node*, shared_ptr<runtime::Tensor>> arg_to_ref_result;
 
     ref_results.reserve(new_results.size());
     bk_results.reserve(new_results.size());
@@ -219,6 +336,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     {
         auto ref_result = ref->create_tensor(out->get_element_type(), out->get_shape());
         ref_results.push_back(ref_result);
+        arg_to_ref_result[out.get()] = ref_result;
         auto bk_result = backend->create_tensor(out->get_element_type(), out->get_shape());
         bk_results.push_back(bk_result);
     }
@@ -246,7 +364,51 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     ref->call_with_validate(ref->compile(ref_func), ref_results, ref_args);
     backend->call_with_validate(backend->compile(bk_func), bk_results, bk_args);
 
-    compare_results(new_results, ref_results, bk_results);
+    // Now create isolated function for backend being tested where each node of the
+    // original graph is tested with inputs copied from reference backend rather
+    // than original dependencies.
+    //auto bk_isolated_func = clone_function(Function(isolated_results, isolated_parameters));
+    auto bk_isolated_func = make_shared<Function>(isolated_results, isolated_parameters);
+
+    // We'll leverage the bk_args we already used above (for same original parameter data values)
+    // and then tack on new data copied (whenever possible) from the reference backend results.
+    auto& isolated_params = bk_isolated_func->get_parameters();
+    for (auto parameter_it = isolated_params.begin() + new_func->get_parameters().size();
+         parameter_it != isolated_params.end();
+         ++parameter_it)
+    {
+        auto param = *parameter_it;
+        bool found_reference_data = false;
+        auto original_node_it = isolated_node_to_original_node.find(param.get());
+        if (original_node_it != isolated_node_to_original_node.end())
+        {
+            auto ref_tensor_it = arg_to_ref_result.find(original_node_it->second.get());
+            if (ref_tensor_it != arg_to_ref_result.end())
+            {
+                found_reference_data = true;
+                auto ref_tensor = ref_tensor_it->second;
+                auto data = make_shared<ngraph::runtime::HostTensor>(param->get_element_type(),
+                                                                     param->get_shape());
+                auto bk_tensor =
+                    backend->create_tensor(param->get_element_type(), param->get_shape());
+                size_t size_in_bytes = ref_tensor->get_size_in_bytes();
+                ref_tensor->read(data->get_data_ptr(), 0, size_in_bytes);
+                bk_tensor->write(data->get_data_ptr(), 0, size_in_bytes);
+                bk_args.push_back(bk_tensor);
+            }
+        }
+        ASSERT_TRUE(found_reference_data);
+    }
+    vector<shared_ptr<runtime::Tensor>> bk_isolated_results;
+    bk_isolated_results.reserve(isolated_results.size());
+    for (shared_ptr<Node>& out : isolated_results)
+    {
+        auto bk_result = backend->create_tensor(out->get_element_type(), out->get_shape());
+        bk_isolated_results.push_back(bk_result);
+    }
+    backend->call_with_validate(bk_isolated_func, bk_isolated_results, bk_args);
+
+    compare_results(new_results, ref_results, bk_results, bk_isolated_results);
 }
 
 // The set of graphs tested is not currently significant. These graphs were
