@@ -20,14 +20,6 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
-#if defined(NGRAPH_CPU_ENABLE)
-#include "ngraph/runtime/cpu/cpu_backend.hpp"
-#endif
-
-#if defined(NGRAPH_INTERPRETER_ENABLE)
-#include "ngraph/runtime/interpreter/int_backend.hpp"
-#endif
-
 using namespace ngraph;
 using namespace std;
 
@@ -56,15 +48,6 @@ runtime::hybrid::HybridBackend::HybridBackend(
     const std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>>& backend_list)
     : m_backend_list{backend_list}
 {
-// TODO: add a priority queue to manipulate backend lists based on priority
-#if defined(NGRAPH_CPU_ENABLE)
-    m_backend_list.push_back(make_pair("CPU", make_shared<runtime::cpu::CPU_Backend>()));
-#endif
-
-#if defined(NGRAPH_INTERPRETER_ENABLE)
-    m_backend_list.push_back(
-        make_pair("INTERPRETER", make_shared<runtime::interpreter::INTBackend>()));
-#endif
 }
 
 shared_ptr<runtime::Tensor>
@@ -125,14 +108,9 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
 {
     // Get FunctionInstance
     bool rc = true;
+    compile(func);
 
     auto it = m_function_map.find(func);
-    if (it == m_function_map.end())
-    {
-        compile(func);
-        it = m_function_map.find(func);
-    }
-
     if (it == m_function_map.end())
     {
         throw runtime_error("Unable to compile hybrid backend");

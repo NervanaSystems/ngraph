@@ -147,9 +147,3 @@ vector<runtime::PerformanceCounter>
     }
     return rc;
 }
-
-bool runtime::cpu::CPU_Backend::is_supported(const Node& node) const
-{
-    // TODO : return false for unsupported CPU backend ops
-    return true;
-}

@@ -102,14 +102,6 @@ option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 
-if (NGRAPH_HYBRID_ENABLE)
-    # hybrid configurations : 
-    if (NOT NGRAPH_INTERPRETER_ENABLE)
-        # always build Interpreter for hybrid 
-        set(NGRAPH_INTERPRETER_ENABLE TRUE)
-    endif()
-endif()
-
 if (NGRAPH_HYBRID_GPU_ENABLE)
     # hybrid GPU configurations : 
     if (NOT NGRAPH_INTERPRETER_ENABLE)

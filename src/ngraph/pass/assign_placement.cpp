@@ -44,7 +44,6 @@ bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
             if (backend->is_supported(*node))
             {
                 node->set_placement(backend_index);
-                NGRAPH_INFO<< "placement for "<< node->description() << " is " << backend_index ;                return false;
                 return false;
             }
         }
