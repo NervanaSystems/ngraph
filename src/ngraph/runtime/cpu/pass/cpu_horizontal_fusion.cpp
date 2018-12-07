@@ -188,6 +188,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(conv_bias, callback);
+    auto m = make_shared<pattern::Matcher>(
+        conv_bias, callback, "CPUHorizontalFusion.CpuConvHorizontalFusion");
     this->add_matcher(m);
 }

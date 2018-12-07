@@ -300,6 +300,9 @@ bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
                 NGRAPH_DEBUG << "Propagating " << describe_reshape(reorders.at(left)) << " for "
                              << n->get_name();
                 reorders[n] = reorders.at(left);
+                //at this point, both reshapes will be eventually removed
+                mark_reshape_for_deletion(reorders.at(left), reshapes_to_delete);
+                mark_reshape_for_deletion(reorders.at(right), reshapes_to_delete);
             }
             else if (reorders.at(left)->get_input_order() ==
                      ngraph::get_default_order(left->get_shape()))
