@@ -29,31 +29,31 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void convolution(const T* arg0,
-                             const T* arg1,
-                             T* out,
-                             const Shape& arg0_shape,
-                             const Shape& arg1_shape,
-                             const Shape& out_shape,
-                             const Strides& window_movement_strides,
-                             const Strides& window_dilation_strides,
-                             const CoordinateDiff& padding_below,
-                             const CoordinateDiff& padding_above,
-                             const Strides& data_dilation_strides,
-                             size_t batch_axis_data,
-                             size_t input_channel_axis_data,
-                             size_t input_channel_axis_filters,
-                             size_t output_channel_axis_filters,
-                             size_t batch_axis_result,
-                             size_t output_channel_axis_result,
-                             bool rotate_filter)
+            void general_convolution(const T* data_batch,
+                                     const T* filters,
+                                     T* out,
+                                     const Shape& data_batch_shape,
+                                     const Shape& filters_shape,
+                                     const Shape& out_shape,
+                                     const Strides& window_movement_strides,
+                                     const Strides& window_dilation_strides,
+                                     const CoordinateDiff& padding_below,
+                                     const CoordinateDiff& padding_above,
+                                     const Strides& data_dilation_strides,
+                                     size_t batch_axis_data,
+                                     size_t data_batch_channel_axis_data,
+                                     size_t data_batch_channel_axis_filters,
+                                     size_t output_channel_axis_filters,
+                                     size_t batch_axis_result,
+                                     size_t output_channel_axis_result,
+                                     bool rotate_filter)
             {
                 // Comments throughout assume without loss of generality that:
                 //
-                // * batch axes for both input data and output data are 0
-                // * input channel axes for both input data and filters are 1
+                // * batch axes for both data_batch and output are 0
+                // * data_batch channel axes for both data_batch and filters are 1
                 // * output channel axes for filters is 0
-                // * output channel axis for output data is 1
+                // * output channel axis for output is 1
                 // * rotate_filter is false
 
                 // At the outermost level we will walk over every output coordinate O.
@@ -68,7 +68,7 @@ namespace ngraph
                     size_t batch_index = out_coord[batch_axis_result];
                     size_t output_channel = out_coord[output_channel_axis_result];
 
-                    // For the input data we need to iterate the coordinate:
+                    // For the data_batch we need to iterate the coordinate:
                     //
                     //   I:
                     //
@@ -85,20 +85,25 @@ namespace ngraph
                     // Note that we are iterating within the *padded* and *dilated* data batch, so further
                     // down we must check the current coordinate is in the padding or dilation gap.
 
-                    size_t n_spatial_dimensions = arg0_shape.size() - 2;
-                    size_t n_input_channels = arg0_shape[input_channel_axis_data];
+                    size_t n_spatial_dimensions = data_batch_shape.size() - 2;
+                    size_t n_data_batch_channels = data_batch_shape[data_batch_channel_axis_data];
 
-                    Coordinate input_batch_transform_start(2 + n_spatial_dimensions);
-                    Coordinate input_batch_transform_end(2 + n_spatial_dimensions);
-                    Strides input_batch_transform_movement_strides(2 + n_spatial_dimensions, 1);
-                    CoordinateDiff input_batch_transform_padding_below(2 + n_spatial_dimensions, 0);
-                    CoordinateDiff input_batch_transform_padding_above(2 + n_spatial_dimensions, 0);
-                    Strides input_batch_transform_dilation_strides(2 + n_spatial_dimensions, 1);
+                    Coordinate data_batch_batch_transform_start(2 + n_spatial_dimensions);
+                    Coordinate data_batch_batch_transform_end(2 + n_spatial_dimensions);
+                    Strides data_batch_batch_transform_movement_strides(2 + n_spatial_dimensions,
+                                                                        1);
+                    CoordinateDiff data_batch_batch_transform_padding_below(
+                        2 + n_spatial_dimensions, 0);
+                    CoordinateDiff data_batch_batch_transform_padding_above(
+                        2 + n_spatial_dimensions, 0);
+                    Strides data_batch_batch_transform_dilation_strides(2 + n_spatial_dimensions,
+                                                                        1);
 
-                    input_batch_transform_start[batch_axis_data] = batch_index;
-                    input_batch_transform_end[batch_axis_data] = batch_index + 1;
-                    input_batch_transform_start[input_channel_axis_data] = 0;
-                    input_batch_transform_end[input_channel_axis_data] = n_input_channels;
+                    data_batch_batch_transform_start[batch_axis_data] = batch_index;
+                    data_batch_batch_transform_end[batch_axis_data] = batch_index + 1;
+                    data_batch_batch_transform_start[data_batch_channel_axis_data] = 0;
+                    data_batch_batch_transform_end[data_batch_channel_axis_data] =
+                        n_data_batch_channels;
 
                     for (size_t i = 2; i < n_spatial_dimensions + 2; i++)
                     {
@@ -108,31 +113,31 @@ namespace ngraph
                         std::ptrdiff_t above_pad = padding_above[i - 2];
                         size_t data_dilation_stride = data_dilation_strides[i - 2];
 
-                        input_batch_transform_start[i] = window_movement_stride * out_coord[i];
-                        input_batch_transform_end[i] =
-                            input_batch_transform_start[i] +
-                            (arg1_shape[i] - 1) * window_dilation_stride + 1;
-                        input_batch_transform_movement_strides[i] = window_dilation_stride;
-                        input_batch_transform_padding_below[i] = below_pad;
-                        input_batch_transform_padding_above[i] = above_pad;
-                        input_batch_transform_dilation_strides[i] = data_dilation_stride;
+                        data_batch_batch_transform_start[i] = window_movement_stride * out_coord[i];
+                        data_batch_batch_transform_end[i] =
+                            data_batch_batch_transform_start[i] +
+                            (filters_shape[i] - 1) * window_dilation_stride + 1;
+                        data_batch_batch_transform_movement_strides[i] = window_dilation_stride;
+                        data_batch_batch_transform_padding_below[i] = below_pad;
+                        data_batch_batch_transform_padding_above[i] = above_pad;
+                        data_batch_batch_transform_dilation_strides[i] = data_dilation_stride;
                     }
 
-                    AxisVector input_batch_transform_axis_order(2 + n_spatial_dimensions);
-                    for (size_t i = 0; i < input_batch_transform_axis_order.size(); i++)
+                    AxisVector data_batch_batch_transform_axis_order(2 + n_spatial_dimensions);
+                    for (size_t i = 0; i < data_batch_batch_transform_axis_order.size(); i++)
                     {
-                        input_batch_transform_axis_order[i] = i;
+                        data_batch_batch_transform_axis_order[i] = i;
                     }
 
-                    CoordinateTransform input_batch_transform(
-                        arg0_shape,
-                        input_batch_transform_start,
-                        input_batch_transform_end,
-                        input_batch_transform_movement_strides,
-                        input_batch_transform_axis_order,
-                        input_batch_transform_padding_below,
-                        input_batch_transform_padding_above,
-                        input_batch_transform_dilation_strides);
+                    CoordinateTransform data_batch_batch_transform(
+                        data_batch_shape,
+                        data_batch_batch_transform_start,
+                        data_batch_batch_transform_end,
+                        data_batch_batch_transform_movement_strides,
+                        data_batch_batch_transform_axis_order,
+                        data_batch_batch_transform_padding_below,
+                        data_batch_batch_transform_padding_above,
+                        data_batch_batch_transform_dilation_strides);
 
                     // Simultaneously with iterating I, for the filters we need to iterate the coordinate:
                     //
@@ -149,32 +154,34 @@ namespace ngraph
 
                     filter_transform_start[output_channel_axis_filters] = output_channel;
                     filter_transform_end[output_channel_axis_filters] = output_channel + 1;
-                    filter_transform_start[input_channel_axis_filters] = 0;
-                    filter_transform_end[input_channel_axis_filters] = n_input_channels;
+                    filter_transform_start[data_batch_channel_axis_filters] = 0;
+                    filter_transform_end[data_batch_channel_axis_filters] = n_data_batch_channels;
 
                     for (size_t i = 2; i < n_spatial_dimensions + 2; i++)
                     {
                         filter_transform_start[i] = 0;
-                        filter_transform_end[i] = arg1_shape[i];
+                        filter_transform_end[i] = filters_shape[i];
                     }
 
                     CoordinateTransform filter_transform(
-                        arg1_shape, filter_transform_start, filter_transform_end);
+                        filters_shape, filter_transform_start, filter_transform_end);
 
                     // As we go, we sum up:
                     //
-                    //   output[O] += arg0[I] * arg1[F].
+                    //   output[O] += data_batch[I] * filters[F].
 
                     T result = 0;
 
-                    CoordinateTransform::Iterator input_it = input_batch_transform.begin();
+                    CoordinateTransform::Iterator data_batch_it =
+                        data_batch_batch_transform.begin();
                     CoordinateTransform::Iterator filter_it = filter_transform.begin();
-                    CoordinateTransform::Iterator input_it_end = input_batch_transform.end();
+                    CoordinateTransform::Iterator data_batch_it_end =
+                        data_batch_batch_transform.end();
                     CoordinateTransform::Iterator filter_it_end = filter_transform.end();
 
-                    while (input_it != input_it_end && filter_it != filter_it_end)
+                    while (data_batch_it != data_batch_it_end && filter_it != filter_it_end)
                     {
-                        const Coordinate& input_batch_coord = *input_it;
+                        const Coordinate& data_batch_batch_coord = *data_batch_it;
                         Coordinate filter_coord = *filter_it;
 
                         if (rotate_filter)
@@ -189,18 +196,160 @@ namespace ngraph
                             }
                         }
 
-                        T v = input_batch_transform.has_source_coordinate(input_batch_coord)
-                                  ? arg0[input_batch_transform.index(input_batch_coord)]
-                                  : 0;
+                        T v =
+                            data_batch_batch_transform.has_source_coordinate(data_batch_batch_coord)
+                                ? data_batch[data_batch_batch_transform.index(
+                                      data_batch_batch_coord)]
+                                : 0;
 
-                        result += v * arg1[filter_transform.index(filter_coord)];
+                        result += v * filters[filter_transform.index(filter_coord)];
 
-                        ++input_it;
+                        ++data_batch_it;
                         ++filter_it;
                     }
 
                     out[output_transform.index(out_coord)] = result;
                 }
+            }
+
+            template <typename T>
+            void convolution(const T* data_batch,
+                             const T* filters,
+                             T* out,
+                             const Shape& data_batch_shape,
+                             const Shape& filters_shape,
+                             const Shape& out_shape,
+                             const Strides& window_movement_strides,
+                             const Strides& window_dilation_strides,
+                             const CoordinateDiff& padding_below,
+                             const CoordinateDiff& padding_above,
+                             const Strides& data_dilation_strides)
+            {
+                general_convolution(data_batch,
+                                    filters,
+                                    out,
+                                    data_batch_shape,
+                                    filters_shape,
+                                    out_shape,
+                                    window_movement_strides,
+                                    window_dilation_strides,
+                                    padding_below,
+                                    padding_above,
+                                    data_dilation_strides,
+                                    0,
+                                    1,
+                                    1,
+                                    0,
+                                    0,
+                                    1,
+                                    false);
+            }
+
+            template <typename T>
+            void convolution_backprop_filters(const T* data_batch,
+                                              const T* output_delta,
+                                              T* out,
+                                              const Shape& filters_shape,
+                                              const Shape& data_batch_shape,
+                                              const Shape& output_delta_shape,
+                                              const Shape& out_shape,
+                                              const Strides& window_dilation_strides,
+                                              const Strides& window_movement_strides,
+                                              const CoordinateDiff& padding_below,
+                                              const CoordinateDiff& padding_above,
+                                              const Strides& data_dilation_strides)
+            {
+                size_t spatial_dim_count = static_cast<size_t>(output_delta_shape.size()) - 2;
+                CoordinateDiff padding_above_backward;
+                padding_above_backward.resize(spatial_dim_count);
+
+                for (size_t i = 0; i < spatial_dim_count; i++)
+                {
+                    padding_above_backward[i] =
+                        padding_above[i] -
+                        (padding_below[i] +
+                         (static_cast<ptrdiff_t>(data_batch_shape[i + 2]) - 1) *
+                             data_dilation_strides[i] +
+                         padding_above[i] -
+                         (filters_shape[i + 2] - 1) * window_dilation_strides[i]) %
+                            window_movement_strides[i];
+                }
+
+                general_convolution(data_batch,
+                                    output_delta,
+                                    out,
+                                    data_batch_shape,
+                                    output_delta_shape,
+                                    out_shape,
+                                    window_dilation_strides,
+                                    window_movement_strides,
+                                    padding_below,
+                                    padding_above_backward,
+                                    data_dilation_strides,
+                                    1,
+                                    0,
+                                    0,
+                                    1,
+                                    1,
+                                    0,
+                                    false);
+            }
+
+            template <typename T>
+            void convolution_backprop_data(const T* output_delta,
+                                           const T* filters,
+                                           T* out,
+                                           const Shape& data_batch_shape,
+                                           const Shape& output_delta_shape,
+                                           const Shape& filters_shape,
+                                           const Shape& out_shape,
+                                           const Strides& data_dilation_strides,
+                                           const Strides& window_dilation_strides,
+                                           const CoordinateDiff& padding_below,
+                                           const CoordinateDiff& padding_above,
+                                           const Strides& window_movement_strides)
+            {
+                size_t spatial_dim_count = static_cast<size_t>(data_batch_shape.size()) - 2;
+
+                CoordinateDiff padding_below_backward;
+                padding_below_backward.resize(spatial_dim_count);
+                CoordinateDiff padding_above_backward;
+                padding_above_backward.resize(spatial_dim_count);
+
+                for (size_t i = 0; i < spatial_dim_count; i++)
+                {
+                    padding_below_backward[i] = (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) *
+                                                    window_dilation_strides[i] -
+                                                padding_below[i];
+                    padding_above_backward[i] =
+                        (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) *
+                            window_dilation_strides[i] +
+                        ((padding_below[i] +
+                          ((data_batch_shape[i + 2]) - 1) * data_dilation_strides[i] +
+                          padding_above[i] -
+                          (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) *
+                              window_dilation_strides[i]) %
+                         window_movement_strides[i]) -
+                        padding_above[i];
+                }
+                general_convolution(output_delta,
+                                    filters,
+                                    out,
+                                    output_delta_shape,
+                                    filters_shape,
+                                    out_shape,
+                                    data_dilation_strides,
+                                    window_dilation_strides,
+                                    padding_below_backward,
+                                    padding_above_backward,
+                                    window_movement_strides,
+                                    0,
+                                    1,
+                                    0,
+                                    1,
+                                    0,
+                                    1,
+                                    true);
             }
         }
     }

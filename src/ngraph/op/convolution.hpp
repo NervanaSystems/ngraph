@@ -220,32 +220,6 @@ namespace ngraph
                 return m_data_dilation_strides_forward;
             }
 
-            /// \return The window movement strides for the backward prop.
-            const Strides& get_window_movement_strides_backward() const
-            {
-                return m_window_movement_strides_backward;
-            }
-            /// \return The window dilation strides for the backward prop.
-            const Strides& get_window_dilation_strides_backward() const
-            {
-                return m_window_dilation_strides_backward;
-            }
-            /// \return The padding-below sizes (possibly negative) for the backward prop.
-            const CoordinateDiff& get_padding_below_backward() const
-            {
-                return m_padding_below_backward;
-            }
-            /// \return The padding-above sizes (possibly negative) for the backward prop.
-            const CoordinateDiff& get_padding_above_backward() const
-            {
-                return m_padding_above_backward;
-            }
-            /// \return The input data dilation strides for the backward prop.
-            const Strides& get_data_dilation_strides_backward() const
-            {
-                return m_data_dilation_strides_backward;
-            }
-
         protected:
             Shape m_data_batch_shape;
             Strides m_window_movement_strides_forward;
@@ -253,12 +227,6 @@ namespace ngraph
             CoordinateDiff m_padding_below_forward;
             CoordinateDiff m_padding_above_forward;
             Strides m_data_dilation_strides_forward;
-
-            Strides m_window_movement_strides_backward;
-            Strides m_window_dilation_strides_backward;
-            CoordinateDiff m_padding_below_backward;
-            CoordinateDiff m_padding_above_backward;
-            Strides m_data_dilation_strides_backward;
         };
 
         /// \brief Filters backprop for batched convolution operation.
@@ -317,32 +285,6 @@ namespace ngraph
                 return m_data_dilation_strides_forward;
             }
 
-            /// \return The window movement strides for the backward prop.
-            const Strides& get_window_movement_strides_backward() const
-            {
-                return m_window_movement_strides_backward;
-            }
-            /// \return The window dilation strides for the backward prop.
-            const Strides& get_window_dilation_strides_backward() const
-            {
-                return m_window_dilation_strides_backward;
-            }
-            /// \return The padding-below sizes (possibly negative) for the backward prop.
-            const CoordinateDiff& get_padding_below_backward() const
-            {
-                return m_padding_below_backward;
-            }
-            /// \return The padding-above sizes (possibly negative) for the backward prop.
-            const CoordinateDiff& get_padding_above_backward() const
-            {
-                return m_padding_above_backward;
-            }
-            /// \return The data dilation strides for the backward prop.
-            const Strides& get_data_dilation_strides_backward() const
-            {
-                return m_data_dilation_strides_backward;
-            }
-
         protected:
             Shape m_filters_shape;
             Strides m_window_movement_strides_forward;
@@ -350,12 +292,6 @@ namespace ngraph
             CoordinateDiff m_padding_below_forward;
             CoordinateDiff m_padding_above_forward;
             Strides m_data_dilation_strides_forward;
-
-            Strides m_window_movement_strides_backward;
-            Strides m_window_dilation_strides_backward;
-            CoordinateDiff m_padding_below_backward;
-            CoordinateDiff m_padding_above_backward;
-            Strides m_data_dilation_strides_backward;
         };
 
         namespace util

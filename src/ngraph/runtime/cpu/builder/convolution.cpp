@@ -99,14 +99,7 @@ namespace ngraph
                                window_dilation_strides,
                                padding_below,
                                padding_above,
-                               data_dilation_strides,
-                               0,
-                               1,
-                               1,
-                               0,
-                               0,
-                               1,
-                               false);
+                               data_dilation_strides);
                     };
                     functors.emplace_back(functor);
                 }
@@ -278,48 +271,45 @@ namespace ngraph
                 }
                 else
                 {
-                    std::function<decltype(runtime::cpu::kernel::convolution<float>)> kernel;
+                    std::function<decltype(runtime::cpu::kernel::convolution_backprop_data<float>)>
+                        kernel;
 
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::convolution);
-
-                    auto window_movement_strides =
-                        convolution->get_window_movement_strides_backward();
+                    SELECT_KERNEL(kernel,
+                                  out[0].get_element_type(),
+                                  runtime::cpu::kernel::convolution_backprop_data);
+                    auto& data_batch_shape = convolution->get_data_batch_shape();
+                    auto data_dilation_strides = convolution->get_data_dilation_strides_forward();
                     auto window_dilation_strides =
-                        convolution->get_window_dilation_strides_backward();
-                    auto padding_below = convolution->get_padding_below_backward();
-                    auto padding_above = convolution->get_padding_above_backward();
-                    auto data_dilation_strides = convolution->get_data_dilation_strides_backward();
+                        convolution->get_window_dilation_strides_forward();
+                    auto padding_below = convolution->get_padding_below_forward();
+                    auto padding_above = convolution->get_padding_above_forward();
+                    auto window_movement_strides =
+                        convolution->get_window_movement_strides_forward();
 
                     auto functor = [&,
                                     kernel,
+                                    data_batch_shape,
                                     arg0_shape,
                                     arg1_shape,
                                     result_shape,
-                                    window_movement_strides,
+                                    data_dilation_strides,
                                     window_dilation_strides,
                                     padding_below,
                                     padding_above,
-                                    data_dilation_strides](CPURuntimeContext* ctx,
-                                                           CPUExecutionContext* ectx) {
+                                    window_movement_strides](CPURuntimeContext* ctx,
+                                                             CPUExecutionContext* ectx) {
                         kernel(arg1_tensor,
                                arg0_tensor,
                                out_tensor,
+                               data_batch_shape,
                                arg1_shape,
                                arg0_shape,
                                result_shape,
-                               window_movement_strides,
+                               data_dilation_strides,
                                window_dilation_strides,
                                padding_below,
                                padding_above,
-                               data_dilation_strides,
-                               0,
-                               1,
-                               0,
-                               1,
-                               0,
-                               1,
-                               true);
+                               window_movement_strides);
                     };
                     functors.emplace_back(functor);
                 }
@@ -360,26 +350,31 @@ namespace ngraph
                 }
                 else
                 {
-                    std::function<decltype(runtime::cpu::kernel::convolution<float>)> kernel;
+                    std::function<decltype(
+                        runtime::cpu::kernel::convolution_backprop_filters<float>)>
+                        kernel;
 
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::convolution);
+                    SELECT_KERNEL(kernel,
+                                  out[0].get_element_type(),
+                                  runtime::cpu::kernel::convolution_backprop_filters);
 
-                    auto window_movement_strides =
-                        convolution->get_window_movement_strides_backward();
+                    auto& filters_shape = convolution->get_filters_shape();
                     auto window_dilation_strides =
-                        convolution->get_window_dilation_strides_backward();
-                    auto padding_below = convolution->get_padding_below_backward();
-                    auto padding_above = convolution->get_padding_above_backward();
-                    auto data_dilation_strides = convolution->get_data_dilation_strides_backward();
+                        convolution->get_window_dilation_strides_forward();
+                    auto window_movement_strides =
+                        convolution->get_window_movement_strides_forward();
+                    auto padding_below = convolution->get_padding_below_forward();
+                    auto padding_above = convolution->get_padding_above_forward();
+                    auto data_dilation_strides = convolution->get_data_dilation_strides_forward();
 
                     auto functor = [&,
                                     kernel,
+                                    filters_shape,
                                     arg0_shape,
                                     arg1_shape,
                                     result_shape,
-                                    window_movement_strides,
                                     window_dilation_strides,
+                                    window_movement_strides,
                                     padding_below,
                                     padding_above,
                                     data_dilation_strides](CPURuntimeContext* ctx,
@@ -387,6 +382,7 @@ namespace ngraph
                         kernel(arg0_tensor,
                                arg1_tensor,
                                out_tensor,
+                               filters_shape,
                                arg0_shape,
                                arg1_shape,
                                result_shape,
@@ -394,14 +390,7 @@ namespace ngraph
                                window_dilation_strides,
                                padding_below,
                                padding_above,
-                               data_dilation_strides,
-                               1,
-                               0,
-                               0,
-                               1,
-                               1,
-                               0,
-                               false);
+                               data_dilation_strides);
                     };
                     functors.emplace_back(functor);
                 }
