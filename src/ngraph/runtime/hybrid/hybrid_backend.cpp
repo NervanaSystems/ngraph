@@ -18,6 +18,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/pass/assign_placement.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/hybrid/hybrid_util.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 using namespace ngraph;

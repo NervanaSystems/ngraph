@@ -157,7 +157,6 @@ set (SRC
     runtime/backend_manager.cpp
     runtime/backend.cpp
     runtime/host_tensor.cpp
-    runtime/hybrid_util.cpp
     runtime/tensor.cpp
     serializer.cpp
     shape_util.cpp

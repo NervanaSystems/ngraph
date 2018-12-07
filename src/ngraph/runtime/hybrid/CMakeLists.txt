@@ -15,7 +15,7 @@
 # ******************************************************************************
 
 if (NGRAPH_HYBRID_ENABLE)
-    add_library(hybrid_backend SHARED hybrid_backend.cpp)
+    add_library(hybrid_backend SHARED hybrid_backend.cpp hybrid_util.cpp)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(hybrid_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}

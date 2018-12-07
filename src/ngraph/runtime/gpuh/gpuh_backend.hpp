@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 
 namespace ngraph
 {
@@ -34,40 +34,8 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::gpuh::GPUHBackend : public ngraph::runtime::Backend
+class ngraph::runtime::gpuh::GPUHBackend : public ngraph::runtime::hybrid::HybridBackend
 {
 public:
-    GPUHBackend(
-        const std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>>& backend_list);
-
-    std::shared_ptr<ngraph::runtime::Tensor>
-        create_tensor(const ngraph::element::Type& element_type,
-                      const ngraph::Shape& shape) override;
-
-    std::shared_ptr<ngraph::runtime::Tensor>
-        create_tensor(const ngraph::element::Type& element_type,
-                      const ngraph::Shape& shape,
-                      void* memory_pointer) override;
-
-    Handle compile(std::shared_ptr<ngraph::Function> func) override;
-
-    bool call(std::shared_ptr<ngraph::Function> func,
-              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& outputs,
-              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& inputs) override;
-
-    bool is_supported(const ngraph::Node& node) const override;
-
-private:
-    class FunctionInstance
-    {
-    public:
-        std::shared_ptr<ngraph::Function> m_function;
-        std::vector<std::shared_ptr<ngraph::Function>> m_sub_functions;
-        std::unordered_map<std::shared_ptr<ngraph::op::Parameter>,
-                           std::shared_ptr<ngraph::op::Result>>
-            m_map_parameter_to_result;
-    };
-
-    std::map<std::shared_ptr<ngraph::Function>, FunctionInstance> m_function_map;
-    std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>> m_backend_list;
+    GPUHBackend();
 };

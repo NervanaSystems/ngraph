@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/hybrid_util.hpp"
+#include "ngraph/runtime/hybrid/hybrid_util.hpp"
 
 using namespace ngraph;
 using namespace std;
