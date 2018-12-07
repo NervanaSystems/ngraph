@@ -97,6 +97,7 @@ if (NOT NGRAPH_MANYLINUX_ENABLE)
                 COMMAND ${PYTHON3_EXECUTABLE} -m venv .venv3
                 COMMAND ./.venv3/bin/python -m pip install -U pip setuptools wheel
                 COMMAND ./.venv3/bin/python setup.py bdist_wheel
+                COMMAND ./.venv3/bin/python setup.py sdist
                 COMMAND ${CMAKE_COMMAND} -E touch wheel3.timestamp
                 DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
         )

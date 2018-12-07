@@ -97,7 +97,7 @@ for root, dirs, files in os.walk(pyngraph_prefix):
     if root.startswith(pyngraph_prefix + 'pyngraph'):
         sources += [root + '/' + f for f in files if f.endswith('.cpp')]
     elif root.startswith(pyngraph_prefix + 'ngraph'):
-        if '${NGRAPH_ONNX_IMPORT_ENABLE}' != 'TRUE' and 'onnx_import' in root:
+        if '${NGRAPH_ONNX_IMPORT_ENABLE}' in ['TRUE', 'ON', True] and 'onnx_import' in root:
             continue
         if '__init__.py' in files:
             package_name = root[len(pyngraph_prefix):].replace('/', '.')
@@ -116,7 +116,7 @@ libraries    = ['ngraph',
                ]
 
 extra_compile_args = []
-if '{NGRAPH_ONNX_IMPORT_ENABLE}' == 'TRUE':
+if '${NGRAPH_ONNX_IMPORT_ENABLE}' in ['TRUE', 'ON', True]:
     extra_compile_args.append('-DNGRAPH_ONNX_IMPORT_ENABLE')
 
 extra_link_args = []
@@ -224,13 +224,14 @@ class BdistWheel(bdist_wheel):
 
 setup(
     name='ngraph-core',
+    description='nGraph - Intel\'s graph compiler and runtime for Neural Networks',
     version=__version__,
     author='Intel',
     author_email='intelnervana@intel.com',
-    url='http://ai.intel.com',
+    url='https://github.com/NervanaSystems/ngraph/',
     license='License :: OSI Approved :: Apache Software License',
-    description='Python API for ngraph',
-    long_description='',
+    long_description=open(os.path.join(PYNGRAPH_SOURCE_DIR, 'README.md')).read(),
+    long_description_content_type='text/markdown',
     ext_modules=ext_modules,
     package_dir=package_dir,
     packages=packages,
@@ -240,4 +241,3 @@ setup(
     install_requires=requirements,
     zip_safe=False,
 )
-
