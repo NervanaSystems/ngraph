@@ -609,7 +609,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
         }
         writer.block_end();
         // reduction max
-        // accumulate 32 threads for each warp
+        // accumulate WARPSIZE = 32 threads for each warp
         for (int i = (WARPSIZE >> 1); i >= 1; i >>= 1)
         {
             if (block_size_x > i)
@@ -621,7 +621,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
         }
         if (block_size_x > WARPSIZE)
         {
-            writer << "uint32_t lane_idx = threadIdx.x & 0x1f; \n";
+            writer << "uint32_t lane_idx = threadIdx.x & " << WARPSIZE - 1 << "; \n";
             writer << "uint32_t warp_idx = threadIdx.x >> 5; \n";
             writer << "if(lane_idx == 0)\n";
             writer.block_begin();
@@ -638,7 +638,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
                 writer << "r_max = sdata[tid];\n";
             }
             writer.block_end();
-            //accumulate 32 threads
+            //accumulate WARPSIZE threads
             for (int i = (WARPSIZE >> 1); i >= 1; i >>= 1)
             {
                 if (num_of_warp > i)
@@ -692,7 +692,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
         writer.block_end();
 
         // reduction sum
-        // accumulate 32 threads for each warp
+        // accumulate WARPSIZE = 32 threads for each warp
         for (int i = (WARPSIZE >> 1); i >= 1; i >>= 1)
         {
             if (block_size_x > i)
@@ -718,7 +718,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
                 writer << "r_sum = sdata[tid];\n";
             }
             writer.block_end();
-            //accumulate 32(warp) threads
+            //accumulate WARPSIZE = 32 threads
             for (int i = (WARPSIZE >> 1); i >= 1; i >>= 1)
             {
                 if (num_of_warp > i)
@@ -946,7 +946,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
         }
         writer.block_end();
 
-        //accumulate 32 threads for each warp
+        //accumulate WARPSIZE threads for each warp
         for (int i = (WARPSIZE >> 1); i >= 1; i >>= 1)
         {
             if (block_size_x > i)
@@ -956,7 +956,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
             }
         }
 
-        if (block_size_x > 32)
+        if (block_size_x > WARPSIZE)
         {
             writer << "uint32_t lane_idx = tid & " << WARPSIZE - 1 << "; \n";
             writer << "uint32_t warp_idx = tid >> 5; \n";
@@ -976,7 +976,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
                 writer << "r = sdata[tid];\n";
             }
             writer.block_end();
-            //accumulate 32 threads
+            //accumulate WARPSIZE threads
             for (int i = (WARPSIZE >> 1); i >= 1; i >>= 1)
             {
                 if (num_of_warp > i)
