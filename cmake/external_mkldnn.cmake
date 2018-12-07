@@ -57,7 +57,6 @@ endif()
 
 set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.17/")
 set(MKLVERSION "2019.0.1.20180928")
-set(NGRAPH_USE_MKLML FALSE)
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
@@ -72,10 +71,19 @@ endif()
 set(MKL_LIBS ${MKLML_LIB} ${OMP_LIB})
 set(MKLURL ${MKLURLROOT}${MKLPACKAGE})
 
-SET(MKLDNN_FLAG "-Wno-error=strict-overflow -Wno-error=unused-result -Wno-error=array-bounds")
-SET(MKLDNN_FLAG "${MKLDNN_FLAG} -Wno-unused-result -Wno-unused-value")
-SET(MKLDNN_CFLAG "${CMAKE_C_FLAGS} ${MKLDNN_FLAG}")
-SET(MKLDNN_CXXFLAG "${CMAKE_CXX_FLAGS} ${MKLDNN_FLAG}")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    if(APPLE)
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 8.0)
+            set(MKLDNN_FLAG "-Wno-stringop-truncation -Wno-stringop-overflow")
+        endif()
+    else()
+        set(MKLDNN_FLAG "-Wno-error=strict-overflow -Wno-error=unused-result -Wno-error=array-bounds")
+        set(MKLDNN_FLAG "${MKLDNN_FLAG} -Wno-unused-result -Wno-unused-value")
+    endif()
+endif()
+set(MKLDNN_CFLAG "${CMAKE_C_FLAGS} ${MKLDNN_FLAG}")
+set(MKLDNN_CXXFLAG "${CMAKE_CXX_FLAGS} ${MKLDNN_FLAG}")
+set(MKLDNN_DEPENDS ext_mkl)
 
 ExternalProject_Add(
     ext_mkl
@@ -95,19 +103,9 @@ set(MKL_SOURCE_DIR ${source_dir})
 add_library(libmkl INTERFACE)
 add_dependencies(libmkl ext_mkl)
 foreach(LIB ${MKL_LIBS})
-    target_link_libraries(libmkl INTERFACE ${MKL_SOURCE_DIR}/src/ext_mkl/lib/${LIB})
+    list(APPEND MKL_LIBS_PATH ${MKL_SOURCE_DIR}/lib/${LIB})
 endforeach()
-set_target_properties(libmkl PROPERTIES INSTALL_RPATH "$ORIGIN")
-
-if(NGRAPH_USE_MKLML)
-    set(MKLDNN_USE_MKL DEF)
-    set(MKLDNN_DEPENDS ext_mkl)
-    set(MKLML_LIB libmkl)
-else()
-    set(MKLDNN_USE_MKL NONE)
-    set(MKLDNN_DEPENDS "")
-    set(MKLML_LIB "")
-endif()
+target_link_libraries(libmkl INTERFACE ${MKL_LIBS_PATH})
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
 set(MKLDNN_GIT_TAG "830a100")
@@ -144,11 +142,8 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
             -DMKLROOT=${MKL_ROOT}
             "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH}"
-            -DMKLDNN_USE_MKL=${MKLDNN_USE_MKL}
             -DCMAKE_C_FLAGS=${MKLDNN_CFLAG}
             -DCMAKE_CXX_FLAGS=${MKLDNN_CXXFLAG}
-            -DMKLDNN_USE_MKL=NONE
-            -DMKLDNN_THREADING=TBB
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
@@ -182,11 +177,8 @@ else()
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
             -DMKLROOT=${MKL_ROOT}
             "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH}"
-            -DMKLDNN_USE_MKL=${MKLDNN_USE_MKL}
             -DCMAKE_C_FLAGS=${MKLDNN_CFLAG}
             -DCMAKE_CXX_FLAGS=${MKLDNN_CXXFLAG}
-            -DMKLDNN_USE_MKL=NONE
-            -DMKLDNN_THREADING=TBB
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
@@ -217,7 +209,7 @@ add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 target_link_libraries(libmkldnn INTERFACE
     ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB}
-    ${MKLML_LIB}
+    libmkl
     )
 
 install(DIRECTORY ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/ DESTINATION ${NGRAPH_INSTALL_LIB} OPTIONAL)

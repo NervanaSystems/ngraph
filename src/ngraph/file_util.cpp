@@ -336,7 +336,7 @@ void file_util::iterate_files(const string& path,
     }
 }
 
-#if !defined(NGRAPH_DEX_ONLY)
+#if !defined(NGRAPH_MANYLINUX_ENABLE)
 string file_util::tmp_filename(const string& extension)
 {
     string rc;

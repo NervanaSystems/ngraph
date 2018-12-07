@@ -86,7 +86,7 @@ namespace ngraph
                            bool recurse = false,
                            bool include_links = false);
 
-#if !defined(NGRAPH_DEX_ONLY)
+#if !defined(NGRAPH_MANYLINUX_ENABLE)
         /// \brief Create a temporary file
         /// \param extension Optional extension for the temporary file
         /// \return Name of the temporary file
