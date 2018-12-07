@@ -20,6 +20,7 @@
 #include <memory>
 #include <vector>
 
+#include "gtest/gtest.h"
 #include "ngraph/type/element_type.hpp"
 #include "test_tools.hpp"
 
@@ -34,13 +35,14 @@ namespace ngraph
         /// \param atol Absolute tolerance
         /// \returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
         template <typename T>
-        typename std::enable_if<std::is_signed<T>::value, bool>::type
+        typename std::enable_if<std::is_signed<T>::value, ::testing::AssertionResult>::type
             all_close(const std::vector<T>& a,
                       const std::vector<T>& b,
                       T rtol = static_cast<T>(1e-5),
                       T atol = static_cast<T>(1e-8))
         {
             bool rc = true;
+            ::testing::AssertionResult ar_fail = ::testing::AssertionFailure();
             assert(a.size() == b.size());
             size_t count = 0;
             for (size_t i = 0; i < a.size(); ++i)
@@ -50,9 +52,8 @@ namespace ngraph
                 {
                     if (count < 5)
                     {
-                        NGRAPH_INFO
-                            << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
-                            << a[i] << " is not close to " << b[i] << " at index " << i;
+                        ar_fail << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
+                                << a[i] << " is not close to " << b[i] << " at index " << i << "\n";
                     }
                     count++;
                     rc = false;
@@ -60,9 +61,9 @@ namespace ngraph
             }
             if (!rc)
             {
-                NGRAPH_INFO << "diff count: " << count << " out of " << a.size();
+                ar_fail << "diff count: " << count << " out of " << a.size() << "\n";
             }
-            return rc;
+            return rc ? ::testing::AssertionSuccess() : ar_fail;
         }
 
         /// \brief Same as numpy.allclose
@@ -72,24 +73,25 @@ namespace ngraph
         /// \param atol Absolute tolerance
         /// \returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
         template <typename T>
-        typename std::enable_if<std::is_unsigned<T>::value, bool>::type
+        typename std::enable_if<std::is_unsigned<T>::value, ::testing::AssertionResult>::type
             all_close(const std::vector<T>& a,
                       const std::vector<T>& b,
                       T rtol = static_cast<T>(1e-5),
                       T atol = static_cast<T>(1e-8))
         {
             bool rc = true;
+            ::testing::AssertionResult ar_fail = ::testing::AssertionFailure();
             assert(a.size() == b.size());
             for (size_t i = 0; i < a.size(); ++i)
             {
                 T abs_diff = (a[i] > b[i]) ? (a[i] - b[i]) : (b[i] - a[i]);
                 if (abs_diff > atol + rtol * b[i])
                 {
-                    NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
+                    ar_fail << a[i] << " is not close to " << b[i] << " at index " << i;
                     rc = false;
                 }
             }
-            return rc;
+            return rc ? ::testing::AssertionSuccess() : ar_fail;
         }
 
         /// \brief Same as numpy.allclose
@@ -99,20 +101,22 @@ namespace ngraph
         /// \param atol Absolute tolerance
         /// Returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
         template <typename T>
-        bool all_close(const std::shared_ptr<ngraph::runtime::Tensor>& a,
-                       const std::shared_ptr<ngraph::runtime::Tensor>& b,
-                       T rtol = 1e-5f,
-                       T atol = 1e-8f)
+        ::testing::AssertionResult all_close(const std::shared_ptr<ngraph::runtime::Tensor>& a,
+                                             const std::shared_ptr<ngraph::runtime::Tensor>& b,
+                                             T rtol = 1e-5f,
+                                             T atol = 1e-8f)
         {
             // Check that the layouts are compatible
             if (*a->get_tensor_layout() != *b->get_tensor_layout())
             {
-                throw ngraph_error("Cannot compare tensors with different layouts");
+                return ::testing::AssertionFailure()
+                       << "Cannot compare tensors with different layouts";
             }
 
             if (a->get_shape() != b->get_shape())
             {
-                return false;
+                return ::testing::AssertionFailure()
+                       << "Cannot compare tensors with different shapes";
             }
 
             return all_close(read_vector<T>(a), read_vector<T>(b), rtol, atol);
@@ -125,23 +129,26 @@ namespace ngraph
         /// \param atol Absolute tolerance
         /// Returns true if shapes match and for all elements, |a_i-b_i| <= atol + rtol*|b_i|.
         template <typename T>
-        bool all_close(const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& as,
-                       const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& bs,
-                       T rtol,
-                       T atol)
+        ::testing::AssertionResult
+            all_close(const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& as,
+                      const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& bs,
+                      T rtol,
+                      T atol)
         {
             if (as.size() != bs.size())
             {
-                return false;
+                return ::testing::AssertionFailure()
+                       << "Cannot compare tensors with different sizes";
             }
             for (size_t i = 0; i < as.size(); ++i)
             {
-                if (!all_close(as[i], bs[i], rtol, atol))
+                auto ar = all_close(as[i], bs[i], rtol, atol);
+                if (!ar)
                 {
-                    return false;
+                    return ar;
                 }
             }
-            return true;
+            return ::testing::AssertionSuccess();
         }
     }
 }

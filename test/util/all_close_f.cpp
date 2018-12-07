@@ -235,12 +235,13 @@ uint64_t test::matching_mantissa_bits(uint64_t distance)
     return matching_matissa_bits;
 }
 
-bool test::all_close_f(const vector<float>& a,
-                       const vector<float>& b,
-                       int mantissa_bits,
-                       int tolerance_bits)
+::testing::AssertionResult test::all_close_f(const vector<float>& a,
+                                             const vector<float>& b,
+                                             int mantissa_bits,
+                                             int tolerance_bits)
 {
     bool rc = true;
+    ::testing::AssertionResult ar_fail = ::testing::AssertionFailure();
     if (a.size() != b.size())
     {
         throw ngraph_error("a.size() != b.size() for all_close_f comparison.");
@@ -274,8 +275,8 @@ bool test::all_close_f(const vector<float>& a,
         {
             if (diff_count < 5)
             {
-                NGRAPH_INFO << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
-                            << a[i] << " is not close to " << b[i] << " at index " << i;
+                ar_fail << std::setprecision(std::numeric_limits<long double>::digits10 + 1) << a[i]
+                        << " is not close to " << b[i] << " at index " << i << "\n";
             }
 
             rc = false;
@@ -284,7 +285,7 @@ bool test::all_close_f(const vector<float>& a,
     }
     if (!rc)
     {
-        NGRAPH_INFO << "diff count: " << diff_count << " out of " << a.size();
+        ar_fail << "diff count: " << diff_count << " out of " << a.size() << "\n";
     }
     // Find median value via partial sorting
     size_t middle = distances.size() / 2;
@@ -298,27 +299,29 @@ bool test::all_close_f(const vector<float>& a,
         median_distance = median_sum / 2;
     }
 
-    NGRAPH_INFO << "passing criteria: " << (mantissa_bits - tolerance_bits) << " mantissa bits ("
-                << mantissa_bits << " mantissa bits w/ " << tolerance_bits << " tolerance bits)";
-    NGRAPH_INFO << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
-                << "tightest match:   " << matching_mantissa_bits(min_distance)
-                << " mantissa bits (" << a[min_distance_index] << " vs " << b[min_distance_index]
-                << " at [" << min_distance_index << "])";
-    NGRAPH_INFO << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
-                << "loosest match:    " << matching_mantissa_bits(max_distance)
-                << " mantissa bits (" << a[max_distance_index] << " vs " << b[max_distance_index]
-                << " at [" << max_distance_index << "])";
-    NGRAPH_INFO << "median match:     " << matching_mantissa_bits(median_distance)
-                << " mantissa bits";
+    ar_fail << "passing criteria: " << (mantissa_bits - tolerance_bits) << " mantissa bits ("
+            << mantissa_bits << " mantissa bits w/ " << tolerance_bits << " tolerance bits)\n";
+    ar_fail << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
+            << "tightest match:   " << matching_mantissa_bits(min_distance) << " mantissa bits ("
+            << a[min_distance_index] << " vs " << b[min_distance_index] << " at ["
+            << min_distance_index << "])\n";
+    ar_fail << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
+            << "loosest match:    " << matching_mantissa_bits(max_distance) << " mantissa bits ("
+            << a[max_distance_index] << " vs " << b[max_distance_index] << " at ["
+            << max_distance_index << "])\n";
+    ar_fail << "median match:     " << matching_mantissa_bits(median_distance)
+            << " mantissa bits\n";
 
-    return rc;
+    return rc ? ::testing::AssertionSuccess() : ar_fail;
 }
 
-bool test::all_close_f(const vector<double>& a, const vector<double>& b, int tolerance_bits)
+::testing::AssertionResult
+    test::all_close_f(const vector<double>& a, const vector<double>& b, int tolerance_bits)
 {
     constexpr int mantissa_bits = 53;
 
     bool rc = true;
+    ::testing::AssertionResult ar_fail = ::testing::AssertionFailure();
     if (a.size() != b.size())
     {
         throw ngraph_error("a.size() != b.size() for all_close_f comparison.");
@@ -352,7 +355,7 @@ bool test::all_close_f(const vector<double>& a, const vector<double>& b, int tol
         {
             if (diff_count < 5)
             {
-                NGRAPH_INFO << a[i] << " is not close to " << b[i] << " at index " << i;
+                ar_fail << a[i] << " is not close to " << b[i] << " at index " << i << "\n";
             }
 
             rc = false;
@@ -361,7 +364,7 @@ bool test::all_close_f(const vector<double>& a, const vector<double>& b, int tol
     }
     if (!rc)
     {
-        NGRAPH_INFO << "diff count: " << diff_count << " out of " << a.size();
+        ar_fail << "diff count: " << diff_count << " out of " << a.size() << "\n";
     }
     // Find median value via partial sorting
     size_t middle = distances.size() / 2;
@@ -376,54 +379,56 @@ bool test::all_close_f(const vector<double>& a, const vector<double>& b, int tol
             (median_distance / 2) + (median_distance2 / 2) + ((remainder1 + remainder2) / 2);
     }
 
-    NGRAPH_INFO << "passing criteria: " << (mantissa_bits - tolerance_bits) << " mantissa bits ("
-                << mantissa_bits << " mantissa bits w/ " << tolerance_bits << " tolerance bits)";
-    NGRAPH_INFO << "tightest match:   " << matching_mantissa_bits(min_distance)
-                << " mantissa bits (" << a[min_distance_index] << " vs " << b[min_distance_index]
-                << " at [" << min_distance_index << "])";
-    NGRAPH_INFO << "loosest match:    " << matching_mantissa_bits(max_distance)
-                << " mantissa bits (" << a[max_distance_index] << " vs " << b[max_distance_index]
-                << " at [" << max_distance_index << "])";
-    NGRAPH_INFO << "median match:     " << matching_mantissa_bits(median_distance)
-                << " mantissa bits";
+    ar_fail << "passing criteria: " << (mantissa_bits - tolerance_bits) << " mantissa bits ("
+            << mantissa_bits << " mantissa bits w/ " << tolerance_bits << " tolerance bits)\n";
+    ar_fail << "tightest match:   " << matching_mantissa_bits(min_distance) << " mantissa bits ("
+            << a[min_distance_index] << " vs " << b[min_distance_index] << " at ["
+            << min_distance_index << "])\n";
+    ar_fail << "loosest match:    " << matching_mantissa_bits(max_distance) << " mantissa bits ("
+            << a[max_distance_index] << " vs " << b[max_distance_index] << " at ["
+            << max_distance_index << "])\n";
+    ar_fail << "median match:     " << matching_mantissa_bits(median_distance)
+            << " mantissa bits\n";
 
-    return rc;
+    return rc ? ::testing::AssertionSuccess() : ar_fail;
 }
 
-bool test::all_close_f(const std::shared_ptr<runtime::Tensor>& a,
-                       const std::shared_ptr<runtime::Tensor>& b,
-                       int mantissa_bits,
-                       int tolerance_bits)
+::testing::AssertionResult test::all_close_f(const std::shared_ptr<runtime::Tensor>& a,
+                                             const std::shared_ptr<runtime::Tensor>& b,
+                                             int mantissa_bits,
+                                             int tolerance_bits)
 {
     // Check that the layouts are compatible
     if (*a->get_tensor_layout() != *b->get_tensor_layout())
     {
-        throw ngraph_error("Cannot compare tensors with different layouts");
+        return ::testing::AssertionFailure() << "Cannot compare tensors with different layouts";
     }
     if (a->get_shape() != b->get_shape())
     {
-        return false;
+        return ::testing::AssertionFailure() << "Cannot compare tensors with different shapes";
     }
 
     return test::all_close_f(
         read_float_vector(a), read_float_vector(b), mantissa_bits, tolerance_bits);
 }
 
-bool test::all_close_f(const std::vector<std::shared_ptr<runtime::Tensor>>& as,
-                       const std::vector<std::shared_ptr<runtime::Tensor>>& bs,
-                       int mantissa_bits,
-                       int tolerance_bits)
+::testing::AssertionResult
+    test::all_close_f(const std::vector<std::shared_ptr<runtime::Tensor>>& as,
+                      const std::vector<std::shared_ptr<runtime::Tensor>>& bs,
+                      int mantissa_bits,
+                      int tolerance_bits)
 {
     if (as.size() != bs.size())
     {
-        return false;
+        return ::testing::AssertionFailure() << "Cannot compare tensors with different sizes";
     }
     for (size_t i = 0; i < as.size(); ++i)
     {
-        if (!test::all_close_f(as[i], bs[i], mantissa_bits, tolerance_bits))
+        auto ar = test::all_close_f(as[i], bs[i], mantissa_bits, tolerance_bits);
+        if (!ar)
         {
-            return false;
+            return ar;
         }
     }
-    return true;
+    return ::testing::AssertionSuccess();
 }
