@@ -139,6 +139,21 @@ static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t out
     }
 }
 
+static void
+    memory_size_check(size_t memory_size, const shared_ptr<Node>& node, const string& function_name)
+{
+    const size_t tensor_size = shape_size(node->get_shape()) * node->get_element_type().size();
+
+    if (memory_size != tensor_size)
+    {
+        ostringstream os;
+        os << "IntelGPU backend failed memory check. In \"" << function_name << "\" with Node \""
+           << node->get_name() << "\" and " << node->get_shape() << " mismatched memory sizes "
+           << tensor_size << " and " << memory_size;
+        throw invalid_argument(os.str());
+    }
+}
+
 static const string& get_input_name(const shared_ptr<Node>& op, size_t num = 0)
 {
     return op->get_inputs().at(num).get_tensor().get_name();
@@ -381,12 +396,12 @@ shared_ptr<runtime::Tensor> runtime::intelgpu::IntelGPUBackend::create_tensor(
         element_type, shape, *ocl_engine, memory_pointer);
 }
 
-bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 {
     FunctionInstance& instance = ocl_networks[func];
     if (instance.ocl_network != nullptr)
     {
-        return true;
+        return func;
     }
 
     set<cldnn::primitive_id> func_output_names;
@@ -962,7 +977,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             const shared_ptr<op::Reduce> red_op = static_pointer_cast<op::Reduce>(op);
             const AxisSet& axis = red_op->get_reduction_axes();
-            vector<shared_ptr<Function>> func = red_op->get_functions();
+            vector<shared_ptr<Function>> f = red_op->get_functions();
 
             // Empty axis is not a case for do_equal_propagation()
             do_reduce_func_call(topology,
@@ -974,7 +989,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                 get_output_shape(op),
                                 get_output_type(op),
                                 axis,
-                                func);
+                                f);
             break;
         }
         case OP_TYPEID::Abs:
@@ -1730,7 +1745,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     instance.ocl_network =
         make_shared<cldnn::network>(*ocl_engine, topology, network_build_options);
 
-    return true;
+    return func;
 }
 
 bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
@@ -1748,15 +1763,11 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
         mem_before_call = get_max_memory_rss();
         timer_compile.start();
     }
-    validate_call(func, outputs, inputs);
 
     FunctionInstance& instance = ocl_networks[func];
     if (instance.ocl_network == nullptr)
     {
-        if (!compile(func))
-        {
-            return false;
-        }
+        throw runtime_error("compile() must be called before call().");
     }
 
     if (m_profile_enable)
@@ -1788,11 +1799,22 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     // we try to match them by index number in vectors.
     for (size_t i = 0; i < func->get_output_size(); i++)
     {
+        const shared_ptr<Node>& dst_node = func->get_output_op(i);
+        const size_t dst_shape_size = shape_size(dst_node->get_shape());
+
+        // We should not touch destination memory if it is not existed
+        if (!dst_shape_size)
+        {
+            continue;
+        }
+
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> ngraph_res =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(outputs[i]);
-        const string& tensor_name = get_input_name(func->get_output_op(i));
-
+        const string& tensor_name = get_input_name(dst_node);
         auto result_memory = result.at(tensor_name).get_memory().pointer<char>();
+
+        memory_size_check(result_memory.size(), dst_node, func->get_name());
+
         ngraph_res->write(result_memory.data(), 0, result_memory.size());
     }
 
