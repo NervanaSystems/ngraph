@@ -3257,6 +3257,58 @@ TEST(cpu_fusion, fuse_update_slice_strided)
     }
 }
 
+TEST(cpu_fusion, fuse_update_slice_strided_inplace)
+{
+    auto make_function = [](bool fuse = true) {
+        auto input = std::make_shared<op::Parameter>(element::f32, Shape{4, 32, 16});
+        auto abs = std::make_shared<op::Abs>(input);
+        Shape lower_bounds{1, 0, 0};
+        Shape upper_bounds{2, 32, 16};
+        Strides strides{1, 4, 2};
+        auto slice = std::make_shared<op::Slice>(abs, lower_bounds, upper_bounds, strides);
+        auto update = std::make_shared<op::Parameter>(element::f32, Shape{1, 8, 8});
+        auto add = std::make_shared<op::Add>(slice, update);
+        auto rs = std::make_shared<op::ReplaceSlice>(abs, add, lower_bounds, upper_bounds, strides);
+        auto out = std::make_shared<op::Abs>(rs);
+        if (fuse)
+        {
+            return make_shared<Function>(NodeVector{out}, ParameterVector{input, update});
+        }
+        else
+        {
+            return make_shared<Function>(NodeVector{out, add}, ParameterVector{input, update});
+        }
+    };
+
+    auto fuse = make_function(true);
+    auto no_fuse = make_function(false);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.run_passes(fuse);
+    pass_manager.run_passes(no_fuse);
+    EXPECT_EQ(1, count_ops_of_type<op::UpdateSlice>(fuse));
+    EXPECT_EQ(0, count_ops_of_type<op::UpdateSlice>(no_fuse));
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+}
+
 TEST(cpu_fusion, dot_batch_forward)
 {
     const Shape shape_a{2, 3, 2};
