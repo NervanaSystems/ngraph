@@ -14,23 +14,36 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/pass/assign_placement.hpp"
-#include "ngraph/log.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/placement.hpp"
-#include "ngraph/runtime/backend.hpp"
+#pragma once
 
-using namespace ngraph;
-using namespace std;
+#include <exception>
+#include <functional>
+#include <sstream>
 
-pass::AssignPlacement::AssignPlacement(function<Placement(shared_ptr<Node>)> placement_policy)
-    : m_placement_policy(placement_policy)
+#include "ngraph/pass/pass.hpp"
+
+namespace ngraph
 {
+    namespace runtime
+    {
+        namespace hybrid
+        {
+            namespace pass
+            {
+                class AssignPlacement;
+            }
+        }
+    }
 }
 
-bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
+class ngraph::runtime::hybrid::pass::AssignPlacement : public ngraph::pass::NodePass
 {
-    node->set_placement(m_placement_policy(node));
+public:
+    // TODO: make policy a class
+    AssignPlacement(std::vector<std::shared_ptr<ngraph::runtime::Backend>> placement_backends);
 
-    return false;
-}
+private:
+    bool run_on_node(std::shared_ptr<Node> node) override;
+
+    std::vector<std::shared_ptr<ngraph::runtime::Backend>> m_placement_backends;
+};

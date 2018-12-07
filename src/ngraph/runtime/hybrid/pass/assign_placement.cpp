@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/pass/assign_placement.hpp"
+#include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/placement.hpp"
@@ -23,14 +23,23 @@
 using namespace ngraph;
 using namespace std;
 
-pass::AssignPlacement::AssignPlacement(function<Placement(shared_ptr<Node>)> placement_policy)
-    : m_placement_policy(placement_policy)
+runtime::hybrid::pass::AssignPlacement::AssignPlacement(
+    vector<shared_ptr<runtime::Backend>> placement_backends)
+    : m_placement_backends(placement_backends)
 {
 }
 
-bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
+bool runtime::hybrid::pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
 {
-    node->set_placement(m_placement_policy(node));
-
-    return false;
+    size_t backend_index = 0;
+    for (auto backend : m_placement_backends)
+    {
+        backend_index++;
+        if (backend->is_supported(*node))
+        {
+            node->set_placement(backend_index);
+            return false;
+        }
+    }
+    throw runtime_error("Node " + node->get_name() + " not supported by any backend");
 }
