@@ -640,24 +640,38 @@ TEST(builder, scaled_DQ_signed)
     EXPECT_EQ((vector<float>{99.212601}), read_vector<float>(result));
 }
 
-TEST(builder, dynamic_scaled_DQ_signed)
+template <typename T>
+shared_ptr<runtime::Tensor> call_SDQ(unique_ptr<runtime::Backend>& backend,
+                                     element::Type type,
+                                     Shape in_shape,
+                                     vector<T> in,
+                                     float min,
+                                     float max)
 {
-    vector<int8_t> a_data = {42};
-    AxisSet quantization_axes;
-    auto A = make_shared<op::Parameter>(element::i8, Shape{1});
+    auto A = make_shared<op::Parameter>(type, in_shape);
     auto B = make_shared<op::Parameter>(element::f32, Shape{});
     auto C = make_shared<op::Parameter>(element::f32, Shape{});
-    auto r = ngraph::builder::ScaledDequantize(A, B, C, element::f32, quantization_axes);
-    auto f = make_shared<Function>(r, ParameterVector{A, B, C});
-    auto backend = runtime::Backend::create("CPU");
+    auto DQT = ngraph::builder::ScaledDequantize(A, B, C, element::f32, AxisSet{});
+    auto f = make_shared<Function>(NodeVector{DQT}, ParameterVector{A, B, C});
     // Create some tensors for input/output
-    auto a = backend->create_tensor(element::i8, Shape{1});
-    copy_data(a, a_data);
+    auto a = backend->create_tensor(type, in_shape);
     auto b = backend->create_tensor(element::f32, Shape{});
-    copy_data(b, vector<float>{-1.0f});
     auto c = backend->create_tensor(element::f32, Shape{});
-    copy_data(c, vector<float>{300.0f});
-    auto result = backend->create_tensor(element::f32, Shape{1});
+    copy_data(a, in);
+    copy_data(b, vector<float>{min});
+    copy_data(c, vector<float>{max});
+    auto result = backend->create_tensor(element::f32, in_shape);
     backend->call_with_validate(f, {result}, {a, b, c});
+    return result;
+}
+TEST(builder, dynamic_scaled_DQ)
+{
+    auto backend = runtime::Backend::create("CPU");
+    auto result =
+        call_SDQ<int8_t>(backend, element::i8, Shape{1}, vector<int8_t>{42}, -1.0f, 300.0f);
     EXPECT_EQ((vector<float>{99.212601}), read_vector<float>(result));
+    auto result2 = call_SDQ<uint8_t>(
+        backend, element::u8, Shape{1}, vector<uint8_t>{35, 151, 154, 219}, 0.0f, 1.0f);
+    EXPECT_EQ((vector<float>{0.13725491, 0.59215689, 0.60392159, 0.8588236}),
+              read_vector<float>(result2));
 }
