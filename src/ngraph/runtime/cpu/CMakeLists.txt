@@ -42,7 +42,6 @@ set(SRC
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
-    builder/quantized_conv.cpp
     builder/convolution.cpp
     builder/dot.cpp
     builder/function_call.cpp
@@ -60,8 +59,10 @@ set(SRC
     builder/reduce_function.cpp
     builder/reduce_function_window.cpp
     builder/replace_slice.cpp
-    builder/quantized_max_pool.cpp
+    builder/quantization.cpp
     builder/quantized_avg_pool.cpp
+    builder/quantized_conv.cpp
+    builder/quantized_max_pool.cpp
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
@@ -70,11 +71,11 @@ set(SRC
     builder/select_and_scatter.cpp
     builder/sigmoid.cpp
     builder/slice.cpp
+    builder/state.cpp
     builder/softmax.cpp
     builder/sum.cpp
     builder/topk.cpp
-    builder/state.cpp
-    builder/quantization.cpp
+    builder/update_slice.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
     kernel/reduce_sum.cpp
@@ -85,12 +86,13 @@ set(SRC
     op/batch_dot.cpp
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
-    op/group_conv.cpp
-    op/group_conv_bias.cpp
-    op/halide_op.cpp
+    op/conv_add.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
+    op/group_conv.cpp
+    op/group_conv_bias.cpp
+    op/halide_op.cpp
     op/leaky_relu.cpp
     op/loop_kernel.cpp
     op/lstm.cpp
@@ -98,7 +100,7 @@ set(SRC
     op/max_pool_with_indices.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
-    op/conv_add.cpp
+    op/update_slice.cpp
     pass/cpu_assignment.cpp
     pass/cpu_collapse_dims.cpp
     pass/cpu_fusion.cpp
@@ -127,6 +129,8 @@ if (NGRAPH_HALIDE)
     set(SRC
         ${SRC}
         builder/halide_op.cpp
+        builder/loop_kernel.cpp
+        builder/halide_generators.cpp
         pass/halide_subgraph_extraction.cpp
         )
 endif()
