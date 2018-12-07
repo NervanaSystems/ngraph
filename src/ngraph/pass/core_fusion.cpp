@@ -666,4 +666,3 @@ void ngraph::pass::CoreFusion::construct_reshape_softmax_reshape()
     auto m = make_shared<pattern::Matcher>(reshape2, callback, "CoreFusion.ReshapeSoftmaxReshape");
     this->add_matcher(m);
 }
-
