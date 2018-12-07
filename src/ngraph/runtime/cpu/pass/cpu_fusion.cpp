@@ -1852,6 +1852,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(replace_slice, callback, "update_slice");
+    auto m = std::make_shared<ngraph::pattern::Matcher>(
+        replace_slice, callback, "CPUFusion.UpdateSlice");
     this->add_matcher(m);
 }
