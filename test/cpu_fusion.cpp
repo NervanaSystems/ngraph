@@ -2959,6 +2959,7 @@ TEST(cpu_fusion, fuse_batch_dot)
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/batch_dot_3.json");
+
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
@@ -3219,4 +3220,77 @@ TEST(cpu_fusion, rnn_input_fusion_inter_vs_cpu)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
+}
+
+TEST(cpu_fusion, cf_investigation)
+{
+
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mac-failure.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+
+
+    stringstream ss_int(json_string);
+    shared_ptr<Function> int_f = ngraph::deserialize(ss_int);
+
+    stringstream ss_cpu(json_string);
+    shared_ptr<Function> cpu_f = ngraph::deserialize(ss_cpu);
+
+    test::Uniform<float> rng(0.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    NodeVector new_results_cpu;
+    for (auto n : cpu_f->get_ordered_ops())
+    {
+        //dont include op::Results otherwise Function c-tor will complain
+        if (!n->is_output() && !n->is_parameter() && !n->is_constant() &&
+            n->get_outputs().size() == 1)
+        {
+            new_results_cpu.push_back(n);
+        }
+    }
+
+    NodeVector new_results_int;
+    for (auto n : int_f->get_ordered_ops())
+    {
+        //dont include op::Results otherwise Function c-tor will complain
+        if (!n->is_output() && !n->is_parameter() && !n->is_constant() &&
+            n->get_outputs().size() == 1)
+        {
+            new_results_int.push_back(n);
+        }
+    }
+
+    //no need to include original results they are subsumed by new_results
+    auto new_func_cpu = make_shared<Function>(new_results_cpu, cpu_f->get_parameters());
+    auto new_func_int = make_shared<Function>(new_results_int, int_f->get_parameters());
+
+    auto int_results = execute(new_func_int, args, "INTERPRETER");
+    auto cpu_results = execute(new_func_cpu, args, "CPU");
+
+    //pass::Manager pass_manager;
+    //pass_manager.register_pass<ngraph::pass::ConstantFolding>();
+    //pass_manager.run_passes(cpu_f);
+
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        std::cout << "Comparing results for " << new_results_cpu.at(i)->get_name() << std::endl;
+        if (!test::all_close(cpu_results.at(i), int_results.at(i)))
+        {
+            std::cout << "found mismatch!\n";
+            EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+            break;
+        }
+    }
+
+    // for (size_t i = 0; i < cpu_results.size(); i++)
+    // {
+    //     std::cout << "Comparing result " << cpu_f->get_results().at(i)->get_name() << std::endl;
+    //     EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    // }
 }
