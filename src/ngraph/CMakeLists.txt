@@ -15,16 +15,17 @@
 # ******************************************************************************
 
 set (SRC
+    autodiff/adjoints.cpp
     axis_set.cpp
     axis_vector.cpp
-    autodiff/adjoints.cpp
     builder/autobroadcast.cpp
     builder/numpy_transpose.cpp
     builder/quantization.cpp
     builder/reduce_ops.cpp
-    coordinate.cpp
     coordinate_diff.cpp
     coordinate_transform.cpp
+    coordinate.cpp
+    cpio.cpp
     descriptor/input.cpp
     descriptor/layout/dense_tensor_layout.cpp
     descriptor/layout/tensor_layout.cpp
@@ -33,6 +34,7 @@ set (SRC
     dimension.cpp
     file_util.cpp
     function.cpp
+    graph_util.cpp
     log.cpp
     ngraph.cpp
     node.cpp
@@ -41,8 +43,8 @@ set (SRC
     op/add.cpp
     op/allreduce.cpp
     op/and.cpp
-    op/argmin.cpp
     op/argmax.cpp
+    op/argmin.cpp
     op/asin.cpp
     op/atan.cpp
     op/avg_pool.cpp
@@ -70,21 +72,21 @@ set (SRC
     op/floor.cpp
     op/function_call.cpp
     op/get_output_element.cpp
-    op/greater.cpp
     op/greater_eq.cpp
-    op/less.cpp
+    op/greater.cpp
     op/less_eq.cpp
+    op/less.cpp
     op/log.cpp
     op/lrn.cpp
+    op/max_pool.cpp
     op/max.cpp
     op/maximum.cpp
-    op/max_pool.cpp
     op/min.cpp
     op/minimum.cpp
     op/multiply.cpp
     op/negative.cpp
-    op/not.cpp
     op/not_equal.cpp
+    op/not.cpp
     op/one_hot.cpp
     op/op.cpp
     op/or.cpp
@@ -93,14 +95,14 @@ set (SRC
     op/power.cpp
     op/product.cpp
     op/quantize.cpp
-    op/reduce.cpp
     op/reduce_window.cpp
+    op/reduce.cpp
     op/relu.cpp
     op/replace_slice.cpp
     op/reshape.cpp
     op/result.cpp
-    op/reverse.cpp
     op/reverse_sequence.cpp
+    op/reverse.cpp
     op/select_and_scatter.cpp
     op/select.cpp
     op/sigmoid.cpp
@@ -123,10 +125,11 @@ set (SRC
     op/util/index_reduction.cpp
     op/util/unary_elementwise_arithmetic.cpp
     partial_shape.cpp
-    pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
+    pass/assign_placement.cpp
     pass/common_function_collection.cpp
     pass/constant_folding.cpp
+    pass/core_fusion.cpp
     pass/cse.cpp
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
@@ -134,39 +137,37 @@ set (SRC
     pass/inliner.cpp
     pass/like_replacement.cpp
     pass/liveness.cpp
-    pass/manager.cpp
     pass/manager_state.cpp
+    pass/manager.cpp
     pass/memory_layout.cpp
     pass/memory_visualize.cpp
     pass/nop_elimination.cpp
-    pass/pass.cpp
     pass/pass_config.cpp
+    pass/pass.cpp
     pass/propagate_cacheability.cpp
     pass/reshape_elimination.cpp
-    pass/zero_dim_tensor_elimination.cpp
+    pass/serialize.cpp
     pass/validate_graph.cpp
     pass/visualize_tree.cpp
-    pass/core_fusion.cpp
-    pass/serialize.cpp
+    pass/zero_dim_tensor_elimination.cpp
     pass/zero_dim_tensor_elimination.cpp
     pattern/matcher.cpp
+    placement.cpp
     runtime/aligned_buffer.cpp
-    runtime/backend.cpp
     runtime/backend_manager.cpp
-    state/rng_state.cpp
+    runtime/backend.cpp
     runtime/host_tensor.cpp
+    runtime/hybrid_util.cpp
     runtime/tensor.cpp
     serializer.cpp
-    shape.cpp
     shape_util.cpp
+    shape.cpp
+    state/rng_state.cpp
     strides.cpp
     type/bfloat16.cpp
     type/element_type.cpp
     util.cpp
     validation_util.cpp
-    graph_util.cpp
-    placement.cpp
-    cpio.cpp
     )
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC distributed.cpp)

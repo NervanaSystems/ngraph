@@ -14,10 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/pass/assign_placement.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/hybrid/hybrid_backend.hpp"
+#include "ngraph/runtime/hybrid_util.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 using namespace ngraph;
