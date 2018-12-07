@@ -14,10 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/runtime/gpuh/gpuh_backend.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/pass/assign_placement.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/runtime/hybrid_util.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
@@ -45,28 +45,27 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
     return rc;
 }
 
-runtime::hybrid::HybridBackend::HybridBackend(
+runtime::gpuh::GPUHBackend::GPUHBackend(
     const std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>>& backend_list)
     : m_backend_list{backend_list}
 {
 }
 
 shared_ptr<runtime::Tensor>
-    runtime::hybrid::HybridBackend::create_tensor(const element::Type& element_type,
-                                                  const Shape& shape)
+    runtime::gpuh::GPUHBackend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
     auto it = m_backend_list.begin();
     return it->second->create_tensor(element_type, shape);
 }
 
-shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
+shared_ptr<runtime::Tensor> runtime::gpuh::GPUHBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     auto it = m_backend_list.begin();
     return it->second->create_tensor(element_type, shape, memory_pointer);
 }
 
-runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::gpuh::GPUHBackend::compile(shared_ptr<Function> func)
 {
     if (m_function_map.find(func) == m_function_map.end())
     {
@@ -103,9 +102,9 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
     return func;
 }
 
-bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
-                                          const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                          const vector<shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::gpuh::GPUHBackend::call(shared_ptr<Function> func,
+                                      const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                      const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     // Get FunctionInstance
     bool rc = true;
@@ -179,7 +178,7 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
     return rc;
 }
 
-bool runtime::hybrid::HybridBackend::is_supported(const Node& node) const
+bool runtime::gpuh::GPUHBackend::is_supported(const Node& node) const
 {
     return true;
 }
