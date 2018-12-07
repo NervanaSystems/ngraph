@@ -550,26 +550,46 @@ TEST(builder, scaled_Q_unsigned)
 
 TEST(builder, dynamic_scaled_Q_unsigned)
 {
-    vector<float> a_data = {-255.0, 0.0, 1.0, 1.25, 1.75, 64.0, 127.0, 500.0};
-    Shape shape_a{8};
-    AxisSet quantization_axes;
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto C = make_shared<op::Parameter>(element::f32, Shape{});
-    auto QT = ngraph::builder::ScaledQuantize(A, B, C, element::u8, quantization_axes, round_mode);
-    auto f = make_shared<Function>(NodeVector{QT}, ParameterVector{A, B, C});
+    auto call_SQ = [](unique_ptr<runtime::Backend>& backend,
+                      element::Type type,
+                      op::Quantize::RoundMode mode,
+                      Shape in_shape,
+                      vector<float> in,
+                      float min,
+                      float max) {
+        auto A = make_shared<op::Parameter>(element::f32, in_shape);
+        auto B = make_shared<op::Parameter>(element::f32, Shape{});
+        auto C = make_shared<op::Parameter>(element::f32, Shape{});
+        auto QT = ngraph::builder::ScaledQuantize(A, B, C, type, AxisSet{}, mode);
+        auto f = make_shared<Function>(NodeVector{QT}, ParameterVector{A, B, C});
+        // Create some tensors for input/output
+        auto a = backend->create_tensor(element::f32, in_shape);
+        auto b = backend->create_tensor(element::f32, Shape{});
+        auto c = backend->create_tensor(element::f32, Shape{});
+        copy_data(a, in);
+        copy_data(b, vector<float>{min});
+        copy_data(c, vector<float>{max});
+        auto result = backend->create_tensor(type, in_shape);
+        backend->call_with_validate(f, {result}, {a, b, c});
+        return result;
+    };
     auto backend = runtime::Backend::create("CPU");
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_a);
-    auto b = backend->create_tensor(element::f32, Shape{});
-    auto c = backend->create_tensor(element::f32, Shape{});
-    copy_data(a, a_data);
-    copy_data(b, vector<float>{-255.0f});
-    copy_data(c, vector<float>{127.0f});
-    auto result = backend->create_tensor(element::u8, shape_a);
-    backend->call_with_validate(f, {result}, {a, b, c});
+    auto result = call_SQ(backend,
+                          element::u8,
+                          op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN,
+                          Shape{8},
+                          vector<float>{-255.0, 0.0, 1.0, 1.25, 1.75, 64.0, 127.0, 500.0},
+                          -255.0f,
+                          127.0f);
     EXPECT_EQ((vector<uint8_t>{0, 0, 1, 1, 2, 64, 127, 255}), read_vector<uint8_t>(result));
+    auto result2 = call_SQ(backend,
+                           element::u8,
+                           op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN,
+                           Shape{2, 2},
+                           vector<float>{0.1392, 0.5928, 0.6027, 0.8579},
+                           0.0f,
+                           1.0f);
+    EXPECT_EQ((vector<uint8_t>{35, 151, 154, 219}), read_vector<uint8_t>(result2));
 }
 
 TEST(builder, scaled_Q_signed)
