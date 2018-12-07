@@ -60,7 +60,7 @@ static vector<unordered_set<shared_ptr<Node>>>
         node_dependency_count[node.get()] = dependency_count;
         if (dependency_count == 0)
         {
-            independent_nodes_by_placement[node->get_placement_size()].push_back(node.get());
+            independent_nodes_by_placement[node->get_placement_index()].push_back(node.get());
         }
     }
 
@@ -69,7 +69,7 @@ static vector<unordered_set<shared_ptr<Node>>>
     while (Node* independent_node = take_independent_node_with_placement_priority_size(
                independent_nodes_by_placement, previous_placement))
     {
-        previous_placement = independent_node->get_placement_size();
+        previous_placement = independent_node->get_placement_index();
         sorted_nodes.push_back(node_map.at(independent_node));
 
         for (auto user : independent_node->get_users())
@@ -78,7 +78,7 @@ static vector<unordered_set<shared_ptr<Node>>>
             node_dependency_count.at(user_node) -= 1;
             if (node_dependency_count.at(user_node) == 0)
             {
-                independent_nodes_by_placement[user_node->get_placement_size()].push_back(
+                independent_nodes_by_placement[user_node->get_placement_index()].push_back(
                     user_node);
             }
         }
@@ -96,7 +96,7 @@ static vector<unordered_set<shared_ptr<Node>>>
     vector<unordered_set<shared_ptr<Node>>> clusters;
     for (shared_ptr<Node> node : sorted_nodes)
     {
-        size_t node_placement = node->get_placement_size();
+        size_t node_placement = node->get_placement_index();
         if (node_placement != previous_placement)
         {
             unordered_set<shared_ptr<Node>> new_cluster;
@@ -162,7 +162,7 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     // Make parameter node
     shared_ptr<op::Parameter> par_node = make_shared<op::Parameter>(
         src_node->get_output_element_type(0), src_node->get_output_shape(0));
-    par_node->set_placement(dst_node->get_placement_size());
+    par_node->set_placement_index(dst_node->get_placement_index());
 
     // Fix input / output among src, dst and par
     descriptor::Input* dst_input = dst_node->get_input_from(src_node);
@@ -172,7 +172,7 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
 
     // Add res node
     shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
-    res_node->set_placement(src_node->get_placement_size());
+    res_node->set_placement_index(src_node->get_placement_index());
 
     return make_pair(res_node, par_node);
 }

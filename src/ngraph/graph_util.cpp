@@ -437,10 +437,10 @@ size_t ngraph::get_colocated_function_placement_size(shared_ptr<Function> func)
     auto ops = func->get_ops();
 
     //it's okay to not do Placement::DEFAULT check; the same node will be checked in the loop below
-    size_t function_placement = ops.front()->get_placement_size();
+    size_t function_placement = ops.front()->get_placement_index();
     for (auto op : ops)
     {
-        size_t node_placement = op->get_placement_size();
+        size_t node_placement = op->get_placement_index();
         if (node_placement == 0)
         {
             throw ngraph_error("Node should have a device placement, not Placement::DEFAULT");

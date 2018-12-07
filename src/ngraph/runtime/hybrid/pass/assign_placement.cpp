@@ -37,7 +37,7 @@ bool runtime::hybrid::pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
         backend_index++;
         if (backend->is_supported(*node))
         {
-            node->set_placement(backend_index);
+            node->set_placement_index(backend_index);
             return false;
         }
     }
