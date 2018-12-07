@@ -65,7 +65,7 @@ static vector<unordered_set<shared_ptr<Node>>>
     }
 
     list<shared_ptr<Node>> sorted_nodes;
-    size_t previous_placement = 0; // Placement::DEFAULT
+    size_t previous_placement = 0;
     while (Node* independent_node = take_independent_node_with_placement_priority_size(
                independent_nodes_by_placement, previous_placement))
     {
@@ -92,7 +92,7 @@ static vector<unordered_set<shared_ptr<Node>>>
     }
 
     // Build clusters from the sorted_nodes
-    previous_placement = 0; // Placement::DEFAULT;
+    previous_placement = Node::placement_invalid;
     vector<unordered_set<shared_ptr<Node>>> clusters;
     for (shared_ptr<Node> node : sorted_nodes)
     {
@@ -180,7 +180,7 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
 // Suffix *_size  as a part of function name is temporary, this suffix
 //  will be removed when the backends move to the latest Hybrid backend
 pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>>>
-    runtime::split_function_by_placement_size(const shared_ptr<Function>& f)
+    runtime::hybrid::split_function_by_placement_size(const shared_ptr<Function>& f)
 {
     // Split functions to clusters of nodes that can be computed together
     vector<unordered_set<shared_ptr<Node>>> clusters = group_function_nodes_to_clusters_size(f);
@@ -243,4 +243,29 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
     }
 
     return make_pair(sub_functions, map_parameter_to_result);
+}
+
+// Suffix *_size  as a part of function name is temporary, this suffix
+//  will be removed when the backends move to the latest Hybrid backend
+// Assert that nodes in the function is colocated and return that placement
+size_t runtime::hybrid::get_colocated_function_placement_size(shared_ptr<Function> func)
+{
+    auto ops = func->get_ops();
+
+    //it's okay to not do Placement::DEFAULT check; the same node will be checked in the loop below
+    size_t function_placement = ops.front()->get_placement_index();
+    for (auto op : ops)
+    {
+        size_t node_placement = op->get_placement_index();
+        if (node_placement == Node::placement_invalid)
+        {
+            throw ngraph_error("Node should have a device placement");
+        }
+        if (function_placement != node_placement)
+        {
+            throw ngraph_error("Function contains nodes of two different placements");
+        }
+    }
+
+    return function_placement;
 }

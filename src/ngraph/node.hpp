@@ -250,6 +250,8 @@ namespace ngraph
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
+        static const size_t placement_invalid = -1;
+
     protected:
         std::set<std::shared_ptr<Node>> m_control_dependencies;
         void set_output_size(size_t n);
@@ -263,7 +265,7 @@ namespace ngraph
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
-        size_t m_placement_index = 0;
+        size_t m_placement_index = placement_invalid;
     };
 
     class NodeValidationError : public AssertionFailure

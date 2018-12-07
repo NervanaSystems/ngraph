@@ -34,12 +34,12 @@ bool runtime::hybrid::pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
     size_t backend_index = 0;
     for (auto backend : m_placement_backends)
     {
-        backend_index++;
         if (backend->is_supported(*node))
         {
             node->set_placement_index(backend_index);
             return false;
         }
+        backend_index++;
     }
     throw runtime_error("Node " + node->get_name() + " not supported by any backend");
 }

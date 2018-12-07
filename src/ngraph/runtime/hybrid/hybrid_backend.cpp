@@ -94,8 +94,7 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
         {
             size_t placement = get_colocated_function_placement_size(sub_function);
-            auto backend =
-                m_backend_list[(placement - 1)]; // (placement-1) as 0 is default placement
+            auto backend = m_backend_list[placement];
             backend.second->compile(sub_function);
         }
     }
@@ -133,8 +132,7 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
     {
         // Init backend
         size_t placement = get_colocated_function_placement_size(sub_function);
-        // (placement-1) as 0 is default placement
-        auto backend = m_backend_list[(placement - 1)].second;
+        auto backend = m_backend_list[placement].second;
 
         // Prepare parameter TensorViews
         vector<shared_ptr<runtime::Tensor>> parameter_tvs;
