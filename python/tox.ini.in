@@ -22,14 +22,14 @@ commands=
   flake8 --config=tox.ini {posargs:${CMAKE_CURRENT_SOURCE_DIR}/pyngraph/ ${CMAKE_CURRENT_SOURCE_DIR}/ngraph/ ${CMAKE_CURRENT_SOURCE_DIR}/examples/}
   flake8 --config=tox.ini --ignore=D100,D101,D102,D103,D104,D105,D107,W503 ${CMAKE_CURRENT_SOURCE_DIR}/test/  # ignore lack of docs in tests
   mypy --config-file=tox.ini {posargs:${CMAKE_CURRENT_SOURCE_DIR}/pyngraph/ ${CMAKE_CURRENT_SOURCE_DIR}/ngraph/ ${CMAKE_CURRENT_SOURCE_DIR}/examples/} # Use MyPy in Python 3 only
-  pytest --ignore=${CMAKE_CURRENT_SOURCE_DIR}/test/ngraph/test_onnx_import.py {posargs:${CMAKE_CURRENT_SOURCE_DIR}/test/}
+  pytest {posargs:${CMAKE_CURRENT_SOURCE_DIR}/test/}
 
 [testenv:py27]
 commands=
   {envbindir}/python setup.py develop
   flake8 --config=tox.ini {posargs:${CMAKE_CURRENT_SOURCE_DIR}/pyngraph/ ${CMAKE_CURRENT_SOURCE_DIR}/ngraph/ ${CMAKE_CURRENT_SOURCE_DIR}/examples/}
   flake8 --config=tox.ini --ignore=D100,D101,D102,D103,D104,D105,D107,W503 ${CMAKE_CURRENT_SOURCE_DIR}/test/  # ignore lack of docs in tests
-  pytest --ignore=${CMAKE_CURRENT_SOURCE_DIR}/test/ngraph/test_onnx_import.py {posargs:${CMAKE_CURRENT_SOURCE_DIR}/test/}
+  pytest {posargs:${CMAKE_CURRENT_SOURCE_DIR}/test/}
 
 [testenv:devenv]
 envdir = devenv
