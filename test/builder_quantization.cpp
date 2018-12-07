@@ -548,7 +548,7 @@ TEST(builder, scaled_Q_unsigned)
     EXPECT_EQ((vector<uint8_t>{0, 0, 1, 1, 2, 64, 127, 255}), read_vector<uint8_t>(result));
 }
 
-TEST(builder, dynamic_scaled_Q_unsigned)
+TEST(builder, dynamic_scaled_Q)
 {
     auto call_SQ = [](unique_ptr<runtime::Backend>& backend,
                       element::Type type,
@@ -598,6 +598,22 @@ TEST(builder, dynamic_scaled_Q_unsigned)
                            0.0f,
                            1.0f);
     EXPECT_EQ((vector<uint8_t>{35, 151, 154, 219}), read_vector<uint8_t>(result3));
+    auto result4 = call_SQ(backend,
+                           element::i8,
+                           op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN,
+                           Shape{2, 4},
+                           vector<float>{-1.3990955,
+                                         -1.468798,
+                                         -2.0760186,
+                                         0.17088544,
+                                         -0.0829789,
+                                         -0.3173087,
+                                         -0.5645172,
+                                         -0.3188769},
+                           -2.0760186f,
+                           0.17088544f);
+    EXPECT_EQ((vector<int8_t>{-86, -90, -127, 10, -5, -19, -35, -20}),
+              read_vector<int8_t>(result4));
 }
 
 TEST(builder, scaled_Q_signed)
