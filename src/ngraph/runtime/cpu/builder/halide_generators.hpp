@@ -16,7 +16,16 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include <Halide.h>
+#include <HalideBuffer.h>
+#include <functional>
+#include <memory>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
+#include <vector>
+
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
@@ -24,23 +33,12 @@ namespace ngraph
     {
         namespace cpu
         {
-            namespace pass
+            namespace halide
             {
-                class ConcatInputs;
+                const std::unordered_map<std::type_index,
+                                         std::function<Halide::Func(std::vector<Halide::Func>)>>&
+                    get_halide_generators();
             }
         }
     }
 }
-
-class ngraph::runtime::cpu::pass::ConcatInputs : public ngraph::pass::GraphRewrite
-{
-public:
-    ConcatInputs()
-        : GraphRewrite()
-    {
-        concat_lstm_inputs();
-    }
-
-private:
-    void concat_lstm_inputs();
-};

@@ -101,7 +101,6 @@ set(SRC
     op/conv_add.cpp
     pass/cpu_assignment.cpp
     pass/cpu_collapse_dims.cpp
-    pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp
     pass/cpu_horizontal_fusion.cpp
     pass/cpu_layout.cpp
@@ -128,6 +127,8 @@ if (NGRAPH_HALIDE)
     set(SRC
         ${SRC}
         builder/halide_op.cpp
+        builder/loop_kernel.cpp
+        builder/halide_generators.cpp
         pass/halide_subgraph_extraction.cpp
         )
 endif()
