@@ -139,6 +139,21 @@ static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t out
     }
 }
 
+static void
+    memory_size_check(size_t memory_size, const shared_ptr<Node>& node, const string& function_name)
+{
+    const size_t tensor_size = shape_size(node->get_shape()) * node->get_element_type().size();
+
+    if (memory_size != tensor_size)
+    {
+        ostringstream os;
+        os << "IntelGPU backend failed memory check. In \"" << function_name << "\" with Node \""
+           << node->get_name() << "\" and " << node->get_shape() << " mismatched memory sizes "
+           << tensor_size << " and " << memory_size;
+        throw invalid_argument(os.str());
+    }
+}
+
 static const string& get_input_name(const shared_ptr<Node>& op, size_t num = 0)
 {
     return op->get_inputs().at(num).get_tensor().get_name();
@@ -1788,11 +1803,22 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     // we try to match them by index number in vectors.
     for (size_t i = 0; i < func->get_output_size(); i++)
     {
+        const shared_ptr<Node>& dst_node = func->get_output_op(i);
+        const size_t dst_shape_size = shape_size(dst_node->get_shape());
+
+        // We should not touch destination memory if it is not existed
+        if (!dst_shape_size)
+        {
+            continue;
+        }
+
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> ngraph_res =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(outputs[i]);
-        const string& tensor_name = get_input_name(func->get_output_op(i));
-
+        const string& tensor_name = get_input_name(dst_node);
         auto result_memory = result.at(tensor_name).get_memory().pointer<char>();
+
+        memory_size_check(result_memory.size(), dst_node, func->get_name());
+
         ngraph_res->write(result_memory.data(), 0, result_memory.size());
     }
 
