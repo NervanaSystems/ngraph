@@ -170,6 +170,8 @@ class BuildExt(build_ext):
             os.makedirs(self.build_lib)
         for source in sharedlib_files:
             destination = self.build_lib + '/' + os.path.basename(source)
+            if 'libomp' in source or 'libgomp' in source:
+                continue
             copyfile(source, destination)
             if 'libtbb' in destination:
                 continue
@@ -216,7 +218,7 @@ class BdistWheel(bdist_wheel):
     def get_tag(self):
         tag = bdist_wheel.get_tag(self)
         if '${NGRAPH_MANYLINUX_ENABLE}' == 'TRUE' and sys.platform.startswith('linux'):
-            tag = ('py2.py3', 'none', 'manylinux2010') + tag[3:]
+            tag = ('py2.py3', 'none', 'manylinux1') + tag[3:]
         return tag
 
 

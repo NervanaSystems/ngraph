@@ -53,6 +53,14 @@ set(TOX_INI_IN "${CMAKE_SOURCE_DIR}/python/tox.ini.in")
 set(TOX_INI    "${CMAKE_BINARY_DIR}/tox.ini")
 configure_file(${TOX_INI_IN} ${TOX_INI})
 
+list(APPEND WHEEL_DEP_LIBS pybind11)
+list(APPEND WHEEL_DEP_LIBS ngraph)
+list(APPEND WHEEL_DEP_LIBS cpu_backend)
+list(APPEND WHEEL_DEP_LIBS interpreter_backend)
+if (NGRAPH_MANYLINUX_ENABLE)
+    list(APPEND WHEEL_DEP_LIBS ext_omprt)
+endif()
+
 unset(PYTHON_EXECUTABLE)
 unset(PYTHONINTERP_FOUND)
 find_package(PythonInterp 2)
@@ -72,7 +80,7 @@ if (PYTHON_EXECUTABLE)
             COMMAND ./.venv2/bin/python -m pip install -U pip setuptools wheel
             COMMAND ./.venv2/bin/python setup.py bdist_wheel
             COMMAND ${CMAKE_COMMAND} -E touch wheel3.timestamp
-            DEPENDS pybind11 ngraph cpu_backend interpreter_backend
+            DEPENDS ${WHEEL_DEP_LIBS}
     )
     list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel2.timestamp)
 endif (PYTHON_EXECUTABLE)
@@ -90,7 +98,7 @@ if (NOT NGRAPH_MANYLINUX_ENABLE)
                 COMMAND ./.venv3/bin/python -m pip install -U pip setuptools wheel
                 COMMAND ./.venv3/bin/python setup.py bdist_wheel
                 COMMAND ${CMAKE_COMMAND} -E touch wheel3.timestamp
-                DEPENDS pybind11 ngraph cpu_backend interpreter_backend ${WHEEL_DEPS}
+                DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
         )
         list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel3.timestamp)
     endif (PYTHON3_EXECUTABLE)
