@@ -234,7 +234,15 @@ if (NOT DEFINED NGRAPH_TBB_ENABLE)
 endif()
 
 add_custom_target(style-check
-    COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh
+    COMMAND ${CMAKE_COMMAND}
+    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    -P ${CMAKE_MODULE_PATH}style_check.cmake
+)
+
+add_custom_target(style-apply
+    COMMAND ${CMAKE_COMMAND}
+    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    -P ${CMAKE_MODULE_PATH}style_apply.cmake
 )
 
 #-----------------------------------------------------------------------------------------------
