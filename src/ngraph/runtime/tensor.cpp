@@ -75,8 +75,11 @@ void runtime::Tensor::set_stale(bool val)
 
 void runtime::Tensor::copy_to(shared_ptr<runtime::Tensor> d)
 {
-    size_t n = get_size_in_bytes();
-    void* copy = malloc(n);
-    read(copy, 0, n);
-    d->write(copy, 0, n);
+    size_t ns = get_size_in_bytes();
+    size_t nd = d->get_size_in_bytes(); 
+    NGRAPH_ASSERT(get_element_count() == d->get_element_count()) << "the source tensor and destination sizes don't match";
+    NGRAPH_ASSERT(get_shape() == d->get_shape()) << "the source and destination tensors shapes don't match";
+    void* copy = malloc(ns);
+    read(copy, 0, ns);
+    d->write(copy, 0, nd);
 }

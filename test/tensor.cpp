@@ -107,8 +107,7 @@ void test_copy_to_same_backend(const vector<T>& x)
     auto backend_int = runtime::Backend::create("INTERPRETER");
     auto a = backend_int->create_tensor(element::from<T>(), Shape{(x.size() / 2), (x.size() / 2)});
     auto b = backend_int->create_tensor(element::from<T>(), Shape{(x.size() / 2), (x.size() / 2)});
-    auto c = backend_int->create_tensor(element::from<T>(),
-                                        Shape{((x.size() / 2) - 1), ((x.size() / 2) + 1)});
+    
     vector<T> result(x.size());
 
     a->write(&x[0], 0, x.size() * sizeof(T));
@@ -120,8 +119,10 @@ void test_copy_to_same_backend(const vector<T>& x)
     vector<T> af_vector(x.size());
     b->read(af_vector.data(), 0, af_vector.size() * sizeof(T));
     ASSERT_EQ(af_vector, result);
-
-    // EXPECT_THROW(a->copy_to(c), ngraph_error);
+    
+    auto c = backend_int->create_tensor(element::from<T>(),
+                                        Shape{((x.size() / 2) - 1), ((x.size() / 2) + 1)});
+    EXPECT_THROW(a->copy_to(c), AssertionFailure);
 }
 
 template <typename T>
@@ -143,6 +144,11 @@ void test_copy_to_other_backend(const vector<T>& x)
     vector<T> af_vector(x.size());
     b->read(af_vector.data(), 0, af_vector.size() * sizeof(T));
     ASSERT_EQ(af_vector, result);
+
+    // check to see if it asserts when sizes don't match 
+    auto c = backend_int->create_tensor(element::from<T>(),
+                                        Shape{((x.size() / 2) - 1), ((x.size() / 2) + 1)});
+    EXPECT_THROW(a->copy_to(c), AssertionFailure);
 }
 
 #if defined(NGRAPH_INTERPRETER_ENABLE)
