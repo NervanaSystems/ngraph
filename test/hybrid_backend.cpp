@@ -73,15 +73,15 @@ TEST(HYBRID, abc)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    backend->call_with_validate(f, {result}, {a, b, c});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    backend->call_with_validate(f, {result}, {b, a, c});
+    backend->call_with_validate(backend->compile(f), {result}, {b, a, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    backend->call_with_validate(f, {result}, {a, c, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, c, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 }
