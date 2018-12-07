@@ -585,11 +585,19 @@ TEST(builder, dynamic_scaled_Q_unsigned)
     auto result2 = call_SQ(backend,
                            element::u8,
                            op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN,
+                           Shape{8},
+                           vector<float>{-85.0, 0.0, 2.0, 10.0, 15.0, 127.0, 64.0, 500.0},
+                           -85.0f,
+                           15.0f);
+    EXPECT_EQ((vector<uint8_t>{0, 0, 6, 30, 45, 255, 192, 255}), read_vector<uint8_t>(result2));
+    auto result3 = call_SQ(backend,
+                           element::u8,
+                           op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN,
                            Shape{2, 2},
                            vector<float>{0.1392, 0.5928, 0.6027, 0.8579},
                            0.0f,
                            1.0f);
-    EXPECT_EQ((vector<uint8_t>{35, 151, 154, 219}), read_vector<uint8_t>(result2));
+    EXPECT_EQ((vector<uint8_t>{35, 151, 154, 219}), read_vector<uint8_t>(result3));
 }
 
 TEST(builder, scaled_Q_signed)
