@@ -523,7 +523,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
                                                true,
                                                "reduce_input_index");
         writer << "input_idx = reduce_input_index + non_reduce_input_index;\n";
-        writer << "input_i = in[input_idx];\n";
+        writer << "input_i = load(in, input_idx);\n";
     };
 
     auto stable_sum_lambda = [&]() {
