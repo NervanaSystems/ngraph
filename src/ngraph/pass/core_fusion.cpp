@@ -459,7 +459,6 @@ void ngraph::pass::CoreFusion::construct_reshape_broadcast()
 
         size_t dim = input_m->get_shape().at(0);
 
-        bool valid_shape = true;
         //We are going to support the most common case where broadcast doesn't add 1-dimensions
         //since it's also very simple to implement
         size_t dim_one_count = 0;
