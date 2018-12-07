@@ -244,7 +244,7 @@ uint64_t test::matching_mantissa_bits(uint64_t distance)
     ::testing::AssertionResult ar_fail = ::testing::AssertionFailure();
     if (a.size() != b.size())
     {
-        throw ngraph_error("a.size() != b.size() for all_close_f comparison.");
+        return ::testing::AssertionFailure() << "a.size() != b.size() for all_close_f comparison.";
     }
     vector<uint32_t> distances = float_distances(a, b);
 
@@ -324,7 +324,7 @@ uint64_t test::matching_mantissa_bits(uint64_t distance)
     ::testing::AssertionResult ar_fail = ::testing::AssertionFailure();
     if (a.size() != b.size())
     {
-        throw ngraph_error("a.size() != b.size() for all_close_f comparison.");
+        return ::testing::AssertionFailure() << "a.size() != b.size() for all_close_f comparison.";
     }
     vector<uint64_t> distances = float_distances(a, b);
 
