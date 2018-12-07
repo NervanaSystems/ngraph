@@ -96,6 +96,13 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
             size_t placement = get_colocated_function_placement_size(sub_function);
             auto backend = m_backend_list[placement];
             backend.second->compile(sub_function);
+
+            // Compile will replace nodes so we need to make one more pass through all
+            // ops to reset placement
+            for (auto op : sub_function->get_ops())
+            {
+                op->set_placement_index(placement);
+            }
         }
     }
 
