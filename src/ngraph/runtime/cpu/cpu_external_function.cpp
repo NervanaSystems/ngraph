@@ -163,7 +163,6 @@
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_collapse_dims.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_horizontal_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
@@ -345,6 +344,10 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::ConvolutionBias), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBias>},
     {TI(ngraph::op::QuantizedConvolutionBias),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBias>},
+    {TI(ngraph::op::QuantizedConvolutionBiasAdd),
+     &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBiasAdd>},
+    {TI(ngraph::op::QuantizedConvolutionBiasSignedAdd),
+     &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBiasSignedAdd>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolution),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolution>},
@@ -1076,11 +1079,10 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass);
-    REGISTER_KNOBBED_PASS(LSTMFusion, false, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(RNNFusion, false, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(LSTMFusion, true, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(RNNFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(AlgebraicSimplification, true, ngraph::pass);
-    REGISTER_KNOBBED_PASS(MultiLayerRNNFusion, false, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(ConcatInputs, false, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(MultiLayerRNNFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPURnnMatFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUReshapeSinking, false, runtime::cpu::pass);
