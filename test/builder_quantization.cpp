@@ -671,7 +671,7 @@ TEST(builder, dynamic_scaled_DQ)
         call_SDQ<int8_t>(backend, element::i8, Shape{1}, vector<int8_t>{42}, -1.0f, 300.0f);
     EXPECT_EQ((vector<float>{99.212601}), read_vector<float>(result));
     auto result2 = call_SDQ<uint8_t>(
-        backend, element::u8, Shape{1}, vector<uint8_t>{35, 151, 154, 219}, 0.0f, 1.0f);
+        backend, element::u8, Shape{2, 2}, vector<uint8_t>{35, 151, 154, 219}, 0.0f, 1.0f);
     EXPECT_EQ((vector<float>{0.13725491, 0.59215689, 0.60392159, 0.8588236}),
               read_vector<float>(result2));
 }
