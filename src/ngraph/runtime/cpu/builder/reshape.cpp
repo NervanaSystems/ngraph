@@ -44,19 +44,19 @@ namespace ngraph
                 auto can_skip_reshape = [&]() {
                     if (!reshape->get_is_transpose())
                     {
-                        std::cout << "not transpose\n";
+                    	std::cout << "not transpose\n";
                         return true;
                     }
                     auto annotation = reshape->get_op_annotations();
                     if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
                     {
-                        std::cout << "in place\n";
+                    	std::cout << "in place\n";
                         return true;
                     }
                     return false;
                 };
 
-#if 1
+#if 0
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
 
@@ -74,8 +74,12 @@ namespace ngraph
 
                 auto functor = [&, ref_kernel, arg_shape, input_order, result_shape](
                     CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    ref_kernel(
-                        arg_tensor, out_tensor, arg_shape, input_order, result_shape, ectx->arena);
+                    ref_kernel(arg_tensor,
+                               out_tensor,
+                               arg_shape,
+                               input_order,
+                               result_shape,
+                               ectx->arena);
                 };
                 functors.emplace_back(functor);
                 return;
@@ -95,7 +99,7 @@ namespace ngraph
                     functors.emplace_back(functor);
                     return;
                 }
-
+#endif
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
 
@@ -108,7 +112,7 @@ namespace ngraph
                 bool same_layout = is_sorted(input_order.begin(), input_order.end());
 
                 auto result_size = shape_size(result_shape);
-
+#if 0
                 if (same_layout || result_size < 2)
                 {
                     size_t size = out[0].get_size() * out[0].get_element_type().size();
@@ -118,7 +122,7 @@ namespace ngraph
                     functors.emplace_back(functor);
                     return;
                 }
-
+#endif
                 std::function<decltype(runtime::cpu::kernel::reshape_1d<float, 2>)> kernel;
                 if (arg_rank == 1)
                 {
@@ -165,7 +169,6 @@ namespace ngraph
                         arg_tensor, out_tensor, arg_shape, input_order, result_shape, ectx->arena);
                 };
                 functors.emplace_back(functor);
-#endif
             }
 
             REGISTER_OP_BUILDER(Reshape);
