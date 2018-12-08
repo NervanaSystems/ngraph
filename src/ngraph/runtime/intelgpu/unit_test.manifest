@@ -148,4 +148,3 @@ max_3d_to_scalar_double
 argmin_trivial_in_i32
 argmax_4D_axis_3_i64_in_i32
 argmin_trivial_in_double
-maxpool_bprop_larger_than_cache
