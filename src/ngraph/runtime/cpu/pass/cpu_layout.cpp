@@ -1481,6 +1481,7 @@ namespace ngraph
                         }
                     }
 
+#if 0
                     if (skip_reshape)
                     {
                         auto op_annotations = reshape->get_op_annotations();
@@ -1493,7 +1494,7 @@ namespace ngraph
                         // pass-through
                         op_annotations->add_in_place_oi_pair({0, 0, false});
                     }
-
+#endif
                     if (!skip_input_reorder)
                     {
                         set_native_layouts(external_function, node);
@@ -2033,7 +2034,7 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GetOutputElement>},
     {TI(ngraph::op::LRN), &runtime::cpu::pass::CPULayout::layout<ngraph::op::LRN>},
     {TI(ngraph::op::Relu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Relu>},
-    {TI(ngraph::op::Reshape), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Reshape>},
+    //{TI(ngraph::op::Reshape), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Reshape>},
     {TI(ngraph::op::Result), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Result>},
     {TI(ngraph::op::ReluBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ReluBackprop>},
