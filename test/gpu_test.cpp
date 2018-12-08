@@ -241,7 +241,7 @@ TEST(gpu_test, topk_fanout_graph_transform)
 // x  : [[0, 1, 0, 1, ... , 0, 1]]
 // dx : [[0, 2, 0, 3, ... , 0, 4]]
 //
-NGRAPH_TEST(gpu_test, maxpool_bprop_larger_than_cache)
+TEST(gpu_test, maxpool_bprop_larger_than_cache)
 {
     Shape window_shape{1, 2};
     Strides move_strides{1, 2};
