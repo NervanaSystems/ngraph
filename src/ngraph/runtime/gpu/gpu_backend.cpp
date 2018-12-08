@@ -37,15 +37,7 @@ extern "C" const char* get_ngraph_version_string()
 
 extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
-#ifdef NGRAPH_HYBRID_ENABLE
-    vector<pair<string, shared_ptr<runtime::Backend>>> backend_list{
-        {"GPU", make_shared<runtime::gpu::GPU_Backend>()}};
-
-    auto wrapper = new runtime::hybrid::HybridBackend(backend_list);
-    return wrapper;
-#else
     return new runtime::gpu::GPU_Backend();
-#endif
 }
 
 extern "C" void delete_backend(runtime::Backend* backend)
@@ -65,8 +57,7 @@ runtime::gpu::GPU_Backend::BackendContext::BackendContext()
     , m_cuda_manager(new CudaContextManager)
 {
     // Create context use driver API and make it current, the runtime call will pickup the context
-    // http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
-    // #interoperability-between-runtime-and-driver-apis
+    // http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#interoperability-between-runtime-and-driver-apis
     m_cuda_manager->SetContextCurrent();
 
     m_runtime_context->cublas_handle = new cublasHandle_t;
