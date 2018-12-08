@@ -1754,11 +1754,10 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<element::Type>
     {
         uint32_t reduce_count = static_cast<uint32_t>(shape_size(reduce_shape));
         uint32_t block_size_x = 1;
-        while ((block_size_x << 1) <= reduce_count)
+        while ((block_size_x << 1) <= fmin(512, reduce_count))
         {
             block_size_x <<= 1;
         }
-        block_size_x = fmin(512, block_size_x);
         uint32_t shared_data_bytes = block_size_x * static_cast<uint32_t>(dtypes[0].size());
         uint32_t aligned_grid_size_x = nthreads;
         auto args = m_primitive_emitter->add_kernel_args();
