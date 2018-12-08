@@ -59,10 +59,7 @@ namespace ngraph
                     rc = false;
                 }
             }
-            if (!rc)
-            {
-                ar_fail << "diff count: " << count << " out of " << a.size() << "\n";
-            }
+            ar_fail << "diff count: " << count << " out of " << a.size() << "\n";
             return rc ? ::testing::AssertionSuccess() : ar_fail;
         }
 

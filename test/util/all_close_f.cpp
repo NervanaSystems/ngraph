@@ -362,10 +362,7 @@ uint64_t test::matching_mantissa_bits(uint64_t distance)
             diff_count++;
         }
     }
-    if (!rc)
-    {
-        ar_fail << "diff count: " << diff_count << " out of " << a.size() << "\n";
-    }
+    ar_fail << "diff count: " << diff_count << " out of " << a.size() << "\n";
     // Find median value via partial sorting
     size_t middle = distances.size() / 2;
     std::nth_element(distances.begin(), distances.begin() + middle, distances.end());
