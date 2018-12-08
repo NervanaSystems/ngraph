@@ -25,6 +25,7 @@
 #include "ngraph/util.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
+#include "util/random.hpp"
 
 using namespace std;
 using namespace ngraph;
