@@ -24,6 +24,7 @@ from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 from wheel.bdist_wheel import bdist_wheel
 from shutil import copyfile
+from distutils.errors import *
 import sys
 import setuptools
 import os
@@ -53,7 +54,10 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     return objects
 
 
-distutils.ccompiler.CCompiler.compile=parallelCCompile
+original_compile=distutils.ccompiler.CCompiler.compile
+
+if sys.version_info < (3, 6):
+    distutils.ccompiler.CCompiler.compile=parallelCCompile
 
 
 # As of Python 3.6, CCompiler has a `has_flag` method.
@@ -64,13 +68,14 @@ def has_flag(compiler, flagname):
     the specified compiler.
     """
     import tempfile
+    retval = True
     with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
         f.write('int main (int argc, char **argv) { return 0; }')
         try:
-            compiler.compile([f.name], extra_postargs=[flagname])
-        except setuptools.distutils.errors.CompileError:
-            return False
-    return True
+            original_compile(compiler, sources=[f.name], extra_postargs=[flagname])
+        except CompileError:
+            retval = False
+    return retval
 
 
 def cpp_flag(compiler):
