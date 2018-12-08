@@ -61,31 +61,32 @@ if (NGRAPH_MANYLINUX_ENABLE)
     list(APPEND WHEEL_DEP_LIBS ext_omprt)
 endif()
 
-unset(PYTHON_EXECUTABLE)
-unset(PYTHONINTERP_FOUND)
-find_package(PythonInterp 2)
-if (PYTHON_EXECUTABLE)
-    set(PYTHON2_EXECUTABLE ${PYTHON_EXECUTABLE})
-    find_program(VIRTUALENV virtualenv)
-    if (NOT VIRTUALENV)
-        message(FATAL_ERROR "Please install virtualenv!")
-    endif()
-
-    message(STATUS "Python2 executable:" ${PYTHON_EXECUTABLE})
-
-    add_custom_command(
-            OUTPUT ${CMAKE_BINARY_DIR}/wheel2.timestamp
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-            COMMAND ${VIRTUALENV} -p ${PYTHON2_EXECUTABLE} .venv2
-            COMMAND ./.venv2/bin/python -m pip install -U pip setuptools wheel
-            COMMAND ./.venv2/bin/python setup.py bdist_wheel
-            COMMAND ${CMAKE_COMMAND} -E touch wheel3.timestamp
-            DEPENDS ${WHEEL_DEP_LIBS}
-    )
-    list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel2.timestamp)
-endif (PYTHON_EXECUTABLE)
-
 if (NOT NGRAPH_MANYLINUX_ENABLE)
+    unset(PYTHON_EXECUTABLE)
+    unset(PYTHONINTERP_FOUND)
+    find_package(PythonInterp 2)
+    if (PYTHON_EXECUTABLE)
+        set(PYTHON2_EXECUTABLE ${PYTHON_EXECUTABLE})
+        find_program(VIRTUALENV virtualenv)
+        if (NOT VIRTUALENV)
+            message(FATAL_ERROR "Please install virtualenv!")
+        endif()
+
+        message(STATUS "Python2 executable:" ${PYTHON_EXECUTABLE})
+
+        add_custom_command(
+                OUTPUT ${CMAKE_BINARY_DIR}/wheel2.timestamp
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                COMMAND ${VIRTUALENV} -p ${PYTHON2_EXECUTABLE} .venv2
+                COMMAND ./.venv2/bin/python -m pip install -U pip setuptools wheel
+                COMMAND ./.venv2/bin/python setup.py bdist_wheel
+                COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
+                COMMAND ${CMAKE_COMMAND} -E touch wheel2.timestamp
+                DEPENDS ${WHEEL_DEP_LIBS}
+        )
+        list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel2.timestamp)
+    endif (PYTHON_EXECUTABLE)
+
     # Workaround: find_package(PythonInterp 3) does not work.
     find_program(PYTHON3_EXECUTABLE python3)
     if (PYTHON3_EXECUTABLE)
@@ -97,12 +98,79 @@ if (NOT NGRAPH_MANYLINUX_ENABLE)
                 COMMAND ${PYTHON3_EXECUTABLE} -m venv .venv3
                 COMMAND ./.venv3/bin/python -m pip install -U pip setuptools wheel
                 COMMAND ./.venv3/bin/python setup.py bdist_wheel
-                COMMAND ./.venv3/bin/python setup.py sdist
+                COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
                 COMMAND ${CMAKE_COMMAND} -E touch wheel3.timestamp
                 DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
         )
         list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel3.timestamp)
     endif (PYTHON3_EXECUTABLE)
+else()
+    add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/wheel27mu.timestamp
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND /opt/python/cp27-cp27mu/bin/virtualenv -p /opt/python/cp27-cp27mu/bin/python2.7 .venv27mu
+            COMMAND ./.venv27mu/bin/python -m pip install -U pip setuptools wheel
+            COMMAND ./.venv27mu/bin/python setup.py bdist_wheel
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
+            COMMAND ${CMAKE_COMMAND} -E touch wheel27mu.timestamp
+            DEPENDS ${WHEEL_DEP_LIBS}
+    )
+    list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel27mu.timestamp)
+    add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/wheel27m.timestamp
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND /opt/python/cp27-cp27mu/bin/virtualenv -p /opt/python/cp27-cp27m/bin/python2.7 .venv27m
+            COMMAND ./.venv27m/bin/python -m pip install -U pip setuptools wheel
+            COMMAND ./.venv27m/bin/python setup.py bdist_wheel
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
+            COMMAND ${CMAKE_COMMAND} -E touch wheel27m.timestamp
+            DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
+    )
+    list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel27m.timestamp)
+    add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/wheel34.timestamp
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND /opt/python/cp34-cp34m/bin/python3.4 -m venv .venv34
+            COMMAND ./.venv34/bin/python -m pip install -U pip setuptools wheel
+            COMMAND ./.venv34/bin/python setup.py bdist_wheel
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
+            COMMAND ${CMAKE_COMMAND} -E touch wheel34.timestamp
+            DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
+    )
+    list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel34.timestamp)
+    add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/wheel35.timestamp
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND /opt/python/cp35-cp35m/bin/python3.5 -m venv .venv35
+            COMMAND ./.venv35/bin/python -m pip install -U pip setuptools wheel
+            COMMAND ./.venv35/bin/python setup.py bdist_wheel
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
+            COMMAND ${CMAKE_COMMAND} -E touch wheel35.timestamp
+            DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
+    )
+    list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel35.timestamp)
+    add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/wheel36.timestamp
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND /opt/python/cp36-cp36m/bin/python3.6 -m venv .venv36
+            COMMAND ./.venv36/bin/python -m pip install -U pip setuptools wheel
+            COMMAND ./.venv36/bin/python setup.py bdist_wheel
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
+            COMMAND ${CMAKE_COMMAND} -E touch wheel36.timestamp
+            DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
+    )
+    list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel36.timestamp)
+    add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/wheel37.timestamp
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND /opt/python/cp37-cp37m/bin/python3.7 -m venv .venv37
+            COMMAND ./.venv37/bin/python -m pip install -U pip setuptools wheel
+            COMMAND ./.venv37/bin/python setup.py bdist_wheel
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
+            COMMAND ${CMAKE_COMMAND} -E touch wheel37.timestamp
+            DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
+    )
+    list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel37.timestamp)
 endif()
 
 add_custom_target(python_wheel DEPENDS ${WHEEL_DEPS})
