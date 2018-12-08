@@ -265,7 +265,7 @@ TEST(gpu_test, maxpool_bprop_larger_than_cache)
                                   x, dy, window_shape, move_strides, padding_below, padding_above),
                               ParameterVector{x, dy});
 
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto backend = runtime::Backend::create("GPU");
 
     // initialize x to array of alternating 0s and 1s as described above
     std::vector<float> x_data(num_elements, 0);
@@ -285,7 +285,8 @@ TEST(gpu_test, maxpool_bprop_larger_than_cache)
 
     // create result deltas tensor and run the backward max pooling operation
     auto dx_t = backend->create_tensor(element::f32, shape_x);
-    backend->call_with_validate(bprop, {dx_t}, {x_t, dy_t});
+    auto handle = backend->compile(bprop);
+    backend->call_with_validate(handle, {dx_t}, {x_t, dy_t});
 
     // expected values should be dy with 0s left inserted
     // for each delta, see test description above for details
