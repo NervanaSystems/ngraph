@@ -163,7 +163,6 @@
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_collapse_dims.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_horizontal_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
@@ -345,6 +344,10 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::ConvolutionBias), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBias>},
     {TI(ngraph::op::QuantizedConvolutionBias),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBias>},
+    {TI(ngraph::op::QuantizedConvolutionBiasAdd),
+     &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBiasAdd>},
+    {TI(ngraph::op::QuantizedConvolutionBiasSignedAdd),
+     &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBiasSignedAdd>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolution),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolution>},
@@ -748,9 +751,9 @@ using namespace ngraph::runtime;
                     stringstream ss;
                     ss << "((" << tensor->get_element_type().c_type_string()
                        << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
-                    m_variable_name_map[tensor->get_name()] = ss.str();
                     if (m_tensor_roles.find(tensor->get_name()) == m_tensor_roles.end())
                     {
+                        m_variable_name_map[tensor->get_name()] = ss.str();
                         m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
                     }
                 }
@@ -1076,11 +1079,10 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass);
-    REGISTER_KNOBBED_PASS(LSTMFusion, false, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(RNNFusion, false, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(LSTMFusion, true, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(RNNFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(AlgebraicSimplification, true, ngraph::pass);
-    REGISTER_KNOBBED_PASS(MultiLayerRNNFusion, false, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(ConcatInputs, false, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(MultiLayerRNNFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPURnnMatFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUReshapeSinking, false, runtime::cpu::pass);
@@ -1111,7 +1113,8 @@ bool runtime::cpu::CPU_ExternalFunction::computes_result(Node* node)
     for (size_t i = 0; i < node->get_output_size(); i++)
     {
         auto& output_tensor = node->get_output_tensor(i);
-        if (m_tensor_roles[output_tensor.get_name()] == CPUTensorRole::OUTPUT)
+        if (m_tensor_roles.find(output_tensor.get_name()) != m_tensor_roles.end() &&
+            m_tensor_roles[output_tensor.get_name()] == CPUTensorRole::OUTPUT)
         {
             return true;
         }
@@ -1399,7 +1402,8 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
                         continue;
                     }
                     auto input_tensor = &input_node->get_output_tensor(index);
-                    if (m_tensor_roles[input_tensor->get_name()] == CPUTensorRole::INPUT)
+                    if (m_tensor_roles.find(input_tensor->get_name()) != m_tensor_roles.end() &&
+                        m_tensor_roles[input_tensor->get_name()] == CPUTensorRole::INPUT)
                     {
                         NGRAPH_DEBUG << "cpu_external_function: function input pointer passed to "
                                         "slice, do not change offset.";
@@ -1420,7 +1424,7 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
 
                     output_tensor->set_pool_offset(offset);
                     NGRAPH_DEBUG << "cpu_external_function: slice, change offset, old offset is "
-                                 << old_offset << ", new offset is " << offset << std::endl;
+                                 << old_offset << ", new offset is " << offset;
                 }
             }
         }
@@ -1534,10 +1538,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
         {
             for (auto tensor : node->liveness_new_list)
             {
-                intermediates_offsets.emplace_back(tensor_data[tensor->get_name()],
-                                                   tensor->get_pool_offset());
                 if (m_tensor_roles.find(tensor->get_name()) == m_tensor_roles.end())
                 {
+                    intermediates_offsets.emplace_back(tensor_data[tensor->get_name()],
+                                                       tensor->get_pool_offset());
                     m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
                 }
             }

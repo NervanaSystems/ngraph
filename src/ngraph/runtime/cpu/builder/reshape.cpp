@@ -44,15 +44,47 @@ namespace ngraph
                 auto can_skip_reshape = [&]() {
                     if (!reshape->get_is_transpose())
                     {
+                    	std::cout << "not transpose\n";
                         return true;
                     }
                     auto annotation = reshape->get_op_annotations();
                     if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
                     {
+                    	std::cout << "in place\n";
                         return true;
                     }
                     return false;
                 };
+
+#if 0
+                auto arg_shape = args[0].get_shape();
+                auto arg_rank = arg_shape.size();
+
+                auto result_shape = out[0].get_shape();
+                auto result_rank = result_shape.size();
+                auto& result_element_type = out[0].get_element_type();
+
+                auto input_order = reshape->get_input_order();
+                std::cout << "arg_shape " << arg_shape << std::endl;
+                std::cout << "result_shape " << result_shape << std::endl;
+                std::cout << "input_order " << input_order << std::endl;
+                std::function<decltype(runtime::cpu::kernel::reshape<float>)> ref_kernel;
+
+                SELECT_KERNEL(ref_kernel, result_element_type, runtime::cpu::kernel::reshape);
+
+                auto functor = [&, ref_kernel, arg_shape, input_order, result_shape](
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    ref_kernel(arg_tensor,
+                               out_tensor,
+                               arg_shape,
+                               input_order,
+                               result_shape,
+                               ectx->arena);
+                };
+                functors.emplace_back(functor);
+                return;
+#endif
+#if 0
 
                 if (can_skip_reshape())
                 {
@@ -60,13 +92,14 @@ namespace ngraph
                     auto functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (out_tensor != arg_tensor)
                         {
+                        	std::cout << "memcpy\n";
                             memcpy(out_tensor, arg_tensor, size);
                         }
                     };
                     functors.emplace_back(functor);
                     return;
                 }
-
+#endif
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
 
@@ -79,7 +112,7 @@ namespace ngraph
                 bool same_layout = is_sorted(input_order.begin(), input_order.end());
 
                 auto result_size = shape_size(result_shape);
-
+#if 0
                 if (same_layout || result_size < 2)
                 {
                     size_t size = out[0].get_size() * out[0].get_element_type().size();
@@ -89,7 +122,7 @@ namespace ngraph
                     functors.emplace_back(functor);
                     return;
                 }
-
+#endif
                 std::function<decltype(runtime::cpu::kernel::reshape_1d<float, 2>)> kernel;
                 if (arg_rank == 1)
                 {
