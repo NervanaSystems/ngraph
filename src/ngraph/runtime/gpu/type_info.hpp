@@ -39,6 +39,9 @@ namespace ngraph
                 virtual std::string lowest() const = 0;
                 virtual std::string min() const = 0;
                 virtual std::string max() const = 0;
+                virtual void* lowest_ptr() = 0;
+                virtual void* min_ptr() = 0;
+                virtual void* max_ptr() = 0;
 
                 using TypeDispatch = std::unordered_map<std::string, std::shared_ptr<TypeInfo>>;
                 static const std::shared_ptr<TypeInfo>& Get(const element::Type& type)
@@ -68,6 +71,17 @@ namespace ngraph
             class TypeInfo_Impl : public TypeInfo
             {
             public:
+                TypeInfo_Impl()
+                    : m_min(std::numeric_limits<T>::min())
+                    , m_max(std::numeric_limits<T>::has_infinity
+                                ? std::numeric_limits<T>::infinity()
+                                : std::numeric_limits<T>::max())
+                    , m_lowest(std::numeric_limits<T>::has_infinity
+                                   ? -std::numeric_limits<T>::infinity()
+                                   : std::numeric_limits<T>::lowest())
+                {
+                }
+
                 std::string lowest() const override
                 {
                     return to_string<T>(std::numeric_limits<T>::lowest());
@@ -80,6 +94,13 @@ namespace ngraph
                 {
                     return to_string<T>(std::numeric_limits<T>::max());
                 }
+                void* lowest_ptr() override { return &m_lowest; }
+                void* min_ptr() override { return &m_min; }
+                void* max_ptr() override { return &m_max; }
+            private:
+                T m_min;
+                T m_max;
+                T m_lowest;
             };
         }
     }

@@ -63,7 +63,7 @@ namespace ngraph
 
         /// \brief Constructs a static PartialShape with zero rank (the shape of a scalar).
         PartialShape()
-            : PartialShape({})
+            : PartialShape(std::initializer_list<Dimension>{})
         {
         }
 

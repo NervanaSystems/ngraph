@@ -62,7 +62,7 @@
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_concat_inputs.hpp"
+#include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_loop_kernel_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
@@ -156,7 +156,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_row)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     vector<float> expected{11, 30, 38, 111};
     EXPECT_EQ(read_vector<float>(result), expected);
 }
@@ -187,7 +187,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_column)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     vector<float> expected{11, 29, 39, 111};
     EXPECT_EQ(read_vector<float>(result), expected);
 }
@@ -222,7 +222,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_matrix)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     vector<float> expected{10, 28, 37, 109};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -254,7 +254,7 @@ TEST(cpu_fusion, gemm_cpu_no_bias)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     vector<float> expected{9, 27, 36, 108};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -634,8 +634,9 @@ TEST(cpu_fusion, conv_bias_fprop_n1c1h3w3)
     auto f = make_shared<Function>(
         convolution_bias, ParameterVector{conv_test.data, conv_test.weights, conv_test.bias});
 
-    backend->call_with_validate(
-        f, {conv_test.result_val}, {conv_test.data_val, conv_test.weights_val, conv_test.bias_val});
+    backend->call_with_validate(backend->compile(f),
+                                {conv_test.result_val},
+                                {conv_test.data_val, conv_test.weights_val, conv_test.bias_val});
     auto result_vec = read_vector<float>(conv_test.result_val);
 
     EXPECT_TRUE(
@@ -665,7 +666,7 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
         NodeVector{d_data, d_weights, d_bias},
         ParameterVector{conv_test.data, conv_test.weights, conv_test.bias, conv_test.delta});
     backend->call_with_validate(
-        df,
+        backend->compile(df),
         {conv_test.d_data_val, conv_test.d_weights_val, conv_test.d_bias_val},
         {conv_test.data_val, conv_test.weights_val, conv_test.bias_val, conv_test.delta_val});
 
@@ -767,7 +768,7 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
     auto result_mean_bnr = backend->create_tensor(element::f32, mean_shape);
     auto result_variance_bnr = backend->create_tensor(element::f32, var_shape);
 
-    backend->call_with_validate(f,
+    backend->call_with_validate(backend->compile(f),
                                 {bn_output,
                                  result_mean,
                                  result_variance,
@@ -781,6 +782,56 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
         test::all_close(read_vector<float>(result_mean), read_vector<float>(result_mean_bnr)));
     EXPECT_TRUE(test::all_close(read_vector<float>(result_variance),
                                 read_vector<float>(result_variance_bnr)));
+}
+
+static void test_batchnorm_fprop_relu(Shape input_shape)
+{
+    auto make_bn_relu_function = [&]() {
+        auto c_axis = input_shape[1];
+        auto input = make_shared<op::Parameter>(element::f32, input_shape);
+        auto mean_shape = Shape{c_axis};
+        auto var_shape = Shape{c_axis};
+        auto gamma_shape = Shape{c_axis};
+        auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+        auto beta_shape = Shape{c_axis};
+        auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+        double eps = 0.001;
+        auto shape_r = input_shape;
+        auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
+        auto output_rt = std::make_shared<op::GetOutputElement>(bn, 0);
+
+        auto output_relu = std::make_shared<op::Relu>(output_rt);
+        auto mean_rt = std::make_shared<op::GetOutputElement>(bn, 1);
+        auto variance_rt = std::make_shared<op::GetOutputElement>(bn, 2);
+
+        auto f = make_shared<Function>(NodeVector{output_relu, mean_rt, variance_rt},
+                                       ParameterVector{input, gamma, beta});
+        return f;
+    };
+    auto cpu_f = make_bn_relu_function();
+    auto int_f = make_bn_relu_function();
+    test::Uniform<float> rng(-10.0f, 10.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
+TEST(cpu_fusion, batchnorm_fprop_relu)
+{
+    test_batchnorm_fprop_relu(Shape{1, 2, 2, 2});
+    test_batchnorm_fprop_relu(Shape{1, 2, 2, 2, 2});
+    test_batchnorm_fprop_relu(Shape{2, 2, 2, 4, 4});
 }
 
 TEST(cpu_fusion, fuse_conv_relu)
@@ -1249,7 +1300,8 @@ std::vector<shared_ptr<runtime::Tensor>> rnn_matrix_fusion_eval(const size_t tim
     copy_data(data_tensor, data_val);
     copy_data(weights_tensor, weights_val);
     copy_data(bias_tensor, bias_val);
-    backend->call_with_validate(func, result_tensors, {data_tensor, weights_tensor, bias_tensor});
+    backend->call_with_validate(
+        backend->compile(func), result_tensors, {data_tensor, weights_tensor, bias_tensor});
     return result_tensors;
 }
 
@@ -1443,38 +1495,73 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
         pass_manager.run_passes(df);
     }
 
-    backend->call_with_validate(df, {output}, {input, ep});
+    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
-#if 0
-TEST(cpu_fusion, loop_kernel_one_input_one_output)
+#if defined(NGRAPH_HALIDE)
+
+TEST(cpu_fusion, loop_kernel_one_input_one_output_halide)
 {
     Shape shapeA{2, 2};
-    auto A = make_shared<op::Parameter>(element::i32, shapeA);
-    auto neg_a = make_shared<op::Negative>(A);
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto relu_a = make_shared<op::Relu>(A);
+    auto relu_relu_a = make_shared<op::Relu>(relu_a);
     auto lk = make_shared<runtime::cpu::op::LoopKernel>(
-        NodeVector{neg_a}, NodeVector{neg_a}, NodeVector{A});
+        NodeVector{relu_a, relu_relu_a}, NodeVector{relu_relu_a}, NodeVector{A});
     auto f = make_shared<Function>(NodeVector{lk}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("CPU");
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shapeA);
 
-    vector<int> dataA{1, 4, 1, 4};
+    vector<float> dataA{-1, 4, -1, 4};
     copy_data(a, dataA);
-    vector<int> expected{-1, -4, -1, -4};
+    vector<float> expected{0, 4, 0, 4};
 
-    backend->call_with_validate(f, {result}, {a});
+    backend->call_with_validate(backend->compile(f), {result}, {a});
 
-    EXPECT_EQ(read_vector<int>(result), expected);
+    EXPECT_TRUE(test::all_close(read_vector<float>(result), expected));
 }
 
-TEST(cpu_fusion, loop_kernel_embedded_graph)
+TEST(cpu_fusion, loop_kernel_two_input_two_output_halide)
 {
     Shape shapeA{2, 2};
-    auto A = make_shared<op::Parameter>(element::i32, shapeA);
-    auto B = make_shared<op::Parameter>(element::i32, shapeA);
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto B = make_shared<op::Parameter>(element::f32, shapeA);
+    auto relu_a = make_shared<op::Relu>(A);
+    auto add_ab = make_shared<op::Add>(relu_a, B);
+
+    auto lk = make_shared<runtime::cpu::op::LoopKernel>(
+        NodeVector{relu_a, add_ab}, NodeVector{relu_a, add_ab}, NodeVector{A, B});
+
+    auto goe1 = make_shared<op::GetOutputElement>(lk, 0);
+    auto goe2 = make_shared<op::GetOutputElement>(lk, 1);
+    auto f = make_shared<Function>(NodeVector{goe1, goe2}, ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> result_relu = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> result_add = backend->create_tensor(element::f32, shapeA);
+
+    vector<float> dataA{-1, 4, -1, 4};
+    vector<float> dataB{0, 4, 0, 4};
+    copy_data(a, dataA);
+    copy_data(b, dataB);
+    vector<float> expected_relu{0, 4, 0, 4};
+    vector<float> expected_add{4, 4, 4, 4};
+
+    backend->call_with_validate(f, {result_relu, result_add}, {a, b});
+
+    EXPECT_TRUE(test::all_close(read_vector<float>(result_relu), expected_relu));
+}
+
+TEST(cpu_fusion, loop_kernel_embedded_graph_halide)
+{
+    Shape shapeA{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto B = make_shared<op::Parameter>(element::f32, shapeA);
     auto neg_a = make_shared<op::Negative>(A);
     auto neg_b = make_shared<op::Negative>(B);
     auto add = neg_a + neg_b;
@@ -1483,52 +1570,52 @@ TEST(cpu_fusion, loop_kernel_embedded_graph)
     auto f = make_shared<Function>(NodeVector{lk}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("CPU");
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shapeA);
 
-    vector<int> dataA{1, 4, 1, 4};
+    vector<float> dataA{1, 4, 1, 4};
     copy_data(a, dataA);
-    vector<int> dataB{1, 2, 3, 4};
+    vector<float> dataB{1, 2, 3, 4};
     copy_data(b, dataB);
-    vector<int> expected{-2, -6, -4, -8};
-    backend->call_with_validate(f, {result}, {a, b});
-    EXPECT_EQ(read_vector<int>(result), expected);
+    vector<float> expected{-2, -6, -4, -8};
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
+    EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-TEST(cpu_fusion, loop_kernel_two_inputs_one_output)
+TEST(cpu_fusion, loop_kernel_two_inputs_one_output_halide)
 {
     Shape shapeA{2, 2};
-    auto A = make_shared<op::Parameter>(element::i32, shapeA);
-    auto B = make_shared<op::Parameter>(element::i32, shapeA);
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto B = make_shared<op::Parameter>(element::f32, shapeA);
     auto add = A + B;
     auto lk = make_shared<runtime::cpu::op::LoopKernel>(
         NodeVector{add}, NodeVector{add}, NodeVector{A, B});
     auto f = make_shared<Function>(NodeVector{lk}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("CPU");
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shapeA);
 
-    vector<int> dataA{1, 4, 1, 4};
+    vector<float> dataA{1, 4, 1, 4};
     copy_data(a, dataA);
-    vector<int> dataB{1, 2, 3, 4};
+    vector<float> dataB{1, 2, 3, 4};
     copy_data(b, dataB);
-    vector<int> expected{2, 6, 4, 8};
+    vector<float> expected{2, 6, 4, 8};
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
 
-    EXPECT_EQ(read_vector<int>(result), expected);
+    EXPECT_EQ(read_vector<float>(result), expected);
 }
 
-TEST(cpu_fusion, loop_kernel_multiple_outputs)
+TEST(cpu_fusion, loop_kernel_multiple_outputs_halide)
 {
     Shape shapeA{2, 2};
-    auto A = make_shared<op::Parameter>(element::i32, shapeA);
-    auto B = make_shared<op::Parameter>(element::i32, shapeA);
-    auto C = make_shared<op::Parameter>(element::i32, shapeA);
-    auto D = make_shared<op::Parameter>(element::i32, shapeA);
+    auto A = make_shared<op::Parameter>(element::f32, shapeA);
+    auto B = make_shared<op::Parameter>(element::f32, shapeA);
+    auto C = make_shared<op::Parameter>(element::f32, shapeA);
+    auto D = make_shared<op::Parameter>(element::f32, shapeA);
 
     auto neg_a = make_shared<op::Negative>(A);
     auto neg_b = make_shared<op::Negative>(B);
@@ -1552,31 +1639,31 @@ TEST(cpu_fusion, loop_kernel_multiple_outputs)
 
     auto backend = runtime::Backend::create("CPU");
 
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> c = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> d = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> r1 = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> r2 = backend->create_tensor(element::i32, shapeA);
-    shared_ptr<runtime::Tensor> r3 = backend->create_tensor(element::i32, shapeA);
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> c = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> d = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> r1 = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> r2 = backend->create_tensor(element::f32, shapeA);
+    shared_ptr<runtime::Tensor> r3 = backend->create_tensor(element::f32, shapeA);
 
-    vector<int> dataA{1, 4, 1, 4};
-    vector<int> dataB{3, 3, 3, 9};
-    vector<int> dataC{1, 2, 3, 4};
-    vector<int> dataD{-2, 2, -1, 1};
+    vector<float> dataA{1, 4, 1, 4};
+    vector<float> dataB{3, 3, 3, 9};
+    vector<float> dataC{1, 2, 3, 4};
+    vector<float> dataD{-2, 2, -1, 1};
     copy_data(a, dataA);
     copy_data(b, dataB);
     copy_data(c, dataC);
     copy_data(d, dataD);
 
-    backend->call_with_validate(f, {r1, r2, r3}, {a, b, c, d});
+    backend->call_with_validate(backend->compile(f), {r1, r2, r3}, {a, b, c, d});
 
-    vector<int> expected1{5, 11, 5, 17};
-    vector<int> expected2{2, 7, 5, 14};
-    vector<int> expected3{-3, -3, -3, -9};
-    EXPECT_EQ(read_vector<int>(r1), expected1);
-    EXPECT_EQ(read_vector<int>(r2), expected2);
-    EXPECT_EQ(read_vector<int>(r3), expected3);
+    vector<float> expected1{5, 11, 5, 17};
+    vector<float> expected2{2, 7, 5, 14};
+    vector<float> expected3{-3, -3, -3, -9};
+    EXPECT_EQ(read_vector<float>(r1), expected1);
+    EXPECT_EQ(read_vector<float>(r2), expected2);
+    EXPECT_EQ(read_vector<float>(r3), expected3);
 }
 
 TEST(cpu_fusion, loop_kernel_copy_with_new_args)
@@ -1631,8 +1718,9 @@ TEST(cpu_fusion, loop_kernel_copy_with_new_args)
     copy_data(c, dataC);
     copy_data(d, dataD);
 
-    backend->call_with_validate(f, {r1, r2, r3}, {a, b, c, d});
-    backend->call_with_validate(copy_f, {copy_r1, copy_r2, copy_r3}, {a, b, c, d});
+    backend->call_with_validate(backend->compile(f), {r1, r2, r3}, {a, b, c, d});
+    backend->call_with_validate(
+        backend->compile(copy_f), {copy_r1, copy_r2, copy_r3}, {a, b, c, d});
 
     EXPECT_EQ(read_vector<int>(r1), read_vector<int>(copy_r1));
     EXPECT_EQ(read_vector<int>(r2), read_vector<int>(copy_r2));
@@ -2067,24 +2155,20 @@ TEST(cpu_fusion, group_convolution)
     auto upper_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
         backend->create_tensor(element::f32, shape_ur, erv.data() + erv.size() / 2));
     backend->call_with_validate(
-        f, {group_result, lower_result, upper_result}, {a_, b_, c_, d_, e_, f_});
+        backend->compile(f), {group_result, lower_result, upper_result}, {a_, b_, c_, d_, e_, f_});
     ASSERT_EQ(rv, erv);
 }
 
-//TODO(Pruthvi) enable this test after MKLDNN RNN bug is fixed
-#if 0
 TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
 {
     auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
     auto src_iter = make_shared<op::Parameter>(element::f32, Shape{20, 100});
-    auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{400, 100});
-    auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{400, 100});
+    auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{100, 400});
+    auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{100, 400});
     auto biases = make_shared<op::Parameter>(element::f32, Shape{400});
     const int number_of_timesteps = 1;
     const int number_of_gates_per_cell = 4;
     const int src_seq_length = 1;
-    const int src_layer_feature_size = 100;
-    const int feature_size = 100;
     const int num_rnn_cell_states = 2;
     const int rnn_direction = 1;
     const int num_of_rnn_fused_layer = 1;
@@ -2096,8 +2180,6 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
                                          number_of_timesteps,
                                          number_of_gates_per_cell,
                                          src_seq_length,
-                                         src_layer_feature_size,
-                                         feature_size,
                                          num_rnn_cell_states,
                                          rnn_direction,
                                          num_of_rnn_fused_layer);
@@ -2120,8 +2202,7 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     shared_ptr<runtime::Tensor> biases_t =
         backend->create_tensor(element::f32, biases->get_shape());
     shared_ptr<runtime::Tensor> result_ht = backend->create_tensor(element::f32, {10, 100});
-    shared_ptr<runtime::Tensor> result_ct =
-        backend->create_tensor(element::f32, Shape{20, 100});
+    shared_ptr<runtime::Tensor> result_ct = backend->create_tensor(element::f32, Shape{20, 100});
 
     copy_data(src_layer_t, vector<float>(1000, 1));
     copy_data(src_iter_t, vector<float>(2000, 1));
@@ -2130,7 +2211,7 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     copy_data(biases_t, vector<float>(400, 1));
 
     backend->call_with_validate(
-        func,
+        backend->compile(func),
         {result_ht, result_ct},
         {src_layer_t, src_iter_t, weights_layer_t, weights_iter_t, biases_t});
     vector<float> expected_ht(10 * 100, 0.964028f);
@@ -2150,13 +2231,11 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
     EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
 }
-#endif
 
 TEST(cpu_fusion, fuse_lstm_cells)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::ConcatInputs>();
     const string json_path =
         file_util::path_join(SERIALIZED_ZOO, "mxnet/2rnn_layer_3lstm_cell.json");
     const string json_string = file_util::read_file_to_string(json_path);
@@ -2219,12 +2298,12 @@ static std::shared_ptr<Function> make_function(const std::string& file_name)
     return func;
 }
 
-TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
+TEST(cpu_fusion, rnn_fusion_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
     auto cpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
@@ -2241,12 +2320,12 @@ TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1lstm_cell)
     }
 }
 
-TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
+TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
@@ -2263,12 +2342,12 @@ TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_1rnn_layer_3lstm_cell)
     }
 }
 
-TEST(DISABLED_cpu_fusion, rnn_fusion_inter_vs_cpu_2rnn_layer_3lstm_cell)
+TEST(cpu_fusion, rnn_fusion_2rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
     auto cpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
@@ -2515,7 +2594,7 @@ void sigmoid_multiply_fusion_forward_compute(runtime::Backend* backend,
 
     auto mul_node = input_0_node * input_1_node;
     auto func = make_shared<Function>(mul_node, input_params);
-    backend->call_with_validate(func, {result_tensor}, input_tensors);
+    backend->call_with_validate(backend->compile(func), {result_tensor}, input_tensors);
     EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
 }
 
@@ -2709,7 +2788,8 @@ void sigmoid_multiply_fusion_backward_compute(runtime::Backend* backend,
     auto d_input_0 = adjoints.backprop_node(input_0_adjoint);
     auto d_input_1 = adjoints.backprop_node(input_1_adjoint);
     auto df = make_shared<Function>(NodeVector{d_input_0, d_input_1}, back_params);
-    backend->call_with_validate(df, {d_input_0_tensor, d_input_1_tensor}, input_tensors);
+    backend->call_with_validate(
+        backend->compile(df), {d_input_0_tensor, d_input_1_tensor}, input_tensors);
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
 }
@@ -2943,30 +3023,12 @@ TEST(cpu_fusion, fuse_batch_dot_forward)
     }
 }
 
-TEST(cpu_fusion, fuse_rnn_across_layer)
+TEST(cpu_fusion, fuse_rnn_across_layer_2layer_3timestep)
 {
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<runtime::cpu::pass::MultiLayerRNNFusion>();
-    const string json_path =
-        file_util::path_join(SERIALIZED_ZOO, "mxnet/2rnn_layer_1timestep.json");
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-    pass_manager.run_passes(func);
-    size_t ref_rnn_count = 1;
-    auto rnn_count = count_ops_of_type<op::Rnn>(func);
-    EXPECT_EQ(ref_rnn_count, rnn_count);
-}
-
-TEST(DISABLED_cpu_fusion, fuse_rnn_across_2layer_1timestep)
-{
-    const std::string file_name("mxnet/2rnn_layer_1timestep.json");
+    const std::string file_name("mxnet/2layer_3timestep_ic100oc100.json");
     auto cpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
@@ -2978,12 +3040,10 @@ TEST(DISABLED_cpu_fusion, fuse_rnn_across_2layer_1timestep)
     auto int_results = execute(int_f, args, "INTERPRETER");
     auto cpu_results = execute(cpu_f, args, "CPU");
 
-    // TODO (pruthvi): Enable this after fixing failing
-    // mxnet rnn unit tests
-    // EXPECT_EQ(1, count_ops_of_type<op::Rnn>(cpu_f));
+    EXPECT_EQ(1, count_ops_of_type<op::Rnn>(cpu_f));
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(cpu_results.at(1), int_results.at(1), 1.0e-4f, 1.0e-4f));
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
 
@@ -3061,6 +3121,201 @@ TEST(cpu_fusion, fuse_leaky_relu)
     auto cpu2_results = execute(cpu_f2, args, "CPU");
     EXPECT_EQ(1, count_ops_of_type<op::LeakyRelu>(cpu_f2));
     EXPECT_TRUE(test::all_close(cpu2_results.at(0), expected_result));
+}
+
+TEST(cpu_fusion, fuse_update_slice)
+{
+    auto make_function = [](bool fuse = true) {
+        auto input = std::make_shared<op::Parameter>(element::f32, Shape{4, 32, 16});
+        Shape lower_bounds{1, 0, 0};
+        Shape upper_bounds{2, 32, 16};
+        auto slice = std::make_shared<op::Slice>(
+            input, fuse ? lower_bounds : Shape{3, 0, 0}, fuse ? upper_bounds : Shape{4, 32, 16});
+        auto update = std::make_shared<op::Parameter>(element::f32, Shape{1, 32, 16});
+        auto add = std::make_shared<op::Add>(slice, update);
+        auto out = std::make_shared<op::ReplaceSlice>(input, add, lower_bounds, upper_bounds);
+        auto f = make_shared<Function>(NodeVector{out}, ParameterVector{input, update});
+        return f;
+    };
+
+    auto fuse = make_function(true);
+    auto no_fuse = make_function(false);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.run_passes(fuse);
+    pass_manager.run_passes(no_fuse);
+    EXPECT_EQ(1, count_ops_of_type<op::UpdateSlice>(fuse));
+    EXPECT_EQ(0, count_ops_of_type<op::UpdateSlice>(no_fuse));
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+}
+
+TEST(cpu_fusion, fuse_update_slice_inplace)
+{
+    auto make_function = [](bool fuse = true) {
+        auto input = std::make_shared<op::Parameter>(element::f32, Shape{4, 32, 16});
+        auto abs = std::make_shared<op::Abs>(input);
+        Shape lower_bounds{1, 0, 0};
+        Shape upper_bounds{2, 32, 16};
+        auto slice = std::make_shared<op::Slice>(abs, lower_bounds, upper_bounds);
+        auto update = std::make_shared<op::Parameter>(element::f32, Shape{1, 32, 16});
+        auto add = std::make_shared<op::Add>(slice, update);
+        auto rs = std::make_shared<op::ReplaceSlice>(abs, add, lower_bounds, upper_bounds);
+        auto out = std::make_shared<op::Abs>(rs);
+        if (fuse)
+        {
+            return make_shared<Function>(NodeVector{out}, ParameterVector{input, update});
+        }
+        else
+        {
+            return make_shared<Function>(NodeVector{out, add}, ParameterVector{input, update});
+        }
+    };
+
+    auto fuse = make_function(true);
+    auto no_fuse = make_function(false);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.run_passes(fuse);
+    pass_manager.run_passes(no_fuse);
+    EXPECT_EQ(1, count_ops_of_type<op::UpdateSlice>(fuse));
+    EXPECT_EQ(0, count_ops_of_type<op::UpdateSlice>(no_fuse));
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+}
+
+TEST(cpu_fusion, fuse_update_slice_strided)
+{
+    auto make_function = [](bool fuse = true) {
+        auto input = std::make_shared<op::Parameter>(element::f32, Shape{4, 32, 16});
+        Shape lower_bounds{1, 0, 0};
+        Shape upper_bounds{2, 32, 16};
+        Strides strides{1, 2, 2};
+        auto slice = std::make_shared<op::Slice>(input,
+                                                 fuse ? lower_bounds : Shape{3, 0, 0},
+                                                 fuse ? upper_bounds : Shape{4, 32, 16},
+                                                 strides);
+        auto update = std::make_shared<op::Parameter>(element::f32, Shape{1, 16, 8});
+        auto add = std::make_shared<op::Add>(slice, update);
+        auto out =
+            std::make_shared<op::ReplaceSlice>(input, add, lower_bounds, upper_bounds, strides);
+        auto f = make_shared<Function>(NodeVector{out}, ParameterVector{input, update});
+        return f;
+    };
+
+    auto fuse = make_function(true);
+    auto no_fuse = make_function(false);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.run_passes(fuse);
+    pass_manager.run_passes(no_fuse);
+    EXPECT_EQ(1, count_ops_of_type<op::UpdateSlice>(fuse));
+    EXPECT_EQ(0, count_ops_of_type<op::UpdateSlice>(no_fuse));
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
+}
+
+TEST(cpu_fusion, fuse_update_slice_strided_inplace)
+{
+    auto make_function = [](bool fuse = true) {
+        auto input = std::make_shared<op::Parameter>(element::f32, Shape{4, 32, 16});
+        auto abs = std::make_shared<op::Abs>(input);
+        Shape lower_bounds{1, 0, 0};
+        Shape upper_bounds{2, 32, 16};
+        Strides strides{1, 4, 2};
+        auto slice = std::make_shared<op::Slice>(abs, lower_bounds, upper_bounds, strides);
+        auto update = std::make_shared<op::Parameter>(element::f32, Shape{1, 8, 8});
+        auto add = std::make_shared<op::Add>(slice, update);
+        auto rs = std::make_shared<op::ReplaceSlice>(abs, add, lower_bounds, upper_bounds, strides);
+        auto out = std::make_shared<op::Abs>(rs);
+        if (fuse)
+        {
+            return make_shared<Function>(NodeVector{out}, ParameterVector{input, update});
+        }
+        else
+        {
+            return make_shared<Function>(NodeVector{out, add}, ParameterVector{input, update});
+        }
+    };
+
+    auto fuse = make_function(true);
+    auto no_fuse = make_function(false);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    pass_manager.run_passes(fuse);
+    pass_manager.run_passes(no_fuse);
+    EXPECT_EQ(1, count_ops_of_type<op::UpdateSlice>(fuse));
+    EXPECT_EQ(0, count_ops_of_type<op::UpdateSlice>(no_fuse));
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
+    }
 }
 
 TEST(cpu_fusion, dot_batch_forward)
