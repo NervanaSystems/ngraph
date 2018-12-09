@@ -3224,10 +3224,8 @@ TEST(cpu_fusion, rnn_input_fusion_inter_vs_cpu)
 
 TEST(cpu_fusion, cf_investigation)
 {
-
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mac-failure.json");
     const string json_string = file_util::read_file_to_string(json_path);
-
 
     stringstream ss_int(json_string);
     shared_ptr<Function> int_f = ngraph::deserialize(ss_int);
