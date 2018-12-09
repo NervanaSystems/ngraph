@@ -58,8 +58,14 @@ install MXNet to the virtual environment:
 Now we're ready to use nGraph to run any model on a CPU backend. Building MXNet 
 with nGraph automatically enabled nGraph on your model scripts, and you 
 shouldn't need to do anything special. If you run into trouble, you can disable 
-nGraph by setting ``MXNET_SUBGRAPH_BACKEND=1``. If you do see trouble, please 
-report it and we'll address it as soon as possible.
+nGraph by setting 
+
+.. code-block:: console
+   
+   MXNET_SUBGRAPH_BACKEND=
+
+If you do see trouble, please report it and we'll address it as soon as possible.
+
 
 Running ResNet-50-V2 Inference
 ------------------------------
