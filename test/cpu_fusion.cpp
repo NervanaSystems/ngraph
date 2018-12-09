@@ -3229,8 +3229,10 @@ TEST(cpu_fusion, rnn_input_fusion_inter_vs_cpu)
 
 TEST(cpu_fusion, cf_investigation)
 {
+
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mac-failure.json");
     const string json_string = file_util::read_file_to_string(json_path);
+
 
     stringstream ss_int(json_string);
     shared_ptr<Function> int_f = ngraph::deserialize(ss_int);
@@ -3240,23 +3242,14 @@ TEST(cpu_fusion, cf_investigation)
 
     test::Uniform<float> rng(0.0f, 100.0f);
     vector<vector<float>> args;
-    std::cout << "init parameters\n";
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_shape()));
         rng.initialize(tensor_val);
-
-        std::cout << "parameter:";
-        for (auto& n : tensor_val)
-        {
-            std::cout << n << ", ";
-        }
-        std::cout << std::endl;
         args.push_back(tensor_val);
     }
 
     NodeVector new_results_cpu;
-    int cpu_count = 0;
     for (auto n : cpu_f->get_ordered_ops())
     {
         //dont include op::Results otherwise Function c-tor will complain
@@ -3264,11 +3257,9 @@ TEST(cpu_fusion, cf_investigation)
             n->get_outputs().size() == 1)
         {
             new_results_cpu.push_back(n);
-            cpu_count++;
         }
     }
 
-    int int_count = 0;
     NodeVector new_results_int;
     for (auto n : int_f->get_ordered_ops())
     {
@@ -3277,11 +3268,8 @@ TEST(cpu_fusion, cf_investigation)
             n->get_outputs().size() == 1)
         {
             new_results_int.push_back(n);
-            int_count++;
         }
     }
-
-    std::cout << "cpu count : " << cpu_count << ", int_count : " << int_count << std::endl;
 
     //no need to include original results they are subsumed by new_results
     auto new_func_cpu = make_shared<Function>(new_results_cpu, cpu_f->get_parameters());
@@ -3297,13 +3285,11 @@ TEST(cpu_fusion, cf_investigation)
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         std::cout << "Comparing results for " << new_results_cpu.at(i)->get_name() << std::endl;
-        std::cout << "int name " << new_results_int.at(i)->get_name() << std::endl;
-
         if (!test::all_close(cpu_results.at(i), int_results.at(i)))
         {
             std::cout << "found mismatch!\n";
             EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i)));
-            //break;
+            break;
         }
     }
 
