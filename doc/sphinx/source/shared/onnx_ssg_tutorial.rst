@@ -1,4 +1,4 @@
-.. onnx_ssg:
+.. onnx_ssg_tutorial:
 
 Shared subgraphs with ONNX 
 ==========================
@@ -6,6 +6,10 @@ Shared subgraphs with ONNX
 
 ShuffleNet Example
 ------------------
+
+.. note:: The following example describes how additional ops documented 
+   with :doc:`../python_api/index` can be applied; it is not necessarily 
+   the only or best bridge (or bridge-enabling) mechanism.
 
 
 `ShuffleNet`_ describes itself as "deep convolutional networks for classification",
@@ -47,8 +51,7 @@ The output should look something like this:
 	More than one different shape in input nodes [<Constant: 'Constant_14379' ([])>, <BatchNormInference: 'gpu_0/gconv1_31_bn_1' ([1, 544, 7, 7])>].
 
 
-These outputs can now be used with the nGraph Python API to start working with 
-`broadcast shapes`_ 
+These outputs can now be used to start working with, for example, the  `broadcast shapes`_ op: 
 
 .. code-block:: python
 
@@ -76,6 +79,7 @@ These outputs can now be used with the nGraph Python API to start working with
 
 
 
+.. _nGraph-ONNX pyapi: https://ngraph.nervanasys.com/docs/latest/python_api/_autosummary/ngraph.html
 
 .. _ShuffleNet: https://github.com/onnx/models/blob/master/shufflenet/README.md
 .. _broadcast shapes: https://ngraph.nervanasys.com/docs/latest/python_api/_autosummary/ngraph.html#ngraph.ops.broadcast_to
