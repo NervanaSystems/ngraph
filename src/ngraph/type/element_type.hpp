@@ -26,7 +26,7 @@
 #include <vector>
 
 #include "ngraph/except.hpp"
-#include "ngraph/ngraph_visibility.h"
+#include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/type/bfloat16.hpp"
 
 namespace ngraph
