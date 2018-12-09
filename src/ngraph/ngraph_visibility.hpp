@@ -20,8 +20,7 @@
 #define NGRAPH_HELPER_DLL_IMPORT __declspec(dllimport)
 #define NGRAPH_HELPER_DLL_EXPORT __declspec(dllexport)
 #define NGRAPH_HELPER_DLL_LOCAL
-#else
-#if __GNUC__ >= 4
+#elif NGRAPH_LINUX_VISIBILITY_ENABLE && __GNUC__ >= 4
 #define NGRAPH_HELPER_DLL_IMPORT __attribute__((visibility("default")))
 #define NGRAPH_HELPER_DLL_EXPORT __attribute__((visibility("default")))
 #define NGRAPH_HELPER_DLL_LOCAL __attribute__((visibility("hidden")))
@@ -29,7 +28,6 @@
 #define NGRAPH_HELPER_DLL_IMPORT
 #define NGRAPH_HELPER_DLL_EXPORT
 #define NGRAPH_HELPER_DLL_LOCAL
-#endif
 #endif
 
 // Now we use the generic helper definitions above to define NGRAPH_API and NGRAPH_LOCAL.

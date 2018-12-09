@@ -15,7 +15,6 @@
 # ******************************************************************************
 
 cmake_minimum_required (VERSION 3.1)
-set (CMAKE_CXX_STANDARD 11)
 
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed.")
@@ -157,9 +156,15 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
 endif()
 
 if (WIN32)
+    set (CMAKE_CXX_STANDARD 11)
     set(CMAKE_CXX_FLAGS "/W0 /EHsc")
-    # string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE})")
-    # string(REPLACE "/MDd" "/MTd" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG})")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
+    set(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
+    # These can be uncommented once we have visibility fully in place
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden")
 endif()
 
 include(cmake/sdl.cmake)
@@ -171,21 +176,10 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     endif()
 endif()
 
-# These can be uncommented once we have visibility fully in place
-if (NOT WIN32)
-    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
-    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden")
-endif()
-
 ngraph_var(NGRAPH_WARNINGS_AS_ERRORS DEFAULT "OFF")
 if (${NGRAPH_WARNINGS_AS_ERRORS})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
     message(STATUS "Warnings as errors")
-endif()
-
-if(NOT WIN32)
-    SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
-    SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
 endif()
 
 if (NGRAPH_CODE_COVERAGE_ENABLE)
