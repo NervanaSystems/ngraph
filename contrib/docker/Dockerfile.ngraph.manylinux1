@@ -14,31 +14,18 @@
 # limitations under the License.
 # ******************************************************************************
 
-# Environment to build and unit-test ngraph
+# Environment to build manylinux1 ngraph-core
 
-FROM ubuntu:16.04
+FROM quay.io/pypa/manylinux1_x86_64
 
-RUN apt-get update && apt-get install -y \
-        build-essential cmake \
-        clang-3.9 clang-format-3.9 \
-        git \
-        wget patch diffutils zlib1g-dev libtinfo-dev \
-        doxygen graphviz \
-        python-sphinx python3-sphinx \
-        python-pip patchelf
-
-RUN apt-get clean autoclean && \
-    apt-get autoremove -y
-RUN pip install --upgrade pip
-
-# allows for make html build under the doc/source directory as an interim build process
-RUN pip install sphinx
-RUN pip install breathe
-
-# need numpy to successfully build docs for python_api
-RUN pip install numpy
-
-# release notes need this markdown extension
-# RUN python3 -m pip install m2r
+RUN curl -O https://cmake.org/files/v3.5/cmake-3.5.2-Linux-x86_64.tar.gz
+RUN tar -xf cmake-3.5.2-Linux-x86_64.tar.gz
+RUN ln -s /cmake-3.5.2-Linux-x86_64/bin/cmake /usr/local/bin/cmake
+RUN /opt/python/cp27-cp27mu/bin/pip install virtualenv
+RUN ln -s /opt/python/cp27-cp27mu/bin/python /usr/local/bin/python
+RUN ln -s /opt/python/cp27-cp27mu/bin/python2 /usr/local/bin/python2
+RUN ln -s /opt/python/cp27-cp27mu/bin/python2.7 /usr/local/bin/python2.7
+RUN ln -s /opt/python/cp27-cp27mu/bin/pip /usr/local/bin/pip
+RUN ln -s /opt/python/cp27-cp27mu/bin/virtualenv /usr/local/bin/virtualenv
 
 WORKDIR /home

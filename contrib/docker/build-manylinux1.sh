@@ -1,3 +1,4 @@
+#!/bin/bash
 # ******************************************************************************
 # Copyright 2018 Intel Corporation
 #
@@ -13,26 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ******************************************************************************
-"""
-Package: ngraph
-Low level wrappers for the nGraph c++ api in ngraph::onnx_import.
-"""
+set -e
 
-# flake8: noqa
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-import sys
-import six
-
-# workaround to load the libngraph.so with RTLD_GLOBAL
-if six.PY3:
-    import os
-    flags = os.RTLD_NOW | os.RTLD_GLOBAL
-else:
-    import ctypes
-    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-sys.setdlopenflags(flags)
-
-from _pyngraph import load_onnx_model
-from _pyngraph import load_onnx_model_file
-from _pyngraph import import_onnx_function
-from _pyngraph import import_onnx_function_file
+cmake -DNGRAPH_DEX_ONLY=TRUE -DNGRAPH_PYTHON_BUILD_ENABLE=TRUE -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_MANYLINUX_ENABLE=TRUE ${SCRIPT_DIR}/../..
+lcores=$(grep processor /proc/cpuinfo | wc -l)
+make -j$lcores python_wheel

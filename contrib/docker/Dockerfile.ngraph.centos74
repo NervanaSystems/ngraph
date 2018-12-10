@@ -34,6 +34,7 @@ RUN yum -y update && \
     python python-devel python-sphinx python-setuptools \
     doxygen graphviz \
     which \
+    patchelf \
     'perl(Data::Dumper)'
 
 RUN ln -s /usr/bin/cmake3 /usr/bin/cmake
@@ -62,7 +63,7 @@ RUN pip install breathe
 # need numpy to successfully build docs for python_api
 RUN pip install numpy
 
-# release notes need this markdown extension 
+# release notes need this markdown extension
 # RUN python3 -m pip install m2r
 
 

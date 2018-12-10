@@ -238,6 +238,10 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     target_link_libraries(ngraph PRIVATE onnx_import)
 endif()
 
+if (NGRAPH_MANYLINUX_ENABLE)
+    target_compile_definitions(ngraph PRIVATE "NGRAPH_MANYLINUX_ENABLE")
+endif()
+
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------

@@ -14,31 +14,172 @@
 # limitations under the License.
 # ******************************************************************************
 
-cmake_minimum_required (VERSION 3.1)
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+    message(FATAL_ERROR "Please call from nGraph !")
+endif()
 
-project (pyngraph)
+if (WIN32)
+    message(WARNING "Python API is not supported on Windows!")
+    return()
+endif()
+
+if (NOT NGRAPH_CPU_ENABLE OR NOT NGRAPH_DEX_ONLY)
+    message(WARNING "Python API requires NGRAPH_CPU_ENABLE and NGRAPH_DEX_ONLY!")
+    return()
+endif()
 
 include(ExternalProject)
+
+set(PYBIND11_SOURCE_DIR "${CMAKE_BINARY_DIR}/pybind11")
 
 ExternalProject_Add(
         pybind11
         GIT_REPOSITORY "https://github.com/pybind/pybind11.git"
         GIT_TAG "v2.2.4"
-        SOURCE_DIR "${CMAKE_BINARY_DIR}/pybind11"
+        SOURCE_DIR ${PYBIND11_SOURCE_DIR}
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
 )
 
-set(BUILD_SH_IN "${CMAKE_SOURCE_DIR}/python/build_wheel.sh.in")
-set(BUILD_SH    "${CMAKE_BINARY_DIR}/python/build_wheel.sh")
-configure_file(${BUILD_SH_IN} ${BUILD_SH} @ONLY)
+set(NGRAPH_DEPS_INCLUDE ${CMAKE_SOURCE_DIR}/src)
+set(NGRAPH_DEPS_LIB     ${NGRAPH_BUILD_DIR})
 
-add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/python/dist/
-        POST_BUILD
-        WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
-        COMMAND make -C ../ DESTDIR=python/_install install && bash build_wheel.sh
-)
+set(SETUP_PY_IN "${CMAKE_SOURCE_DIR}/python/setup.py.in")
+set(SETUP_PY    "${CMAKE_BINARY_DIR}/setup.py")
+configure_file(${SETUP_PY_IN} ${SETUP_PY})
 
-add_custom_target(python_wheel DEPENDS ngraph ${CMAKE_BINARY_DIR}/python/dist/)
+set(TOX_INI_IN "${CMAKE_SOURCE_DIR}/python/tox.ini.in")
+set(TOX_INI    "${CMAKE_BINARY_DIR}/tox.ini")
+configure_file(${TOX_INI_IN} ${TOX_INI})
+
+list(APPEND WHEEL_DEP_LIBS pybind11)
+list(APPEND WHEEL_DEP_LIBS ngraph)
+list(APPEND WHEEL_DEP_LIBS cpu_backend)
+list(APPEND WHEEL_DEP_LIBS interpreter_backend)
+if (NGRAPH_MANYLINUX_ENABLE)
+    list(APPEND WHEEL_DEP_LIBS ext_omprt)
+endif()
+
+if (NOT NGRAPH_MANYLINUX_ENABLE)
+    unset(PYTHON_EXECUTABLE)
+    unset(PYTHONINTERP_FOUND)
+    find_package(PythonInterp 2)
+    if (PYTHON_EXECUTABLE)
+        set(PYTHON2_EXECUTABLE ${PYTHON_EXECUTABLE})
+        find_program(VIRTUALENV virtualenv)
+        if (NOT VIRTUALENV)
+            message(FATAL_ERROR "Please install virtualenv!")
+        endif()
+
+        message(STATUS "Python2 executable:" ${PYTHON_EXECUTABLE})
+
+        add_custom_command(
+                OUTPUT ${CMAKE_BINARY_DIR}/wheel2.timestamp
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                COMMAND ${VIRTUALENV} -p ${PYTHON2_EXECUTABLE} .venv2
+                COMMAND ./.venv2/bin/python -m pip install --no-cache-dir -U pip setuptools wheel
+                COMMAND ./.venv2/bin/python setup.py bdist_wheel
+                COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
+                COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/ngraph_core.egg-info
+                COMMAND ${CMAKE_COMMAND} -E touch wheel2.timestamp
+                DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
+        )
+        list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel2.timestamp)
+    endif (PYTHON_EXECUTABLE)
+
+    # Workaround: find_package(PythonInterp 3) does not work.
+    find_program(PYTHON3_EXECUTABLE python3)
+    if (PYTHON3_EXECUTABLE)
+        message(STATUS "Python3 executable:" ${PYTHON3_EXECUTABLE})
+
+        add_custom_command(
+                OUTPUT ${CMAKE_BINARY_DIR}/wheel3.timestamp
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                COMMAND ${PYTHON3_EXECUTABLE} -m venv .venv3
+                COMMAND ./.venv3/bin/python -m pip install --no-cache-dir -U pip setuptools wheel
+                COMMAND ./.venv3/bin/python setup.py bdist_wheel
+                COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
+                COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/ngraph_core.egg-info
+                COMMAND ${CMAKE_COMMAND} -E touch wheel3.timestamp
+                DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
+        )
+        list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel3.timestamp)
+    endif (PYTHON3_EXECUTABLE)
+else()
+    add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/wheel27mu.timestamp
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND /opt/python/cp27-cp27mu/bin/virtualenv -p /opt/python/cp27-cp27mu/bin/python2.7 .venv27mu
+            COMMAND ./.venv27mu/bin/python -m pip install --no-cache-dir -U pip setuptools wheel
+            COMMAND ./.venv27mu/bin/python setup.py bdist_wheel
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/ngraph_core.egg-info
+            COMMAND ${CMAKE_COMMAND} -E touch wheel27mu.timestamp
+            DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
+    )
+    list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel27mu.timestamp)
+    add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/wheel27m.timestamp
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND /opt/python/cp27-cp27mu/bin/virtualenv -p /opt/python/cp27-cp27m/bin/python2.7 .venv27m
+            COMMAND ./.venv27m/bin/python -m pip install --no-cache-dir -U pip setuptools wheel
+            COMMAND ./.venv27m/bin/python setup.py bdist_wheel
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/ngraph_core.egg-info
+            COMMAND ${CMAKE_COMMAND} -E touch wheel27m.timestamp
+            DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
+    )
+    list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel27m.timestamp)
+    add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/wheel34.timestamp
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND /opt/python/cp34-cp34m/bin/python3.4 -m venv .venv34
+            COMMAND ./.venv34/bin/python -m pip install --no-cache-dir -U pip setuptools wheel
+            COMMAND ./.venv34/bin/python setup.py bdist_wheel
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/ngraph_core.egg-info
+            COMMAND ${CMAKE_COMMAND} -E touch wheel34.timestamp
+            DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
+    )
+    list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel34.timestamp)
+    add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/wheel35.timestamp
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND /opt/python/cp35-cp35m/bin/python3.5 -m venv .venv35
+            COMMAND ./.venv35/bin/python -m pip install --no-cache-dir -U pip setuptools wheel
+            COMMAND ./.venv35/bin/python setup.py bdist_wheel
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/ngraph_core.egg-info
+            COMMAND ${CMAKE_COMMAND} -E touch wheel35.timestamp
+            DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
+    )
+    list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel35.timestamp)
+    add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/wheel36.timestamp
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND /opt/python/cp36-cp36m/bin/python3.6 -m venv .venv36
+            COMMAND ./.venv36/bin/python -m pip install --no-cache-dir -U pip setuptools wheel
+            COMMAND ./.venv36/bin/python setup.py bdist_wheel
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/ngraph_core.egg-info
+            COMMAND ${CMAKE_COMMAND} -E touch wheel36.timestamp
+            DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
+    )
+    list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel36.timestamp)
+    add_custom_command(
+            OUTPUT ${CMAKE_BINARY_DIR}/wheel37.timestamp
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND /opt/python/cp37-cp37m/bin/python3.7 -m venv .venv37
+            COMMAND ./.venv37/bin/python -m pip install --no-cache-dir -U pip setuptools wheel
+            COMMAND ./.venv37/bin/python setup.py bdist_wheel
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/ngraph_core.egg-info
+            COMMAND ${CMAKE_COMMAND} -E touch wheel37.timestamp
+            DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
+    )
+    list(APPEND WHEEL_DEPS ${CMAKE_BINARY_DIR}/wheel37.timestamp)
+endif()
+
+add_custom_target(python_wheel DEPENDS ${WHEEL_DEPS})
+

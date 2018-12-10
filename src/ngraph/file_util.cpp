@@ -336,6 +336,7 @@ void file_util::iterate_files(const string& path,
     }
 }
 
+#if !defined(NGRAPH_MANYLINUX_ENABLE)
 string file_util::tmp_filename(const string& extension)
 {
     string rc;
@@ -356,6 +357,7 @@ string file_util::tmp_filename(const string& extension)
 #endif
     return rc;
 }
+#endif
 
 bool file_util::exists(const string& filename)
 {

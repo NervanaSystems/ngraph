@@ -149,6 +149,10 @@ if (NGRAPH_TBB_ENABLE)
     set_source_files_properties(cpu_external_function.cpp
         PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
 
+    file(GLOB _tbb_shared_libs ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/libtbb.*)
+    foreach(_tbb_shared_lib ${_tbb_shared_libs})
+        execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${_tbb_shared_lib} ${NGRAPH_BUILD_DIR})
+    endforeach()
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
         DESTINATION ${NGRAPH_INSTALL_LIB}
         FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
@@ -198,7 +202,7 @@ if (NGRAPH_CPU_ENABLE)
     endif()
 
     add_dependencies(cpu_backend ext_mkldnn ext_eigen)
-    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libeigen libjson libtbb)
+    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libjson libtbb)
     if (NOT NGRAPH_DEX_ONLY)
         target_link_libraries(cpu_backend PUBLIC codegen)
     endif()
