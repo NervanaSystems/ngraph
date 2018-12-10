@@ -124,9 +124,11 @@ namespace mkl
 
 namespace ngraph
 {
-    class Shape;
     class AxisSet;
     class AxisVector;
+    class Coordinate;
+    class Shape;
+    class Strides;
 
     namespace runtime
     {
@@ -195,6 +197,26 @@ namespace ngraph
                                            const AxisVector& input_axis_order,
                                            const Shape& output_shape,
                                            int arena);
+
+                template <typename ElementType, unsigned int Rank>
+                void update_slice(void* input0,
+                                  void* input1,
+                                  void* output,
+                                  const Shape& input0_shape,
+                                  const Shape& input1_shape,
+                                  const Coordinate& lower_bounds,
+                                  int arena);
+
+                template <typename ElementType, unsigned int Rank>
+                void strided_update_slice(void* input0,
+                                          void* input1,
+                                          void* output,
+                                          const Shape& input0_shape,
+                                          const Shape& input1_shape,
+                                          const Coordinate& lower_bounds,
+                                          const Coordinate& upper_bounds,
+                                          const Strides& slice_strides,
+                                          int arena);
             }
         }
     }

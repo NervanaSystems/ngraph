@@ -361,8 +361,8 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
         throw ngraph::ngraph_error(
             "Number of backend runtime results and allocated results don't match");
     }
-    ref->call_with_validate(ref_func, ref_results, ref_args);
-    backend->call_with_validate(bk_func, bk_results, bk_args);
+    ref->call_with_validate(ref->compile(ref_func), ref_results, ref_args);
+    backend->call_with_validate(backend->compile(bk_func), bk_results, bk_args);
 
     // Now create isolated function for backend being tested where each node of the
     // original graph is tested with inputs copied from reference backend rather
@@ -406,7 +406,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
         auto bk_result = backend->create_tensor(out->get_element_type(), out->get_shape());
         bk_isolated_results.push_back(bk_result);
     }
-    backend->call_with_validate(bk_isolated_func, bk_isolated_results, bk_args);
+    backend->call_with_validate(backend->compile(bk_isolated_func), bk_isolated_results, bk_args);
 
     compare_results(new_results, ref_results, bk_results, bk_isolated_results);
 }
