@@ -132,8 +132,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
                 if (!std::dynamic_pointer_cast<op::Concat>(arg))
                 {
-                    if (auto op = std::dynamic_pointer_cast<op::Op>(arg))
+                    if (arg->is_op())
                     {
+                        auto op = std::static_pointer_cast<op::Op>(arg);
                         auto annotation = op->get_op_annotations();
                         if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
 
@@ -174,8 +175,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     {
                         if ((user != concat))
                         {
-                            if (auto op = std::dynamic_pointer_cast<op::Op>(user))
+                            if (user->is_op())
                             {
+                                auto op = std::static_pointer_cast<op::Op>(user);
                                 if (auto op_annotations = op->get_op_annotations())
                                 {
                                     if (op_annotations->get_in_place_oi_pairs().size() > 0)
