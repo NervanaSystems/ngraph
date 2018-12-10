@@ -134,9 +134,9 @@ namespace ngraph
                 // Gets a useful name for the current op.
                 std::string get_op_name() const { return op().description(); }
                 // Starts a Tile function builder.
-                builder::Function start_tile_function() const
+                builder::Function start_tile_function(bool debug = false) const
                 {
-                    return builder::Function{get_op_name(), m_build->config->debug};
+                    return builder::Function{get_op_name(), debug || m_build->config->debug};
                 }
 
             private:

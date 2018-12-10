@@ -47,6 +47,7 @@ set(SRC
     plaidml_ops_tile.cpp
     plaidml_ops_transcendental.cpp
     plaidml_pass_explicit_logicals.cpp
+    plaidml_pass_implicit_broadcast.cpp
     plaidml_tensor.cpp
     plaidml_translate.cpp
 )

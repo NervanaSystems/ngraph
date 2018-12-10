@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/plaidml/plaidml_compiler.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/any_all_replacement.hpp"
@@ -30,6 +31,7 @@
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 #include "ngraph/runtime/plaidml/plaidml_logger.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_explicit_logicals.hpp"
+#include "ngraph/runtime/plaidml/plaidml_pass_implicit_broadcast.hpp"
 
 namespace
 {
@@ -89,13 +91,27 @@ std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     // backprop
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ExplicitLogicals>();
+    pass_manager.register_pass<ngraph::runtime::plaidml::pass::ImplicitBroadcast>();
     if (!m_config->graphviz.empty())
     {
         pass_manager.register_pass<ngraph::pass::VisualizeTree>(m_config->graphviz);
     }
 
+    // N.B. When we rewrite the graph, there are cases where we
+    // produce nodes that contain validation errors.  A good example
+    // is in the ImplicitBroadcast pass -- after this pass, there may
+    // be elementwise operations whose inputs are not all the same
+    // shape.
+    //
+    // The caller may wish to perform operations (e.g. clone) on their
+    // supplied function that will cause validation to occur.  So
+    // before we rewrite, we make our own copy of the function.
+    func = clone_function(*func);
+
+    // Apply passes.
     pass_manager.run_passes(func);
 
+    // Compile the resulting function.
     Build b;
     build(std::move(func), &b);
     return std::make_shared<CompiledFunction>(std::move(b));
