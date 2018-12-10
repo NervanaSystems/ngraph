@@ -28,7 +28,7 @@ and multi-device support of nGraph Compiler, please refer to [Framework integrat
 | TensorFlow* 1.12           | :heavy_check_mark: |  :heavy_check_mark:
 | MXNet* 1.3                 | :heavy_check_mark: |  :heavy_check_mark:
 | ONNX 1.3                   | :heavy_check_mark: |  :heavy_check_mark:
-| ONNX Runtime  Functional   | Functional         |  No
+| ONNX Runtime               | Functional         |  No
 | PyTorch (via ONNXIFI)      | Functional         |  No
 | PaddlePaddle               | Functional         |  No
 
