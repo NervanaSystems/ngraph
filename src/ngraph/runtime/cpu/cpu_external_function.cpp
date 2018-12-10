@@ -750,6 +750,12 @@ using namespace ngraph::runtime;
             {
                 for (descriptor::Tensor* tensor : node->liveness_new_list)
                 {
+                    // avoid overwriting already propagated tensor mappings
+                    // by process_in_place_XXX
+                    if (m_variable_name_map.count(tensor->get_name()))
+                    {
+                        continue;
+                    }
                     stringstream ss;
                     ss << "((" << tensor->get_element_type().c_type_string()
                        << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
