@@ -139,12 +139,12 @@ namespace ngraph
                     auto qc = dynamic_cast<const OP*>(node);
                     auto scale_const_op =
                         std::dynamic_pointer_cast<ngraph::op::Constant>(qc->get_arguments()[index]);
-                    if (scale_const_op == nullptr)
+                    std::vector<float> scale_val = {1.0f};
+                    if (scale_const_op != nullptr)
                     {
-                        throw ngraph_error("Scale must be a Constant");
+                        scale_val = scale_const_op->template get_vector<float>();
                     }
 
-                    auto scale_val = scale_const_op->template get_vector<float>();
                     return scale_val;
                 }
 
@@ -616,12 +616,14 @@ namespace ngraph
                                           const mkldnn::memory::desc& result_desc,
                                           float alpha);
 
-                template <typename OP, bool with_bias>
-                void recreate_qconv(const ngraph::Node* node,
-                                    CPURuntimeContext* ctx,
-                                    const std::vector<float>& dyn_scales,
-                                    const std::vector<size_t>& deps,
-                                    const size_t conv_index)
+                template <typename OP, bool with_bias, bool with_add>
+                void recreate_qconv(
+                    const ngraph::Node* node,
+                    CPURuntimeContext* ctx,
+                    const std::vector<float>& dyn_scales,
+                    const std::vector<size_t>& deps,
+                    const size_t conv_index,
+                    const std::vector<float>& dyn_post_op_scales = std::vector<float>())
                 {
                     auto qconv = static_cast<const OP*>(node);
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
@@ -640,6 +642,19 @@ namespace ngraph
                     mkldnn::primitive_attr attr;
                     attr.set_output_scales(0, dyn_scales);
                     attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
+                    if (with_add)
+                    {
+                        mkldnn::post_ops ops;
+                        if (node->get_input_element_type(3) == element::i8)
+                        {
+                            ops.append_sum(2.0 * dyn_post_op_scales[0]);
+                        }
+                        else
+                        {
+                            ops.append_sum(dyn_post_op_scales[0]);
+                        }
+                        attr.set_post_ops(ops);
+                    }
 
                     if (with_bias)
                     {
