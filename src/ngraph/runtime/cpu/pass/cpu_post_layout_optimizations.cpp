@@ -213,7 +213,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
         }
 
         auto annotation = reshape_m->get_op_annotations();
-        if (annotation && annotation->get_in_place_oi_pairs().size() == 0)
+        if (!annotation || annotation->get_in_place_oi_pairs().size() == 0)
         {
             NGRAPH_DEBUG << "ReshapeConvertLayout: Reshape is not pass-through";
             return false;
