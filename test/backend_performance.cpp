@@ -99,7 +99,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
         result_tvs.push_back(result_tv);
 
         std::function<void()> cb = [&]() {
-            backend->call_with_validate(f, {result_tv}, input_vals);
+            backend->call_with_validate(backend->compile(f), {result_tv}, input_vals);
         };
 
         test_callbacks.push_back(cb);
