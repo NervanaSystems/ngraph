@@ -132,6 +132,22 @@ namespace ngraph
                     const float scale,
                     const mkldnn::post_ops& pops = mkldnn::post_ops());
 
+                // TODO (nbpatel) Templatize the return type when we have double scales
+                template <typename OP>
+                std::vector<float> extract_scale_value(const ngraph::Node* node, int index)
+                {
+                    auto qc = dynamic_cast<const OP*>(node);
+                    auto scale_const_op =
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(qc->get_arguments()[index]);
+                    if (scale_const_op == nullptr)
+                    {
+                        throw ngraph_error("Scale must be a Constant");
+                    }
+
+                    auto scale_val = scale_const_op->template get_vector<float>();
+                    return scale_val;
+                }
+
                 template <typename OP>
                 size_t build_convolution(const ngraph::Node* node,
                                          const std::vector<TensorViewWrapper>& args,
@@ -167,6 +183,21 @@ namespace ngraph
                         ops.append_sum(1.f);
                     }
 
+                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>())
+                    {
+                        auto sum_scale_val =
+                            extract_scale_value<ngraph::op::QuantizedConvolutionBiasAdd>(node, 5);
+                        ops.append_sum(sum_scale_val[0]);
+                    }
+
+                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
+                    {
+                        auto sum_scale_val =
+                            extract_scale_value<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node,
+                                                                                               5);
+                        ops.append_sum(2.0 * sum_scale_val[0]);
+                    }
+
                     auto add_relu = [&]() {
                         if (dynamic_cast<const ngraph::op::ConvolutionBias*>(node))
                         {
@@ -196,6 +227,19 @@ namespace ngraph
                             return (dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node))
                                 ->with_relu();
                         }
+                        if (dynamic_cast<const ngraph::op::QuantizedConvolutionBiasAdd*>(node))
+                        {
+                            return (dynamic_cast<const ngraph::op::QuantizedConvolutionBiasAdd*>(
+                                        node))
+                                ->with_relu();
+                        }
+                        if (dynamic_cast<const ngraph::op::QuantizedConvolutionBiasSignedAdd*>(
+                                node))
+                        {
+                            return (dynamic_cast<
+                                        const ngraph::op::QuantizedConvolutionBiasSignedAdd*>(node))
+                                ->with_relu();
+                        }
 
                         return false;
                     };
@@ -223,17 +267,10 @@ namespace ngraph
                                                          convolution->get_padding_above(),
                                                          ops);
                     }
-                    else if (std::is_same<OP, ngraph::op::QuantizedConvolution>())
+                    else if (std::is_same<OP, ngraph::op::QuantizedConvolution>() ||
+                             std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
                     {
-                        auto qc = dynamic_cast<const ngraph::op::QuantizedConvolution*>(node);
-                        auto scale_const_op =
-                            std::dynamic_pointer_cast<ngraph::op::Constant>(qc->get_arguments()[2]);
-                        std::vector<float> scale_val = {1.0f};
-                        if (scale_const_op != nullptr)
-                        {
-                            scale_val = scale_const_op->get_vector<float>();
-                        }
-
+                        auto scale_val = extract_scale_value<OP>(node, 2);
                         return build_quantized_convolution_forward(
                             data_desc,
                             weights_desc,
@@ -245,40 +282,13 @@ namespace ngraph
                             scale_val[0],
                             ops);
                     }
-                    else if (std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
+                    else if (std::is_same<OP, ngraph::op::QuantizedConvolutionBias>() ||
+                             std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
+                             std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
                     {
-                        auto qcr = dynamic_cast<const ngraph::op::QuantizedConvolutionRelu*>(node);
-                        auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
-                            qcr->get_arguments()[2]);
-                        std::vector<float> scale_val = {1.0f};
-                        if (scale_const_op != nullptr)
-                        {
-                            scale_val = scale_const_op->get_vector<float>();
-                        }
-
-                        return build_quantized_convolution_forward(
-                            data_desc,
-                            weights_desc,
-                            result_desc,
-                            convolution->get_window_movement_strides(),
-                            window_dilation_strides_adjusted,
-                            convolution->get_padding_below(),
-                            convolution->get_padding_above(),
-                            scale_val[0],
-                            ops);
-                    }
-                    else if (std::is_same<OP, ngraph::op::QuantizedConvolutionBias>())
-                    {
-                        auto qcb = dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node);
-                        auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
-                            qcb->get_arguments()[3]);
-                        std::vector<float> scale_val = {1.0f};
-                        if (scale_const_op != nullptr)
-                        {
-                            scale_val = scale_const_op->get_vector<float>();
-                        }
-
-                        // conv+bias = cvt_to_int8(scale*(dst + bias))
+                        int index =
+                            std::is_same<OP, ngraph::op::QuantizedConvolutionBias>() ? 3 : 4;
+                        auto scale_val = extract_scale_value<OP>(node, index);
                         auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                         return build_quantized_convolution_forward(
                             data_desc,
@@ -402,6 +412,8 @@ namespace ngraph
                             convolution->get_padding_below_forward(),
                             convolution->get_padding_above_forward());
                     }
+
+                    throw ngraph_error(std::string("Unknown op ") + convolution->get_name());
                 }
 
                 size_t build_pooling_forward(mkldnn::algorithm pooling_algorithm,

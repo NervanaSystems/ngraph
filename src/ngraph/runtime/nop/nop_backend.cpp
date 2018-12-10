@@ -54,9 +54,9 @@ shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const elemen
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer, "external");
 }
 
-bool runtime::nop::NOPBackend::compile(shared_ptr<Function> function)
+runtime::Handle runtime::nop::NOPBackend::compile(shared_ptr<Function> function)
 {
-    return true;
+    return function;
 }
 
 bool runtime::nop::NOPBackend::call(shared_ptr<Function> function,
