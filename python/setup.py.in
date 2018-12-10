@@ -223,7 +223,7 @@ class BdistWheel(bdist_wheel):
     def get_tag(self):
         tag = bdist_wheel.get_tag(self)
         if '${NGRAPH_MANYLINUX_ENABLE}' == 'TRUE' and sys.platform.startswith('linux'):
-            tag = tag[:2] + ('manylinux1',) + tag[3:]
+            tag = tag[:2] + ('manylinux1_x86_64',) + tag[3:]
         return tag
 
 

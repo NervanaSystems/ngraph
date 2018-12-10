@@ -18,9 +18,9 @@ Then follow the steps below.
     $ cd build/
     $ ../ngraph/contrib/docker/make-manylinux1.sh
 
-After this procedure completes, the `build/dist` directory should contain Python packages.
+After this procedure completes, the `dist` directory should contain Python packages.
 
-    $ ls build/dist
+    $ ls dist
     ngraph_core-0.10.0-cp27-cp27m-manylinux1.whl
     ngraph_core-0.10.0-cp34-cp34m-manylinux1.whl
     ngraph_core-0.10.0-cp36-cp36m-manylinux1.whl
