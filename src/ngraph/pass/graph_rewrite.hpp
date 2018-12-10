@@ -52,7 +52,8 @@ public:
     {
     }
 
-    void add_matcher(std::shared_ptr<pattern::Matcher> m) { m_matchers.push_back(m); }
+    bool is_enabled(std::shared_ptr<pattern::Matcher> m);
+    void add_matcher(std::shared_ptr<pattern::Matcher> m);
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 
 private:

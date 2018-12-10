@@ -42,6 +42,7 @@
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/slice.hpp"
@@ -61,8 +62,10 @@
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
+#include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
+#include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/util.hpp"
 
 extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
@@ -157,7 +160,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(padd, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(padd, callback, "CPUFusion.MatMulBias");
     this->add_matcher(m);
 }
 
@@ -230,7 +233,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(pdot, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(pdot, callback, "CPUFusion.MatMul");
     this->add_matcher(m);
 }
 
@@ -302,12 +305,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
             NGRAPH_DEBUG << "beta: " << pattern_map[beta_label]->get_name() << " "
                          << pattern_map[beta_label]->get_shape().size();
 
-            // dont fuse if the inout doesnt have 4dims
-            if (pattern_map[input]->get_shape().size() != 4)
-            {
-                NGRAPH_DEBUG << "Input to bn doesnt not have a rank=4, so not fusing";
-                return false;
-            }
             Shape bn_output_shape{m.get_match_root()->get_shape()};
             Shape m_bn_mean_shape{pattern_map[mean_label]->get_shape()};
             Shape m_bn_variance_shape{pattern_map[variance_label]->get_shape()};
@@ -323,13 +320,17 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
             auto bn_node = std::make_shared<op::BatchNormTraining>(
                 epsilon, pattern_map[gamma_label], pattern_map[beta_label], pattern_map[input]);
 
+            if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_node.get()))
+            {
+                return false;
+            }
             auto normalized_output = std::shared_ptr<Node>(new op::GetOutputElement(bn_node, 0));
 
             ngraph::replace_node(m.get_match_root(), normalized_output);
             return true;
         };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(add_beta, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(add_beta, callback, "CPUFusion.FpropBN");
     this->add_matcher(m);
 }
 
@@ -473,7 +474,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_reshaped_conv(
             return true;
         };
 
-    this->add_matcher(std::make_shared<ngraph::pattern::Matcher>(conv_label, callback));
+    this->add_matcher(std::make_shared<ngraph::pattern::Matcher>(
+        conv_label, callback, "CPUFusion.ZeroPaddedReshapedConv"));
 }
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
@@ -542,7 +544,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
             return true;
         };
 
-    this->add_matcher(std::make_shared<ngraph::pattern::Matcher>(conv_label, callback));
+    this->add_matcher(std::make_shared<ngraph::pattern::Matcher>(
+        conv_label, callback, "CPUFusion.ZeroPaddedConv"));
 }
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv_backprop_filters()
@@ -614,7 +617,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv_backprop_
             return true;
         };
 
-    this->add_matcher(std::make_shared<ngraph::pattern::Matcher>(conv_label, callback));
+    this->add_matcher(std::make_shared<ngraph::pattern::Matcher>(
+        conv_label, callback, "CPUFusion.ZeroPaddedConvBackpropFilters"));
 }
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
@@ -668,7 +672,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(p_conv_bias, callback);
+    auto m =
+        std::make_shared<ngraph::pattern::Matcher>(p_conv_bias, callback, "CPUFusion.ConvBias");
     this->add_matcher(m);
 }
 
@@ -750,7 +755,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
         return false;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(conv_bprop_filter, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(
+        conv_bprop_filter, callback, "CPUFusion.ConvBiasBprop");
     this->add_matcher(m);
 }
 
@@ -777,15 +783,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         auto m_bn = std::static_pointer_cast<op::BatchNormTraining>(
             m.get_match_root()->get_argument(0)->get_inputs().at(0).get_output().get_node());
 
-        // as of now, only MKLDNN supports this fusion
-        // and it requires input data's rank to be equal to 4
-        if (pattern_map[input]->get_shape().size() != 4)
+        if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(m_bn.get()))
         {
-            NGRAPH_DEBUG << " Input data's rank isn't equal to 4. Shape = "
-                         << pattern_map[input]->get_shape().size();
             return false;
         }
-
         std::vector<std::shared_ptr<Node>> mgoes(m_bn->get_outputs().size());
         for (auto bn_in : m_bn->get_output_inputs(0))
         {
@@ -818,7 +819,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(prelu, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(prelu, callback, "CPUFusion.BatchNormRelu");
     this->add_matcher(m);
 }
 
@@ -849,15 +850,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
 
         auto pattern_map = m.get_pattern_map();
 
-        // as of now, only MKLDNN supports this fusion
-        // and it requires input data's rank to be equal to 4
-        if (pattern_map[input]->get_shape().size() != 4)
-        {
-            NGRAPH_DEBUG << " Input data's rank isn't equal to 4. Shape = "
-                         << pattern_map[input]->get_shape().size();
-            return false;
-        }
-
         auto bn_match = m.get_match_root()->get_inputs().at(0).get_output().get_node();
         if (bn_match->get_users().size() > 1)
         {
@@ -868,6 +860,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
         std::shared_ptr<Node> bn_relu;
         if (auto bn_inference = std::dynamic_pointer_cast<op::BatchNormInference>(bn_match))
         {
+            if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_inference.get()))
+            {
+                return false;
+            }
             bn_relu = std::make_shared<op::BatchNormInferenceRelu>(bn_inference->get_eps_value(),
                                                                    pattern_map[gamma],
                                                                    pattern_map[beta],
@@ -885,7 +881,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
         return false;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(prelu, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(
+        prelu, callback, "CPUFusion.BatchNormReluGlobalStats");
     this->add_matcher(m);
 }
 
@@ -928,7 +925,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(prelu, callback);
+    auto m = std::make_shared<pattern::Matcher>(prelu, callback, "CPUFusion.ConvRelu");
     this->add_matcher(m);
 }
 
@@ -978,7 +975,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(prelu, callback);
+    auto m = std::make_shared<pattern::Matcher>(prelu, callback, "CPUFusion.ConvBiasRelu");
     this->add_matcher(m);
 }
 
@@ -1044,7 +1041,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(padd, callback, "conv_add");
+    auto m = std::make_shared<pattern::Matcher>(padd, callback, "CPUFusion.ConvAdd");
     this->add_matcher(m);
 }
 
@@ -1093,7 +1090,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add_relu()
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(prelu, callback, "conv_add_relu");
+    auto m = std::make_shared<pattern::Matcher>(prelu, callback, "CPUFusion.ConvAddRelu");
     this->add_matcher(m);
 }
 
@@ -1162,7 +1159,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(padd, callback, "conv_bias_add");
+    auto m = std::make_shared<pattern::Matcher>(padd, callback, "CPUFusion.ConvBiasAdd");
     this->add_matcher(m);
 }
 
@@ -1225,7 +1222,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(prelu, callback, "conv_bias_add_relu");
+    auto m = std::make_shared<pattern::Matcher>(prelu, callback, "CPUFusion.ConvBiasAddRelu");
     this->add_matcher(m);
 }
 
@@ -1346,7 +1343,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(leaky_relu, callback);
+    auto m = std::make_shared<pattern::Matcher>(leaky_relu, callback, "CPUFusion.LeakyRelu");
     this->add_matcher(m);
 }
 void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
@@ -1398,7 +1395,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(min, callback);
+    auto m = std::make_shared<pattern::Matcher>(min, callback, "CPUFusion.BoundedRelu");
     this->add_matcher(m);
 }
 
@@ -1478,7 +1475,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
 
         };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(bn, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(
+        bn, callback, "CPUFusion.ConvBiasFoldedBatchNorm");
     this->add_matcher(m);
 }
 
@@ -1605,7 +1603,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
 
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(multiply, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(
+        multiply, callback, "CPUFusion.ConvBiasAffineFolding");
     this->add_matcher(m);
 }
 
@@ -1700,7 +1699,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
             return true;
         };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(bn, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(
+        bn, callback, "CPUFusion.GroupconvBatchNormGlobalStatsFolding");
     this->add_matcher(m);
 }
 
@@ -1762,6 +1762,97 @@ void ngraph::runtime::cpu::pass::CPUFusion::
             return true;
         };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(prelu, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(
+        prelu, callback, "CPUFusion.GroupconvBatchNormGlobalStatsFoldingRelu");
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_fuse_lstm_recurrent_state()
+{
+    auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
+    auto src_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});
+    auto weights_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{100, 400});
+    auto weights_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{100, 400});
+    auto bias_label = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
+    auto lstm1 = std::make_shared<op::Lstm>(
+        src_layer_label, src_iter_label, weights_layer_label, weights_iter_label, bias_label);
+
+    auto lstm1_goe0 = std::make_shared<op::GetOutputElement>(lstm1, 0);
+    auto lstm1_goe1 = std::make_shared<op::GetOutputElement>(lstm1, 1);
+    auto lstm1_goe0_label =
+        std::make_shared<pattern::op::Label>(lstm1_goe0, nullptr, NodeVector{lstm1_goe0});
+    auto lstm1_goe1_label =
+        std::make_shared<pattern::op::Label>(lstm1_goe1, nullptr, NodeVector{lstm1_goe1});
+    auto lstm1_goe0_slice =
+        std::make_shared<op::Slice>(lstm1_goe0_label, Coordinate{0, 0}, Coordinate{10, 100});
+    auto lstm1_goe1_slice =
+        std::make_shared<op::Slice>(lstm1_goe1_label, Coordinate{10, 0}, Coordinate{20, 100});
+
+    auto concat = std::make_shared<op::Concat>(NodeVector{lstm1_goe0_slice, lstm1_goe1_slice}, 0);
+    auto concat_label = std::make_shared<pattern::op::Label>(concat, nullptr, NodeVector{concat});
+
+    ngraph::pattern::graph_rewrite_callback callback =
+        [lstm1, lstm1_goe0_label, concat_label, lstm1_goe1_label](pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In Lstm concat fusion" << m.get_match_root()->get_name();
+            auto pattern_map = m.get_pattern_map();
+
+            if (pattern_map[lstm1_goe0_label]->get_arguments()[0] !=
+                pattern_map[lstm1_goe1_label]->get_arguments()[0])
+            {
+                return false;
+            }
+            // we can replace the concat lstm_goe_1 which had both recurrent state tensor
+            ngraph::replace_node(pattern_map[concat_label], pattern_map[lstm1_goe1_label]);
+            return true;
+        };
+    auto m = std::make_shared<ngraph::pattern::Matcher>(concat_label, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
+{
+    Shape shape_a{2, 32, 2};
+    Shape shape_b{1, 32, 2};
+
+    auto input = std::make_shared<pattern::op::Label>(element::f32, shape_a);
+    auto slice = std::make_shared<op::Slice>(input, Coordinate{1, 0, 0}, Coordinate{2, 32, 2});
+    auto slice_label = std::make_shared<pattern::op::Label>(slice, nullptr, NodeVector{slice});
+    auto update_input = std::make_shared<pattern::op::Label>(element::f32, shape_b);
+    auto update = std::make_shared<op::Add>(update_input, slice_label);
+    auto replace_slice = std::make_shared<op::ReplaceSlice>(
+        input, update, Coordinate{1, 0, 0}, Coordinate{2, 32, 2});
+
+    ngraph::pattern::graph_rewrite_callback callback = [input, update_input, slice_label](
+        pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for update_slice = " << m.get_match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
+        auto slice_m = std::static_pointer_cast<op::Slice>(pattern_map[slice_label]);
+        auto replace_m = std::static_pointer_cast<op::ReplaceSlice>(m.get_match_root());
+        if (replace_m->get_lower_bounds() != slice_m->get_lower_bounds() ||
+            replace_m->get_upper_bounds() != slice_m->get_upper_bounds() ||
+            replace_m->get_strides() != slice_m->get_strides())
+        {
+            NGRAPH_DEBUG
+                << "Update slice cannot be created, slice and replace_slice are not compatible";
+            return false;
+        }
+
+        if (slice_m->get_users().size() > 1 || replace_m->get_argument(1)->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Update slice cannot be created, intermediate values required";
+            return false;
+        }
+
+        auto update_slice = std::make_shared<op::UpdateSlice>(pattern_map[input],
+                                                              pattern_map[update_input],
+                                                              replace_m->get_lower_bounds(),
+                                                              replace_m->get_upper_bounds(),
+                                                              replace_m->get_strides());
+        ngraph::replace_node(m.get_match_root(), update_slice);
+        return true;
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(
+        replace_slice, callback, "CPUFusion.UpdateSlice");
     this->add_matcher(m);
 }

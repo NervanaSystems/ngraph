@@ -12,7 +12,10 @@ shape_of_scalar
 shape_of_vector
 shape_of_matrix
 shape_of_5d
-quantize_clamp_int32
+sum_stable_acc_double
 
 # failing in CI build but passing on local machine
 max_3d_to_scalar_int32
+
+argmin_trivial_in_i32
+argmax_4D_axis_3_i64_in_i32
