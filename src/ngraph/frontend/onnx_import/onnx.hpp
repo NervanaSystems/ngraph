@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <iostream>
 #include <string>
 
@@ -39,6 +40,15 @@ namespace ngraph
                                std::int64_t version,
                                const std::string& domain,
                                Operator fn);
+
+        /// \brief      Return the set of supported operators.
+        ///
+        /// \param[in]  version  The requested version of ONNX operators set.
+        /// \param[in]  domain   The requested domain the operators where registered for.
+        ///
+        /// \return     The set containing supported operators.
+        ///
+        OperatorSet get_operator_set(std::int64_t version, const std::string& domain);
 
         /// \brief Convert an ONNX model to nGraph functions
         /// The function translated serialized ONNX model to nGraph functions. The serialized

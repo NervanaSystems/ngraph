@@ -99,6 +99,11 @@ namespace ngraph
             OperatorsBridge::register_operator(name, version, domain, std::move(fn));
         }
 
+        OperatorSet get_operator_set(std::int64_t version, const std::string& domain)
+        {
+            return OperatorsBridge::get_operator_set(version, domain);
+        }
+
     } // namespace onnx_import
 
 } // namespace ngraph
