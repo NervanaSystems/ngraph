@@ -36,7 +36,7 @@ TEST(nop_elimination, eliminate_pad)
     Shape padding_interior{0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
-        op::ParameterVector{A, B});
+        ParameterVector{A, B});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
@@ -49,7 +49,7 @@ TEST(nop_elimination, eliminate_sum)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{}), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
@@ -63,8 +63,7 @@ TEST(nop_elimination, eliminate_convert)
     Shape shape{};
     auto type = element::f32;
     auto A = make_shared<op::Parameter>(type, shape);
-    auto f =
-        make_shared<Function>(make_shared<op::Convert>(A, element::f32), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Convert>(A, element::f32), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
@@ -78,7 +77,7 @@ TEST(nop_elimination, eliminate_slice)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Slice>(A, Coordinate{0, 0}, Coordinate{2, 2}),
-                                   op::ParameterVector{A});
+                                   ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
@@ -91,8 +90,8 @@ TEST(nop_elimination, eliminate_broadcast)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}),
-                                   op::ParameterVector{A});
+    auto f =
+        make_shared<Function>(make_shared<op::Broadcast>(A, shape, AxisSet{}), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
@@ -105,7 +104,7 @@ TEST(nop_elimination, eliminate_stop_gradient)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::StopGradient>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::StopGradient>(A), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();

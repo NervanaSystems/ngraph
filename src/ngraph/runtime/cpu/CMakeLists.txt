@@ -20,13 +20,17 @@ set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
     cpu_call_frame.cpp
+    cpu_executor.cpp
     cpu_external_function.cpp
     cpu_kernels.cpp
     cpu_layout_descriptor.cpp
+    cpu_op_annotations.cpp
     cpu_tensor_view_wrapper.cpp
     cpu_tensor_view.cpp
     cpu_tracing.cpp
     cpu_visualize_tree.cpp
+    cpu_cse.cpp
+    cpu_debugger.cpp
     builder/add.cpp
     builder/allreduce.cpp
     builder/avg_pool.cpp
@@ -38,10 +42,10 @@ set(SRC
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
-    builder/quantized_conv.cpp
     builder/convolution.cpp
     builder/dot.cpp
     builder/function_call.cpp
+    builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
     builder/matmul_bias.cpp
@@ -55,8 +59,10 @@ set(SRC
     builder/reduce_function.cpp
     builder/reduce_function_window.cpp
     builder/replace_slice.cpp
-    builder/quantized_max_pool.cpp
+    builder/quantization.cpp
     builder/quantized_avg_pool.cpp
+    builder/quantized_conv.cpp
+    builder/quantized_max_pool.cpp
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
@@ -65,11 +71,11 @@ set(SRC
     builder/select_and_scatter.cpp
     builder/sigmoid.cpp
     builder/slice.cpp
+    builder/state.cpp
     builder/softmax.cpp
     builder/sum.cpp
     builder/topk.cpp
-    builder/quantization.cpp
-    kernel/eigen_thread_pool.cpp
+    builder/update_slice.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
     kernel/reduce_sum.cpp
@@ -80,30 +86,34 @@ set(SRC
     op/batch_dot.cpp
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
-    op/group_conv.cpp
-    op/halide_op.cpp
+    op/conv_add.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
+    op/group_conv.cpp
+    op/group_conv_bias.cpp
+    op/halide_op.cpp
+    op/leaky_relu.cpp
     op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
     op/max_pool_with_indices.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
-    op/conv_add.cpp
+    op/update_slice.cpp
     pass/cpu_assignment.cpp
     pass/cpu_collapse_dims.cpp
-    pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp
     pass/cpu_horizontal_fusion.cpp
     pass/cpu_layout.cpp
     pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_mat_fusion.cpp
+    pass/cpu_memory_optimization.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
     pass/cpu_reshape_sinking.cpp
+    ngraph_version.cpp
 )
 
 if (NOT NGRAPH_DEX_ONLY)
@@ -119,6 +129,8 @@ if (NGRAPH_HALIDE)
     set(SRC
         ${SRC}
         builder/halide_op.cpp
+        builder/loop_kernel.cpp
+        builder/halide_generators.cpp
         pass/halide_subgraph_extraction.cpp
         )
 endif()
@@ -141,10 +153,6 @@ if (NGRAPH_TBB_ENABLE)
         DESTINATION ${NGRAPH_INSTALL_LIB}
         FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
-    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
-        DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
-    )
     add_library(libtbb INTERFACE)
     target_link_libraries(libtbb INTERFACE
         ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
@@ -156,7 +164,11 @@ if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
     add_library(cpu_backend SHARED ${SRC})
-    set_target_properties(cpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+    if(NGRAPH_LIB_VERSIONING_ENABLE)
+        set_target_properties(cpu_backend PROPERTIES
+            VERSION ${NGRAPH_VERSION}
+            SOVERSION ${NGRAPH_API_VERSION})
+    endif()
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     endif()
@@ -164,7 +176,8 @@ if (NGRAPH_CPU_ENABLE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_HALIDE")
         ExternalProject_Get_Property(ext_halide BINARY_DIR)
         target_include_directories(cpu_backend SYSTEM PRIVATE ${BINARY_DIR}/include)
-        target_link_libraries(cpu_backend PRIVATE ${BINARY_DIR}/lib/libHalide.so)
+        target_link_libraries(cpu_backend PRIVATE ${BINARY_DIR}/lib/libHalide.a libhalidellvm)
+        add_dependencies(cpu_backend ext_halide)
     endif()
 
     if(OPENMP_FOUND)
@@ -197,7 +210,7 @@ if (NGRAPH_CPU_ENABLE)
         # CPU backend picking up the wrong version or even multiple versions of the
         # third-party library. -Bsymbolic-functions tells the linker to prefer the internal
         # version inside cpu_backend over what is available through the global symbol table
-        set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions")
+        set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
     endif()
 
     install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})

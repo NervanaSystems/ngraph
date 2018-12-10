@@ -58,7 +58,7 @@ public:
     static std::vector<std::string> get_registered_backends();
 
 private:
-    static std::shared_ptr<runtime::Backend> create_backend(const std::string& type);
+    static std::unique_ptr<runtime::Backend> create_backend(const std::string& type);
     static std::unordered_map<std::string, new_backend_t>& get_registry();
 
     static std::unordered_map<std::string, new_backend_t> s_registered_backend;

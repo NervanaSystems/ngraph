@@ -51,7 +51,7 @@ namespace ngraph
                     create_tensor(const ngraph::element::Type& element_type,
                                   const Shape& shape) override;
 
-                bool compile(std::shared_ptr<Function> func) override;
+                Handle compile(std::shared_ptr<Function> func) override;
 
                 bool call(std::shared_ptr<Function> func,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
@@ -61,6 +61,8 @@ namespace ngraph
                 void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
                 std::vector<PerformanceCounter>
                     get_performance_data(std::shared_ptr<Function> func) const override;
+
+                bool is_supported(const Node& node) const override;
 
                 class BackendContext
                 {

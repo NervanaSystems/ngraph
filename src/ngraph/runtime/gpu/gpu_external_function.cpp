@@ -112,7 +112,9 @@
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/gpu/op/batch_norm.hpp"
 #include "ngraph/runtime/gpu/op/rnn.hpp"
+#include "ngraph/runtime/gpu/pass/gpu_batch_norm_cache.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_layout.hpp"
 #include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
 #include "ngraph/runtime/gpu/pass/tensor_memory_reservation.hpp"
@@ -307,8 +309,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
                 // get an allocator for transient per kernel gpu memory
                 runtime::gpu::GPUAllocator allocator =
                     m_shared_context->m_primitive_emitter->get_memory_allocator();
-                size_t idx = allocator.reserve_argspace(c->get_data_ptr(),
-                                                        tv->size() * tv->get_element_type().size());
+                size_t idx = allocator.reserve_argspace(c->get_data_ptr(), tv->size());
                 m_writer << "static size_t " << tv->get_name() << "_idx = " << idx << ";\n";
                 m_writer << "static " << tv->get_element_type().c_type_string() << "* "
                          << tv->get_name() << " = nullptr;\n";
@@ -568,9 +569,10 @@ void runtime::gpu::GPU_ExternalFunction::compile()
 #else
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
 #endif
+    pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
     pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
+    pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
     pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(

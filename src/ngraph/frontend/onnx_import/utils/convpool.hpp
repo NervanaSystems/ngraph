@@ -18,12 +18,11 @@
 
 #include <string>
 
+#include "core/attribute.hpp"
+#include "core/node.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/shape.hpp"
-
-#include "core/attribute.hpp"
-#include "core/node.hpp"
 
 namespace ngraph
 {
@@ -118,8 +117,8 @@ namespace ngraph
                 bool count_include_pad = node.get_attribute_value<int64_t>("count_include_pad", 0);
 
                 // Convert padding from CoordinateDiff to Shape objects
-                const CoordinateDiff& padding_above{paddings.first};
-                const CoordinateDiff& padding_below{paddings.second};
+                const CoordinateDiff& padding_above{paddings.second};
+                const CoordinateDiff& padding_below{paddings.first};
                 Shape padding_below_shape{std::begin(padding_below), std::end(padding_below)};
                 Shape padding_above_shape{std::begin(padding_above), std::end(padding_above)};
 

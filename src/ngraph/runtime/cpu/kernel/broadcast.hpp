@@ -20,7 +20,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/shape.hpp"
 
@@ -36,7 +36,8 @@ namespace ngraph
                 void broadcast(void* input,
                                void* output,
                                const Shape& input_shape,
-                               const Shape& output_shape)
+                               const Shape& output_shape,
+                               int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> out_dims;
                     Eigen::array<Eigen::Index, Rank> in_dims;
@@ -58,7 +59,8 @@ namespace ngraph
                         factors[i] = output_shape[i] / input_shape[i];
                     }
 
-                    out.device(eigen::global_thread_pool_device) = in.broadcast(factors);
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
+                        in.broadcast(factors);
                 }
             }
         }

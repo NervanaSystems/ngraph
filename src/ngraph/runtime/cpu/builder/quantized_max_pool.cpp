@@ -43,7 +43,8 @@ namespace ngraph
                     size_t qmax_pool_index = mkldnn_emitter->build_quantized_max_pool(node);
                     auto& deps = mkldnn_emitter->get_primitive_deps(qmax_pool_index);
 
-                    auto functor = [&, qmax_pool_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, qmax_pool_index](CPURuntimeContext* ctx,
+                                                        CPUExecutionContext* ectx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
                         cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, qmax_pool_index);

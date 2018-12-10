@@ -28,6 +28,7 @@
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
@@ -39,32 +40,6 @@
 using namespace mkldnn;
 using namespace ngraph;
 using namespace std;
-
-#define TI(x) std::type_index(typeid(x))
-
-std::unordered_set<std::type_index>& runtime::cpu::mkldnn_utils::get_op_registry()
-{
-    static std::unordered_set<std::type_index> s_op_registry{
-        TI(ngraph::op::Add),
-        TI(ngraph::op::AvgPool),
-        TI(ngraph::op::AvgPoolBackprop),
-        TI(ngraph::op::BatchNormTraining),
-        TI(ngraph::op::BatchNormInference),
-        TI(ngraph::op::BatchNormTrainingBackprop),
-        TI(ngraph::op::Concat),
-        TI(ngraph::op::Convolution),
-        TI(ngraph::op::ConvolutionBackpropData),
-        TI(ngraph::op::ConvolutionBackpropFilters),
-        TI(ngraph::op::ConvolutionBias),
-        TI(ngraph::op::ConvolutionRelu),
-        TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
-        TI(ngraph::op::MaxPool),
-        TI(ngraph::op::MaxPoolBackprop),
-        TI(ngraph::op::Relu),
-        TI(ngraph::op::ReluBackprop),
-        TI(ngraph::op::Reshape)};
-    return s_op_registry;
-}
 
 std::map<element::Type, const mkldnn::memory::data_type>&
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type_map()
@@ -107,7 +82,6 @@ std::map<element::Type, const std::string>&
 std::map<memory::format, const std::string>&
     runtime::cpu::mkldnn_utils::get_mkldnn_format_string_map()
 {
-    // TODO (jbobba): Add the rest of memory formats to this map as well
     static std::map<memory::format, const std::string> s_mkldnn_format_string_map{
         {memory::format::format_undef, "memory::format::format_undef"},
         {memory::format::any, "memory::format::any"},
@@ -119,37 +93,78 @@ std::map<memory::format, const std::string>&
         {memory::format::chwn, "memory::format::chwn"},
         {memory::format::nChw8c, "memory::format::nChw8c"},
         {memory::format::nChw16c, "memory::format::nChw16c"},
-        {memory::format::ncdhw, "memory::format::ndhwc"},
-        {memory::format::ncdhw, "memory::format::ndhwc"},
+        {memory::format::ncdhw, "memory::format::ncdhw"},
+        {memory::format::ndhwc, "memory::format::ndhwc"},
+        {memory::format::nCdhw8c, "memory::format::nCdhw8c"},
         {memory::format::nCdhw16c, "memory::format::nCdhw16c"},
         {memory::format::oi, "memory::format::oi"},
         {memory::format::io, "memory::format::io"},
         {memory::format::oihw, "memory::format::oihw"},
         {memory::format::ihwo, "memory::format::ihwo"},
         {memory::format::hwio, "memory::format::hwio"},
-        // TODO (nishant): Uncomment after the next release of mkl-dnn"
-        //{memory::format::dhwio, "memory::format::dhwio"},
+        {memory::format::dhwio, "memory::format::dhwio"},
         {memory::format::oidhw, "memory::format::oidhw"},
+        {memory::format::OIdhw8i8o, "memory::format::OIdhw8i8o"},
+        {memory::format::OIdhw8o8i, "memory::format::OIdhw8o8i"},
+        {memory::format::Odhwi8o, "memory::format::Odhwi8o"},
         {memory::format::OIdhw16i16o, "memory::format::OIdhw16i16o"},
         {memory::format::OIdhw16o16i, "memory::format::OIdhw16o16i"},
         {memory::format::Oidhw16o, "memory::format::Oidhw16o"},
         {memory::format::Odhwi16o, "memory::format::Odhwi16o"},
         {memory::format::oIhw8i, "memory::format::oIhw8i"},
         {memory::format::oIhw16i, "memory::format::oIhw16i"},
+        {memory::format::oIdhw8i, "memory::format::oIdhw8i"},
+        {memory::format::oIdhw16i, "memory::format::oIdhw16i"},
         {memory::format::OIhw8i8o, "memory::format::OIhw8i8o"},
         {memory::format::OIhw16i16o, "memory::format::OIhw16i16o"},
-        {memory::format::IOhw16o16i, "memory::format::IOhw16o16i"},
         {memory::format::OIhw8o8i, "memory::format::OIhw8o8i"},
         {memory::format::OIhw16o16i, "memory::format::OIhw16o16i"},
+        {memory::format::IOhw16o16i, "memory::format::IOhw16o16i"},
+        {memory::format::OIhw8i16o2i, "memory::format::OIhw8i16o2i"},
+        {memory::format::OIdhw8i16o2i, "memory::format::OIdhw8i16o2i"},
+        {memory::format::OIhw8o16i2o, "memory::format::OIhw8o16i2o"},
+        {memory::format::OIhw4i16o4i, "memory::format::OIhw4i16o4i"},
         {memory::format::Oihw8o, "memory::format::Oihw8o"},
         {memory::format::Oihw16o, "memory::format::Oihw16o"},
         {memory::format::Ohwi8o, "memory::format::Ohwi8o"},
         {memory::format::Ohwi16o, "memory::format::Ohwi16o"},
         {memory::format::OhIw16o4i, "memory::format::OhIw16o4i"},
+        {memory::format::goihw, "memory::format::goihw"},
+        {memory::format::hwigo, "memory::format::hwigo"},
+        {memory::format::gOIdhw8i8o, "memory::format::gOIdhw8i8o"},
+        {memory::format::gOIdhw8o8i, "memory::format::gOIdhw8o8i"},
+        {memory::format::gOdhwi8o, "memory::format::gOdhwi8o"},
+        {memory::format::gOIhw8i8o, "memory::format::gOIhw8i8o"},
+        {memory::format::gOIhw16i16o, "memory::format::gOIhw16i16o"},
+        {memory::format::gOIhw8i16o2i, "memory::format::gOIhw8i16o2i"},
+        {memory::format::gOIdhw8i16o2i, "memory::format::gOIdhw8i16o2i"},
+        {memory::format::gOIhw8o16i2o, "memory::format::gOIhw8o16i2o"},
+        {memory::format::gOIhw4i16o4i, "memory::format::gOIhw4i16o4i"},
+        {memory::format::gOihw8o, "memory::format::gOihw8o"},
+        {memory::format::gOihw16o, "memory::format::gOihw16o"},
+        {memory::format::gOhwi8o, "memory::format::gOhwi8o"},
+        {memory::format::gOhwi16o, "memory::format::gOhwi16o"},
+        {memory::format::Goihw8g, "memory::format::Goihw8g"},
+        {memory::format::Goihw16g, "memory::format::Goihw16g"},
+        {memory::format::gOIhw8o8i, "memory::format::gOIhw8o8i"},
+        {memory::format::gOIhw16o16i, "memory::format::gOIhw16o16i"},
+        {memory::format::gIOhw16o16i, "memory::format::gIOhw16o16i"},
+        {memory::format::gOhIw16o4i, "memory::format::gOhIw16o4i"},
+        {memory::format::goidhw, "memory::format::goidhw"},
+        {memory::format::gOIdhw16i16o, "memory::format::gOIdhw16i16o"},
+        {memory::format::gOIdhw16o16i, "memory::format::gOIdhw16o16i"},
+        {memory::format::gOidhw16o, "memory::format::gOidhw16o"},
+        {memory::format::gOdhwi16o, "memory::format::gOdhwi16o"},
+        {memory::format::ntc, "memory::format::ntc"},
         {memory::format::tnc, "memory::format::tnc"},
         {memory::format::ldsnc, "memory::format::ldsnc"},
         {memory::format::ldigo, "memory::format::ldigo"},
+        {memory::format::ldigo_p, "memory::format::ldigo_p"},
+        {memory::format::ldgoi, "memory::format::ldgoi"},
+        {memory::format::ldgoi_p, "memory::format::ldgoi_p"},
         {memory::format::ldgo, "memory::format::ldgo"},
+        {memory::format::wino_fmt, "memory::format::wino_fmt"},
+        {memory::format::format_last, "memory::format::format_last"},
     };
     return s_mkldnn_format_string_map;
 }
@@ -180,10 +195,6 @@ std::set<memory::format>& runtime::cpu::mkldnn_utils::get_filter_formats()
         memory::format::Ohwi16o,
         memory::format::OhIw16o4i};
     return s_filter_formats;
-}
-bool runtime::cpu::mkldnn_utils::IsMKLDNNOp(ngraph::Node& op)
-{
-    return (get_op_registry().find(TI(op)) != get_op_registry().end());
 }
 
 mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
@@ -271,6 +282,10 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
         et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(index));
     }
 
+    if (shape == Shape{})
+    {
+        shape = Shape{1};
+    }
     return memory::desc(memory::dims(shape.begin(), shape.end()), et, format);
 }
 
@@ -388,7 +403,7 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
 
 // MKLDNN kernel selection sometimes relies on named layouts like "mkldnn_nchw"
 // Try and convert a blocked layout into a named layout
-memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(mkldnn_memory_desc_t md)
+memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(const mkldnn_memory_desc_t& md)
 {
     auto out_md = memory::desc(md);
 
@@ -550,7 +565,7 @@ memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& i
                     in.data.layout_desc.blocking.strides[0][in.data.ndims - 1];
                 size_t nelems = 1;
                 for (size_t idx = 0; idx < in.data.ndims; idx++)
-                    nelems *= in.data.dims[idx];
+                    nelems *= in.data.layout_desc.blocking.padding_dims[idx];
                 md.layout_desc.blocking.strides[0][j] = nelems;
             }
         }
@@ -587,8 +602,8 @@ bool runtime::cpu::mkldnn_utils::compare_mkldnn_formats(mkldnn::memory::format l
 bool runtime::cpu::mkldnn_utils::compare_mkldnn_mds(const mkldnn::memory::desc& lhs,
                                                     const mkldnn::memory::desc& rhs)
 {
-    return (memory::primitive_desc(lhs, runtime::cpu::mkldnn_utils::global_cpu_engine) ==
-            memory::primitive_desc(rhs, runtime::cpu::mkldnn_utils::global_cpu_engine));
+    return (memory::primitive_desc(lhs, runtime::cpu::executor::global_cpu_engine) ==
+            memory::primitive_desc(rhs, runtime::cpu::executor::global_cpu_engine));
 }
 
 bool runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(mkldnn::memory::format fmt)
@@ -642,4 +657,45 @@ bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
     return (op_annotations &&
             static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
                 ->is_mkldnn_op());
+}
+
+void runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(Node* node)
+{
+    auto ngraph_op = static_cast<op::Op*>(node);
+    auto op_annotations = std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+    op_annotations->set_mkldnn_op(true);
+    ngraph_op->set_op_annotations(op_annotations);
+}
+
+bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_fprop(const ngraph::Node* node)
+{
+    auto input_rank = node->get_input_shape(2).size();
+    auto input_element_type = node->get_input_element_type(2);
+
+    if (((input_rank == 4 || input_rank == 5) && input_element_type == element::f32))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node)
+{
+    auto input_rank = node->get_input_shape(2).size();
+    auto input_element_type = node->get_input_element_type(2);
+    auto delta_rank = node->get_input_shape(5).size();
+    auto delta_element_type = node->get_input_element_type(5);
+
+    if (((input_rank == 4 && delta_rank == 4) || (input_rank == 5 && delta_rank == 5)) &&
+        (input_element_type == element::f32) && (delta_element_type == element::f32))
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }

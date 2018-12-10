@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -25,7 +25,7 @@ namespace ngraph
         NodeVector get_output_elements(const std::shared_ptr<Node>& mon);
 
         /// \brief Operation to get an output from a node.
-        class GetOutputElement : public Node
+        class GetOutputElement : public Op
         {
         public:
             /// \brief Constructs a get-tuple-element operation.
@@ -36,6 +36,7 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+            void validate_and_infer_types() override;
 
             /// \return The index of the tuple element to get.
             size_t get_n() const { return m_n; }

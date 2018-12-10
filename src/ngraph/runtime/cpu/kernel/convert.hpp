@@ -19,7 +19,7 @@
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 
 namespace ngraph
 {
@@ -30,7 +30,7 @@ namespace ngraph
             namespace kernel
             {
                 template <typename InputElementType, typename OutputElementType>
-                void convert(void* input, void* output, size_t count)
+                void convert(void* input, void* output, size_t count, int arena)
                 {
                     Eigen::array<Eigen::Index, 1> out_dims, in_dims;
 
@@ -41,68 +41,68 @@ namespace ngraph
                     Eigen::TensorMap<Eigen::Tensor<InputElementType, 1, Eigen::RowMajor>> in(
                         static_cast<InputElementType*>(input), in_dims);
 
-                    out.device(eigen::global_thread_pool_device) =
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         in.template cast<OutputElementType>();
                 }
 
                 template <typename InputElementType>
-                void convert_to_float32(void* input, void* output, size_t count)
+                void convert_to_float32(void* input, void* output, size_t count, int arena)
                 {
-                    convert<InputElementType, float>(input, output, count);
+                    convert<InputElementType, float>(input, output, count, arena);
                 }
 
                 template <typename InputElementType>
-                void convert_to_float64(void* input, void* output, size_t count)
+                void convert_to_float64(void* input, void* output, size_t count, int arena)
                 {
-                    convert<InputElementType, double>(input, output, count);
+                    convert<InputElementType, double>(input, output, count, arena);
                 }
 
                 template <typename InputElementType>
-                void convert_to_i8(void* input, void* output, size_t count)
+                void convert_to_i8(void* input, void* output, size_t count, int arena)
                 {
-                    convert<InputElementType, int8_t>(input, output, count);
+                    convert<InputElementType, int8_t>(input, output, count, arena);
                 }
 
                 template <typename InputElementType>
-                void convert_to_i16(void* input, void* output, size_t count)
+                void convert_to_i16(void* input, void* output, size_t count, int arena)
                 {
-                    convert<InputElementType, int16_t>(input, output, count);
+                    convert<InputElementType, int16_t>(input, output, count, arena);
                 }
 
                 template <typename InputElementType>
-                void convert_to_i32(void* input, void* output, size_t count)
+                void convert_to_i32(void* input, void* output, size_t count, int arena)
                 {
-                    convert<InputElementType, int32_t>(input, output, count);
+                    convert<InputElementType, int32_t>(input, output, count, arena);
                 }
 
                 template <typename InputElementType>
-                void convert_to_i64(void* input, void* output, size_t count)
+                void convert_to_i64(void* input, void* output, size_t count, int arena)
                 {
-                    convert<InputElementType, int64_t>(input, output, count);
+                    convert<InputElementType, int64_t>(input, output, count, arena);
                 }
 
                 template <typename InputElementType>
-                void convert_to_u8(void* input, void* output, size_t count)
+                void convert_to_u8(void* input, void* output, size_t count, int arena)
                 {
-                    convert<InputElementType, uint8_t>(input, output, count);
+                    convert<InputElementType, uint8_t>(input, output, count, arena);
                 }
 
                 template <typename InputElementType>
-                void convert_to_u16(void* input, void* output, size_t count)
+                void convert_to_u16(void* input, void* output, size_t count, int arena)
                 {
-                    convert<InputElementType, uint16_t>(input, output, count);
+                    convert<InputElementType, uint16_t>(input, output, count, arena);
                 }
 
                 template <typename InputElementType>
-                void convert_to_u32(void* input, void* output, size_t count)
+                void convert_to_u32(void* input, void* output, size_t count, int arena)
                 {
-                    convert<InputElementType, uint32_t>(input, output, count);
+                    convert<InputElementType, uint32_t>(input, output, count, arena);
                 }
 
                 template <typename InputElementType>
-                void convert_to_u64(void* input, void* output, size_t count)
+                void convert_to_u64(void* input, void* output, size_t count, int arena)
                 {
-                    convert<InputElementType, uint64_t>(input, output, count);
+                    convert<InputElementType, uint64_t>(input, output, count, arena);
                 }
             }
         }

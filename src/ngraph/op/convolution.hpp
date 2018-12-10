@@ -155,8 +155,12 @@ namespace ngraph
             Strides m_data_dilation_strides;
 
         private:
-            static Strides default_strides(const Node* node, const Shape& data_batch_shape);
-            static CoordinateDiff default_padding(const Node* node, const Shape& data_batch_shape);
+            static Strides default_strides(const Node* node,
+                                           const PartialShape& data_batch_shape,
+                                           const PartialShape& filters_shape);
+            static CoordinateDiff default_padding(const Node* node,
+                                                  const PartialShape& data_batch_shape,
+                                                  const PartialShape& filters_shape);
         };
 
         /// \brief Data batch backprop for batched convolution operation.

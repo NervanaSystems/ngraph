@@ -33,7 +33,7 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::AllReduce>(A), op::ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     int comm_size;
@@ -49,6 +49,6 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     std::transform(
         v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
 
-    backend->call_with_validate(f, {result}, {a});
+    backend->call_with_validate(backend->compile(f), {result}, {a});
     EXPECT_EQ(v, read_vector<float>(result));
 }

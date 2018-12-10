@@ -37,9 +37,7 @@ namespace ngraph
                         "Lstm is supported only through MKLDNN and doesnt have reference "
                         "INTERPRETER implementation");
                 }
-
-                const ngraph::op::Lstm* lstm_node = static_cast<const ngraph::op::Lstm*>(node);
-                if (args.size() != 5 || !lstm_node->get_fused_inputs())
+                if (args.size() != 5)
                 {
                     throw ngraph_error(
                         "Lstm op doesnt have the required number of inputs to create MKLDNN "
@@ -59,7 +57,7 @@ namespace ngraph
                 auto lstm_index = mkldnn_emitter->build_rnn<ngraph::op::Lstm>(node, args, out);
                 auto& deps = mkldnn_emitter->get_primitive_deps(lstm_index);
 
-                auto functor = [&, lstm_index](CPURuntimeContext* ctx) {
+                auto functor = [&, lstm_index](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], src_layer_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], src_iter_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], weights_layer_tensor);

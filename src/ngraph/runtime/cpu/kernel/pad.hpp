@@ -19,7 +19,7 @@
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/shape.hpp"
 
@@ -38,7 +38,8 @@ namespace ngraph
                          const Shape& input_shape,
                          const Shape& output_shape,
                          const Shape& padding_below,
-                         const Shape& padding_above)
+                         const Shape& padding_above,
+                         int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> out_dims, in_dims;
                     Eigen::array<Eigen::IndexPair<size_t>, Rank> padding;
@@ -54,7 +55,7 @@ namespace ngraph
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> in(
                         static_cast<ElementType*>(input), in_dims);
 
-                    out.device(eigen::global_thread_pool_device) =
+                    out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         in.pad(padding, *static_cast<ElementType*>(pad_value));
                 }
 
@@ -66,7 +67,8 @@ namespace ngraph
                          const Shape& out_shape,
                          const Shape& padding_below,
                          const Shape& padding_above,
-                         const Shape& padding_interior)
+                         const Shape& padding_interior,
+                         int arena)
                 {
                     reference::pad(static_cast<const ElementType*>(arg0),
                                    static_cast<const ElementType*>(arg1),

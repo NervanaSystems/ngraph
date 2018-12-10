@@ -28,20 +28,22 @@ namespace ngraph
                                            float* output,
                                            const Shape& input_shape,
                                            const AxisVector& input_axis_order,
-                                           const Shape& output_shape)
+                                           const Shape& output_shape,
+                                           int arena)
                 {
                     reshape<float, 3, 3>(
-                        input, output, input_shape, input_axis_order, output_shape);
+                        input, output, input_shape, input_axis_order, output_shape, arena);
                 }
 
                 void reshape_4d_4d_float32(float* input,
                                            float* output,
                                            const Shape& input_shape,
                                            const AxisVector& input_axis_order,
-                                           const Shape& output_shape)
+                                           const Shape& output_shape,
+                                           int arena)
                 {
                     reshape<float, 4, 4>(
-                        input, output, input_shape, input_axis_order, output_shape);
+                        input, output, input_shape, input_axis_order, output_shape, arena);
                 }
             }
         }

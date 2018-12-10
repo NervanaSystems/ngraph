@@ -130,7 +130,7 @@ void op::AvgPoolBackprop::validate_and_infer_types()
                                       m_window_movement_strides,
                                       m_include_padding_in_avg_computation);
 
-    const PartialShape& delta_shape = get_input_shape(0);
+    const PartialShape& delta_shape = get_input_partial_shape(0);
 
     NODE_VALIDATION_ASSERT(this, forward_result_shape.compatible(delta_shape))
         << "Inferred forward output shape does not match delta shape (inferred forward output "

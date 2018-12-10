@@ -47,6 +47,7 @@
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -57,6 +58,8 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -90,12 +93,16 @@ shared_ptr<Node> runtime::cpu::pass::CPULayout::insert_input_conversions(
         const auto& output = input.get_output();
         auto tv = output.get_tensor_ptr();
         auto tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(tv->get_tensor_layout());
-
         if (!tvl)
         {
             throw ngraph_error(
                 "In insert_input_conversions: Expecting Layout descriptor to be already set on " +
                 output.get_node()->get_name());
+        }
+
+        if (input.get_shape() == Shape{})
+        {
+            tvl->set_mkldnn_md(required_mds[index]);
         }
         if (!tvl->is_mkldnn_layout())
         {
@@ -269,7 +276,7 @@ namespace ngraph
         {
             namespace pass
             {
-                template <typename T, bool use_bias, bool default_weights_format>
+                template <typename T, bool use_bias>
                 void ConvolutionLayout(std::shared_ptr<ngraph::Node> node,
                                        vector<memory::desc>& i_mds,
                                        vector<memory::desc>& o_mds)
@@ -279,10 +286,16 @@ namespace ngraph
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg1_shape = node->get_input_shape(1);
 
-                    if (default_weights_format)
+                    // Convert filters to MKLDNN shape
+                    // o,i,h,w -> g,o,i,h,w (e.g., {6, 2, 1, 1}, groups = 2 -> {2, 3, 1, 1, 1})
+                    if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node))
                     {
-                        arg1_shape = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node)
-                                         ->get_weights_dimensions();
+                        arg1_shape = gconv->get_weights_dimensions();
+                    }
+                    if (auto gconv =
+                            std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node))
+                    {
+                        arg1_shape = gconv->get_weights_dimensions();
                     }
                     auto result_shape = node->get_output_shape(0);
                     auto filter_strides = convolution->get_window_movement_strides();
@@ -322,11 +335,12 @@ namespace ngraph
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     if (use_bias)
                     {
+                        memory::data_type et_bias =
+                            mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(2));
                         auto arg2_shape = node->get_input_shape(2);
-                        ngraph::op::util::validate_convbias_shapes(
-                            arg0_shape, arg1_shape, arg2_shape);
                         memory::dims mkldnn_arg2_shape(arg2_shape.begin(), arg2_shape.end());
-                        const memory::desc bias_desc(mkldnn_arg2_shape, et, memory::format::any);
+                        const memory::desc bias_desc(
+                            mkldnn_arg2_shape, et_bias, memory::format::any);
                         try
                         {
                             fwd_desc.reset(
@@ -390,7 +404,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::QuantizedConvolution, false, false>(
+                        ConvolutionLayout<ngraph::op::QuantizedConvolution, false>(
                             node, i_mds, o_mds);
 
                         auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
@@ -413,8 +427,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::Convolution, false, false>(
-                            node, i_mds, o_mds);
+                        ConvolutionLayout<ngraph::op::Convolution, false>(node, i_mds, o_mds);
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
@@ -432,7 +445,25 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::GroupConvolution, false, true>(
+                        ConvolutionLayout<ngraph::op::GroupConvolution, false>(node, i_mds, o_mds);
+
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::GroupConvolutionBias)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        ConvolutionLayout<ngraph::op::GroupConvolutionBias, true>(
                             node, i_mds, o_mds);
 
                         node = insert_input_conversions(external_function, node, i_mds);
@@ -451,8 +482,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::ConvolutionBias, true, false>(
-                            node, i_mds, o_mds);
+                        ConvolutionLayout<ngraph::op::ConvolutionBias, true>(node, i_mds, o_mds);
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -469,7 +499,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::QuantizedConvolutionBias, true, false>(
+                        ConvolutionLayout<ngraph::op::QuantizedConvolutionBias, true>(
                             node, i_mds, o_mds);
 
                         auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
@@ -487,14 +517,69 @@ namespace ngraph
                 }
 
                 template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolutionBiasAdd)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        ConvolutionLayout<ngraph::op::QuantizedConvolutionBiasAdd, true>(
+                            node, i_mds, o_mds);
+
+                        auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 4, false, memory::format::x);
+                        auto sum_scale_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 5, false, memory::format::x);
+
+                        i_mds.push_back(o_mds[0]);
+                        i_mds.push_back(scale_input_md);
+                        i_mds.push_back(sum_scale_input_md);
+
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolutionBiasSignedAdd)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        ConvolutionLayout<ngraph::op::QuantizedConvolutionBiasSignedAdd, true>(
+                            node, i_mds, o_mds);
+
+                        auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 4, false, memory::format::x);
+                        auto sum_scale_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 5, false, memory::format::x);
+
+                        i_mds.push_back(o_mds[0]);
+                        i_mds.push_back(scale_input_md);
+                        i_mds.push_back(sum_scale_input_md);
+
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
+
+                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::ConvolutionRelu)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::ConvolutionRelu, false, false>(
-                            node, i_mds, o_mds);
+                        ConvolutionLayout<ngraph::op::ConvolutionRelu, false>(node, i_mds, o_mds);
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -511,7 +596,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::QuantizedConvolutionRelu, false, false>(
+                        ConvolutionLayout<ngraph::op::QuantizedConvolutionRelu, false>(
                             node, i_mds, o_mds);
 
                         auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
@@ -535,8 +620,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::ConvolutionBiasAdd, true, false>(
-                            node, i_mds, o_mds);
+                        ConvolutionLayout<ngraph::op::ConvolutionBiasAdd, true>(node, i_mds, o_mds);
                         // Force second input to sum to use the same layout as convolution output
                         i_mds.push_back(o_mds[0]);
                         node = insert_input_conversions(external_function, node, i_mds);
@@ -555,8 +639,7 @@ namespace ngraph
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::ConvolutionAdd, false, false>(
-                            node, i_mds, o_mds);
+                        ConvolutionLayout<ngraph::op::ConvolutionAdd, false>(node, i_mds, o_mds);
                         // Force second input to sum to use the same layout as convolution output
                         i_mds.push_back(o_mds[0]);
                         node = insert_input_conversions(external_function, node, i_mds);
@@ -845,7 +928,7 @@ namespace ngraph
                                                              mkldnn_padding_below,
                                                              mkldnn_padding_above,
                                                              padding_kind::zero},
-                                                            mkldnn_utils::global_cpu_engine);
+                                                            executor::global_cpu_engine);
                         i_mds.push_back(input_desc);
                         o_mds.push_back(prim_desc.dst_primitive_desc().desc());
                     }
@@ -925,7 +1008,7 @@ namespace ngraph
                                                                  mkldnn_padding_below,
                                                                  mkldnn_padding_above,
                                                                  padding_kind::zero},
-                                                                mkldnn_utils::global_cpu_engine);
+                                                                executor::global_cpu_engine);
                             auto prim_desc =
                                 pooling_backward::primitive_desc({algorithm_enumerator,
                                                                   result_desc,
@@ -935,7 +1018,7 @@ namespace ngraph
                                                                   mkldnn_padding_below,
                                                                   mkldnn_padding_above,
                                                                   padding_kind::zero},
-                                                                 mkldnn_utils::global_cpu_engine,
+                                                                 executor::global_cpu_engine,
                                                                  fwd_prim_desc);
                             i_mds.push_back(input_desc);
                             o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
@@ -997,7 +1080,7 @@ namespace ngraph
                                                              mkldnn_padding_below,
                                                              mkldnn_padding_above,
                                                              padding_kind::zero},
-                                                            mkldnn_utils::global_cpu_engine);
+                                                            executor::global_cpu_engine);
                         i_mds.push_back(input_desc);
                         o_mds.push_back(prim_desc.dst_primitive_desc().desc());
 
@@ -1141,7 +1224,7 @@ namespace ngraph
                                                              mkldnn_padding_below,
                                                              mkldnn_padding_above,
                                                              padding_kind::zero},
-                                                            mkldnn_utils::global_cpu_engine);
+                                                            executor::global_cpu_engine);
 
                         auto prim_desc =
                             pooling_backward::primitive_desc({algorithm_enumerator,
@@ -1152,7 +1235,7 @@ namespace ngraph
                                                               mkldnn_padding_below,
                                                               mkldnn_padding_above,
                                                               padding_kind::zero},
-                                                             mkldnn_utils::global_cpu_engine,
+                                                             executor::global_cpu_engine,
                                                              fwd_prim_desc);
                         i_mds.push_back(fprop_input_md);
                         i_mds.push_back(diff_dst_desc);
@@ -1160,6 +1243,10 @@ namespace ngraph
                         if (with_indices)
                         {
                             i_mds.push_back(fwd_prim_desc.workspace_primitive_desc().desc());
+                        }
+                        else if (node->get_input_size() == 3)
+                        {
+                            i_mds.push_back(diff_dst_desc);
                         }
 
                         o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
@@ -1280,7 +1367,9 @@ namespace ngraph
                     }
 
                     if (mkldnn_utils::is_mkldnn_padded_layout(md, squeezed_axis))
+                    {
                         return false;
+                    }
 
                     return true;
                 }
@@ -1782,7 +1871,7 @@ namespace ngraph
                         {
                             auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), i);
                             inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                                input_md, mkldnn_utils::global_cpu_engine));
+                                input_md, executor::global_cpu_engine));
                         }
                         try
                         {
@@ -1873,6 +1962,22 @@ namespace ngraph
                         set_native_layouts(external_function, node);
                     }
                 }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::LeakyRelu)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        vector<memory::desc> o_mds;
+                        o_mds.push_back(input_md);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
             }
         }
     }
@@ -1939,6 +2044,7 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Rnn>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Softmax>},
     {TI(ngraph::op::BoundedRelu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BoundedRelu>},
+    {TI(ngraph::op::LeakyRelu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::LeakyRelu>},
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
     {TI(ngraph::op::Slice), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Slice>},
@@ -1946,6 +2052,12 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolutionBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBias>},
+    {TI(ngraph::op::QuantizedConvolutionBiasAdd),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBiasAdd>},
+    {TI(ngraph::op::QuantizedConvolutionBiasSignedAdd),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBiasSignedAdd>},
+    {TI(ngraph::op::GroupConvolutionBias),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolutionBias>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

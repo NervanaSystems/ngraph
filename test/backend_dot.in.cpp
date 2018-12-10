@@ -79,7 +79,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis)
     Shape shape_r{2, 3, 2, 3, 2};
 
     auto r = make_shared<op::Dot>(A, B, 2);
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -91,7 +91,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis)
 
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ(
         (vector<float>{6942.,  7020.,  7098.,  7176.,  7254.,  7332.,  7410.,  7488.,  7566.,
                        7644.,  7722.,  7800.,  16590., 16812., 17034., 17256., 17478., 17700.,
@@ -138,7 +138,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
     Shape shape_r{2};
 
     auto r = make_shared<op::Dot>(A, B, 4);
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -150,7 +150,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_4d_5d_multi_axis_more)
 
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{251412., 254040.}), read_vector<float>(result));
 }
 
@@ -200,7 +200,7 @@ NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
     Shape shape_r{20};
 
     auto r = make_shared<op::Dot>(A, B, 4);
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -212,7 +212,7 @@ NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dot_4d_5d_multi_axis_big_fp64_VERY_SLOW)
 
     auto result = backend->create_tensor(element::f64, shape_r);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_TRUE(test::all_close(
         vector<double>{
             2.48832025919525478400e+18, 2.48832051839533977600e+18, 2.48832077759658444800e+18,
@@ -231,7 +231,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_0_0)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     Shape shape_r{};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -245,7 +245,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_0_0)
     // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
     copy_data(result, vector<float>{2112});
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{0}), read_vector<float>(result));
 }
 
@@ -257,7 +257,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
 
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -271,7 +271,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
     // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
     copy_data(result, vector<float>{2112, 2112, 2112, 2112});
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{0, 0, 0, 0}), read_vector<float>(result));
 }
 
@@ -283,7 +283,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
     Shape shape_b{2, 0};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{0, 0};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -294,7 +294,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_0x2_2x0)
     copy_data(b, vector<float>{});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{}), read_vector<float>(result));
 }
 
@@ -306,7 +306,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
     Shape shape_b{2, 0};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{3, 0};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -317,7 +317,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_3x2_2x0)
     copy_data(b, vector<float>{});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{}), read_vector<float>(result));
 }
 
@@ -328,7 +328,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_0x2)
     Shape shape_b{0, 2};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{0, 2};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -339,7 +339,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_0x2)
     copy_data(b, vector<float>{});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{}), read_vector<float>(result));
 }
 
@@ -350,7 +350,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_2x0_0)
     Shape shape_b{0};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{2};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -364,7 +364,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_2x0_0)
     // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
     copy_data(result, vector<float>{2112, 2112});
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{0, 0}), read_vector<float>(result));
 }
 
@@ -374,7 +374,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot1d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     Shape shape_r{};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -385,7 +385,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot1d)
     copy_data(b, vector<float>{1, 2, 4, 8});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{170}), read_vector<float>(result));
 }
 
@@ -395,7 +395,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot2d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     Shape shape_r{2, 2};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -406,7 +406,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot2d)
     copy_data(b, vector<float>{5, 6, 7, 8});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{19, 22, 43, 50}), read_vector<float>(result));
 }
 
@@ -439,7 +439,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot3d_3d)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     Shape shape_r{2, 2, 2, 2};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -450,7 +450,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot3d_3d)
     copy_data(b, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{11, 14, 17, 20, 23, 30, 37, 44, 35, 46, 57, 68, 47, 62, 77, 92}),
               read_vector<float>(result));
 }
@@ -485,7 +485,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot3d_2d)
     Shape shape_b{3, 4};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{4, 2, 4};
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -497,7 +497,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot3d_2d)
     copy_data(b, vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{20,  23,  26,  29,  56,  68,  80,  92,  92,  113, 134,
                              155, 128, 158, 188, 218, 164, 203, 242, 281, 200, 248,
                              296, 344, 236, 293, 350, 407, 272, 338, 404, 470}),
@@ -510,7 +510,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
     Shape shape_b{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -521,7 +521,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_tensor_arg0)
     copy_data(b, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
     auto result = backend->create_tensor(element::f32, shape_b);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), read_vector<float>(result));
 }
 
@@ -531,7 +531,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
     Shape shape_b{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -542,7 +542,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_tensor_arg1)
     copy_data(b, vector<float>{6});
     auto result = backend->create_tensor(element::f32, shape_a);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{6, 12, 18, 24, 30, 36, 42, 48}), read_vector<float>(result));
 }
 
@@ -551,7 +551,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_scalar)
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -562,7 +562,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_scalar_scalar)
     copy_data(b, vector<float>{6});
     auto result = backend->create_tensor(element::f32, shape);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{48}), read_vector<float>(result));
 }
 
@@ -572,7 +572,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector_4_3)
     Shape shape_b{3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
     Shape shape_r{4};
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -584,7 +584,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector_4_3)
     copy_data(b, vector<float>{17, 18, 19});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{110, 272, 434, 596}), read_vector<float>(result));
 }
 
@@ -594,7 +594,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector)
     Shape shape_b{4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
     Shape shape_r{4};
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -606,7 +606,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector)
     copy_data(b, vector<float>{17, 18, 19, 20});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{190, 486, 782, 1078}), read_vector<float>(result));
 }
 
@@ -616,7 +616,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
     Shape shape_b{4};
     auto A = make_shared<op::Parameter>(element::i64, shape_a);
     auto B = make_shared<op::Parameter>(element::i64, shape_b);
-    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), op::ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
     Shape shape_r{4};
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -628,7 +628,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_vector_int64)
     copy_data(b, vector<int64_t>{17, 18, 19, 20});
     auto result = backend->create_tensor(element::i64, shape_r);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<int64_t>{190, 486, 782, 1078}), read_vector<int64_t>(result));
 }
 
@@ -667,7 +667,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_3d_multi_axis)
     Shape shape_r{2, 5};
 
     auto r = make_shared<op::Dot>(A, B, 2);
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -679,7 +679,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_3d_multi_axis)
 
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{2938., 3016., 3094., 3172., 3250., 7042., 7264., 7486., 7708., 7930.}),
               read_vector<float>(result));
 }
@@ -716,7 +716,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
     Shape shape_r{2, 4, 4, 2};
 
     auto r = make_shared<op::Dot>(A, B);
-    auto f = make_shared<Function>(r, op::ParameterVector{A, B});
+    auto f = make_shared<Function>(r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -728,7 +728,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_3d_one_axis_arbitrary)
 
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<float>{483,  189, 331, 86,  85,  1262, 2155, 354, 83,  18,   58,   543,  77,
                              241,  325, 286, 859, 144, 438,  1025, 317, 973, 1041, 2930, 163,  69,
                              117,  50,  29,  472, 819, 62,   785,  236, 476, 235,  175,  1521, 2387,

@@ -35,10 +35,12 @@ namespace ngraph
                      const AxisSet& reduction_axes)
             {
                 CoordinateTransform output_transform(out_shape);
+                std::vector<T> c(shape_size(out_shape));
 
                 for (const Coordinate& output_coord : output_transform)
                 {
                     out[output_transform.index(output_coord)] = 0;
+                    c[output_transform.index(output_coord)] = 0;
                 }
 
                 CoordinateTransform input_transform(in_shape);
@@ -46,9 +48,12 @@ namespace ngraph
                 for (const Coordinate& input_coord : input_transform)
                 {
                     Coordinate output_coord = reduce(input_coord, reduction_axes);
-
-                    out[output_transform.index(output_coord)] +=
-                        arg[input_transform.index(input_coord)];
+                    T y = arg[input_transform.index(input_coord)] -
+                          c[output_transform.index(output_coord)];
+                    T t = out[output_transform.index(output_coord)] + y;
+                    c[output_transform.index(output_coord)] =
+                        (t - out[output_transform.index(output_coord)]) - y;
+                    out[output_transform.index(output_coord)] = t;
                 }
             }
         }

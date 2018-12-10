@@ -53,7 +53,7 @@ TEST(serialize, main)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, op::ParameterVector{A, B, C}, "f");
+    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C}, "f");
 
     // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
     auto X = make_shared<op::Parameter>(element::f32, shape);
@@ -61,7 +61,7 @@ TEST(serialize, main)
     auto Z = make_shared<op::Parameter>(element::f32, shape);
     auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}) +
                                        make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}),
-                                   op::ParameterVector{X, Y, Z},
+                                   ParameterVector{X, Y, Z},
                                    "g");
 
     // Now make "h(X,Y,Z) = g(X,Y,Z) + g(X,Y,Z)"
@@ -70,7 +70,7 @@ TEST(serialize, main)
     auto Z1 = make_shared<op::Parameter>(element::f32, shape);
     auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}) +
                                        make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}),
-                                   op::ParameterVector{X1, Y1, Z1},
+                                   ParameterVector{X1, Y1, Z1},
                                    "h");
 
     string js = serialize(h, 4);
@@ -82,9 +82,8 @@ TEST(serialize, main)
 
     istringstream in(js);
     shared_ptr<Function> sfunc = deserialize(in);
-
-    // Now call h on some test vectors.
     auto backend = runtime::Backend::create("INTERPRETER");
+    auto handle = backend->compile(sfunc);
 
     auto x = backend->create_tensor(element::f32, shape);
     copy_data(x, vector<float>{1, 2, 3, 4});
@@ -94,13 +93,13 @@ TEST(serialize, main)
     copy_data(z, vector<float>{9, 10, 11, 12});
     auto result = backend->create_tensor(element::f32, shape);
 
-    backend->call_with_validate(sfunc, {result}, {x, y, z});
+    backend->call_with_validate(handle, {result}, {x, y, z});
     EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
-    backend->call_with_validate(sfunc, {result}, {y, x, z});
+    backend->call_with_validate(handle, {result}, {y, x, z});
     EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
-    backend->call_with_validate(sfunc, {result}, {x, z, y});
+    backend->call_with_validate(handle, {result}, {x, z, y});
     EXPECT_EQ((vector<float>{200, 288, 392, 512}), read_vector<float>(result));
 }
 #endif
@@ -137,7 +136,7 @@ TEST(serialize, constant)
     const string tmp_file = "serialize_constant.cpio";
     Shape shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
-    auto f = make_shared<Function>(A, op::ParameterVector{});
+    auto f = make_shared<Function>(A, ParameterVector{});
 
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), A->get_vector<float>());
     serialize(tmp_file, f);

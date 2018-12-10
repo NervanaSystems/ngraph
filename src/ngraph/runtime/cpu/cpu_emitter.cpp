@@ -47,6 +47,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
@@ -98,6 +99,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -109,6 +111,8 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
+#include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
@@ -116,6 +120,7 @@
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
+#include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -179,9 +184,9 @@ namespace ngraph
                     auto input1_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                        input0_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+                        input0_data_desc, runtime::cpu::executor::global_cpu_engine));
                     inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                        input1_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+                        input1_data_desc, runtime::cpu::executor::global_cpu_engine));
 
                     size_t add_index = 0;
                     add_index = mkldnn_emitter->build_elementwise_add(
@@ -517,8 +522,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Lstm)
             {
-                const ngraph::op::Lstm* lstm_node = static_cast<const ngraph::op::Lstm*>(node);
-                if (args.size() != 5 || !lstm_node->get_fused_inputs())
+                if (args.size() != 5)
                 {
                     throw ngraph_error(
                         "Lstm op doesnt have the required number of inputs to emit MKLDNN kernel");
@@ -694,8 +698,8 @@ namespace ngraph
 
                     if (args.size() == 3)
                     {
-                        writer << "reference::batch_norm_three_outputs("
-                               << batchnorm->get_eps_value() << ",\n";
+                        writer << "reference::batch_norm_training(" << batchnorm->get_eps_value()
+                               << ",\n";
                         writer << "            " << args[0].get_name() << ",\n";
                         writer << "            " << args[1].get_name() << ",\n";
                         writer << "            " << args[2].get_name() << ",\n";
@@ -706,7 +710,7 @@ namespace ngraph
                     }
                     else
                     {
-                        writer << "reference::batch_norm_one_output(" << batchnorm->get_eps_value()
+                        writer << "reference::batch_norm_inference(" << batchnorm->get_eps_value()
                                << ",\n";
                         writer << "            " << args[0].get_name() << ",\n";
                         writer << "            " << args[1].get_name() << ",\n";
@@ -732,7 +736,7 @@ namespace ngraph
                     const ngraph::op::BatchNormInference* batchnorm =
                         static_cast<const ngraph::op::BatchNormInference*>(node);
 
-                    writer << "reference::batch_norm_one_output(" << batchnorm->get_eps_value()
+                    writer << "reference::batch_norm_inference(" << batchnorm->get_eps_value()
                            << ",\n";
                     writer << "            " << args[0].get_name() << ",\n";
                     writer << "            " << args[1].get_name() << ",\n";
@@ -1034,6 +1038,29 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Concat)
             {
+                auto concat = static_cast<const ngraph::op::Concat*>(node);
+                if (auto op_annotations = concat->get_op_annotations())
+                {
+                    auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                    if (in_place_oi_pairs.size() > 0)
+                    {
+                        auto offset = 0;
+                        for (auto i = 0; i < args.size(); i++)
+                        {
+                            writer << "if (" << args[i].get_name() << " < " << out[0].get_name()
+                                   << " || " << args[i].get_name() << " >= " << out[0].get_name()
+                                   << " + " << out[0].get_size() << ")\n";
+                            writer.block_begin();
+                            writer << "memcpy(" << out[0].get_name() << " + " << offset << ", "
+                                   << args[i].get_name() << ", "
+                                   << args[i].get_size() * out[0].get_element_type().size()
+                                   << ");\n";
+                            writer.block_end();
+                            offset += args[i].get_size();
+                        }
+                        return;
+                    }
+                }
                 auto result_shape = out[0].get_shape();
 
 #if USE_EIGEN_CORE_INLINE == 1
@@ -1700,7 +1727,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(reshape->get_input_order()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ",  0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 4 && out[0].get_shape().size() == 4)
@@ -1710,7 +1737,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(reshape->get_input_order()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else
                 {
@@ -1983,6 +2010,31 @@ namespace ngraph
             {
                 const ngraph::op::Slice* slice = static_cast<const ngraph::op::Slice*>(node);
 
+                if (auto op_annotations = slice->get_op_annotations())
+                {
+                    auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                    if (in_place_oi_pairs.size() > 0)
+                    {
+                        auto arg_shape = args[0].get_shape();
+                        auto lower_bounds = slice->get_lower_bounds();
+                        auto start = 0, accumulated = 1;
+                        for (int i = arg_shape.size() - 1; i >= 0; i--)
+                        {
+                            start += lower_bounds[i] * accumulated;
+                            accumulated *= arg_shape[i];
+                        }
+                        writer << "if (" << out[0].get_name() << " < " << args[0].get_name()
+                               << " || " << out[0].get_name() << " >= " << args[0].get_name()
+                               << " + " << args[0].get_size() << ")\n";
+                        writer.block_begin();
+                        writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name()
+                               << " + " << start << ", "
+                               << out[0].get_size() * out[0].get_element_type().size() << ");\n";
+                        writer.block_end();
+                        return;
+                    }
+                }
+
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto out_shape = out[0].get_shape();
@@ -2141,7 +2193,7 @@ namespace ngraph
                            << ", " << out[0].get_name() << ", "
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 2 && sum->get_reduction_axes().size() == 2)
@@ -2150,7 +2202,7 @@ namespace ngraph
                            << ", " << out[0].get_name() << ", "
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 2 && sum->get_reduction_axes().size() == 1)
@@ -2160,7 +2212,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}, "
                            << "{" << join(sum->get_reduction_axes()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 4 && sum->get_reduction_axes().size() == 2)
@@ -2170,7 +2222,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}, "
                            << "{" << join(sum->get_reduction_axes()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else if (args[0].get_element_type() == element::f32 &&
                          args[0].get_shape().size() == 4 && sum->get_reduction_axes().size() == 4)
@@ -2445,6 +2497,49 @@ namespace ngraph
                        << args[1].get_name() << "[i]);\n";
                 writer.block_end();
 #endif
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::UpdateSlice)
+            {
+                auto update_slice = static_cast<const ngraph::op::UpdateSlice*>(node);
+                const Shape& arg0_shape = args[0].get_shape();
+                const Shape& arg1_shape = args[1].get_shape();
+                auto strides = update_slice->get_strides();
+                writer.block_begin();
+                if (!ngraph::is_strided(strides))
+                {
+                    writer << "cpu::kernel::update_slice<"
+                           << args[0].get_element_type().c_type_string() << ", "
+                           << arg0_shape.size() << ">(\n"
+                           << "                                " << args[0].get_name() << ",\n"
+                           << "                                " << args[1].get_name() << ",\n"
+                           << "                                " << out[0].get_name() << ",\n"
+                           << "                               {" << join(arg0_shape) << "},\n"
+                           << "                               {" << join(arg1_shape) << "},\n"
+                           << "                               {"
+                           << join(update_slice->get_lower_bounds()) << "},\n"
+                           << "0);\n";
+                }
+                else
+                {
+                    writer << "cpu::kernel::strided_update_slice<"
+                           << args[0].get_element_type().c_type_string() << ", "
+                           << arg0_shape.size() << ">(\n"
+                           << "                                " << args[0].get_name() << ",\n"
+                           << "                                " << args[1].get_name() << ",\n"
+                           << "                                " << out[0].get_name() << ",\n"
+                           << "                               {" << join(arg0_shape) << "},\n"
+                           << "                               {" << join(arg1_shape) << "},\n"
+                           << "                               {"
+                           << join(update_slice->get_lower_bounds()) << "},\n"
+                           << "                               {"
+                           << join(update_slice->get_upper_bounds()) << "},\n"
+                           << "                               {"
+                           << join(update_slice->get_strides()) << "},\n"
+                           << "0);\n";
+                }
                 writer.block_end();
             }
 
@@ -2805,6 +2900,77 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GroupConvolutionBias)
+            {
+                auto convolution = static_cast<const ngraph::op::GroupConvolutionBias*>(node);
+
+                auto arg0_shape = args[0].get_shape();
+                auto arg1_shape = args[1].get_shape();
+                auto arg2_shape = args[2].get_shape();
+                auto result_shape = out[0].get_shape();
+
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    Strides window_dilation_strides_adjusted;
+                    for (size_t s : convolution->get_window_dilation_strides())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+
+                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    auto padding_below = convolution->get_padding_below();
+                    auto padding_above = convolution->get_padding_above();
+                    auto filter_strides = convolution->get_window_movement_strides();
+
+                    const float ops_scale = 1.f;
+                    const float ops_alpha = -0.f; // relu negative slope
+                    const float ops_beta = 0.f;
+
+                    mkldnn::post_ops ops;
+                    if (convolution->with_relu())
+                    {
+                        ops.append_eltwise(
+                            ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+                    }
+
+                    size_t conv_index =
+                        mkldnn_emitter->build_convolution_forward(input_data_desc,
+                                                                  weights_desc,
+                                                                  bias_desc,
+                                                                  result_desc,
+                                                                  filter_strides,
+                                                                  window_dilation_strides_adjusted,
+                                                                  padding_below,
+                                                                  padding_above,
+                                                                  ops);
+
+                    // invoke group convolution bias
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(conv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error("Unsupported parameters for GroupConvolutionBias");
+                }
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Convolution)
             {
                 auto convolution = static_cast<const ngraph::op::Convolution*>(node);
@@ -2983,6 +3149,67 @@ namespace ngraph
                 {
                     throw ngraph_error(
                         "QuantizedConvolutionBias is only supported with MKLDNN kernel.");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConvolutionBiasAdd)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto qconv_index =
+                        mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolutionBiasAdd>(
+                            node, args, out);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
+
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(qconv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error(
+                        "QuantizedConvolutionBiasAdd is only supported with MKLDNN kernel.");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConvolutionBiasSignedAdd)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto qconv_index =
+                        mkldnn_emitter
+                            ->build_convolution<ngraph::op::QuantizedConvolutionBiasSignedAdd>(
+                                node, args, out);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
+
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(qconv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error(
+                        "QuantizedConvolutionBiasSignedAdd is only supported with MKLDNN kernel.");
                 }
             }
 
@@ -3490,7 +3717,7 @@ namespace ngraph
                            << "                            {" << join(pad->get_padding_below())
                            << "},\n"
                            << "                            {" << join(pad->get_padding_above())
-                           << "});\n";
+                           << "}, 0);\n";
                 }
                 else
                 {
@@ -3791,7 +4018,7 @@ namespace ngraph
                            << "{" << join(args[0].get_shape()) << "}, "
                            << "{" << join(out[0].get_shape()) << "}, "
                            << "{" << join(max->get_reduction_axes()) << "}"
-                           << ");\n";
+                           << ", 0);\n";
                 }
                 else
                 {
@@ -3896,17 +4123,27 @@ namespace ngraph
                          result_desc.data.ndims == 5 /*Goihw16g/Goihw8g/etc*/ &&
                          node->get_users().size() == 1)
                 {
-                    auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
-                        *(begin(node->get_users())));
-                    if (gconv)
+                    Shape weights_shape_groups;
+                    if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
+                            node->get_users()[0]))
                     {
-                        Shape weights_shape_groups = gconv->get_weights_dimensions();
-                        input_desc = mkldnn::memory::desc(
-                            mkldnn::memory::dims(weights_shape_groups.begin(),
-                                                 weights_shape_groups.end()),
-                            mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
-                            mkldnn::memory::format::goihw);
+                        weights_shape_groups = gconv->get_weights_dimensions();
                     }
+                    else if (auto gconvb =
+                                 std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(
+                                     node->get_users()[0]))
+                    {
+                        weights_shape_groups = gconvb->get_weights_dimensions();
+                    }
+                    else
+                    {
+                        throw ngraph_error("Incompatible input/output shape in ConvertLayout op");
+                    }
+                    input_desc = mkldnn::memory::desc(
+                        mkldnn::memory::dims(weights_shape_groups.begin(),
+                                             weights_shape_groups.end()),
+                        mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                        mkldnn::memory::format::goihw);
                 }
 
                 size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);
@@ -3988,6 +4225,39 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::LeakyRelu)
+            {
+                auto leaky_relu_node = static_cast<const ngraph::op::LeakyRelu*>(node);
+                float alpha = leaky_relu_node->get_alpha();
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto leaky_relu_index =
+                        mkldnn_emitter->build_leaky_relu(input_desc, result_desc, alpha);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(leaky_relu_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(leaky_relu_index) << ");\n";
+                }
+                else
+                {
+                    writer << "#pragma omp parallel for\n";
+                    writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                    writer.block_begin();
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > 0 ? "
+                           << args[0].get_name() << "[i] : (" << alpha << " * "
+                           << args[0].get_name() << "[i]);\n";
+                    writer.block_end();
+                }
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::BoundedRelu)
             {
                 auto bounded_relu_node = static_cast<const ngraph::op::BoundedRelu*>(node);
@@ -3995,7 +4265,10 @@ namespace ngraph
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto bounded_relu_index = mkldnn_emitter->build_bounded_relu(node, args, out);
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto bounded_relu_index =
+                        mkldnn_emitter->build_bounded_relu(input_desc, result_desc, alpha);
                     auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
                     writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
                            << ", " << args[0].get_name() << ");\n";
@@ -4023,18 +4296,11 @@ namespace ngraph
             {
                 auto input_shape = args[0].get_shape();
                 auto result_shape = out[0].get_shape();
-                int input_1d_size = static_cast<int>(shape_size(input_shape));
-                int result_1d_size = static_cast<int>(shape_size(result_shape));
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto input_desc = mkldnn::memory::desc(
-                    {input_1d_size},
-                    mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
-                    mkldnn::memory::format::x);
-                auto result_desc = mkldnn::memory::desc(
-                    {result_1d_size},
-                    mkldnn_utils::get_mkldnn_data_type(out[0].get_element_type()),
-                    mkldnn::memory::format::x);
+
+                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                 size_t sigmoid_index =
                     mkldnn_emitter->build_sigmoid_forward(input_desc, result_desc);
@@ -4055,23 +4321,12 @@ namespace ngraph
                 auto input_shape = args[0].get_shape();
                 auto delta_shape = args[1].get_shape();
                 auto result_shape = out[0].get_shape();
-                int input_1d_size = static_cast<int>(shape_size(input_shape));
-                int delta_1d_size = static_cast<int>(shape_size(delta_shape));
-                int result_1d_size = static_cast<int>(shape_size(result_shape));
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto input_desc = mkldnn::memory::desc(
-                    {input_1d_size},
-                    mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
-                    mkldnn::memory::format::x);
-                auto delta_desc = mkldnn::memory::desc(
-                    {delta_1d_size},
-                    mkldnn_utils::get_mkldnn_data_type(args[1].get_element_type()),
-                    mkldnn::memory::format::x);
-                auto result_desc = mkldnn::memory::desc(
-                    {result_1d_size},
-                    mkldnn_utils::get_mkldnn_data_type(out[0].get_element_type()),
-                    mkldnn::memory::format::x);
+
+                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                 size_t sigmoid_index =
                     mkldnn_emitter->build_sigmoid_backward(input_desc, delta_desc, result_desc);
@@ -4644,33 +4899,100 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::GenerateMask)
+            {
+                auto gm = static_cast<const ngraph::op::GenerateMask*>(node);
+                writer.block_begin();
+                auto index = external_function->add_state(
+                    ngraph::RNGState::create_rng_state(gm->get_seed(), gm->get_probability()));
+                writer << "auto state = static_cast<ngraph::RNGState*>(ctx->states[" << index
+                       << "]);\n";
+                writer << "bool training = static_cast<bool>(" << args[0].get_name() << "[0]);\n";
+                writer << "reference::generate_mask(";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            " << out[0].get_size() << ",\n";
+                writer << "            state, training);\n";
+                writer.block_end();
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Dequantize)
             {
-                auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
-                writer << "reference::dequantize(";
-                writer << "            " << args[0].get_name() << ",\n";
-                writer << "            " << args[1].get_name() << ",\n";
-                writer << "            " << args[2].get_name() << ",\n";
-                writer << "            " << out[0].get_name() << ",\n";
-                writer << "            {" << join(args[0].get_shape()) << "},\n";
-                writer << "            {" << join(args[1].get_shape()) << "},\n";
-                writer << "            {" << join(dequantize->get_axes()) << "});\n";
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    size_t dequantize_index =
+                        mkldnn_emitter->build_dequantization(node, input_data_desc, result_desc);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(dequantize_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(dequantize_index) << ");\n";
+                }
+                else
+                {
+                    auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
+                    writer << "reference::dequantize(";
+                    writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            " << args[1].get_name() << ",\n";
+                    writer << "            " << args[2].get_name() << ",\n";
+                    writer << "            " << out[0].get_name() << ",\n";
+                    writer << "            {" << join(args[0].get_shape()) << "},\n";
+                    writer << "            {" << join(args[1].get_shape()) << "},\n";
+                    writer << "            {" << join(dequantize->get_axes()) << "});\n";
+                }
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Quantize)
             {
                 auto quantize = static_cast<const ngraph::op::Quantize*>(node);
-                writer << "reference::quantize(";
-                writer << "            " << args[0].get_name() << ",\n";
-                writer << "            " << args[1].get_name() << ",\n";
-                writer << "            " << args[2].get_name() << ",\n";
-                writer << "            " << out[0].get_name() << ",\n";
-                writer << "            {" << join(args[0].get_shape()) << "},\n";
-                writer << "            {" << join(args[1].get_shape()) << "},\n";
-                writer << "            {" << join(quantize->get_axes()) << "},\n";
-                writer << "            static_cast<op::Quantize::RoundMode>("
-                       << static_cast<int>(quantize->get_round_mode()) << "));\n";
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    auto scale_const_op =
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));
+                    if (scale_const_op == nullptr)
+                    {
+                        throw ngraph_error("Quantize scale must be a constant");
+                    }
+                    auto scale = scale_const_op->get_vector<float>();
+
+                    std::vector<float> scales;
+                    scales.push_back(1.0 / scale[0]);
+
+                    size_t quantize_index = 0;
+                    quantize_index = mkldnn_emitter->build_quantize_reorder(
+                        input_data_desc, result_desc, scales);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << out[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(quantize_index) << ");\n";
+                }
+                else
+                {
+                    writer << "reference::quantize(";
+                    writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            " << args[1].get_name() << ",\n";
+                    writer << "            " << args[2].get_name() << ",\n";
+                    writer << "            " << out[0].get_name() << ",\n";
+                    writer << "            {" << join(args[0].get_shape()) << "},\n";
+                    writer << "            {" << join(args[1].get_shape()) << "},\n";
+                    writer << "            {" << join(quantize->get_axes()) << "},\n";
+                    writer << "            static_cast<ngraph::op::Quantize::RoundMode>("
+                           << static_cast<int>(quantize->get_round_mode()) << "));\n";
+                }
             }
 
 #undef TI

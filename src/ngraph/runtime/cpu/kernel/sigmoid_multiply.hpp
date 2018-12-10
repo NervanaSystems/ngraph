@@ -17,7 +17,7 @@
 #define EIGEN_USE_THREADS
 #include <unsupported/Eigen/CXX11/Tensor>
 #include "ngraph/op/sigmoid.hpp"
-#include "ngraph/runtime/cpu/kernel/eigen_thread_pool.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 
 template <typename ElementType>
@@ -47,7 +47,8 @@ namespace ngraph
                                       void* arg1_tensor,
                                       void* out_tensor,
                                       size_t tensor_size,
-                                      size_t index)
+                                      size_t index,
+                                      int arena)
                 {
                     auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
                     auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
@@ -57,58 +58,67 @@ namespace ngraph
                     case 0 /*Logistic|Logistic*/:
                     {
                         auto c = (in0.exp() * in1.exp()) / ((in0.exp() + 1.f) * (in1.exp() + 1.f));
-                        out_tm.device(eigen::global_thread_pool_device) = c;
+                        out_tm.device(
+                            ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
                     case 1 /*Logistic|Tanh*/:
                     {
                         auto c = (in0.exp() * ((in1 * 2.f).exp() - 1.f)) /
                                  ((in0.exp() + 1.f) * ((in1 * 2.f).exp() + 1.f));
-                        out_tm.device(eigen::global_thread_pool_device) = c;
+                        out_tm.device(
+                            ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
                     case 2 /*Logistic|Identity*/:
                     {
                         auto c = (in0.exp() * in1) / (in0.exp() + 1.f);
-                        out_tm.device(eigen::global_thread_pool_device) = c;
+                        out_tm.device(
+                            ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
                     case 3 /*Tanh|Logistic*/:
                     {
                         auto c = (((in0 * 2.f).exp() - 1.f) * in1.exp()) /
                                  (((in0 * 2.f).exp() + 1.f) * (in1.exp() + 1.f));
-                        out_tm.device(eigen::global_thread_pool_device) = c;
+                        out_tm.device(
+                            ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
                     case 4 /*Tanh|Tanh*/:
                     {
                         auto c = (((in0 * 2.f).exp() - 1.f) * ((in1 * 2.f).exp() - 1.f)) /
                                  (((in0 * 2.f).exp() + 1.f) * ((in1 * 2.f).exp() + 1.f));
-                        out_tm.device(eigen::global_thread_pool_device) = c;
+                        out_tm.device(
+                            ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
                     case 5 /*Tanh|Identity*/:
                     {
                         auto c = (((in0 * 2.f).exp() - 1.f) * in1) / ((in0 * 2.f).exp() + 1.f);
-                        out_tm.device(eigen::global_thread_pool_device) = c;
+                        out_tm.device(
+                            ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
                     case 6 /*Identity|Logistic*/:
                     {
                         auto c = (in0 * in1.exp()) / (in1.exp() + 1.f);
-                        out_tm.device(eigen::global_thread_pool_device) = c;
+                        out_tm.device(
+                            ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
                     case 7 /*Identity|Tanh*/:
                     {
                         auto c = (in0 * ((in1 * 2.f).exp() - 1.f)) / ((in1 * 2.f).exp() + 1.f);
-                        out_tm.device(eigen::global_thread_pool_device) = c;
+                        out_tm.device(
+                            ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
                     case 8 /*Identity|Identity*/:
                     {
                         auto c = (in0 * in1);
-                        out_tm.device(eigen::global_thread_pool_device) = c;
+                        out_tm.device(
+                            ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
                     default: throw ngraph_error("unsupported combination for SigmoidMultiply");
@@ -121,7 +131,8 @@ namespace ngraph
                                                void* out0_tensor,
                                                void* out1_tensor,
                                                size_t tensor_size,
-                                               size_t index)
+                                               size_t index,
+                                               int arena)
                 {
                     auto in0 = wrap_into_tensor_map<float>(arg0_tensor, tensor_size);
                     auto in1 = wrap_into_tensor_map<float>(arg1_tensor, tensor_size);
@@ -137,8 +148,10 @@ namespace ngraph
                                   ((in1.exp() + 1.f) * ((in0.exp() + 1.f) * (in0.exp() + 1.f)));
                         auto i1 = delta * (in0.exp() * in1.exp()) /
                                   ((in0.exp() + 1.f) * ((in1.exp() + 1.f) * (in1.exp() + 1.f)));
-                        i0_delta.device(eigen::global_thread_pool_device) = i0;
-                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                        i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i0;
+                        i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i1;
                     }
                     break;
                     case 1 /*Logistic|Tanh*/:
@@ -149,8 +162,10 @@ namespace ngraph
                         auto i1 = delta * (in0.exp() * (4.f * (in1 * 2.f).exp())) /
                                   ((in0.exp() + 1.f) *
                                    (((in1 * 2.f).exp() + 1.f) * ((in1 * 2.f).exp() + 1.f)));
-                        i0_delta.device(eigen::global_thread_pool_device) = i0;
-                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                        i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i0;
+                        i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i1;
                     }
                     break;
                     case 2 /*Logistic|Identity*/:
@@ -158,8 +173,10 @@ namespace ngraph
                         auto i0 =
                             delta * (in1 * in0.exp()) / ((in0.exp() + 1.f) * (in0.exp() + 1.f));
                         auto i1 = delta * in0.exp() / ((in0.exp() + 1.f));
-                        i0_delta.device(eigen::global_thread_pool_device) = i0;
-                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                        i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i0;
+                        i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i1;
                     }
                     break;
                     case 3 /*Tanh|Logistic*/:
@@ -170,8 +187,10 @@ namespace ngraph
                         auto i1 =
                             delta * (((in0 * 2.f).exp() - 1.f) * in1.exp()) /
                             (((in0 * 2.f).exp() + 1.f) * ((in1.exp() + 1.f) * (in1.exp() + 1.f)));
-                        i0_delta.device(eigen::global_thread_pool_device) = i0;
-                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                        i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i0;
+                        i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i1;
                     }
                     break;
                     case 4 /*Tanh|Tanh*/:
@@ -182,8 +201,10 @@ namespace ngraph
                         auto i1 = delta * (((in0 * 2.f).exp() - 1.f) * (4.f * (in1 * 2.f).exp())) /
                                   (((in0 * 2.f).exp() + 1.f) *
                                    (((in1 * 2.f).exp() + 1.f) * ((in1 * 2.f).exp() + 1.f)));
-                        i0_delta.device(eigen::global_thread_pool_device) = i0;
-                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                        i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i0;
+                        i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i1;
                     }
                     break;
                     case 5 /*Tanh|Identity*/:
@@ -191,8 +212,10 @@ namespace ngraph
                         auto i0 = delta * (in1 * (4.f * (in0 * 2.f).exp())) /
                                   (((in0 * 2.f).exp() + 1.f) * ((in0 * 2.f).exp() + 1.f));
                         auto i1 = delta * ((in0 * 2.f).exp() - 1.f) / ((in0 * 2.f).exp() + 1.f);
-                        i0_delta.device(eigen::global_thread_pool_device) = i0;
-                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                        i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i0;
+                        i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i1;
                     }
                     break;
                     case 6 /*Identity|Logistic*/:
@@ -200,8 +223,10 @@ namespace ngraph
                         auto i0 = delta * (in1.exp()) / (in1.exp() + 1.f);
                         auto i1 =
                             delta * (in0 * in1.exp()) / ((in1.exp() + 1.f) * (in1.exp() + 1.f));
-                        i0_delta.device(eigen::global_thread_pool_device) = i0;
-                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                        i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i0;
+                        i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i1;
                     }
                     break;
                     case 7 /*Identity|Tanh*/:
@@ -209,16 +234,20 @@ namespace ngraph
                         auto i0 = delta * ((in1 * 2.f).exp() - 1.f) / ((in1 * 2.f).exp() + 1.f);
                         auto i1 = delta * (in0 * (4.f * (in1 * 2.f).exp())) /
                                   (((in1 * 2.f).exp() + 1.f) * ((in1 * 2.f).exp() + 1.f));
-                        i0_delta.device(eigen::global_thread_pool_device) = i0;
-                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                        i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i0;
+                        i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i1;
                     }
                     break;
                     case 8 /*Identity|Identity*/:
                     {
                         auto i0 = delta * in1;
                         auto i1 = delta * in0;
-                        i0_delta.device(eigen::global_thread_pool_device) = i0;
-                        i1_delta.device(eigen::global_thread_pool_device) = i1;
+                        i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i0;
+                        i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                            arena)) = i1;
                     }
                     break;
                     default: throw ngraph_error("unsupported combination for SigmoidMultiply");

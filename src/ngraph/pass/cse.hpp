@@ -34,5 +34,18 @@ public:
     {
     }
 
+    CommonSubexpressionElimination(
+        const std::unordered_map<std::type_index,
+                                 std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
+            backend_cse_handlers)
+        : FunctionPass()
+        , m_backend_cse_handlers(backend_cse_handlers)
+    {
+    }
+
+    std::unordered_map<std::type_index,
+                       std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>
+        m_backend_cse_handlers;
+
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 };

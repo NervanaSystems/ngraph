@@ -77,6 +77,11 @@ namespace ngraph
 
             /// Returns true if the type is floating point, else false.
             bool get_is_real() const { return m_is_real; }
+            /// \brief Checks whether this element type is merge-compatible with `t`.
+            /// \param t The element type to compare this element type to.
+            /// \return `true` if this element type is compatible with `t`, else `false`.
+            bool compatible(element::Type t) const;
+
             /// \brief Merges two element types t1 and t2, writing the result into dst and
             ///        returning true if successful, else returning false.
             ///

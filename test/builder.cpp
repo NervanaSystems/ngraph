@@ -28,13 +28,13 @@ shared_ptr<runtime::Tensor>
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(func(A, {0}), op::ParameterVector{A});
+    auto f = make_shared<Function>(func(A, {0}), ParameterVector{A});
     auto backend = runtime::Backend::create("INTERPRETER");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->create_tensor(element::f32, shape_rt);
-    backend->call_with_validate(f, {result}, {a});
+    backend->call_with_validate(backend->compile(f), {result}, {a});
 
     return result;
 }
@@ -45,13 +45,13 @@ shared_ptr<runtime::Tensor> make_reduce_result_true(
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(func(A, {0}, true), op::ParameterVector{A});
+    auto f = make_shared<Function>(func(A, {0}, true), ParameterVector{A});
     auto backend = runtime::Backend::create("INTERPRETER");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->create_tensor(element::f32, shape_rt);
-    backend->call_with_validate(f, {result}, {a});
+    backend->call_with_validate(backend->compile(f), {result}, {a});
 
     return result;
 }
@@ -62,13 +62,13 @@ shared_ptr<runtime::Tensor> make_reduce_result_false(
     Shape shape_a{3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto f = make_shared<Function>(func(A, {0}, false), op::ParameterVector{A});
+    auto f = make_shared<Function>(func(A, {0}, false), ParameterVector{A});
     auto backend = runtime::Backend::create("INTERPRETER");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     auto result = backend->create_tensor(element::f32, shape_rt);
-    backend->call_with_validate(f, {result}, {a});
+    backend->call_with_validate(backend->compile(f), {result}, {a});
 
     return result;
 }
@@ -140,7 +140,7 @@ TEST(builder, tensor_mask)
     Shape mask_shape{3, 5};
     auto f =
         make_shared<Function>(builder::tensor_mask<op::Less>(sequence_lengths, 1, 0, mask_shape, 0),
-                              op::ParameterVector{sequence_lengths});
+                              ParameterVector{sequence_lengths});
 
     auto backend = runtime::Backend::create("INTERPRETER");
 
@@ -148,7 +148,7 @@ TEST(builder, tensor_mask)
     copy_data(sequence_lengths_data, vector<uint32_t>{1, 3, 2});
     auto result = backend->create_tensor(element::boolean, mask_shape);
 
-    backend->call_with_validate(f, {result}, {sequence_lengths_data});
+    backend->call_with_validate(backend->compile(f), {result}, {sequence_lengths_data});
     vector<char> expected{1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0};
 
     EXPECT_EQ(expected, read_vector<char>(result));

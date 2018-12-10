@@ -20,7 +20,9 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/batch_norm.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
@@ -33,7 +35,6 @@ namespace ngraph
             {
                 extern mkldnn::engine global_cpu_engine;
 
-                bool IsMKLDNNOp(ngraph::Node& op);
                 mkldnn::memory::format
                     CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
                 mkldnn::memory::format CreateNativeDataFormat(const Shape& shape);
@@ -55,7 +56,7 @@ namespace ngraph
                 mkldnn::memory::desc create_blocked_mkldnn_md(const Shape& dims,
                                                               const Strides& strides,
                                                               const ngraph::element::Type type);
-                mkldnn::memory::desc try_get_named_md(mkldnn_memory_desc_t md);
+                mkldnn::memory::desc try_get_named_md(const mkldnn_memory_desc_t& md);
                 mkldnn::memory::desc rotate_blocked_md(const mkldnn::memory::desc& in,
                                                        const AxisVector& axis_order);
                 mkldnn::memory::desc squeeze_blocked_md(const mkldnn::memory::desc& in,
@@ -70,15 +71,40 @@ namespace ngraph
                                              const AxisVector& axis_list);
                 bool is_mkldnn_filter_format(mkldnn::memory::format fmt);
                 bool is_mkldnn_blocked_data_format(mkldnn::memory::format fmt);
+                bool can_use_mkldnn_batchnorm_fprop(const ngraph::Node* node);
+                bool can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node);
 
                 bool use_mkldnn_kernel(const ngraph::Node* node);
+                void assign_mkldnn_kernel(Node* node);
 
-                std::unordered_set<std::type_index>& get_op_registry();
                 std::map<element::Type, const mkldnn::memory::data_type>&
                     get_mkldnn_data_type_map();
                 std::map<element::Type, const std::string>& get_mkldnn_data_type_string_map();
                 std::map<mkldnn::memory::format, const std::string>& get_mkldnn_format_string_map();
                 std::set<mkldnn::memory::format>& get_filter_formats();
+
+                template <typename T>
+                bool can_use_mkldnn_conv(ngraph::Node* node)
+                {
+                    auto convolution = static_cast<const T*>(node);
+                    auto arg0_rank = node->get_input_shape(0).size();
+
+                    for (size_t s : convolution->get_data_dilation_strides())
+                    {
+                        if (s != 1)
+                            return false;
+                    }
+                    if (arg0_rank != 4 && arg0_rank != 5)
+                    {
+                        return false;
+                    }
+                    if (node->get_input_element_type(0) != element::f32)
+                    {
+                        return false;
+                    }
+
+                    return true;
+                }
             }
         }
     }

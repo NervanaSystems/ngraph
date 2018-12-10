@@ -124,9 +124,11 @@ namespace mkl
 
 namespace ngraph
 {
-    class Shape;
     class AxisSet;
     class AxisVector;
+    class Coordinate;
+    class Shape;
+    class Strides;
 
     namespace runtime
     {
@@ -140,52 +142,81 @@ namespace ngraph
                                     const Shape& input_shape,
                                     const Shape& output_shape,
                                     const Shape& padding_below,
-                                    const Shape& padding_above);
+                                    const Shape& padding_above,
+                                    int arena);
 
                 void reduce_sum_all_1d_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
-                                               const Shape& output_shape);
+                                               const Shape& output_shape,
+                                               int arena);
 
                 void reduce_sum_all_2d_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
-                                               const Shape& output_shape);
+                                               const Shape& output_shape,
+                                               int arena);
 
                 void reduce_sum_2d_1rd_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
                                                const Shape& output_shape,
-                                               const AxisSet& reduction_axes);
+                                               const AxisSet& reduction_axes,
+                                               int arena);
 
                 void reduce_sum_4d_2rd_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
                                                const Shape& output_shape,
-                                               const AxisSet& reduction_axes);
+                                               const AxisSet& reduction_axes,
+                                               int arena);
 
                 void reduce_sum_all_4d_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
-                                               const Shape& output_shape);
+                                               const Shape& output_shape,
+                                               int arena);
 
                 void reduce_max_2d_1rd_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
                                                const Shape& output_shape,
-                                               const AxisSet& reduction_axes);
+                                               const AxisSet& reduction_axes,
+                                               int arena);
 
                 void reshape_3d_3d_float32(float* input,
                                            float* output,
                                            const Shape& input_shape,
                                            const AxisVector& input_axis_order,
-                                           const Shape& output_shape);
+                                           const Shape& output_shape,
+                                           int arena);
 
                 void reshape_4d_4d_float32(float* input,
                                            float* output,
                                            const Shape& input_shape,
                                            const AxisVector& input_axis_order,
-                                           const Shape& output_shape);
+                                           const Shape& output_shape,
+                                           int arena);
+
+                template <typename ElementType, unsigned int Rank>
+                void update_slice(void* input0,
+                                  void* input1,
+                                  void* output,
+                                  const Shape& input0_shape,
+                                  const Shape& input1_shape,
+                                  const Coordinate& lower_bounds,
+                                  int arena);
+
+                template <typename ElementType, unsigned int Rank>
+                void strided_update_slice(void* input0,
+                                          void* input1,
+                                          void* output,
+                                          const Shape& input0_shape,
+                                          const Shape& input1_shape,
+                                          const Coordinate& lower_bounds,
+                                          const Coordinate& upper_bounds,
+                                          const Strides& slice_strides,
+                                          int arena);
             }
         }
     }

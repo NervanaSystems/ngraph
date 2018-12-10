@@ -46,9 +46,9 @@ namespace ngraph
                     auto input1_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                        input0_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+                        input0_data_desc, runtime::cpu::executor::global_cpu_engine));
                     inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                        input1_data_desc, runtime::cpu::mkldnn_utils::global_cpu_engine));
+                        input1_data_desc, runtime::cpu::executor::global_cpu_engine));
 
                     size_t add_index = mkldnn_emitter->build_elementwise_add(
                         input0_data_desc, input1_data_desc, result_desc, scale_vector, inputs_pd);
@@ -58,7 +58,8 @@ namespace ngraph
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                     auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
 
-                    auto functor = [&, add_index](CPURuntimeContext* ctx) {
+                    auto functor = [&, add_index](CPURuntimeContext* ctx,
+                                                  CPUExecutionContext* ectx) {
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
                         cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out_tensor);

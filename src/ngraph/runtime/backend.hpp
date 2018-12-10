@@ -30,6 +30,7 @@ namespace ngraph
         class ExternalFunction;
         class Tensor;
         class Backend;
+        using Handle = std::shared_ptr<Function>;
     }
 }
 
@@ -43,9 +44,9 @@ public:
     /// \brief Create a new Backend object
     /// \param type The name of a registered backend, such as "CPU" or "GPU".
     ///   To select a subdevice use "GPU:N" where s`N` is the subdevice number.
-    /// \returns shared_ptr to a new Backend or nullptr if the named backend
+    /// \returns unique_ptr to a new Backend or nullptr if the named backend
     ///   does not exist.
-    static std::shared_ptr<Backend> create(const std::string& type);
+    static std::unique_ptr<Backend> create(const std::string& type);
 
     /// \brief Query the list of registered devices
     /// \returns A vector of all registered devices.
@@ -79,8 +80,8 @@ public:
 
     /// \brief Compiles a Function.
     /// \param func The function to compile
-    /// \returns true if compile is successful, false otherwise
-    virtual bool compile(std::shared_ptr<Function> func) = 0;
+    /// \returns compiled function or nullptr on failure
+    virtual Handle compile(std::shared_ptr<Function> func) = 0;
 
     /// \brief Executes a single iteration of a Function. If func is not compiled the call will
     ///     compile it.

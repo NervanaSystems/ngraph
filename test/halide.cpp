@@ -39,7 +39,7 @@ TEST(halide, halide_subgraph)
 
     auto relu = make_shared<op::Relu>((A + B) * C);
 
-    auto f = make_shared<Function>(relu + D, op::ParameterVector{A, B, C, D});
+    auto f = make_shared<Function>(relu + D, ParameterVector{A, B, C, D});
 
     auto backend = runtime::Backend::create("CPU");
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
@@ -58,7 +58,7 @@ TEST(halide, halide_subgraph)
 
     vector<float> expected{1, 36, 6, 55, 3, 55, 105, 171};
 
-    backend->call_with_validate(f, {result}, {a, b, c, d});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b, c, d});
 
     EXPECT_TRUE(test::all_close(read_vector<float>(result), expected, 1.0e-4f, 1.0e-4f));
 }

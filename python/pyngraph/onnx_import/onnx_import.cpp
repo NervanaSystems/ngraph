@@ -41,16 +41,21 @@ static std::shared_ptr<ngraph::Function> import_onnx_function(const std::string&
     return ngraph::onnx_import::import_onnx_function(iss);
 }
 
+static std::vector<std::shared_ptr<ngraph::Function>>
+    load_onnx_model_file(const std::string& filename)
+{
+    return ngraph::onnx_import::load_onnx_model(filename);
+}
+
+static std::shared_ptr<ngraph::Function> import_onnx_function_file(const std::string& filename)
+{
+    return ngraph::onnx_import::import_onnx_function(filename);
+}
+
 void regmodule_pyngraph_onnx_import(py::module mod)
 {
     mod.def("load_onnx_model", &load_onnx_model);
     mod.def("import_onnx_function", &import_onnx_function);
-    mod.def("load_onnx_model_file",
-            static_cast<std::vector<std::shared_ptr<ngraph::Function>> (*)(const std::string&)>(
-                &ngraph::onnx_import::load_onnx_model),
-            py::arg());
-    mod.def("import_onnx_function_file",
-            static_cast<std::shared_ptr<ngraph::Function> (*)(const std::string&)>(
-                &ngraph::onnx_import::import_onnx_function),
-            py::arg());
+    mod.def("load_onnx_model_file", &load_onnx_model_file);
+    mod.def("import_onnx_function_file", &import_onnx_function_file);
 }

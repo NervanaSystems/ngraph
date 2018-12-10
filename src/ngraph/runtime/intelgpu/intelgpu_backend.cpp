@@ -22,14 +22,19 @@
 #include <CPP/activation_grad.hpp>
 #include <CPP/arg_max_min.hpp>
 #include <CPP/batch_norm.hpp>
+#include <CPP/border.hpp>
 #include <CPP/broadcast.hpp>
 #include <CPP/concatenation.hpp>
 #include <CPP/convolution.hpp>
+#include <CPP/convolution_grad_input.hpp>
+#include <CPP/crop.hpp>
 #include <CPP/data.hpp>
 #include <CPP/eltwise.hpp>
+#include <CPP/gemm.hpp>
 #include <CPP/input_layout.hpp>
 #include <CPP/layout.hpp>
 #include <CPP/lrn.hpp>
+#include <CPP/mutable_data.hpp>
 #include <CPP/permute.hpp>
 #include <CPP/pooling.hpp>
 #include <CPP/reorder.hpp>
@@ -54,7 +59,9 @@
 #include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_softmax.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
+#include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 
+#include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/argmax.hpp"
@@ -73,7 +80,6 @@
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
-#include "ngraph/op/parameter_vector.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -81,6 +87,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/parameter_vector.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -128,6 +135,21 @@ static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t out
         os << "Operation \"" << op->description() << "\" input and output sizes mismatch."
            << " Expected input size=" << input << ", provided=" << op->get_input_size()
            << ". Expected output size=" << output << ", provided=" << op->get_output_size();
+        throw invalid_argument(os.str());
+    }
+}
+
+static void
+    memory_size_check(size_t memory_size, const shared_ptr<Node>& node, const string& function_name)
+{
+    const size_t tensor_size = shape_size(node->get_shape()) * node->get_element_type().size();
+
+    if (memory_size != tensor_size)
+    {
+        ostringstream os;
+        os << "IntelGPU backend failed memory check. In \"" << function_name << "\" with Node \""
+           << node->get_name() << "\" and " << node->get_shape() << " mismatched memory sizes "
+           << tensor_size << " and " << memory_size;
         throw invalid_argument(os.str());
     }
 }
@@ -328,6 +350,34 @@ runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
         m_disable_backend_optimizations = true;
     }
 
+    // Disables clDNN (cldnn::network) level optimizations
+    if (getenv("NGRAPH_INTELGPU_CLDNN_DISABLE_OPTIMIZATIONS") != nullptr)
+    {
+        m_cldnn_graph_optimize = false;
+    }
+
+    // Dumps the input Function into Graphviz format
+    if (getenv("NGRAPH_INTELGPU_DUMP_FUNCTION") != nullptr)
+    {
+        m_dump_graph_enable = true;
+    }
+
+    // Dumps the clDNN internal logs into directory
+    if (getenv("NGRAPH_INTELGPU_CLDNN_DUMP") != nullptr)
+    {
+        file_util::make_directory(m_cldnn_dump_dir);
+        m_cldnn_dump_enable = true;
+    }
+
+    // Delete compiled Function from the cache after execution.
+    // It helps in cases where a lot of small functions used
+    // in case of memory consumption. It slow overall execution
+    // because Function compilation required every time
+    if (getenv("NGRAPH_INTELGPU_FUNCTION_CACHE_DISABLE") != nullptr)
+    {
+        m_function_cache_disabled = true;
+    }
+
     cldnn::engine_configuration cldnn_configuration(profiling);
     ocl_engine = make_shared<cldnn::engine>(cldnn_configuration);
 }
@@ -346,15 +396,21 @@ shared_ptr<runtime::Tensor> runtime::intelgpu::IntelGPUBackend::create_tensor(
         element_type, shape, *ocl_engine, memory_pointer);
 }
 
-bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 {
     FunctionInstance& instance = ocl_networks[func];
     if (instance.ocl_network != nullptr)
     {
-        return true;
+        return func;
     }
 
+    set<cldnn::primitive_id> func_output_names;
     cldnn::topology topology;
+
+    if (m_dump_graph_enable)
+    {
+        visualize_tree(func, "intelgpu_", "_orig");
+    }
 
     if (!m_disable_backend_optimizations)
     {
@@ -369,6 +425,11 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
 
         pass_manager.run_passes(func);
+
+        if (m_dump_graph_enable)
+        {
+            visualize_tree(func, "intelgpu_", "_opt");
+        }
     }
 
     for (shared_ptr<Node> op : func->get_ops())
@@ -397,7 +458,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             arguments_check(op, 1, 1);
 
-            do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+            func_output_names.insert(get_input_name(op));
             break;
         }
         case OP_TYPEID::GetOutputElement:
@@ -630,14 +691,53 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         {
             arguments_check(op, 2, 1);
 
-            do_dot_operation(topology,
-                             get_input_name(op, 0),
-                             get_input_shape(op, 0),
-                             get_input_name(op, 1),
-                             get_input_shape(op, 1),
-                             get_output_name(op),
-                             get_output_shape(op),
-                             get_output_type(op));
+            const shared_ptr<op::Dot> dot_inst = static_pointer_cast<op::Dot>(op);
+            const size_t axes_count = dot_inst->get_reduction_axes_count();
+            const Shape& input0_shape = get_input_shape(op, 0);
+            const Shape& input1_shape = get_input_shape(op, 1);
+            const size_t input0_elem_count = shape_size(input0_shape);
+            const size_t input1_elem_count = shape_size(input1_shape);
+
+            if (get_input_type(op) == element::f32 && get_input_type(op, 1) == element::f32 &&
+                get_output_type(op) == element::f32 && input0_elem_count && input1_elem_count &&
+                (axes_count < 2) && (input0_shape.size() < 3) && (input1_shape.size() < 3))
+            {
+                bool transpose0 = false;
+                bool transpose1 = false;
+
+                // If we have A[5] and B[] here, in cldnn we have A[1, 1, 1, 5] and B[1, 1, 1, 1]
+                // it needs to be reshaped into A[1, 1, 5, 1] and B[1, 1, 1, 1]
+                if ((input0_shape.size() == 1) && input1_shape.empty())
+                {
+                    transpose0 = true;
+                }
+
+                // If we have A[5] and B[5] here, in cldnn we have A[1, 1, 1, 5] and B[1, 1, 1, 5]
+                // it needs to be reshaped into A[1, 1, 1, 5] and B[1, 1, 5, 1]
+                if (!input0_shape.empty() && (input1_shape.size() == 1))
+                {
+                    transpose1 = true;
+                }
+
+                const cldnn::gemm dot_op(get_output_name(op),
+                                         get_input_name(op, 0),
+                                         get_input_name(op, 1),
+                                         transpose0,
+                                         transpose1);
+                topology.add(dot_op);
+            }
+            else
+            {
+                do_dot_operation(topology,
+                                 get_input_name(op, 0),
+                                 get_input_shape(op, 0),
+                                 get_input_name(op, 1),
+                                 get_input_shape(op, 1),
+                                 get_output_name(op),
+                                 get_output_shape(op),
+                                 get_output_type(op),
+                                 axes_count);
+            }
             break;
         }
         case OP_TYPEID::MaxPool:
@@ -654,7 +754,14 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
         case OP_TYPEID::MaxPoolBackprop:
         {
-            arguments_check(op, 2, 1);
+            if (op->get_input_size() == 3)
+            {
+                arguments_check(op, 3, 1);
+            }
+            else
+            {
+                arguments_check(op, 2, 1);
+            }
 
             const shared_ptr<op::MaxPoolBackprop> max_pool_b =
                 static_pointer_cast<op::MaxPoolBackprop>(op);
@@ -870,7 +977,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             const shared_ptr<op::Reduce> red_op = static_pointer_cast<op::Reduce>(op);
             const AxisSet& axis = red_op->get_reduction_axes();
-            vector<shared_ptr<Function>> func = red_op->get_functions();
+            vector<shared_ptr<Function>> f = red_op->get_functions();
 
             // Empty axis is not a case for do_equal_propagation()
             do_reduce_func_call(topology,
@@ -882,7 +989,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                 get_output_shape(op),
                                 get_output_type(op),
                                 axis,
-                                func);
+                                f);
             break;
         }
         case OP_TYPEID::Abs:
@@ -1147,71 +1254,14 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
         case OP_TYPEID::BatchNormInference:
         {
-            const shared_ptr<op::BatchNormInference> batch_norm =
+            const shared_ptr<op::BatchNormInference> bnorm =
                 static_pointer_cast<op::BatchNormInference>(op);
-            const double eps = batch_norm->get_eps_value();
-            string mean_name;
-            string variance_name;
+            const double eps = bnorm->get_eps_value();
 
             arguments_check(op, 5, 1);
 
-            do_batch_norm_operation(topology,
-                                    get_output_name(op),
-                                    get_output_type(op),
-                                    eps,
-                                    get_input_name(op, 2),
-                                    get_input_shape(op, 2),
-                                    get_input_name(op, 0),
-                                    get_input_name(op, 1),
-                                    get_input_name(op, 3),
-                                    get_input_name(op, 4));
-            break;
-        }
-        case OP_TYPEID::BatchNormTraining:
-        {
-            const shared_ptr<op::BatchNormTraining> batch_norm =
-                static_pointer_cast<op::BatchNormTraining>(op);
-            const double eps = batch_norm->get_eps_value();
-            string mean_name;
-            string variance_name;
-
-            if (op->get_inputs().size() < 3 || op->get_outputs().empty())
+            if (get_input_name(op, 2).size() != 4)
             {
-                arguments_check(op, 3, 1); // throw exception in this case
-            }
-
-            if (op->get_outputs().size() == 3)
-            {
-                arguments_check(op, 3, 3);
-
-                mean_name = get_output_name(op, 1);
-                variance_name = get_output_name(op, 2);
-
-                do_create_mean(topology,
-                               mean_name,
-                               get_output_type(op),
-                               get_input_name(op, 2),
-                               get_input_shape(op, 2),
-                               false);
-
-                do_create_variance(topology,
-                                   variance_name,
-                                   get_output_type(op),
-                                   get_input_name(op, 2),
-                                   get_input_shape(op, 2),
-                                   mean_name);
-            }
-
-            if (op->get_outputs().size() == 1 || op->get_outputs().size() == 3)
-            {
-                if (mean_name.empty() || variance_name.empty())
-                {
-                    arguments_check(op, 5, 1);
-
-                    mean_name = get_input_name(op, 3);
-                    variance_name = get_input_name(op, 4);
-                }
-
                 do_batch_norm_operation(topology,
                                         get_output_name(op),
                                         get_output_type(op),
@@ -1220,12 +1270,138 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                         get_input_shape(op, 2),
                                         get_input_name(op, 0),
                                         get_input_name(op, 1),
-                                        mean_name,
-                                        variance_name);
+                                        get_input_name(op, 3),
+                                        get_input_name(op, 4));
             }
             else
             {
-                arguments_check(op, 5, 1); // throw exception in this case
+                const cldnn::batch_norm batchnorm(get_output_name(op),
+                                                  get_input_name(op, 2), // input
+                                                  get_input_name(op, 3), // mean
+                                                  get_input_name(op, 4), // variance
+                                                  get_input_name(op, 0), // gamma
+                                                  get_input_name(op, 1), // beta
+                                                  eps);                  // epsilon (float)
+                topology.add(batchnorm);
+            }
+            break;
+        }
+        case OP_TYPEID::BatchNormTraining:
+        {
+            const shared_ptr<op::BatchNormTraining> bnorm =
+                static_pointer_cast<op::BatchNormTraining>(op);
+            const double eps = bnorm->get_eps_value();
+
+            if (get_input_name(op, 2).size() != 4)
+            {
+                string mean_name;
+                string variance_name;
+
+                if (op->get_inputs().size() < 3 || op->get_outputs().empty())
+                {
+                    arguments_check(op, 3, 1); // throw exception in this case
+                }
+
+                if (op->get_outputs().size() == 3)
+                {
+                    arguments_check(op, 3, 3);
+
+                    mean_name = get_output_name(op, 1);
+                    variance_name = get_output_name(op, 2);
+
+                    do_create_mean(topology,
+                                   mean_name,
+                                   get_output_type(op),
+                                   get_input_name(op, 2),
+                                   get_input_shape(op, 2),
+                                   false);
+
+                    do_create_variance(topology,
+                                       variance_name,
+                                       get_output_type(op),
+                                       get_input_name(op, 2),
+                                       get_input_shape(op, 2),
+                                       mean_name);
+                }
+
+                if (op->get_outputs().size() == 1 || op->get_outputs().size() == 3)
+                {
+                    if (mean_name.empty() || variance_name.empty())
+                    {
+                        arguments_check(op, 5, 1);
+
+                        mean_name = get_input_name(op, 3);
+                        variance_name = get_input_name(op, 4);
+                    }
+
+                    do_batch_norm_operation(topology,
+                                            get_output_name(op),
+                                            get_output_type(op),
+                                            eps,
+                                            get_input_name(op, 2),
+                                            get_input_shape(op, 2),
+                                            get_input_name(op, 0),
+                                            get_input_name(op, 1),
+                                            mean_name,
+                                            variance_name);
+                }
+                else
+                {
+                    arguments_check(op, 5, 1); // throw exception in this case
+                }
+            }
+            else
+            {
+                if (op->get_inputs().size() == 5 && op->get_outputs().size() == 1)
+                {
+                    const cldnn::batch_norm batchnorm(get_output_name(op),
+                                                      get_input_name(op, 2), // input
+                                                      get_input_name(op, 3), // mean
+                                                      get_input_name(op, 4), // variance
+                                                      get_input_name(op, 0), // gamma
+                                                      get_input_name(op, 1), // beta
+                                                      eps);                  // epsilon (float)
+                    topology.add(batchnorm);
+                }
+                else if (op->get_inputs().size() == 3 && op->get_outputs().size() == 3)
+                {
+                    const string mean_name = get_output_name(op, 1);
+                    const string variance_name = get_output_name(op, 2);
+
+                    // Create a memory for mean as mutable_data to treat it as constant
+                    const cldnn::layout mean_layout = IntelGPULayout::create_cldnn_layout(
+                        get_output_type(op, 1), get_output_shape(op, 1));
+                    const cldnn::memory mean_mem(cldnn::memory::allocate(*ocl_engine, mean_layout));
+
+                    const cldnn::mutable_data mean_const(mean_name, mean_mem);
+                    topology.add(mean_const);
+
+                    // Create a memory for variance as mutable_data to treat it as constant
+                    const cldnn::layout variance_layout = IntelGPULayout::create_cldnn_layout(
+                        get_output_type(op, 2), get_output_shape(op, 2));
+                    const cldnn::memory variance_mem(
+                        cldnn::memory::allocate(*ocl_engine, variance_layout));
+
+                    const cldnn::mutable_data variance_const(variance_name, variance_mem);
+                    topology.add(variance_const);
+
+                    const cldnn::batch_norm batchnorm(get_output_name(op),
+                                                      get_input_name(op, 2), // input
+                                                      eps,                   // epsilon (float)
+                                                      mean_name,
+                                                      variance_name,
+                                                      get_input_name(op, 0),  // gamma
+                                                      get_input_name(op, 1)); // beta
+                    topology.add(batchnorm);
+
+                    // Need to mark this operation as "output" to keep mean and variance
+                    // in cldnn::network
+                    func_output_names.insert(get_output_name(op));
+                }
+                else
+                {
+                    arguments_check(op, 5, 1); // throw exception in this case
+                }
             }
             break;
         }
@@ -1242,10 +1418,9 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             // clDNN has quite limited support for Convolution operation
             // following are the checks to go with workaround
-            if ((win_stride.size() > 2) || (pad_below.size() > 2 || pad_above.size() > 2) ||
-                (pad_below.at(0) != pad_above.at(0) || pad_below.at(1) != pad_above.at(1)) ||
-                (win_dilation.size() > 2) ||
-                (data_dilation.size() > 2 || data_dilation.at(0) != 1 || data_dilation.at(1) != 1))
+            if ((win_stride.size() > 2) || (pad_below.size() > 2) || (pad_above.size() > 2) ||
+                (win_dilation.size() > 2) || (data_dilation.size() > 2) ||
+                (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1))
             {
                 do_convolution_operation(topology,
                                          get_input_name(op, 0),
@@ -1269,12 +1444,33 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             }
             else
             {
-                const cldnn::tensor input_offset(0, 0, -pad_below.at(1), -pad_below.at(0));
+                cldnn::tensor::value_type input_offset_x = -pad_below.at(1);
+                cldnn::tensor::value_type input_offset_y = -pad_below.at(0);
+                std::string op_input_name = get_input_name(op, 0);
+
+                if ((pad_below.at(0) != pad_above.at(0)) || (pad_below.at(1) != pad_above.at(1)))
+                {
+                    // Different input padding for operation workarounded by adding aux layer
+                    const cldnn::tensor border_pad_above(0, 0, pad_below.at(1), pad_below.at(0));
+                    const cldnn::tensor border_pad_below(0, 0, pad_above.at(1), pad_above.at(0));
+                    input_offset_x = 0;
+                    input_offset_y = 0;
+                    op_input_name += "_bordered";
+
+                    const cldnn::border cldnn_border(op_input_name,
+                                                     get_input_name(op, 0),
+                                                     border_pad_above,
+                                                     border_pad_below,
+                                                     cldnn::border_type::zero);
+                    topology.add(cldnn_border);
+                }
+
+                const cldnn::tensor input_offset(0, 0, input_offset_x, input_offset_y);
                 const cldnn::tensor strides(1, 1, win_stride.at(1), win_stride.at(0));
                 const cldnn::tensor dilation(1, 1, win_dilation.at(1), win_dilation.at(0));
 
                 const cldnn::convolution cldnn_conv(get_output_name(op),
-                                                    get_input_name(op, 0),
+                                                    op_input_name,
                                                     {get_input_name(op, 1)},
                                                     strides,
                                                     input_offset,
@@ -1317,26 +1513,71 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             const shared_ptr<op::ConvolutionBackpropData> conv_op =
                 static_pointer_cast<op::ConvolutionBackpropData>(op);
+            const Strides& win_stride = conv_op->get_window_movement_strides_backward();
+            const CoordinateDiff& pad_below = conv_op->get_padding_below_backward();
+            const CoordinateDiff& pad_above = conv_op->get_padding_above_backward();
+            const Strides& win_dilation = conv_op->get_window_dilation_strides_backward();
+            const Strides& data_dilation = conv_op->get_data_dilation_strides_backward();
 
-            do_convolution_operation(topology,
-                                     get_input_name(op, 1),
-                                     get_input_shape(op, 1),
-                                     get_input_name(op, 0),
-                                     get_input_shape(op, 0),
-                                     get_output_name(op),
-                                     get_output_shape(op),
-                                     get_output_type(op),
-                                     conv_op->get_padding_below_backward(),
-                                     conv_op->get_window_movement_strides_backward(),
-                                     conv_op->get_window_dilation_strides_backward(),
-                                     conv_op->get_data_dilation_strides_backward(),
-                                     0,
-                                     1,
-                                     1,
-                                     "input[batch][input_channel]",
-                                     "filter[input_channel][output_channel]",
-                                     "output[batch][output_channel]",
-                                     true);
+            if ((win_stride.size() > 2) || (win_stride.at(0) != 1) || (win_stride.at(1) != 1) ||
+                (pad_below.size() > 2) || (pad_above.size() > 2) || (data_dilation.size() > 2) ||
+                (data_dilation.at(0) != 1) || (data_dilation.at(1) != 1) ||
+                (win_dilation.size() > 2) || (win_dilation.at(0) != 1) || (win_dilation.at(1) != 1))
+            {
+                do_convolution_operation(topology,
+                                         get_input_name(op, 1),
+                                         get_input_shape(op, 1),
+                                         get_input_name(op, 0),
+                                         get_input_shape(op, 0),
+                                         get_output_name(op),
+                                         get_output_shape(op),
+                                         get_output_type(op),
+                                         conv_op->get_padding_below_backward(),
+                                         conv_op->get_window_movement_strides_backward(),
+                                         conv_op->get_window_dilation_strides_backward(),
+                                         conv_op->get_data_dilation_strides_backward(),
+                                         0,
+                                         1,
+                                         1,
+                                         "input[batch][input_channel]",
+                                         "filter[input_channel][output_channel]",
+                                         "output[batch][output_channel]",
+                                         true);
+            }
+            else
+            {
+                cldnn::tensor::value_type input_offset_xy = -1;
+                std::string op_input_name = get_input_name(op, 1);
+
+                if ((pad_below.at(0) == pad_above.at(0)) && (pad_below.at(1) == pad_above.at(1)))
+                {
+                    input_offset_xy = pad_below.at(0) - 1;
+                }
+                else
+                {
+                    // Different input padding for operation workarounded by adding aux layer
+                    const cldnn::tensor crop_pad_above(0, 0, -pad_below.at(1), -pad_below.at(0));
+                    const cldnn::tensor crop_pad_below(0, 0, -pad_above.at(1), -pad_above.at(0));
+                    op_input_name += "_cropped";
+
+                    const cldnn::crop cldnn_crop(op_input_name,
+                                                 get_input_name(op, 1),
+                                                 crop_pad_above,
+                                                 crop_pad_below,
+                                                 cldnn::crop_borders_t());
+                    topology.add(cldnn_crop);
+                }
+
+                const cldnn::tensor input_offset(0, 0, input_offset_xy, input_offset_xy);
+                const cldnn::tensor strides(1, 1, win_stride.at(1), win_stride.at(0));
+
+                const cldnn::convolution_grad_input cldnn_conv_back_data(get_output_name(op),
+                                                                         op_input_name,
+                                                                         {get_input_name(op, 0)},
+                                                                         strides,
+                                                                         input_offset);
+                topology.add(cldnn_conv_back_data);
+            }
             break;
         }
         case OP_TYPEID::Min:
@@ -1472,8 +1713,10 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         case OP_TYPEID::Quantize:
         case OP_TYPEID::ReduceWindow:
         case OP_TYPEID::ReplaceSlice:
+        case OP_TYPEID::GenerateMask:
         case OP_TYPEID::ReverseSequence:
         case OP_TYPEID::SelectAndScatter:
+        case OP_TYPEID::ShapeOf:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::TopK:
         {
@@ -1484,12 +1727,25 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         }
     }
 
-    cldnn::build_options network_build_options(cldnn::build_option::optimize_data(true));
+    cldnn::build_options network_build_options;
+
+    network_build_options.set_option(cldnn::build_option::optimize_data(m_cldnn_graph_optimize));
+
+    if (!func_output_names.empty())
+    {
+        vector<cldnn::primitive_id> names_vec(func_output_names.begin(), func_output_names.end());
+        network_build_options.set_option(cldnn::build_option::outputs(names_vec));
+    }
+
+    if (m_cldnn_dump_enable)
+    {
+        network_build_options.set_option(cldnn::build_option::graph_dumps_dir(m_cldnn_dump_dir));
+    }
 
     instance.ocl_network =
         make_shared<cldnn::network>(*ocl_engine, topology, network_build_options);
 
-    return true;
+    return func;
 }
 
 bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
@@ -1507,15 +1763,11 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
         mem_before_call = get_max_memory_rss();
         timer_compile.start();
     }
-    validate_call(func, outputs, inputs);
 
     FunctionInstance& instance = ocl_networks[func];
     if (instance.ocl_network == nullptr)
     {
-        if (!compile(func))
-        {
-            return false;
-        }
+        throw runtime_error("compile() must be called before call().");
     }
 
     if (m_profile_enable)
@@ -1534,7 +1786,7 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     {
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> tv =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(inputs[i]);
-        const op::ParameterVector& input_params = func->get_parameters();
+        const ParameterVector& input_params = func->get_parameters();
         const string& tensor_name = input_params[i]->get_output_tensor().get_name();
         network->set_input_data(tensor_name, *tv->get_data_ptr());
     }
@@ -1547,11 +1799,22 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     // we try to match them by index number in vectors.
     for (size_t i = 0; i < func->get_output_size(); i++)
     {
+        const shared_ptr<Node>& dst_node = func->get_output_op(i);
+        const size_t dst_shape_size = shape_size(dst_node->get_shape());
+
+        // We should not touch destination memory if it is not existed
+        if (!dst_shape_size)
+        {
+            continue;
+        }
+
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> ngraph_res =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(outputs[i]);
-        const string& tensor_name = func->get_output_op(i)->get_output_tensor().get_name();
-
+        const string& tensor_name = get_input_name(dst_node);
         auto result_memory = result.at(tensor_name).get_memory().pointer<char>();
+
+        memory_size_check(result_memory.size(), dst_node, func->get_name());
+
         ngraph_res->write(result_memory.data(), 0, result_memory.size());
     }
 
@@ -1567,6 +1830,11 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
                                mem_before_call,
                                mem_after_compilation,
                                mem_after_call);
+    }
+
+    if (m_function_cache_disabled)
+    {
+        remove_compiled_function(func);
     }
 
     return true;
@@ -1632,10 +1900,13 @@ vector<runtime::PerformanceCounter>
                 size_t usec = 0;
                 for (const auto& q : p.second.get_profiling_info())
                 {
-                    usec += chrono::duration_cast<
-                                chrono::duration<int64_t, chrono::milliseconds::period>>(
-                                q.value->value())
-                                .count();
+                    if (q.name == string("executing"))
+                    {
+                        usec += chrono::duration_cast<
+                                    chrono::duration<size_t, chrono::milliseconds::period>>(
+                                    q.value->value())
+                                    .count();
+                    }
                 }
                 const runtime::PerformanceCounter perf_counter(primitive_name.c_str(), usec, 1);
                 rc.push_back(perf_counter);
@@ -1645,17 +1916,17 @@ vector<runtime::PerformanceCounter>
     return rc;
 }
 
-static Shape get_shape_by_name(const shared_ptr<Function> func, const string& name)
+static Node* get_node_by_name(const shared_ptr<Function> func, const string& name)
 {
     for (shared_ptr<Node> node : func->get_ops())
     {
         if (node->get_name() == name)
         {
-            return node->get_output_shape(0);
+            return node.get();
         }
     }
 
-    return Shape();
+    return nullptr;
 }
 
 void runtime::intelgpu::IntelGPUBackend::print_call_performance(
@@ -1728,7 +1999,7 @@ void runtime::intelgpu::IntelGPUBackend::print_call_performance(
         for (auto it = data.rbegin(); (it != data.rend()) && (limit_count > 0); ++it, --limit_count)
         {
             const string ngraph_node_name = convert_cldnn_names(func, it->second.item_name);
-            const Shape ngraph_node_shape = get_shape_by_name(func, ngraph_node_name);
+            const Node* ngraph_node = get_node_by_name(func, ngraph_node_name);
 
             cout << func_name << delim << setw(max_item_name_size) << it->second.item_name << delim
                  << "time(ms)" << delim << scientific << setprecision(2) << it->first;
@@ -1736,7 +2007,30 @@ void runtime::intelgpu::IntelGPUBackend::print_call_performance(
             {
                 cout << delim << item.first << "(ms)" << delim << item.second;
             }
-            cout << delim << ngraph_node_name << delim << ngraph_node_shape << "\n";
+            cout << delim << ngraph_node_name;
+
+            if (ngraph_node) // it might be initialized by nullptr
+            {
+                // print all input shapes for the Node
+                size_t arg_idx = 0;
+                for (const descriptor::Input& op_input : ngraph_node->get_inputs())
+                {
+                    cout << delim << op_input.get_element_type().c_type_string() << " input"
+                         << arg_idx << vector_to_string(op_input.get_shape());
+                    ++arg_idx;
+                }
+
+                // print all output shapes for the Node
+                arg_idx = 0;
+                for (const descriptor::Output& op_output : ngraph_node->get_outputs())
+                {
+                    cout << delim << op_output.get_element_type().c_type_string() << " output"
+                         << arg_idx << vector_to_string(op_output.get_shape());
+                    ++arg_idx;
+                }
+            }
+
+            cout << "\n";
         }
 
         // Print bottom line summary

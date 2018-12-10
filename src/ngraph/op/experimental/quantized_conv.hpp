@@ -41,7 +41,6 @@ namespace ngraph
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
             std::shared_ptr<Node> get_filters() { return get_argument(1); }
             std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
-            float get_scale() const { return m_scale; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -51,7 +50,6 @@ namespace ngraph
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
-            float m_scale;
         };
     }
 }

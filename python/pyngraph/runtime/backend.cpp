@@ -25,7 +25,7 @@ namespace py = pybind11;
 
 void regclass_pyngraph_runtime_Backend(py::module m)
 {
-    py::class_<ngraph::runtime::Backend, std::shared_ptr<ngraph::runtime::Backend>> backend(
+    py::class_<ngraph::runtime::Backend, std::unique_ptr<ngraph::runtime::Backend>> backend(
         m, "Backend");
     backend.doc() = "ngraph.impl.runtime.Backend wraps ngraph::runtime::Backend";
     backend.def_static("create", &ngraph::runtime::Backend::create);
@@ -35,10 +35,11 @@ void regclass_pyngraph_runtime_Backend(py::module m)
                     const ngraph::element::Type&, const ngraph::Shape&)) &
                     ngraph::runtime::Backend::create_tensor);
     backend.def("compile",
-                (void (ngraph::runtime::Backend::*)(std::shared_ptr<ngraph::Function>)) &
+                (std::shared_ptr<ngraph::Function>(ngraph::runtime::Backend::*)(
+                    std::shared_ptr<ngraph::Function>)) &
                     ngraph::runtime::Backend::compile);
     backend.def("call",
-                (void (ngraph::runtime::Backend::*)(
+                (bool (ngraph::runtime::Backend::*)(
                     std::shared_ptr<ngraph::Function>,
                     const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>&,
                     const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>&)) &

@@ -228,6 +228,7 @@ function_name
 fuse_max_with_constant_zero_input_as_relu
 greater
 greatereq
+generate_mask
 kahan_sum_3d_to_vector
 kahan_sum_to_scalar
 less
@@ -507,3 +508,7 @@ zero_sized_sqrt
 zero_sized_subtract
 zero_sized_tan
 zero_sized_tanh
+shape_of_scalar
+shape_of_vector
+shape_of_matrix
+shape_of_5d

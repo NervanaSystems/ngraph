@@ -77,7 +77,7 @@ std::shared_ptr<CUfunction> runtime::gpu::CudaFunctionBuilder::get(const std::st
     // extract the compiled function
     CUmodule module;
     CUfunction function;
-    CUDA_SAFE_CALL(cuModuleLoadDataEx(&module, ptx, 0, 0, 0));
+    CUDA_SAFE_CALL(cuModuleLoadDataEx(&module, ptx, 0, nullptr, nullptr));
     CUDA_SAFE_CALL(cuModuleGetFunction(&function, module, name.c_str()));
     return std::make_shared<CUfunction>(function);
 }

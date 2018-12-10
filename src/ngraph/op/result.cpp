@@ -36,7 +36,7 @@ void op::Result::validate_and_infer_types()
                                                         << " outputs (1 expected).";
 
     // always borrow the placement conf even the default one
-    set_placement(get_argument(0)->get_placement());
+    set_placement(get_argument(0)->get_placement_size());
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 

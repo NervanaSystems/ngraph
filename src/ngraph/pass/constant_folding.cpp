@@ -30,6 +30,7 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -45,6 +46,7 @@
 #include "ngraph/runtime/reference/negate.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
+#include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
 
@@ -135,7 +137,8 @@ void ngraph::pass::ConstantFolding::construct_constant_pad()
         return false;
     };
 
-    auto pad_matcher = make_shared<pattern::Matcher>(pad, constant_pad_callback);
+    auto pad_matcher =
+        make_shared<pattern::Matcher>(pad, constant_pad_callback, "ConstantFolding.ConstantPad");
     this->add_matcher(pad_matcher);
 }
 
@@ -183,7 +186,8 @@ void ngraph::pass::ConstantFolding::construct_constant_reshape()
         return false;
     };
 
-    auto reshape_matcher = make_shared<pattern::Matcher>(reshape, constant_reshape_callback);
+    auto reshape_matcher = make_shared<pattern::Matcher>(
+        reshape, constant_reshape_callback, "ConstantFolding.ConstantReshape");
     this->add_matcher(reshape_matcher);
 }
 
@@ -248,7 +252,8 @@ void ngraph::pass::ConstantFolding::construct_constant_broadcast()
         return false;
     };
 
-    auto broadcast_matcher = make_shared<pattern::Matcher>(broadcast, constant_broadcast_callback);
+    auto broadcast_matcher = make_shared<pattern::Matcher>(
+        broadcast, constant_broadcast_callback, "ConstantFolding.ConstantBroadcast");
     this->add_matcher(broadcast_matcher);
 }
 
@@ -372,13 +377,15 @@ void ngraph::pass::ConstantFolding::construct_constant_binary()
         return false;
     };
 
-    auto reshape_matcher = make_shared<pattern::Matcher>(bea, constant_binary_callback);
+    auto reshape_matcher = make_shared<pattern::Matcher>(
+        bea, constant_binary_callback, "ConstantFolding.ConstantBinary");
     this->add_matcher(reshape_matcher);
 }
 
 bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
-    return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Negative>(n);
+    return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Negative>(n) ||
+           std::dynamic_pointer_cast<op::Relu>(n);
 }
 
 template <class T>
@@ -396,6 +403,11 @@ shared_ptr<op::Constant> make_constant_unary(shared_ptr<op::Constant> constant,
     else if (std::dynamic_pointer_cast<op::Negative>(unary))
     {
         runtime::reference::negate<T>(
+            constant->get_vector<T>().data(), out_vec.data(), shape_size(out_shape));
+    }
+    else if (std::dynamic_pointer_cast<op::Relu>(unary))
+    {
+        runtime::reference::relu<T>(
             constant->get_vector<T>().data(), out_vec.data(), shape_size(out_shape));
     }
     else
@@ -456,7 +468,8 @@ void ngraph::pass::ConstantFolding::construct_constant_unary()
         return false;
     };
 
-    auto reshape_matcher = make_shared<pattern::Matcher>(uea, constant_unary_callback);
+    auto reshape_matcher = make_shared<pattern::Matcher>(
+        uea, constant_unary_callback, "ConstantFolding.ConstantUnary");
     this->add_matcher(reshape_matcher);
 }
 
@@ -528,7 +541,8 @@ void ngraph::pass::ConstantFolding::construct_constant_dequantize()
         return false;
     };
 
-    auto dequantize_matcher = make_shared<pattern::Matcher>(dequant, constant_dequantize_callback);
+    auto dequantize_matcher = make_shared<pattern::Matcher>(
+        dequant, constant_dequantize_callback, "ConstantFolding.ConstantDequantize");
     this->add_matcher(dequantize_matcher);
 }
 
@@ -559,7 +573,7 @@ void ngraph::pass::ConstantFolding::construct_constant_quantize()
         make_shared<pattern::op::Label>(element::f32, Shape{2}, pattern::has_class<op::Constant>());
     auto q_scale = op::Constant::create(element::f32, Shape{}, {1});
     auto q_offset = op::Constant::create(element::i8, Shape{}, {0});
-    auto mode = op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO;
+    auto mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
     auto quant_op =
         make_shared<op::Quantize>(constant_label, q_scale, q_offset, element::i8, AxisSet{}, mode);
     auto quant = make_shared<pattern::op::Label>(quant_op, nullptr, NodeVector{quant_op});
@@ -584,11 +598,6 @@ void ngraph::pass::ConstantFolding::construct_constant_quantize()
             return false;
         }
 
-        if (quantize_op->get_round_mode() != op::Quantize::RoundMode::HALF_AWAY_FROM_ZERO)
-        {
-            return false;
-        }
-
         if (type == element::u8)
         {
             replace_node(
@@ -607,6 +616,7 @@ void ngraph::pass::ConstantFolding::construct_constant_quantize()
         return false;
     };
 
-    auto quantize_matcher = make_shared<pattern::Matcher>(quant, constant_quantize_callback);
+    auto quantize_matcher = make_shared<pattern::Matcher>(
+        quant, constant_quantize_callback, "ConstantFolding.ConstantQuantize");
     this->add_matcher(quantize_matcher);
 }

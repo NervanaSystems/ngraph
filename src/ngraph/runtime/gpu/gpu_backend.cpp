@@ -24,6 +24,7 @@
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor.hpp"
+#include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -36,7 +37,15 @@ extern "C" const char* get_ngraph_version_string()
 
 extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
+#ifdef NGRAPH_HYBRID_ENABLE
+    vector<pair<string, shared_ptr<runtime::Backend>>> backend_list{
+        {"GPU", make_shared<runtime::gpu::GPU_Backend>()}};
+
+    auto wrapper = new runtime::hybrid::HybridBackend(backend_list);
+    return wrapper;
+#else
     return new runtime::gpu::GPU_Backend();
+#endif
 }
 
 extern "C" void delete_backend(runtime::Backend* backend)
@@ -110,7 +119,7 @@ shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
     return make_shared<runtime::gpu::GPUTensor>(element_type, shape, memory_pointer);
 }
 
-bool runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
 {
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
@@ -122,7 +131,7 @@ bool runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
         instance.m_inputs.resize(func->get_parameters().size());
         instance.m_outputs.resize(func->get_output_size());
     }
-    return true;
+    return func;
 }
 
 void runtime::gpu::GPU_Backend::initialize_io(void** target,
@@ -147,14 +156,10 @@ bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
                                      const vector<shared_ptr<runtime::Tensor>>& outputs,
                                      const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    bool rc = true;
-
-    validate_call(func, outputs, inputs);
-
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
     {
-        rc = compile(func);
+        throw runtime_error("compile() must be called before call().");
     }
 
     // ensure the GPURuntimeContext primitive pointers are valid
@@ -167,7 +172,7 @@ bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
     auto ctx = m_context->m_runtime_context.get();
     instance.m_compiled_function(instance.m_inputs.data(), instance.m_outputs.data(), ctx);
 
-    return rc;
+    return true;
 }
 
 void runtime::gpu::GPU_Backend::remove_compiled_function(shared_ptr<Function> func)
@@ -216,5 +221,36 @@ vector<runtime::PerformanceCounter>
             }
         }
     }
+    return rc;
+}
+
+bool runtime::gpu::GPU_Backend::is_supported(const Node& node) const
+{
+    bool rc = true;
+
+    // get op type
+    element::Type type;
+    if (node.description() == "Select")
+    {
+        type = node.get_input_element_type(1);
+    }
+    else if (node.description() == "Constant")
+    {
+        type = node.get_outputs().at(0).get_element_type();
+    }
+    else if (node.description() == "Parameter")
+    {
+        type = node.get_outputs().at(0).get_element_type();
+    }
+    else
+    {
+        type = node.get_input_element_type(0);
+    }
+
+    if (type != element::f32)
+    {
+        rc = false;
+    }
+
     return rc;
 }

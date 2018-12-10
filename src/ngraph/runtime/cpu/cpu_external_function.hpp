@@ -40,12 +40,15 @@
 #endif
 
 #include "ngraph/function.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
+#include "ngraph/state/state.hpp"
 
 namespace ngraph
 {
@@ -56,6 +59,7 @@ namespace ngraph
             class CPU_ExternalFunction;
             class CPU_Emitter;
             class CPU_CallFrame;
+            class CPU_Debugger;
 
 #if !defined(NGRAPH_DEX_ONLY)
 
@@ -86,6 +90,8 @@ namespace ngraph
             class CPU_ExternalFunction : public std::enable_shared_from_this<CPU_ExternalFunction>
             {
                 friend class CPU_Backend;
+                friend class CPU_CallFrame;
+                friend class CPU_Debugger;
 
             public:
                 enum class CPUTensorRole
@@ -113,15 +119,18 @@ namespace ngraph
                     return m_mkldnn_emitter;
                 }
 
+                size_t add_state(ngraph::State* state)
+                {
+                    m_states.push_back(state);
+                    return m_states.size() - 1;
+                }
+
                 const std::string& get_function_name() const { return m_function_name; }
                 const std::shared_ptr<ngraph::Function> get_function() { return m_function; }
                 // Temporary Memory Pool alignment
                 static constexpr size_t s_memory_pool_alignment = 4096;
 
-                std::list<std::function<void(CPURuntimeContext*)>>& get_functors()
-                {
-                    return functors;
-                }
+                std::vector<CPUKernelFunctor>& get_functors() { return functors; }
                 std::unordered_map<std::string, void*>& get_tensor_data() { return tensor_data; }
                 void*& get_tensor_data(const std::string& name);
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>&
@@ -170,6 +179,8 @@ namespace ngraph
 
 #endif
 
+                std::vector<ngraph::State*> m_states;
+
             private:
                 // Register passes that are common to codegen and DEX
                 void register_common_passes(ngraph::pass::Manager& pass_manager);
@@ -189,6 +200,16 @@ namespace ngraph
                 void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
                                                std::string output_name,
                                                bool dex);
+
+                // Find in-place concat ops and set appropriate memory pool offset for its arguments
+                void process_in_place_concat(std::list<std::shared_ptr<Node>> nodes);
+
+                // For a chain of concat ops, propagate memory pool offsets
+                void propagate_in_place_concat(std::shared_ptr<ngraph::op::Concat> concat);
+
+                // Find in-place slice ops and set appropriate memory pool offset for its output
+                void process_in_place_slice(std::list<std::shared_ptr<Node>> nodes);
+
                 bool computes_result(Node* node);
                 void release_function() { m_function = nullptr; }
 #if !defined(NGRAPH_DEX_ONLY)
@@ -230,8 +251,8 @@ namespace ngraph
                 bool m_use_tbb;
 #if !defined(NGRAPH_DEX_ONLY)
                 bool m_is_compiled;
-                bool m_direct_execution;
 #endif
+                bool m_direct_execution;
                 EntryPoint m_compiled_function;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
 
@@ -246,8 +267,9 @@ namespace ngraph
 
                 std::string m_function_name;
 
-                std::list<std::function<void(CPURuntimeContext*)>> functors;
-                std::list<std::function<bool(CPURuntimeContext*)>> enables;
+                std::vector<CPUKernelFunctor> functors;
+                std::vector<std::string> op_names;
+                std::vector<std::function<bool(CPURuntimeContext*)>> enables;
                 std::list<std::pair<std::function<bool(CPURuntimeContext*)>, std::string>>
                     enable_nodename_list;
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>

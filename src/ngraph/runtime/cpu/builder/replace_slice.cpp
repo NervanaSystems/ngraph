@@ -61,7 +61,7 @@ namespace ngraph
                 if (!arg0_shape.size())
                 {
                     size_t size = args[0].get_element_type().size();
-                    auto functor = [&, size](CPURuntimeContext* ctx) {
+                    auto functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         memcpy(out_tensor, arg1_tensor, size);
                     };
                     functors.emplace_back(functor);
@@ -80,7 +80,7 @@ namespace ngraph
 
                     auto functor =
                         [&, kernel, arg0_shape, arg1_shape, lower_bounds, upper_bounds, strides](
-                            CPURuntimeContext* ctx) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             kernel(arg0_tensor,
                                    arg1_tensor,
                                    out_tensor,
@@ -88,7 +88,8 @@ namespace ngraph
                                    arg1_shape,
                                    lower_bounds,
                                    upper_bounds,
-                                   strides);
+                                   strides,
+                                   ectx->arena);
                         };
                     functors.emplace_back(functor);
                 }
@@ -101,15 +102,16 @@ namespace ngraph
                                           arg0_shape.size(),
                                           runtime::cpu::kernel::replace_slice);
 
-                    auto functor =
-                        [&, kernel, arg0_shape, arg1_shape, lower_bounds](CPURuntimeContext* ctx) {
-                            kernel(arg0_tensor,
-                                   arg1_tensor,
-                                   out_tensor,
-                                   arg0_shape,
-                                   arg1_shape,
-                                   lower_bounds);
-                        };
+                    auto functor = [&, kernel, arg0_shape, arg1_shape, lower_bounds](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        kernel(arg0_tensor,
+                               arg1_tensor,
+                               out_tensor,
+                               arg0_shape,
+                               arg1_shape,
+                               lower_bounds,
+                               ectx->arena);
+                    };
                     functors.emplace_back(functor);
                 }
             }

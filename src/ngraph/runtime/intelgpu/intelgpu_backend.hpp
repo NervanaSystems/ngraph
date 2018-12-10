@@ -47,7 +47,7 @@ public:
     std::shared_ptr<ngraph::runtime::Tensor>
         create_tensor(const ngraph::element::Type& element_type, const Shape& shape) override;
 
-    bool compile(std::shared_ptr<Function> func) override;
+    Handle compile(std::shared_ptr<Function> func) override;
 
     bool call(std::shared_ptr<Function> func,
               const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
@@ -82,5 +82,10 @@ private:
 
     bool m_profile_enable = false;
     long m_profile_lines_limit_count = 10;
+    bool m_dump_graph_enable = false;
+    bool m_cldnn_graph_optimize = true;
+    bool m_cldnn_dump_enable = false;
+    bool m_function_cache_disabled = false;
+    std::string m_cldnn_dump_dir = std::string("intelgpu_codegen");
     std::string delim = std::string(":");
 };
