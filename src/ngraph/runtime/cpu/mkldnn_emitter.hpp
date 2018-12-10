@@ -30,6 +30,7 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
@@ -602,6 +603,76 @@ namespace ngraph
                 size_t build_bounded_relu(const mkldnn::memory::desc& input_desc,
                                           const mkldnn::memory::desc& result_desc,
                                           float alpha);
+
+                template <typename OP, bool with_bias>
+                void recreate_qconv(const ngraph::Node* node,
+                                    CPURuntimeContext* ctx,
+                                    const std::vector<float>& dyn_scales,
+                                    const std::vector<size_t>& deps,
+                                    const size_t conv_index)
+                {
+                    auto qconv = static_cast<const OP*>(node);
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto padding_below = qconv->get_padding_below();
+                    auto padding_above = qconv->get_padding_above();
+                    auto strides = qconv->get_window_movement_strides();
+                    Strides dilation_strides_adjusted;
+
+                    for (size_t s : qconv->get_window_dilation_strides())
+                    {
+                        dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    mkldnn::primitive_attr attr;
+                    attr.set_output_scales(0, dyn_scales);
+                    attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
+
+                    if (with_bias)
+                    {
+                        auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                        *ctx->mkldnn_primitives[conv_index] = mkldnn::convolution_forward(
+                            {{mkldnn::prop_kind::forward,
+                              mkldnn::algorithm::convolution_direct,
+                              input_desc,
+                              weights_desc,
+                              bias_desc,
+                              result_desc,
+                              mkldnn::memory::dims(strides.begin(), strides.end()),
+                              mkldnn::memory::dims(dilation_strides_adjusted.begin(),
+                                                   dilation_strides_adjusted.end()),
+                              mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+                              mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+                              mkldnn::padding_kind::zero},
+                             attr,
+                             executor::global_cpu_engine},
+                            *ctx->mkldnn_primitives[deps[0]],
+                            *ctx->mkldnn_primitives[deps[1]],
+                            *ctx->mkldnn_primitives[deps[2]],
+                            *ctx->mkldnn_primitives[deps[3]]);
+                    }
+                    else
+                    {
+                        *ctx->mkldnn_primitives[conv_index] = mkldnn::convolution_forward(
+                            {{mkldnn::prop_kind::forward,
+                              mkldnn::algorithm::convolution_direct,
+                              input_desc,
+                              weights_desc,
+                              result_desc,
+                              mkldnn::memory::dims(strides.begin(), strides.end()),
+                              mkldnn::memory::dims(dilation_strides_adjusted.begin(),
+                                                   dilation_strides_adjusted.end()),
+                              mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+                              mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+                              mkldnn::padding_kind::zero},
+                             attr,
+                             executor::global_cpu_engine},
+                            *ctx->mkldnn_primitives[deps[0]],
+                            *ctx->mkldnn_primitives[deps[1]],
+                            *ctx->mkldnn_primitives[deps[2]]);
+                    }
+                }
 
                 size_t build_quantized_max_pool(const ngraph::Node* node);
 
