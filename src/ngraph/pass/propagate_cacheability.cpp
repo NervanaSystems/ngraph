@@ -28,8 +28,9 @@ bool ngraph::pass::PropagateCacheability::run_on_function(std::shared_ptr<Functi
 {
     for (auto& node : function->get_ordered_ops())
     {
-        if (auto op = std::dynamic_pointer_cast<op::Op>(node))
+        if (node->is_op())
         {
+            auto op = std::static_pointer_cast<op::Op>(node);
             NGRAPH_DEBUG << "propagate cacheability: node is " << node->get_name();
             auto op_annotations = op->get_op_annotations();
             if (!op_annotations)
@@ -55,8 +56,9 @@ bool ngraph::pass::PropagateCacheability::run_on_function(std::shared_ptr<Functi
                 for (auto arg : node->get_arguments())
                 {
                     NGRAPH_DEBUG << "propagate cacheability: arg is " << arg->get_name();
-                    if (auto arg_op = std::dynamic_pointer_cast<op::Op>(arg))
+                    if (arg->is_op())
                     {
+                        auto arg_op = std::static_pointer_cast<op::Op>(arg);
                         auto arg_op_annotations = arg_op->get_op_annotations();
                         NGRAPH_ASSERT(arg_op_annotations);
                         if (!arg_op_annotations->is_cacheable())
