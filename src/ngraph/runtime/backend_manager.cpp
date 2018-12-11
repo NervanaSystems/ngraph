@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #else
 #include <dlfcn.h>
@@ -30,7 +30,7 @@
 using namespace std;
 using namespace ngraph;
 
-#ifdef WIN32
+#ifdef _WIN32
 #define CLOSE_LIBRARY(a) FreeLibrary(a)
 #define DLSYM(a, b) GetProcAddress(a, b)
 #else
@@ -91,7 +91,10 @@ unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         if (!handle)
         {
             stringstream ss;
-            ss << "Backend '" << type << "' not registered. Error:" << dlerror();
+            ss << "Backend '" << type << "' not registered. Error:";
+#ifndef _WIN32
+            ss << dlerror();
+#endif
             throw runtime_error(ss.str());
         }
         function<const char*()> get_ngraph_version_string =
@@ -119,8 +122,16 @@ unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
 // This doodad finds the full path of the containing shared library
 static string find_my_file()
 {
-#ifdef WIN32
-    return ".";
+#ifdef _WIN32
+    HMODULE hModule = GetModuleHandleW(NULL);
+    WCHAR wpath[MAX_PATH];
+    GetModuleFileNameW(hModule, wpath, MAX_PATH);
+    wstring ws(wpath);
+    string path(ws.begin(), ws.end());
+    replace(path.begin(), path.end(), '\\', '/');
+    path = file_util::get_directory(path);
+    path += "/";
+    return path;
 #else
     Dl_info dl_info;
     dladdr(reinterpret_cast<void*>(find_my_file), &dl_info);
@@ -130,7 +141,8 @@ static string find_my_file()
 
 DL_HANDLE runtime::BackendManager::open_shared_library(string type)
 {
-    string ext = SHARED_LIB_EXT;
+    string lib_prefix = SHARED_LIB_PREFIX;
+    string lib_suffix = SHARED_LIB_SUFFIX;
 
     DL_HANDLE handle = nullptr;
 
@@ -141,10 +153,10 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
         type = type.substr(0, colon);
     }
 
-    string library_name = "lib" + to_lower(type) + "_backend" + string(SHARED_LIB_EXT);
+    string library_name = lib_prefix + to_lower(type) + "_backend" + lib_suffix;
     string my_directory = file_util::get_directory(find_my_file());
     string library_path = file_util::path_join(my_directory, library_name);
-#ifdef WIN32
+#ifdef _WIN32
     handle = LoadLibrary(library_path.c_str());
 #else
     handle = dlopen(library_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
@@ -159,11 +171,14 @@ map<string, string> runtime::BackendManager::get_registered_device_map()
     vector<string> backend_list;
 
     auto f = [&](const string& file, bool is_dir) {
-        string name = file_util::get_file_name(file);
-        string backend_name;
-        if (is_backend_name(name, backend_name))
+        if (!is_dir)
         {
-            rc.insert({to_upper(backend_name), file});
+            string name = file_util::get_file_name(file);
+            string backend_name;
+            if (is_backend_name(name, backend_name))
+            {
+                rc.insert({to_upper(backend_name), file});
+            }
         }
     };
     file_util::iterate_files(my_directory, f, false, true);
@@ -172,17 +187,19 @@ map<string, string> runtime::BackendManager::get_registered_device_map()
 
 bool runtime::BackendManager::is_backend_name(const string& file, string& backend_name)
 {
-    string name = file_util::get_file_name(file);
-    string ext = SHARED_LIB_EXT;
     bool rc = false;
-    if (!name.compare(0, 3, "lib"))
+    string name = file_util::get_file_name(file);
+    string lib_prefix = SHARED_LIB_PREFIX;
+    string lib_suffix = SHARED_LIB_SUFFIX;
+    if ((name.size() > lib_prefix.size() + lib_suffix.size()) &
+        !name.compare(0, lib_prefix.size(), lib_prefix))
     {
-        if (!name.compare(name.size() - ext.size(), ext.size(), ext))
+        if (!name.compare(name.size() - lib_suffix.size(), lib_suffix.size(), lib_suffix))
         {
             auto pos = name.find("_backend");
             if (pos != name.npos)
             {
-                backend_name = name.substr(3, pos - 3);
+                backend_name = name.substr(lib_prefix.size(), pos - lib_prefix.size());
                 rc = true;
             }
         }
