@@ -34,9 +34,15 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::GetOutputElement)
             {
                 auto& functors = external_function->get_functors();
-
-                auto functor = [&](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    //nothing to do; GOEs' offsets should've been adjusted in MemoryLayout
+                auto goe = static_cast<const ngraph::op::GetOutputElement*>(node);
+                size_t n = goe->get_n();
+                auto& arg_tensor = external_function->get_tensor_data(args[n].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto functor = [&, n](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    if (arg_tensor != out_tensor)
+                    {
+                        throw ngraph_error("GOE's input and out must be equal");
+                    }
                 };
                 functors.emplace_back(functor);
                 return;
