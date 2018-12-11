@@ -432,6 +432,7 @@ private:
                                     broadcast_axes);
             break;
         }
+        case OP_TYPEID::BroadcastLike: break;
         case OP_TYPEID::Ceiling:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -461,6 +462,7 @@ private:
             // Constant is handled in the main loop
             break;
         }
+        case OP_TYPEID::ScalarConstantLike: break;
         case OP_TYPEID::Convert:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
