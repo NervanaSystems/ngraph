@@ -84,7 +84,7 @@ if (NGRAPH_GPU_ENABLE OR (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY))
     add_dependencies(codegen header_resource)
     if (NGRAPH_CPU_ENABLE)
         add_dependencies(codegen libmkldnn libeigen)
-        if(NOT APPLE)
+        if(LINUX)
             # --exclude-libs=ALL prevents symbols from statically-linked libraries (LLVM, in this case)
             # from being automatically exported
             set_property(TARGET codegen APPEND PROPERTY LINK_FLAGS "-Wl,--exclude-libs=ALL")
