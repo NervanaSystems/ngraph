@@ -16,10 +16,6 @@ Basic build procedure on an Ubuntu system:
     $ cmake ../ -DNGRAPH_PYTHON_BUILD_ENABLE=ON -DNGRAPH_ONNX_IMPORT_ENABLE=ON -DNGRAPH_USE_PREBUILT_LLVM=ON
     $ make python_wheel
 
-You can speed up make with `-j` flag. For example, if your CPU has 8 threads:
-
-    $ make -j8 python_wheel
-
 After this procedure completes, the `ngraph/build/python/dist` directory should contain Python packages.
 
     $ ls python/dist/

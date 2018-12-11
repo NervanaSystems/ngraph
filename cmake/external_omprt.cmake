@@ -18,6 +18,11 @@ if (NOT NGRAPH_MANYLINUX_ENABLE)
     return()
 endif()
 
+#
+# OpenMP runtime bundled with mklml cannot run with GLIBC==2.5
+# For manylinux1, build the OpenMP runtime from LLVM and use it instead.
+#
+
 include(ExternalProject)
 
 set(OMPRT_INSTALL_PREFIX ${EXTERNAL_PROJECTS_ROOT}/omprt)
@@ -43,8 +48,8 @@ ExternalProject_Add(
 )
 
 add_custom_command(TARGET ext_omprt POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${OMPRT_INSTALL_PREFIX}/lib/libomp.so ${NGRAPH_BUILD_DIR}
-    COMMAND ${CMAKE_COMMAND} -E copy ${OMPRT_INSTALL_PREFIX}/lib/libgomp.so ${NGRAPH_BUILD_DIR}
-    COMMAND ${CMAKE_COMMAND} -E copy ${OMPRT_INSTALL_PREFIX}/lib/libiomp5.so ${NGRAPH_BUILD_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy ${OMPRT_INSTALL_PREFIX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}omp${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy ${OMPRT_INSTALL_PREFIX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}gomp${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy ${OMPRT_INSTALL_PREFIX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
     COMMENT "Move OpenMP runtime libraries to ngraph build directory."
 )
