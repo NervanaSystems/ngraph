@@ -26,7 +26,7 @@ void regclass_pyngraph_op_GetOutputElement(py::module m)
 {
     py::class_<ngraph::op::GetOutputElement,
                std::shared_ptr<ngraph::op::GetOutputElement>,
-               ngraph::Node>
+               ngraph::op::Op>
         get_output_element(m, "GetOutputElement");
     get_output_element.doc() = "ngraph.impl.op.GetOutputElement wraps ngraph::op::GetOutputElement";
     get_output_element.def(py::init<const std::shared_ptr<ngraph::Node>&, size_t>());
