@@ -47,8 +47,9 @@ TEST(INTERPRETER, nan_check_input)
     copy_data(b, vector<float>{1, 2, 1, 8});
     auto result = backend->create_tensor(element::f32, shape);
 
-    ibackend->set_nan_check(f, true);
-    EXPECT_ANY_THROW(ibackend->call_with_validate(f, {result}, {a, b}));
+    auto handle = backend->compile(f);
+    ibackend->set_nan_check(handle, true);
+    EXPECT_ANY_THROW(ibackend->call_with_validate(handle, {result}, {a, b}));
 }
 
 TEST(INTERPRETER, nan_check_output)
@@ -70,6 +71,7 @@ TEST(INTERPRETER, nan_check_output)
     copy_data(b, vector<float>{1, 2, 0, 8});
     auto result = backend->create_tensor(element::f32, shape);
 
-    ibackend->set_nan_check(f, true);
-    EXPECT_ANY_THROW(ibackend->call_with_validate(f, {result}, {a, b}));
+    auto handle = backend->compile(f);
+    ibackend->set_nan_check(handle, true);
+    EXPECT_ANY_THROW(ibackend->call_with_validate(handle, {result}, {a, b}));
 }
