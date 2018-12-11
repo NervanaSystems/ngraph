@@ -1135,12 +1135,14 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_input(
         stack.pop_front();
         for (auto input : it->get_inputs())
         {
-            auto c_op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node());
-            if (!c_op || c_op->is_output() || dynamic_pointer_cast<ngraph::op::Slice>(c_op))
+            auto input_node = input->get_node();
+            if (!input_node->is_op() || input_node->is_output() ||
+                dynamic_pointer_cast<ngraph::op::Slice>(input_node))
             {
                 continue;
             }
 
+            auto c_op = std::static_pointer_cast<ngraph::op::Op>(input_node);
             if (auto op_annotations = c_op->get_op_annotations())
             {
                 for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
@@ -1182,12 +1184,13 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_constant(
         stack.pop_front();
         for (auto input : it->get_inputs())
         {
-            auto c_op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node());
-            if (!c_op || c_op->is_output())
+            auto input_node = input->get_node();
+            if (!input_node->is_op() || input_node->is_output())
             {
                 continue;
             }
 
+            auto c_op = std::static_pointer_cast<ngraph::op::Op>(input_node);
             if (auto op_annotations = c_op->get_op_annotations())
             {
                 for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
@@ -1229,11 +1232,14 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
     do
     {
         propagate_further = false;
-        auto arg = std::dynamic_pointer_cast<ngraph::op::Op>(it->get_node());
-        if (!arg || std::dynamic_pointer_cast<ngraph::op::Slice>(it->get_node()))
+        auto it_node = it->get_node();
+
+        if (!it_node->is_op() || std::dynamic_pointer_cast<ngraph::op::Slice>(it_node))
         {
             break;
         }
+
+        auto arg = std::static_pointer_cast<ngraph::op::Op>(it_node);
         if (auto op_annotations = arg->get_op_annotations())
         {
             for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
@@ -1284,8 +1290,7 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_concat(
                     auto offset = output_tensor->get_pool_offset();
                     for (auto arg : concat->get_arguments())
                     {
-                        auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
-                        auto input_tensor = &input_node->get_output_tensor();
+                        auto input_tensor = &arg->get_output_tensor();
                         auto old_offset = input_tensor->get_pool_offset();
                         input_tensor->set_pool_offset(offset);
                         NGRAPH_DEBUG << "cpu_external_function: change offset, old offset is "
@@ -1349,8 +1354,7 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_concat(
                 auto offset = output_tensor->get_pool_offset();
                 for (auto arg : it->get_arguments())
                 {
-                    auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
-                    auto input_tensor = &input_node->get_output_tensor();
+                    auto input_tensor = &arg->get_output_tensor();
                     auto old_offset = input_tensor->get_pool_offset();
                     input_tensor->set_pool_offset(offset);
                     NGRAPH_DEBUG
@@ -1383,8 +1387,7 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
                     auto input = &slice->get_inputs().at(0);
                     auto arg = input->get_output().get_node();
                     auto index = input->get_output().get_index();
-                    auto input_node = std::dynamic_pointer_cast<ngraph::op::Op>(arg);
-                    auto input_tensor = &input_node->get_output_tensor(index);
+                    auto input_tensor = &arg->get_output_tensor(index);
                     if (m_tensor_roles[input_tensor->get_name()] == CPUTensorRole::INPUT)
                     {
                         NGRAPH_DEBUG << "cpu_external_function: function input pointer passed to "
