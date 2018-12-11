@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -63,6 +64,7 @@
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/and.hpp"
+#include "ngraph/runtime/reference/any.hpp"
 #include "ngraph/runtime/reference/argmax.hpp"
 #include "ngraph/runtime/reference/argmin.hpp"
 #include "ngraph/runtime/reference/asin.hpp"
@@ -251,6 +253,16 @@ private:
                                    static_cast<const T*>(args[1]),
                                    static_cast<T*>(out[0]),
                                    element_count);
+            break;
+        }
+        case OP_TYPEID::Any:
+        {
+            const op::Any* any = static_cast<const op::Any*>(&node);
+            reference::any(static_cast<const char*>(args[0]),
+                           static_cast<char*>(out[0]),
+                           node.get_input_shape(0),
+                           node.get_output_shape(0),
+                           any->get_reduction_axes());
             break;
         }
         case OP_TYPEID::ArgMin:

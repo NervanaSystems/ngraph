@@ -25,6 +25,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
@@ -466,6 +467,12 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::And:
             {
                 node = make_shared<op::And>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::Any:
+            {
+                auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+                node = make_shared<op::Any>(args[0], reduction_axes);
                 break;
             }
             case OP_TYPEID::ArgMin:
@@ -1255,6 +1262,12 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::AllReduce: { break;
     }
     case OP_TYPEID::And: { break;
+    }
+    case OP_TYPEID::Any:
+    {
+        auto tmp = dynamic_cast<const op::Any*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
+        break;
     }
     case OP_TYPEID::Asin: { break;
     }
