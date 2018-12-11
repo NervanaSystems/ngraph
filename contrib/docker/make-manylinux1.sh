@@ -47,7 +47,7 @@ docker build  --rm=true \
        ${DOCKER_HTTP_PROXY} ${DOCKER_HTTPS_PROXY} \
        -f="${SCRIPT_DIR}/Dockerfile.ngraph.manylinux1" \
        -t="ngraph:manylinux1" \
-       .
+       ${SCRIPT_DIR}
 
 # build manulinux1 wheels
 docker run -it -u`id -u`:`id -g` \
