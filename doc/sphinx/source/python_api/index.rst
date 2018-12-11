@@ -1,13 +1,16 @@
 .. python_api/index.rst
 
-######################
-Using the pip packages
-######################
+###########
+Python API 
+###########
 
-This section contains nGraph™ Python API documentation. Python API exposes
-nGraph™ C++ operations to Python users. For quick-start you can find an example
-of the API usage below. For other examples, or to contribute new or interesting 
-use cases, please read :doc:`../shared/index`. 
+This section contains the Python API component of the nGraph Compiler stack. The 
+Python API exposes nGraph™ C++ operations to Python users. For quick-start you 
+can find an example of the API usage below. 
+
+
+
+
 
 .. literalinclude:: ../../../../python/examples/basic.py
    :language: python

@@ -1,23 +1,35 @@
-.. frameworks/generic.rst
+.. frameworks/generic-configs.rst
 
 
-Working with other frameworks
-##############################
+Configs available to any Framework
+##################################
 
-An engineer may want to work with a deep learning framework that does not yet 
-have bridge code written. For non-supported or "generic" frameworks, it is 
-expected that engineers will use the nGraph library to create custom bridge code, 
-and/or to design and document a user interface (UI) with specific runtime 
-options for whatever custom use case they need. 
+An engineer might want to work with a DL framework that does not yet have bridge 
+code written. For non-supported or "generic" frameworks, it is assumed that 
+engineers will make use of the :doc:`../ops/index` to create custom bridge code 
+for their framework, and figure out how to present user-based actions to the 
+users of their framework. nGraph does not provide an interface for "users" of 
+frameworks (we cannot dictate how Tensorflow or MXNet presents things to their 
+users, for example), so keep in mind that designing and documenting a user 
+interface (UI) is entirely in the realm of the framework and beyond the scope of 
+the nGraph Compiler stack.
+ 
+The nGraph :abbr:`Intermediate Representation (IR` is a Today, the two primary tasks that can be accomplished in the “bridge code” space
+of the nGraph IR are: 
 
-The two primary tasks that can be accomplished in the “bridge code” space of the 
-nGraph abstraction layer are: (1) compiling a dataflow graph and (2) executing 
-a pre-compiled graph. See the :doc:`../framework-integration-guides` for how we 
-have built bridges with other frameworks. For more in-depth help in writing 
+#. Compiling a dataflow graph 
+#. Executing a pre-compiled graph. 
+
+See the :doc:`../framework-integration-guides` for how we built bridges with our 
+initially-supported frameworks. For more in-depth help in writing things like 
 graph optimizations and bridge code, we provide articles on how to 
 :doc:`../fusion/index`, and programmatically :doc:`../howto/execute` that can 
 target various compute resources using nGraph when a framework provides some 
 inputs to be computed.
+
+.. note:: Configuration options can be added manually on the command line or via 
+   scripting. Please keep in mind that fine-tuning of parameters is as much of 
+   an art as it is a science; there are virtually limitless ways to do so.  
 
 
 Integrating nGraph with new frameworks

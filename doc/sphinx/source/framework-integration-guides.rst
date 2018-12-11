@@ -28,9 +28,13 @@ as an optimizing compiler available through the framework.
 MXNet\* bridge
 ===============
 
-* See the README on `nGraph-MXNet`_ Integration for how to enable the bridge.
+* See the README on `nGraph-MXNet`_ Integration.
 
-* Optional: For experimental or alternative approaches to distributed training
+* **Testing latency for Inference**:  See the :doc:`frameworks/testing-latency` 
+  doc for a fully-documented example how to compile and test latency with an 
+  MXNet-supported model.     
+
+* **Training**: For experimental or alternative approaches to distributed training
   methodologies, including data parallel training, see the MXNet-relevant sections
   of the docs on :doc:`distr/index` and :doc:`How to <howto/index>` topics like
   :doc:`howto/distribute-train`. 

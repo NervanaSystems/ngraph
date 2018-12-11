@@ -24,8 +24,11 @@ Welcome
 See the latest :doc:`project/release-notes`. 
 
 
-.. figure:: graphics/599px-Intel-ngraph-ecosystem.png
-   :width: 599px
+.. figure:: graphics/ngcompiler-ecosystem.png
+   :width: 650px
+   :alt: ecosystem 
+
+   The Intel nGraph Compiler stack supports a broad ecosystem of frameworks and backends. 
 
 
 nGraph is an open-source C++ library, compiler stack, and runtime accelerator 
@@ -44,7 +47,10 @@ Quick Start
 
 We have many documentation pages to help you get started.  
 
-* **TensorFlow or MXNet users** can get started with :doc:`framework-integration-guides`; see also: 
+* **TensorFlow or MXNet users** can get started with 
+  :doc:`framework-integration-guides`. Note that the ``pip`` packages work only 
+  with Ubuntu 16.04 or greater and Intel® Xeon® CPUs. CPUs without AVX512 will 
+  not run these packages; the alternative is to build from source: 
 
    * `TensorFlow bridge to nGraph`_ 
    * `Compiling MXNet with nGraph`_ 
@@ -55,7 +61,7 @@ We have many documentation pages to help you get started.
 * **Framework authors and architects** will likely want to :doc:`buildlb` 
   and learn how nGraph can be used to :doc:`howto/execute`. For examples 
   of generic configurations or optimizations available when designing or 
-  bridging a framework directly with nGraph, see :doc:`frameworks/generic`.
+  bridging a framework directly with nGraph, see :doc:`frameworks/index`.
 
 * To start learning about nGraph's set of **Core ops** and how they can 
   be used with Ops from other frameworks, go to :doc:`ops/index`.
@@ -112,7 +118,6 @@ Contents
    framework-integration-guides.rst
    frameworks/index.rst
    fusion/index.rst
-   shared/index.rst
    programmable/index.rst
    distr/index.rst
    python_api/index.rst

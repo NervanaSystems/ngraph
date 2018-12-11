@@ -1,10 +1,17 @@
-.. shared/mxnet_tutorial.rst:
+.. frameworks/testing_latency:
 
 
-Working with subgraphs on MXNet
-################################
+Testing latency  
+###############
 
-One DL framework with advancing efforts on shared graph optimizations is Apache 
+
+Many open-source DL frameworks provide a layer where experts in data science 
+can make use of optimizations contributed by machine learning engineers. Having 
+a common API benefits both: it simplifies deployment and makes it easier for ML 
+engineers working on advanced deep learning hardware to bring highly-optimized 
+performance to a wide range of models, especially in inference.  
+
+One DL framework with advancing efforts on graph optimizations is Apache 
 MXNet\*, where `Intel has contributed efforts showing`_ how to work with our
 nGraph Compiler stack as an `experimental backend`_. Our approach provides 
 **more opportunities** to start working with different kinds of graph 
@@ -15,32 +22,31 @@ reasons outlined in our `features`_ documentation.
    keep in mind this tutorial will still work  regardless of the merge status of 
    the experimental backend if you already use the ngraph-mxnet Github repo 
 
-The Intel nGraph Compiler provides an abstraction layer for converting 
-the mathematical representation of a DL model into an optimized-for-execution 
-format that can be understood by and run on multiple hardware backends. A 
-primary goal of this integration is to provide a seamless development and 
-deployment experience to Data Scientists and Machine Learning Engineers. It 
-simplifies development by providing a common API for framework or hardware 
-developers to optimize a Deep Learning model; deployment is simplified 
-by bringing highly-optimized CPU performance to a wide range of MXNet models, 
-especially in inference.
 
-Future releases of the nGraph Library will improve training support and add 
-other hardware backends currently under development, including Nvidia\* GPU, 
-Intel GPU, and custom silicon like the Intel® Nervana™ NNP. Future releases are 
-planned to further simplify installation with ``pip``, and to offer support for 
-the Microsot\* Windows\* operating system.
+.. figure:: ../graphics/ngraph-mxnet-models.png
+    :width: 533px
+    :alt: Up to 45X faster 
+
+    Up to 45X faster compilation with nGraph backend
 
 
-
-Tutorial: Compiling MXNet with nGraph and running Resnet-50-v2 Inference
-========================================================================
+Tutorial: Testing inference latency of ResNet-50-V2 with MXNet
+==============================================================
 
 This tutorial supports compiling MXNet with nGraph's CPU backend.
 
-To compile MXNet with nGraph, follow steps 1-3 in the ``NGRAPH_README`` file 
-located in the `nGraph-MXNet`_ repository. When building MXNet, be sure to 
-append the make command with ``USE_NGRAPH=1``
+Begin by cloning MXNet from GitHub:
+     
+.. code-block:: console
+
+   git clone --recursive https://github.com/apache/incubator-mxnet
+
+To compile run:
+           
+.. code-block:: console
+
+   cd incubator-mxnet
+   make -j USE_NGRAPH=1
 
 MXNet's build system will automatically download, configure, and build the 
 nGraph library, then link it into ``libmxnet.so``. Once this is complete, we 
@@ -71,7 +77,7 @@ Running ResNet-50-V2 Inference
 ------------------------------
 
 To show a working example, we'll demonstrate how MXNet may be used to run 
-ResNet-50 Inference. For ease, we'll consider the standard MXNet ResNet-50-V2 00
+ResNet-50 Inference. For ease, we'll consider the standard MXNet ResNet-50-V2
 model from the `gluon model zoo`_, and we'll test with ``batch_size=1``. 
 Note that the nGraph-MXNet bridge supports static graphs only (dynamic graphs 
 are in the works); so for this example, we begin by converting the gluon model 

@@ -2539,7 +2539,7 @@ div[class^='highlight'] pre {
     font-family: monospace;
   line-height: normal;
   background: white;
-  color: #84aead;
+  color: #0071c5;
   border-top: solid 0.31em #cad8a5;
   padding: 6px;
   position: relative;
@@ -2967,7 +2967,7 @@ span[id*='MathJax-Span'] {
 }
 
 .wy-nav .wy-menu-vertical header {
-  color: #84aead;
+  color: #0071c5;
 }
 .wy-nav .wy-menu-vertical a {
   color: #dadada;
@@ -3038,13 +3038,14 @@ span[id*='MathJax-Span'] {
 
 .wy-nav-top {
   display: none;
-  background: #84aead;
+  background: #0071c5;
   color: #fff;
   padding: 0.4045em 0.809em;
   position: relative;
   line-height: 50px;
   text-align: center;
   font-size: 100%;
+  font-family: 'NeoSansIntel';
   *zoom: 1;
 }
 .wy-nav-top:before, .wy-nav-top:after {
@@ -3062,7 +3063,7 @@ span[id*='MathJax-Span'] {
   margin-right: 12px;
   height: 45px;
   width: 45px;
-  background-color: #84aead;
+  background-color: #0071c5;
   padding: 5px;
   border-radius: 100%;
 }

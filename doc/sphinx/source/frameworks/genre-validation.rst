@@ -1,17 +1,17 @@
-.. frameworks/validation-testing: 
+.. frameworks/genre-validation.rst: 
 
 
-Validation and testing
-######################
+Validated and Tested
+####################
 
-We validated performance for the following TensorFlow* and MXNet* workloads:
+We validated performance for the following TensorFlow\* and MXNet\* workloads:
 
 
 TensorFlow 
 ==========
 
 .. csv-table::
-   :header: "TensorFlow Workload", "Type"
+   :header: "TensorFlow Workload", "Genre of Deep Learning"
    :widths: 27, 53
    :escape: ~
 
@@ -40,7 +40,7 @@ MXNet
 =====
 
 .. csv-table::
-   :header: "MXNet Workload", "Type"
+   :header: "MXNet Workload", "Genre of Deep Learning"
    :widths: 27, 53
    :escape: ~
 
@@ -66,11 +66,12 @@ MXNet
 ONNX
 =====
 
-Additionally, we validated the following workloads are functional through nGraph ONNX importer: 
+Additionally, we validated the following workloads are functional through 
+`nGraph ONNX importer`_: 
 
 
 .. csv-table::
-   :header: "ONNX Workload", "Type"
+   :header: "ONNX Workload", "Genre of Deep Learning"
    :widths: 27, 53
    :escape: ~
 
@@ -98,7 +99,7 @@ Additionally, we validated the following workloads are functional through nGraph
 
 
 .. _Optimization Notice: https://software.intel.com/en-us/articles/optimization-notice
-
+.. _nGraph ONNX importer: https://github.com/NervanaSystems/ngraph-onnx/blob/master/README.md
 
 .. Notice revision #20110804: Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors. These optimizations include SSE2, SSE3, and SSSE3 instruction sets and other optimizations. Intel does not guarantee the availability, functionality, or effectiveness of any optimization on microprocessors not manufactured by Intel. Microprocessor-dependent optimizations in this product are intended for use with Intel microprocessors. Certain optimizations not specific to Intel microarchitecture are reserved for Intel microprocessors. Please refer to the applicable product User and Reference Guides for more information regarding the specific instruction sets covered by this notice.
 

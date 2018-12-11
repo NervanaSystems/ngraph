@@ -20,11 +20,16 @@ workloads on CPU for inference, please refer to the links below.
 | MXNet* 1.3                 | [Pip install](https://github.com/NervanaSystems/ngraph-mxnet#Installation) or [Build from source](https://github.com/NervanaSystems/ngraph-mxnet#building-with-ngraph-support)| 18 [Validated workloads]   
 | ONNX 1.3                   | [Pip install](https://github.com/NervanaSystems/ngraph-onnx#installation)                          | 14 [Validated workloads] 
 
+:exclamation: :exclamation: :exclamation: Note that the ``pip`` package option 
+works only with Ubuntu 16.04 or greater and Intel® Xeon® CPUs. CPUs without 
+Intel® Advanced Vector Extensions 512 (Intel® AVX-512) will not run these 
+packages; the alternative if you do not have this CPU is to build from source. 
+
 Frameworks using nGraph Compiler stack to execute workloads have shown 
-[**up to 45X**](https://ai.intel.com/ngraph-compiler-stack-beta-release/) performance boost when compared to native framework 
-implementations. We've also seen performance boosts running workloads that 
-are not included on the list of [Validated workloads], thanks to our 
-powerful subgraph pattern matching.
+[**up to 45X**](https://ai.intel.com/ngraph-compiler-stack-beta-release/) 
+performance boost when compared to native framework implementations. We've also 
+seen performance boosts running workloads that are not included on the list of 
+[Validated workloads], thanks to our powerful subgraph pattern matching.
 
 Additional work is also being done via [PlaidML] which will feature running 
 compute for Deep Learning with GPU accleration. See our 
@@ -104,5 +109,5 @@ to improve it:
 [nGraph-ONNX]: https://github.com/NervanaSystems/ngraph-onnx/blob/master/README.md
 [nGraph-ONNX adaptable]: https://ai.intel.com/adaptable-deep-learning-solutions-with-ngraph-compiler-and-onnx/
 [nGraph for PyTorch developers]: https://ai.intel.com/investing-in-the-pytorch-developer-community
-[Validated workloads]: https://ngraph.nervanasys.com/docs/latest/frameworks/validation-testing.html
+[Validated workloads]: https://ngraph.nervanasys.com/docs/latest/frameworks/genre-validation.html
 

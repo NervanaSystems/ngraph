@@ -1,38 +1,55 @@
-.. framework/index: 
+.. frameworks/index: 
 
-Integrate Other Frameworks   
-###########################
-
-In this section, written for framework architects or engineers who want 
-to optimize brand new, generic, or less widely-supported frameworks, we provide 
-some of our learnings from our "framework Direct Optimization (framework DO)" 
-work and custom bridge code, such as that for our `ngraph tensorflow bridge`_.
-
-
+Framework Customizations   
+########################
 
 .. important:: This section contains articles for framework owners or developers
-   who want to incorporate the nGraph library directly into their framework and 
-   optimize for some specific compute-time characteristic. 
-
+   who want to incorporate the nGraph Compiler stack and optimize for some 
+   specific compute, runtime, or compile-time characteristic. 
 
 .. toctree::
    :maxdepth: 1 
 
-   generic.rst
-   validation-testing.rst
+   generic-configs.rst
+   genre-validation.rst
+   testing-latency.rst
 
 
+Data scientists and ML engineers may not initially know which framework is the 
+"best" framework to use to start working on his or her problem set. While there 
+are several to choose from, it can be daunting and time-consuming to scope the 
+wide array of features and customization options offered by some of the more 
+popular frameworks. One of the more common approaches is the three-pronged 
+approach: 
 
-When using a framework to run a model or deploy an algorithm on nGraph 
-devices, there are some additional configuration options that can be 
-incorporated -- manually on the command line or via scripting -- to improve 
-performance. Fine-tuning an nGraph-enabled device is as much of an art as it 
-is a science; there are virtually limitless ways to do so. 
+#. First **find** a tested and working DL model that does something *similar* 
+   to what the data scientist or ML engineer wants to do. To assist with this 
+   stage, we've already provided several :doc:`genre-validation` examples 
+   organized by framework and what we call *Genre of Deep Learning*.  
+#. Next, **replicate** that result using well-known datasets to confirm that the 
+   model does indeed work. To assist wtih this stage, we've released several  
+   :doc:`pip installation options <../framework-integration-guides>` that can 
+   be used to test a very simple example.
+#. Finally, **modify** some aspect: add new datasets, or adjust an algorithm's 
+   parameters to hone in on specifics that can better train, forecast, or predict 
+   scenarios modeling the real-world problem.
 
-Since a framework is typically designed around some feature, such as fast 
-training using image data, inference on a mobile device, or support for voice 
-and speech pattern recognition, a framework cannot optimize for all 
-possibilities at the same time.   
+   .. warning:: nGraph does not provide an interface for "users" of frameworks 
+      (that is, we cannot dictate or control how Tensorflow* or MXNet* presents 
+      outputs to users). Please keep in mind that designing and documenting 
+      the :abbr:`User Interface (UI)` of step 3 above is entirely in the realm 
+      of the framework owner or developer and beyond the scope of the nGraph 
+      Compiler stack. Any framework can be designed to make direct use of 
+      specific nGraph features. See the :doc:`generic-configs` doc for some 
+      ideas.    
+
+Enabling new genres of Deep Learning 
+====================================
+
+For framework architects or engineers who can't quite find what they need among 
+the existing DL tools, we have incorporated several ways to build or optimize 
+frameworks that are built-from-scratch, generic, "stock", or less widely-supported 
+See :doc:`generic-configs`. 
 
 In general, the larger and more complex a framework is, the harder it becomes 
 to navigate and extract the best performance; configuration options that are 
