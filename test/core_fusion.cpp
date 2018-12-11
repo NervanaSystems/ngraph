@@ -27,6 +27,8 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -36,8 +38,10 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
+#include "util/all_close.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/matcher.hpp"
+#include "util/random.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
@@ -137,4 +141,40 @@ TEST(core_fusion, sparsity_opt_56x56)
     ASSERT_TRUE(t_eltwise_conv2);
     ASSERT_EQ(t_eltwise_conv1->get_window_movement_strides(), stride_1);
     ASSERT_EQ(t_eltwise_conv2->get_window_movement_strides(), stride_1);
+}
+
+static std::shared_ptr<Function> generate_reshape_softmax_reshape()
+{
+    Shape shape_nchw{10, 20, 30, 40};
+    Shape shape_nhwc{10, 30, 40, 20};
+    AxisVector to_nhwc{0, 2, 3, 1};
+    AxisVector to_nchw{0, 3, 1, 2};
+    auto input = make_shared<op::Parameter>(element::f32, shape_nchw);
+    auto reshape1 = make_shared<op::Reshape>(input, to_nhwc, shape_nhwc);
+    auto softmax = make_shared<op::Softmax>(reshape1, AxisSet{1, 2, 3});
+    auto reshape2 = make_shared<op::Reshape>(softmax, to_nchw, shape_nchw);
+    auto f = make_shared<Function>(reshape2, ParameterVector{input});
+    return f;
+}
+
+TEST(core_fusion, reshape_softmax_reshape)
+{
+    auto baseline_f = generate_reshape_softmax_reshape();
+    auto optimized_f = generate_reshape_softmax_reshape();
+    auto baseline_input = baseline_f->get_parameters().at(0);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>();
+    pass_manager.run_passes(optimized_f);
+
+    test::Uniform<float> rng(0.0f, 100.0f);
+    vector<vector<float>> args;
+    vector<float> tensor_val(shape_size(baseline_input->get_shape()));
+    rng.initialize(tensor_val);
+    args.push_back(tensor_val);
+
+    auto baseline_results = execute(baseline_f, args, "INTERPRETER");
+    auto optimized_results = execute(optimized_f, args, "INTERPRETER");
+
+    EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 }

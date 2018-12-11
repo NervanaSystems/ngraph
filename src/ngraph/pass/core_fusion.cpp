@@ -36,6 +36,7 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
@@ -620,5 +621,52 @@ void pass::CoreFusion::construct_optimized_strided_conv()
 
     auto m =
         make_shared<pattern::Matcher>(eltwise_conv, callback, "CoreFusion.OptimizedStridedConv");
+    this->add_matcher(m);
+}
+
+void ngraph::pass::CoreFusion::construct_reshape_softmax_reshape()
+{
+    Shape input_shape{10, 20};
+    AxisVector io{1, 0};
+    auto input = make_shared<pattern::op::Label>(element::f32, input_shape);
+    auto reshape1 = make_shared<op::Reshape>(input, io, Shape{20, 10});
+    auto softmax = make_shared<op::Softmax>(reshape1, AxisSet{1});
+    auto reshape2 = make_shared<op::Reshape>(softmax, io, input_shape);
+
+    pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_reshape_softmax_reshape against "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+        auto reshape2_m = std::static_pointer_cast<op::Reshape>(m.get_match_root());
+        auto softmax_m = std::static_pointer_cast<op::Softmax>(reshape2_m->get_argument(0));
+        auto reshape1_m = std::static_pointer_cast<op::Reshape>(softmax_m->get_argument(0));
+        auto input_m = m.get_pattern_map()[input];
+
+        if (!reshape2_m->get_is_transpose() || !reshape1_m->get_is_transpose())
+        {
+            NGRAPH_DEBUG << "we expect reshape2 and reshape1 both be dimshuffles";
+            return false;
+        }
+
+        if (input_m->get_shape() != reshape2_m->get_shape())
+        {
+            NGRAPH_DEBUG << "input and reshape2's shape are different";
+            return false;
+        }
+
+        AxisSet new_axes;
+        const auto& axis_order = reshape2_m->get_input_order();
+        for (auto axis : softmax_m->get_axes())
+        {
+            new_axes.insert(axis_order.at(axis));
+        }
+
+        auto new_softmax = make_shared<op::Softmax>(input_m, new_axes);
+        ngraph::replace_node(m.get_match_root(), new_softmax);
+        return true;
+    };
+
+    auto m = make_shared<pattern::Matcher>(reshape2, callback, "CoreFusion.ReshapeSoftmaxReshape");
     this->add_matcher(m);
 }
