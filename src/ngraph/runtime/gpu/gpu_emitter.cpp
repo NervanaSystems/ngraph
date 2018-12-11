@@ -1477,9 +1477,9 @@ void runtime::gpu::GPU_Emitter::emit_Softmax(EMIT_ARGS)
     writer.block_begin();
     {
         auto axes_set = softmax->get_axes();
-        std::vector<string> dtypes;
-        dtypes.push_back(args[0].get_type());
-        dtypes.push_back(out[0].get_type());
+        std::vector<element::Type> dtypes;
+        dtypes.push_back(args[0].get_element_type());
+        dtypes.push_back(out[0].get_element_type());
         auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
         size_t index = cuda_emitter->build_softmax(dtypes, args[0].get_shape(), axes_set);
 
