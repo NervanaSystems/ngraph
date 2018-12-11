@@ -1789,7 +1789,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
 
         for (auto& p : slice_input_index_offset)
         {
-             get<0>(p).get() = static_cast<uint8_t*>(inputs[get<1>(p)]) + get<2>(p);
+            get<0>(p).get() = static_cast<uint8_t*>(inputs[get<1>(p)]) + get<2>(p);
         }
 
         for (const auto& p : function_input_index)

@@ -243,6 +243,25 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                 continue;
             }
 
+            bool no_in_place_slice = false;
+            if (arg->is_parameter())
+            {
+                for (auto user : slice->get_users())
+                {
+                    if (user->is_output())
+                    {
+                        NGRAPH_DEBUG << "cpu_memory_optimization: slice between function input and "
+                                        "output, no in place slice";
+                        no_in_place_slice = true;
+                        break;
+                    }
+                }
+            }
+            if (no_in_place_slice)
+            {
+                continue;
+            }
+
             if (is_strided(strides))
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: strided slice, no in place slice";
