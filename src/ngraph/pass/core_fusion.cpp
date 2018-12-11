@@ -91,7 +91,6 @@ void pass::CoreFusion::construct_sigmoid()
     auto neg_input = std::make_shared<op::Negative>(input);
     auto exp_neg_input = std::make_shared<op::Exp>(neg_input);
 
-    // broadcast input
     auto constant = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
     auto skip_broadcast =
         std::make_shared<pattern::op::Skip>(constant, pattern::has_class<op::Broadcast>());
@@ -100,7 +99,7 @@ void pass::CoreFusion::construct_sigmoid()
     auto divide_1_over_exp = std::make_shared<op::Divide>(skip_broadcast, add_exp);
 
     // Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [input, constant](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -119,6 +118,26 @@ void pass::CoreFusion::construct_sigmoid()
             return false;
         }
 
+        auto const_val_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[constant]);
+        if (!const_val_op)
+        {
+            NGRAPH_DEBUG << "const value should be of type Constant";
+            return false;
+        }
+
+        if (const_val_op->get_vector<float>().at(0) != 1.0f)
+        {
+            NGRAPH_DEBUG << "const value should be 1";
+            return false;
+        }
+
+        auto const_data = const_val_op->get_vector<float>();
+        if (std::adjacent_find(const_data.begin(), const_data.end(), std::not_equal_to<float>()) !=
+            const_data.end() )
+        {
+            NGRAPH_DEBUG << "All elements are not equal to each other";
+            return false;
+        }
         auto sigmoid_node = std::make_shared<op::Sigmoid>(pattern_map[input]);
         ngraph::replace_node(m.get_match_root(), sigmoid_node);
         return true;
