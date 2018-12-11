@@ -42,6 +42,7 @@
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/slice.hpp"
@@ -64,6 +65,7 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
+#include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/util.hpp"
 
 extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
@@ -1804,5 +1806,53 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fuse_lstm_recurrent_state(
             return true;
         };
     auto m = std::make_shared<ngraph::pattern::Matcher>(concat_label, callback);
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
+{
+    Shape shape_a{2, 32, 2};
+    Shape shape_b{1, 32, 2};
+
+    auto input = std::make_shared<pattern::op::Label>(element::f32, shape_a);
+    auto slice = std::make_shared<op::Slice>(input, Coordinate{1, 0, 0}, Coordinate{2, 32, 2});
+    auto slice_label = std::make_shared<pattern::op::Label>(slice, nullptr, NodeVector{slice});
+    auto update_input = std::make_shared<pattern::op::Label>(element::f32, shape_b);
+    auto update = std::make_shared<op::Add>(update_input, slice_label);
+    auto replace_slice = std::make_shared<op::ReplaceSlice>(
+        input, update, Coordinate{1, 0, 0}, Coordinate{2, 32, 2});
+
+    ngraph::pattern::graph_rewrite_callback callback = [input, update_input, slice_label](
+        pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for update_slice = " << m.get_match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
+        auto slice_m = std::static_pointer_cast<op::Slice>(pattern_map[slice_label]);
+        auto replace_m = std::static_pointer_cast<op::ReplaceSlice>(m.get_match_root());
+        if (replace_m->get_lower_bounds() != slice_m->get_lower_bounds() ||
+            replace_m->get_upper_bounds() != slice_m->get_upper_bounds() ||
+            replace_m->get_strides() != slice_m->get_strides())
+        {
+            NGRAPH_DEBUG
+                << "Update slice cannot be created, slice and replace_slice are not compatible";
+            return false;
+        }
+
+        if (slice_m->get_users().size() > 1 || replace_m->get_argument(1)->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Update slice cannot be created, intermediate values required";
+            return false;
+        }
+
+        auto update_slice = std::make_shared<op::UpdateSlice>(pattern_map[input],
+                                                              pattern_map[update_input],
+                                                              replace_m->get_lower_bounds(),
+                                                              replace_m->get_upper_bounds(),
+                                                              replace_m->get_strides());
+        ngraph::replace_node(m.get_match_root(), update_slice);
+        return true;
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(
+        replace_slice, callback, "CPUFusion.UpdateSlice");
     this->add_matcher(m);
 }

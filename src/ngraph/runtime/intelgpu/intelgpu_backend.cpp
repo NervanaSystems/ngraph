@@ -396,12 +396,12 @@ shared_ptr<runtime::Tensor> runtime::intelgpu::IntelGPUBackend::create_tensor(
         element_type, shape, *ocl_engine, memory_pointer);
 }
 
-bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 {
     FunctionInstance& instance = ocl_networks[func];
     if (instance.ocl_network != nullptr)
     {
-        return true;
+        return func;
     }
 
     set<cldnn::primitive_id> func_output_names;
@@ -977,7 +977,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             const shared_ptr<op::Reduce> red_op = static_pointer_cast<op::Reduce>(op);
             const AxisSet& axis = red_op->get_reduction_axes();
-            vector<shared_ptr<Function>> func = red_op->get_functions();
+            vector<shared_ptr<Function>> f = red_op->get_functions();
 
             // Empty axis is not a case for do_equal_propagation()
             do_reduce_func_call(topology,
@@ -989,7 +989,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                 get_output_shape(op),
                                 get_output_type(op),
                                 axis,
-                                func);
+                                f);
             break;
         }
         case OP_TYPEID::Abs:
@@ -1745,7 +1745,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     instance.ocl_network =
         make_shared<cldnn::network>(*ocl_engine, topology, network_build_options);
 
-    return true;
+    return func;
 }
 
 bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
@@ -1763,15 +1763,11 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
         mem_before_call = get_max_memory_rss();
         timer_compile.start();
     }
-    validate_call(func, outputs, inputs);
 
     FunctionInstance& instance = ocl_networks[func];
     if (instance.ocl_network == nullptr)
     {
-        if (!compile(func))
-        {
-            return false;
-        }
+        throw runtime_error("compile() must be called before call().");
     }
 
     if (m_profile_enable)

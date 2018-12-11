@@ -82,9 +82,8 @@ TEST(serialize, main)
 
     istringstream in(js);
     shared_ptr<Function> sfunc = deserialize(in);
-
-    // Now call h on some test vectors.
     auto backend = runtime::Backend::create("INTERPRETER");
+    auto handle = backend->compile(sfunc);
 
     auto x = backend->create_tensor(element::f32, shape);
     copy_data(x, vector<float>{1, 2, 3, 4});
@@ -94,13 +93,13 @@ TEST(serialize, main)
     copy_data(z, vector<float>{9, 10, 11, 12});
     auto result = backend->create_tensor(element::f32, shape);
 
-    backend->call_with_validate(sfunc, {result}, {x, y, z});
+    backend->call_with_validate(handle, {result}, {x, y, z});
     EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
-    backend->call_with_validate(sfunc, {result}, {y, x, z});
+    backend->call_with_validate(handle, {result}, {y, x, z});
     EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
-    backend->call_with_validate(sfunc, {result}, {x, z, y});
+    backend->call_with_validate(handle, {result}, {x, z, y});
     EXPECT_EQ((vector<float>{200, 288, 392, 512}), read_vector<float>(result));
 }
 #endif

@@ -127,7 +127,7 @@ def binary_op_exec(op_str):
 
     result_arr = np.array([[0, 0], [0, 0]], dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 16)
-    backend.call(function, [result], [a, b])
+    backend.call(backend.compile(function), [result], [a, b])
     result.read(util.numpy_to_c(result_arr), 0, 16)
 
     a_arr = np.array([[1, 6], [7, 4]], dtype=np.float32)
@@ -156,7 +156,7 @@ def binary_op_comparison(op_str):
 
     result_arr = np.array([[False, False], [False, False]], dtype=np.bool)
     result.write(util.numpy_to_c(result_arr), 0, 4)
-    backend.call(function, [result], [a, b])
+    backend.call(backend.compile(function), [result], [a, b])
     result.read(util.numpy_to_c(result_arr), 0, 4)
 
     a_arr = np.array([[1, 5], [3, 2]], dtype=np.float32)
@@ -256,7 +256,7 @@ def test_add_with_mul():
 
     result_arr = np.array([0, 0, 0, 0], dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 16)
-    backend.call(function, [result], [a, b, c])
+    backend.call(backend.compile(function), [result], [a, b, c])
     result.read(util.numpy_to_c(result_arr), 0, 16)
 
     a_arr = np.array([1, 2, 3, 4], dtype=np.float32)
@@ -364,7 +364,7 @@ def unary_op_exec(op_str, input_list):
 
     result_arr = np.zeros(shape_np, dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 16)
-    backend.call(function, [result], [a])
+    backend.call(backend.compile(function), [result], [a])
     result.read(util.numpy_to_c(result_arr), 0, 16)
 
     a_arr = np.array(input_list, dtype=np.float32)
@@ -497,7 +497,7 @@ def test_not():
 
     result_arr = np.array([False, False], dtype=np.bool)
     result.write(util.numpy_to_c(result_arr), 0, 2)
-    backend.call(function, [result], [a])
+    backend.call(backend.compile(function), [result], [a])
     result.read(util.numpy_to_c(result_arr), 0, 2)
 
     a_arr = np.array([True, False], dtype=np.bool)
@@ -522,7 +522,7 @@ def test_sum():
 
     result_arr = np.array([0], dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 4)
-    backend.call(function, [result], [a])
+    backend.call(backend.compile(function), [result], [a])
     result.read(util.numpy_to_c(result_arr), 0, 4)
 
     a_arr = np.array([1, 2, 3, 4], dtype=np.float32)
@@ -547,7 +547,7 @@ def test_reshape():
 
     result_arr = np.array([[0, 0], [0, 0], [0, 0]], dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 24)
-    backend.call(function, [result], [a])
+    backend.call(backend.compile(function), [result], [a])
     result.read(util.numpy_to_c(result_arr), 0, 24)
 
     a_arr = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
@@ -573,7 +573,7 @@ def test_convert():
 
     result_arr = np.array([False, False, False], dtype=np.bool)
     result.write(util.numpy_to_c(result_arr), 0, 3)
-    backend.call(function, [result], [a])
+    backend.call(backend.compile(function), [result], [a])
     result.read(util.numpy_to_c(result_arr), 0, 3)
 
     a_arr = np.array([1, 5, 3], dtype=np.float32)
@@ -590,7 +590,7 @@ def test_convert():
 
     result_arr = np.array([0, 0, 0], dtype=np.int32)
     result.write(util.numpy_to_c(result_arr), 0, 12)
-    backend.call(function, [result], [a])
+    backend.call(backend.compile(function), [result], [a])
     result.read(util.numpy_to_c(result_arr), 0, 12)
 
     a_arr = np.array([1.4, 5.4, 3.9], dtype=np.float32)
@@ -614,7 +614,7 @@ def test_broadcast():
 
     result_arr = np.zeros((3, 3), dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 36)
-    backend.call(function, [result], [a])
+    backend.call(backend.compile(function), [result], [a])
     result.read(util.numpy_to_c(result_arr), 0, 36)
 
     a_arr = np.array([[0], [0], [0]], dtype=np.float32)
@@ -636,7 +636,7 @@ def test_constant():
 
     result_arr = np.zeros((3, 3), dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 36)
-    backend.call(function, [result], [])
+    backend.call(backend.compile(function), [result], [])
     result.read(util.numpy_to_c(result_arr), 0, 36)
 
     result_arr_ref = np.arange(9).reshape(3, 3)
@@ -669,7 +669,7 @@ def test_reduce():
 
     result_arr = np.zeros((2, 2), dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 16)
-    backend.call(function, [result], [a])
+    backend.call(backend.compile(function), [result], [a])
     result.read(util.numpy_to_c(result_arr), 0, 16)
 
     a_arr = np.arange(8).reshape(2, 2, 2)
@@ -693,7 +693,7 @@ def test_onehot():
 
     result_arr = np.zeros((3, 3), dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 36)
-    backend.call(function, [result], [a])
+    backend.call(backend.compile(function), [result], [a])
     result.read(util.numpy_to_c(result_arr), 0, 36)
 
     a_arr = np.array([1, 0, 2])
@@ -725,7 +725,7 @@ def test_concat():
 
     result_arr = np.zeros(6, dtype=np.float32).reshape(3, 2)
     result.write(util.numpy_to_c(result_arr), 0, 24)
-    backend.call(function, [result], [a, b, c])
+    backend.call(backend.compile(function), [result], [a, b, c])
     result.read(util.numpy_to_c(result_arr), 0, 24)
 
     a_arr = np.array([[1, 2]], dtype=np.float32)
@@ -776,7 +776,7 @@ def test_select():
 
     result_arr = np.array([[0, 0]], dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 0, 8)
-    backend.call(function, [result], [a, b, c])
+    backend.call(backend.compile(function), [result], [a, b, c])
     result.read(util.numpy_to_c(result_arr), 0, 8)
 
     result_arr_ref = np.array([[5, 8]])
@@ -807,7 +807,7 @@ def test_slice():
 
     result_arr = np.zeros(16, dtype=np.float32).reshape(4, 4)
     result.write(util.numpy_to_c(result_arr), 0, 16*4)
-    backend.call(function, [result], [a])
+    backend.call(backend.compile(function), [result], [a])
     result.read(util.numpy_to_c(result_arr), 0, 64)
 
     result_arr_ref = input_arr[lower_bounds[0]:upper_bounds[0], lower_bounds[1]:upper_bounds[1]]
@@ -826,7 +826,7 @@ def test_slice():
     result_arr = np.zeros(8, dtype=np.float32).reshape(4, 2)
 
     result.write(util.numpy_to_c(result_arr), 0, 8*4)
-    backend.call(function, [result], [a])
+    backend.call(backend.compile(function), [result], [a])
     result.read(util.numpy_to_c(result_arr), 0, 32)
 
     result_arr_ref = result_arr_ref[::strides[0], ::strides[1]]
@@ -860,7 +860,7 @@ def test_replace_slice():
 
     result_arr = np.zeros(24, dtype=np.float32).reshape(6, 4)
     result.write(util.numpy_to_c(result_arr), 0, 24*4)
-    backend.call(function, [result], [a, b])
+    backend.call(backend.compile(function), [result], [a, b])
     result.read(util.numpy_to_c(result_arr), 0, 24*4)
 
     result_arr_ref = np.copy(input_arr_a)
@@ -878,7 +878,7 @@ def test_replace_slice():
                         parameter_list, 'test')
     backend = Backend.create(pytest.config.getoption('backend'))
 
-    backend.call(function, [result], [a, b])
+    backend.call(backend.compile(function), [result], [a, b])
     result.read(util.numpy_to_c(result_arr), 0, 24*4)
 
     result_arr_ref = np.copy(input_arr_a)
@@ -909,7 +909,7 @@ def test_max_pool():
 
     result_arr = np.zeros(8, dtype=np.float32).reshape(1, 1, 8)
     result.write(util.numpy_to_c(result_arr), 0, 8*4)
-    backend.call(function, [result], [a])
+    backend.call(backend.compile(function), [result], [a])
     result.read(util.numpy_to_c(result_arr), 0, 32)
 
     result_arr_ref = (np.arange(8) + 2).reshape(1, 1, 8)
@@ -926,7 +926,7 @@ def test_max_pool():
     result_arr = np.zeros(size, dtype=np.float32).reshape(1, 1, size)
 
     result.write(util.numpy_to_c(result_arr), 0, size*4)
-    backend.call(function, [result], [a])
+    backend.call(backend.compile(function), [result], [a])
     result.read(util.numpy_to_c(result_arr), 0, size*4)
 
     result_arr_ref = ((np.arange(size) + 1) * 2).reshape(1, 1, size)
@@ -951,7 +951,7 @@ def test_max_pool():
 
     result_arr = np.zeros(64, dtype=np.float32).reshape(1, 1, 8, 8)
     result.write(util.numpy_to_c(result_arr), 0, 8*8*4)
-    backend.call(function, [result], [a])
+    backend.call(backend.compile(function), [result], [a])
     result.read(util.numpy_to_c(result_arr), 0, 8*8*4)
 
     result_arr_ref = ((np.arange(100).reshape(10, 10))[2:, 2:]).reshape(1, 1, 8, 8)
@@ -968,7 +968,7 @@ def test_max_pool():
     result_arr = np.zeros(size*size, dtype=np.float32).reshape(1, 1, size, size)
 
     result.write(util.numpy_to_c(result_arr), 0, size*size*4)
-    backend.call(function, [result], [a])
+    backend.call(backend.compile(function), [result], [a])
     result.read(util.numpy_to_c(result_arr), 0, size*size*4)
 
     result_arr_ref = ((np.arange(100).reshape(10, 10))[2::2, 2::2]).reshape(1, 1, size, size)
@@ -1048,7 +1048,7 @@ def test_convolution():
 
     result = backend.create_tensor(element_type, Shape([1, 1, 14, 14]))
     result.write(util.numpy_to_c(result_arr), 0, 14*14*4)
-    backend.call(function, [result], [a, b])
+    backend.call(backend.compile(function), [result], [a, b])
     result.read(util.numpy_to_c(result_arr), 0, 14*14*4)
 
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0]).reshape(1, 1, 14, 14)
@@ -1082,7 +1082,7 @@ def test_convolution_with_strides():
     result_arr = np.zeros(16, dtype=np.float32).reshape(1, 1, 4, 4)
     result = backend.create_tensor(element_type, Shape([1, 1, 4, 4]))
     result.write(util.numpy_to_c(result_arr), 0, 4*4*4)
-    backend.call(function, [result], [a, b])
+    backend.call(backend.compile(function), [result], [a, b])
 
     result.read(util.numpy_to_c(result_arr), 0, 4*4*4)
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides).reshape(1, 1, 4, 4)
@@ -1116,7 +1116,7 @@ def test_convolution_with_filter_dilation():
     result_arr = np.zeros(36, dtype=np.float32).reshape(1, 1, 6, 6)
     result = backend.create_tensor(element_type, Shape([1, 1, 6, 6]))
     result.write(util.numpy_to_c(result_arr), 0, 6*6*4)
-    backend.call(function, [result], [a, b])
+    backend.call(backend.compile(function), [result], [a, b])
 
     result.read(util.numpy_to_c(result_arr), 0, 6*6*4)
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
@@ -1156,7 +1156,7 @@ def test_convolution_with_padding():
     result_arr = np.zeros(36, dtype=np.float32).reshape(1, 1, 6, 6)
     result = backend.create_tensor(element_type, Shape([1, 1, 6, 6]))
     result.write(util.numpy_to_c(result_arr), 0, 6*6*4)
-    backend.call(function, [result], [a, b])
+    backend.call(backend.compile(function), [result], [a, b])
 
     result.read(util.numpy_to_c(result_arr), 0, 6*6*4)
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
@@ -1194,7 +1194,7 @@ def test_convolution_with_padding():
     result_arr = np.zeros(81, dtype=np.float32).reshape(1, 1, 9, 9)
     result = backend.create_tensor(element_type, Shape([1, 1, 9, 9]))
     result.write(util.numpy_to_c(result_arr), 0, 9*9*4)
-    backend.call(function, [result], [a, b])
+    backend.call(backend.compile(function), [result], [a, b])
 
     result.read(util.numpy_to_c(result_arr), 0, 9*9*4)
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
@@ -1235,7 +1235,7 @@ def test_convolution_with_data_dilation():
     result_arr = np.zeros(17*17, dtype=np.float32).reshape(1, 1, 17, 17)
     result = backend.create_tensor(element_type, Shape([1, 1, 17, 17]))
     result.write(util.numpy_to_c(result_arr), 0, 17*17*4)
-    backend.call(function, [result], [a, b])
+    backend.call(backend.compile(function), [result], [a, b])
 
     result.read(util.numpy_to_c(result_arr), 0, 17*17*4)
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
@@ -1282,7 +1282,7 @@ def test_convolutionBackpropData():
     result_arr = np.zeros(10*10, dtype=np.float32).reshape(1, 1, 10, 10)
     result = backend.create_tensor(element_type, Shape([1, 1, 10, 10]))
     result.write(util.numpy_to_c(result_arr), 0, 10*10*4)
-    backend.call(function, [result], [a, b])
+    backend.call(backend.compile(function), [result], [a, b])
 
     result.read(util.numpy_to_c(result_arr), 0, 10*10*4)
     result_arr_ref = np.array(
@@ -1337,7 +1337,7 @@ def test_convolutionBackpropFilters():
     result_arr = np.zeros(3*3, dtype=np.float32).reshape(1, 1, 3, 3)
     result = backend.create_tensor(element_type, Shape([1, 1, 3, 3]))
     result.write(util.numpy_to_c(result_arr), 0, 3*3*4)
-    backend.call(function, [result], [a, b])
+    backend.call(backend.compile(function), [result], [a, b])
 
     result.read(util.numpy_to_c(result_arr), 0, 3*3*4)
     result_arr_ref = np.array(

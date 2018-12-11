@@ -54,7 +54,7 @@ NGRAPH_TEST(${BACKEND_NAME}, equal)
     copy_data(b, vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5});
     auto result = backend->create_tensor(element::boolean, shape);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<char>{1, 1, 0, 0, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
@@ -74,7 +74,7 @@ NGRAPH_TEST(${BACKEND_NAME}, notequal)
     copy_data(b, vector<float>{1, 8, 4, 8, 0, 0, 1, 1.5});
     auto result = backend->create_tensor(element::boolean, shape);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<char>{0, 0, 1, 1, 1, 0, 0, 1}), read_vector<char>(result));
 }
 
@@ -94,7 +94,7 @@ NGRAPH_TEST(${BACKEND_NAME}, greater)
     copy_data(b, vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5});
     auto result = backend->create_tensor(element::boolean, shape);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
@@ -114,7 +114,7 @@ NGRAPH_TEST(${BACKEND_NAME}, greatereq)
     copy_data(b, vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5});
     auto result = backend->create_tensor(element::boolean, shape);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<char>{1, 1, 1, 1, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
@@ -134,7 +134,7 @@ NGRAPH_TEST(${BACKEND_NAME}, less)
     copy_data(b, vector<float>{1, 2, 4, 8, 0, 0, 1, 1.5});
     auto result = backend->create_tensor(element::boolean, shape);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<char>{0, 0, 1, 0, 1, 0, 0, 1}), read_vector<char>(result));
 }
 
@@ -154,7 +154,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lesseq)
     copy_data(b, vector<float>{1, 2, -8, 8, 0, 0, 0.5, 1.5});
     auto result = backend->create_tensor(element::boolean, shape);
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<char>{1, 0, 1, 0, 1, 1, 0, 1}), read_vector<char>(result));
 }
 
@@ -177,6 +177,6 @@ NGRAPH_TEST(${BACKEND_NAME}, lesseq_bool)
     // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
     copy_data(result, vector<char>{1, 1, 1, 1, 1, 1, 1, 1});
 
-    backend->call_with_validate(f, {result}, {a, b});
+    backend->call_with_validate(backend->compile(f), {result}, {a, b});
     EXPECT_EQ((vector<char>{0, 0, 0, 0, 0, 0, 0, 0}), read_vector<char>(result));
 }
