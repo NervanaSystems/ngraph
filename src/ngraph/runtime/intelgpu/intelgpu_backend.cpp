@@ -926,7 +926,10 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
             }
             else
             {
-                do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+                const cldnn::tensor new_shape =
+                    intelgpu_space::create_cldnn_tensor(get_output_shape(op));
+                const cldnn::reshape reshape_op(get_output_name(op), get_input_name(op), new_shape);
+                topology.add(reshape_op);
             }
             break;
         }
