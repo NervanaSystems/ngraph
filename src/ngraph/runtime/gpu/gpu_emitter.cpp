@@ -35,6 +35,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
@@ -164,6 +165,11 @@ void runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)
 void runtime::gpu::GPU_Emitter::emit_And(EMIT_ARGS)
 {
     emit_elementwise<ngraph::op::And>(external_function, writer, node, args, out);
+}
+
+void runtime::gpu::GPU_Emitter::emit_Any(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 void runtime::gpu::GPU_Emitter::emit_ArgMax(EMIT_ARGS)

@@ -1710,6 +1710,7 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
             break;
         }
         case OP_TYPEID::AllReduce:
+        case OP_TYPEID::Any:
         case OP_TYPEID::FunctionCall:
         case OP_TYPEID::Dequantize:
         case OP_TYPEID::Quantize:
