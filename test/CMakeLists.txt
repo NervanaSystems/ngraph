@@ -76,12 +76,6 @@ if (NGRAPH_INTERPRETER_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
-if (NGRAPH_HYBRID_ENABLE)
-    list(APPEND SRC
-        hybrid_backend.cpp
-        hybrid_utils.cpp)
-endif()
-
 if (NGRAPH_CPU_ENABLE)
     list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
     list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp cpu_debugger.cpp)
@@ -100,8 +94,8 @@ if (NGRAPH_INTELGPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
 endif()
 
-if (NGRAPH_HYBRID_ENABLE)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} HYBRID)
+if (NGRAPH_GPUH_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPUH)
 endif()
 
 if (NGRAPH_PLAIDML_ENABLE)
@@ -188,7 +182,10 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
 endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
-target_link_libraries(unit-test PRIVATE ngraph libgtest libjson pthread)
+target_link_libraries(unit-test PRIVATE ngraph libgtest libjson)
+if(NOT WIN32)
+    target_link_libraries(unit-test PRIVATE pthread)
+endif()
 target_link_libraries(unit-test PRIVATE ${CMAKE_DL_LIBS})
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
@@ -228,6 +225,10 @@ endif()
 
 if (NGRAPH_NOP_ENABLE)
     target_link_libraries(unit-test PRIVATE nop_backend)
+endif()
+
+if (NGRAPH_GPUH_ENABLE)
+    target_link_libraries(unit-test PRIVATE gpuh_backend)
 endif()
 
 if (NGRAPH_ONNXIFI_ENABLE)

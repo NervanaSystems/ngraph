@@ -164,6 +164,8 @@ void* ngraph::aligned_alloc(size_t alignment, size_t size)
 {
 #ifdef __APPLE__
     return new uint64_t[round_up(size, sizeof(uint64_t)) / sizeof(uint64_t)];
+#elif defined _WIN32
+    return new uint64_t[round_up(size, sizeof(uint64_t)) / sizeof(uint64_t)];
 #else
     return ::aligned_alloc(alignment, size);
 #endif

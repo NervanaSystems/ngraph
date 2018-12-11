@@ -14,41 +14,32 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
-
+#include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/placement.hpp"
+#include "ngraph/runtime/backend.hpp"
 
-namespace ngraph
+using namespace ngraph;
+using namespace std;
+
+runtime::hybrid::pass::AssignPlacement::AssignPlacement(
+    vector<shared_ptr<runtime::Backend>> placement_backends)
+    : m_placement_backends(placement_backends)
 {
-    class Function;
-    class Node;
+}
 
-    namespace op
+bool runtime::hybrid::pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
+{
+    size_t backend_index = 0;
+    for (auto backend : m_placement_backends)
     {
-        class Parameter;
-        class Result;
+        if (backend->is_supported(*node))
+        {
+            node->set_placement_index(backend_index);
+            return false;
+        }
+        backend_index++;
     }
-
-    enum class Placement
-    {
-        DEFAULT,
-        INTERPRETER,
-        CPU,
-        GPU,
-        NNP,
-        PLAIDML,
-    };
-
-    std::string placement_to_string(Placement placement);
-
-    // Split function to function(s) with unique placement
-    std::pair<std::vector<std::shared_ptr<Function>>,
-              std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Result>>>
-        split_function_by_placement(const std::shared_ptr<Function>& f);
+    throw runtime_error("Node " + node->get_name() + " not supported by any backend");
 }
