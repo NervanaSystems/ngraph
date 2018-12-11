@@ -150,14 +150,14 @@ void Node::set_placement(Placement placement)
     m_placement = placement;
 }
 
-size_t Node::get_placement_size() const
+size_t Node::get_placement_index() const
 {
-    return m_placement_size;
+    return m_placement_index;
 }
 
-void Node::set_placement(size_t placement)
+void Node::set_placement_index(size_t placement)
 {
-    m_placement_size = placement;
+    m_placement_index = placement;
 }
 
 std::shared_ptr<Node> Node::get_argument(size_t index) const

@@ -28,31 +28,9 @@ pass::AssignPlacement::AssignPlacement(function<Placement(shared_ptr<Node>)> pla
 {
 }
 
-pass::AssignPlacement::AssignPlacement(vector<shared_ptr<runtime::Backend>> placement_backends)
-    : m_placement_backends(placement_backends)
-{
-}
-
 bool pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
 {
-    if (!m_placement_backends.empty())
-    {
-        size_t backend_index = 0;
-        for (auto backend : m_placement_backends)
-        {
-            backend_index += 1;
-            if (backend->is_supported(*node))
-            {
-                node->set_placement(backend_index);
-                return false;
-            }
-        }
-        throw runtime_error("Node " + node->get_name() + " not supported by any backend");
-    }
-    else
-    {
-        node->set_placement(m_placement_policy(node));
-    }
+    node->set_placement(m_placement_policy(node));
 
     return false;
 }
