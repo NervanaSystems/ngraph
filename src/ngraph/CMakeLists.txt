@@ -126,6 +126,7 @@ set (SRC
     op/util/logical_reduction.cpp
     op/util/unary_elementwise_arithmetic.cpp
     partial_shape.cpp
+    pass/any_all_insertion.cpp
     pass/any_all_replacement.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp

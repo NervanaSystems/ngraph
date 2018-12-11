@@ -25,6 +25,7 @@ endif()
 set(SRC
     algebraic_simplification.cpp
     all_close_f.cpp
+    any_all_insertion.cpp
     any_all_replacement.cpp
     assertion.cpp
     build_graph.cpp

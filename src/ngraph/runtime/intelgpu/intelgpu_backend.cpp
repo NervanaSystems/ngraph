@@ -1709,6 +1709,7 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
             topology.add(lrn);
             break;
         }
+        case OP_TYPEID::All:
         case OP_TYPEID::AllReduce:
         case OP_TYPEID::Any:
         case OP_TYPEID::FunctionCall:

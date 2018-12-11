@@ -11,16 +11,16 @@ Any
 Description
 ===========
 
-Reduces the tensor, eliminating the specified reduction axes by taking the logical disjunction (i.e., "OR-reduce").
+Reduces a tensor of booleans, eliminating the specified reduction axes by taking the logical disjunction (i.e., "OR-reduce").
 
 Inputs
 ------
 
-+-----------------+-------------------------+--------------------------------+
-| Name            | Element Type            | Shape                          |
-+=================+=========================+================================+
-| ``arg``         | Any                     | Any                            |
-+-----------------+-------------------------+--------------------------------+
++-----------------+------------------------------+--------------------------------+
+| Name            | Element Type                 | Shape                          |
++=================+==============================+================================+
+| ``arg``         | ``ngraph::element::boolean`` | Any                            |
++-----------------+------------------------------+--------------------------------+
 
 Attributes
 ----------
