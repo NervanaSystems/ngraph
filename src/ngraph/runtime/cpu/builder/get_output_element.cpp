@@ -35,10 +35,7 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
-                size_t size = out[0].get_size() * out[0].get_element_type().size();
-                auto functor = [&, size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                auto functor = [&](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     //nothing to do; GOEs' offsets should've been adjusted in MemoryLayout
                 };
                 functors.emplace_back(functor);
