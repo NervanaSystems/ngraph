@@ -15,9 +15,8 @@ DNN (Deep Neural Network) model can use nGraph to bypass significant
 framework-based complexity and [import it] to test or run on targeted and 
 efficient backends with our user-friendly Python-based API.
 
-nGraph is also integrated as an computation provider for [ONNX Runtime], 
-which is a runtime for [WinML] on Windows OS and Azure to accelerate DL 
-workloads. 
+nGraph is also integrated as an execution provider for [ONNX Runtime], 
+which is the first publicably available inference engine for ONNX.
 
 The table below summarizes our current progress on supported frameworks. 
 If you are an architect of a framework wishing to take advantage of speed 
@@ -29,7 +28,7 @@ and multi-device support of nGraph Compiler, please refer to [Framework integrat
 | TensorFlow* 1.12           | :heavy_check_mark: |  :heavy_check_mark:
 | MXNet* 1.3                 | :heavy_check_mark: |  :heavy_check_mark:
 | ONNX 1.3                   | :heavy_check_mark: |  :heavy_check_mark:
-| ONNX Runtime  Functional   | Functional         |  No
+| ONNX Runtime               | Functional         |  No
 | PyTorch (via ONNXIFI)      | Functional         |  No
 | PaddlePaddle               | Functional         |  No
 
@@ -72,7 +71,7 @@ stack, and early adopters will be able test them in 2019.
 [Upcoming DL accelerators]: https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/vision-accelerator-design-product-brief.pdf
 [import it]: http://ngraph.nervanasys.com/docs/latest/howto/import.html
 [ONNXIFI]: https://github.com/onnx/onnx/blob/master/docs/ONNXIFI.md
-[ONNX Runtime]:https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-build-deploy-onnx
+[ONNX Runtime]: https://azure.microsoft.com/en-us/blog/onnx-runtime-is-now-open-source/
 [WinML]: http://docs.microsoft.com/en-us/windows/ai
 [How to]: https://ngraph.nervanasys.com/docs/latest/howto/index.html
 [Framework integration guide]: https://ngraph.nervanasys.com/docs/latest/frameworks/index.html

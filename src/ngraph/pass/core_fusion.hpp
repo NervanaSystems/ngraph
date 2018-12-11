@@ -38,6 +38,7 @@ public:
         construct_sigmoid();
         construct_sigmoid_bprop();
         construct_optimized_strided_conv();
+        construct_reshape_softmax_reshape();
     }
     void construct_relu();
     void construct_folded_batch_norm();
@@ -45,4 +46,5 @@ public:
     void construct_sigmoid();
     void construct_sigmoid_bprop();
     void construct_optimized_strided_conv();
+    void construct_reshape_softmax_reshape();
 };
