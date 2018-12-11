@@ -44,6 +44,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
@@ -728,6 +729,11 @@ static shared_ptr<ngraph::Function>
                 }
                 break;
             }
+            case OP_TYPEID::EmbeddingLookup:
+            {
+                node = make_shared<op::EmbeddingLookup>(args[0], args[1]);
+                break;
+            }
             case OP_TYPEID::Equal:
             {
                 node = make_shared<op::Equal>(args[0], args[1]);
@@ -1407,6 +1413,8 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::Dot*>(&n);
         node["reduction_axes_count"] = tmp->get_reduction_axes_count();
         break;
+    }
+    case OP_TYPEID::EmbeddingLookup: { break;
     }
     case OP_TYPEID::Equal: { break;
     }
