@@ -14,41 +14,27 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/runtime/gpuh/gpuh_backend.hpp"
+#include "ngraph/graph_util.hpp"
+#include "ngraph/pass/assign_placement.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
+using namespace ngraph;
+using namespace std;
 
-#include "ngraph/log.hpp"
-
-namespace ngraph
+extern "C" const char* get_ngraph_version_string()
 {
-    class Function;
-    class Node;
+    return NGRAPH_VERSION;
+}
 
-    namespace op
-    {
-        class Parameter;
-        class Result;
-    }
+extern "C" runtime::Backend* new_backend(const char* configuration_string)
+{
+    return new runtime::gpuh::GPUHBackend();
+}
 
-    enum class Placement
-    {
-        DEFAULT,
-        INTERPRETER,
-        CPU,
-        GPU,
-        NNP,
-        PLAIDML,
-    };
-
-    std::string placement_to_string(Placement placement);
-
-    // Split function to function(s) with unique placement
-    std::pair<std::vector<std::shared_ptr<Function>>,
-              std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Result>>>
-        split_function_by_placement(const std::shared_ptr<Function>& f);
+runtime::gpuh::GPUHBackend::GPUHBackend()
+    : HybridBackend({{"INTERPRETER", make_shared<ngraph::runtime::interpreter::INTBackend>()}})
+{
 }

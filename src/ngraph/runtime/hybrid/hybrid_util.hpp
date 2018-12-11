@@ -17,38 +17,27 @@
 #pragma once
 
 #include <memory>
-#include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
-#include "ngraph/log.hpp"
+#include "ngraph/function.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/result.hpp"
 
 namespace ngraph
 {
-    class Function;
-    class Node;
-
-    namespace op
+    namespace runtime
     {
-        class Parameter;
-        class Result;
+        namespace hybrid
+        {
+            // Split function to function(s) with unique placement
+            std::pair<
+                std::vector<std::shared_ptr<Function>>,
+                std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Result>>>
+                split_function_by_placement_size(const std::shared_ptr<Function>& f);
+
+            // Assert that nodes in the function is colocated and return that placement
+            size_t get_colocated_function_placement_size(std::shared_ptr<Function> func);
+        }
     }
-
-    enum class Placement
-    {
-        DEFAULT,
-        INTERPRETER,
-        CPU,
-        GPU,
-        NNP,
-        PLAIDML,
-    };
-
-    std::string placement_to_string(Placement placement);
-
-    // Split function to function(s) with unique placement
-    std::pair<std::vector<std::shared_ptr<Function>>,
-              std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Result>>>
-        split_function_by_placement(const std::shared_ptr<Function>& f);
 }
