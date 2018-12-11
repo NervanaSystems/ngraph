@@ -150,9 +150,11 @@ protected:
 
 TEST_P(all_close_f_param_test, test_boundaries)
 {
+#ifdef NGRAPH_GTEST_INFO
     // Print short string documenting which test is being run
     std::cout << "[   INFO   ] Test params: (" << expected << ", " << mantissa_bits << ", "
               << tolerance_bits << ")\n";
+#endif
 
     // Format verbose info to only print out in case of test failure
     stringstream ss;
@@ -278,8 +280,10 @@ protected:
 
 TEST_P(all_close_f_double_param_test, test_boundaries)
 {
+#ifdef NGRAPH_GTEST_INFO
     // Print short string documenting which test is being run
     std::cout << "[   INFO   ] Test params: (" << expected << ", " << tolerance_bits << ")\n";
+#endif
 
     // Format verbose info to only print out in case of test failure
 

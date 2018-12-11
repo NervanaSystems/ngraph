@@ -286,6 +286,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
         median_distance = median_sum / 2;
     }
 
+#ifdef NGRAPH_GTEST_INFO
     if (rc)
     {
         // Short unobtrusive message when passing
@@ -294,6 +295,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
                   << " tolerance). Loosest match found is " << matching_mantissa_bits(max_distance)
                   << " mantissa bits.\n";
     }
+#endif
 
     msg << "passing criteria: " << (mantissa_bits - tolerance_bits) << " mantissa bits ("
         << mantissa_bits << " mantissa bits w/ " << tolerance_bits << " tolerance bits)\n";
@@ -374,6 +376,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
             (median_distance / 2) + (median_distance2 / 2) + ((remainder1 + remainder2) / 2);
     }
 
+#ifdef NGRAPH_GTEST_INFO
     if (rc)
     {
         // Short unobtrusive message when passing
@@ -382,6 +385,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
                   << " tolerance). Loosest match found is " << matching_mantissa_bits(max_distance)
                   << " mantissa bits.\n";
     }
+#endif
 
     msg << "passing criteria: " << (mantissa_bits - tolerance_bits) << " mantissa bits ("
         << mantissa_bits << " mantissa bits w/ " << tolerance_bits << " tolerance bits)\n";
