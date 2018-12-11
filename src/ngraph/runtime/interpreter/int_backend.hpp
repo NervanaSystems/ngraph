@@ -157,7 +157,7 @@ public:
 
     std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
 
-    bool compile(std::shared_ptr<Function> function) override;
+    Handle compile(std::shared_ptr<Function> function) override;
 
     bool call(std::shared_ptr<Function> function,
               const std::vector<std::shared_ptr<Tensor>>& outputs,
@@ -366,42 +366,28 @@ private:
         {
             const ngraph::op::BatchNormTraining* bn =
                 static_cast<const ngraph::op::BatchNormTraining*>(&node);
-            if (bn->get_output_size() == 3)
-            {
-                reference::batch_norm_three_outputs<T>(bn->get_eps_value(),
-                                                       static_cast<const T*>(args[0]),
-                                                       static_cast<const T*>(args[1]),
-                                                       static_cast<const T*>(args[2]),
-                                                       static_cast<T*>(out[0]),
-                                                       static_cast<T*>(out[1]),
-                                                       static_cast<T*>(out[2]),
-                                                       node.get_input_shape(2));
-            }
-            else
-            {
-                reference::batch_norm_one_output<T>(bn->get_eps_value(),
-                                                    static_cast<const T*>(args[0]),
-                                                    static_cast<const T*>(args[1]),
-                                                    static_cast<const T*>(args[2]),
-                                                    static_cast<const T*>(args[3]),
-                                                    static_cast<const T*>(args[4]),
-                                                    static_cast<T*>(out[0]),
-                                                    node.get_input_shape(2));
-            }
+            reference::batch_norm_training<T>(bn->get_eps_value(),
+                                              static_cast<const T*>(args[0]),
+                                              static_cast<const T*>(args[1]),
+                                              static_cast<const T*>(args[2]),
+                                              static_cast<T*>(out[0]),
+                                              static_cast<T*>(out[1]),
+                                              static_cast<T*>(out[2]),
+                                              node.get_input_shape(2));
             break;
         }
         case OP_TYPEID::BatchNormInference:
         {
             const ngraph::op::BatchNormInference* bn =
                 static_cast<const ngraph::op::BatchNormInference*>(&node);
-            reference::batch_norm_one_output<T>(bn->get_eps_value(),
-                                                static_cast<const T*>(args[0]),
-                                                static_cast<const T*>(args[1]),
-                                                static_cast<const T*>(args[2]),
-                                                static_cast<const T*>(args[3]),
-                                                static_cast<const T*>(args[4]),
-                                                static_cast<T*>(out[0]),
-                                                node.get_input_shape(2));
+            reference::batch_norm_inference<T>(bn->get_eps_value(),
+                                               static_cast<const T*>(args[0]),
+                                               static_cast<const T*>(args[1]),
+                                               static_cast<const T*>(args[2]),
+                                               static_cast<const T*>(args[3]),
+                                               static_cast<const T*>(args[4]),
+                                               static_cast<T*>(out[0]),
+                                               node.get_input_shape(2));
             break;
         }
         case OP_TYPEID::BatchNormTrainingBackprop:
@@ -780,7 +766,8 @@ private:
                 inputs.push_back(std::static_pointer_cast<runtime::Tensor>(host_tensor));
             }
 
-            call(function, outputs, inputs);
+            auto handle = compile(function);
+            call(handle, outputs, inputs);
             break;
         }
         case OP_TYPEID::Greater:
@@ -1050,7 +1037,8 @@ private:
                     node.get_inputs().at(1).get_element_type(), Shape{}, &y, "reduce_temp_y");
                 auto tr = std::make_shared<HostTensor>(
                     node.get_output_element_type(0), Shape{}, "reduce_temp_r");
-                call(reduction_function, {tr}, {tx, ty});
+                auto handle = compile(reduction_function);
+                call(handle, {tr}, {tx, ty});
                 return *(tr->get_data_ptr<T>());
             };
 
@@ -1079,7 +1067,8 @@ private:
                                                        "reduce_window_temp_y");
                 auto tr = std::make_shared<HostTensor>(
                     node.get_output_element_type(0), Shape{}, "reduce_window_temp_r");
-                call(reduction_function, {tr}, {tx, ty});
+                auto handle = compile(reduction_function);
+                call(handle, {tr}, {tx, ty});
                 return *(tr->get_data_ptr<T>());
             };
 
@@ -1194,7 +1183,8 @@ private:
                     node.get_inputs().at(1).get_element_type(), Shape{}, &y, "selection_temp_y");
                 auto tr = std::make_shared<runtime::HostTensor>(
                     element::boolean, Shape{}, "selection_temp_r");
-                call(selection_function, {tr}, {tx, ty});
+                auto handle = compile(selection_function);
+                call(handle, {tr}, {tx, ty});
                 return *(tr->get_data_ptr<char>());
             };
 
@@ -1207,7 +1197,8 @@ private:
                     node.get_inputs().at(1).get_element_type(), Shape{}, &y, "scatter_temp_y");
                 auto tr = std::make_shared<runtime::HostTensor>(
                     node.get_output_element_type(0), Shape{}, "scatter_temp_r");
-                call(scatter_function, {tr}, {tx, ty});
+                auto handle = compile(scatter_function);
+                call(handle, {tr}, {tx, ty});
                 return *(tr->get_data_ptr<T>());
             };
 

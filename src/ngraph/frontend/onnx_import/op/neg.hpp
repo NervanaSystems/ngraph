@@ -16,10 +16,9 @@
 
 #pragma once
 
+#include "core/node.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/negative.hpp"
-
-#include "core/node.hpp"
 
 namespace ngraph
 {

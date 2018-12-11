@@ -16,12 +16,11 @@
 
 #include <cmath>
 
-#include "ngraph/coordinate_diff.hpp"
-#include "ngraph/shape.hpp"
-
 #include "convpool.hpp"
 #include "core/attribute.hpp"
 #include "core/node.hpp"
+#include "ngraph/coordinate_diff.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {

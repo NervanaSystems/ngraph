@@ -42,10 +42,11 @@ set(SRC
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
-    builder/quantized_conv.cpp
     builder/convolution.cpp
     builder/dot.cpp
+    builder/embedding_lookup.cpp
     builder/function_call.cpp
+    builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
     builder/matmul_bias.cpp
@@ -59,8 +60,10 @@ set(SRC
     builder/reduce_function.cpp
     builder/reduce_function_window.cpp
     builder/replace_slice.cpp
-    builder/quantized_max_pool.cpp
+    builder/quantization.cpp
     builder/quantized_avg_pool.cpp
+    builder/quantized_conv.cpp
+    builder/quantized_max_pool.cpp
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
@@ -69,12 +72,11 @@ set(SRC
     builder/select_and_scatter.cpp
     builder/sigmoid.cpp
     builder/slice.cpp
+    builder/state.cpp
     builder/softmax.cpp
     builder/sum.cpp
     builder/topk.cpp
-    builder/state.cpp
-    builder/embedding_lookup.cpp
-    builder/quantization.cpp
+    builder/update_slice.cpp
     kernel/pad.cpp
     kernel/reduce_max.cpp
     kernel/reduce_sum.cpp
@@ -85,22 +87,23 @@ set(SRC
     op/batch_dot.cpp
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
-    op/group_conv.cpp
-    op/group_conv_bias.cpp
-    op/halide_op.cpp
+    op/conv_add.cpp
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
+    op/group_conv.cpp
+    op/group_conv_bias.cpp
+    op/halide_op.cpp
+    op/leaky_relu.cpp
     op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
     op/max_pool_with_indices.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
-    op/conv_add.cpp
+    op/update_slice.cpp
     pass/cpu_assignment.cpp
     pass/cpu_collapse_dims.cpp
-    pass/cpu_concat_inputs.cpp
     pass/cpu_fusion.cpp
     pass/cpu_horizontal_fusion.cpp
     pass/cpu_layout.cpp
@@ -111,6 +114,7 @@ set(SRC
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
     pass/cpu_reshape_sinking.cpp
+    ngraph_version.cpp
 )
 
 if (NOT NGRAPH_DEX_ONLY)
@@ -126,6 +130,8 @@ if (NGRAPH_HALIDE)
     set(SRC
         ${SRC}
         builder/halide_op.cpp
+        builder/loop_kernel.cpp
+        builder/halide_generators.cpp
         pass/halide_subgraph_extraction.cpp
         )
 endif()
@@ -148,10 +154,6 @@ if (NGRAPH_TBB_ENABLE)
         DESTINATION ${NGRAPH_INSTALL_LIB}
         FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
-    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_debug/
-        DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING REGEX "/libtbb_debug${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
-    )
     add_library(libtbb INTERFACE)
     target_link_libraries(libtbb INTERFACE
         ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
@@ -163,7 +165,11 @@ if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
     add_library(cpu_backend SHARED ${SRC})
-    set_target_properties(cpu_backend PROPERTIES VERSION ${NGRAPH_VERSION} SOVERSION ${NGRAPH_API_VERSION})
+    if(NGRAPH_LIB_VERSIONING_ENABLE)
+        set_target_properties(cpu_backend PROPERTIES
+            VERSION ${NGRAPH_VERSION}
+            SOVERSION ${NGRAPH_API_VERSION})
+    endif()
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     endif()

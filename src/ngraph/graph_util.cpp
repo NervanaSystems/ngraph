@@ -590,8 +590,9 @@ bool ngraph::possibly_overwritten(Node* node)
     {
         for (const descriptor::Input* input : output.get_inputs())
         {
-            if (auto op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node()))
+            if (input->get_node()->is_op())
             {
+                auto op = std::static_pointer_cast<ngraph::op::Op>(input->get_node());
                 if (auto op_annotations = op->get_op_annotations())
                 {
                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())

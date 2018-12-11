@@ -59,6 +59,7 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
@@ -505,6 +506,62 @@ namespace ngraph
                             node.get(), 3, false, memory::format::x);
 
                         i_mds.push_back(scale_input_md);
+
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolutionBiasAdd)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        ConvolutionLayout<ngraph::op::QuantizedConvolutionBiasAdd, true>(
+                            node, i_mds, o_mds);
+
+                        auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 4, false, memory::format::x);
+                        auto sum_scale_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 5, false, memory::format::x);
+
+                        i_mds.push_back(o_mds[0]);
+                        i_mds.push_back(scale_input_md);
+                        i_mds.push_back(sum_scale_input_md);
+
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolutionBiasSignedAdd)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        ConvolutionLayout<ngraph::op::QuantizedConvolutionBiasSignedAdd, true>(
+                            node, i_mds, o_mds);
+
+                        auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 4, false, memory::format::x);
+                        auto sum_scale_input_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 5, false, memory::format::x);
+
+                        i_mds.push_back(o_mds[0]);
+                        i_mds.push_back(scale_input_md);
+                        i_mds.push_back(sum_scale_input_md);
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
@@ -1187,6 +1244,10 @@ namespace ngraph
                         {
                             i_mds.push_back(fwd_prim_desc.workspace_primitive_desc().desc());
                         }
+                        else if (node->get_input_size() == 3)
+                        {
+                            i_mds.push_back(diff_dst_desc);
+                        }
 
                         o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
                     }
@@ -1306,7 +1367,9 @@ namespace ngraph
                     }
 
                     if (mkldnn_utils::is_mkldnn_padded_layout(md, squeezed_axis))
+                    {
                         return false;
+                    }
 
                     return true;
                 }
@@ -1899,6 +1962,22 @@ namespace ngraph
                         set_native_layouts(external_function, node);
                     }
                 }
+
+                template <>
+                void CPULayout::LAYOUT_DECL(ngraph::op::LeakyRelu)
+                {
+                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+                        vector<memory::desc> o_mds;
+                        o_mds.push_back(input_md);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        set_native_layouts(external_function, node);
+                    }
+                }
             }
         }
     }
@@ -1965,6 +2044,7 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Rnn>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Softmax>},
     {TI(ngraph::op::BoundedRelu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::BoundedRelu>},
+    {TI(ngraph::op::LeakyRelu), &runtime::cpu::pass::CPULayout::layout<ngraph::op::LeakyRelu>},
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
     {TI(ngraph::op::Slice), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Slice>},
@@ -1972,6 +2052,10 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolutionBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBias>},
+    {TI(ngraph::op::QuantizedConvolutionBiasAdd),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBiasAdd>},
+    {TI(ngraph::op::QuantizedConvolutionBiasSignedAdd),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBiasSignedAdd>},
     {TI(ngraph::op::GroupConvolutionBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolutionBias>},
 };

@@ -209,7 +209,7 @@ TEST(type_prop, batchnorm_training_rank_less_than_2)
     auto dummy = make_shared<op::Parameter>(element::f32, Shape{1});
     try
     {
-        auto bc = make_shared<op::BatchNormTraining>(0.001, dummy, dummy, dummy);
+        auto bc = make_shared<op::BatchNormTraining>(dummy, dummy, dummy, 0.001);
         FAIL() << "BatchNorm c-tor should throw for tensors whose rank is less than 2";
     }
     catch (const NodeValidationError& error)
@@ -230,7 +230,7 @@ TEST(type_prop, batchnorm_training_zero_channel_check)
     auto beta = make_shared<op::Parameter>(element::f32, Shape{0});
     try
     {
-        auto bc = make_shared<op::BatchNormTraining>(0.001, gamma, beta, data_batch);
+        auto bc = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, 0.001);
         FAIL() << "BatchNorm c-tor should throw for tensors w/ zero-dimension channels";
     }
     catch (const NodeValidationError& error)
@@ -251,7 +251,7 @@ TEST(type_prop, batchnorm_training_et_check)
 
     try
     {
-        auto bc = make_shared<op::BatchNormTraining>(0.001, gamma, beta, data_batch);
+        auto bc = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, 0.001);
         FAIL() << "BatchNorm c-tor should throw for different element types";
     }
     catch (const NodeValidationError& error)
@@ -272,7 +272,7 @@ TEST(type_prop, batchnorm_training_shape_check)
 
     try
     {
-        auto bc = make_shared<op::BatchNormTraining>(0.001, gamma, beta, data_batch);
+        auto bc = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, 0.001);
         FAIL() << "BatchNorm c-tor should throw if gamma and beta shapes don't match";
     }
     catch (const NodeValidationError& error)
@@ -297,7 +297,7 @@ TEST(type_prop, batchnorm_training_backprop_et_check)
     try
     {
         auto bc = make_shared<op::BatchNormTrainingBackprop>(
-            0.001, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, 0.001);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
     catch (const NodeValidationError& error)
@@ -322,7 +322,7 @@ TEST(type_prop, batchnorm_training_backprop_shape_check)
     try
     {
         auto bc = make_shared<op::BatchNormTrainingBackprop>(
-            0.001, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, 0.001);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
     catch (const NodeValidationError& error)
@@ -346,7 +346,7 @@ TEST(type_prop, batchnorm_training_backprop_delta_check)
     try
     {
         auto bc = make_shared<op::BatchNormTrainingBackprop>(
-            0.001, dummy, dummy, param, dummy, dummy, delta);
+            param, dummy, dummy, dummy, dummy, delta, 0.001);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
     catch (const NodeValidationError& error)
@@ -380,7 +380,7 @@ TEST(type_prop, batchnorm_inference_partial_all_rank_dynamic)
     auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
     auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
 
-    auto bn = make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+    auto bn = make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 1);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -408,7 +408,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_ok)
     auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
     auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
 
-    auto bn = make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+    auto bn = make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 1);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -440,7 +440,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_zero_chann
     try
     {
         auto bn =
-            make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+            make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Zero channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -473,7 +473,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_dynamic_some_rank_static_
     auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
     auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
 
-    auto bn = make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+    auto bn = make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 1);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -503,7 +503,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_dynamic_some_rank_static_
     try
     {
         auto bn =
-            make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+            make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Wrong gamma/beta/mean/variance shape not detected";
     }
     catch (const NodeValidationError& error)
@@ -542,7 +542,7 @@ TEST(type_prop,
     try
     {
         auto bn =
-            make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+            make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Inconsistent gamma/beta/mean/variance shape not detected";
     }
     catch (const NodeValidationError& error)
@@ -580,7 +580,7 @@ TEST(type_prop,
     try
     {
         auto bn =
-            make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+            make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Inconsistent gamma/beta/mean/variance channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -614,7 +614,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_some_stati
     auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
     auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
 
-    auto bn = make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+    auto bn = make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 1);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -646,7 +646,7 @@ TEST(type_prop,
     try
     {
         auto bn =
-            make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+            make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Inconsistent input/gamma/beta/mean/variance channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -675,7 +675,7 @@ TEST(type_prop, batchnorm_training_partial_all_rank_dynamic)
     auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
     auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
 
-    auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+    auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -701,7 +701,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_batch_size_
     auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
     auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
 
-    auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+    auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -728,7 +728,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_channel_cou
     auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
     auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
 
-    auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+    auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -756,7 +756,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_zero_channe
     auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
     try
     {
-        auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+        auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Zero channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -783,7 +783,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_dynamic_some_rank_static_d
     auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
     auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
 
-    auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+    auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -810,7 +810,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_dynamic_some_rank_static_d
 
     try
     {
-        auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+        auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Wrong gamma/beta shape not detected";
     }
     catch (const NodeValidationError& error)
@@ -841,7 +841,7 @@ TEST(type_prop,
 
     try
     {
-        auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+        auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Inconsistent gamma/beta shape not detected";
     }
     catch (const NodeValidationError& error)
@@ -871,7 +871,7 @@ TEST(type_prop,
 
     try
     {
-        auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+        auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Inconsistent gamma/beta channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -898,7 +898,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_some_static
     auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
     auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
 
-    auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+    auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -927,7 +927,7 @@ TEST(type_prop,
 
     try
     {
-        auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+        auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Inconsistent input/gamma/beta channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -971,7 +971,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_all_rank_dynamic)
     auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
 
     auto bn = make_shared<op::BatchNormTrainingBackprop>(
-        epsilon, gamma, beta, data_batch, mean, variance, delta);
+        data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -1007,7 +1007,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_input_rank_static_dynamic_ok
     auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
 
     auto bn = make_shared<op::BatchNormTrainingBackprop>(
-        epsilon, gamma, beta, data_batch, mean, variance, delta);
+        data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -1046,7 +1046,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_input_rank_static_dynamic_ze
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Zero channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -1083,7 +1083,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_ok
     auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
 
     auto bn = make_shared<op::BatchNormTrainingBackprop>(
-        epsilon, gamma, beta, data_batch, mean, variance, delta);
+        data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -1119,7 +1119,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_ch
     auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
 
     auto bn = make_shared<op::BatchNormTrainingBackprop>(
-        epsilon, gamma, beta, data_batch, mean, variance, delta);
+        data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -1157,7 +1157,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_ze
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Zero channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -1195,7 +1195,7 @@ TEST(type_prop,
     auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
 
     auto bn = make_shared<op::BatchNormTrainingBackprop>(
-        epsilon, gamma, beta, data_batch, mean, variance, delta);
+        data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -1234,7 +1234,7 @@ TEST(
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Wrong gamma/beta/mean/variance shape not detected";
     }
     catch (const NodeValidationError& error)
@@ -1277,7 +1277,7 @@ TEST(
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Wrong gamma/beta/mean/variance shape not detected";
     }
     catch (const NodeValidationError& error)
@@ -1319,7 +1319,7 @@ TEST(
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "nconsistent gamma/beta/mean/variance channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -1358,7 +1358,7 @@ TEST(type_prop,
     auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
 
     auto bn = make_shared<op::BatchNormTrainingBackprop>(
-        epsilon, gamma, beta, data_batch, mean, variance, delta);
+        data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -1397,7 +1397,7 @@ TEST(
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Inconsistent delta/gamma/beta/mean/variance channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -1440,7 +1440,7 @@ TEST(
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Inconsistent input/delta batch size not detected";
     }
     catch (const NodeValidationError& error)
@@ -1484,7 +1484,7 @@ TEST(
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Inconsistent input/delta spatial dimensions not detected";
     }
     catch (const NodeValidationError& error)

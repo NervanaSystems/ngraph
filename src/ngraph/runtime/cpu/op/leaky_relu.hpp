@@ -16,31 +16,30 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace op
     {
-        namespace cpu
+        /// \brief Elementwise Maximum(arg, arg * alpha) operation
+        ///        alpha > 0
+        ///
+        class LeakyRelu : public Op
         {
-            namespace pass
-            {
-                class ConcatInputs;
-            }
-        }
+        public:
+            /// \brief Constructs a LeakyRelu operation.
+            ///
+            /// \param arg Node input to the Relu.
+            LeakyRelu(std::shared_ptr<ngraph::Node> arg, float alpha);
+            float get_alpha() const { return m_alpha; }
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+
+        private:
+            float m_alpha;
+        };
     }
 }
-
-class ngraph::runtime::cpu::pass::ConcatInputs : public ngraph::pass::GraphRewrite
-{
-public:
-    ConcatInputs()
-        : GraphRewrite()
-    {
-        concat_lstm_inputs();
-    }
-
-private:
-    void concat_lstm_inputs();
-};

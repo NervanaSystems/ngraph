@@ -345,12 +345,14 @@ string file_util::tmp_filename(const string& extension)
     string tmp_template =
         file_util::path_join(file_util::get_temp_directory_path(), "ngraph_XXXXXX" + extension);
     char* tmpname = strdup(tmp_template.c_str());
+    if (tmpname != nullptr)
+    {
+        // mkstemp opens the file with open() so we need to close it
+        close(mkstemps(tmpname, static_cast<int>(extension.size())));
 
-    // mkstemp opens the file with open() so we need to close it
-    close(mkstemps(tmpname, static_cast<int>(extension.size())));
-
-    rc = tmpname;
-    free(tmpname);
+        rc = tmpname;
+        free(tmpname);
+    }
 #endif
     return rc;
 }

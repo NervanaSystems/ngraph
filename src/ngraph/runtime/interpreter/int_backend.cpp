@@ -56,7 +56,7 @@ shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer, "external");
 }
 
-bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
+runtime::Handle runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
 {
     FunctionInstance& instance = m_function_map[function];
     if (!instance.m_is_compiled)
@@ -78,7 +78,7 @@ bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
         }
     }
 
-    return true;
+    return function;
 }
 
 bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
@@ -87,8 +87,12 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 {
     validate_call(function, outputs, inputs);
 
-    compile(function);
-    FunctionInstance& instance = m_function_map[function];
+    auto fit = m_function_map.find(function);
+    if (fit == m_function_map.end())
+    {
+        throw runtime_error("compile() must be called before call().");
+    }
+    FunctionInstance& instance = fit->second;
 
     // convert inputs to HostTensor
     vector<void*> func_inputs;
@@ -205,7 +209,8 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
             // Select has bool for first input and the type we are interested in for the second
             type = op->get_input_element_type(1);
             break;
-        default: type = op->get_outputs().at(0).get_element_type(); break;
+        case OP_TYPEID::TopK: type = op->get_output_element_type(1); break;
+        default: type = op->get_output_element_type(0); break;
         }
 #pragma GCC diagnostic pop
 

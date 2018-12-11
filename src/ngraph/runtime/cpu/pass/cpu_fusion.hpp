@@ -74,10 +74,13 @@ public:
             construct_conv_bias_relu();
             construct_conv_bias_add();
             construct_conv_bias_add_relu();
+            construct_leaky_relu();
             construct_bounded_relu();
             // construct_conv_add() should always be after construct_conv_bias()
             construct_conv_add();
             construct_conv_add_relu();
+            construct_update_slice();
+            construct_fuse_lstm_recurrent_state();
         }
     }
 
@@ -99,9 +102,12 @@ private:
     void construct_conv_bias_add_relu();
     void construct_conv_add();
     void construct_conv_add_relu();
+    void construct_leaky_relu();
     void construct_bounded_relu();
     void construct_conv_bias_folded_batch_norm();
     void construct_conv_bias_affine_folding();
     void construct_groupconv_batchnorm_global_stats_folding();
     void construct_groupconv_batchnorm_global_stats_folding_relu();
+    void construct_update_slice();
+    void construct_fuse_lstm_recurrent_state();
 };
