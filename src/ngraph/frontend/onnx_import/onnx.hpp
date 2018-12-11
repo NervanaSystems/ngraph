@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <set>
 #include <string>
 
 #include "core/operator_set.hpp"
@@ -41,14 +42,14 @@ namespace ngraph
                                const std::string& domain,
                                Operator fn);
 
-        /// \brief      Return the set of supported operators.
+        /// \brief      Return the set of names of supported operators.
         ///
         /// \param[in]  version  The requested version of ONNX operators set.
         /// \param[in]  domain   The requested domain the operators where registered for.
         ///
-        /// \return     The set containing supported operators.
+        /// \return     The set containing names of supported operators.
         ///
-        OperatorSet get_operator_set(std::int64_t version, const std::string& domain);
+        std::set<std::string> get_operators_list(std::int64_t version, const std::string& domain);
 
         /// \brief Convert an ONNX model to nGraph functions
         /// The function translated serialized ONNX model to nGraph functions. The serialized
