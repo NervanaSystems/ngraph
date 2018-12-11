@@ -1626,7 +1626,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training)
 {
-    const Shape input_shape{5, 3, 2, 2};
+    const Shape input_shape{10, 4, 5, 5};
     const Shape channel_shape{input_shape.at(1)};
     const double eps = 1e-3;
     const element::Type& et = element::f32;
@@ -1647,19 +1647,19 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training)
         goes.push_back(mean);
         goes.push_back(variance);
         // TODO autodiff testing with more than one result
-        auto f = make_shared<Function>(ResultVector{normed_input /* , mean, variance*/},
-                                       ParameterVector{input, gamma, beta});
+        auto f =
+            make_shared<Function>(ResultVector{normed_input}, ParameterVector{input, gamma, beta});
         return f;
     };
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
-    test::Uniform<T> rng(-1.0, 1.0);
+    test::Uniform<T> rng(-5.0, 2.0);
     auto input = rng.initialize(backend->create_tensor<T>(input_shape));
     auto gamma = rng.initialize(backend->create_tensor<T>(channel_shape));
     auto beta = rng.initialize(backend->create_tensor<T>(channel_shape));
 
     EXPECT_TRUE(
-        autodiff_numeric_compare<T>(backend.get(), make_graph, {input, gamma, beta}, .001, .001));
+        autodiff_numeric_compare<T>(backend.get(), make_graph, {input, gamma, beta}, .005, .005));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n3_c2_h3)
