@@ -52,6 +52,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
@@ -629,6 +630,11 @@ void runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
         }
     }
     writer.block_end();
+}
+
+void runtime::gpu::GPU_Emitter::emit_EmbeddingLookup(EMIT_ARGS)
+{
+    throw ngraph_error("EmbeddingLookup is not yet implemented for NVIDIA GPU");
 }
 
 void runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)

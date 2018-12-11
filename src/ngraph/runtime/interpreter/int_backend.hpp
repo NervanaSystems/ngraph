@@ -31,6 +31,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -82,6 +83,7 @@
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
+#include "ngraph/runtime/reference/embedding_lookup.hpp"
 #include "ngraph/runtime/reference/equal.hpp"
 #include "ngraph/runtime/reference/exp.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
@@ -670,6 +672,51 @@ private:
                            node.get_input_shape(1),
                            node.get_output_shape(0),
                            dot->get_reduction_axes_count());
+            break;
+        }
+        case OP_TYPEID::EmbeddingLookup:
+        {
+            const op::EmbeddingLookup* embed = static_cast<const op::EmbeddingLookup*>(&node);
+            auto type = embed->get_argument(0)->get_element_type();
+            size_t element_count = shape_size(embed->get_argument(0)->get_shape());
+
+            if (type == element::f32)
+            {
+                reference::embedding<T, float>(static_cast<const float*>(args[0]),
+                                               static_cast<const T*>(args[1]),
+                                               static_cast<T*>(out[0]),
+                                               element_count,
+                                               embed->get_shape());
+            }
+            else if (type == element::f64)
+            {
+                reference::embedding<T, double>(static_cast<const double*>(args[0]),
+                                                static_cast<const T*>(args[1]),
+                                                static_cast<T*>(out[0]),
+                                                element_count,
+                                                embed->get_shape());
+            }
+            else if (type == element::i32)
+            {
+                reference::embedding<T, int>(static_cast<const int*>(args[0]),
+                                             static_cast<const T*>(args[1]),
+                                             static_cast<T*>(out[0]),
+                                             element_count,
+                                             embed->get_shape());
+            }
+            else if (type == element::i64)
+            {
+                reference::embedding<T, int64_t>(static_cast<const int64_t*>(args[0]),
+                                                 static_cast<const T*>(args[1]),
+                                                 static_cast<T*>(out[0]),
+                                                 element_count,
+                                                 embed->get_shape());
+            }
+            else
+            {
+                throw ngraph_error(std::string("Unsupported index type ") + type.c_type_string() +
+                                   std::string("in EmbeddingLookup"));
+            }
             break;
         }
         case OP_TYPEID::Equal:

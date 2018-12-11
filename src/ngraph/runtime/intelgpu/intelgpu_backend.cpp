@@ -73,6 +73,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
@@ -1722,6 +1723,7 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::TopK:
+        case OP_TYPEID::EmbeddingLookup:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");
