@@ -143,6 +143,7 @@ set (SRC
     pass/pass_config.cpp
     pass/propagate_cacheability.cpp
     pass/reshape_elimination.cpp
+    pass/reshape_sinking.cpp
     pass/zero_dim_tensor_elimination.cpp
     pass/validate_graph.cpp
     pass/visualize_tree.cpp

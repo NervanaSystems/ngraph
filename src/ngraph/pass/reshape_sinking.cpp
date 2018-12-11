@@ -14,14 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "cpu_reshape_sinking.hpp"
+#include "reshape_sinking.hpp"
 #include <algorithm>
 #include <iostream>
 #include <numeric>
 #include <set>
 #include <unordered_set>
 
-#include "cpu_collapse_dims.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -148,7 +147,7 @@ void swim(descriptor::Input* input, std::shared_ptr<op::Reshape> reshape)
         {
             auto old_broadcast = std::static_pointer_cast<op::Broadcast>(n);
             auto broadcast_axes = old_broadcast->get_broadcast_axes();
-            auto broadcast_reshape = csw.reshape;
+           auto broadcast_reshape = csw.reshape;
             bool in_order = true;
             AxisSet new_broadcast_axes;
             std::vector<size_t> new_source_axes;
@@ -242,7 +241,7 @@ static void convert_binary_to_default_order(
 //For each op type we support we can either combine
 //two reshapes by replacing the existing Reshape,
 //materialize pending reshapes if they can't be propagated through op
-bool ngraph::runtime::cpu::pass::CPUReshapeSinking::run_on_function(
+bool ngraph::pass::ReshapeSinking::run_on_function(
     std::shared_ptr<ngraph::Function> f)
 {
     std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<op::Reshape>> reorders;

@@ -49,6 +49,7 @@ set(SRC
     pass_memory_layout.cpp
     pattern.cpp
     reshape_elimination.cpp
+    reshape_sinking.cpp
     serialize.cpp
     shape.cpp
     tensor.cpp
@@ -84,7 +85,7 @@ endif()
 
 if (NGRAPH_CPU_ENABLE)
     list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
-    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp cpu_debugger.cpp)
+    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp)
     if (NGRAPH_HALIDE)
         list(APPEND SRC halide.cpp)
     endif()
