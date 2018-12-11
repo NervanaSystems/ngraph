@@ -750,6 +750,10 @@ using namespace ngraph::runtime;
             {
                 for (descriptor::Tensor* tensor : node->liveness_new_list)
                 {
+                    if (m_variable_name_map.count(tensor->get_name()))
+                    {
+                        continue;
+                    }
                     stringstream ss;
                     ss << "((" << tensor->get_element_type().c_type_string()
                        << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
@@ -1106,7 +1110,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
         CommonSubexpressionElimination, true, ngraph::pass, runtime::cpu::get_cse_handlers_map());
     REGISTER_KNOBBED_PASS(CPUPostLayoutOptimizations, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUMemoryOptimization, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(GetOutputElementElimination, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS(GetOutputElementElimination, false, ngraph::pass);
     pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
 }
 
@@ -1854,7 +1858,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
                     }
                     CPUExecutionContext ectx{0};
                     executor::GetCPUExecutor().execute(functors.at(ctx->pc), ctx, &ectx);
-
                     if (ctx->breakpoints.count(ctx->pc + 1))
                     {
                         ctx->pc++;
