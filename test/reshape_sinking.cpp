@@ -138,9 +138,6 @@ TEST(reshape_sinking, nasnet_pooladd)
     auto input_type = element::f32;
     auto output_type = element::f32;
 
-    typedef float input_c_type;
-    typedef float output_c_type;
-
     auto X = make_shared<op::Parameter>(input_type, input_shape);
     auto c_weights = op::Constant::create(input_type, Shape{1, 1, 1, 1}, {3});
     auto reshape1 = make_shared<op::Reshape>(X, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 3});
