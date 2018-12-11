@@ -16,8 +16,23 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include "ngraph/frontend/onnx_import/core/node.hpp"
+#include "ngraph/node_vector.hpp"
 
-namespace py = pybind11;
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector pad(const Node& node);
 
-void regclass_pyngraph_ResultVector(py::module m);
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

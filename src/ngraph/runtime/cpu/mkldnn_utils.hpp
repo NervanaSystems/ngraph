@@ -20,7 +20,9 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/batch_norm.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
@@ -69,8 +71,11 @@ namespace ngraph
                                              const AxisVector& axis_list);
                 bool is_mkldnn_filter_format(mkldnn::memory::format fmt);
                 bool is_mkldnn_blocked_data_format(mkldnn::memory::format fmt);
+                bool can_use_mkldnn_batchnorm_fprop(const ngraph::Node* node);
+                bool can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node);
 
                 bool use_mkldnn_kernel(const ngraph::Node* node);
+                void assign_mkldnn_kernel(Node* node);
 
                 std::map<element::Type, const mkldnn::memory::data_type>&
                     get_mkldnn_data_type_map();
@@ -96,18 +101,6 @@ namespace ngraph
                     if (node->get_input_element_type(0) != element::f32)
                     {
                         return false;
-                    }
-                    // Temporarily disable MKLDNN for large paddings due to
-                    // a bug in v0.16 - MKFDNN-982
-                    for (auto s : convolution->get_padding_below())
-                    {
-                        if (s >= 7)
-                            return false;
-                    }
-                    for (auto s : convolution->get_padding_above())
-                    {
-                        if (s >= 7)
-                            return false;
                     }
 
                     return true;

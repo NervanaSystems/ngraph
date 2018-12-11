@@ -70,6 +70,12 @@ namespace ngraph
                     pattern_map[label] = graph_node;
                 }
             }
+
+            if (!is_match)
+            {
+                NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
+                             << " for pattern " << label->get_name();
+            }
             return is_match;
         }
 
@@ -132,6 +138,8 @@ namespace ngraph
             }
             else
             {
+                NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
+                             << " for pattern " << any->get_name();
                 return false;
             }
         }
@@ -158,10 +166,14 @@ namespace ngraph
                     }
                 }
 
+                NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
+                             << " for pattern " << any->get_name();
                 return false;
             }
             else
             {
+                NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
+                             << " for pattern " << any->get_name();
                 return false;
             }
         }
@@ -227,6 +239,8 @@ namespace ngraph
                                    match_arguments(pattern_node, graph_node, pattern_map));
             }
 
+            NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name() << " for pattern "
+                         << pattern_node->get_name();
             return abort_match(watermark, false);
         }
 
@@ -260,6 +274,8 @@ namespace ngraph
 
             if (args.size() != pattern_args.size())
             {
+                NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name()
+                             << " for pattern " << pattern_node->get_name();
                 return false;
             }
 
@@ -289,6 +305,9 @@ namespace ngraph
                     return true;
                 }
             }
+
+            NGRAPH_DEBUG << "[MATCHER] Aborting at " << graph_node->get_name() << " for pattern "
+                         << pattern_node->get_name();
             return false;
         }
 
@@ -409,6 +428,8 @@ namespace ngraph
 
             if (!matched)
             {
+                NGRAPH_DEBUG << "[RecurrentMatcher] Aborting at " << graph->get_name()
+                             << " for pattern " << m_pattern->get_name();
                 m_match_root.reset();
             }
 

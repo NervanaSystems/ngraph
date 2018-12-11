@@ -16,8 +16,29 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <Halide.h>
+#include <HalideBuffer.h>
+#include <functional>
+#include <memory>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
+#include <vector>
 
-namespace py = pybind11;
+#include "ngraph/node.hpp"
 
-void regclass_pyngraph_op_Result(py::module m);
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace cpu
+        {
+            namespace halide
+            {
+                const std::unordered_map<std::type_index,
+                                         std::function<Halide::Func(std::vector<Halide::Func>)>>&
+                    get_halide_generators();
+            }
+        }
+    }
+}

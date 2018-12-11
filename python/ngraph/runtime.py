@@ -67,19 +67,13 @@ class Computation(object):
         self.runtime = runtime
         self.function = ng_function
         self.parameters = ng_function.get_parameters()
-        self.results = ng_function.get_results()
+        self.handle = self.runtime.backend.compile(self.function)
 
         self.tensor_views = []  # type: List[Tensor]
         for parameter in self.parameters:
             shape = parameter.get_shape()
             element_type = parameter.get_element_type()
             self.tensor_views.append(runtime.backend.create_tensor(element_type, shape))
-
-        self.result_views = []  # type: List[Tensor]
-        for result in self.results:
-            shape = result.get_shape()
-            element_type = result.get_element_type()
-            self.result_views.append(runtime.backend.create_tensor(element_type, shape))
 
     def __repr__(self):  # type: () -> str
         params_string = ', '.join([param.name for param in self.parameters])
@@ -92,15 +86,18 @@ class Computation(object):
                 value = np.array(value)
             Computation._write_ndarray_to_tensor_view(value, tensor_view)
 
-        self.runtime.backend.call(self.function, self.result_views, self.tensor_views)
+        result_element_type = self.function.get_output_element_type(0)
+        result_shape = self.function.get_output_shape(0)
+        result_dtype = get_dtype(result_element_type)
 
-        results = []
-        for result_view in self.result_views:
-            result = np.ndarray(result_view.shape, dtype=get_dtype(result_view.element_type))
-            Computation._read_tensor_view_to_ndarray(result_view, result)
-            results.append(result)
+        result_view = self.runtime.backend.create_tensor(result_element_type, result_shape)
+        result_arr = np.empty(result_shape, dtype=result_dtype)
 
-        return results
+        self.runtime.backend.call(self.handle, [result_view], self.tensor_views)
+
+        Computation._read_tensor_view_to_ndarray(result_view, result_arr)
+        result_arr = result_arr.reshape(result_shape)
+        return result_arr
 
     def serialize(self, indent=0):  # type: (int) -> str
         """Serialize function (compute graph) to a JSON string.
