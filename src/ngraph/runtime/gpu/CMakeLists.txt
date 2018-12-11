@@ -161,6 +161,17 @@ if (NGRAPH_GPU_ENABLE)
             PRIVATE
                 hybrid_backend)
     endif()
+
+    if(NGRAPH_DISTRIBUTED_ENABLE)
+        find_package(MPI REQUIRED)
+        target_compile_definitions(gpu_backend
+            PRIVATE NGRAPH_DISTRIBUTED)
+        target_include_directories(gpu_backend
+            SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+        target_link_libraries(gpu_backend
+            PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    endif()
+
     set_target_properties(gpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     install(TARGETS gpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
