@@ -210,6 +210,11 @@ namespace ngraph
                 // Find in-place slice ops and set appropriate memory pool offset for its output
                 void process_in_place_slice(std::list<std::shared_ptr<Node>> nodes);
 
+                // propagate slice when its arg comes from function input
+                void propagate_in_place_slice(ngraph::descriptor::Output* output,
+                                              size_t input_index,
+                                              size_t input_offset);
+
                 bool computes_result(Node* node);
                 void release_function() { m_function = nullptr; }
 #if !defined(NGRAPH_DEX_ONLY)
@@ -277,7 +282,10 @@ namespace ngraph
                 std::unordered_map<std::string, void*> tensor_data;
                 std::unordered_map<std::string, bool> tensor_stale;
                 std::unordered_map<std::string, std::string> tensor_alias;
+                std::unordered_map<std::string, size_t> function_input_name_index;
                 std::list<std::pair<std::reference_wrapper<void*>, size_t>> intermediates_offsets;
+                std::list<std::tuple<std::reference_wrapper<void*>, size_t, size_t>>
+                    slice_input_index_offset;
                 std::list<
                     std::tuple<std::reference_wrapper<void*>, size_t, std::reference_wrapper<bool>>>
                     function_input_index;
