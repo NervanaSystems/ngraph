@@ -121,6 +121,7 @@ add_subdirectory(util)
 # such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
 set(MULTI_TEST_SRC
     autodiff.in.cpp
+    backend_all.in.cpp
     backend_any.in.cpp
     backend_binary_elementwise.in.cpp
     backend_broadcast.in.cpp

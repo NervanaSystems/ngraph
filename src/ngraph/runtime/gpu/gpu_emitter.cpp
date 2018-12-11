@@ -33,6 +33,7 @@
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
 #include "ngraph/op/any.hpp"
@@ -155,6 +156,11 @@ void runtime::gpu::GPU_Emitter::emit_Acos(EMIT_ARGS)
 void runtime::gpu::GPU_Emitter::emit_Add(EMIT_ARGS)
 {
     emit_elementwise<ngraph::op::Add>(external_function, writer, node, args, out);
+}
+
+void runtime::gpu::GPU_Emitter::emit_All(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 void runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)

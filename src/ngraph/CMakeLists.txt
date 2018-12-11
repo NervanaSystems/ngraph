@@ -39,6 +39,7 @@ set (SRC
     op/abs.cpp
     op/acos.cpp
     op/add.cpp
+    op/all.cpp
     op/allreduce.cpp
     op/and.cpp
     op/any.cpp
