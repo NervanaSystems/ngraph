@@ -57,7 +57,9 @@ public:
 static void compare_backends(std::shared_ptr<Function>& f1,
                              std::shared_ptr<Function>& f2,
                              const string backend1,
-                             const string backend2)
+                             const string backend2,
+                             float rtol = 1e-5,
+                             float atol = 1e-8)
 {
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
@@ -72,7 +74,7 @@ static void compare_backends(std::shared_ptr<Function>& f1,
 
     for (size_t i = 0; i < f1_results.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(f1_results.at(i), f2_results.at(i)));
+        EXPECT_TRUE(test::all_close(f1_results.at(i), f2_results.at(i), rtol, atol));
     }
 }
 
@@ -639,4 +641,27 @@ TEST(cpu_test, mkldnn_layouts_eltwise)
     auto int_f = make_function();
     auto cpu_f = make_function();
     compare_backends(int_f, cpu_f, "INTERPRETER", "CPU");
+}
+
+TEST(cpu_test, convolution_large_padding)
+{
+    Shape input_shape{1, 1, 100, 100};
+    Shape filter_shape{1, 1, 3, 3};
+
+    auto make_function = [&]() {
+        auto input = std::make_shared<op::Parameter>(element::f32, input_shape);
+        auto filter = std::make_shared<op::Parameter>(element::f32, filter_shape);
+        auto conv = std::make_shared<op::Convolution>(input,
+                                                      filter,
+                                                      Strides{1, 1},
+                                                      Strides{9, 9},
+                                                      CoordinateDiff{9, 9},
+                                                      CoordinateDiff{9, 9});
+        auto f = make_shared<Function>(NodeVector{conv}, ParameterVector{input, filter});
+        return f;
+    };
+
+    auto int_f = make_function();
+    auto cpu_f = make_function();
+    compare_backends(int_f, cpu_f, "INTERPRETER", "CPU", 1e-4, 1e-4);
 }
