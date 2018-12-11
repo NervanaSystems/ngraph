@@ -49,7 +49,8 @@ namespace ngraph
         ///
         /// \return     The set containing names of supported operators.
         ///
-        std::set<std::string> get_operators_list(std::int64_t version, const std::string& domain);
+        std::set<std::string> get_supported_operators(std::int64_t version,
+                                                      const std::string& domain);
 
         /// \brief Convert an ONNX model to nGraph functions
         /// The function translated serialized ONNX model to nGraph functions. The serialized
