@@ -753,9 +753,9 @@ using namespace ngraph::runtime;
                     stringstream ss;
                     ss << "((" << tensor->get_element_type().c_type_string()
                        << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
-                    m_variable_name_map[tensor->get_name()] = ss.str();
                     if (m_tensor_roles.find(tensor->get_name()) == m_tensor_roles.end())
                     {
+                        m_variable_name_map[tensor->get_name()] = ss.str();
                         m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
                     }
                 }
@@ -1115,7 +1115,8 @@ bool runtime::cpu::CPU_ExternalFunction::computes_result(Node* node)
     for (size_t i = 0; i < node->get_output_size(); i++)
     {
         auto& output_tensor = node->get_output_tensor(i);
-        if (m_tensor_roles[output_tensor.get_name()] == CPUTensorRole::OUTPUT)
+        if (m_tensor_roles.find(output_tensor.get_name()) != m_tensor_roles.end() &&
+            m_tensor_roles[output_tensor.get_name()] == CPUTensorRole::OUTPUT)
         {
             return true;
         }
@@ -1388,7 +1389,8 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
                     auto arg = input->get_output().get_node();
                     auto index = input->get_output().get_index();
                     auto input_tensor = &arg->get_output_tensor(index);
-                    if (m_tensor_roles[input_tensor->get_name()] == CPUTensorRole::INPUT)
+                    if (m_tensor_roles.find(input_tensor->get_name()) != m_tensor_roles.end() &&
+                        m_tensor_roles[input_tensor->get_name()] == CPUTensorRole::INPUT)
                     {
                         NGRAPH_DEBUG << "cpu_external_function: function input pointer passed to "
                                         "slice, do not change offset.";
@@ -1409,7 +1411,7 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
 
                     output_tensor->set_pool_offset(offset);
                     NGRAPH_DEBUG << "cpu_external_function: slice, change offset, old offset is "
-                                 << old_offset << ", new offset is " << offset << std::endl;
+                                 << old_offset << ", new offset is " << offset;
                 }
             }
         }
@@ -1523,10 +1525,10 @@ void runtime::cpu::CPU_ExternalFunction::build()
         {
             for (auto tensor : node->liveness_new_list)
             {
-                intermediates_offsets.emplace_back(tensor_data[tensor->get_name()],
-                                                   tensor->get_pool_offset());
                 if (m_tensor_roles.find(tensor->get_name()) == m_tensor_roles.end())
                 {
+                    intermediates_offsets.emplace_back(tensor_data[tensor->get_name()],
+                                                       tensor->get_pool_offset());
                     m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
                 }
             }
