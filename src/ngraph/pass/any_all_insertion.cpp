@@ -25,7 +25,7 @@
 
 using namespace ngraph;
 
-bool is_boolean_scalar_constant_with_val(std::shared_ptr<ngraph::Node> node, bool val)
+static bool is_boolean_scalar_constant_with_val(std::shared_ptr<ngraph::Node> node, bool val)
 {
     auto k = std::dynamic_pointer_cast<op::Constant>(node);
 
@@ -49,7 +49,8 @@ bool is_boolean_scalar_constant_with_val(std::shared_ptr<ngraph::Node> node, boo
 }
 
 template <typename T>
-bool check_reduce_for_replacement(std::shared_ptr<ngraph::op::Reduce> reduce, bool expected_k_val)
+static bool check_reduce_for_replacement(std::shared_ptr<ngraph::op::Reduce> reduce,
+                                         bool expected_k_val)
 {
     auto reductee = reduce->get_argument(0);
     auto init_val = reduce->get_argument(1);
