@@ -74,6 +74,53 @@ TEST(core_fusion, sigmoid_fprop_fusion)
     ASSERT_EQ(ccg, 1);
 }
 
+TEST(core_fusion, sigmoid_fprop_fusion_no_broadcast)
+{
+    auto make_function = []() {
+        auto input = std::make_shared<op::Parameter>(element::f32, Shape{3, 4});
+        auto neg_input = std::make_shared<op::Negative>(input);
+        auto exp_neg_input = std::make_shared<op::Exp>(neg_input);
+
+        auto constant =
+            op::Constant::create(element::f32, Shape{3, 4}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+
+        auto add_exp = std::make_shared<op::Add>(exp_neg_input, constant);
+        auto divide_1_over_exp = std::make_shared<op::Divide>(constant, add_exp);
+        return make_shared<Function>(NodeVector{divide_1_over_exp}, ParameterVector{input});
+    };
+    auto func = make_function();
+
+    // Check fusion happens
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>();
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::Sigmoid>(func);
+    ASSERT_EQ(ccg, 1);
+}
+
+TEST(core_fusion, sigmoid_fprop_fusion_no_broadcast2)
+{
+    auto make_function = []() {
+        auto input = std::make_shared<op::Parameter>(element::f32, Shape{3, 4});
+        auto neg_input = std::make_shared<op::Negative>(input);
+        auto exp_neg_input = std::make_shared<op::Exp>(neg_input);
+
+        auto constant =
+            op::Constant::create(element::f32, Shape{3, 4}, {1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1});
+
+        auto add_exp = std::make_shared<op::Add>(exp_neg_input, constant);
+        auto divide_1_over_exp = std::make_shared<op::Divide>(constant, add_exp);
+        return make_shared<Function>(NodeVector{divide_1_over_exp}, ParameterVector{input});
+    };
+    auto func = make_function();
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>();
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::Sigmoid>(func);
+    ASSERT_EQ(ccg, 0);
+}
+
 TEST(core_fusion, sigmoid_bprop_fusion)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_fprop_sigmoid.json");
