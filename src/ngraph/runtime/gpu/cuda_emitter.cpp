@@ -86,7 +86,7 @@ size_t runtime::gpu::CUDAEmitter::build_allreduce(const element::Type& element_t
                                                size_t count)
 {
     std::stringstream hash;
-    kernel_name << "allreduce_" << element_type.c_type_string() << "_c_" << count;
+    hash << "allreduce_" << element_type.c_type_string() << "_c_" << count;
 
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash.str());
@@ -107,7 +107,7 @@ size_t runtime::gpu::CUDAEmitter::build_allreduce(const element::Type& element_t
     }
     else
     {
-        throw runtime_error("only float and double is supported by MPI_Allreduce.");
+        throw std::runtime_error("only float and double is supported by MPI_Allreduce.");
     }
 
     size_t data_size = element_type.size();

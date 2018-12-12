@@ -48,6 +48,7 @@ extern "C" runtime::Backend* new_backend(const char* configuration_string)
 #endif
 }
 
+
 extern "C" void delete_backend(runtime::Backend* backend)
 {
     delete backend;

@@ -51,7 +51,7 @@ namespace ngraph
 
             public:
 #ifdef NGRAPH_DISTRIBUTED
-                size_t build_allreduce(const std::string& dtype, size_t count);
+                size_t build_allreduce(const element::Type& dtype, size_t count);
 #endif
                 size_t build_memset(const std::string& dtype, uint32_t tensor_size);
 

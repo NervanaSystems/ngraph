@@ -161,7 +161,7 @@ void runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)
 #ifdef NGRAPH_DISTRIBUTED
     auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
 
-    auto index = cuda_emitter->build_allreduce(out[0].get_type(), out[0].get_size());
+    auto index = cuda_emitter->build_allreduce(out[0].get_element_type(), out[0].get_size());
     writer.block_begin();
     {
         writer << "void* input[] = {" << node_names(args) << "};\n";
