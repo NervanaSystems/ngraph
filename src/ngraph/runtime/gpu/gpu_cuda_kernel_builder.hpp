@@ -208,6 +208,14 @@ namespace ngraph
                                            size_t out_rank,
                                            size_t reduce_rank);
 
+                static void get_softmax_block_reduce_op(codegen::CodeWriter& writer,
+                                                        const std::string& name,
+                                                        runtime::gpu::GPUKernelArgs& args,
+                                                        const std::vector<std::string>& data_types,
+                                                        size_t non_reduce_rank,
+                                                        size_t reduce_rank,
+                                                        size_t block_size_x);
+
                 static void add_pod_typedefs(codegen::CodeWriter& writer);
 
                 static void coordinate_transform_to_multi_d(codegen::CodeWriter& writer,
