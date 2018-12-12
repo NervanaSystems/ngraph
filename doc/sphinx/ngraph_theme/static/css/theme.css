@@ -2513,7 +2513,7 @@ div[class^='highlight'] pre {
 }
 .rst-content tt.literal, .rst-content tt.literal, .rst-content code.literal {
   font-size: 103% !important;
-  color: #975714;
+  color: #c68b4b;
   line-height: 0.93em;
 }
 .rst-content tt.xref, a .rst-content tt, .rst-content tt.xref, .rst-content code.xref, a .rst-content tt, a .rst-content code {

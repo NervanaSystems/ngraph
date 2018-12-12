@@ -108,20 +108,32 @@ Contents
 
 .. toctree::
    :maxdepth: 1
-   :name: tocmaster
-   :caption: Documentation
+   :caption: Python Ops for ONNX
+
+   python_api/index.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Core Documentation
 
    buildlb.rst
-   python_api/index.rst
+   framework-integration-guides.rst
+   frameworks/validation.rst
+   frameworks/index.rst
    graph-basics.rst
    howto/index.rst
+   ops/about.rst
    ops/index.rst
-   framework-integration-guides.rst
-   frameworks/index.rst
    fusion/index.rst
    programmable/index.rst
    distr/index.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Project Metadata
+
    project/index.rst
+   glossary.rst
 
 
 Indices and tables

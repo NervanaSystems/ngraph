@@ -3,15 +3,14 @@
 Framework Customizations   
 ########################
 
-.. important:: This section contains articles for framework owners or developers
-   who want to incorporate the nGraph Compiler stack and optimize for some 
-   specific compute, runtime, or compile-time characteristic. 
+This section contains articles for framework owners or developers
+who want to incorporate the nGraph Compiler stack and optimize for some 
+specific compute, runtime, or compile-time characteristic. 
 
 .. toctree::
    :maxdepth: 1 
 
    generic-configs.rst
-   validation.rst
    testing-latency.rst
 
 
@@ -34,7 +33,7 @@ approach:
    parameters to hone in on specifics that can better train, forecast, or predict 
    scenarios modeling the real-world problem.
 
-   .. warning:: nGraph does not provide an interface for "users" of frameworks 
+   .. important:: nGraph does not provide an interface for "users" of frameworks 
       (that is, we cannot dictate or control how Tensorflow* or MXNet* presents 
       outputs to users). Please keep in mind that designing and documenting 
       the :abbr:`User Interface (UI)` of step 3 above is entirely in the realm 

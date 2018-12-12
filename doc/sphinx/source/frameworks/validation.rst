@@ -1,8 +1,8 @@
 .. frameworks/validation.rst: 
 
-
-Validated and Tested
-####################
+##############################
+Validated Models and Workloads
+##############################
 
 We validated performance for the following TensorFlow\* and MXNet\* workloads:
 
