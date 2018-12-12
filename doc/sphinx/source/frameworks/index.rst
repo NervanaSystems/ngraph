@@ -4,26 +4,27 @@
 Framework Customizations   
 ########################
 
-While a :abbr:`Deep Learning (DL)`:term:`framework` is ultimately meant for end use 
-by data scientists, or for deployment in cloud container environments, the 
+While a :abbr:`Deep Learning (DL)`:term:`framework` is ultimately meant for end 
+use by data scientists, or for deployment in cloud container environments, the 
 nGraph Core and C++ Library is designed for the framework builders themselves. 
 We invite anyone building new and novel frameworks to explore our highly modular 
 stack of components that can be implemented in virtually limitless ways -- from 
 creating a lightweight design that does "just one thing" extremely well to 
-architecting a complex and robust framework created for an entirely new *genre* 
+architecting a complex and robust framework design around an entirely new *genre* 
 of deep learning application on new silicon -- technologies that are too brand 
 new to be well-known.  
 
-Read this section if you considering incorporating components from the nGraph 
-Compiler stack, or if you are working on something being built-from-scratch, 
-or on an existing framework that is less widely-supported than the popular 
-frameworks like TensorFlow and PyTorch.
+Read the articles in this section if you considering incorporating components 
+from the nGraph Compiler stack in your framework. If you are working on something 
+built-from-scratch, or on an existing framework that is less widely-supported 
+than the popular frameworks like TensorFlow and PyTorch, see :doc:`generic-configs`.
 
 .. toctree::
    :maxdepth: 1 
 
    generic-configs.rst
    testing-latency.rst
+   validation.rst
 
 
 Understanding users of frameworks
@@ -41,9 +42,9 @@ approach:
    stage, we've already provided several :doc:`validation` examples 
    organized by framework and what we call *Genre of Deep Learning*.  
 #. Next, **replicate** that result using well-known datasets to confirm that the 
-   model does indeed work. To assist wtih this stage, we've released several  
+   model does indeed work. To assist with this stage, we've released several  
    :doc:`pip installation options <../framework-integration-guides>` that can 
-   be used to test the basic examples.
+   be used to test basic examples.
 #. Finally, **modify** some aspect: add new datasets, or adjust an algorithm's 
    parameters to hone in on specifics that can better train, forecast, or predict 
    scenarios modeling the real-world problem.
@@ -57,16 +58,13 @@ approach:
       of specific nGraph features; see the :doc:`generic-configs` doc for some 
       ideas.
 
-
-
-Enabling new genres of Deep Learning 
-====================================
-
-Framework architects or engineers who can't quite find what they need among 
-the existing DL tools may need to build something new from scratch.  For this 
-category of developer, we have documented several ways to offer built-in compiler 
-support for users of your framework; this includes out-of-box support for  
-things like Intel® MKL-DNN and advanced support for PlaidML. See :doc:`generic-configs`.   
+Clearly, one challenge of the framework developer, is to differentiate from 
+the pack by providing a means for the data scientist to obtain reproducible 
+results. The other challenge is to provide sufficient documentation, or to 
+provide sufficient hints for how to do any "fine-tuning" for specific use cases. 
+With the nGraph Compiler stack powering your framework, it becomes much easier 
+to help your users get reproducible results with nothing more complex than the 
+CPU that powers their Operating System.   
 
 In general, the larger and more complex a framework is, the harder it becomes 
 to navigate and extract the best performance; configuration options that are 
@@ -76,14 +74,7 @@ adjustments can increase performance. Likewise, a minimalistic framework that
 is designed around one specific kind of model can sometimes offer significant 
 performance-improvement opportunities by lowering overhead. 
 
-
-.. rubric:: Footnotes
-
-.. [#1] Benchmarking performance of DL systems is a young discipline; it is a
-   good idea to be vigilant for results based on atypical distortions in the 
-   configuration parameters. Every topology is different, and performance 
-   changes can be attributed to multiple causes. Also watch out for the word "theoretical" in comparisons; actual performance should not be 
-   compared to theoretical performance.     
+See :doc:`generic-configs` to get started.   
 
 
 .. _ngraph tensorflow bridge: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html#tensorflow

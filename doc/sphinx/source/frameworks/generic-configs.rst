@@ -4,17 +4,31 @@
 Configurations available to any Framework
 #########################################
 
-An engineer might want to work with a DL framework that does not yet have bridge 
-code written. For non-supported or "generic" frameworks, it is assumed that 
-engineers will make use of the :doc:`../ops/index` to create custom bridge code 
-for their framework, and figure out how to present user-based actions to the 
-users of their framework. nGraph does not provide an interface for "users" of 
-frameworks (we cannot dictate how Tensorflow or MXNet presents things to their 
-users, for example), so keep in mind that designing and documenting a user 
-interface (UI) is entirely in the realm of the framework and beyond the scope of 
-the nGraph Compiler stack.
+
+Enabling new genres of Deep Learning 
+====================================
+
+Framework architects or engineers who can't quite find what they need among 
+the existing DL tools may need to build something new off a "stock" framework, 
+or someting entirely from scratch. For this category of developer, we have 
+:doc:`documented several ways <../howto/execute>` you can incorporate built-in 
+compiler support for users of your framework; this includes out-of-box support 
+for things like Intel® MKL-DNN and PlaidML. 
+
+For such cases, some sort of :term:`bridge code` will need to be written so 
+that inputs into your framework can be read by the nGraph 
+:abbr:`Intermediate Representation (IR)`. It is assumed that framework developers 
+will make use of the :doc:`Core ops<../ops/about>` to create custom bridge code 
+connecting the two. 
+
+
+.. important:: It is important to note that nGraph does not provide an interface 
+   for "users" of frameworks (we cannot dictate how Tensorflow or MXNet presents 
+   things to their users, for example). Keep in mind that designing and documenting 
+   a user interface (UI) is entirely in the realm of the framework and beyond the 
+   scope of the nGraph Compiler stack.
  
-The nGraph :abbr:`Intermediate Representation (IR` is a Today, the two primary tasks that can be accomplished in the “bridge code” space
+The nGraph :abbr:`IR Intermediate Representation` is format a Today, the two primary tasks that can be accomplished in the “bridge code” space
 of the nGraph IR are: 
 
 #. Compiling a dataflow graph 
