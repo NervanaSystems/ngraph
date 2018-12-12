@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include <algorithm>
-#ifdef WIN32
+#ifdef _WIN32
 #else
 #include <cxxabi.h>
 #endif
@@ -156,7 +156,7 @@ void ngraph::pass::Manager::run_passes(shared_ptr<Function> func, bool transitiv
         {
             PassBase* p = pass.get();
             string name = typeid(*p).name();
-#ifndef WIN32
+#ifndef _WIN32
             int status;
             name = abi::__cxa_demangle(name.c_str(), nullptr, nullptr, &status);
 #endif

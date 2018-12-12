@@ -60,7 +60,6 @@ reduce_3d_to_vector  # To debug: possible broadcasting error?
 replace_slice_matrix_inplace
 max_pool_2d_1channel_1image_overpadded
 max_pool_3d
-maxpool_bprop_larger_than_cache
 reduce_window_emulating_max_pool_1d_1channel_1image
 reduce_window_emulating_max_pool_1d_1channel_2image
 reduce_window_emulating_max_pool_1d_2channel_2image

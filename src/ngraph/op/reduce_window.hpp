@@ -22,7 +22,9 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Windowed reduction operation.
+        /// \brief (DEPRECATED) Windowed reduction operation.
+        ///
+        /// WARNING: This op is deprecated and will be removed in a future version of nGraph.
         ///
         /// Slides a window of user-defined shape, with user-defined strides, over the tensor and produces for each window position the result obtained by
         /// reducing the tensors in the window to a scalar, using the user-supplied reduction function.

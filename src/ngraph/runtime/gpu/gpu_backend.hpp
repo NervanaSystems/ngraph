@@ -70,6 +70,7 @@ namespace ngraph
                     BackendContext();
                     ~BackendContext();
                     void prepare_runtime_context();
+                    void bind_cuda_context_to_thread();
 
                     std::unique_ptr<GPURuntimeContext> m_runtime_context;
                     std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;
