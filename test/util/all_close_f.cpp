@@ -94,7 +94,7 @@ bool test::close_f(float a, float b, int mantissa_bits, int tolerance_bits)
     uint32_t tolerance_bit_shift = 32 - (1 + 8 + (mantissa_bits - 1) - tolerance_bits);
     uint32_t tolerance = static_cast<uint32_t>(1U) << tolerance_bit_shift;
 
-    return distance <= tolerance;
+    return distance < tolerance;
 }
 
 bool test::close_f(double a, double b, int tolerance_bits)
@@ -115,7 +115,7 @@ bool test::close_f(double a, double b, int tolerance_bits)
     uint64_t tolerance_bit_shift = 64 - (1 + 11 + (mantissa_bits - 1) - tolerance_bits);
     uint64_t tolerance = static_cast<uint64_t>(1U) << tolerance_bit_shift;
 
-    return distance <= tolerance;
+    return distance < tolerance;
 }
 
 vector<uint32_t> test::float_distances(const vector<float>& a, const vector<float>& b)
@@ -163,12 +163,6 @@ uint32_t test::matching_mantissa_bits(uint32_t distance)
 
         // Tumble the dominos so we end up with next highest bit
         ++tolerance_needed;
-
-        // all_close_f is <= test for tolerance
-        if ((tolerance_needed >> 1) == distance)
-        {
-            tolerance_needed = distance;
-        }
     }
 
     uint32_t tolerance_bit_shift = 0;
@@ -207,12 +201,6 @@ uint64_t test::matching_mantissa_bits(uint64_t distance)
 
         // Tumble the dominos so we end up with next highest bit
         ++tolerance_needed;
-
-        // all_close_f is <= test for tolerance
-        if ((tolerance_needed >> 1) == distance)
-        {
-            tolerance_needed = distance;
-        }
     }
 
     uint64_t tolerance_bit_shift = 0;
@@ -270,7 +258,7 @@ uint64_t test::matching_mantissa_bits(uint64_t distance)
             min_distance = distances[i];
             min_distance_index = i;
         }
-        bool is_close_f = distances[i] <= tolerance;
+        bool is_close_f = distances[i] < tolerance;
         if (!is_close_f)
         {
             if (diff_count < 5)
@@ -350,7 +338,7 @@ uint64_t test::matching_mantissa_bits(uint64_t distance)
             min_distance = distances[i];
             min_distance_index = i;
         }
-        bool is_close_f = distances[i] <= tolerance;
+        bool is_close_f = distances[i] < tolerance;
         if (!is_close_f)
         {
             if (diff_count < 5)
