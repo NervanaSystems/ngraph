@@ -46,12 +46,14 @@ Quick Start
 We have many documentation pages to help you get started.  
 
 * **TensorFlow or MXNet users** can get started with 
-  :doc:`framework-integration-guides`. Note that the ``pip`` packages work only 
-  with Ubuntu 16.04 or greater and Intel® Xeon® CPUs. CPUs without AVX512 will 
-  not run these packages; the alternative is to build from source: 
+  :doc:`framework-integration-guides`. 
 
    * `TensorFlow bridge to nGraph`_ 
-   * `Compiling MXNet with nGraph`_ 
+   * `Compiling MXNet with nGraph`_
+   
+   .. note:: Note that the ``pip`` packages work only with Ubuntu 16.04 
+      or greater and Intel® Xeon® CPUs. CPUs without AVX512 will not run 
+      these packages; the alternative is to build from source: 
 
 * **Data scientists** interested in the `ONNX`_ format will find the 
   `nGraph ONNX companion tool`_ of interest. 
