@@ -38,6 +38,7 @@ namespace ngraph
                 return m_op_annotations;
             }
 
+            virtual bool is_op() const override { return true; }
         protected:
             Op(const std::string& node_type, const NodeVector& arguments);
 
