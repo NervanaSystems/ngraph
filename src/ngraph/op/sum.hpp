@@ -54,8 +54,6 @@ namespace ngraph
         ///      21~~~\text{(both dimensions (rows and columns) are eliminated)}
         /// \f]
         ///
-        /// This is equivalent to Reduce where `arg_init` = 0 and `reduction_function` is \f$f(x,y) = x+y\f$.
-        ///
         /// ## Parameters
         ///
         /// |                      | Description                              |

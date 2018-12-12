@@ -109,12 +109,6 @@ namespace ngraph
             };
 
             template <>
-            struct ParentImpl<op::Reduce>
-            {
-                using Type = ReductionImpl<op::Reduce>;
-            };
-
-            template <>
             struct ParentImpl<op::Sum>
             {
                 using Type = ReductionImpl<op::Sum>;
@@ -141,122 +135,6 @@ namespace ngraph
                 build_reduction("*");
             }
 
-            // Reduce reduces a tensor with an arbitrary user-supplied reduction operation.
-            template <>
-            void Impl<op::Reduce>::operator()()
-            {
-                check_inputs(2);
-                check_outputs(1);
-
-                // TODO: Special case known-easy reductions.
-
-                // To support arbitrary reduction operations, we take advantage of the fact that in nGraph, we
-                // have concrete dimension sizes.  We start with the initial tensor (argument 1), construct N
-                // slices of tensor 0 (where N == the product of the sizes of the axes to reduce), and
-                // repeatedly apply the supplied aggregation function to them.
-                //
-                // This is somewhat inefficient, but works.
-                const Shape& input_shape = op().get_input_shape(0);
-                auto dim_limit = input_shape.size();
-                Shape reduction_shape;
-                for (std::size_t axis_idx = 0; axis_idx < input_shape.size(); ++axis_idx)
-                {
-                    if (op().get_reduction_axes().count(axis_idx))
-                    {
-                        reduction_shape.emplace_back(input_shape[axis_idx]);
-                    }
-                }
-                std::size_t agg_dim_limit = dim_limit - reduction_shape.size();
-
-                vp::function agg_fn;
-                {
-                    Build b;
-                    b.io_dim_override = true;
-                    b.io_dim_override_count = agg_dim_limit;
-                    build()->compiler->build(op().get_functions()[0], &b);
-                    agg_fn = b.composer;
-                }
-
-                vp::variable input = op_input(0);
-
-                // Note that we need to explicitly broadcast the 0-dimensional base result to match the
-                // aggregation dimension count.
-                vp::variable result =
-                    start_tile_function()
-                        .add(builder::Input{op_input(1), "I"})
-                        .add(builder::Output{"O"})
-                        .add(
-                            builder::UnaryContraction{"="}
-                                .set(
-                                    builder::ContractionOutput{"O"}
-                                        .add_indices("d", 0, agg_dim_limit)
-                                        .add_dims([&](
-                                            std::back_insert_iterator<std::list<std::string>> out) {
-                                            for (auto idx = 0; idx < agg_dim_limit; ++idx)
-                                            {
-                                                out = "1";
-                                            }
-                                        }))
-                                .set(builder::ContractionInput{"I"}))
-                        .finalize();
-
-                CoordinateTransform reduction_coords{reduction_shape};
-                for (const Coordinate& coordinate : reduction_coords)
-                {
-                    result = agg_fn(
-                        result,
-                        start_tile_function()
-                            .add(builder::Input{input, "I"}.add_dims("D", 0, dim_limit))
-                            .add(builder::Output{"O"})
-                            .add(builder::UnaryContraction{"="}
-                                     .set(builder::ContractionOutput{"O"}
-                                              .add_indices([&](
-                                                  std::back_insert_iterator<std::list<std::string>>
-                                                      out) {
-                                                  for (std::size_t idx = 0;
-                                                       idx < input_shape.size();
-                                                       ++idx)
-                                                  {
-                                                      if (!op().get_reduction_axes().count(idx))
-                                                      {
-                                                          out = "d" + std::to_string(idx);
-                                                      }
-                                                  }
-                                              })
-                                              .add_dims([&](
-                                                  std::back_insert_iterator<std::list<std::string>>
-                                                      out) {
-                                                  for (std::size_t idx = 0;
-                                                       idx < input_shape.size();
-                                                       ++idx)
-                                                  {
-                                                      if (!op().get_reduction_axes().count(idx))
-                                                      {
-                                                          out = "D" + std::to_string(idx);
-                                                      }
-                                                  }
-                                              }))
-                                     .set(builder::ContractionInput{"I"}.add_indices([&](
-                                         std::back_insert_iterator<std::list<std::string>> out) {
-                                         for (std::size_t idx = 0; idx < input_shape.size(); ++idx)
-                                         {
-                                             std::size_t cidx = 0;
-                                             if (!op().get_reduction_axes().count(idx))
-                                             {
-                                                 out = "d" + std::to_string(idx);
-                                             }
-                                             else
-                                             {
-                                                 out = std::to_string(coordinate[cidx++]);
-                                             }
-                                         }
-                                     })))
-                            .finalize());
-                }
-
-                set_output(result);
-            }
-
             // Sum reduces a tensor, summing the specified axes.
             template <>
             void Impl<op::Sum>::operator()()
@@ -269,7 +147,6 @@ namespace ngraph
                 Impl<op::Max>::Registration register_max;
                 Impl<op::Min>::Registration register_min;
                 Impl<op::Product>::Registration register_product;
-                Impl<op::Reduce>::Registration register_reduce;
                 Impl<op::Sum>::Registration register_sum;
             }
         }

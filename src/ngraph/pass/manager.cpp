@@ -27,7 +27,6 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/function_call.hpp"
-#include "ngraph/op/reduce.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/serialize.hpp"

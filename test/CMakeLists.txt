@@ -25,8 +25,6 @@ endif()
 set(SRC
     algebraic_simplification.cpp
     all_close_f.cpp
-    any_all_insertion.cpp
-    any_all_replacement.cpp
     assertion.cpp
     build_graph.cpp
     builder_autobroadcast.cpp
@@ -125,7 +123,6 @@ set(MULTI_TEST_SRC
     backend_embedding_lookup.in.cpp
     backend_one_hot.in.cpp
     backend_pool.in.cpp
-    backend_reduce.in.cpp
     backend_reshape.in.cpp
     backend_sum.in.cpp
     backend_topk.in.cpp

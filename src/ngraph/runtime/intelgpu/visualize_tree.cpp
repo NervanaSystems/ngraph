@@ -38,8 +38,6 @@
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
-#include "ngraph/op/reduce.hpp"
-#include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sum.hpp"
@@ -273,24 +271,6 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
         const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(node);
 
         writer << print_table_row_value("concat_axis", concat_op->get_concatenation_axis());
-        break;
-    }
-    case OP_TYPEID::Reduce:
-    {
-        const shared_ptr<op::Reduce> red_op = static_pointer_cast<op::Reduce>(node);
-        const AxisSet& axis = red_op->get_reduction_axes();
-
-        writer << print_table_row_dims("reduction_axis", red_op->get_reduction_axes())
-               << print_table_row_value("Function:TBD", 0);
-        break;
-    }
-    case OP_TYPEID::ReduceWindow:
-    {
-        const shared_ptr<op::ReduceWindow> red_win_op = static_pointer_cast<op::ReduceWindow>(node);
-
-        writer << print_table_row_dims("window_shape", red_win_op->get_window_shape())
-               << print_table_row_dims("window_stride", red_win_op->get_window_movement_strides())
-               << print_table_row_value("Function:TBD", 0);
         break;
     }
     case OP_TYPEID::Pad:

@@ -96,15 +96,12 @@ set (SRC
     op/power.cpp
     op/product.cpp
     op/quantize.cpp
-    op/reduce.cpp
-    op/reduce_window.cpp
     op/relu.cpp
     op/replace_slice.cpp
     op/reshape.cpp
     op/result.cpp
     op/reverse.cpp
     op/reverse_sequence.cpp
-    op/select_and_scatter.cpp
     op/select.cpp
     op/sigmoid.cpp
     op/sign.cpp
@@ -127,8 +124,6 @@ set (SRC
     op/util/logical_reduction.cpp
     op/util/unary_elementwise_arithmetic.cpp
     partial_shape.cpp
-    pass/any_all_insertion.cpp
-    pass/any_all_replacement.cpp
     pass/assign_placement.cpp
     pass/algebraic_simplification.cpp
     pass/common_function_collection.cpp

@@ -54,20 +54,9 @@ backwards_slice
 batchnorm_fprop_bprop  # To debug
 batchnorm_fprop_bprop_2step  # To debug
 softmax_axis_3d_double  # To debug
-reduce_matrix_rows_zero  # To debug: possible broadcasting error?
-reduce_matrix_cols_zero  # To debug: possible broadcasting error?
-reduce_3d_to_vector  # To debug: possible broadcasting error?
 replace_slice_matrix_inplace
 max_pool_2d_1channel_1image_overpadded
 max_pool_3d
-reduce_window_emulating_max_pool_1d_1channel_1image
-reduce_window_emulating_max_pool_1d_1channel_2image
-reduce_window_emulating_max_pool_1d_2channel_2image
-reduce_window_emulating_max_pool_2d_2channel_2image
-reduce_window_emulating_max_pool_2d_1channel_1image_strided
-select_and_scatter_with_overlap
-select_and_scatter_without_overlap
-select_and_scatter_3d_without_overlap
 generate_mask
 avg_pool_3d
 avg_pool_3d_uneven_strided_padded_include_in_computation

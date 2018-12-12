@@ -74,8 +74,6 @@
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
-#include "ngraph/op/reduce.hpp"
-#include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -83,7 +81,6 @@
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
-#include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
@@ -962,25 +959,6 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Quantize>(args[0], args[1], args[2], type, axes, round_mode);
                 break;
             }
-            case OP_TYPEID::Reduce:
-            {
-                auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
-                string function_name = node_js.at("function").get<string>();
-                shared_ptr<Function> f_ptr = function_map.at(function_name);
-                node = make_shared<op::Reduce>(args[0], args[1], f_ptr, reduction_axes);
-                break;
-            }
-            case OP_TYPEID::ReduceWindow:
-            {
-                auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-                auto window_movement_strides =
-                    node_js.at("window_movement_strides").get<vector<size_t>>();
-                string function_name = node_js.at("function").get<string>();
-                shared_ptr<Function> f_ptr = function_map.at(function_name);
-                node = make_shared<op::ReduceWindow>(
-                    args[0], args[1], f_ptr, window_shape, window_movement_strides);
-                break;
-            }
             case OP_TYPEID::Relu:
             {
                 node = make_shared<op::Relu>(args[0]);
@@ -1029,26 +1007,6 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Select:
             {
                 node = make_shared<op::Select>(args[0], args[1], args[2]);
-                break;
-            }
-            case OP_TYPEID::SelectAndScatter:
-            {
-                string selection_function_name = node_js.at("selection_function").get<string>();
-                shared_ptr<Function> selection_f_ptr = function_map.at(selection_function_name);
-                string scatter_function_name = node_js.at("scatter_function").get<string>();
-                shared_ptr<Function> scatter_f_ptr = function_map.at(scatter_function_name);
-
-                auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-                auto window_movement_strides =
-                    node_js.at("window_movement_strides").get<vector<size_t>>();
-
-                node = make_shared<op::SelectAndScatter>(args[0],
-                                                         args[1],
-                                                         args[2],
-                                                         selection_f_ptr,
-                                                         scatter_f_ptr,
-                                                         window_shape,
-                                                         window_movement_strides);
                 break;
             }
             case OP_TYPEID::ShapeOf:
@@ -1544,21 +1502,6 @@ static json write(const Node& n, bool binary_constant_data)
         node["round_mode"] = tmp->get_round_mode();
         break;
     }
-    case OP_TYPEID::Reduce:
-    {
-        auto tmp = dynamic_cast<const op::Reduce*>(&n);
-        node["function"] = tmp->get_functions()[0]->get_name();
-        node["reduction_axes"] = tmp->get_reduction_axes();
-        break;
-    }
-    case OP_TYPEID::ReduceWindow:
-    {
-        auto tmp = dynamic_cast<const op::ReduceWindow*>(&n);
-        node["function"] = tmp->get_functions()[0]->get_name();
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        break;
-    }
     case OP_TYPEID::Relu: { break;
     }
     case OP_TYPEID::ReluBackprop: { break;
@@ -1594,15 +1537,6 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::Select: { break;
-    }
-    case OP_TYPEID::SelectAndScatter:
-    {
-        auto tmp = dynamic_cast<const op::SelectAndScatter*>(&n);
-        node["selection_function"] = tmp->get_functions()[0]->get_name();
-        node["scatter_function"] = tmp->get_functions()[1]->get_name();
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        break;
     }
     case OP_TYPEID::ShapeOf: { break;
     }

@@ -977,27 +977,6 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
             topology.add(cldnn_activ_grad);
             break;
         }
-        case OP_TYPEID::Reduce:
-        {
-            arguments_check(op, 2, 1);
-
-            const shared_ptr<op::Reduce> red_op = static_pointer_cast<op::Reduce>(op);
-            const AxisSet& axis = red_op->get_reduction_axes();
-            vector<shared_ptr<Function>> f = red_op->get_functions();
-
-            // Empty axis is not a case for do_equal_propagation()
-            do_reduce_func_call(topology,
-                                get_input_name(op, 0),
-                                get_input_shape(op, 0),
-                                get_input_name(op, 1),
-                                get_input_shape(op, 1),
-                                get_output_name(op),
-                                get_output_shape(op),
-                                get_output_type(op),
-                                axis,
-                                f);
-            break;
-        }
         case OP_TYPEID::Abs:
         {
             do_unary_operation(topology, op, activation_abs);
@@ -1719,11 +1698,9 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
         case OP_TYPEID::FunctionCall:
         case OP_TYPEID::Dequantize:
         case OP_TYPEID::Quantize:
-        case OP_TYPEID::ReduceWindow:
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::ReverseSequence:
-        case OP_TYPEID::SelectAndScatter:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::TopK:

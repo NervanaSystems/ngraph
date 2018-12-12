@@ -96,8 +96,6 @@
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
-#include "ngraph/op/reduce.hpp"
-#include "ngraph/op/reduce_window.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -105,7 +103,6 @@
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
-#include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
@@ -118,7 +115,6 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
-#include "ngraph/pass/any_all_replacement.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/core_fusion.hpp"
@@ -316,7 +312,6 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Constant), &runtime::cpu::CPU_Emitter::emit<op::Constant>},
     {TI(ngraph::op::Reshape), &runtime::cpu::CPU_Emitter::emit<op::Reshape>},
     {TI(ngraph::op::FunctionCall), &runtime::cpu::CPU_Emitter::emit<op::FunctionCall>},
-    {TI(ngraph::op::Reduce), &runtime::cpu::CPU_Emitter::emit<op::Reduce>},
     {TI(ngraph::op::Sign), &runtime::cpu::CPU_Emitter::emit<op::Sign>},
     {TI(ngraph::op::Slice), &runtime::cpu::CPU_Emitter::emit<op::Slice>},
     {TI(ngraph::op::Sum), &runtime::cpu::CPU_Emitter::emit<op::Sum>},
@@ -372,8 +367,6 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::emit<op::Reverse>},
     {TI(ngraph::op::ReverseSequence), &runtime::cpu::CPU_Emitter::emit<op::ReverseSequence>},
     {TI(ngraph::op::Result), &runtime::cpu::CPU_Emitter::emit<op::Result>},
-    {TI(ngraph::op::ReduceWindow), &runtime::cpu::CPU_Emitter::emit<op::ReduceWindow>},
-    {TI(ngraph::op::SelectAndScatter), &runtime::cpu::CPU_Emitter::emit<op::SelectAndScatter>},
     {TI(ngraph::op::AvgPool), &runtime::cpu::CPU_Emitter::emit<op::AvgPool>},
     {TI(ngraph::op::AvgPoolBackprop), &runtime::cpu::CPU_Emitter::emit<op::AvgPoolBackprop>},
     {TI(ngraph::op::Pad), &runtime::cpu::CPU_Emitter::emit<op::Pad>},
@@ -507,15 +500,12 @@ void runtime::cpu::CPU_ExternalFunction::compile()
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
-#include "ngraph/runtime/reference/reduce.hpp"
-#include "ngraph/runtime/reference/reduce_window.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/replace_slice.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/result.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
-#include "ngraph/runtime/reference/select_and_scatter.hpp"
 #include "ngraph/runtime/reference/slice.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
@@ -1082,7 +1072,6 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
 {
     auto pass_map = pass_manager.get_pass_config().get_enables();
 
-    REGISTER_KNOBBED_PASS(AnyAllReplacement, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass);

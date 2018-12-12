@@ -15,10 +15,6 @@ one_hot_scalar_oob_in_3
 one_hot_vector_1_barely_oob
 one_hot_vector_1_far_oob
 one_hot_vector_1_fp_nonint
-#select_and_scatter is deprecated
-select_and_scatter_3d_without_overlap
-select_and_scatter_with_overlap
-select_and_scatter_without_overlap
 #custom_mem is not implemented on GPU
 tensorview_custom_mem
 #integer is not supported by cuDNN on backward pooling
