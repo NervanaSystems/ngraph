@@ -50,8 +50,10 @@ Not currently a comprehensive list.
    * :doc:`abs`
    * :doc:`acos`
    * :doc:`add`
+   * :doc:`all`
    * :doc:`allreduce`
    * :doc:`and`
+   * :doc:`any`
    * :doc:`asin`
    * :doc:`atan`
    * :doc:`avg_pool`
@@ -119,8 +121,10 @@ Not currently a comprehensive list.
    abs.rst
    acos.rst
    add.rst
+   all.rst
    allreduce.rst
    and.rst
+   any.rst
    asin.rst
    atan.rst
    avg_pool.rst

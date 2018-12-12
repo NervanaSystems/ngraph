@@ -22,7 +22,9 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Select-and-scatter operation.
+        /// \brief (DEPRECATED) Select-and-scatter operation.
+        ///
+        /// WARNING: This op is deprecated and will be removed in a future version of nGraph.
         ///
         /// Select-and-scatter takes three inputs, all of which must have the same element type \f$E\f$:
         ///
