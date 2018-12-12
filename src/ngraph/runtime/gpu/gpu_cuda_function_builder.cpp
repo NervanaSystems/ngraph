@@ -17,6 +17,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <thread>
 
 #include "ngraph/runtime/gpu/cuda_error_check.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
@@ -77,6 +78,8 @@ std::shared_ptr<CUfunction> runtime::gpu::CudaFunctionBuilder::get(const std::st
     // extract the compiled function
     CUmodule module;
     CUfunction function;
+    std::cout << "Compile thread: ";
+    std::cout << std::this_thread::get_id() << std::endl;
     CUDA_SAFE_CALL(cuModuleLoadDataEx(&module, ptx, 0, nullptr, nullptr));
     CUDA_SAFE_CALL(cuModuleGetFunction(&function, module, name.c_str()));
     return std::make_shared<CUfunction>(function);

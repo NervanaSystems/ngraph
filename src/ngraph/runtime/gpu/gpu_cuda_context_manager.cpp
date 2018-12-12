@@ -16,6 +16,7 @@
 
 #include <memory>
 #include <string>
+#include <thread>
 
 #include "ngraph/runtime/gpu/cuda_error_check.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
@@ -24,9 +25,16 @@ using namespace ngraph;
 
 runtime::gpu::CudaContextManager::CudaContextManager()
 {
+    std::cout << "Init thread: ";
+    std::cout << std::this_thread::get_id() << std::endl;
+    CUcontext local;
+    CUDA_SAFE_CALL(cuCtxGetCurrent(&local));
+    std::cout << "context prior to init: " << local << std::endl;
+
     CUDA_SAFE_CALL(cuInit(0));
     CUDA_SAFE_CALL(cuDeviceGet(&m_device, 0));
     CUDA_SAFE_CALL(cuDevicePrimaryCtxRetain(&m_context, m_device));
+    std::cout << "m_context from cuDevicePrimaryCtxRetain: " << m_context << std::endl;
 }
 
 runtime::gpu::CudaContextManager::~CudaContextManager()

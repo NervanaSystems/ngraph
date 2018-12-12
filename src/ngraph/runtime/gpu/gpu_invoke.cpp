@@ -16,6 +16,8 @@
 
 #include <string>
 
+#include <cuda_runtime.h>
+
 #include "ngraph/runtime/gpu/gpu_invoke.hpp"
 #include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
 
@@ -31,4 +33,25 @@ extern "C" void* ngraph::runtime::gpu::invoke_memory_primitive(const GPURuntimeC
                                                                size_t primitive_index)
 {
     return ctx->gpu_memory_primitives[primitive_index]();
+}
+
+
+extern "C" bool is_device_pointer(const void *ptr)
+{
+    bool is_device_ptr = false;
+    cudaPointerAttributes attributes;
+    auto err = cudaPointerGetAttributes(&attributes, ptr);
+    if(err != cudaSuccess)
+    {
+        err = cudaGetLastError();
+        err = cudaGetLastError();
+        return is_device_ptr;
+    }
+
+    if(attributes.devicePointer != nullptr)
+    {
+        is_device_ptr = true;
+    }
+
+    return is_device_ptr;
 }

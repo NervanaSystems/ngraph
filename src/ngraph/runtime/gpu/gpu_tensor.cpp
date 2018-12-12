@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
 #include <memory>
 
 #include <cuda_runtime.h>
@@ -23,6 +24,8 @@
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/util.hpp"
+
 
 using namespace ngraph;
 using namespace std;
@@ -37,6 +40,7 @@ runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type,
         std::make_shared<ngraph::descriptor::layout::DenseTensorLayout>(*m_descriptor));
 
     m_buffer_size = shape_size(shape) * element_type.size();
+
     if (memory_pointer != nullptr)
     {
         m_allocated_buffer_pool = memory_pointer;
@@ -60,10 +64,37 @@ runtime::gpu::GPUTensor::~GPUTensor()
         runtime::gpu::free_gpu_buffer(m_allocated_buffer_pool);
     }
 }
+static bool is_device_pointer(const void *ptr) {
+    bool is_device_ptr = false;
+    cudaPointerAttributes attributes;
+    auto err = cudaPointerGetAttributes(&attributes, ptr);
+    if(err != cudaSuccess)
+    {
+        err = cudaGetLastError();
+        err = cudaGetLastError();
+        return is_device_ptr;
+    }
+
+    if(attributes.devicePointer != nullptr)
+    {
+        is_device_ptr = true;
+    }
+
+    return is_device_ptr;
+}
 
 void runtime::gpu::GPUTensor::write(const void* source, size_t tensor_offset, size_t n)
 {
-    CUDA_RT_SAFE_CALL(cudaMemcpy(m_allocated_buffer_pool, source, n, cudaMemcpyHostToDevice));
+    if (is_device_pointer(source))
+    {
+        CUDA_RT_SAFE_CALL(cudaMemcpy(m_allocated_buffer_pool, source, n, cudaMemcpyDeviceToDevice));
+    }
+    else
+    {
+        CUDA_RT_SAFE_CALL(cudaMemcpy(m_allocated_buffer_pool, source, n, cudaMemcpyHostToDevice));
+    }
+    cudaGetLastError();
+    cudaGetLastError();
 }
 
 void runtime::gpu::GPUTensor::read(void* target, size_t tensor_offset, size_t n) const

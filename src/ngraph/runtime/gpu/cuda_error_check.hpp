@@ -105,6 +105,7 @@
             safe_call_ss << "\nerror: " #x " failed with error"                                    \
                          << "\nfile: " << __FILE__ << "\nline: " << __LINE__                       \
                          << "\nmsg: " << cudaGetErrorString(err);                                  \
+            std::cout << safe_call_ss.str() << std::endl;               \
             throw std::runtime_error(safe_call_ss.str());                                          \
         }                                                                                          \
     } while (0)

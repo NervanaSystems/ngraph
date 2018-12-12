@@ -31,6 +31,7 @@ namespace ngraph
                                              void** result);
             extern "C" void* invoke_memory_primitive(const GPURuntimeContext* ctx,
                                                      size_t primitive_index);
+            extern "C" bool is_device_pointer(const void *ptr);
         }
     }
 }
