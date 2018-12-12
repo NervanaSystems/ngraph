@@ -118,6 +118,7 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/any_all_replacement.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/core_fusion.hpp"
@@ -1081,6 +1082,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
 {
     auto pass_map = pass_manager.get_pass_config().get_enables();
 
+    REGISTER_KNOBBED_PASS(AnyAllReplacement, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass);
@@ -1109,7 +1111,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
         CommonSubexpressionElimination, true, ngraph::pass, runtime::cpu::get_cse_handlers_map());
     REGISTER_KNOBBED_PASS(CPUPostLayoutOptimizations, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUMemoryOptimization, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(GetOutputElementElimination, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS(GetOutputElementElimination, false, ngraph::pass);
     pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
 }
 
@@ -1862,7 +1864,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
                     }
                     CPUExecutionContext ectx{0};
                     executor::GetCPUExecutor().execute(functors.at(ctx->pc), ctx, &ectx);
-
                     if (ctx->breakpoints.count(ctx->pc + 1))
                     {
                         ctx->pc++;
