@@ -100,6 +100,10 @@ namespace ngraph
             /// \param n Number of bytes to read, must be integral number of elements.
             virtual void read(void* p, size_t offset, size_t n) const = 0;
 
+            /// \brief copy bytes directly from source to this tensor
+            /// \param source The source tensor
+            virtual void copy_from(const ngraph::runtime::Tensor& source);
+
         protected:
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
             bool m_stale;

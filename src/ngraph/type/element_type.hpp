@@ -26,28 +26,13 @@
 #include <vector>
 
 #include "ngraph/except.hpp"
+#include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/type/bfloat16.hpp"
 
 namespace ngraph
 {
     namespace element
     {
-        class Type;
-
-        extern const Type dynamic;
-        extern const Type boolean;
-        extern const Type bf16;
-        extern const Type f32;
-        extern const Type f64;
-        extern const Type i8;
-        extern const Type i16;
-        extern const Type i32;
-        extern const Type i64;
-        extern const Type u8;
-        extern const Type u16;
-        extern const Type u32;
-        extern const Type u64;
-
         class Type
         {
         public:
@@ -63,7 +48,7 @@ namespace ngraph
             const std::string& c_type_string() const;
             size_t size() const;
             size_t hash() const;
-            bool is_static() const { return (*this != dynamic); }
+            bool is_static() const;
             bool is_dynamic() const { return !is_static(); }
             bool is_real() const { return m_is_real; }
             bool is_signed() const { return m_is_signed; }
@@ -109,6 +94,20 @@ namespace ngraph
             bool m_is_quantized{false};
             std::string m_cname{"dynamic"};
         };
+
+        extern NGRAPH_API const Type dynamic;
+        extern NGRAPH_API const Type boolean;
+        extern NGRAPH_API const Type bf16;
+        extern NGRAPH_API const Type f32;
+        extern NGRAPH_API const Type f64;
+        extern NGRAPH_API const Type i8;
+        extern NGRAPH_API const Type i16;
+        extern NGRAPH_API const Type i32;
+        extern NGRAPH_API const Type i64;
+        extern NGRAPH_API const Type u8;
+        extern NGRAPH_API const Type u16;
+        extern NGRAPH_API const Type u32;
+        extern NGRAPH_API const Type u64;
 
         template <typename T>
         const Type& from()

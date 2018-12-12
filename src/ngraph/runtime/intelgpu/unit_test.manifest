@@ -28,6 +28,9 @@ dequantize_int8
 dequantize_int8_zero_offset
 dequantize_zero_offset
 divide_by_zero_int32
+embedding_lookup_4x5_reverse
+embedding_lookup_10x1_arbitrary
+embedding_lookup_10x1_arbitrary_index_type_int
 function_call
 generate_mask
 max_pool_3d
@@ -135,6 +138,8 @@ shape_of_vector
 shape_of_matrix
 shape_of_5d
 sum_stable_acc
+sum_stable_acc_double
+sum_stable_simple_double
 sum_trivial_in_double
 product_2d_to_scalar_int32
 product_to_scalar_int32
@@ -146,4 +151,3 @@ max_3d_to_scalar_double
 argmin_trivial_in_i32
 argmax_4D_axis_3_i64_in_i32
 argmin_trivial_in_double
-maxpool_bprop_larger_than_cache

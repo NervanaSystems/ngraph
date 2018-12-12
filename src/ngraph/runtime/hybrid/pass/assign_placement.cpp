@@ -14,33 +14,32 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/placement.hpp"
+#include "ngraph/runtime/backend.hpp"
 
-#include "ngraph/pass/graph_rewrite.hpp"
+using namespace ngraph;
+using namespace std;
 
-namespace ngraph
+runtime::hybrid::pass::AssignPlacement::AssignPlacement(
+    vector<shared_ptr<runtime::Backend>> placement_backends)
+    : m_placement_backends(placement_backends)
 {
-    namespace runtime
-    {
-        namespace cpu
-        {
-            namespace pass
-            {
-                class ConcatInputs;
-            }
-        }
-    }
 }
 
-class ngraph::runtime::cpu::pass::ConcatInputs : public ngraph::pass::GraphRewrite
+bool runtime::hybrid::pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
 {
-public:
-    ConcatInputs()
-        : GraphRewrite()
+    size_t backend_index = 0;
+    for (auto backend : m_placement_backends)
     {
-        concat_lstm_inputs();
+        if (backend->is_supported(*node))
+        {
+            node->set_placement_index(backend_index);
+            return false;
+        }
+        backend_index++;
     }
-
-private:
-    void concat_lstm_inputs();
-};
+    throw runtime_error("Node " + node->get_name() + " not supported by any backend");
+}

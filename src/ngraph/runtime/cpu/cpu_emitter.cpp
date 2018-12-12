@@ -45,6 +45,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
@@ -120,6 +121,7 @@
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
+#include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -523,8 +525,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Lstm)
             {
-                const ngraph::op::Lstm* lstm_node = static_cast<const ngraph::op::Lstm*>(node);
-                if (args.size() != 5 || !lstm_node->get_fused_inputs())
+                if (args.size() != 5)
                 {
                     throw ngraph_error(
                         "Lstm op doesnt have the required number of inputs to emit MKLDNN kernel");
@@ -700,8 +701,8 @@ namespace ngraph
 
                     if (args.size() == 3)
                     {
-                        writer << "reference::batch_norm_three_outputs("
-                               << batchnorm->get_eps_value() << ",\n";
+                        writer << "reference::batch_norm_training(" << batchnorm->get_eps_value()
+                               << ",\n";
                         writer << "            " << args[0].get_name() << ",\n";
                         writer << "            " << args[1].get_name() << ",\n";
                         writer << "            " << args[2].get_name() << ",\n";
@@ -712,7 +713,7 @@ namespace ngraph
                     }
                     else
                     {
-                        writer << "reference::batch_norm_one_output(" << batchnorm->get_eps_value()
+                        writer << "reference::batch_norm_inference(" << batchnorm->get_eps_value()
                                << ",\n";
                         writer << "            " << args[0].get_name() << ",\n";
                         writer << "            " << args[1].get_name() << ",\n";
@@ -738,7 +739,7 @@ namespace ngraph
                     const ngraph::op::BatchNormInference* batchnorm =
                         static_cast<const ngraph::op::BatchNormInference*>(node);
 
-                    writer << "reference::batch_norm_one_output(" << batchnorm->get_eps_value()
+                    writer << "reference::batch_norm_inference(" << batchnorm->get_eps_value()
                            << ",\n";
                     writer << "            " << args[0].get_name() << ",\n";
                     writer << "            " << args[1].get_name() << ",\n";
@@ -2267,6 +2268,24 @@ namespace ngraph
             }
 
             template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::EmbeddingLookup)
+            {
+                writer.block_begin();
+                const ngraph::op::EmbeddingLookup* embed =
+                    static_cast<const ngraph::op::EmbeddingLookup*>(node);
+                auto index_type_name = embed->get_argument(0)->get_element_type().c_type_string();
+                auto type_name = embed->get_element_type().c_type_string();
+                auto element_count = shape_size(embed->get_argument(0)->get_shape());
+                writer << "reference::embedding<" << type_name << "," << index_type_name << ">(";
+                writer << "            " << args[0].get_name() << ",\n";
+                writer << "            " << args[1].get_name() << ",\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            " << element_count << ",\n";
+                writer << "            {" << join(args[1].get_shape()) << "});\n";
+                writer.block_end();
+            }
+
+            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sin)
             {
                 writer.block_begin();
@@ -2499,6 +2518,49 @@ namespace ngraph
                        << args[1].get_name() << "[i]);\n";
                 writer.block_end();
 #endif
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::UpdateSlice)
+            {
+                auto update_slice = static_cast<const ngraph::op::UpdateSlice*>(node);
+                const Shape& arg0_shape = args[0].get_shape();
+                const Shape& arg1_shape = args[1].get_shape();
+                auto strides = update_slice->get_strides();
+                writer.block_begin();
+                if (!ngraph::is_strided(strides))
+                {
+                    writer << "cpu::kernel::update_slice<"
+                           << args[0].get_element_type().c_type_string() << ", "
+                           << arg0_shape.size() << ">(\n"
+                           << "                                " << args[0].get_name() << ",\n"
+                           << "                                " << args[1].get_name() << ",\n"
+                           << "                                " << out[0].get_name() << ",\n"
+                           << "                               {" << join(arg0_shape) << "},\n"
+                           << "                               {" << join(arg1_shape) << "},\n"
+                           << "                               {"
+                           << join(update_slice->get_lower_bounds()) << "},\n"
+                           << "0);\n";
+                }
+                else
+                {
+                    writer << "cpu::kernel::strided_update_slice<"
+                           << args[0].get_element_type().c_type_string() << ", "
+                           << arg0_shape.size() << ">(\n"
+                           << "                                " << args[0].get_name() << ",\n"
+                           << "                                " << args[1].get_name() << ",\n"
+                           << "                                " << out[0].get_name() << ",\n"
+                           << "                               {" << join(arg0_shape) << "},\n"
+                           << "                               {" << join(arg1_shape) << "},\n"
+                           << "                               {"
+                           << join(update_slice->get_lower_bounds()) << "},\n"
+                           << "                               {"
+                           << join(update_slice->get_upper_bounds()) << "},\n"
+                           << "                               {"
+                           << join(update_slice->get_strides()) << "},\n"
+                           << "0);\n";
+                }
                 writer.block_end();
             }
 
@@ -3108,6 +3170,67 @@ namespace ngraph
                 {
                     throw ngraph_error(
                         "QuantizedConvolutionBias is only supported with MKLDNN kernel.");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConvolutionBiasAdd)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto qconv_index =
+                        mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolutionBiasAdd>(
+                            node, args, out);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
+
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(qconv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error(
+                        "QuantizedConvolutionBiasAdd is only supported with MKLDNN kernel.");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConvolutionBiasSignedAdd)
+            {
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto qconv_index =
+                        mkldnn_emitter
+                            ->build_convolution<ngraph::op::QuantizedConvolutionBiasSignedAdd>(
+                                node, args, out);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(qconv_index);
+
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
+                           << ", " << args[0].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
+                           << ", " << args[1].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[2])
+                           << ", " << args[2].get_name() << ");\n";
+                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[3])
+                           << ", " << out[0].get_name() << ");\n";
+
+                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
+                           << to_string(qconv_index) << ");\n";
+                }
+                else
+                {
+                    throw ngraph_error(
+                        "QuantizedConvolutionBiasSignedAdd is only supported with MKLDNN kernel.");
                 }
             }
 
