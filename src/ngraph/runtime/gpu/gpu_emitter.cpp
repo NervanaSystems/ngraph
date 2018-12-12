@@ -119,8 +119,6 @@
 using namespace std;
 using namespace ngraph;
 
-#define TI(x) type_index(typeid(x))
-
 function<void(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(const Node& node)
 {
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
