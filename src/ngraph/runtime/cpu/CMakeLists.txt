@@ -44,6 +44,7 @@ set(SRC
     builder/convert_layout.cpp
     builder/convolution.cpp
     builder/dot.cpp
+    builder/embedding_lookup.cpp
     builder/function_call.cpp
     builder/leaky_relu.cpp
     builder/lstm.cpp
