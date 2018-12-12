@@ -21,19 +21,19 @@
 
 using namespace ngraph;
 
-const element::Type element::dynamic(0, false, false, false, "dynamic");
-const element::Type element::boolean(8, false, true, false, "char");
-const element::Type element::bf16(16, true, true, false, "bfloat16");
-const element::Type element::f32(32, true, true, false, "float");
-const element::Type element::f64(64, true, true, false, "double");
-const element::Type element::i8(8, false, true, true, "int8_t");
-const element::Type element::i16(16, false, true, false, "int16_t");
-const element::Type element::i32(32, false, true, true, "int32_t");
-const element::Type element::i64(64, false, true, false, "int64_t");
-const element::Type element::u8(8, false, false, true, "uint8_t");
-const element::Type element::u16(16, false, false, false, "uint16_t");
-const element::Type element::u32(32, false, false, false, "uint32_t");
-const element::Type element::u64(64, false, false, false, "uint64_t");
+NGRAPH_API const element::Type element::dynamic(0, false, false, false, "dynamic");
+NGRAPH_API const element::Type element::boolean(8, false, true, false, "char");
+NGRAPH_API const element::Type element::bf16(16, true, true, false, "bfloat16");
+NGRAPH_API const element::Type element::f32(32, true, true, false, "float");
+NGRAPH_API const element::Type element::f64(64, true, true, false, "double");
+NGRAPH_API const element::Type element::i8(8, false, true, true, "int8_t");
+NGRAPH_API const element::Type element::i16(16, false, true, false, "int16_t");
+NGRAPH_API const element::Type element::i32(32, false, true, true, "int32_t");
+NGRAPH_API const element::Type element::i64(64, false, true, false, "int64_t");
+NGRAPH_API const element::Type element::u8(8, false, false, true, "uint8_t");
+NGRAPH_API const element::Type element::u16(16, false, false, false, "uint16_t");
+NGRAPH_API const element::Type element::u32(32, false, false, false, "uint32_t");
+NGRAPH_API const element::Type element::u64(64, false, false, false, "uint64_t");
 
 std::vector<const element::Type*> element::Type::get_known_types()
 {
@@ -218,4 +218,9 @@ bool element::Type::merge(element::Type& dst, const element::Type& t1, const ele
     {
         return false;
     }
+}
+
+bool element::Type::is_static() const
+{
+    return (*this != dynamic);
 }

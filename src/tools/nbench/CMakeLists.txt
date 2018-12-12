@@ -25,6 +25,11 @@ if (APPLE)
     set_property(TARGET nbench APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-rpath,@loader_path/../lib")
 endif()
 target_link_libraries(nbench ngraph)
+# if (WIN32)
+#     set_target_properties(nbench
+#         PROPERTIES
+#             LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+# endif()
 if (NGRAPH_CPU_ENABLE)
     target_link_libraries(nbench cpu_backend)
 endif()
