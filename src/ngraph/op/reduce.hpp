@@ -23,7 +23,9 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Tensor reduction operation.
+        /// \brief (DEPRECATED) Tensor reduction operation.
+        ///
+        /// WARNING: This op is deprecated and will be removed in a future version of nGraph.
         ///
         /// Element-wise reduces the input tensor, eliminating the specified reduction axes, given a reduction function that maps two scalars to a scalar.
         /// For example, if the reduction function \f$f(x,y) = x+y\f$:

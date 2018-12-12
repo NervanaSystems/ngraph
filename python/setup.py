@@ -64,7 +64,14 @@ def find_pybind_headers_dir():
 NGRAPH_CPP_DIST_DIR = find_ngraph_dist_dir()
 PYBIND11_INCLUDE_DIR = find_pybind_headers_dir() + '/include'
 NGRAPH_CPP_INCLUDE_DIR = NGRAPH_CPP_DIST_DIR + '/include'
-NGRAPH_CPP_LIBRARY_DIR = NGRAPH_CPP_DIST_DIR + '/lib'
+if os.path.exists(NGRAPH_CPP_DIST_DIR + '/lib'):
+    NGRAPH_CPP_LIBRARY_DIR = NGRAPH_CPP_DIST_DIR + '/lib'
+elif os.path.exists(NGRAPH_CPP_DIST_DIR + '/lib64'):
+    NGRAPH_CPP_LIBRARY_DIR = NGRAPH_CPP_DIST_DIR + '/lib64'
+else:
+    print('Cannot find library directory in {}, make sure that nGraph is installed '
+          'correctly'.format(NGRAPH_CPP_DIST_DIR))
+    sys.exit(1)
 
 
 def parallelCCompile(
@@ -383,6 +390,7 @@ setup(
     packages=packages,
     cmdclass={'build_ext': BuildExt},
     data_files=data_files,
+    setup_requires=['numpy'],
     install_requires=requirements,
     zip_safe=False,
 )

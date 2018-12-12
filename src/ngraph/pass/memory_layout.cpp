@@ -47,8 +47,9 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
         std::map<descriptor::Tensor*, descriptor::Tensor*> in_place_outputs;
         std::set<const descriptor::Tensor*> reused_inputs;
 
-        if (auto op = std::dynamic_pointer_cast<op::Op>(node))
+        if (node->is_op())
         {
+            auto op = std::static_pointer_cast<op::Op>(node);
             // concat and slice in_place_oi should be treated differently
             if (!std::dynamic_pointer_cast<op::Concat>(node) &&
                 !std::dynamic_pointer_cast<op::Slice>(node))

@@ -142,9 +142,12 @@ if (NGRAPH_GPU_ENABLE)
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
     target_link_libraries(gpu_backend PUBLIC ngraph codegen)
-    find_library(CUDA_nvrtc_LIBRARY nvrtc /usr/local/cuda/lib64)
-    find_library(CUDA_cuda_LIBRARY cuda /usr/local/cuda/lib64/stubs)
-    find_library(CUDA_cudart_LIBRARY libcudart_static.a /usr/local/cuda/lib64)
+    find_library(CUDA_nvrtc_LIBRARY nvrtc
+        PATH_SUFFIXES lib lib64 cuda/lib cuda/lib64 lib/x64)
+    find_library(CUDA_cuda_LIBRARY cuda
+        PATH_SUFFIXES lib lib64 cuda/lib cuda/lib64 lib/x64 cuda/lib64/stubs)
+    find_library(CUDA_cudart_LIBRARY ${CMAKE_STATIC_LIBRARY_PREFIX}cudart_static${CMAKE_STATIC_LIBRARY_SUFFIX}
+        PATH_SUFFIXES lib lib64 cuda/lib cuda/lib64 lib/x64)
 
     find_package(CUDNN 7 REQUIRED)
     target_include_directories(gpu_backend SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
@@ -161,7 +164,10 @@ if (NGRAPH_GPU_ENABLE)
             PRIVATE
                 hybrid_backend)
     endif()
+
     set_target_properties(gpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
-    install(TARGETS gpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+    install(TARGETS gpu_backend
+        ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB}
+        LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()
