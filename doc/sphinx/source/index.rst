@@ -23,14 +23,6 @@ Welcome
 
 See the latest :doc:`project/release-notes`. 
 
-
-.. figure:: graphics/ngcompiler-ecosystem.png
-   :width: 650px
-   :alt: ecosystem 
-
-   The Intel nGraph Compiler stack supports a broad ecosystem of frameworks and backends. 
-
-
 nGraph is an open-source C++ library, compiler stack, and runtime accelerator 
 for software engineering in the :abbr:`Deep Learning (DL)` ecosystem. nGraph 
 simplifies development and makes it possible to design, write, compile, and
@@ -38,6 +30,12 @@ deploy :abbr:`Deep Neural Network (DNN)`-based solutions that can be adapted and
 deployed across many frameworks and backends. A more detailed explanation, as
 well as a high-level overview, can be found on our project :doc:`project/about`.  
 For more generalized discussion on the ecosystem, see the `ecosystem`_ document.
+
+.. figure:: graphics/ngcompiler-ecosystem.png
+   :width: 650px
+   :alt: ecosystem 
+
+   The Intel nGraph Compiler stack supports a broad ecosystem of frameworks and backends. 
 
 
 .. _quickstart:

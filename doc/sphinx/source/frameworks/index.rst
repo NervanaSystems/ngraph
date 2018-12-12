@@ -1,4 +1,4 @@
-.. frameworks/index: 
+.. frameworks/index.rst: 
 
 Framework Customizations   
 ########################
