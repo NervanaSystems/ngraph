@@ -45,7 +45,6 @@
 #include <CPP/topology.hpp>
 
 #include "ngraph/pass/algebraic_simplification.hpp"
-#include "ngraph/pass/any_all_replacement.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -418,7 +417,6 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
     {
         ngraph::pass::Manager pass_manager;
 
-        pass_manager.register_pass<ngraph::pass::AnyAllReplacement>();
         pass_manager.register_pass<ngraph::pass::NopElimination>();
         pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
