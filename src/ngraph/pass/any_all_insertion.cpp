@@ -48,12 +48,13 @@ bool is_boolean_scalar_constant_with_val(std::shared_ptr<ngraph::Node> node, boo
     return (*k_data == static_cast<char>(val));
 }
 
-bool reduce_is_any(std::shared_ptr<ngraph::op::Reduce> reduce)
+template <typename T>
+bool check_reduce_for_replacement(std::shared_ptr<ngraph::op::Reduce> reduce, bool expected_k_val)
 {
     auto reductee = reduce->get_argument(0);
     auto init_val = reduce->get_argument(1);
 
-    if (!is_boolean_scalar_constant_with_val(init_val, false))
+    if (!is_boolean_scalar_constant_with_val(init_val, expected_k_val))
     {
         return false;
     }
@@ -61,40 +62,7 @@ bool reduce_is_any(std::shared_ptr<ngraph::op::Reduce> reduce)
     auto func = reduce->get_functions().at(0);
     auto func_result_op = func->get_results().at(0)->get_argument(0);
 
-    if (std::dynamic_pointer_cast<op::Or>(func_result_op) == nullptr)
-    {
-        return false;
-    }
-
-    auto func_params = func->get_parameters();
-    auto func_param_0 = func_params.at(0);
-    auto func_param_1 = func_params.at(1);
-    auto func_result_op_arg_0 = func_result_op->get_argument(0);
-    auto func_result_op_arg_1 = func_result_op->get_argument(1);
-
-    if (!((func_param_0 == func_result_op_arg_0 && func_param_1 == func_result_op_arg_1) ||
-          (func_param_0 == func_result_op_arg_1 && func_param_1 == func_result_op_arg_0)))
-    {
-        return false;
-    }
-
-    return true;
-}
-
-bool reduce_is_all(std::shared_ptr<ngraph::op::Reduce> reduce)
-{
-    auto reductee = reduce->get_argument(0);
-    auto init_val = reduce->get_argument(1);
-
-    if (!is_boolean_scalar_constant_with_val(init_val, true))
-    {
-        return false;
-    }
-
-    auto func = reduce->get_functions().at(0);
-    auto func_result_op = func->get_results().at(0)->get_argument(0);
-
-    if (std::dynamic_pointer_cast<op::And>(func_result_op) == nullptr)
+    if (std::dynamic_pointer_cast<T>(func_result_op) == nullptr)
     {
         return false;
     }
@@ -122,14 +90,14 @@ bool ngraph::pass::AnyAllInsertion::run_on_node(std::shared_ptr<ngraph::Node> no
         return false;
     }
 
-    if (reduce_is_any(reduce))
+    if (check_reduce_for_replacement<op::Or>(reduce, false))
     {
         ngraph::replace_node(
             reduce,
             std::make_shared<op::Any>(reduce->get_argument(0), reduce->get_reduction_axes()));
         return true;
     }
-    else if (reduce_is_all(reduce))
+    else if (check_reduce_for_replacement<op::And>(reduce, true))
     {
         ngraph::replace_node(
             reduce,
