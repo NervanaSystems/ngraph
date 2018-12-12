@@ -22,6 +22,7 @@
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
+from setuptools.command.develop import develop
 from wheel.bdist_wheel import bdist_wheel
 from shutil import copyfile
 from distutils.errors import *
@@ -46,15 +47,14 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     def _single_compile(obj):
         try:
             src, ext = build[obj]
+            self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
         except KeyError:
-            return
-        self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
+            pass
+        return obj
     # convert to list, imap is evaluated on-demand
-    list(multiprocessing.pool.ThreadPool().imap(_single_compile, objects))
-    return objects
+    retval = [result for result in multiprocessing.pool.ThreadPool().imap(_single_compile, objects)]
+    return retval
 
-
-original_compile=distutils.ccompiler.CCompiler.compile
 
 if sys.version_info < (3, 6):
     distutils.ccompiler.CCompiler.compile=parallelCCompile
@@ -72,7 +72,7 @@ def has_flag(compiler, flagname):
     with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
         f.write('int main (int argc, char **argv) { return 0; }')
         try:
-            original_compile(compiler, sources=[f.name], extra_postargs=[flagname])
+            compiler.compile(sources=[f.name], extra_postargs=[flagname])
         except CompileError:
             retval = False
     return retval
@@ -165,15 +165,33 @@ ext_modules = [Extension(
               ]
 
 
+build_shared_lib = None
+
+
+class Develop(develop):
+    def run(self):
+        develop.run(self)
+        if self.uninstall:
+            pass
+        # Copy nGraph library to a path accessible in develop mode
+        libs = os.listdir(build_shared_lib)
+        for lib in libs:
+            src = os.path.join(build_shared_lib, lib)
+            copyfile(src, lib)
+
+
+
 class BuildExt(build_ext):
     """
     A custom build extension for adding compiler-specific options.
     """
     def build_extensions(self):
+        global build_shared_lib
         if sys.platform == 'win32':
             raise RuntimeError('Unsupported platform: win32!')
         if not os.path.exists(self.build_lib + '/'):
             os.makedirs(self.build_lib)
+        build_shared_lib = self.build_lib
         for source in sharedlib_files:
             destination = self.build_lib + '/' + os.path.basename(source)
             if 'libomp' in source or 'libgomp' in source:
@@ -241,7 +259,7 @@ setup(
     ext_modules=ext_modules,
     package_dir=package_dir,
     packages=packages,
-    cmdclass={'build_ext': BuildExt, 'bdist_wheel': BdistWheel},
+    cmdclass={'build_ext': BuildExt, 'bdist_wheel': BdistWheel, 'develop': Develop},
     data_files=data_files,
     setup_requires=['numpy'],
     install_requires=requirements,
