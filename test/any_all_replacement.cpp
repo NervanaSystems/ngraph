@@ -23,10 +23,12 @@
 using namespace ngraph;
 using namespace std;
 
+template <typename T>
 static void
-    check_any_replacement(std::shared_ptr<Node> n, std::shared_ptr<Node> arg, const AxisSet& axes)
+    check_replacement(std::shared_ptr<Node> n, std::shared_ptr<Node> arg, const AxisSet& axes)
 {
-    // NB: We are probably not checking all properties we could check here.
+    // NB: We are not checking all properties we could check here. (In particular could check the
+    // constant value.)
 
     auto reduce = std::dynamic_pointer_cast<op::Reduce>(n);
     ASSERT_NE(reduce, nullptr);
@@ -35,32 +37,10 @@ static void
     auto k = std::dynamic_pointer_cast<op::Constant>(reduce->get_argument(1));
     ASSERT_NE(k, nullptr);
     auto reduce_f = reduce->get_functions().at(0);
-    auto reduce_f_or =
-        std::dynamic_pointer_cast<op::Or>(reduce_f->get_results().at(0)->get_argument(0));
-    ASSERT_NE(reduce_f_or, nullptr);
-    ASSERT_EQ(reduce_f_or->get_argument(0), reduce_f->get_parameters().at(0));
-    ASSERT_EQ(reduce_f_or->get_argument(1), reduce_f->get_parameters().at(1));
-    ASSERT_EQ(reduce_f->get_parameters().at(0)->get_shape(), Shape{});
-    ASSERT_EQ(reduce_f->get_parameters().at(1)->get_shape(), Shape{});
-}
-
-static void
-    check_all_replacement(std::shared_ptr<Node> n, std::shared_ptr<Node> arg, const AxisSet& axes)
-{
-    // NB: We are probably not checking all properties we could check here.
-
-    auto reduce = std::dynamic_pointer_cast<op::Reduce>(n);
-    ASSERT_NE(reduce, nullptr);
-    ASSERT_EQ(reduce->get_reduction_axes(), axes);
-    ASSERT_EQ(reduce->get_argument(0), arg);
-    auto k = std::dynamic_pointer_cast<op::Constant>(reduce->get_argument(1));
-    ASSERT_NE(k, nullptr);
-    auto reduce_f = reduce->get_functions().at(0);
-    auto reduce_f_and =
-        std::dynamic_pointer_cast<op::And>(reduce_f->get_results().at(0)->get_argument(0));
-    ASSERT_NE(reduce_f_and, nullptr);
-    ASSERT_EQ(reduce_f_and->get_argument(0), reduce_f->get_parameters().at(0));
-    ASSERT_EQ(reduce_f_and->get_argument(1), reduce_f->get_parameters().at(1));
+    auto reduce_f_op = std::dynamic_pointer_cast<T>(reduce_f->get_results().at(0)->get_argument(0));
+    ASSERT_NE(reduce_f_op, nullptr);
+    ASSERT_EQ(reduce_f_op->get_argument(0), reduce_f->get_parameters().at(0));
+    ASSERT_EQ(reduce_f_op->get_argument(1), reduce_f->get_parameters().at(1));
     ASSERT_EQ(reduce_f->get_parameters().at(0)->get_shape(), Shape{});
     ASSERT_EQ(reduce_f->get_parameters().at(1)->get_shape(), Shape{});
 }
@@ -75,7 +55,7 @@ TEST(any_all_replacement, any_simple)
     pass_manager.register_pass<pass::AnyAllReplacement>();
     pass_manager.run_passes(f);
 
-    check_any_replacement(
+    check_replacement<op::Or>(
         f->get_results().at(0)->get_argument(0), param, any->get_reduction_axes());
 }
 
@@ -92,11 +72,11 @@ TEST(any_all_replacement, any_chained)
     pass_manager.register_pass<pass::AnyAllReplacement>();
     pass_manager.run_passes(f);
 
-    check_any_replacement(
+    check_replacement<op::Or>(
         f->get_results().at(0)->get_argument(0), param, any_0->get_reduction_axes());
-    check_any_replacement(f->get_results().at(1)->get_argument(0),
-                          f->get_results().at(0)->get_argument(0),
-                          any_1->get_reduction_axes());
+    check_replacement<op::Or>(f->get_results().at(1)->get_argument(0),
+                              f->get_results().at(0)->get_argument(0),
+                              any_1->get_reduction_axes());
 }
 
 TEST(any_all_replacement, all_simple)
@@ -109,7 +89,7 @@ TEST(any_all_replacement, all_simple)
     pass_manager.register_pass<pass::AnyAllReplacement>();
     pass_manager.run_passes(f);
 
-    check_all_replacement(
+    check_replacement<op::And>(
         f->get_results().at(0)->get_argument(0), param, all->get_reduction_axes());
 }
 
@@ -126,9 +106,9 @@ TEST(any_all_replacement, all_chained)
     pass_manager.register_pass<pass::AnyAllReplacement>();
     pass_manager.run_passes(f);
 
-    check_all_replacement(
+    check_replacement<op::And>(
         f->get_results().at(0)->get_argument(0), param, all_0->get_reduction_axes());
-    check_all_replacement(f->get_results().at(1)->get_argument(0),
-                          f->get_results().at(0)->get_argument(0),
-                          all_1->get_reduction_axes());
+    check_replacement<op::And>(f->get_results().at(1)->get_argument(0),
+                               f->get_results().at(0)->get_argument(0),
+                               all_1->get_reduction_axes());
 }
