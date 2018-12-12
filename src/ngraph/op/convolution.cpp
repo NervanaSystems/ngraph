@@ -327,7 +327,7 @@ void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints
     for (size_t i = 0; i < f_shape.size() - 2; i++)
     {
         window_movement_strides.push_back(m_window_dilation_strides_forward[i]);
-        window_dilation_strides.push_back(m_window_movement_strides_forward[i]);
+        window_dilation_strides.push_back(m_data_dilation_strides_forward[i]);
         ptrdiff_t padding_below_backward =
             (static_cast<ptrdiff_t>(filters_shape[i + 2]) - 1) * window_dilation_strides[i] -
             m_padding_below_forward[i];
@@ -346,7 +346,7 @@ void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints
         padding_above.push_back(
             padding_above_backward -
             (padding_below_backward + (x_shape[i + 2] - 1) * m_window_movement_strides_forward[i] +
-             padding_above_backward - (f_shape[i + 2] - 1) * m_window_movement_strides_forward[i]) %
+             padding_above_backward - (f_shape[i + 2] - 1) * m_window_dilation_strides_forward[i]) %
                 m_data_dilation_strides_forward[i]);
         data_dilation_strides.push_back(m_window_movement_strides_forward[i]);
     }
