@@ -18,7 +18,6 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/product.hpp"
-#include "ngraph/op/reduce.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/runtime/plaidml/plaidml_compiler.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
