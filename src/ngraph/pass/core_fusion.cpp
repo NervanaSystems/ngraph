@@ -118,24 +118,9 @@ void pass::CoreFusion::construct_sigmoid()
             return false;
         }
 
-        auto const_val_op = std::dynamic_pointer_cast<op::Constant>(pattern_map[constant]);
-        if (!const_val_op)
+        if (!is_one(pattern_map[constant]))
         {
-            NGRAPH_DEBUG << "const value should be of type Constant";
-            return false;
-        }
-
-        if (const_val_op->get_vector<float>().at(0) != 1.0f)
-        {
-            NGRAPH_DEBUG << "const value should be 1";
-            return false;
-        }
-
-        auto const_data = const_val_op->get_vector<float>();
-        if (std::adjacent_find(const_data.begin(), const_data.end(), std::not_equal_to<float>()) !=
-            const_data.end() )
-        {
-            NGRAPH_DEBUG << "All elements are not equal to each other";
+            NGRAPH_DEBUG << "Node not constant or not 1";
             return false;
         }
         auto sigmoid_node = std::make_shared<op::Sigmoid>(pattern_map[input]);
