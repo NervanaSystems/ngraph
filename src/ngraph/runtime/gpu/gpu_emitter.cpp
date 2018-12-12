@@ -33,8 +33,10 @@
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
@@ -52,6 +54,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
@@ -156,6 +159,11 @@ void runtime::gpu::GPU_Emitter::emit_Add(EMIT_ARGS)
     emit_elementwise<ngraph::op::Add>(external_function, writer, node, args, out);
 }
 
+void runtime::gpu::GPU_Emitter::emit_All(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 void runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
@@ -164,6 +172,11 @@ void runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)
 void runtime::gpu::GPU_Emitter::emit_And(EMIT_ARGS)
 {
     emit_elementwise<ngraph::op::And>(external_function, writer, node, args, out);
+}
+
+void runtime::gpu::GPU_Emitter::emit_Any(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 void runtime::gpu::GPU_Emitter::emit_ArgMax(EMIT_ARGS)
@@ -634,6 +647,11 @@ void runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
         }
     }
     writer.block_end();
+}
+
+void runtime::gpu::GPU_Emitter::emit_EmbeddingLookup(EMIT_ARGS)
+{
+    throw ngraph_error("EmbeddingLookup is not yet implemented for NVIDIA GPU");
 }
 
 void runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)
@@ -1487,9 +1505,9 @@ void runtime::gpu::GPU_Emitter::emit_Softmax(EMIT_ARGS)
     writer.block_begin();
     {
         auto axes_set = softmax->get_axes();
-        std::vector<string> dtypes;
-        dtypes.push_back(args[0].get_type());
-        dtypes.push_back(out[0].get_type());
+        std::vector<element::Type> dtypes;
+        dtypes.push_back(args[0].get_element_type());
+        dtypes.push_back(out[0].get_element_type());
         auto& cuda_emitter = external_function->get_primitive_emitter()->get_cuda_emitter();
         size_t index = cuda_emitter->build_softmax(dtypes, args[0].get_shape(), axes_set);
 
