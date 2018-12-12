@@ -112,6 +112,7 @@ Contents
    :caption: Documentation
 
    buildlb.rst
+   python_api/index.rst
    graph-basics.rst
    howto/index.rst
    ops/index.rst
@@ -120,7 +121,6 @@ Contents
    fusion/index.rst
    programmable/index.rst
    distr/index.rst
-   python_api/index.rst
    project/index.rst
 
 

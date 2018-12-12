@@ -91,6 +91,12 @@ q:before, q:after {
   content: none;
 }
 
+
+title {
+  font-family: NeoSansIntel;
+}
+
+
 small {
   font-size: 85%;
 }
@@ -577,7 +583,8 @@ a .fa, a .rst-content .admonition-title, .rst-content a .admonition-title, a .rs
   display: block;
   background: #638470;
   margin: -5px;
-  font-family: 'RobotoSlab', sans;
+  font-family: NeoSansIntel, sans;
+  font-weight: bolder;
   padding: 0.43em 0.74em;
   margin-bottom: 0.33em;
 }
@@ -597,27 +604,27 @@ a .fa, a .rst-content .admonition-title, .rst-content a .admonition-title, a .rs
 }
 
 .wy-alert.wy-alert-info, .rst-content .note, .rst-content .wy-alert-info.attention, .rst-content .wy-alert-info.caution, .rst-content .wy-alert-info.danger, .rst-content .wy-alert-info.error, .rst-content .wy-alert-info.hint, .rst-content .wy-alert-info.important, .rst-content .wy-alert-info.tip, .rst-content .wy-alert-info.warning, .rst-content .seealso, .rst-content .wy-alert-info.admonition-todo {
-  background: #d2e0df;
+  background: #c0e4ff;
 }
 .wy-alert.wy-alert-info .wy-alert-title, .rst-content .note .wy-alert-title, .rst-content .wy-alert-info.attention .wy-alert-title, .rst-content .wy-alert-info.caution .wy-alert-title, .rst-content .wy-alert-info.danger .wy-alert-title, .rst-content .wy-alert-info.error .wy-alert-title, .rst-content .wy-alert-info.hint .wy-alert-title, .rst-content .wy-alert-info.important .wy-alert-title, .rst-content .wy-alert-info.tip .wy-alert-title, .rst-content .wy-alert-info.warning .wy-alert-title, .rst-content .seealso .wy-alert-title, .rst-content .wy-alert-info.admonition-todo .wy-alert-title, .wy-alert.wy-alert-info .rst-content .admonition-title, .rst-content .wy-alert.wy-alert-info .admonition-title, .rst-content .note .admonition-title, .rst-content .wy-alert-info.attention .admonition-title, .rst-content .wy-alert-info.caution .admonition-title, .rst-content .wy-alert-info.danger .admonition-title, .rst-content .wy-alert-info.error .admonition-title, .rst-content .wy-alert-info.hint .admonition-title, .rst-content .wy-alert-info.important .admonition-title, .rst-content .wy-alert-info.tip .admonition-title, .rst-content .wy-alert-info.warning .admonition-title, .rst-content .seealso .admonition-title, .rst-content .wy-alert-info.admonition-todo .admonition-title {
-  background: #a3bfbd;
+  background: #0071c5;
 }
 
 .wy-alert.wy-alert-success, .rst-content .wy-alert-success.note, .rst-content .wy-alert-success.attention, .rst-content .wy-alert-success.caution, .rst-content .wy-alert-success.danger, .rst-content .wy-alert-success.error, .rst-content .hint, .rst-content .important, .rst-content .tip, .rst-content .wy-alert-success.warning, .rst-content .wy-alert-success.seealso, .rst-content .wy-alert-success.admonition-todo {
-  background: #dbfaf4;
+  background: #f1e2c6;
 }
 .wy-alert.wy-alert-success .wy-alert-title, .rst-content .wy-alert-success.note .wy-alert-title, .rst-content .wy-alert-success.attention .wy-alert-title, .rst-content .wy-alert-success.caution .wy-alert-title, .rst-content .wy-alert-success.danger .wy-alert-title, .rst-content .wy-alert-success.error .wy-alert-title, .rst-content .hint .wy-alert-title, .rst-content .important .wy-alert-title, .rst-content .tip .wy-alert-title, .rst-content .wy-alert-success.warning .wy-alert-title, .rst-content .wy-alert-success.seealso .wy-alert-title, .rst-content .wy-alert-success.admonition-todo .wy-alert-title, .wy-alert.wy-alert-success .rst-content .admonition-title, .rst-content .wy-alert.wy-alert-success .admonition-title, .rst-content .wy-alert-success.note .admonition-title, .rst-content .wy-alert-success.attention .admonition-title, .rst-content .wy-alert-success.caution .admonition-title, .rst-content .wy-alert-success.danger .admonition-title, .rst-content .wy-alert-success.error .admonition-title, .rst-content .hint .admonition-title, .rst-content .important .admonition-title, .rst-content .tip .admonition-title, .rst-content .wy-alert-success.warning .admonition-title, .rst-content .wy-alert-success.seealso .admonition-title, .rst-content .wy-alert-success.admonition-todo .admonition-title {
-  background: #1abc9c;
+  background: #d8a335;
 }
 
 .wy-alert.wy-alert-neutral, .rst-content .wy-alert-neutral.note, .rst-content .wy-alert-neutral.attention, .rst-content .wy-alert-neutral.caution, .rst-content .wy-alert-neutral.danger, .rst-content .wy-alert-neutral.error, .rst-content .wy-alert-neutral.hint, .rst-content .wy-alert-neutral.important, .rst-content .wy-alert-neutral.tip, .rst-content .wy-alert-neutral.warning, .rst-content .wy-alert-neutral.seealso, .rst-content .wy-alert-neutral.admonition-todo {
   background: #f3f6f6;
 }
 .wy-alert.wy-alert-neutral .wy-alert-title, .rst-content .wy-alert-neutral.note .wy-alert-title, .rst-content .wy-alert-neutral.attention .wy-alert-title, .rst-content .wy-alert-neutral.caution .wy-alert-title, .rst-content .wy-alert-neutral.danger .wy-alert-title, .rst-content .wy-alert-neutral.error .wy-alert-title, .rst-content .wy-alert-neutral.hint .wy-alert-title, .rst-content .wy-alert-neutral.important .wy-alert-title, .rst-content .wy-alert-neutral.tip .wy-alert-title, .rst-content .wy-alert-neutral.warning .wy-alert-title, .rst-content .wy-alert-neutral.seealso .wy-alert-title, .rst-content .wy-alert-neutral.admonition-todo .wy-alert-title, .wy-alert.wy-alert-neutral .rst-content .admonition-title, .rst-content .wy-alert.wy-alert-neutral .admonition-title, .rst-content .wy-alert-neutral.note .admonition-title, .rst-content .wy-alert-neutral.attention .admonition-title, .rst-content .wy-alert-neutral.caution .admonition-title, .rst-content .wy-alert-neutral.danger .admonition-title, .rst-content .wy-alert-neutral.error .admonition-title, .rst-content .wy-alert-neutral.hint .admonition-title, .rst-content .wy-alert-neutral.important .admonition-title, .rst-content .wy-alert-neutral.tip .admonition-title, .rst-content .wy-alert-neutral.warning .admonition-title, .rst-content .wy-alert-neutral.seealso .admonition-title, .rst-content .wy-alert-neutral.admonition-todo .admonition-title {
-  background: #e1e4e5;
+  background: #88b8c8;
 }
 .wy-alert.wy-alert-neutral a, .rst-content .wy-alert-neutral.note a, .rst-content .wy-alert-neutral.attention a, .rst-content .wy-alert-neutral.caution a, .rst-content .wy-alert-neutral.danger a, .rst-content .wy-alert-neutral.error a, .rst-content .wy-alert-neutral.hint a, .rst-content .wy-alert-neutral.important a, .rst-content .wy-alert-neutral.tip a, .rst-content .wy-alert-neutral.warning a, .rst-content .wy-alert-neutral.seealso a, .rst-content .wy-alert-neutral.admonition-todo a {
-  color: #2980B9;
+  color: #2995b8;
 }
 
 .wy-alert p:last-child, .rst-content .note p:last-child, .rst-content .attention p:last-child, .rst-content .caution p:last-child, .rst-content .danger p:last-child, .rst-content .error p:last-child, .rst-content .hint p:last-child, .rst-content .important p:last-child, .rst-content .tip p:last-child, .rst-content .warning p:last-child, .rst-content .seealso p:last-child, .rst-content .admonition-todo p:last-child {
@@ -789,14 +796,14 @@ button[disabled] {
 
 .btn-neutral {
   background-color: #f3f6f6 !important;
-  color: #404040 !important;
+  color: #7b7064 !important;
 }
 .btn-neutral:hover {
   background-color: #e5ebeb !important;
-  color: #404040;
+  color: #7b7064;
 }
 .btn-neutral:visited {
-  color: #404040 !important;
+  color: #7b7064 !important;
 }
 
 .btn-success {
@@ -888,7 +895,7 @@ button[disabled] {
 .wy-dropdown-menu > dd > a {
   display: block;
   clear: both;
-  color: #404040;
+  color: #7b7064;
   white-space: nowrap;
   font-size: 90%;
   padding: 0 12px;
@@ -1262,7 +1269,7 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
 
 .wy-checkbox, .wy-radio {
   margin: 6px 0;
-  color: #404040;
+  color: #7b7064;
   display: block;
 }
 .wy-checkbox input, .wy-radio input {
@@ -1610,17 +1617,17 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
 }
 
 a {
-  color: #a08105;
+  color: #0071c5;
   text-decoration: none;
   cursor: pointer;
 }
 a:hover {
-  color: #a08105;
-  text-decoration: underline;
+  color: #0071c5;
+  text-decoration: underline #c0e4ff;
 
 }
 a:visited {
-  color: #a08105;
+  color: #0071c5;
 }
 
 html {
@@ -1699,7 +1706,7 @@ a.wy-text-danger:hover {
 }
 
 .wy-text-neutral {
-  color: #404040 !important;
+  color: #7b7064 !important;
 }
 
 a.wy-text-neutral:hover {
@@ -1733,7 +1740,7 @@ h2, .rst-content .toctree-wrapper p.caption {
 
 h3 {
   font-size: 127%;
-  color: #5F5F5F;
+  color: #63503c;
 }
 
 h4 {
@@ -1862,13 +1869,13 @@ caption-text {
 
 
   .code-block-caption { 
-    color: #5f6161;
-    background-color: #c8d5d4;
+    color: #40515d;
+    background-color: #c0e4ff;
     padding-right: 0.43em;
     padding-top: 0.29em;
     padding-left: 0.11em;
     padding-bottom: 0.23em;
-    text-align: right; 
+    text-align: rig6ht; 
     }
 
 div[class^='highlight'] pre {
@@ -1978,7 +1985,7 @@ div[class^='highlight'] pre {
 
 .go {
   /* Original white wasn't visible */
-  color: #333333;
+  color: #554d2f;
 }
 
 .gp {
@@ -2032,7 +2039,7 @@ div[class^='highlight'] pre {
 }
 
 .n {
-  color: #333333;
+  color: #554d2f;
 }
 
 .na {
@@ -2190,7 +2197,7 @@ div[class^='highlight'] pre {
   background: none;
 }
 .wy-breadcrumbs li code.literal, .wy-breadcrumbs li .rst-content tt.literal, .rst-content .wy-breadcrumbs li tt.literal {
-  color: #404040;
+  color: #7b7064;
 }
 
 .wy-breadcrumbs-extra {
@@ -2389,7 +2396,7 @@ div[class^='highlight'] pre {
   margin-bottom: 12px;
 }
 .rst-content .toc-backref {
-  color: #404040;
+  color: #7b7064;
 }
 .rst-content .align-right {
   float: right;
@@ -2506,12 +2513,12 @@ div[class^='highlight'] pre {
 }
 .rst-content tt.literal, .rst-content tt.literal, .rst-content code.literal {
   font-size: 103% !important;
-  color: #0C7881;
+  color: #975714;
   line-height: 0.93em;
 }
 .rst-content tt.xref, a .rst-content tt, .rst-content tt.xref, .rst-content code.xref, a .rst-content tt, a .rst-content code {
   font-weight: bold;
-  color: #404040;
+  color: #7b7064;
 }
 .rst-content a tt, .rst-content a tt, .rst-content a code {
   color: #2980B9;
@@ -2538,8 +2545,8 @@ div[class^='highlight'] pre {
     font-family: monospace;
   line-height: normal;
   background: white;
-  color: #84aead;
-  border-top: solid 0.31em #6da09d;
+  color: #0071c5;
+  border-top: solid 0.31em #0071c5;
   padding: 6px;
   position: relative;
 }
@@ -2559,15 +2566,15 @@ div[class^='highlight'] pre {
 }
 
 .function {
-    border-right: dashed 0.19em #a3bfbd;
-    border-bottom: solid 0.23em #a3bfbd;
-    border-top: solid 0.31em #a3bfbd;
-    background: #f4f2f0;
+    border-right: dashed 0.19em #eac98a;
+    border-bottom: solid 0.23em #d8a36b;
+    border-top: solid 0.27em #d8a36b;
+    background: #f0ece1;
 }
 
 
 .rst-content dl:not(.docutils) dt .headerlink {
-  color: #404040;
+  color: #7b7064;
   font-size: 100% !important;
 }
 .rst-content dl:not(.docutils) dl dt {
@@ -2579,7 +2586,7 @@ div[class^='highlight'] pre {
  
 }
 .rst-content dl:not(.docutils) dl dt .headerlink {
-  color: #404040;
+  color: #7b7064;
   font-size: 100% !important;
 }
 .rst-content dl:not(.docutils) dt:first-child {
@@ -2672,7 +2679,7 @@ div[class^='highlight'] pre {
   }
 }
 span[id*='MathJax-Span'] {
-  color: #404040;
+  color: #7b7064;
 }
 
 .math {
@@ -2742,10 +2749,10 @@ span[id*='MathJax-Span'] {
   background: rgba(255, 255, 255, 0.1);
 }
 .wy-menu-horiz li.divide-left {
-  border-left: solid 1px #404040;
+  border-left: solid 1px #7b7064;
 }
 .wy-menu-horiz li.divide-right {
-  border-right: solid 1px #404040;
+  border-right: solid 1px #7b7064;
 }
 .wy-menu-horiz a {
   height: 32px;
@@ -2764,7 +2771,7 @@ span[id*='MathJax-Span'] {
   padding: 0 1.618em;
   margin-bottom: 0;
   display: block;
-  font-family: "Neo Sans Intel", sans;
+  font-family: NeoSansIntel, sans;
   font-weight: bold;
   text-transform: uppercase;
   font-size: 80%;
@@ -2775,10 +2782,10 @@ span[id*='MathJax-Span'] {
   margin-bottom: 0;
 }
 .wy-menu-vertical li.divide-top {
-  border-top: solid 1px #404040;
+  border-top: solid 1px #7b7064;
 }
 .wy-menu-vertical li.divide-bottom {
-  border-bottom: solid 1px #404040;
+  border-bottom: solid 1px #7b7064;
 }
 .wy-menu-vertical li.current {
   background: #e3e3e3;
@@ -2826,7 +2833,7 @@ span[id*='MathJax-Span'] {
   display: block;
   font-size: 0.8em;
   line-height: 1.6em;
-  color: #333333;
+  color: #554d2f;
 }
 .wy-menu-vertical li.toctree-l1.current li.toctree-l2 > ul, .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > ul {
   display: none; margin-left: 0.33em; padding-left: 0.22em;
@@ -2904,7 +2911,7 @@ span[id*='MathJax-Span'] {
   color: #e8e8e8;
 }
 .wy-menu-vertical a:active {
-  background-color: #84AEAD;
+  background-color: #0071c5;
   cursor: pointer;
   color: #fff;
 }
@@ -2918,7 +2925,7 @@ span[id*='MathJax-Span'] {
   padding: 0.809em;
   margin-bottom: 0.809em;
   z-index: 200;
-  background-color: #84AEAD;
+  background-color: #0071c5;
   text-align: center;
   padding: 0.809em;
   display: block;
@@ -2972,7 +2979,7 @@ span[id*='MathJax-Span'] {
 }
 
 .wy-nav .wy-menu-vertical header {
-  color: #84aead;
+  color: #0071c5;
 }
 .wy-nav .wy-menu-vertical a {
   color: #dadada;
@@ -3042,7 +3049,7 @@ span[id*='MathJax-Span'] {
 
 .wy-nav-top {
   display: none;
-  background: #84aead;
+  background: #0071c5;
   color: #fff;
   padding: 0.4045em 0.809em;
   position: relative;
@@ -3066,7 +3073,7 @@ span[id*='MathJax-Span'] {
   margin-right: 12px;
   height: 45px;
   width: 45px;
-  background-color: #84aead;
+  background-color: #0071c5;
   padding: 5px;
   border-radius: 100%;
 }

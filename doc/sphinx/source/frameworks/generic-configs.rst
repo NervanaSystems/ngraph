@@ -1,8 +1,8 @@
 .. frameworks/generic-configs.rst
 
 
-Configs available to any Framework
-##################################
+Configurations available to any Framework
+#########################################
 
 An engineer might want to work with a DL framework that does not yet have bridge 
 code written. For non-supported or "generic" frameworks, it is assumed that 

@@ -89,7 +89,7 @@ to improve it:
 [Documentation]: https://ngraph.nervanasys.com/docs/latest
 [build the Library]: https://ngraph.nervanasys.com/docs/latest/buildlb.html
 [Getting Started Guides]: Getting-started-guides
-[Validated workloads]: https://ngraph.nervanasys.com/docs/latest/frameworks/validation-testing.html
+[Validated workloads]: https://ngraph.nervanasys.com/docs/latest/frameworks/validation.html
 [Functional]: https://github.com/NervanaSystems/ngraph-onnx/ 
 [How to contribute]: How-to-contribute
 [framework integration guides]: http://ngraph.nervanasys.com/docs/latest/framework-integration-guides.html
@@ -110,4 +110,5 @@ to improve it:
 [nGraph-ONNX adaptable]: https://ai.intel.com/adaptable-deep-learning-solutions-with-ngraph-compiler-and-onnx/
 [nGraph for PyTorch developers]: https://ai.intel.com/investing-in-the-pytorch-developer-community
 [Validated workloads]: https://ngraph.nervanasys.com/docs/latest/frameworks/genre-validation.html
+
 

@@ -11,7 +11,7 @@ Framework Customizations
    :maxdepth: 1 
 
    generic-configs.rst
-   genre-validation.rst
+   validation.rst
    testing-latency.rst
 
 
@@ -24,7 +24,7 @@ approach:
 
 #. First **find** a tested and working DL model that does something *similar* 
    to what the data scientist or ML engineer wants to do. To assist with this 
-   stage, we've already provided several :doc:`genre-validation` examples 
+   stage, we've already provided several :doc:`validation` examples 
    organized by framework and what we call *Genre of Deep Learning*.  
 #. Next, **replicate** that result using well-known datasets to confirm that the 
    model does indeed work. To assist wtih this stage, we've released several  
