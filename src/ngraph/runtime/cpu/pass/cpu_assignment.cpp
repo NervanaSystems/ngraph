@@ -37,6 +37,7 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/quantize.hpp"
@@ -169,6 +170,16 @@ namespace ngraph
                         op_annotations->add_in_place_oi_pair({0, ADD_INPUT, true});
                         convolution->set_op_annotations(op_annotations);
                     }
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::GetOutputElement)
+                {
+                    auto goe = static_cast<op::GetOutputElement*>(node);
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    op_annotations->add_in_place_oi_pair({0, goe->get_n(), false});
+                    goe->set_op_annotations(op_annotations);
                 }
 
                 template <>
@@ -871,6 +882,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Quantize>},
     {TI(ngraph::op::Dequantize),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Dequantize>},
+    {TI(ngraph::op::GetOutputElement),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::GetOutputElement>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(
