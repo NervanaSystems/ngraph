@@ -2764,26 +2764,6 @@ TEST(type_prop, select_partial_all_rank_static_intransitive_incompatibility)
     }
 }
 
-TEST(type_prop, function_call_deduce)
-{
-    // First create "f(A,B,C) = (A+B)*C".
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B * C), ParameterVector{A, B, C});
-
-    // Now make "f(X,Y,Z) + f(X,Y,Z)"
-    auto X = make_shared<op::Parameter>(element::f32, shape);
-    auto Y = make_shared<op::Parameter>(element::f32, shape);
-    auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto r = make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z});
-    auto r_p_r = r + r;
-
-    ASSERT_EQ(r_p_r->get_element_type(), element::f32);
-    ASSERT_EQ(r_p_r->get_shape(), shape);
-}
-
 TEST(type_prop, reshape_deduce_s2v)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{});

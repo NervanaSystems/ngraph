@@ -60,7 +60,6 @@
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/floor.hpp"
-#include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -662,20 +661,6 @@ void runtime::gpu::GPU_Emitter::emit_Exp(EMIT_ARGS)
 void runtime::gpu::GPU_Emitter::emit_Floor(EMIT_ARGS)
 {
     emit_elementwise<ngraph::op::Floor>(external_function, writer, node, args, out);
-}
-
-void runtime::gpu::GPU_Emitter::emit_FunctionCall(EMIT_ARGS)
-{
-    auto function_call = static_cast<const ngraph::op::FunctionCall*>(node);
-    shared_ptr<Function> function = function_call->get_functions()[0];
-
-    writer.block_begin();
-    {
-        writer << "void* input[] = {" << node_names(args) << "};\n";
-        writer << "void* output[] = {" << node_names(out) << "};\n";
-        writer << function->get_name() << "(input, output, ctx);\n";
-    }
-    writer.block_end();
 }
 
 void runtime::gpu::GPU_Emitter::emit_GenerateMask(EMIT_ARGS)

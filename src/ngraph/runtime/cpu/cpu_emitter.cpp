@@ -54,7 +54,6 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/floor.hpp"
-#include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -1420,45 +1419,6 @@ namespace ngraph
                                          reshape->get_input_order());
                 }
 
-                writer.block_end();
-            }
-
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::FunctionCall)
-            {
-                auto function_call = static_cast<const ngraph::op::FunctionCall*>(node);
-                shared_ptr<Function> function = function_call->get_functions()[0];
-
-                writer.block_begin();
-                {
-                    vector<string> input_names;
-                    vector<string> output_names;
-
-                    for (const runtime::cpu::TensorViewWrapper& input : args)
-                    {
-                        input_names.push_back(input.get_name());
-                    }
-
-                    for (const runtime::cpu::TensorViewWrapper& output : out)
-                    {
-                        output_names.push_back(output.get_name());
-                    }
-
-                    writer << "void* args[] =\n";
-                    writer.block_begin();
-                    writer << "\n" << join(input_names, ",\n");
-                    writer.block_end();
-                    writer << ";\n";
-
-                    writer << "void* out[] =\n";
-                    writer.block_begin();
-                    writer << "\n" << join(output_names, ",\n");
-                    writer.block_end();
-                    writer << ";\n";
-
-                    writer << "\n";
-                    writer << function->get_name() << "(args, out, ctx);\n";
-                }
                 writer.block_end();
             }
 

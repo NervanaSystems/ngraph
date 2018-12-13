@@ -71,7 +71,6 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/floor.hpp"
-#include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -311,7 +310,6 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Convert), &runtime::cpu::CPU_Emitter::emit<op::Convert>},
     {TI(ngraph::op::Constant), &runtime::cpu::CPU_Emitter::emit<op::Constant>},
     {TI(ngraph::op::Reshape), &runtime::cpu::CPU_Emitter::emit<op::Reshape>},
-    {TI(ngraph::op::FunctionCall), &runtime::cpu::CPU_Emitter::emit<op::FunctionCall>},
     {TI(ngraph::op::Sign), &runtime::cpu::CPU_Emitter::emit<op::Sign>},
     {TI(ngraph::op::Slice), &runtime::cpu::CPU_Emitter::emit<op::Slice>},
     {TI(ngraph::op::Sum), &runtime::cpu::CPU_Emitter::emit<op::Sum>},

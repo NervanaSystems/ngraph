@@ -38,7 +38,6 @@ set(SRC
     file_util.cpp
     graph_partition.cpp
     includes.cpp
-    inliner.cpp
     input_output_assign.cpp
     main.cpp
     nop_elimination.cpp

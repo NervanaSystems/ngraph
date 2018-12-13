@@ -50,7 +50,6 @@
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/floor.hpp"
-#include "ngraph/op/function_call.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -752,13 +751,6 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Floor>(args[0]);
                 break;
             }
-            case OP_TYPEID::FunctionCall:
-            {
-                string function_name = node_js.at("function").get<string>();
-                shared_ptr<Function> f_ptr = function_map.at(function_name);
-                node = make_shared<op::FunctionCall>(f_ptr, args);
-                break;
-            }
             case OP_TYPEID::GenerateMask:
             {
                 auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
@@ -1397,11 +1389,6 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Exp: { break;
     }
     case OP_TYPEID::Floor: { break;
-    }
-    case OP_TYPEID::FunctionCall:
-    {
-        node["function"] = n.get_functions()[0]->get_name();
-        break;
     }
     case OP_TYPEID::GetOutputElement:
     {

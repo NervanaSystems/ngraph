@@ -172,27 +172,9 @@ TEST(util, traverse_functions)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C}, "f");
 
-    // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
-    auto X = make_shared<op::Parameter>(element::f32, shape);
-    auto Y = make_shared<op::Parameter>(element::f32, shape);
-    auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}) +
-                                       make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}),
-                                   ParameterVector{X, Y, Z},
-                                   "g");
-
-    // Now make "h(X,Y,Z) = g(X,Y,Z) + g(X,Y,Z)"
-    auto X1 = make_shared<op::Parameter>(element::f32, shape);
-    auto Y1 = make_shared<op::Parameter>(element::f32, shape);
-    auto Z1 = make_shared<op::Parameter>(element::f32, shape);
-    auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}) +
-                                       make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}),
-                                   ParameterVector{X1, Y1, Z1},
-                                   "h");
-
     vector<Function*> functions;
-    traverse_functions(h, [&](shared_ptr<Function> fp) { functions.push_back(fp.get()); });
-    ASSERT_EQ(3, functions.size());
+    traverse_functions(f, [&](shared_ptr<Function> fp) { functions.push_back(fp.get()); });
+    ASSERT_EQ(1, functions.size());
 }
 
 class CloneTest : public ::testing::Test

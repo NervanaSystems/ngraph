@@ -55,25 +55,7 @@ TEST(serialize, main)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C}, "f");
 
-    // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
-    auto X = make_shared<op::Parameter>(element::f32, shape);
-    auto Y = make_shared<op::Parameter>(element::f32, shape);
-    auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto g = make_shared<Function>(make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}) +
-                                       make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}),
-                                   ParameterVector{X, Y, Z},
-                                   "g");
-
-    // Now make "h(X,Y,Z) = g(X,Y,Z) + g(X,Y,Z)"
-    auto X1 = make_shared<op::Parameter>(element::f32, shape);
-    auto Y1 = make_shared<op::Parameter>(element::f32, shape);
-    auto Z1 = make_shared<op::Parameter>(element::f32, shape);
-    auto h = make_shared<Function>(make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}) +
-                                       make_shared<op::FunctionCall>(g, NodeVector{X1, Y1, Z1}),
-                                   ParameterVector{X1, Y1, Z1},
-                                   "h");
-
-    string js = serialize(h, 4);
+    string js = serialize(f, 4);
 
     {
         ofstream out("serialize_function.js");
@@ -94,13 +76,13 @@ TEST(serialize, main)
     auto result = backend->create_tensor(element::f32, shape);
 
     backend->call_with_validate(handle, {result}, {x, y, z});
-    EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
 
     backend->call_with_validate(handle, {result}, {y, x, z});
-    EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{54, 80, 110, 144}), read_vector<float>(result));
 
     backend->call_with_validate(handle, {result}, {x, z, y});
-    EXPECT_EQ((vector<float>{200, 288, 392, 512}), read_vector<float>(result));
+    EXPECT_EQ((vector<float>{50, 72, 98, 128}), read_vector<float>(result));
 }
 #endif
 

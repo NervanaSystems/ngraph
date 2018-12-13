@@ -223,7 +223,6 @@ dot3d_3d
 equal
 exp
 floor
-function_call
 function_name
 fuse_max_with_constant_zero_input_as_relu
 greater

@@ -71,7 +71,6 @@ set (SRC
     op/experimental/quantized_max_pool.cpp
     op/experimental/shape_of.cpp
     op/floor.cpp
-    op/function_call.cpp
     op/get_output_element.cpp
     op/greater.cpp
     op/greater_eq.cpp
@@ -132,7 +131,6 @@ set (SRC
     pass/dump_sorted.cpp
     pass/get_output_element_elimination.cpp
     pass/graph_rewrite.cpp
-    pass/inliner.cpp
     pass/like_replacement.cpp
     pass/liveness.cpp
     pass/manager.cpp

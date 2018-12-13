@@ -76,7 +76,6 @@ Not currently a comprehensive list.
    * :doc:`equal`
    * :doc:`exp`
    * :doc:`floor`
-   * :doc:`function_call`
    * :doc:`get_output_element`
    * :doc:`greater_eq`
    * :doc:`greater`
@@ -147,7 +146,6 @@ Not currently a comprehensive list.
    equal.rst
    exp.rst
    floor.rst
-   function_call.rst
    get_output_element.rst
    greater_eq.rst
    greater.rst

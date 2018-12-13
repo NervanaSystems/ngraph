@@ -1337,45 +1337,6 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_multi_use)
     EXPECT_EQ(read_vector<int>(r2), std::vector<int>{388});
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, function_call)
-{
-    // First create "f(A,B,C) = (A+B)*C".
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
-
-    // Now make "g(X,Y,Z) = f(X,Y,Z) + f(X,Y,Z)"
-    auto X = make_shared<op::Parameter>(element::f32, shape);
-    auto Y = make_shared<op::Parameter>(element::f32, shape);
-    auto Z = make_shared<op::Parameter>(element::f32, shape);
-    auto g =
-        make_shared<Function>(make_shared<op::FunctionCall>(f, NodeVector{X + Y, Y + Z, Z + X}) +
-                                  make_shared<op::FunctionCall>(f, NodeVector{X, Y, Z}),
-                              ParameterVector{X, Y, Z});
-
-    // Now call g on some test vectors.
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    auto x = backend->create_tensor(element::f32, shape);
-    copy_data(x, vector<float>{1, 2, 3, 4});
-    auto y = backend->create_tensor(element::f32, shape);
-    copy_data(y, vector<float>{5, 6, 7, 8});
-    auto z = backend->create_tensor(element::f32, shape);
-    copy_data(z, vector<float>{9, 10, 11, 12});
-    auto result = backend->create_tensor(element::f32, shape);
-
-    backend->call_with_validate(backend->compile(g), {result}, {x, y, z});
-    EXPECT_EQ((vector<float>{254, 368, 502, 656}), read_vector<float>(result));
-
-    backend->call_with_validate(backend->compile(g), {result}, {y, x, z});
-    EXPECT_EQ((vector<float>{278, 400, 542, 704}), read_vector<float>(result));
-
-    backend->call_with_validate(backend->compile(g), {result}, {x, z, y});
-    EXPECT_EQ((vector<float>{194, 296, 418, 560}), read_vector<float>(result));
-}
-
 NGRAPH_TEST(${BACKEND_NAME}, convert_int32_float32)
 {
     Shape shape{2, 2};
