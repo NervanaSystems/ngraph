@@ -46,4 +46,9 @@ if (NGRAPH_PLAIDML_ENABLE)
     target_link_libraries(nbench plaidml_backend)
 endif()
 
+if (NGRAPH_DISTRIBUTED_ENABLE)
+    target_compile_definitions(nbench PRIVATE NGRAPH_DISTRIBUTED)
+    target_link_libraries(nbench libmlsl)
+endif()
+
 install(TARGETS nbench RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})
