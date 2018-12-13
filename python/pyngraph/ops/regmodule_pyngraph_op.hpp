@@ -64,6 +64,7 @@
 #include "pyngraph/ops/parameter.hpp"
 #include "pyngraph/ops/power.hpp"
 #include "pyngraph/ops/product.hpp"
+#include "pyngraph/ops/quantize.hpp"
 #include "pyngraph/ops/reduce.hpp"
 #include "pyngraph/ops/relu.hpp"
 #include "pyngraph/ops/replace_slice.hpp"

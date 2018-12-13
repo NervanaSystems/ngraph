@@ -97,6 +97,7 @@ from _pyngraph.op import Pad
 from _pyngraph.op import Parameter
 from _pyngraph.op import Power
 from _pyngraph.op import Product
+from _pyngraph.op import Quantize
 from _pyngraph.op import Reduce
 from _pyngraph.op import Relu
 from _pyngraph.op import ReluBackprop

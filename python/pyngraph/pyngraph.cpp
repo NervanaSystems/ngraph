@@ -33,6 +33,7 @@
 #include "pyngraph/strides.hpp"
 #include "pyngraph/types/regmodule_pyngraph_types.hpp"
 #include "pyngraph/util.hpp"
+#include "pyngraph/builder/regmodule_pyngraph_builder.hpp"
 
 namespace py = pybind11;
 
@@ -58,4 +59,5 @@ PYBIND11_MODULE(_pyngraph, m)
     regmodule_pyngraph_runtime(m);
     regmodule_pyngraph_passes(m);
     regmodule_pyngraph_util(m);
+    regmodule_pyngraph_builder(m);
 }

@@ -86,4 +86,8 @@ from ngraph.ops import tan
 from ngraph.ops import tanh
 from ngraph.ops import topk
 
+from ngraph.builder import scaledquantize
+from ngraph.builder import scaleddequantize
+from ngraph.builder import scaledquantizedconvolution
+
 from ngraph.runtime import runtime

@@ -23,6 +23,7 @@ import numpy as np
 from ngraph.impl import Type as NgraphType
 from ngraph.impl import Node, Shape
 from ngraph.impl.op import Constant
+from ngraph.impl.op import Quantize
 
 from ngraph.exceptions import NgraphTypeError
 
@@ -34,6 +35,7 @@ NumericData = Union[int, float, np.ndarray]
 NumericType = Union[type, np.dtype]
 ScalarData = Union[int, float]
 NodeInput = Union[Node, NumericData]
+RoundMode = Quantize.RoundMode
 
 ngraph_to_numpy_types_map = [
     (NgraphType.boolean, np.bool),

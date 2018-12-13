@@ -75,6 +75,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Parameter(m_op);
     regclass_pyngraph_op_Power(m_op);
     regclass_pyngraph_op_Product(m_op);
+    regclass_pyngraph_op_Quantize(m_op);
     regclass_pyngraph_op_Reduce(m_op);
     regclass_pyngraph_op_Relu(m_op);
     regclass_pyngraph_op_ReluBackprop(m_op);
