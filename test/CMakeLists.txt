@@ -51,6 +51,7 @@ set(SRC
     pass_memory_layout.cpp
     pattern.cpp
     reshape_elimination.cpp
+    reshape_sinking.cpp
     serialize.cpp
     shape.cpp
     tensor.cpp
@@ -80,7 +81,7 @@ endif()
 
 if (NGRAPH_CPU_ENABLE)
     list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
-    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp cpu_debugger.cpp)
+    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp)
     if (NGRAPH_HALIDE)
         list(APPEND SRC halide.cpp)
     endif()
@@ -178,11 +179,8 @@ if(NGRAPH_ADDRESS_SANITIZER)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    find_package(MPI REQUIRED)
     target_compile_definitions(unit-test PRIVATE NGRAPH_DISTRIBUTED)
-    target_include_directories(unit-test
-        SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    target_link_libraries(unit-test PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    target_link_libraries(unit-test PRIVATE libmlsl)
 endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)

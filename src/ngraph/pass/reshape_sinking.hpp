@@ -20,18 +20,12 @@
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pass
     {
-        namespace cpu
+        class ReshapeSinking : public ngraph::pass::FunctionPass
         {
-            namespace pass
-            {
-                class CPUReshapeSinking : public ngraph::pass::FunctionPass
-                {
-                public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
-            }
-        }
+        public:
+            bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+        };
     }
 }
