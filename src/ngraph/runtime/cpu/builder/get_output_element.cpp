@@ -13,12 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#ifdef NGRAPH_DISTRIBUTED
 
-#include <mlsl.hpp>
+#include <cstring>
 
-#include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
+#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -30,36 +31,24 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::AllReduce)
+            void Builder::BUILDER_DECL(ngraph::op::GetOutputElement)
             {
                 auto& functors = external_function->get_functors();
-
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto goe = static_cast<const ngraph::op::GetOutputElement*>(node);
+                size_t n = goe->get_n();
+                auto& arg_tensor = external_function->get_tensor_data(args[n].get_name());
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
-                auto count = static_cast<int>(out[0].get_size());
-                auto data_type = MLSL::DT_FLOAT;
-
-                if (args[0].get_element_type() == element::f32)
-                {
-                    data_type = MLSL::DT_FLOAT;
-                }
-                else if (args[0].get_element_type() == element::f64)
-                {
-                    data_type = MLSL::DT_DOUBLE;
-                }
-
-                auto functor = [&, count, data_type](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
-                    MLSL::CommReq* req = ctx->mlsl_dist->AllReduce(
-                        arg_tensor, out_tensor, count, data_type, MLSL::RT_SUM, MLSL::GT_DATA);
-                    ctx->mlsl_env->Wait(req);
+                auto functor = [&, n](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    if (arg_tensor != out_tensor)
+                    {
+                        throw ngraph_error("GOE's input and out must be equal");
+                    }
                 };
-
                 functors.emplace_back(functor);
+                return;
             }
 
-            REGISTER_OP_BUILDER(AllReduce);
+            REGISTER_OP_BUILDER(GetOutputElement);
         }
     }
 }
-#endif
