@@ -1718,6 +1718,7 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
         case OP_TYPEID::Any:
         case OP_TYPEID::FunctionCall:
         case OP_TYPEID::Dequantize:
+        case OP_TYPEID::MPI_Broadcast:
         case OP_TYPEID::Quantize:
         case OP_TYPEID::ReduceWindow:
         case OP_TYPEID::ReplaceSlice:

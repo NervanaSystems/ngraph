@@ -141,6 +141,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/runtime/reference/allreduce.hpp"
+#include "ngraph/runtime/reference/mpi_bcast.hpp"
 #endif
 
 namespace ngraph
@@ -916,6 +917,14 @@ private:
                                   static_cast<const T*>(args[1]),
                                   static_cast<T*>(out[0]),
                                   element_count);
+            break;
+        }
+        case OP_TYPEID::MPI_Broadcast: {
+#ifdef NGRAPH_DISTRIBUTED
+            reference::mpi_bcast<T>(static_cast<const T*>(args[0]),
+                                    node.get_input_element_type(0),
+                                    static_cast<int>(shape_size(node.get_input_shape(0))));
+#endif
             break;
         }
         case OP_TYPEID::Multiply:

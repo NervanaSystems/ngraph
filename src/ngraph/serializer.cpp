@@ -63,6 +63,7 @@
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
+#include "ngraph/op/mmpi_bcast.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/not.hpp"
@@ -891,6 +892,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Minimum>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::MPI_Broadcast:
+            {
+                node = make_shared<op::MPI_Broadcast>(args[0]);
+                break;
+            }
             case OP_TYPEID::Multiply:
             {
                 node = make_shared<op::Multiply>(args[0], args[1]);
@@ -1494,6 +1500,8 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::Minimum: { break;
+    }
+    case OP_TYPEID::MPI_Broadcast: { break;
     }
     case OP_TYPEID::Multiply: { break;
     }

@@ -67,6 +67,7 @@
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
+#include "ngraph/op/mpi_bcast.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/not.hpp"
@@ -236,6 +237,28 @@ namespace ngraph
                 writer << "MPI_Allreduce(" << args[0].get_name() << ", " << out[0].get_name()
                        << ", " << out[0].get_size() << ", " << data_type
                        << ", MPI_SUM, MPI_COMM_WORLD);\n";
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::MPI_Broadcast)
+            {
+                const element::Type& element_type = args[0].get_element_type();
+                auto data_type = "MPI_FLOAT";
+
+                if (element_type == element::f32)
+                {
+                    data_type = "MPI_FLOAT";
+                }
+                else if (element_type == element::f64)
+                {
+                    data_type = "MPI_DOUBLE";
+                }
+
+                writer.block_begin();
+                writer << "MPI_Bcast(" << args[0].get_name() << ", " << out[0].get_name()
+                       << ", " << out[0].get_size() << ", " << data_type
+                       << ", MPI_COMM_WORLD);\n";
                 writer.block_end();
             }
 #endif
