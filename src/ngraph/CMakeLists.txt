@@ -149,6 +149,7 @@ set (SRC
     pass/pass_config.cpp
     pass/propagate_cacheability.cpp
     pass/reshape_elimination.cpp
+    pass/reshape_sinking.cpp
     pass/zero_dim_tensor_elimination.cpp
     pass/validate_graph.cpp
     pass/visualize_tree.cpp
@@ -181,10 +182,10 @@ endif()
 add_library(ngraph SHARED ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    find_package(MPI REQUIRED)
+    target_sources(ngraph PRIVATE distributed.cpp)
     target_compile_definitions(ngraph PRIVATE NGRAPH_DISTRIBUTED)
-    target_include_directories(ngraph SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    target_link_libraries(ngraph PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
+    target_link_libraries(ngraph PRIVATE libmlsl)
 endif()
 
 add_subdirectory(frontend)
@@ -259,7 +260,9 @@ install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph.so
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph"
-    FILES_MATCHING PATTERN "*.hpp"
+    FILES_MATCHING
+        PATTERN "*.hpp"
+        PATTERN "*.h"
 )
 
 set(CPACK_GENERATOR "DEB")
