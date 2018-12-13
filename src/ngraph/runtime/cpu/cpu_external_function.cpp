@@ -476,6 +476,11 @@ void runtime::cpu::CPU_ExternalFunction::compile()
         writer << "#include <tbb/flow_graph.h>";
     }
 
+#ifdef NGRAPH_DISTRIBUTED
+    writer << "#include <mlsl.hpp>\n";
+    writer << "#define NGRAPH_DISTRIBUTED\n";
+#endif
+
     writer +=
         R"(
 #include <cmath>
@@ -528,10 +533,6 @@ using namespace ngraph::runtime::cpu::eigen;
 using namespace ngraph::runtime;
 
 )";
-
-#ifdef NGRAPH_DISTRIBUTED
-    writer << "#include <mpi.h>\n\n";
-#endif
 
     string pch_header_source = writer.get_code();
 
@@ -1111,7 +1112,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
         CommonSubexpressionElimination, true, ngraph::pass, runtime::cpu::get_cse_handlers_map());
     REGISTER_KNOBBED_PASS(CPUPostLayoutOptimizations, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUMemoryOptimization, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(GetOutputElementElimination, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS(GetOutputElementElimination, false, ngraph::pass);
     pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
 }
 
@@ -1864,7 +1865,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
                     }
                     CPUExecutionContext ectx{0};
                     executor::GetCPUExecutor().execute(functors.at(ctx->pc), ctx, &ectx);
-
                     if (ctx->breakpoints.count(ctx->pc + 1))
                     {
                         ctx->pc++;
