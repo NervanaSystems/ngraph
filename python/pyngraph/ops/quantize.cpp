@@ -35,7 +35,6 @@ void regclass_pyngraph_op_Quantize(py::module m)
         .value("ROUND_TOWARD_INFINITY", ngraph::op::Quantize::RoundMode::ROUND_TOWARD_INFINITY)
         .value("ROUND_TOWARD_ZERO", ngraph::op::Quantize::RoundMode::ROUND_TOWARD_ZERO)
         .value("ROUND_UP", ngraph::op::Quantize::RoundMode::ROUND_UP)
-        .value("ROUND_DOWN", ngraph::op::Quantize::RoundMode::ROUND_DOWN)
-        .export_values();
+        .value("ROUND_DOWN", ngraph::op::Quantize::RoundMode::ROUND_DOWN);
 
 }
