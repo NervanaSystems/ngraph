@@ -132,6 +132,7 @@
 #include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/propagate_cacheability.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
+#include "ngraph/pass/reshape_sinking.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
@@ -172,7 +173,6 @@
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_memory_optimization.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_reshape_sinking.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
 #include "ngraph/runtime/cpu/pass/halide_subgraph_extraction.hpp"
@@ -476,6 +476,11 @@ void runtime::cpu::CPU_ExternalFunction::compile()
         writer << "#include <tbb/flow_graph.h>";
     }
 
+#ifdef NGRAPH_DISTRIBUTED
+    writer << "#include <mlsl.hpp>\n";
+    writer << "#define NGRAPH_DISTRIBUTED\n";
+#endif
+
     writer +=
         R"(
 #include <cmath>
@@ -528,10 +533,6 @@ using namespace ngraph::runtime::cpu::eigen;
 using namespace ngraph::runtime;
 
 )";
-
-#ifdef NGRAPH_DISTRIBUTED
-    writer << "#include <mpi.h>\n\n";
-#endif
 
     string pch_header_source = writer.get_code();
 
@@ -1092,7 +1093,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
     REGISTER_KNOBBED_PASS(MultiLayerRNNFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPURnnMatFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(CPUReshapeSinking, false, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(ReshapeSinking, false, ngraph::pass);
     REGISTER_KNOBBED_PASS(ReshapeElimination, false, ngraph::pass);
     REGISTER_KNOBBED_PASS(CoreFusion, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass);
@@ -1111,7 +1112,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
         CommonSubexpressionElimination, true, ngraph::pass, runtime::cpu::get_cse_handlers_map());
     REGISTER_KNOBBED_PASS(CPUPostLayoutOptimizations, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUMemoryOptimization, true, runtime::cpu::pass);
-    REGISTER_KNOBBED_PASS(GetOutputElementElimination, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS(GetOutputElementElimination, false, ngraph::pass);
     pass_manager.get_state().set_visualize_tree_ops_map(runtime::cpu::get_visualize_tree_ops_map());
 }
 
@@ -1864,7 +1865,6 @@ void runtime::cpu::CPU_ExternalFunction::build()
                     }
                     CPUExecutionContext ectx{0};
                     executor::GetCPUExecutor().execute(functors.at(ctx->pc), ctx, &ectx);
-
                     if (ctx->breakpoints.count(ctx->pc + 1))
                     {
                         ctx->pc++;
