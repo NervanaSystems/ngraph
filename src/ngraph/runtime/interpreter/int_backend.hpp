@@ -254,7 +254,7 @@ private:
         }
         case OP_TYPEID::AllReduce: {
 #ifdef NGRAPH_DISTRIBUTED
-            reference::allreduce<T>(static_cast<const T*>(args[0]),
+            reference::allreduce<T>(static_cast<T*>(const_cast<void*>(args[0])),
                                     static_cast<T*>(out[0]),
                                     node.get_input_element_type(0),
                                     static_cast<int>(shape_size(node.get_input_shape(0))));
@@ -459,6 +459,7 @@ private:
                                     broadcast_axes);
             break;
         }
+        case OP_TYPEID::BroadcastLike: break;
         case OP_TYPEID::Ceiling:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -488,6 +489,7 @@ private:
             // Constant is handled in the main loop
             break;
         }
+        case OP_TYPEID::ScalarConstantLike: break;
         case OP_TYPEID::Convert:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
