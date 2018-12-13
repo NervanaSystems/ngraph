@@ -260,6 +260,8 @@ namespace ngraph
                 bool m_direct_execution;
                 EntryPoint m_compiled_function;
                 std::unordered_map<std::string, std::string> m_variable_name_map;
+                std::unordered_map<std::string, std::pair<std::size_t, std::size_t>>
+                    m_variable_input_index_offset_map;
 
                 std::unordered_map<std::string, CPUTensorRole> m_tensor_roles;
 
@@ -285,7 +287,7 @@ namespace ngraph
                 std::unordered_map<std::string, size_t> function_input_name_index;
                 std::list<std::pair<std::reference_wrapper<void*>, size_t>> intermediates_offsets;
                 std::list<std::tuple<std::reference_wrapper<void*>, size_t, size_t>>
-                    slice_input_index_offset;
+                    intermediate_input_index_offset;
                 std::list<
                     std::tuple<std::reference_wrapper<void*>, size_t, std::reference_wrapper<bool>>>
                     function_input_index;

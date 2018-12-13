@@ -728,6 +728,7 @@ using namespace ngraph::runtime;
             for (size_t i = 0; i < param->get_output_size(); ++i)
             {
                 shared_ptr<descriptor::Tensor> tv = param->get_output_tensor_ptr(i);
+                function_input_name_index[tv->get_name()] = arg_index;
                 const element::Type& et = tv->get_element_type();
                 string type = et.c_type_string();
                 stringstream ss;
@@ -751,8 +752,19 @@ using namespace ngraph::runtime;
                 for (descriptor::Tensor* tensor : node->liveness_new_list)
                 {
                     stringstream ss;
-                    ss << "((" << tensor->get_element_type().c_type_string()
-                       << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
+                    auto ele = m_variable_input_index_offset_map.find(tensor->get_name());
+                    if (ele != m_variable_input_index_offset_map.end())
+                    {
+                        ss << "(((" << tensor->get_element_type().c_type_string() << "*)(inputs["
+                           << ele->second.first << "])) + "
+                           << ele->second.second / tensor->get_element_type().size() << ")";
+                    }
+                    else
+                    {
+                        ss << "((" << tensor->get_element_type().c_type_string()
+                           << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
+                    }
+
                     if (m_tensor_roles.find(tensor->get_name()) == m_tensor_roles.end())
                     {
                         m_variable_name_map[tensor->get_name()] = ss.str();
@@ -1412,8 +1424,13 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
                         }
                         auto input_index = function_input_name_index[name];
                         auto input_offset = node->get_element_type().size() * start;
-                        slice_input_index_offset.emplace_back(
+                        intermediate_input_index_offset.emplace_back(
                             tensor_data[output_tensor->get_name()], input_index, input_offset);
+
+                        // for codegen
+                        m_variable_input_index_offset_map[output_tensor->get_name()] =
+                            std::pair<size_t, size_t>(input_index, input_offset);
+
                         for (size_t i = 0; i < slice->get_output_size(); ++i)
                         {
                             NGRAPH_DEBUG << "cpu_external_function: call propagate_in_place_slice "
@@ -1467,9 +1484,13 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_slice(
                     {
                         size_t output_index = oi_pair.output;
                         auto& output_tensor = c_op->get_outputs().at(output_index).get_tensor();
-                        slice_input_index_offset.emplace_back(
+                        intermediate_input_index_offset.emplace_back(
                             tensor_data[output_tensor.get_name()], input_index, input_offset);
                         stack.push_back(&c_op->get_outputs().at(output_index));
+
+                        // for codegen
+                        m_variable_input_index_offset_map[output_tensor.get_name()] =
+                            std::pair<size_t, size_t>(input_index, input_offset);
                     }
                 }
             }
@@ -1787,7 +1808,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
             }
         }
 
-        for (auto& p : slice_input_index_offset)
+        for (auto& p : intermediate_input_index_offset)
         {
             get<0>(p).get() = static_cast<uint8_t*>(inputs[get<1>(p)]) + get<2>(p);
         }
