@@ -18,6 +18,7 @@ from ngraph.impl.builder import ScaledQuantize, ScaledDequantize, ScaledQuantize
 from ngraph.impl.Quantize import RoundMode
 from ngraph.impl import Node
 from ngraph.utils.types import NumericType
+from ngraph.utils.types import RoundMode
 
 
 def scaledquantize(data, # type: Node
@@ -25,7 +26,7 @@ def scaledquantize(data, # type: Node
         max_val,         # type: Node
         quant_type,      # type: NumericType
         axes,            # type: List[int]
-        round_mode,      # type: int
+        round_mode,      # type: RoundMode
         name=None,       # type: str
         ):
 
