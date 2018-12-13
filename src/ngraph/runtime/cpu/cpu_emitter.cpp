@@ -133,9 +133,6 @@
 using namespace std;
 using namespace ngraph;
 
-// Enables old unoptimized Eigen code paths
-#define USE_EIGEN_CORE_INLINE 0
-
 static bool s_use_ref_kernels = (std::getenv("NGRAPH_CPU_USE_REF_KERNELS") != nullptr);
 
 static string eigen_vector_format(const runtime::cpu::TensorViewWrapper& tvi)
@@ -159,22 +156,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Add)
             {
-                // TODO: Audit all uses of Add and fix this to use
-                // the right alignment instead of Eigen::Unaligned
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << "Eigen::Map<Eigen::Array<" << out[0].get_element_type().c_type_string()
-                       << ", " << out[0].get_size() << ", 1>, Eigen::Unaligned> out("
-                       << out[0].get_name() << ");\n";
-                writer << "Eigen::Map<Eigen::Array<" << args[0].get_element_type().c_type_string()
-                       << ", " << args[0].get_size() << ", 1>, Eigen::Unaligned> arg0("
-                       << args[0].get_name() << ");\n";
-                writer << "Eigen::Map<Eigen::Array<" << args[1].get_element_type().c_type_string()
-                       << ", " << args[1].get_size() << ", 1>, Eigen::Unaligned> arg1("
-                       << args[1].get_name() << ");\n";
-                writer << "out = arg0 + arg1;\n";
-#else
-
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     std::vector<float> scale_vector(2, 1);
@@ -212,7 +194,6 @@ namespace ngraph
                            << args[1].get_name() << "[i];\n";
                     writer.block_end();
                 }
-#endif
                 writer.block_end();
             }
 
@@ -986,18 +967,12 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Multiply)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "   " << emit_array1d(args[0]) << " *\n"
-                       << "   " << emit_array1d(args[1]) << ";\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] * "
                        << args[1].get_name() << "[i];\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1017,10 +992,6 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Abs)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n";
-                writer << "Eigen::abs(" << emit_array1d(args[0]) << ");\n";
-#else
                 // Some C++ implementations don't like it when we call std::abs on unsigned types, so we will
                 // avoid doing so here.
                 auto& result_element_type = out[0].get_element_type();
@@ -1032,7 +1003,6 @@ namespace ngraph
                        << "[i] = " << (result_element_type.is_signed() ? "std::abs" : "") << "("
                        << args[0].get_name() << "[i]);\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1063,92 +1033,6 @@ namespace ngraph
                     }
                 }
                 auto result_shape = out[0].get_shape();
-
-#if USE_EIGEN_CORE_INLINE == 1
-                if (result_shape.size() == 1)
-                {
-                    writer.block_begin();
-                    writer << emit_vector(out[0], "out_vector") << ";\n";
-
-                    size_t concat_pos = 0;
-                    for (size_t i = 0; i < args.size(); i++)
-                    {
-                        writer << "out_vector.segment(" << concat_pos << ", "
-                               << args[i].get_shape().at(0) << ") << " << emit_vector(args[i])
-                               << ";\n";
-                        concat_pos += args[i].get_shape().at(0);
-                    }
-                    writer.block_end();
-                }
-                else if (result_shape.size() == 2)
-                {
-                    auto axis =
-                        (dynamic_cast<const ngraph::op::Concat*>(node))->get_concatenation_axis();
-
-                    writer.block_begin();
-                    writer << emit_matrix(out[0], "out_matrix") << ";\n";
-
-                    size_t concat_pos[2]{0, 0};
-                    for (size_t i = 0; i < args.size(); i++)
-                    {
-                        auto& arg_shape = args[i].get_shape();
-
-                        writer << "out_matrix.block(" << concat_pos[0] << ", " << concat_pos[1]
-                               << ", " << arg_shape.at(0) << ", " << arg_shape.at(1) << ") << "
-                               << emit_matrix(args[i]) << ";\n";
-
-                        concat_pos[axis] += arg_shape.at(axis);
-                    }
-
-                    writer.block_end();
-                }
-                else
-                {
-                    if (s_use_ref_kernels)
-                    {
-                        auto axis = (dynamic_cast<const ngraph::op::Concat*>(node))
-                                        ->get_concatenation_axis();
-
-                        std::vector<std::string> arg_names;
-                        std::vector<std::string> arg_shape_strings;
-
-                        for (auto arg : args)
-                        {
-                            arg_names.push_back(arg.get_name());
-                            arg_shape_strings.push_back("{" + join(arg.get_shape()) + "}");
-                        }
-
-                        writer << "reference::concat<" << out[0].get_type() << ">({"
-                               << join(arg_names) << "},\n";
-                        writer << "                         " << out[0].get_name() << ",\n";
-                        writer << "                         {" << join(arg_shape_strings) << "},\n";
-                        writer << "                         {" << join(result_shape) << "},\n";
-                        writer << "                         " << axis << ");\n";
-                    }
-                    else
-                    {
-                        auto axis = (dynamic_cast<const ngraph::op::Concat*>(node))
-                                        ->get_concatenation_axis();
-
-                        std::vector<std::string> arg_names;
-                        std::vector<Shape> arg_shapes;
-
-                        for (auto arg : args)
-                        {
-                            arg_names.push_back(arg.get_name());
-                            arg_shapes.push_back(arg.get_shape());
-                        }
-
-                        kernel::emit_concat(writer,
-                                            args[0].get_element_type().c_type_string(),
-                                            arg_names,
-                                            out[0].get_name(),
-                                            arg_shapes,
-                                            result_shape,
-                                            axis);
-                    }
-                }
-#else
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -1201,7 +1085,6 @@ namespace ngraph
                                         result_shape,
                                         axis);
                 }
-#endif
             }
 
             template <>
@@ -1218,18 +1101,12 @@ namespace ngraph
                            << "[i] == 0) throw std::runtime_error(\"integer divide by zero\");\n";
                     writer.block_end();
                 }
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    " << emit_array1d(args[0]) << " /\n"
-                       << "    " << emit_array1d(args[1]) << ";\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] / "
                        << args[1].get_name() << "[i];\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1237,18 +1114,12 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Equal)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    (" << emit_array1d(args[0]) << " ==\n"
-                       << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = " << args[0].get_name()
                        << "[i] == " << args[1].get_name() << "[i];\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1256,18 +1127,12 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Greater)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    (" << emit_array1d(args[0]) << " >\n"
-                       << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] > "
                        << args[1].get_name() << "[i];\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1275,18 +1140,12 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::GreaterEq)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    (" << emit_array1d(args[0]) << " >=\n"
-                       << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = " << args[0].get_name()
                        << "[i] >= " << args[1].get_name() << "[i];\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1294,18 +1153,12 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Less)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    (" << emit_array1d(args[0]) << " <\n"
-                       << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] < "
                        << args[1].get_name() << "[i];\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1313,18 +1166,12 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::LessEq)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    (" << emit_array1d(args[0]) << " <=\n"
-                       << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = " << args[0].get_name()
                        << "[i] <= " << args[1].get_name() << "[i];\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1375,16 +1222,11 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Log)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    Eigen::log(" << emit_array1d(args[0]) << ");\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = log(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1392,11 +1234,6 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Maximum)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "        " << emit_array1d(args[0]) << ".max(\n"
-                       << "        " << emit_array1d(args[1]) << ");\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
@@ -1404,7 +1241,6 @@ namespace ngraph
                        << args[1].get_name() << "[i] ? " << args[0].get_name()
                        << "[i] : " << args[1].get_name() << "[i] ;\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1412,11 +1248,6 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Minimum)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    " << emit_array1d(args[0]) << ".min(\n"
-                       << "    " << emit_array1d(args[1]) << ");\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
@@ -1424,7 +1255,6 @@ namespace ngraph
                        << args[1].get_name() << "[i] ? " << args[0].get_name()
                        << "[i] : " << args[1].get_name() << "[i] ;\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1432,16 +1262,11 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Negative)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    -" << emit_array1d(args[0]) << ";\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = -" << args[0].get_name() << "[i];\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1449,18 +1274,12 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::NotEqual)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    (" << emit_array1d(args[0]) << " !=\n"
-                       << "    " << emit_array1d(args[1]) << ").template cast<char>();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = " << args[0].get_name()
                        << "[i] != " << args[1].get_name() << "[i];\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1468,19 +1287,12 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Select)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "   " << emit_array1d(args[0]) << "\n"
-                       << "    .select(" << emit_array1d(args[1]) << ",\n"
-                       << "       " << emit_array1d(args[2]) << ");\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] ? "
                        << args[1].get_name() << "[i] : " << args[2].get_name() << "[i];\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1488,18 +1300,12 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Subtract)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    " << emit_array1d(args[0]) << " -\n"
-                       << "    " << emit_array1d(args[1]) << ";\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] - "
                        << args[1].get_name() << "[i];\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1509,73 +1315,6 @@ namespace ngraph
                 auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
 
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                auto arg_shape = args[0].get_shape();
-                auto result_shape = out[0].get_shape();
-
-                if (broadcast->get_broadcast_axes().empty())
-                {
-                    writer.block_begin();
-                    writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.block_end();
-                }
-                else if (arg_shape.size() == 0)
-                {
-                    writer.block_begin();
-                    writer << emit_array1d(out[0]) << " =\n"
-                           << "    " << emit_array1d(args[0]) << "(0, 0);\n";
-                    writer.block_end();
-                }
-                else if (arg_shape.size() == 1 && result_shape.size() == 2)
-                {
-                    if (broadcast->get_broadcast_axes() == AxisSet{1})
-                    {
-                        writer.block_begin();
-                        writer << emit_matrix(out[0]) << ".colwise() =\n"
-                               << "    " << emit_vector(args[0]) << ";\n";
-                        writer.block_end();
-                    }
-                    else if (broadcast->get_broadcast_axes() == AxisSet{0})
-                    {
-                        writer.block_begin();
-
-                        writer << "Eigen::Map<Eigen::Matrix<"
-                               << out[0].get_element_type().c_type_string() << ", "
-                               << join(out[0].get_shape())
-                               << ", Eigen::RowMajor>, Eigen::Aligned64, Eigen::Stride<"
-                               << join(out[0].get_strides()) << ">> out(" << out[0].get_name()
-                               << ");\n";
-                        writer << "Eigen::Map<Eigen::Matrix<"
-                               << args[0].get_element_type().c_type_string() << ", 1, "
-                               << args[0].get_size()
-                               << ", Eigen::RowMajor>, Eigen::Aligned64, Eigen::Stride<"
-                               << args[0].get_size() << ", 1>> arg0(" << args[0].get_name()
-                               << ");\n";
-                        writer << "out = arg0.replicate<" << out[0].get_shape().at(0)
-                               << ", 1>();\n";
-
-                        writer.block_end();
-                    }
-                    else
-                    {
-                        throw ngraph_error(
-                            "Internal error: axis set for vector-matrix broadcast is neither {0} "
-                            "nor "
-                            "{1}");
-                    }
-                }
-                else
-                {
-                    writer << "reference::broadcast<" << out[0].get_type() << ">("
-                           << args[0].get_name() << ",\n";
-                    writer << "                         " << out[0].get_name() << ",\n";
-                    writer << "                         {" << join(arg_shape) << "},\n";
-                    writer << "                         {" << join(result_shape) << "},\n";
-                    writer << "                         {" << join(broadcast->get_broadcast_axes())
-                           << "});\n";
-                }
-#else
                 kernel::emit_broadcast(writer,
                                        args[0].get_element_type().c_type_string(),
                                        args[0].get_name(),
@@ -1583,7 +1322,6 @@ namespace ngraph
                                        args[0].get_shape(),
                                        out[0].get_shape(),
                                        broadcast->get_broadcast_axes());
-#endif
                 writer.block_end();
             }
 
@@ -1593,18 +1331,12 @@ namespace ngraph
                 auto& result_element_type = out[0].get_element_type();
 
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    " << emit_array1d(args[0]) << "\n"
-                       << "    .template cast<" << result_element_type.c_type_string() << ">();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = (" << result_element_type.c_type_string()
                        << ")(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -1658,68 +1390,6 @@ namespace ngraph
                 }
 
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                auto arg_shape = args[0].get_shape();
-                auto arg_rank = arg_shape.size();
-
-                auto result_shape = out[0].get_shape();
-                auto& result_element_type = out[0].get_element_type();
-
-                auto input_order = reshape->get_input_order();
-
-                bool same_layout = is_sorted(input_order.begin(), input_order.end());
-
-                size_t result_shape_product = 1;
-                for (auto i : result_shape)
-                {
-                    result_shape_product *= i;
-                }
-
-                // If there is no layout change or we are just going from 1^n to 1^m or a zero-size tensor,
-                //  we can just copy.
-                if (same_layout || result_shape_product < 2)
-                {
-                    writer.block_begin();
-                    writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.block_end();
-                }
-                // If there *is* a layout change in the 2D case, we transpose the input.
-                else if (arg_rank == 2)
-                {
-                    // Emit an MKL transpose call if possible
-                    if (result_element_type == ngraph::element::f32)
-                    {
-                        writer.block_begin();
-                        writer << "mkl::MKL_Somatcopy('R', 'T', " << to_string(arg_shape[0])
-                               << ",\n"
-                               << "                   " << to_string(arg_shape[1]) << ", 1.0f,\n"
-                               << "                   " << args[0].get_name() << ", "
-                               << to_string(arg_shape[1]) << ",\n"
-                               << "                   " << out[0].get_name() << ", "
-                               << to_string(arg_shape[0]) << ");\n";
-                        writer.block_end();
-                    }
-                    else
-                    {
-                        writer.block_begin();
-                        writer << emit_matrix(out[0]) << " =\n"
-                               << "        " << emit_matrix(args[0]) << ".transpose();\n";
-                        writer.block_end();
-                    }
-                }
-                // Other cases
-                else
-                {
-                    writer << "reference::reshape<" << out[0].get_type() << ">("
-                           << args[0].get_name() << ",\n";
-                    writer << "                " << out[0].get_name() << ",\n";
-                    writer << "               {" << join(args[0].get_shape()) << "},\n";
-                    writer << "               {" << join(reshape->get_input_order()) << "},\n";
-                    writer << "               {" << join(out[0].get_shape()) << "}\n";
-                    writer << "               );\n";
-                }
-#else
                 if (args[0].get_element_type() == element::f32 && args[0].get_shape().size() == 3 &&
                     out[0].get_shape().size() == 3)
                 {
@@ -1751,7 +1421,6 @@ namespace ngraph
                                          reshape->get_input_order());
                 }
 
-#endif
                 writer.block_end();
             }
 
@@ -1811,156 +1480,6 @@ namespace ngraph
                 auto& f_result_element_type = out[0].get_element_type();
                 auto result_shape = out[0].get_shape();
 
-#if USE_EIGEN_CORE_INLINE == 1
-                auto& reduction_axes = reduce->get_reduction_axes();
-                // Trivial case: no reduction axes (this includes the scalar-reductee case).
-                if (reduction_axes.empty())
-                {
-                    writer.block_begin();
-                    writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.block_end();
-                }
-                // Behavior for zero-size axes bears some explanation here. XLA's reduce
-                // operator provides an "base" element (usually, but not necessarily,
-                // an identity element) that it apparently *may* choose to insert anywhere
-                // in the reduction any number of times. For example, given:
-                //
-                //   reduce{{1,2,3},b,+)
-                //
-                // any of the following are valid reductions (I think!):
-                //
-                //   b+(b+1+2)+3
-                //   b+(1+(2+3))
-                //   (1+2)+3 (I think!)
-                //
-                // etc. Here we will choose never to instantiate the base element, which
-                // works well with Eigen's default behavior for non-zero-length axes. The
-                // exceptional case is when we reduce on a zero-length axis. In this case,
-                // Eigen's default behavior is to put a zero in the output,  which is not
-                // what we want, so we detect that case here and override with a copy
-                // instruction (for reduce-to-scalar) or a broadcast (for reduce-to-vector)
-                // from the base element.
-                //
-                // What I'm actually not sure about is whether the identity element is
-                // required to appear at least once. If so, this will need to be reworked,
-                // assuming we actually want to mimic XLA's semantics that closely, which
-                // we may not.
-                else if ((reductee_shape.size() == 1 && reduction_axes == AxisSet{0}) ||
-                         (reductee_shape.size() == 2 && reduction_axes == AxisSet{0, 1}))
-                {
-                    if (reductee_shape.at(0) == 0 ||
-                        (reductee_shape.size() == 2 && reductee_shape.at(1) == 0))
-                    {
-                        writer.block_begin();
-                        writer << "memcpy(" << out[0].get_name() << ", " << args[1].get_name()
-                               << ", " << out[0].get_size() * out[0].get_element_type().size()
-                               << ");\n";
-                        writer.block_end();
-                    }
-                    else
-                    {
-                        writer.block_begin();
-                        string type = f_result_element_type.c_type_string();
-                        writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type
-                               << " {\n";
-                        writer.indent++;
-                        writer << type << " result;\n";
-                        writer << "void* args[] = {&x, &y};\n";
-                        writer << "void* out[] = {&result};\n";
-                        writer << reduction_function->get_name() << "(args, out, ctx);\n";
-                        writer << "return result;\n";
-                        writer.indent--;
-                        writer << "};\n";
-                        writer << emit_array1d(out[0]) << " =\n"
-                               << "    " << emit_array1d(args[0]) << ".redux(f);\n";
-                        writer.block_end();
-                    }
-                }
-                else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{1})
-                {
-                    if (reductee_shape.at(1) == 0)
-                    {
-                        writer.block_begin();
-                        writer << emit_array1d(out[0]) << " =\n"
-                               << "    " << emit_array1d(args[1]) << "(0, 0);\n";
-                        writer.block_end();
-                    }
-                    else
-                    {
-                        writer.block_begin();
-                        string type = f_result_element_type.c_type_string();
-                        writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type
-                               << " {\n";
-                        writer.indent++;
-                        writer << type << " result;\n";
-                        writer << "void* args[] = {&x, &y};\n";
-                        writer << "void* out[] = {&result};\n";
-                        writer << reduction_function->get_name() << "(args, out, ctx);\n";
-                        writer << "return result;\n";
-                        writer.indent--;
-                        writer << "};\n";
-                        writer << emit_vector(out[0]) << " =\n"
-                               << "        " << emit_matrix(args[0]) << ".rowwise().redux(f);\n";
-                        writer.block_end();
-                    }
-                }
-                else if (reductee_shape.size() == 2 && reduction_axes == AxisSet{0})
-                {
-                    if (reductee_shape.at(0) == 0)
-                    {
-                        writer.block_begin();
-                        writer << emit_array1d(out[0]) << " =\n"
-                               << "    " << emit_array1d(args[1]) << "(0, 0);\n";
-                        writer.block_end();
-                    }
-                    else
-                    {
-                        writer.block_begin();
-                        string type = f_result_element_type.c_type_string();
-                        writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type
-                               << " {\n";
-                        writer.indent++;
-                        writer << type << " result;\n";
-                        writer << "void* args[] = {&x, &y};\n";
-                        writer << "void* out[] = {&result};\n";
-                        writer << reduction_function->get_name() << "(args, out, ctx);\n";
-                        writer << "return result;\n";
-                        writer.indent--;
-                        writer << "};\n";
-                        writer << emit_vector(out[0]) << " =\n"
-                               << "    " << emit_matrix(args[0]) << ".colwise().redux(f);\n";
-                        writer.block_end();
-                    }
-                }
-                else
-                {
-                    writer.block_begin();
-
-                    string type = f_result_element_type.c_type_string();
-                    writer << "auto f = [&](" << type << " x, " << type << " y) -> " << type
-                           << " {\n";
-                    writer.indent++;
-                    writer << type << " result;\n";
-                    writer << "void* args[] = {&x, &y};\n";
-                    writer << "void* out[] = {&result};\n";
-                    writer << reduction_function->get_name() << "(args, out, ctx);\n";
-                    writer << "return result;\n";
-                    writer.indent--;
-                    writer << "};\n";
-
-                    writer << "reference::reduce<" << out[0].get_type() << ">("
-                           << args[0].get_name() << ",\n";
-                    writer << "               " << args[1].get_name() << ",\n";
-                    writer << "               " << out[0].get_name() << ",\n";
-                    writer << "               {" << join(args[0].get_shape()) << "},\n";
-                    writer << "               {" << join(out[0].get_shape()) << "},\n";
-                    writer << "               {" << join(reduce->get_reduction_axes()) << "},\n";
-                    writer << "               f);\n";
-
-                    writer.block_end();
-                }
-#else
                 writer.block_begin();
 
                 string type = f_result_element_type.c_type_string();
@@ -1985,24 +1504,18 @@ namespace ngraph
                                     reduce->get_reduction_axes());
 
                 writer.block_end();
-#endif
             }
 
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sign)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    " << emit_array1d(args[0]) << ".sign();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = (0 < " << args[0].get_name() << "[i]) - ("
                        << args[0].get_name() << "[i] < 0);\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -2063,65 +1576,6 @@ namespace ngraph
                 }
 
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                size_t arg_rank = args[0].get_shape().size();
-
-                const Coordinate& lower_bounds = slice->get_lower_bounds();
-                const Coordinate& upper_bounds = slice->get_upper_bounds();
-
-                bool strided = false;
-                for (size_t stride : slice->get_strides())
-                {
-                    if (stride != 1)
-                    {
-                        strided = true;
-                        break;
-                    }
-                }
-
-                // Scalar slice is necessarily just a copy.
-                if (!strided && arg_rank == 0)
-                {
-                    writer.block_begin();
-                    writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.block_end();
-                }
-                else if (!strided && arg_rank == 1)
-                {
-                    writer.block_begin();
-                    writer << emit_vector(out[0]) << " =\n"
-                           << "    " << emit_vector(args[0]) << ".segment(\n"
-                           << "        " << to_string(lower_bounds[0]) << ", "
-                           << to_string(upper_bounds[0] - lower_bounds[0]) << ");\n";
-                    writer.block_end();
-                }
-                else if (!strided && arg_rank == 2)
-                {
-                    writer.block_begin();
-                    writer << emit_matrix(out[0]) << " = \n"
-                           << "        " << emit_matrix(args[0]) << ".block("
-                           << to_string(lower_bounds[0]) << ", " << to_string(lower_bounds[1])
-                           << ",\n"
-                           << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
-                           << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ");\n";
-                    writer.block_end();
-                }
-                // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
-                else
-                {
-                    writer << "reference::slice<" << out[0].get_type() << ">(" << args[0].get_name()
-                           << ",\n";
-                    writer << "                         " << out[0].get_name() << ",\n";
-                    writer << "                         {" << join(args[0].get_shape()) << "},\n";
-                    writer << "                         {" << join(slice->get_lower_bounds())
-                           << "},\n";
-                    writer << "                         {" << join(slice->get_upper_bounds())
-                           << "},\n";
-                    writer << "                         {" << join(slice->get_strides()) << "},\n";
-                    writer << "                         {" << join(out[0].get_shape()) << "});\n";
-                }
-#else
                 kernel::emit_slice(writer,
                                    args[0].get_element_type().c_type_string(),
                                    args[0].get_name(),
@@ -2131,7 +1585,6 @@ namespace ngraph
                                    slice->get_lower_bounds(),
                                    slice->get_upper_bounds(),
                                    slice->get_strides());
-#endif
                 writer.block_end();
             }
 
@@ -2140,53 +1593,6 @@ namespace ngraph
             {
                 const ngraph::op::Sum* sum = static_cast<const ngraph::op::Sum*>(node);
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                const Shape& arg_shape = args[0].get_shape();
-                size_t arg_rank = arg_shape.size();
-                const AxisSet& reduction_axes = sum->get_reduction_axes();
-
-                // Trivial case: no reduction axes.
-                if (reduction_axes.size() == 0)
-                {
-                    writer.block_begin();
-                    writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.block_end();
-                }
-                // Full reduction? Then sum to scalar.
-                else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
-                         (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
-                {
-                    writer.block_begin();
-                    writer << emit_array1d(out[0]) << " =\n"
-                           << "    " << emit_array1d(args[0]) << ".sum();\n";
-                    writer.block_end();
-                }
-                else if (arg_rank == 2 && reduction_axes == AxisSet{1})
-                {
-                    writer.block_begin();
-                    writer << emit_vector(out[0]) << " =\n"
-                           << "    " << emit_matrix(args[0]) << ".rowwise().sum();\n";
-                    writer.block_end();
-                }
-                else if (arg_rank == 2 && reduction_axes == AxisSet{0})
-                {
-                    writer.block_begin();
-                    writer << emit_vector(out[0]) << " =\n"
-                           << "    " << emit_matrix(args[0]) << ".colwise().sum();\n";
-                    writer.block_end();
-                }
-                else
-                {
-                    writer << "reference::sum<" << out[0].get_type() << ">(" << args[0].get_name()
-                           << ",\n";
-                    writer << "                         " << out[0].get_name() << ",\n";
-                    writer << "                         {" << join(args[0].get_shape()) << "},\n";
-                    writer << "                         {" << join(out[0].get_shape()) << "},\n";
-                    writer << "                         {" << join(sum->get_reduction_axes())
-                           << "});\n";
-                }
-#else
                 if (args[0].get_element_type() == element::f32 && args[0].get_shape().size() == 1 &&
                     sum->get_reduction_axes().size() == 1)
                 {
@@ -2244,7 +1650,6 @@ namespace ngraph
                                      out[0].get_shape(),
                                      sum->get_reduction_axes());
                 }
-#endif
                 writer.block_end();
             }
 
@@ -2252,16 +1657,11 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Exp)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    " << emit_array1d(args[0]) << ".exp();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = exp(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -2287,16 +1687,11 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sin)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    " << emit_array1d(args[0]) << ".sin();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = sin(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -2304,16 +1699,11 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Sinh)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    " << emit_array1d(args[0]) << ".sinh();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = sinh(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -2321,16 +1711,11 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Cos)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    " << emit_array1d(args[0]) << ".cos();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = cos(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -2338,16 +1723,11 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Cosh)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    " << emit_array1d(args[0]) << ".cosh();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = cosh(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -2355,16 +1735,11 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Tan)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    " << emit_array1d(args[0]) << ".tan();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = tan(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -2376,9 +1751,7 @@ namespace ngraph
                 // TODO: Implement our own internal fast/approximate tanh if this actually gets used
                 // by models
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 0
                 writer << "#pragma omp parallel for\n";
-#endif
                 writer << "for (size_t i=0; i<" << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = tanh(" << args[0].get_name() << "[i]);\n";
@@ -2390,16 +1763,11 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Asin)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    " << emit_array1d(args[0]) << ".asin();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = asin(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -2407,16 +1775,11 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Acos)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    " << emit_array1d(args[0]) << ".acos();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = acos(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -2424,16 +1787,11 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Atan)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " =\n"
-                       << "    " << emit_array1d(args[0]) << ".atan();\n";
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = atan(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -2502,20 +1860,12 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Power)
             {
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                writer << emit_array1d(out[0]) << " = \n";
-                writer.indent++;
-                writer << emit_array1d(args[0]) << ".pow(\n ";
-                writer << emit_array1d(args[1]) << ");\n";
-                writer.indent--;
-#else
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = pow(" << args[0].get_name() << "[i], "
                        << args[1].get_name() << "[i]);\n";
                 writer.block_end();
-#endif
                 writer.block_end();
             }
 
@@ -2567,71 +1917,6 @@ namespace ngraph
             {
                 auto replace_slice = static_cast<const ngraph::op::ReplaceSlice*>(node);
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                size_t arg0_rank = args[0].get_shape().size();
-
-                auto& lower_bounds = replace_slice->get_lower_bounds();
-                auto& upper_bounds = replace_slice->get_upper_bounds();
-
-                bool strided = false;
-                for (size_t stride : replace_slice->get_strides())
-                {
-                    if (stride != 1)
-                    {
-                        strided = true;
-                        break;
-                    }
-                }
-
-                // Scalar slice is necessarily just a copy.
-                if (!strided && arg0_rank == 0)
-                {
-                    writer.block_begin();
-                    writer << "memcpy(" << out[0].get_name() << ", " << args[1].get_name() << ", "
-                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.block_end();
-                }
-                else if (!strided && arg0_rank == 1)
-                {
-                    writer.block_begin();
-                    writer << emit_vector(out[0]) << " =\n"
-                           << "    " << emit_vector(args[0]) << ";\n"
-                           << emit_vector(out[0]) << ".segment(\n"
-                           << "    " << to_string(lower_bounds[0]) << ", "
-                           << to_string(upper_bounds[0] - lower_bounds[0]) << ") =\n"
-                           << "    " << emit_vector(args[1]) << ";\n";
-                    writer.block_end();
-                }
-                else if (!strided && arg0_rank == 2)
-                {
-                    writer.block_begin();
-                    writer << emit_matrix(out[0]) << " =\n"
-                           << "    " << emit_matrix(args[0]) << ";\n"
-                           << emit_matrix(out[0]) << ".block(\n"
-                           << "        " << to_string(lower_bounds[0]) << ",\n"
-                           << "        " << to_string(lower_bounds[1]) << ",\n"
-                           << "        " << to_string(upper_bounds[0] - lower_bounds[0]) << ",\n"
-                           << "        " << to_string(upper_bounds[1] - lower_bounds[1]) << ") =\n"
-                           << "    " << emit_matrix(args[1]) << ";\n";
-                    writer.block_end();
-                }
-                // Other cases (reordering of axes for tensors with rank>2) are not handled yet.
-                else
-                {
-                    writer << "reference::replace_slice<" << out[0].get_type() << ">("
-                           << args[0].get_name() << ",\n";
-                    writer << "                         " << args[1].get_name() << ",\n";
-                    writer << "                         " << out[0].get_name() << ",\n";
-                    writer << "                         {" << join(args[1].get_shape()) << "},\n";
-                    writer << "                         {"
-                           << join(replace_slice->get_lower_bounds()) << "},\n";
-                    writer << "                         {"
-                           << join(replace_slice->get_upper_bounds()) << "},\n";
-                    writer << "                         {" << join(replace_slice->get_strides())
-                           << "},\n";
-                    writer << "                         {" << join(out[0].get_shape()) << "});\n";
-                }
-#else
                 if (args[0].get_name() != out[0].get_name())
                 {
                     kernel::emit_replace_slice(writer,
@@ -2657,7 +1942,6 @@ namespace ngraph
                                                        replace_slice->get_upper_bounds(),
                                                        replace_slice->get_strides());
                 }
-#endif
                 writer.block_end();
             }
 
@@ -2750,9 +2034,7 @@ namespace ngraph
             {
                 writer.block_begin();
                 size_t element_count = out[0].get_size();
-#if USE_EIGEN_CORE_INLINE == 0
                 writer << "#pragma omp parallel for\n";
-#endif
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = ceil(" << args[0].get_name() << "[i]);\n";
@@ -2765,9 +2047,7 @@ namespace ngraph
             {
                 writer.block_begin();
                 size_t element_count = out[0].get_size();
-#if USE_EIGEN_CORE_INLINE == 0
                 writer << "#pragma omp parallel for\n";
-#endif
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = floor(" << args[0].get_name() << "[i]);\n";
@@ -2780,9 +2060,7 @@ namespace ngraph
             {
                 writer.block_begin();
                 size_t element_count = out[0].get_size();
-#if USE_EIGEN_CORE_INLINE == 0
                 writer << "#pragma omp parallel for\n";
-#endif
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
                 writer.block_begin();
                 writer << out[0].get_name() << "[i] = sqrt(" << args[0].get_name() << "[i]);\n";
@@ -3912,53 +3190,6 @@ namespace ngraph
             {
                 const ngraph::op::Product* product = static_cast<const ngraph::op::Product*>(node);
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                const Shape& arg_shape = args[0].get_shape();
-                size_t arg_rank = arg_shape.size();
-                const AxisSet& reduction_axes = product->get_reduction_axes();
-
-                // Trivial case: no reduction axes.
-                if (reduction_axes.size() == 0)
-                {
-                    writer.block_begin();
-                    writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.block_end();
-                }
-                // Full reduction? Then reduce to scalar.
-                else if ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
-                         (arg_rank == 2 && reduction_axes == AxisSet{0, 1}))
-                {
-                    writer.block_begin();
-                    writer << emit_array1d(out[0]) << " =\n"
-                           << "    " << emit_array1d(args[0]) << ".prod();\n";
-                    writer.block_end();
-                }
-                else if (arg_rank == 2 && reduction_axes == AxisSet{1})
-                {
-                    writer.block_begin();
-                    writer << emit_vector(out[0]) << " =\n"
-                           << "    " << emit_matrix(args[0]) << ".rowwise().prod();\n";
-                    writer.block_end();
-                }
-                else if (arg_rank == 2 && reduction_axes == AxisSet{0})
-                {
-                    writer.block_begin();
-                    writer << emit_vector(out[0]) << " =\n"
-                           << "    " << emit_matrix(args[0]) << ".colwise().prod();\n";
-                    writer.block_end();
-                }
-                else
-                {
-                    writer << "reference::product<" << out[0].get_type() << ">("
-                           << args[0].get_name() << ",\n";
-                    writer << "                         " << out[0].get_name() << ",\n";
-                    writer << "                         {" << join(args[0].get_shape()) << "},\n";
-                    writer << "                         {" << join(out[0].get_shape()) << "},\n";
-                    writer << "                         {" << join(product->get_reduction_axes())
-                           << "});\n";
-                }
-#else
                 // TODO: add an emitter akin to the emit_sum
                 writer << "reference::product<" << out[0].get_type() << ">(" << args[0].get_name()
                        << ",\n";
@@ -3967,7 +3198,6 @@ namespace ngraph
                 writer << "                         {" << join(out[0].get_shape()) << "},\n";
                 writer << "                         {" << join(product->get_reduction_axes())
                        << "});\n";
-#endif
                 writer.block_end();
             }
 
@@ -3976,59 +3206,6 @@ namespace ngraph
             {
                 const ngraph::op::Max* max = static_cast<const ngraph::op::Max*>(node);
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                const Shape& arg_shape = args[0].get_shape();
-                size_t arg_rank = arg_shape.size();
-                const AxisSet& reduction_axes = max->get_reduction_axes();
-
-                bool zero_sized = false;
-                for (size_t s : arg_shape)
-                {
-                    zero_sized |= (s == 0);
-                }
-
-                // Trivial case: no reduction axes.
-                if (!zero_sized && reduction_axes.size() == 0)
-                {
-                    writer.block_begin();
-                    writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.block_end();
-                }
-                // Full reduction? Then reduce to scalar.
-                else if (!zero_sized && ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
-                                         (arg_rank == 2 && reduction_axes == AxisSet{0, 1})))
-                {
-                    writer.block_begin();
-                    writer << emit_array1d(out[0]) << " =\n"
-                           << "    " << emit_array1d(args[0]) << ".maxCoeff();\n";
-                    writer.block_end();
-                }
-                else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{1})
-                {
-                    writer.block_begin();
-                    writer << emit_vector(out[0]) << " =\n"
-                           << "    " << emit_matrix(args[0]) << ".rowwise().maxCoeff();\n";
-                    writer.block_end();
-                }
-                else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{0})
-                {
-                    writer.block_begin();
-                    writer << emit_vector(out[0]) << " =\n"
-                           << "    " << emit_matrix(args[0]) << ".colwise().maxCoeff();\n";
-                    writer.block_end();
-                }
-                else
-                {
-                    writer << "reference::max<" << out[0].get_type() << ">(" << args[0].get_name()
-                           << ",\n";
-                    writer << "                         " << out[0].get_name() << ",\n";
-                    writer << "                         {" << join(args[0].get_shape()) << "},\n";
-                    writer << "                         {" << join(out[0].get_shape()) << "},\n";
-                    writer << "                         {" << join(max->get_reduction_axes())
-                           << "});\n";
-                }
-#else
                 if (args[0].get_element_type() == element::f32 && args[0].get_shape().size() == 2 &&
                     max->get_reduction_axes().size() == 1)
                 {
@@ -4049,7 +3226,6 @@ namespace ngraph
                     writer << "                         {" << join(max->get_reduction_axes())
                            << "});\n";
                 }
-#endif
                 writer.block_end();
             }
 
@@ -4058,59 +3234,6 @@ namespace ngraph
             {
                 const ngraph::op::Min* min = static_cast<const ngraph::op::Min*>(node);
                 writer.block_begin();
-#if USE_EIGEN_CORE_INLINE == 1
-                const Shape& arg_shape = args[0].get_shape();
-                size_t arg_rank = arg_shape.size();
-                const AxisSet& reduction_axes = min->get_reduction_axes();
-
-                bool zero_sized = false;
-                for (size_t s : arg_shape)
-                {
-                    zero_sized |= (s == 0);
-                }
-
-                // Trivial case: no reduction axes.
-                if (!zero_sized && reduction_axes.size() == 0)
-                {
-                    writer.block_begin();
-                    writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-                           << out[0].get_size() * out[0].get_element_type().size() << ");\n";
-                    writer.block_end();
-                }
-                // Full reduction? Then reduce to scalar.
-                else if (!zero_sized && ((arg_rank == 1 && reduction_axes == AxisSet{0}) ||
-                                         (arg_rank == 2 && reduction_axes == AxisSet{0, 1})))
-                {
-                    writer.block_begin();
-                    writer << emit_array1d(out[0]) << " =\n"
-                           << "    " << emit_array1d(args[0]) << ".minCoeff();\n";
-                    writer.block_end();
-                }
-                else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{1})
-                {
-                    writer.block_begin();
-                    writer << emit_vector(out[0]) << " =\n"
-                           << "    " << emit_matrix(args[0]) << ".rowwise().minCoeff();\n";
-                    writer.block_end();
-                }
-                else if (!zero_sized && arg_rank == 2 && reduction_axes == AxisSet{0})
-                {
-                    writer.block_begin();
-                    writer << emit_vector(out[0]) << " =\n"
-                           << "    " << emit_matrix(args[0]) << ".colwise().minCoeff();\n";
-                    writer.block_end();
-                }
-                else
-                {
-                    writer << "reference::min<" << out[0].get_type() << ">(" << args[0].get_name()
-                           << ",\n";
-                    writer << "                         " << out[0].get_name() << ",\n";
-                    writer << "                         {" << join(args[0].get_shape()) << "},\n";
-                    writer << "                         {" << join(out[0].get_shape()) << "},\n";
-                    writer << "                         {" << join(min->get_reduction_axes())
-                           << "});\n";
-                }
-#else
                 // TODO: add an emitter akin to the emit_sum
                 writer << "reference::min<" << out[0].get_type() << ">(" << args[0].get_name()
                        << ",\n";
@@ -4119,7 +3242,6 @@ namespace ngraph
                 writer << "                         {" << join(out[0].get_shape()) << "},\n";
                 writer << "                         {" << join(min->get_reduction_axes())
                        << "});\n";
-#endif
                 writer.block_end();
             }
 
