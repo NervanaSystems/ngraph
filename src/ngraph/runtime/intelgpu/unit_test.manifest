@@ -28,6 +28,9 @@ dequantize_int8
 dequantize_int8_zero_offset
 dequantize_zero_offset
 divide_by_zero_int32
+embedding_lookup_4x5_reverse
+embedding_lookup_10x1_arbitrary
+embedding_lookup_10x1_arbitrary_index_type_int
 function_call
 generate_mask
 max_pool_3d
@@ -148,3 +151,6 @@ max_3d_to_scalar_double
 argmin_trivial_in_i32
 argmax_4D_axis_3_i64_in_i32
 argmin_trivial_in_double
+all_2x2x3_eliminate_dim_1
+all_2x2x3_eliminate_dim_2
+all_2x2x3_eliminate_dims_0_1

@@ -14,18 +14,19 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/op/any.hpp"
 
-#include "ngraph/pass/pass.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+op::Any::Any(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
+    : LogicalReduction("Any", arg, reduction_axes)
 {
-    namespace pass
-    {
-        class ReshapeSinking : public ngraph::pass::FunctionPass
-        {
-        public:
-            bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-        };
-    }
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::Any::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<Any>(new_args.at(0), m_reduction_axes);
 }

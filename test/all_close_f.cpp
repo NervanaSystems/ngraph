@@ -150,9 +150,12 @@ protected:
 
 TEST_P(all_close_f_param_test, test_boundaries)
 {
-    // Print short string documenting which test is being run
-    std::cout << "[   INFO   ] Test params: (" << expected << ", " << mantissa_bits << ", "
-              << tolerance_bits << ")\n";
+    if (std::getenv("NGRAPH_GTEST_INFO") != nullptr)
+    {
+        // Print short string documenting which test is being run
+        std::cout << "[   INFO   ] Test params: (" << expected << ", " << mantissa_bits << ", "
+                  << tolerance_bits << ")\n";
+    }
 
     // Format verbose info to only print out in case of test failure
     stringstream ss;
@@ -190,7 +193,6 @@ TEST_P(all_close_f_param_test, test_boundaries)
         << ss.str();
 }
 
-// Avoid warning with how gtest defines INSTANTIATE_TEST_CASE_P
 INSTANTIATE_TEST_CASE_P(
     test_simple_floats_with_range_of_precisions,
     all_close_f_param_test,
@@ -279,8 +281,11 @@ protected:
 
 TEST_P(all_close_f_double_param_test, test_boundaries)
 {
-    // Print short string documenting which test is being run
-    std::cout << "[   INFO   ] Test params: (" << expected << ", " << tolerance_bits << ")\n";
+    if (std::getenv("NGRAPH_GTEST_INFO") != nullptr)
+    {
+        // Print short string documenting which test is being run
+        std::cout << "[   INFO   ] Test params: (" << expected << ", " << tolerance_bits << ")\n";
+    }
 
     // Format verbose info to only print out in case of test failure
 
@@ -313,7 +318,6 @@ TEST_P(all_close_f_double_param_test, test_boundaries)
         << ss.str();
 }
 
-// Avoid warning with how gtest defines INSTANTIATE_TEST_CASE_P
 INSTANTIATE_TEST_CASE_P(
     test_simple_doubles_with_range_of_precisions,
     all_close_f_double_param_test,
