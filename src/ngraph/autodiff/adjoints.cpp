@@ -37,7 +37,7 @@ using namespace ngraph;
 
 std::shared_ptr<Node> make_zero(const std::shared_ptr<Node>& node)
 {
-    std::shared_ptr<Node> zero = std::make_shared<op::ScalarConstantLike<double>>(node, 0.0);
+    std::shared_ptr<Node> zero = std::make_shared<op::ScalarConstantLike>(node, 0.0);
     std::shared_ptr<Node> bzero = std::make_shared<op::BroadcastLike>(zero, node, AxisSet{});
     return bzero;
 }

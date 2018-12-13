@@ -33,9 +33,8 @@
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
+#include "ngraph/pass/reshape_sinking.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_reshape_sinking.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -49,7 +48,7 @@
 using namespace ngraph;
 using namespace std;
 
-TEST(cpu_reshape_sinking, edge_splitting)
+TEST(reshape_sinking, edge_splitting)
 {
     //checks if Reshapes are pushed through op::Abs, but stopped by Sum
     Shape shape_nhwc{16, 28, 28, 1};
@@ -63,7 +62,7 @@ TEST(cpu_reshape_sinking, edge_splitting)
     pass::Manager pass_manager;
     //size_t before_count = count_ops_of_type<op::Reshape>(func);
     pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
-    pass_manager.register_pass<runtime::cpu::pass::CPUReshapeSinking>();
+    pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
     pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
@@ -75,7 +74,7 @@ TEST(cpu_reshape_sinking, edge_splitting)
     ASSERT_EQ(new_reshape->get_shape(), shape_nchw);
 }
 
-TEST(cpu_reshape_sinking, broadcast_swimming)
+TEST(reshape_sinking, broadcast_swimming)
 {
     Shape shape_nchw{1, 32, 536, 536};
     Shape shape_nhwc{1, 536, 536, 32};
@@ -102,7 +101,7 @@ TEST(cpu_reshape_sinking, broadcast_swimming)
     auto func = make_shared<Function>(NodeVector{relu}, ParameterVector{bias, input, weights});
     pass::Manager pass_manager;
 
-    pass_manager.register_pass<runtime::cpu::pass::CPUReshapeSinking>();
+    pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
     pass_manager.run_passes(func);
@@ -112,7 +111,7 @@ TEST(cpu_reshape_sinking, broadcast_swimming)
     ASSERT_EQ(add->get_argument(1), conv);
 }
 
-TEST(cpu_reshape_sinking, mnist_conv)
+TEST(reshape_sinking, mnist_conv)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "tf_conv_mnist_nhwc.json");
     const string json_string = file_util::read_file_to_string(json_path);
@@ -121,12 +120,45 @@ TEST(cpu_reshape_sinking, mnist_conv)
     pass::Manager pass_manager;
     size_t before_count = count_ops_of_type<op::Reshape>(func);
     //pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
-    pass_manager.register_pass<runtime::cpu::pass::CPUReshapeSinking>();
+    pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
     //pass_manager.register_pass<pass::CoreFusion>();
     //pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     //pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.run_passes(func);
+    size_t before_after = count_ops_of_type<op::Reshape>(func);
+    ASSERT_LE(before_after, before_count);
+}
+
+TEST(reshape_sinking, nasnet_pooladd)
+{
+    Shape input_shape{1, 3, 3, 1};
+
+    auto input_type = element::f32;
+    auto output_type = element::f32;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto c_weights = op::Constant::create(input_type, Shape{1, 1, 1, 1}, {3});
+    auto reshape1 = make_shared<op::Reshape>(X, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 3});
+    auto avgpool =
+        make_shared<op::AvgPool>(reshape1, Shape{1, 1}, Strides{1, 1}, Shape{0, 0}, Shape{0, 0});
+    auto reshape2 = make_shared<op::Reshape>(avgpool, AxisVector{0, 2, 3, 1}, Shape{1, 3, 3, 1});
+    auto maxpool =
+        make_shared<op::MaxPool>(reshape1, Shape{1, 1}, Strides{1, 1}, Shape{0, 0}, Shape{0, 0});
+    auto reshape3 = make_shared<op::Reshape>(maxpool, AxisVector{0, 2, 3, 1}, Shape{1, 3, 3, 1});
+    auto const1 = op::Constant::create(input_type, Shape{1, 3, 3, 1}, {3});
+    auto add1 = make_shared<op::Add>(reshape3, const1);
+    auto add2 = make_shared<op::Add>(add1, reshape2);
+    auto func = make_shared<Function>(add2, ParameterVector{X});
+
+    pass::Manager pass_manager;
+    size_t before_count = count_ops_of_type<op::Reshape>(func);
+    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::ReshapeSinking>();
+    pass_manager.register_pass<pass::ReshapeElimination>();
+    pass_manager.register_pass<pass::CommonSubexpressionElimination>();
+    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
     pass_manager.run_passes(func);
     size_t before_after = count_ops_of_type<op::Reshape>(func);
     ASSERT_LE(before_after, before_count);

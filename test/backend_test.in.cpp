@@ -3601,8 +3601,7 @@ NGRAPH_TEST(${BACKEND_NAME}, product_2d_to_scalar_int32)
     auto result = backend->create_tensor(element::i32, shape_rt);
 
     backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_TRUE(test::all_close(vector<int32_t>{1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9},
-                                read_vector<int32_t>(result)));
+    EXPECT_EQ(vector<int32_t>{1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9}, read_vector<int32_t>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, product_to_scalar_int32)
