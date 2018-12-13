@@ -570,6 +570,12 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Broadcast>(args[0], shape, axes);
                 break;
             }
+            case OP_TYPEID::BroadcastLike:
+            {
+                auto initial_axes = node_js.at("initial_axes").get<set<size_t>>();
+                node = make_shared<op::BroadcastLike>(args[0], args[1], initial_axes);
+                break;
+            }
             case OP_TYPEID::Ceiling:
             {
                 node = make_shared<op::Ceiling>(args[0]);
@@ -1004,6 +1010,12 @@ static shared_ptr<ngraph::Function>
                     make_shared<op::ReverseSequence>(args[0], args[1], batch_axis, sequence_axis);
                 break;
             }
+            case OP_TYPEID::ScalarConstantLike:
+            {
+                double value = node_js.at("value").get<double>();
+                node = make_shared<op::ScalarConstantLike>(args[0], value);
+                break;
+            }
             case OP_TYPEID::Select:
             {
                 node = make_shared<op::Select>(args[0], args[1], args[2]);
@@ -1296,6 +1308,12 @@ static json write(const Node& n, bool binary_constant_data)
         node["shape"] = tmp->get_broadcast_shape();
         break;
     }
+    case OP_TYPEID::BroadcastLike:
+    {
+        auto tmp = dynamic_cast<const op::BroadcastLike*>(&n);
+        node["initial_axes"] = tmp->get_initial_broadcast_axes();
+        break;
+    }
     case OP_TYPEID::Ceiling: { break;
     }
     case OP_TYPEID::Concat:
@@ -1534,6 +1552,14 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::ReverseSequence*>(&n);
         node["batch_axis"] = tmp->get_batch_axis();
         node["sequence_axis"] = tmp->get_sequence_axis();
+        break;
+    }
+    case OP_TYPEID::ScalarConstantLike:
+    {
+        auto tmp = dynamic_cast<const op::ScalarConstantLikeBase*>(&n);
+        auto constant = tmp->as_constant();
+        node["value"] = constant->get_value_strings()[0];
+        node["element_type"] = write_element_type(constant->get_element_type());
         break;
     }
     case OP_TYPEID::Select: { break;

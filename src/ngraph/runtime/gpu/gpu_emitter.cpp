@@ -455,6 +455,11 @@ void runtime::gpu::GPU_Emitter::emit_Broadcast(EMIT_ARGS)
     writer.block_end();
 }
 
+void runtime::gpu::GPU_Emitter::emit_BroadcastLike(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 void runtime::gpu::GPU_Emitter::emit_Ceiling(EMIT_ARGS)
 {
     emit_elementwise<ngraph::op::Ceiling>(external_function, writer, node, args, out);
@@ -1239,6 +1244,11 @@ void runtime::gpu::GPU_Emitter::emit_Rnn(EMIT_ARGS)
     writer.block_end();
 }
 #endif
+
+void runtime::gpu::GPU_Emitter::emit_ScalarConstantLike(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
 
 void runtime::gpu::GPU_Emitter::emit_Select(EMIT_ARGS)
 {

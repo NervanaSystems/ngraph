@@ -1692,12 +1692,14 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
         case OP_TYPEID::All:
         case OP_TYPEID::AllReduce:
         case OP_TYPEID::Any:
+        case OP_TYPEID::BroadcastLike:
         case OP_TYPEID::FunctionCall:
         case OP_TYPEID::Dequantize:
         case OP_TYPEID::Quantize:
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::ReverseSequence:
+        case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::TopK:
