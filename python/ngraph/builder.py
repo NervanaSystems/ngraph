@@ -51,17 +51,17 @@ def scaleddequantize(data,  # type: Node
 
 def scaledquantizedconvolution(data,    # type: Node
         filters,                        # type: Node
-        window_movement_strides=None,   # type: List[int]
-        window_dilation_strides=None,   # type: List[int]
-        padding_below=None,             # type: List[int]
-        padding above=None,             # type: List[int]
-        data_dilation_stride=None,      # type: List[int]
         min_input,                      # type: Node
         max_output,                     # type: Node
         min_filter,                     # type: Node
         max_filter,                     # type: Node
         min_freezed_output,             # type: Node
-        max_freezed_output              # type: Node
+        max_freezed_output,             # type: Node
+        window_movement_strides=None,   # type: List[int]
+        window_dilation_strides=None,   # type: List[int]
+        padding_below=None,             # type: List[int]
+        padding_above=None,             # type: List[int]
+        data_dilation_stride=None,      # type: List[int]
         name=None,                      # type: str
         ):
     spatial_dim_count = len(data.shape) - 2
@@ -80,7 +80,7 @@ def scaledquantizedconvolution(data,    # type: Node
             window_movement_strides,
             window_dilation_strides,
             padding_below,
-            padding above,
+            padding_above,
             data_dilation_stride,
             min_input,
             max_output,
