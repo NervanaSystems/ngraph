@@ -15,7 +15,6 @@
 # ******************************************************************************
 
 from ngraph.impl.builder import ScaledQuantize, ScaledDequantize, ScaledQuantizedConvolution
-from ngraph.impl.Quantize import RoundMode
 from ngraph.impl import Node
 from ngraph.utils.types import NumericType
 from ngraph.utils.types import RoundMode
