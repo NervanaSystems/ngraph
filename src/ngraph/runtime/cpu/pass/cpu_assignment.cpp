@@ -292,7 +292,8 @@ namespace ngraph
                         data_dilated = data_dilated || (s != 1);
                     }
 
-                    if (!data_dilated && data_rank == 4 && delta_rank == 4 &&
+                    if (!data_dilated && data_rank == delta_rank &&
+                        (data_rank == 4 || data_rank == 5) &&
                         node->get_input_element_type(0) == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
