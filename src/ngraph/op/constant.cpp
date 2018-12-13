@@ -169,6 +169,21 @@ shared_ptr<op::Constant> op::ScalarConstantLikeBase::as_constant() const
     return std::make_shared<op::Constant>(m_element_type, m_shape, m_data);
 }
 
+std::shared_ptr<Node> op::ScalarConstantLike::copy_with_new_args(const NodeVector& new_args) const
+{
+    return std::make_shared<ScalarConstantLike>(new_args.at(0), m_value);
+}
+
+void op::ScalarConstantLike::infer_element_type()
+{
+    m_element_type = get_input_element_type(0);
+    if (nullptr == m_data)
+    {
+        m_data = ngraph::aligned_alloc(m_element_type.size(), m_element_type.size());
+        write_values(std::vector<double>(1, m_value));
+    }
+}
+
 //
 // We have to open up namespace blocks here to work around a problem with gcc:
 //

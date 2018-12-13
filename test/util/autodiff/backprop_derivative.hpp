@@ -88,7 +88,7 @@ namespace ngraph
 
             // get adjoint and force to all elements to zero
             auto c_vec = read_vector<T>(c_arg);
-            fill(c_vec.begin(), c_vec.end(), 0);
+            fill(c_vec.begin(), c_vec.end(), static_cast<T>(0));
 
             static std::unordered_map<std::shared_ptr<Function>, runtime::Handle>
                 s_compiled_functions;
