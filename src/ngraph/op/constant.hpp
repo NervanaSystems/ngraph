@@ -281,7 +281,6 @@ namespace ngraph
         };
 
         /// \brief A scalar constant whose element type is the same as like.
-        template <typename T>
         class ScalarConstantLike : public ScalarConstantLikeBase
         {
         public:
@@ -292,30 +291,20 @@ namespace ngraph
             ///
             /// \param like A tensor that will supply the element type.
             /// \param value The value of the scalar.
+            template <typename T>
             ScalarConstantLike(const std::shared_ptr<Node>& like, T value)
                 : ScalarConstantLikeBase("ScalarConstantLike", {like})
-                , m_value(value)
+                , m_value(static_cast<double>(value))
             {
                 constructor_validate_and_infer_types();
             }
 
-            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
-            {
-                return std::make_shared<ScalarConstantLike<T>>(new_args.at(0), m_value);
-            }
+            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
-            void infer_element_type() override
-            {
-                m_element_type = get_input_element_type(0);
-                if (nullptr == m_data)
-                {
-                    m_data = ngraph::aligned_alloc(m_element_type.size(), m_element_type.size());
-                    write_values(std::vector<T>(1, m_value));
-                }
-            }
+            void infer_element_type() override;
 
-            T m_value;
+            double m_value;
         };
     }
 }

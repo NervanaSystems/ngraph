@@ -50,7 +50,7 @@ void op::Acos::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
 
     auto x = get_inputs().at(0).get_output().get_node();
 
-    auto one = make_shared<op::ScalarConstantLike<double>>(x, 1.0);
+    auto one = make_shared<op::ScalarConstantLike>(x, 1.0);
     auto ones = make_shared<op::BroadcastLike>(one, x, AxisSet());
 
     adjoints.add_delta(x, -delta / make_shared<op::Sqrt>(ones - x * x));
