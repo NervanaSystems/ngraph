@@ -238,7 +238,7 @@ static void sink_reshape(std::shared_ptr<op::Reshape> reshape,
                          ReshapeMap& reorders,
                          std::set<std::shared_ptr<Node>>& reshapes_to_delete)
 {
-    auto orig_reshape = reorders.at(n->get_argument(0));
+    auto orig_reshape = reorders.at(reshape->get_argument(0));
     if (!reshape->get_is_transpose())
     {
         NGRAPH_DEBUG << "Materializing " << describe_reshape(orig_reshape) << " for reshape "
