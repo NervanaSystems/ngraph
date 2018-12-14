@@ -19,26 +19,18 @@
 #include "core/node.hpp"
 #include "ngraph/node_vector.hpp"
 
-namespace ngraph
+namespace onnxruntime
 {
-    namespace onnx_import
+    namespace ngraph_ep
     {
-        namespace op
-        {
-            namespace set_1
-            {
-                /// \brief Performs ONNX Quant Conv operation.
-                ///
-                /// \param node   The ONNX node object representing this operation.
-                ///
-                /// \return The vector containing Ngraph nodes producing output of ONNX quantizied convolution
-                ///         operation.
-                NodeVector quant_conv(const Node& node);
+        /// \brief Performs ONNX Quant Conv operation.
+        ///
+        /// \param node   The ONNX node object representing this operation.
+        ///
+        /// \return The vector containing Ngraph nodes producing output of ONNX quantizied convolution
+        ///         operation.
+        ngraph::NodeVector quant_conv(const ngraph::onnx_import::Node& node);
 
-            } // namespace set_1
+    } // namespace ngraph_ep
 
-        } //namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+} // namespace onnxruntime

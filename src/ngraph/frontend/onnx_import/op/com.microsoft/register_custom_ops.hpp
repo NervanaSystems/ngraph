@@ -19,6 +19,7 @@
 #include "dequantize_linear.hpp"
 #include "onnx.hpp"
 #include "quantize_linear.hpp"
+#include "quant_conv.hpp"
 
 namespace onnxruntime
 {
@@ -28,9 +29,10 @@ namespace onnxruntime
         {
             constexpr const char* ms_domain = "com.microsoft";
 
-            ngraph::onnx_import::register_operator("QuantizeLinear", 9, ms_domain, quantize_linear);
             ngraph::onnx_import::register_operator(
                 "DequantizeLinear", 9, ms_domain, dequantize_linear);
+            ngraph::onnx_import::register_operator("QuantizeLinear", 9, ms_domain, quantize_linear);
+            ngraph::onnx_import::register_operator("QLinearConv", 9, ms_domain, quant_conv);
         }
     } // namespace ngraph_ep
 
