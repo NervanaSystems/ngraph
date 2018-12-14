@@ -26,74 +26,65 @@
 #include "quantize_linear.hpp"
 #include "utils/reshape.hpp"
 
-namespace ngraph
+namespace onnxruntime
 {
-    namespace onnx_import
+    namespace ngraph_ep
     {
-        namespace op
+        ngraph::NodeVector quantize_linear(const ngraph::onnx_import::Node& node)
         {
-            namespace set_1
+            ngraph::NodeVector inputs{node.get_ng_inputs()};
+            std::shared_ptr<ngraph::Node> x = inputs.at(0);
+            std::shared_ptr<ngraph::Node> y_scale = inputs.at(1);
+            std::shared_ptr<ngraph::Node> y_zero_point = inputs.at(2);
+
+            bool has_axis = false;
+            ngraph::Shape x_shape = x->get_shape();
+            ngraph::Shape y_scale_shape = y_scale->get_shape();
+            ngraph::Shape y_zero_point_shape = y_zero_point->get_shape();
+            ngraph::AxisSet axis_set{
+                ngraph::onnx_import::reshape::get_default_axis_vector(x_shape.size())};
+
+            try
             {
-                NodeVector quantize_linear(const Node& node)
-                {
-                    NodeVector inputs{node.get_ng_inputs()};
-                    std::shared_ptr<ngraph::Node> x = inputs.at(0);
-                    std::shared_ptr<ngraph::Node> y_scale = inputs.at(1);
-                    std::shared_ptr<ngraph::Node> y_zero_point = inputs.at(2);
+                std::int64_t axis = node.get_attribute_value<std::int64_t>("axis");
+                axis_set = ngraph::AxisSet{static_cast<std::size_t>(axis)};
+                has_axis = true;
+            }
+            catch (const ngraph::onnx_import::error::node::UnknownAttribute&)
+            {
+            }
 
-                    bool has_axis = false;
-                    Shape x_shape = x->get_shape();
-                    Shape y_scale_shape = y_scale->get_shape();
-                    Shape y_zero_point_shape = y_zero_point->get_shape();
-                    AxisSet axis_set{reshape::get_default_axis_vector(x_shape.size())};
+            // Per `axis` quantization. Input ‘scale’ and ‘zero_point’ must be 1-D tensors
+            if (has_axis)
+            {
+                std::size_t axis_dim_value = x_shape.at(*std::begin(axis_set));
 
-                    try
-                    {
-                        std::int64_t axis = node.get_attribute_value<std::int64_t>("axis");
-                        axis_set = AxisSet{static_cast<std::size_t>(axis)};
-                        has_axis = true;
-                    }
-                    catch (const error::node::UnknownAttribute&)
-                    {
-                    }
+                ASSERT_VALID_ARGUMENT(
+                    node, (y_scale_shape.size() == 1 && y_scale_shape.at(0) == axis_dim_value))
+                    << "y_scale must be 1D tensor with size equal to: " << axis_dim_value;
+                ASSERT_VALID_ARGUMENT(
+                    node,
+                    (y_zero_point_shape.size() == 1 && y_zero_point_shape.at(0) == axis_dim_value))
+                    << "y_zero_point must be 1D tensor with size equal to: " << axis_dim_value;
+            }
+            // Per tensor quantization. Input ‘scale’ and ‘zero_point’ must be scalars
+            else
+            {
+                ASSERT_VALID_ARGUMENT(node, y_scale_shape.size() == 0)
+                    << "y_scale must be a scalar if no axis is provided.";
+                ASSERT_VALID_ARGUMENT(node, y_zero_point_shape.size() == 0)
+                    << "y_zero_point must be a scalar if no axis is provided.";
+            }
 
-                    // Per `axis` quantization. Input ‘scale’ and ‘zero_point’ must be 1-D tensors
-                    if (has_axis)
-                    {
-                        std::size_t axis_dim_value = x_shape.at(*std::begin(axis_set));
+            return {std::make_shared<ngraph::op::Quantize>(
+                x,
+                y_scale,
+                y_zero_point,
+                y_zero_point->get_element_type(),
+                axis_set,
+                ngraph::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY)};
+        }
 
-                        ASSERT_VALID_ARGUMENT(node,
-                                              (y_scale_shape.size() == 1 &&
-                                               y_scale_shape.at(0) == axis_dim_value))
-                            << "y_scale must be 1D tensor with size equal to: " << axis_dim_value;
-                        ASSERT_VALID_ARGUMENT(node,
-                                              (y_zero_point_shape.size() == 1 &&
-                                               y_zero_point_shape.at(0) == axis_dim_value))
-                            << "y_zero_point must be 1D tensor with size equal to: "
-                            << axis_dim_value;
-                    }
-                    // Per tensor quantization. Input ‘scale’ and ‘zero_point’ must be scalars
-                    else
-                    {
-                        ASSERT_VALID_ARGUMENT(node, y_scale_shape.size() == 0)
-                            << "y_scale must be a scalar if no axis is provided.";
-                        ASSERT_VALID_ARGUMENT(node, y_zero_point_shape.size() == 0)
-                            << "y_zero_point must be a scalar if no axis is provided.";
-                    }
+    } // namespace ngraph_ep
 
-                    return {std::make_shared<ngraph::op::Quantize>(
-                        x,
-                        y_scale,
-                        y_zero_point,
-                        y_zero_point->get_element_type(),
-                        axis_set,
-                        ngraph::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY)};
-                }
-
-            } // namespace set_1
-
-        } //namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+} // namespace onnxruntime

@@ -16,15 +16,22 @@
 
 #pragma once
 
-#include "core/node.hpp"
-#include "ngraph/node_vector.hpp"
+#include "dequantize_linear.hpp"
+#include "onnx.hpp"
+#include "quantize_linear.hpp"
 
 namespace onnxruntime
 {
     namespace ngraph_ep
     {
-        ngraph::NodeVector dequantize_linear(const ngraph::onnx_import::Node& node);
+        void register_custom_ops()
+        {
+            constexpr const char* ms_domain = "com.microsoft";
 
+            ngraph::onnx_import::register_operator("QuantizeLinear", 9, ms_domain, quantize_linear);
+            ngraph::onnx_import::register_operator(
+                "DequantizeLinear", 9, ms_domain, dequantize_linear);
+        }
     } // namespace ngraph_ep
 
 } // namespace onnxruntime
