@@ -41,59 +41,42 @@ namespace ngraph
                     auto& functors = external_function->get_functors();
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                    auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto scale_const_op =
-                        std::dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(2));
-                    std::vector<float> scales;
-                    if (scale_const_op == nullptr)
-                    {
-                        auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                        auto scales_size = shape_size(args[2].get_shape());
+                    auto scales_size = shape_size(args[2].get_shape());
 
-                        auto conv_index =
-                            mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolution>(
+                    auto conv_desc =
+                        mkldnn_emitter
+                            ->get_convolution_forward_desc<ngraph::op::QuantizedConvolution>(
                                 node, args, out);
-                        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    auto conv_attr =
+                        mkldnn_emitter
+                            ->get_convolution_forward_attr<ngraph::op::QuantizedConvolution>(node);
+                    size_t conv_index = mkldnn_emitter->convolution_forward_init();
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                        auto functor = [&, scales_size, deps, node, conv_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            // Create MKLDNN convolution primitive during the first iteration.
-                            // Assumes the scales dont change for the duration of the graph
-                            if (ctx->first_iteration)
-                            {
-                                vector<float> dyn_scales;
-                                dyn_scales.assign(static_cast<float*>(arg2_tensor),
-                                                  static_cast<float*>(arg2_tensor) + scales_size);
-                                mkldnn_emitter->recreate_qconv<ngraph::op::QuantizedConvolution,
-                                                               false,
-                                                               false>(
-                                    node, ctx, dyn_scales, deps, conv_index);
-                            }
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
-                        };
-                        functors.emplace_back(functor);
-                    }
-                    else
-                    {
-                        auto conv_index =
-                            mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolution>(
-                                node, args, out);
-                        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-
-                        auto functor = [&, conv_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
-                        };
-                        functors.emplace_back(functor);
-                    }
+                    auto functor = [&, scales_size, conv_desc, conv_attr, deps, conv_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) mutable {
+                        // Create MKLDNN convolution primitive during the first iteration.
+                        // Assumes the scales dont change for the duration of the graph
+                        // if (ctx->first_iteration && rebuild)
+                        if (ctx->first_iteration)
+                        {
+                            vector<float> dyn_scales;
+                            dyn_scales.assign(static_cast<float*>(arg2_tensor),
+                                              static_cast<float*>(arg2_tensor) + scales_size);
+                            conv_attr.set_output_scales(0, dyn_scales);
+                            mkldnn_emitter->convolution_forward<false>(
+                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                        }
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                    };
+                    functors.emplace_back(functor);
                 }
                 else
                 {
@@ -110,59 +93,40 @@ namespace ngraph
                     auto& functors = external_function->get_functors();
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                    auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto scale_const_op =
-                        std::dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(2));
-                    std::vector<float> scales;
-                    if (scale_const_op == nullptr)
-                    {
-                        auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
-                        auto scales_size = shape_size(args[2].get_shape());
+                    auto scales_size = shape_size(args[2].get_shape());
 
-                        auto conv_index =
-                            mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolutionRelu>(
+                    auto conv_desc =
+                        mkldnn_emitter
+                            ->get_convolution_forward_desc<ngraph::op::QuantizedConvolutionRelu>(
                                 node, args, out);
-                        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    auto conv_attr =
+                        mkldnn_emitter
+                            ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionRelu>(
+                                node);
+                    size_t conv_index = mkldnn_emitter->convolution_forward_init();
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                        auto functor = [&, scales_size, deps, node, conv_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            // Create MKLDNN convolution primitive during the first iteration.
-                            // Assumes the scales dont change for the duration of the graph
-                            if (ctx->first_iteration)
-                            {
-                                vector<float> dyn_scales;
-                                dyn_scales.assign(static_cast<float*>(arg2_tensor),
-                                                  static_cast<float*>(arg2_tensor) + scales_size);
-                                mkldnn_emitter->recreate_qconv<ngraph::op::QuantizedConvolutionRelu,
-                                                               false,
-                                                               false>(
-                                    node, ctx, dyn_scales, deps, conv_index);
-                            }
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
-                        };
-                        functors.emplace_back(functor);
-                    }
-                    else
-                    {
-                        auto conv_index =
-                            mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolutionRelu>(
-                                node, args, out);
-                        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-
-                        auto functor = [&, conv_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
-                        };
-                        functors.emplace_back(functor);
-                    }
+                    auto functor = [&, scales_size, conv_desc, conv_attr, deps, conv_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) mutable {
+                        if (ctx->first_iteration)
+                        {
+                            vector<float> dyn_scales;
+                            dyn_scales.assign(static_cast<float*>(arg2_tensor),
+                                              static_cast<float*>(arg2_tensor) + scales_size);
+                            conv_attr.set_output_scales(0, dyn_scales);
+                            mkldnn_emitter->convolution_forward<false>(
+                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                        }
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], out0_tensor);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                    };
+                    functors.emplace_back(functor);
                 }
                 else
                 {
@@ -181,61 +145,41 @@ namespace ngraph
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                     auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                    auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto scale_const_op =
-                        std::dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(3));
-                    std::vector<float> scales;
-                    if (scale_const_op == nullptr)
-                    {
-                        auto& arg3_tensor = external_function->get_tensor_data(args[3].get_name());
-                        auto scales_size = shape_size(args[3].get_shape());
+                    auto scales_size = shape_size(args[3].get_shape());
 
-                        auto conv_index =
-                            mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolutionBias>(
+                    auto conv_desc =
+                        mkldnn_emitter
+                            ->get_convolution_forward_desc<ngraph::op::QuantizedConvolutionBias>(
                                 node, args, out);
-                        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    auto conv_attr =
+                        mkldnn_emitter
+                            ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionBias>(
+                                node);
+                    size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                        auto functor = [&, scales_size, deps, node, conv_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            // Create MKLDNN convolution primitive during the first iteration.
-                            // Assumes the scales dont change for the duration of the graph
-                            if (ctx->first_iteration)
-                            {
-                                vector<float> dyn_scales;
-                                dyn_scales.assign(static_cast<float*>(arg3_tensor),
-                                                  static_cast<float*>(arg3_tensor) + scales_size);
-                                mkldnn_emitter->recreate_qconv<ngraph::op::QuantizedConvolutionBias,
-                                                               true,
-                                                               false>(
-                                    node, ctx, dyn_scales, deps, conv_index);
-                            }
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
-                        };
-                        functors.emplace_back(functor);
-                    }
-                    else
-                    {
-                        auto conv_index =
-                            mkldnn_emitter->build_convolution<ngraph::op::QuantizedConvolutionBias>(
-                                node, args, out);
-                        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-
-                        auto functor = [&, conv_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
-                        };
-                        functors.emplace_back(functor);
-                    }
+                    auto functor = [&, scales_size, conv_desc, conv_attr, deps, conv_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) mutable {
+                        if (ctx->first_iteration)
+                        {
+                            vector<float> dyn_scales;
+                            dyn_scales.assign(static_cast<float*>(arg3_tensor),
+                                              static_cast<float*>(arg3_tensor) + scales_size);
+                            conv_attr.set_output_scales(0, dyn_scales);
+                            mkldnn_emitter->convolution_forward<true>(
+                                conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
+                        }
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
+                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                    };
+                    functors.emplace_back(functor);
                 }
                 else
                 {
@@ -254,29 +198,28 @@ namespace ngraph
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                     auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                    auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
+                    auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto scale_const_op =
-                        std::dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(4));
-                    std::vector<float> scales;
-                    if (scale_const_op == nullptr)
-                    {
-                        auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
-                        auto scales_size = shape_size(args[4].get_shape());
-                        auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
-                        auto arg5_scales_size = shape_size(args[5].get_shape());
+                    auto scales_size = shape_size(args[4].get_shape());
+                    auto sum_scales_size = shape_size(args[5].get_shape());
 
-                        auto conv_index =
-                            mkldnn_emitter
-                                ->build_convolution<ngraph::op::QuantizedConvolutionBiasAdd>(
-                                    node, args, out);
-                        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    auto conv_desc =
+                        mkldnn_emitter
+                            ->get_convolution_forward_desc<ngraph::op::QuantizedConvolutionBiasAdd>(
+                                node, args, out);
+                    auto conv_attr =
+                        mkldnn_emitter
+                            ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionBiasAdd>(
+                                node);
+                    size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                        auto functor = [&, scales_size, arg5_scales_size, deps, node, conv_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            // Create MKLDNN convolution primitive during the first iteration.
-                            // Assumes the scales dont change for the duration of the graph
+                    auto functor =
+                        [&, scales_size, sum_scales_size, conv_desc, conv_attr, deps, conv_index](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) mutable {
                             if (ctx->first_iteration)
                             {
                                 vector<float> dyn_scales;
@@ -285,16 +228,27 @@ namespace ngraph
                                                   static_cast<float*>(arg4_tensor) + scales_size);
                                 dyn_post_op_scales.assign(static_cast<float*>(arg5_tensor),
                                                           static_cast<float*>(arg5_tensor) +
-                                                              arg5_scales_size);
-                                mkldnn_emitter
-                                    ->recreate_qconv<ngraph::op::QuantizedConvolutionBiasAdd,
-                                                     true,
-                                                     true>(node,
-                                                           ctx,
-                                                           dyn_scales,
-                                                           deps,
-                                                           conv_index,
-                                                           dyn_post_op_scales);
+                                                              sum_scales_size);
+                                auto old_pops = conv_attr.get_post_ops();
+                                mkldnn::post_ops new_pops;
+                                for (int i = 0; i < old_pops.len(); i++)
+                                {
+                                    if (old_pops.kind(i) == mkldnn::primitive::kind::eltwise)
+                                    {
+                                        mkldnn::algorithm alg;
+                                        float scale, alpha, beta;
+                                        old_pops.get_params_eltwise(i, scale, alg, alpha, beta);
+                                        new_pops.append_eltwise(scale, alg, alpha, beta);
+                                    }
+                                    if (old_pops.kind(i) == mkldnn::primitive::kind::sum)
+                                    {
+                                        new_pops.append_sum(dyn_post_op_scales[0]);
+                                    }
+                                }
+                                conv_attr.set_output_scales(0, dyn_scales);
+                                conv_attr.set_post_ops(new_pops);
+                                mkldnn_emitter->convolution_forward<true>(
+                                    conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
                             }
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
@@ -302,26 +256,7 @@ namespace ngraph
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
                             cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
                         };
-                        functors.emplace_back(functor);
-                    }
-                    else
-                    {
-                        auto conv_index =
-                            mkldnn_emitter
-                                ->build_convolution<ngraph::op::QuantizedConvolutionBiasAdd>(
-                                    node, args, out);
-                        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-
-                        auto functor = [&, conv_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
-                        };
-                        functors.emplace_back(functor);
-                    }
+                    functors.emplace_back(functor);
                 }
                 else
                 {
@@ -341,29 +276,24 @@ namespace ngraph
                     auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
                     auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
                     auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                    auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
+                    auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
                     auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto scale_const_op =
-                        std::dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(4));
-                    std::vector<float> scales;
-                    if (scale_const_op == nullptr)
-                    {
-                        auto& arg4_tensor = external_function->get_tensor_data(args[4].get_name());
-                        auto scales_size = shape_size(args[4].get_shape());
-                        auto& arg5_tensor = external_function->get_tensor_data(args[5].get_name());
-                        auto arg5_scales_size = shape_size(args[5].get_shape());
+                    auto scales_size = shape_size(args[4].get_shape());
+                    auto sum_scales_size = shape_size(args[5].get_shape());
 
-                        auto conv_index =
-                            mkldnn_emitter
-                                ->build_convolution<ngraph::op::QuantizedConvolutionBiasSignedAdd>(
-                                    node, args, out);
-                        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    auto conv_desc = mkldnn_emitter->get_convolution_forward_desc<
+                        ngraph::op::QuantizedConvolutionBiasSignedAdd>(node, args, out);
+                    auto conv_attr = mkldnn_emitter->get_convolution_forward_attr<
+                        ngraph::op::QuantizedConvolutionBiasSignedAdd>(node);
+                    size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
+                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
-                        auto functor = [&, scales_size, arg5_scales_size, deps, node, conv_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            // Create MKLDNN convolution primitive during the first iteration.
-                            // Assumes the scales dont change for the duration of the graph
+                    auto functor =
+                        [&, scales_size, sum_scales_size, conv_desc, conv_attr, deps, conv_index](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) mutable {
                             if (ctx->first_iteration)
                             {
                                 vector<float> dyn_scales;
@@ -372,16 +302,27 @@ namespace ngraph
                                                   static_cast<float*>(arg4_tensor) + scales_size);
                                 dyn_post_op_scales.assign(static_cast<float*>(arg5_tensor),
                                                           static_cast<float*>(arg5_tensor) +
-                                                              arg5_scales_size);
-                                mkldnn_emitter
-                                    ->recreate_qconv<ngraph::op::QuantizedConvolutionBiasSignedAdd,
-                                                     true,
-                                                     true>(node,
-                                                           ctx,
-                                                           dyn_scales,
-                                                           deps,
-                                                           conv_index,
-                                                           dyn_post_op_scales);
+                                                              sum_scales_size);
+                                auto old_pops = conv_attr.get_post_ops();
+                                mkldnn::post_ops new_pops;
+                                for (int i = 0; i < old_pops.len(); i++)
+                                {
+                                    if (old_pops.kind(i) == mkldnn::primitive::kind::eltwise)
+                                    {
+                                        mkldnn::algorithm alg;
+                                        float scale, alpha, beta;
+                                        old_pops.get_params_eltwise(i, scale, alg, alpha, beta);
+                                        new_pops.append_eltwise(scale, alg, alpha, beta);
+                                    }
+                                    if (old_pops.kind(i) == mkldnn::primitive::kind::sum)
+                                    {
+                                        new_pops.append_sum(2 * dyn_post_op_scales[0]);
+                                    }
+                                }
+                                conv_attr.set_post_ops(new_pops);
+                                conv_attr.set_output_scales(0, dyn_scales);
+                                mkldnn_emitter->convolution_forward<true>(
+                                    conv_desc, conv_attr, executor::global_cpu_engine, conv_index);
                             }
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
@@ -389,26 +330,7 @@ namespace ngraph
                             cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
                             cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
                         };
-                        functors.emplace_back(functor);
-                    }
-                    else
-                    {
-                        auto conv_index =
-                            mkldnn_emitter
-                                ->build_convolution<ngraph::op::QuantizedConvolutionBiasSignedAdd>(
-                                    node, args, out);
-                        auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
-
-                        auto functor = [&, conv_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], arg1_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], arg2_tensor);
-                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], out0_tensor);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
-                        };
-                        functors.emplace_back(functor);
-                    }
+                    functors.emplace_back(functor);
                 }
                 else
                 {

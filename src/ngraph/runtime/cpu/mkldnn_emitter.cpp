@@ -268,6 +268,18 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
         conv_index = insert_primitive(conv_prim);
 
         m_primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
+
+        auto conv_desc = mkldnn::convolution_forward::desc(
+            mkldnn::prop_kind::forward,
+            mkldnn::algorithm::convolution_direct,
+            input_data_desc,
+            weights_desc,
+            result_desc,
+            mkldnn::memory::dims(strides.begin(), strides.end()),
+            mkldnn::memory::dims(dilation_strides.begin(), dilation_strides.end()),
+            mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+            mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
+            mkldnn::padding_kind::zero);
     }
     catch (const mkldnn::error& e)
     {
@@ -1206,4 +1218,22 @@ size_t MKLDNNEmitter::build_bounded_relu(const mkldnn::memory::desc& input_desc,
 
     m_primitive_deps[primitive_index] = {input_index, result_index};
     return primitive_index;
+}
+
+size_t MKLDNNEmitter::convolution_forward_init(bool with_bias)
+{
+    size_t size = m_mkldnn_primitives.size();
+    if (with_bias)
+    {
+        // Inputs, Weights, Bias, Results, Conv
+        m_mkldnn_primitives.resize(size + 5, nullptr);
+        m_primitive_deps[m_mkldnn_primitives.size() - 1] = {size, size + 1, size + 2, size + 3};
+    }
+    else
+    {
+        // Inputs, Weights, Results, Conv
+        m_mkldnn_primitives.resize(size + 4, nullptr);
+        m_primitive_deps[m_mkldnn_primitives.size() - 1] = {size, size + 1, size + 2};
+    }
+    return m_mkldnn_primitives.size() - 1;
 }
