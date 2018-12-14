@@ -34,9 +34,6 @@
 #include "op/cast.hpp"
 #include "op/ceil.hpp"
 #include "op/clip.hpp"
-#include "op/com.microsoft/dequantize_linear.hpp"
-#include "op/com.microsoft/quant_conv.hpp"
-#include "op/com.microsoft/quantize_linear.hpp"
 #include "op/concat.hpp"
 #include "op/constant.hpp"
 #include "op/conv.hpp"
@@ -170,7 +167,6 @@ namespace ngraph
             REGISTER_OPERATOR("Conv", 1, conv);
             REGISTER_OPERATOR("ConvTranspose", 1, conv_transpose);
             REGISTER_OPERATOR("Cos", 1, cos);
-            REGISTER_OPERATOR("DequantizeLinear", 1, dequantize_linear);
             REGISTER_OPERATOR("Div", 1, div);
             REGISTER_OPERATOR("Div", 7, div);
             REGISTER_OPERATOR("Dropout", 1, identity);
@@ -204,8 +200,6 @@ namespace ngraph
             REGISTER_OPERATOR("Pad", 1, pad);
             REGISTER_OPERATOR("Pow", 1, pow);
             REGISTER_OPERATOR("PRelu", 1, prelu);
-            REGISTER_OPERATOR("QLinearConv", 1, quant_conv);
-            REGISTER_OPERATOR("QuantizeLinear", 1, quantize_linear);
             REGISTER_OPERATOR("Reciprocal", 1, reciprocal);
             REGISTER_OPERATOR("ReduceLogSum", 1, reduce_log_sum);
             REGISTER_OPERATOR("ReduceLogSumExp", 1, reduce_log_sum_exp);

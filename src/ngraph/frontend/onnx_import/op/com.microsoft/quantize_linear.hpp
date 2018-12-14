@@ -19,20 +19,12 @@
 #include "core/node.hpp"
 #include "ngraph/node_vector.hpp"
 
-namespace ngraph
+namespace onnxruntime
 {
-    namespace onnx_import
+    namespace ngraph_ep
     {
-        namespace op
-        {
-            namespace set_1
-            {
-                NodeVector quantize_linear(const Node& node);
+        ngraph::NodeVector quantize_linear(const ngraph::onnx_import::Node& node);
 
-            } // namespace set_1
+    } // namespace ngraph_ep
 
-        } //namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+} // namespace onnxruntime
