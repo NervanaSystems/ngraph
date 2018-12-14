@@ -547,9 +547,10 @@ TEST(pattern, matcher)
         TestMatcher sm(nullptr, nullptr, "TestMatcher", true);
         // exact shape and type
         auto scalar_param = make_shared<op::Parameter>(element::i32, Shape{});
-        auto label = make_shared<pattern::op::Label>(element::i32, PartialShape::dynamic());
+        auto label_dynamic_shape =
+            make_shared<pattern::op::Label>(element::i32, PartialShape::dynamic());
         auto param = make_shared<op::Parameter>(element::f32, Shape{});
-        ASSERT_TRUE(sm.match(label, scalar_param));
+        ASSERT_TRUE(sm.match(label_dynamic_shape, scalar_param));
         // wrong type
         auto scalar_param_wrong_type = make_shared<op::Parameter>(element::f32, Shape{});
         ASSERT_FALSE(sm.match(label, scalar_param_wrong_type));
