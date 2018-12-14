@@ -17,7 +17,7 @@
 #pragma once
 
 #include "dequantize_linear.hpp"
-#include "onnx.hpp"
+#include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "quant_conv.hpp"
 #include "quantize_linear.hpp"
 

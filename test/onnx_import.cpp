@@ -21,6 +21,7 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
+#include "ngraph/frontend/onnx_import/op/com.microsoft/register_custom_ops.hpp"
 #include "ngraph/ngraph.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
@@ -1515,4 +1516,11 @@ TEST(onnx, model_matmul_vec_ten3d)
 
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_quantized_resnet50)
+{
+    onnxruntime::ngraph_ep::register_custom_ops();
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/final_int8_resnet50.onnx"));
 }

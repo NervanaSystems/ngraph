@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "core/node.hpp"
+#include "ngraph/frontend/onnx_import/core/node.hpp"
 #include "ngraph/node_vector.hpp"
 
 namespace onnxruntime
