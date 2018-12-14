@@ -137,7 +137,7 @@ namespace ngraph
         /// \returns Number of matching mantissa bits
         ///
         /// See float_distance for limitations and assumptions.
-        uint64_t matching_mantissa_bits(uint64_t distance);
+        uint32_t matching_mantissa_bits(uint64_t distance);
 
         /// \brief Check if the two floating point vectors are all close
         /// \param a First number to compare
