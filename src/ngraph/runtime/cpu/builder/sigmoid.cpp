@@ -95,11 +95,10 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::SigmoidMultiply)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
 
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& out_tensor = tensor_data[out[0].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
                 auto tensor_size = shape_size(args[0].get_shape());
 
                 auto sigmoid_mul = static_cast<const ngraph::op::SigmoidMultiply*>(node);
@@ -122,13 +121,11 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::SigmoidMultiplyBackprop)
             {
                 auto& functors = external_function->get_functors();
-                auto& tensor_data = external_function->get_tensor_data();
-
-                auto& arg0_tensor = tensor_data[args[0].get_name()];
-                auto& arg1_tensor = tensor_data[args[1].get_name()];
-                auto& arg2_tensor = tensor_data[args[2].get_name()];
-                auto& out0_tensor = tensor_data[out[0].get_name()];
-                auto& out1_tensor = tensor_data[out[1].get_name()];
+                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
+                auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                auto& arg2_tensor = external_function->get_tensor_data(args[2].get_name());
+                auto& out0_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& out1_tensor = external_function->get_tensor_data(out[1].get_name());
                 auto tensor_size = shape_size(args[0].get_shape());
 
                 auto sigmoid_mul = static_cast<const ngraph::op::SigmoidMultiplyBackprop*>(node);
