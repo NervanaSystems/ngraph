@@ -14,21 +14,13 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_HYBRID_ENABLE)
-    add_library(hybrid_backend SHARED
-        hybrid_backend.cpp
-        hybrid_util.cpp
-        pass/assign_placement.cpp)
-    if(NGRAPH_LIB_VERSIONING_ENABLE)
-        set_target_properties(hybrid_backend PROPERTIES
-            VERSION ${NGRAPH_VERSION}
-            SOVERSION ${NGRAPH_API_VERSION})
-    endif()
-    target_link_libraries(hybrid_backend PUBLIC ngraph)
-    set_target_properties(hybrid_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+add_library(hybrid_base STATIC
+    hybrid_backend.cpp
+    hybrid_util.cpp
+    pass/assign_placement.cpp)
+target_link_libraries(hybrid_base PUBLIC ngraph)
+set_target_properties(hybrid_base PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
-    install(TARGETS hybrid_backend
-        LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
-        ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
-    )
-endif()
+install(TARGETS hybrid_base
+    ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
+)

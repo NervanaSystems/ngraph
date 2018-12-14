@@ -217,10 +217,6 @@ if (NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
 endif()
 
-if (NGRAPH_HYBRID_ENABLE)
-    target_link_libraries(unit-test PRIVATE hybrid_backend)
-endif()
-
 if (NGRAPH_GPU_ENABLE)
     target_link_libraries(unit-test PRIVATE gpu_backend)
 endif()

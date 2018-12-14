@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <initializer_list>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -156,6 +157,12 @@ namespace ngraph
 class ngraph::runtime::interpreter::INTBackend : public Backend
 {
 public:
+    INTBackend();
+    INTBackend(const std::vector<std::string>& unsupported_op_name_list);
+    INTBackend(const INTBackend&) = delete;
+    INTBackend(INTBackend&&) = delete;
+    INTBackend& operator=(const INTBackend&) = delete;
+
     std::shared_ptr<Tensor>
         create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
 
@@ -173,7 +180,8 @@ public:
     std::vector<PerformanceCounter>
         get_performance_data(std::shared_ptr<Function> func) const override;
 
-    bool is_supported(const Node& node) const override { return true; }
+    bool is_supported(const Node& node) const override;
+
 private:
     int get_alignment() const { return 64; }
     class FunctionInstance
@@ -190,6 +198,7 @@ private:
         void* get_temporary_pointer(size_t offset) { return m_temporary_memory->get_ptr(offset); }
     };
     std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
+    std::set<std::string> m_unsupported_op_name_list;
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);
