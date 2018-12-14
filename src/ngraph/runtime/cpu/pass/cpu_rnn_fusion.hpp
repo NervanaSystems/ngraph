@@ -29,6 +29,7 @@ namespace ngraph
             {
                 class LSTMFusion;
                 class RNNFusion;
+                class BiDirectionalRnn;
                 class MultiLayerRNNFusion;
             }
         }
@@ -48,6 +49,19 @@ public:
 private:
     void construct_sigmoid();
     void construct_lstm_fprop();
+};
+
+class ngraph::runtime::cpu::pass::BiDirectionalRnn : public ngraph::pass::GraphRewrite
+{
+public:
+    BiDirectionalRnn()
+        : GraphRewrite()
+    {
+        construct_bidirectional_rnn();
+    }
+
+private:
+    void construct_bidirectional_rnn();
 };
 
 class ngraph::runtime::cpu::pass::RNNFusion : public ngraph::pass::RecurrentGraphRewrite

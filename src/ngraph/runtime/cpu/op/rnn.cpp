@@ -90,8 +90,10 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
         throw ngraph_error("src_layer size is not equal t*n*c");
     }
 
-    if ((bias->get_shape()[0] / m_num_fused_layers) != (weights_layer->get_shape()[1]) ||
-        (bias->get_shape()[0] / m_num_fused_layers) != (weights_iter->get_shape()[1]))
+    if ((bias->get_shape()[0] / (m_direction * m_num_fused_layers)) !=
+            (weights_layer->get_shape()[1]) ||
+        (bias->get_shape()[0] / (m_direction * m_num_fused_layers)) !=
+            (weights_iter->get_shape()[1]))
     {
         throw ngraph_error("bias and weights_shape are not compatible");
     }
@@ -108,7 +110,7 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     set_output_size(2);
     set_output_type(0,
                     src_layer->get_element_type(),
-                    Shape{(m_direction * m_num_timesteps * m_batch_size), m_src_iter_feature_size});
+                    Shape{(m_num_timesteps * m_batch_size), m_direction * m_src_iter_feature_size});
     set_output_type(1,
                     src_layer->get_element_type(),
                     Shape{(m_num_cell_states * m_direction * m_num_fused_layers * m_batch_size),

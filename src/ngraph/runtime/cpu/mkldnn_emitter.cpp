@@ -1036,16 +1036,17 @@ size_t MKLDNNEmitter::build_rnn_forward(const mkldnn::memory::desc& src_layer_de
     size_t dst_iter_index = build_memory_primitive(dst_iter_desc);
 
     mkldnn::rnn_cell::desc rnn_cell(mkldnn::algorithm::vanilla_lstm);
-    mkldnn::rnn_forward::desc rnn_layer_desc(mkldnn::prop_kind::forward_training,
-                                             rnn_cell,
-                                             mkldnn::rnn_direction::unidirectional_left2right,
-                                             src_layer_desc,
-                                             src_iter_desc,
-                                             weights_layer_desc,
-                                             weights_iter_desc,
-                                             bias_desc,
-                                             dst_layer_desc,
-                                             dst_iter_desc);
+    mkldnn::rnn_forward::desc rnn_layer_desc(
+        mkldnn::prop_kind::forward_training,
+        rnn_cell,
+        mkldnn::rnn_direction::bidirectional_concat /*unidirectional_left2right*/,
+        src_layer_desc,
+        src_iter_desc,
+        weights_layer_desc,
+        weights_iter_desc,
+        bias_desc,
+        dst_layer_desc,
+        dst_iter_desc);
     auto rnn_layer_prim_desc =
         mkldnn::rnn_forward::primitive_desc(rnn_layer_desc, executor::global_cpu_engine);
     auto workspace_index =
