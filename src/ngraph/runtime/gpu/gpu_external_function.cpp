@@ -104,6 +104,7 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/any_all_replacement.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
@@ -570,6 +571,7 @@ void runtime::gpu::GPU_ExternalFunction::compile()
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
 #endif
     pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
+    pass_manager.register_pass<ngraph::pass::AnyAllReplacement>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
@@ -765,12 +767,13 @@ void runtime::gpu::GPU_ExternalFunction::propagate_in_place_input(
         stack.pop_front();
         for (auto input : it->get_inputs())
         {
-            auto c_op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node());
-            if (!c_op || c_op->is_output())
+            auto input_node = input->get_node();
+            if (!input_node->is_op() || input_node->is_output())
             {
                 continue;
             }
 
+            auto c_op = std::static_pointer_cast<ngraph::op::Op>(input_node);
             if (auto op_annotations = c_op->get_op_annotations())
             {
                 for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
@@ -804,11 +807,11 @@ void runtime::gpu::GPU_ExternalFunction::propagate_in_place_output(
     do
     {
         propagate_further = false;
-        auto arg = std::dynamic_pointer_cast<ngraph::op::Op>(it->get_node());
-        if (!arg)
+        if (!it->get_node()->is_op())
         {
             break;
         }
+        auto arg = std::static_pointer_cast<ngraph::op::Op>(it->get_node());
         if (auto op_annotations = arg->get_op_annotations())
         {
             for (auto oi_pair : op_annotations->get_in_place_oi_pairs())

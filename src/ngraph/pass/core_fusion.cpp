@@ -36,6 +36,7 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
+#include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
@@ -91,15 +92,15 @@ void pass::CoreFusion::construct_sigmoid()
     auto neg_input = std::make_shared<op::Negative>(input);
     auto exp_neg_input = std::make_shared<op::Exp>(neg_input);
 
-    // broadcast input
-    auto constant = std::make_shared<pattern::op::Label>(element::f32, Shape{});
-    auto broadcast_constant = std::make_shared<op::Broadcast>(constant, Shape{3, 4}, AxisSet{0, 1});
+    auto constant = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
+    auto skip_broadcast =
+        std::make_shared<pattern::op::Skip>(constant, pattern::has_class<op::Broadcast>());
 
-    auto add_exp = std::make_shared<op::Add>(exp_neg_input, broadcast_constant);
-    auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
+    auto add_exp = std::make_shared<op::Add>(exp_neg_input, skip_broadcast);
+    auto divide_1_over_exp = std::make_shared<op::Divide>(skip_broadcast, add_exp);
 
     // Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
+    ngraph::pattern::graph_rewrite_callback callback = [input, constant](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -118,6 +119,11 @@ void pass::CoreFusion::construct_sigmoid()
             return false;
         }
 
+        if (!is_one(pattern_map[constant]))
+        {
+            NGRAPH_DEBUG << "Node not constant or not 1";
+            return false;
+        }
         auto sigmoid_node = std::make_shared<op::Sigmoid>(pattern_map[input]);
         ngraph::replace_node(m.get_match_root(), sigmoid_node);
         return true;
@@ -150,11 +156,11 @@ void pass::CoreFusion::construct_sigmoid_bprop()
     auto divide_2 = std::make_shared<op::Divide>(multiply_sigmoid_delta, add_exp);
 
     auto multiply_2 = std::make_shared<op::Multiply>(divide_2, exp_neg_input);
-    auto negtive_2 = std::make_shared<op::Negative>(multiply_2);
+    auto negative_2 = std::make_shared<op::Negative>(multiply_2);
 
     // Define a call back that needs to called once the DFG matches the pattern
     ngraph::pattern::graph_rewrite_callback callback = [input, delta](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
+        NGRAPH_DEBUG << "In a callback for construct_bprop_sigmoid pattern against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         if (m.get_match_root()->get_element_type() != element::f32)
@@ -177,7 +183,7 @@ void pass::CoreFusion::construct_sigmoid_bprop()
     };
 
     auto m =
-        std::make_shared<ngraph::pattern::Matcher>(negtive_2, callback, "CoreFusion.SigmoidBprop");
+        std::make_shared<ngraph::pattern::Matcher>(negative_2, callback, "CoreFusion.SigmoidBprop");
     this->add_matcher(m);
 }
 
@@ -434,6 +440,76 @@ static size_t shape_to_index(Shape shape)
     }
 }
 
+void ngraph::pass::CoreFusion::construct_reshape_broadcast()
+{
+    Shape input_shape{10};
+    auto input = make_shared<pattern::op::Label>(element::f32, input_shape);
+    auto reshape1 = make_shared<op::Reshape>(input, AxisVector{0}, Shape{10, 1});
+    auto broadcast = make_shared<op::Broadcast>(reshape1, Shape{10, 1, 20}, AxisSet{2});
+
+    pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_reshape_broadcast against "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+        auto broadcast_m = std::static_pointer_cast<op::Broadcast>(m.get_match_root());
+        auto reshape1_m = std::static_pointer_cast<op::Reshape>(broadcast_m->get_argument(0));
+        auto input_m = m.get_pattern_map()[input];
+
+        //it doesn't seem to make sense to support shapes : [0] or [1]
+        if (input_m->get_shape().size() != 1 || input_m->get_shape().at(0) < 2)
+        {
+            NGRAPH_DEBUG << "input_m isn't a scalar or contains zero dimension";
+            return false;
+        }
+
+        size_t dim = input_m->get_shape().at(0);
+
+        //We are going to support the most common case where broadcast doesn't add 1-dimensions
+        //since it's also very simple to implement
+        size_t dim_one_count = 0;
+        for (auto d : reshape1_m->get_shape())
+        {
+            if (d != 1 && d != dim)
+            {
+                NGRAPH_DEBUG << "Input is reshaped in a way we can't directly broadcast ( shape = "
+                             << ngraph::vector_to_string(reshape1_m->get_shape()) << ")";
+                return false;
+            }
+
+            if (d == 1)
+            {
+                dim_one_count++;
+            }
+        }
+
+        AxisSet new_axes = broadcast_m->get_broadcast_axes();
+        auto broadcast_shape = broadcast_m->get_shape();
+        for (size_t i = 0; i < broadcast_shape.size(); i++)
+        {
+            if (broadcast_shape[i] == 1)
+            {
+                dim_one_count--;
+                new_axes.insert(i);
+            }
+        }
+
+        if (dim_one_count != 0)
+        {
+            NGRAPH_DEBUG << "Broadcast adds 1-dimensions";
+            return false;
+        }
+
+        auto new_broadcast =
+            make_shared<op::Broadcast>(input_m, broadcast_m->get_shape(), new_axes);
+        ngraph::replace_node(m.get_match_root(), new_broadcast);
+        return true;
+    };
+
+    auto m = make_shared<pattern::Matcher>(broadcast, callback, "CoreFusion.ReshapeBroadcast");
+    this->add_matcher(m);
+}
+
 //   conv(56w3s1)                        conv(28w3s2)
 //	      |                           	    |
 //   conv(56w1s1)              ==>      conv(28w1s1)
@@ -620,5 +696,52 @@ void pass::CoreFusion::construct_optimized_strided_conv()
 
     auto m =
         make_shared<pattern::Matcher>(eltwise_conv, callback, "CoreFusion.OptimizedStridedConv");
+    this->add_matcher(m);
+}
+
+void ngraph::pass::CoreFusion::construct_reshape_softmax_reshape()
+{
+    Shape input_shape{10, 20};
+    AxisVector io{1, 0};
+    auto input = make_shared<pattern::op::Label>(element::f32, input_shape);
+    auto reshape1 = make_shared<op::Reshape>(input, io, Shape{20, 10});
+    auto softmax = make_shared<op::Softmax>(reshape1, AxisSet{1});
+    auto reshape2 = make_shared<op::Reshape>(softmax, io, input_shape);
+
+    pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_reshape_softmax_reshape against "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+        auto reshape2_m = std::static_pointer_cast<op::Reshape>(m.get_match_root());
+        auto softmax_m = std::static_pointer_cast<op::Softmax>(reshape2_m->get_argument(0));
+        auto reshape1_m = std::static_pointer_cast<op::Reshape>(softmax_m->get_argument(0));
+        auto input_m = m.get_pattern_map()[input];
+
+        if (!reshape2_m->get_is_transpose() || !reshape1_m->get_is_transpose())
+        {
+            NGRAPH_DEBUG << "we expect reshape2 and reshape1 both be dimshuffles";
+            return false;
+        }
+
+        if (input_m->get_shape() != reshape2_m->get_shape())
+        {
+            NGRAPH_DEBUG << "input and reshape2's shape are different";
+            return false;
+        }
+
+        AxisSet new_axes;
+        const auto& axis_order = reshape2_m->get_input_order();
+        for (auto axis : softmax_m->get_axes())
+        {
+            new_axes.insert(axis_order.at(axis));
+        }
+
+        auto new_softmax = make_shared<op::Softmax>(input_m, new_axes);
+        ngraph::replace_node(m.get_match_root(), new_softmax);
+        return true;
+    };
+
+    auto m = make_shared<pattern::Matcher>(reshape2, callback, "CoreFusion.ReshapeSoftmaxReshape");
     this->add_matcher(m);
 }
