@@ -30,7 +30,7 @@ from ngraph.impl.op import Parameter, Maximum, Minimum
 from ngraph.impl.op import Add, Subtract, Multiply, Divide, Dot
 from ngraph.impl.op import Constant, Abs, Exp, Log, Sum
 from ngraph.impl.op import Greater, Less, Equal, NotEqual, GreaterEq, LessEq, Not
-from ngraph.impl.op import OneHot, Broadcast, Reshape, Convert, Reduce
+from ngraph.impl.op import OneHot, Broadcast, Reshape, Convert
 from ngraph.impl.op import Concat, Select
 from ngraph.impl.op import Reverse, MaxPool, ReplaceSlice, Slice
 from ngraph.impl.op import Convolution, ConvolutionBackpropData, ConvolutionBackpropFilters
@@ -640,40 +640,6 @@ def test_constant():
     result.read(util.numpy_to_c(result_arr), 0, 36)
 
     result_arr_ref = np.arange(9).reshape(3, 3)
-
-    assert np.allclose(result_arr, result_arr_ref)
-
-
-@pytest.config.gpu_skip(reason="Not implemented")
-def test_reduce():
-
-    float_element_type = Type.f32
-
-    AddParam1 = Parameter(float_element_type, Shape([]))
-    AddParam2 = Parameter(float_element_type, Shape([]))
-    constant_op = Constant(float_element_type, Shape([]), [0.])
-    reduce_function = Function(NodeVector([Add(AddParam1, AddParam2)]),
-                               [AddParam1, AddParam2], 'add')
-
-    A = Parameter(float_element_type, Shape([2, 2, 2]))
-    parameter_list = [A]
-
-    function = Function(NodeVector([Reduce(A, constant_op, reduce_function, AxisSet({0}))]),
-                        parameter_list, 'test')
-    backend = Backend.create(pytest.config.getoption('backend'))
-
-    a = backend.create_tensor(float_element_type, Shape([2, 2, 2]))
-    result = backend.create_tensor(float_element_type, Shape([2, 2]))
-
-    a.write(util.numpy_to_c(np.arange(8, dtype=np.float32).reshape(2, 2, 2)), 0, 32)
-
-    result_arr = np.zeros((2, 2), dtype=np.float32)
-    result.write(util.numpy_to_c(result_arr), 0, 16)
-    backend.call(backend.compile(function), [result], [a])
-    result.read(util.numpy_to_c(result_arr), 0, 16)
-
-    a_arr = np.arange(8).reshape(2, 2, 2)
-    result_arr_ref = np.add.reduce(a_arr)
 
     assert np.allclose(result_arr, result_arr_ref)
 

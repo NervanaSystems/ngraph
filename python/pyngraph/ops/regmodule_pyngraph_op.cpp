@@ -51,7 +51,6 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Equal(m_op);
     regclass_pyngraph_op_Exp(m_op);
     regclass_pyngraph_op_Floor(m_op);
-    regclass_pyngraph_op_FunctionCall(m_op);
     regclass_pyngraph_op_GetOutputElement(m_op);
     regclass_pyngraph_op_Greater(m_op);
     regclass_pyngraph_op_GreaterEq(m_op);
@@ -75,7 +74,6 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Parameter(m_op);
     regclass_pyngraph_op_Power(m_op);
     regclass_pyngraph_op_Product(m_op);
-    regclass_pyngraph_op_Reduce(m_op);
     regclass_pyngraph_op_Relu(m_op);
     regclass_pyngraph_op_ReluBackprop(m_op);
     regclass_pyngraph_op_ReplaceSlice(m_op);
