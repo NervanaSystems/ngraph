@@ -14,24 +14,32 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/placement.hpp"
+#include "ngraph/runtime/backend.hpp"
 
-#include "ngraph/pass/pass.hpp"
+using namespace ngraph;
+using namespace std;
 
-namespace ngraph
+runtime::hybrid::pass::AssignPlacement::AssignPlacement(
+    vector<shared_ptr<runtime::Backend>> placement_backends)
+    : m_placement_backends(placement_backends)
 {
-    namespace runtime
+}
+
+bool runtime::hybrid::pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
+{
+    size_t backend_index = 0;
+    for (auto backend : m_placement_backends)
     {
-        namespace cpu
+        if (backend->is_supported(*node))
         {
-            namespace pass
-            {
-                class CPUReshapeSinking : public ngraph::pass::FunctionPass
-                {
-                public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
-            }
+            node->set_placement_index(backend_index);
+            return false;
         }
+        backend_index++;
     }
+    throw runtime_error("Node " + node->get_name() + " not supported by any backend");
 }

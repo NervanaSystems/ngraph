@@ -45,6 +45,7 @@
 #include <CPP/topology.hpp>
 
 #include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/any_all_replacement.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -73,6 +74,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
@@ -416,6 +418,7 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
     {
         ngraph::pass::Manager pass_manager;
 
+        pass_manager.register_pass<ngraph::pass::AnyAllReplacement>();
         pass_manager.register_pass<ngraph::pass::NopElimination>();
         pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -1710,7 +1713,10 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
             topology.add(lrn);
             break;
         }
+        case OP_TYPEID::All:
         case OP_TYPEID::AllReduce:
+        case OP_TYPEID::Any:
+        case OP_TYPEID::BroadcastLike:
         case OP_TYPEID::FunctionCall:
         case OP_TYPEID::Dequantize:
         case OP_TYPEID::Quantize:
@@ -1718,10 +1724,12 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::ReverseSequence:
+        case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::SelectAndScatter:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::TopK:
+        case OP_TYPEID::EmbeddingLookup:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");

@@ -33,8 +33,10 @@
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
@@ -52,6 +54,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
@@ -156,6 +159,11 @@ void runtime::gpu::GPU_Emitter::emit_Add(EMIT_ARGS)
     emit_elementwise<ngraph::op::Add>(external_function, writer, node, args, out);
 }
 
+void runtime::gpu::GPU_Emitter::emit_All(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 void runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
@@ -164,6 +172,11 @@ void runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)
 void runtime::gpu::GPU_Emitter::emit_And(EMIT_ARGS)
 {
     emit_elementwise<ngraph::op::And>(external_function, writer, node, args, out);
+}
+
+void runtime::gpu::GPU_Emitter::emit_Any(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 void runtime::gpu::GPU_Emitter::emit_ArgMax(EMIT_ARGS)
@@ -447,6 +460,11 @@ void runtime::gpu::GPU_Emitter::emit_Broadcast(EMIT_ARGS)
     writer.block_end();
 }
 
+void runtime::gpu::GPU_Emitter::emit_BroadcastLike(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 void runtime::gpu::GPU_Emitter::emit_Ceiling(EMIT_ARGS)
 {
     emit_elementwise<ngraph::op::Ceiling>(external_function, writer, node, args, out);
@@ -629,6 +647,11 @@ void runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
         }
     }
     writer.block_end();
+}
+
+void runtime::gpu::GPU_Emitter::emit_EmbeddingLookup(EMIT_ARGS)
+{
+    throw ngraph_error("EmbeddingLookup is not yet implemented for NVIDIA GPU");
 }
 
 void runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)
@@ -1396,6 +1419,11 @@ void runtime::gpu::GPU_Emitter::emit_Rnn(EMIT_ARGS)
     writer.block_end();
 }
 #endif
+
+void runtime::gpu::GPU_Emitter::emit_ScalarConstantLike(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
 
 void runtime::gpu::GPU_Emitter::emit_Select(EMIT_ARGS)
 {

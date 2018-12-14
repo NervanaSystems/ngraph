@@ -21,6 +21,8 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/op/all.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -31,6 +33,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -58,12 +61,13 @@
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
-#include "ngraph/runtime/interpreter/int_visibility.h"
 #include "ngraph/runtime/interpreter/node_wrapper.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
+#include "ngraph/runtime/reference/all.hpp"
 #include "ngraph/runtime/reference/and.hpp"
+#include "ngraph/runtime/reference/any.hpp"
 #include "ngraph/runtime/reference/argmax.hpp"
 #include "ngraph/runtime/reference/argmin.hpp"
 #include "ngraph/runtime/reference/asin.hpp"
@@ -82,6 +86,7 @@
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
+#include "ngraph/runtime/reference/embedding_lookup.hpp"
 #include "ngraph/runtime/reference/equal.hpp"
 #include "ngraph/runtime/reference/exp.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
@@ -236,9 +241,19 @@ private:
                               element_count);
             break;
         }
+        case OP_TYPEID::All:
+        {
+            const op::All* all = static_cast<const op::All*>(&node);
+            reference::all(static_cast<const char*>(args[0]),
+                           static_cast<char*>(out[0]),
+                           node.get_input_shape(0),
+                           node.get_output_shape(0),
+                           all->get_reduction_axes());
+            break;
+        }
         case OP_TYPEID::AllReduce: {
 #ifdef NGRAPH_DISTRIBUTED
-            reference::allreduce<T>(static_cast<const T*>(args[0]),
+            reference::allreduce<T>(static_cast<T*>(const_cast<void*>(args[0])),
                                     static_cast<T*>(out[0]),
                                     node.get_input_element_type(0),
                                     static_cast<int>(shape_size(node.get_input_shape(0))));
@@ -252,6 +267,16 @@ private:
                                    static_cast<const T*>(args[1]),
                                    static_cast<T*>(out[0]),
                                    element_count);
+            break;
+        }
+        case OP_TYPEID::Any:
+        {
+            const op::Any* any = static_cast<const op::Any*>(&node);
+            reference::any(static_cast<const char*>(args[0]),
+                           static_cast<char*>(out[0]),
+                           node.get_input_shape(0),
+                           node.get_output_shape(0),
+                           any->get_reduction_axes());
             break;
         }
         case OP_TYPEID::ArgMin:
@@ -433,6 +458,7 @@ private:
                                     broadcast_axes);
             break;
         }
+        case OP_TYPEID::BroadcastLike: break;
         case OP_TYPEID::Ceiling:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -462,6 +488,7 @@ private:
             // Constant is handled in the main loop
             break;
         }
+        case OP_TYPEID::ScalarConstantLike: break;
         case OP_TYPEID::Convert:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
@@ -670,6 +697,51 @@ private:
                            node.get_input_shape(1),
                            node.get_output_shape(0),
                            dot->get_reduction_axes_count());
+            break;
+        }
+        case OP_TYPEID::EmbeddingLookup:
+        {
+            const op::EmbeddingLookup* embed = static_cast<const op::EmbeddingLookup*>(&node);
+            auto type = embed->get_argument(0)->get_element_type();
+            size_t element_count = shape_size(embed->get_argument(0)->get_shape());
+
+            if (type == element::f32)
+            {
+                reference::embedding<T, float>(static_cast<const float*>(args[0]),
+                                               static_cast<const T*>(args[1]),
+                                               static_cast<T*>(out[0]),
+                                               element_count,
+                                               embed->get_shape());
+            }
+            else if (type == element::f64)
+            {
+                reference::embedding<T, double>(static_cast<const double*>(args[0]),
+                                                static_cast<const T*>(args[1]),
+                                                static_cast<T*>(out[0]),
+                                                element_count,
+                                                embed->get_shape());
+            }
+            else if (type == element::i32)
+            {
+                reference::embedding<T, int>(static_cast<const int*>(args[0]),
+                                             static_cast<const T*>(args[1]),
+                                             static_cast<T*>(out[0]),
+                                             element_count,
+                                             embed->get_shape());
+            }
+            else if (type == element::i64)
+            {
+                reference::embedding<T, int64_t>(static_cast<const int64_t*>(args[0]),
+                                                 static_cast<const T*>(args[1]),
+                                                 static_cast<T*>(out[0]),
+                                                 element_count,
+                                                 embed->get_shape());
+            }
+            else
+            {
+                throw ngraph_error(std::string("Unsupported index type ") + type.c_type_string() +
+                                   std::string("in EmbeddingLookup"));
+            }
             break;
         }
         case OP_TYPEID::Equal:

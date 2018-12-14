@@ -16,37 +16,35 @@
 
 #ifdef NGRAPH_DISTRIBUTED
 
+#include <mlsl.hpp>
+
 #include "ngraph/distributed.hpp"
-#include <mpi.h>
 
 using namespace ngraph;
 
 ngraph::Distributed::Distributed()
 {
-    int flag = 0;
-    MPI_Initialized(&flag);
-    if (!flag)
+    if (!MLSL::Environment::GetEnv().IsInitialized())
     {
-        MPI_Init(NULL, NULL);
+        MLSL::Environment::GetEnv().Init(nullptr, nullptr);
     }
 }
 
 ngraph::Distributed::~Distributed()
 {
-    MPI_Finalize();
+    if (MLSL::Environment::GetEnv().IsInitialized())
+    {
+        MLSL::Environment::GetEnv().Finalize();
+    }
 }
 
-int ngraph::Distributed::get_size() const
+size_t ngraph::Distributed::get_size() const
 {
-    int size;
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    return size;
+    return MLSL::Environment::GetEnv().GetProcessCount();
 }
 
-int ngraph::Distributed::get_rank() const
+size_t ngraph::Distributed::get_rank() const
 {
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    return rank;
+    return MLSL::Environment::GetEnv().GetProcessIdx();
 }
 #endif

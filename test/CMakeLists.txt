@@ -25,6 +25,8 @@ endif()
 set(SRC
     algebraic_simplification.cpp
     all_close_f.cpp
+    any_all_insertion.cpp
+    any_all_replacement.cpp
     assertion.cpp
     build_graph.cpp
     builder_autobroadcast.cpp
@@ -49,6 +51,7 @@ set(SRC
     pass_memory_layout.cpp
     pattern.cpp
     reshape_elimination.cpp
+    reshape_sinking.cpp
     serialize.cpp
     shape.cpp
     tensor.cpp
@@ -76,15 +79,9 @@ if (NGRAPH_INTERPRETER_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
-if (NGRAPH_HYBRID_ENABLE)
-    list(APPEND SRC
-        hybrid_backend.cpp
-        hybrid_utils.cpp)
-endif()
-
 if (NGRAPH_CPU_ENABLE)
     list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
-    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_reshape_sinking.cpp cpu_debugger.cpp)
+    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp)
     if (NGRAPH_HALIDE)
         list(APPEND SRC halide.cpp)
     endif()
@@ -100,8 +97,8 @@ if (NGRAPH_INTELGPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
 endif()
 
-if (NGRAPH_HYBRID_ENABLE)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} HYBRID)
+if (NGRAPH_GPUH_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPUH)
 endif()
 
 if (NGRAPH_PLAIDML_ENABLE)
@@ -120,10 +117,13 @@ add_subdirectory(util)
 # such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
 set(MULTI_TEST_SRC
     autodiff.in.cpp
+    backend_all.in.cpp
+    backend_any.in.cpp
     backend_binary_elementwise.in.cpp
     backend_broadcast.in.cpp
     backend_comparison.in.cpp
     backend_dot.in.cpp
+    backend_embedding_lookup.in.cpp
     backend_one_hot.in.cpp
     backend_pool.in.cpp
     backend_reduce.in.cpp
@@ -179,11 +179,8 @@ if(NGRAPH_ADDRESS_SANITIZER)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    find_package(MPI REQUIRED)
     target_compile_definitions(unit-test PRIVATE NGRAPH_DISTRIBUTED)
-    target_include_directories(unit-test
-        SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-    target_link_libraries(unit-test PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+    target_link_libraries(unit-test PRIVATE libmlsl)
 endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
@@ -230,6 +227,10 @@ endif()
 
 if (NGRAPH_NOP_ENABLE)
     target_link_libraries(unit-test PRIVATE nop_backend)
+endif()
+
+if (NGRAPH_GPUH_ENABLE)
+    target_link_libraries(unit-test PRIVATE gpuh_backend)
 endif()
 
 if (NGRAPH_ONNXIFI_ENABLE)
