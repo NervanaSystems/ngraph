@@ -33,8 +33,10 @@
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
@@ -157,6 +159,11 @@ void runtime::gpu::GPU_Emitter::emit_Add(EMIT_ARGS)
     emit_elementwise<ngraph::op::Add>(external_function, writer, node, args, out);
 }
 
+void runtime::gpu::GPU_Emitter::emit_All(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 void runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
@@ -165,6 +172,11 @@ void runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)
 void runtime::gpu::GPU_Emitter::emit_And(EMIT_ARGS)
 {
     emit_elementwise<ngraph::op::And>(external_function, writer, node, args, out);
+}
+
+void runtime::gpu::GPU_Emitter::emit_Any(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 void runtime::gpu::GPU_Emitter::emit_ArgMax(EMIT_ARGS)
@@ -446,6 +458,11 @@ void runtime::gpu::GPU_Emitter::emit_Broadcast(EMIT_ARGS)
         writer << "gpu::invoke_primitive(ctx, " << bcast_index << ", input, output);\n";
     }
     writer.block_end();
+}
+
+void runtime::gpu::GPU_Emitter::emit_BroadcastLike(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 void runtime::gpu::GPU_Emitter::emit_Ceiling(EMIT_ARGS)
@@ -1402,6 +1419,11 @@ void runtime::gpu::GPU_Emitter::emit_Rnn(EMIT_ARGS)
     writer.block_end();
 }
 #endif
+
+void runtime::gpu::GPU_Emitter::emit_ScalarConstantLike(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
 
 void runtime::gpu::GPU_Emitter::emit_Select(EMIT_ARGS)
 {
