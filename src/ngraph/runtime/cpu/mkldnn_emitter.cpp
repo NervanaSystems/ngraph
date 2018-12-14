@@ -268,18 +268,6 @@ size_t MKLDNNEmitter::build_convolution_forward(const mkldnn::memory::desc& inpu
         conv_index = insert_primitive(conv_prim);
 
         m_primitive_deps[conv_index] = {input_data_index, weights_index, result_index};
-
-        auto conv_desc = mkldnn::convolution_forward::desc(
-            mkldnn::prop_kind::forward,
-            mkldnn::algorithm::convolution_direct,
-            input_data_desc,
-            weights_desc,
-            result_desc,
-            mkldnn::memory::dims(strides.begin(), strides.end()),
-            mkldnn::memory::dims(dilation_strides.begin(), dilation_strides.end()),
-            mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
-            mkldnn::memory::dims(padding_above.begin(), padding_above.end()),
-            mkldnn::padding_kind::zero);
     }
     catch (const mkldnn::error& e)
     {
