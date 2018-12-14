@@ -18,7 +18,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
@@ -27,7 +27,7 @@ namespace ngraph
         /// \brief Elementwise Maximum(arg, arg * alpha) operation
         ///        alpha > 0
         ///
-        class LeakyRelu : public Op
+        class LeakyRelu : public ngraph::op::util::UnaryElementwiseArithmetic
         {
         public:
             /// \brief Constructs a LeakyRelu operation.
