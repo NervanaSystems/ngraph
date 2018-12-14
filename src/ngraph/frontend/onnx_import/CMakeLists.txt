@@ -19,6 +19,7 @@ set(ONNX_OPSET_VERSION 9 CACHE INTERNAL "Supported version of ONNX operator set"
 add_library(onnx_import_interface OBJECT
         onnx.cpp
         onnx.hpp
+        op/com.microsoft/register_custom_ops.hpp
         core/operator_set.hpp
         core/node.cpp
         core/node.hpp
