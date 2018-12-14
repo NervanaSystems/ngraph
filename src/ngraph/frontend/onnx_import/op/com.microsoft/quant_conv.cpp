@@ -29,7 +29,7 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/slice.hpp"
-#include "op/quant_conv.hpp"
+#include "quant_conv.hpp"
 
 namespace ngraph
 {

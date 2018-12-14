@@ -57,6 +57,8 @@ add_library(onnx_import STATIC
         op/cos.hpp
         op/com.microsoft/dequantize_linear.cpp
         op/com.microsoft/dequantize_linear.hpp
+        op/com.microsoft/quant_conv.cpp
+        op/com.microsoft/quant_conv.hpp
         op/com.microsoft/quantize_linear.cpp
         op/com.microsoft/quantize_linear.hpp
         op/concat.cpp
@@ -111,8 +113,6 @@ add_library(onnx_import STATIC
         op/pow.hpp
         op/prelu.cpp
         op/prelu.hpp
-        op/quant_conv.cpp
-        op/quant_conv.hpp
         op/reciprocal.cpp
         op/reciprocal.hpp
         op/reduce.cpp
