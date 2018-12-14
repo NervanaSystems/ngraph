@@ -35,7 +35,7 @@ ngraph::runtime::plaidml::op::Tile::Tile(
     vertexai::plaidml::function function,
     const NodeVector& args,
     std::vector<std::tuple<element::Type, PartialShape>> outputs)
-    : Node(node_type, args, outputs.size())
+    : Node{node_type, args, outputs.size()}
     , m_function{std::move(function)}
     , m_output_shapes{std::move(outputs)}
 {
