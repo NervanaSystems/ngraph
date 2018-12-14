@@ -18,8 +18,8 @@
 
 #include "dequantize_linear.hpp"
 #include "onnx.hpp"
-#include "quantize_linear.hpp"
 #include "quant_conv.hpp"
+#include "quantize_linear.hpp"
 
 namespace onnxruntime
 {

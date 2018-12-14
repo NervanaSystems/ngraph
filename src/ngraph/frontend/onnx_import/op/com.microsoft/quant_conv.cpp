@@ -39,13 +39,13 @@ namespace onnxruntime
         {
             std::shared_ptr<ngraph::op::Op>
                 make_ng_quant_conv(const std::shared_ptr<ngraph::Node>& data,
-                                    const std::shared_ptr<ngraph::Node>& filters,
-                                    const ngraph::Strides& strides,
-                                    const ngraph::Strides& dilations,
-                                    const ngraph::CoordinateDiff& padding_below,
-                                    const ngraph::CoordinateDiff& padding_above,
-                                    int groups,
-                                    std::shared_ptr<ngraph::Node> scale)
+                                   const std::shared_ptr<ngraph::Node>& filters,
+                                   const ngraph::Strides& strides,
+                                   const ngraph::Strides& dilations,
+                                   const ngraph::CoordinateDiff& padding_below,
+                                   const ngraph::CoordinateDiff& padding_above,
+                                   int groups,
+                                   std::shared_ptr<ngraph::Node> scale)
             {
                 if (groups > 1)
                 {
@@ -79,15 +79,14 @@ namespace onnxruntime
                             filters, filters_lower_bounds, filters_upper_bounds);
 
                         convolution_nodes.push_back(
-                            std::make_shared<ngraph::op::QuantizedConvolution>(
-                                sliced_data,
-                                sliced_filters,
-                                strides,
-                                dilations,
-                                padding_below,
-                                padding_above,
-                                ngraph::Strides(),
-                                scale));
+                            std::make_shared<ngraph::op::QuantizedConvolution>(sliced_data,
+                                                                               sliced_filters,
+                                                                               strides,
+                                                                               dilations,
+                                                                               padding_below,
+                                                                               padding_above,
+                                                                               ngraph::Strides(),
+                                                                               scale));
                     }
                     std::size_t concatenation_axis = 1;
                     return std::make_shared<ngraph::op::Concat>(convolution_nodes,
@@ -150,8 +149,9 @@ namespace onnxruntime
             const ngraph::Shape& new_shape = conv_node->get_shape();
 
             auto broadcasted_bias = std::make_shared<ngraph::op::Broadcast>(
-                bias, new_shape, ngraph::onnx_import::calculate_broadcast_axes(
-                    new_shape, bias->get_shape(), 1));
+                bias,
+                new_shape,
+                ngraph::onnx_import::calculate_broadcast_axes(new_shape, bias->get_shape(), 1));
             return {std::make_shared<ngraph::op::Add>(conv_node, broadcasted_bias)};
         }
 

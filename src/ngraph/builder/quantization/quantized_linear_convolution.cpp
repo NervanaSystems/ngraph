@@ -30,33 +30,33 @@ namespace ngraph
     {
         namespace quantization
         {
-
-            std::shared_ptr<Node> QuantizedLinearConvolution(std::shared_ptr<Node> input,
-                                                             std::shared_ptr<Node> filter,
-                                                             const Strides& window_movement_strides,
-                                                             const Strides& window_dilation_strides,
-                                                             const CoordinateDiff& padding_below,
-                                                             const CoordinateDiff& padding_above,
-                                                             const Strides& data_dilation_strides,
-                                                             std::shared_ptr<Node> input_scale,
-                                                             std::shared_ptr<Node> input_zero_point,
-                                                             std::shared_ptr<Node> filter_scale,
-                                                             std::shared_ptr<Node> filter_zero_point,
-                                                             std::shared_ptr<Node> output_scale,
-                                                             std::shared_ptr<Node> output_zero_point)
+            std::shared_ptr<Node>
+                QuantizedLinearConvolution(std::shared_ptr<Node> input,
+                                           std::shared_ptr<Node> filter,
+                                           const Strides& window_movement_strides,
+                                           const Strides& window_dilation_strides,
+                                           const CoordinateDiff& padding_below,
+                                           const CoordinateDiff& padding_above,
+                                           const Strides& data_dilation_strides,
+                                           std::shared_ptr<Node> input_scale,
+                                           std::shared_ptr<Node> input_zero_point,
+                                           std::shared_ptr<Node> filter_scale,
+                                           std::shared_ptr<Node> filter_zero_point,
+                                           std::shared_ptr<Node> output_scale,
+                                           std::shared_ptr<Node> output_zero_point)
             {
                 // TODO: need to verify that zero points are 0 or otherwise handle
                 // TODO: not entirely sure this is correct
                 auto requantization_scale = input_scale * filter_scale / output_scale;
 
                 return make_shared<op::QuantizedConvolution>(input,
-                                                            filter,
-                                                            window_movement_strides,
-                                                            window_dilation_strides,
-                                                            padding_below,
-                                                            padding_above,
-                                                            data_dilation_strides,
-                                                            requantization_scale);
+                                                             filter,
+                                                             window_movement_strides,
+                                                             window_dilation_strides,
+                                                             padding_below,
+                                                             padding_above,
+                                                             data_dilation_strides,
+                                                             requantization_scale);
             }
         }
     }
