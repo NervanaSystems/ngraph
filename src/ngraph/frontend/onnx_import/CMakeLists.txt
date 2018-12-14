@@ -57,6 +57,8 @@ add_library(onnx_import STATIC
         op/cos.hpp
         op/com.microsoft/dequantize_linear.cpp
         op/com.microsoft/dequantize_linear.hpp
+        op/com.microsoft/quant_conv.cpp
+        op/com.microsoft/quant_conv.hpp
         op/com.microsoft/quantize_linear.cpp
         op/com.microsoft/quantize_linear.hpp
         op/com.microsoft/register_custom_ops.hpp

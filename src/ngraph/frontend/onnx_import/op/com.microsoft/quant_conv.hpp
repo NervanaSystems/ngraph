@@ -16,24 +16,21 @@
 
 #pragma once
 
-#include "dequantize_linear.hpp"
-#include "onnx.hpp"
-#include "quant_conv.hpp"
-#include "quantize_linear.hpp"
+#include "core/node.hpp"
+#include "ngraph/node_vector.hpp"
 
 namespace onnxruntime
 {
     namespace ngraph_ep
     {
-        void register_custom_ops()
-        {
-            constexpr const char* ms_domain = "com.microsoft";
+        /// \brief Performs ONNX Quant Conv operation.
+        ///
+        /// \param node   The ONNX node object representing this operation.
+        ///
+        /// \return The vector containing Ngraph nodes producing output of ONNX quantizied convolution
+        ///         operation.
+        ngraph::NodeVector quant_conv(const ngraph::onnx_import::Node& node);
 
-            ngraph::onnx_import::register_operator(
-                "DequantizeLinear", 9, ms_domain, dequantize_linear);
-            ngraph::onnx_import::register_operator("QuantizeLinear", 9, ms_domain, quantize_linear);
-            ngraph::onnx_import::register_operator("QLinearConv", 9, ms_domain, quant_conv);
-        }
     } // namespace ngraph_ep
 
 } // namespace onnxruntime
