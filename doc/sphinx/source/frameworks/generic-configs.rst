@@ -5,8 +5,8 @@ Configurations available to any Framework
 #########################################
 
 
-Enabling new genres of Deep Learning 
-====================================
+Enabling Deep Learning paradigms  
+================================
 
 Framework architects or engineers who can't quite find what they need among 
 the existing DL tools may need to build something new off a "stock" framework, 
@@ -28,8 +28,9 @@ connecting the two.
    a user interface (UI) is entirely in the realm of the framework and beyond the 
    scope of the nGraph Compiler stack.
  
-The nGraph :abbr:`IR Intermediate Representation` is format a Today, the two primary tasks that can be accomplished in the “bridge code” space
-of the nGraph IR are: 
+The nGraph :abbr:`IR Intermediate Representation` is format that can understand 
+inputs from a framework. Today, there are two primary tasks that can be accomplished 
+in the “bridge code” space of the nGraph IR: 
 
 #. Compiling a dataflow graph 
 #. Executing a pre-compiled graph. 
@@ -43,7 +44,8 @@ inputs to be computed.
 
 .. note:: Configuration options can be added manually on the command line or via 
    scripting. Please keep in mind that fine-tuning of parameters is as much of 
-   an art as it is a science; there are virtually limitless ways to do so.  
+   an art as it is a science; there are virtually limitless ways to do so and 
+   our documentation provides only a sampling.  
 
 
 Integrating nGraph with new frameworks
@@ -94,14 +96,14 @@ For CPU (and most cuDNN) backends, the preferred layout is currently ``NCHW``.
 * **H** -- Height of the image
 * **W** -- Width of the image
 
-MKL-DNN
--------
+Intel® Math Kernel Library for Deep Neural Networks 
+---------------------------------------------------
 
-The following `KMP options`_ were originally optimized for `MKLDNN`_ projects 
-running models with the ``NCHW`` data layout; however, other configurations can 
-be explored. MKL-DNN is automatically enabled as part of an nGraph build; you do 
-*not* need to add MKL-DNN separately or as an additional component to be able to 
-use these configuration settings.   
+-The following `KMP options`_ were originally optimized for models using the 
+Intel® `MKL-DNN`_ to train models with the ``NCHW`` data layout; however, other 
+configurations can be explored. MKL-DNN is automatically enabled as part of an 
+nGraph compilation; you do *not* need to add MKL-DNN separately or as an 
+additional component to be able to use these configuration settings.   
 
 * ``KMP_BLOCKTIME`` Sets the time, in milliseconds, that a thread should wait 
   after completing the execution of a parallel region, before sleeping.
@@ -204,6 +206,6 @@ achieve the best performance for NN workloads on CPU platforms.
 
 
 .. _KMP options: https://software.intel.com/en-us/node/522691
-.. _MKLDNN: https://github.com/intel/mkl-dnn
+.. _MKL-DNN: https://github.com/intel/mkl-dnn
 .. _gnu.org site: https://gcc.gnu.org/onlinedocs/libgomp/Environment-Variables.html
 .. _Movidius: https://www.movidius.com/

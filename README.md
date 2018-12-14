@@ -24,6 +24,8 @@ workloads on CPU for inference, please refer to the links below.
 works only with Ubuntu 16.04 or greater and Intel® Xeon® CPUs. CPUs without 
 Intel® Advanced Vector Extensions 512 (Intel® AVX-512) will not run these 
 packages; the alternative if you do not have this CPU is to build from source. 
+Wider support for other CPUS will be offered starting in early 2019, and later 
+with our Gold release.
 
 Frameworks using nGraph Compiler stack to execute workloads have shown 
 [**up to 45X**](https://ai.intel.com/ngraph-compiler-stack-beta-release/) 
