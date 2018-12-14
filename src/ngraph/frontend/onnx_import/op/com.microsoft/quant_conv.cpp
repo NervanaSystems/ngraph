@@ -18,6 +18,7 @@
 #include <memory>
 #include <vector>
 
+#include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/op/conv.hpp"
 #include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
@@ -37,7 +38,21 @@ namespace onnxruntime
     {
         namespace
         {
-            std::shared_ptr<ngraph::op::Op>
+            struct OpScale
+            {
+                std::shared_ptr<ngraph::Node> data_scale;
+                std::shared_ptr<ngraph::Node> filter_scale;
+                std::shared_ptr<ngraph::Node> output_scale;
+            };
+
+            struct OpZeroPoint
+            {
+                std::shared_ptr<ngraph::Node> data_zero_point;
+                std::shared_ptr<ngraph::Node> filter_zero_point;
+                std::shared_ptr<ngraph::Node> output_zero_point;
+            };
+
+            std::shared_ptr<ngraph::Node>
                 make_ng_quant_conv(const std::shared_ptr<ngraph::Node>& data,
                                    const std::shared_ptr<ngraph::Node>& filters,
                                    const ngraph::Strides& strides,
@@ -45,7 +60,8 @@ namespace onnxruntime
                                    const ngraph::CoordinateDiff& padding_below,
                                    const ngraph::CoordinateDiff& padding_above,
                                    int groups,
-                                   std::shared_ptr<ngraph::Node> scale)
+                                   const OpScale& op_scale,
+                                   const OpZeroPoint& op_zero_point)
             {
                 if (groups > 1)
                 {
@@ -79,14 +95,12 @@ namespace onnxruntime
                             filters, filters_lower_bounds, filters_upper_bounds);
 
                         convolution_nodes.push_back(
-                            std::make_shared<ngraph::op::QuantizedConvolution>(sliced_data,
-                                                                               sliced_filters,
-                                                                               strides,
-                                                                               dilations,
-                                                                               padding_below,
-                                                                               padding_above,
-                                                                               ngraph::Strides(),
-                                                                               scale));
+                            ngraph::builder::quantization::QuantizedLinearConvolution(
+                                sliced_data, sliced_filters, strides, dilations, padding_below,
+                                padding_above, ngraph::Strides(), op_scale.data_scale,
+                                op_zero_point.data_zero_point, op_scale.filter_scale,
+                                op_zero_point.filter_zero_point, op_scale.output_scale,
+                                op_zero_point.output_zero_point));
                     }
                     std::size_t concatenation_axis = 1;
                     return std::make_shared<ngraph::op::Concat>(convolution_nodes,
@@ -94,14 +108,11 @@ namespace onnxruntime
                 }
                 else
                 {
-                    return std::make_shared<ngraph::op::QuantizedConvolution>(data,
-                                                                              filters,
-                                                                              strides,
-                                                                              dilations,
-                                                                              padding_below,
-                                                                              padding_above,
-                                                                              ngraph::Strides(),
-                                                                              scale);
+                    return ngraph::builder::quantization::QuantizedLinearConvolution(
+                        data, filters, strides, dilations, padding_below, padding_above,
+                        ngraph::Strides(), op_scale.data_scale, op_zero_point.data_zero_point,
+                        op_scale.filter_scale, op_zero_point.filter_zero_point,
+                        op_scale.output_scale, op_zero_point.output_zero_point);
                 }
             }
 
@@ -137,7 +148,9 @@ namespace onnxruntime
             const auto& padding_above = paddings.second;
 
             auto conv_node = make_ng_quant_conv(
-                data, filters, strides, dilations, padding_below, padding_above, groups, scale);
+                data, filters, strides, dilations, padding_below, padding_above, groups,
+                OpScale{data_scale, filters_scale, output_scale},
+                OpZeroPoint{data_zp, filters_zp, output_zp});
 
             // no bias param
             if (inputs.size() < 9)
