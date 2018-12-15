@@ -44,6 +44,7 @@ set(SRC
     builder/convert_layout.cpp
     builder/convolution.cpp
     builder/dot.cpp
+    builder/embedding_lookup.cpp
     builder/function_call.cpp
     builder/leaky_relu.cpp
     builder/lstm.cpp
@@ -73,6 +74,7 @@ set(SRC
     builder/slice.cpp
     builder/state.cpp
     builder/softmax.cpp
+    builder/get_output_element.cpp
     builder/sum.cpp
     builder/topk.cpp
     builder/update_slice.cpp
@@ -112,7 +114,6 @@ set(SRC
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
-    pass/cpu_reshape_sinking.cpp
     ngraph_version.cpp
 )
 
@@ -188,13 +189,9 @@ if (NGRAPH_CPU_ENABLE)
     endif()
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
-        find_package(MPI REQUIRED)
-        target_compile_definitions(cpu_backend
-            PRIVATE NGRAPH_DISTRIBUTED)
-        target_include_directories(cpu_backend
-            SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-        target_link_libraries(cpu_backend
-            PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+        target_compile_definitions(cpu_backend PRIVATE NGRAPH_DISTRIBUTED)
+        target_include_directories(cpu_backend SYSTEM PRIVATE libmlsl)
+        target_link_libraries(cpu_backend PRIVATE libmlsl)
     endif()
 
     add_dependencies(cpu_backend ext_mkldnn ext_eigen)

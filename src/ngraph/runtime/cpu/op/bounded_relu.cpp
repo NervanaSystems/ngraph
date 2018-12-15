@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 op::BoundedRelu::BoundedRelu(shared_ptr<Node> arg, float alpha)
-    : Op("BoundedRelu", check_single_output_args({arg}))
+    : UnaryElementwiseArithmetic("BoundedRelu", {arg})
     , m_alpha(alpha)
 {
     constructor_validate_and_infer_types();

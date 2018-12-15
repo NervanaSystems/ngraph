@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 
 #include <memory>
 using namespace std;
@@ -2383,6 +2384,64 @@ TEST(type_prop, or_bad_arguments)
         "Or", [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
             return make_shared<op::Or>(x, y);
         });
+}
+
+TEST(type_prop, embedding_lookup_non_matrix_weights)
+{
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::boolean, Shape{2, 4, 5});
+    try
+    {
+        auto bc = make_shared<op::EmbeddingLookup>(tv0_2_4_param_0, tv0_2_4_param_1);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("weights are expected to be a matrix"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, embedding_lookup_static_shapes)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{8, 10, 12});
+    auto weights = make_shared<op::Parameter>(element::f32, Shape{5, 10});
+    auto embed = make_shared<op::EmbeddingLookup>(data, weights);
+    ASSERT_EQ(embed->get_element_type(), element::f32);
+    ASSERT_EQ(embed->get_shape(), (Shape{8, 10, 12, 10}));
+}
+
+TEST(type_prop, embedding_lookup_dynamic_shape_arg0)
+{
+    auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto weights = make_shared<op::Parameter>(element::f32, Shape{5, 10});
+    auto embed = make_shared<op::EmbeddingLookup>(data, weights);
+    ASSERT_EQ(embed->get_element_type(), element::f32);
+    ASSERT_TRUE(embed->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, embedding_lookup_dynamic_shape_arg1)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{8, 10, 12});
+    auto weights = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto embed = make_shared<op::EmbeddingLookup>(data, weights);
+    ASSERT_EQ(embed->get_element_type(), element::f32);
+    PartialShape expected{8, 10, 12, Dimension::dynamic()};
+    ASSERT_TRUE(embed->get_output_partial_shape(0).same_scheme(expected));
+}
+
+TEST(type_prop, embedding_lookup_shape_arg1_dynamic_embedding_length)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{8, 10, 12});
+    auto weights = make_shared<op::Parameter>(element::f32, PartialShape{5, Dimension::dynamic()});
+    auto embed = make_shared<op::EmbeddingLookup>(data, weights);
+    ASSERT_EQ(embed->get_element_type(), element::f32);
+    PartialShape expected{8, 10, 12, Dimension::dynamic()};
+    ASSERT_TRUE(embed->get_output_partial_shape(0).same_scheme(expected));
 }
 
 TEST(type_prop, comparison_good)
@@ -13597,4 +13656,278 @@ TEST(type_prop, shape_of_partial_rank_dynamic)
 
     ASSERT_EQ(so->get_output_element_type(0), element::u64);
     ASSERT_TRUE(so->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
+}
+
+TEST(type_prop, any_deduce)
+{
+    auto param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+
+    auto r0 = make_shared<op::Any>(param_0, AxisSet{0});
+    ASSERT_EQ(r0->get_element_type(), element::boolean);
+    ASSERT_EQ(r0->get_shape(), (Shape{4}));
+
+    auto r1 = make_shared<op::Any>(param_0, AxisSet{1});
+    ASSERT_EQ(r1->get_element_type(), element::boolean);
+    ASSERT_EQ(r1->get_shape(), (Shape{2}));
+
+    auto r01 = make_shared<op::Any>(param_0, AxisSet{0, 1});
+    ASSERT_EQ(r01->get_element_type(), element::boolean);
+    ASSERT_EQ(r01->get_shape(), (Shape{}));
+
+    auto r_none = make_shared<op::Any>(param_0, AxisSet{});
+    ASSERT_EQ(r_none->get_element_type(), element::boolean);
+    ASSERT_EQ(r_none->get_shape(), (Shape{2, 4}));
+}
+
+TEST(type_prop, any_deduce_et_dynamic)
+{
+    auto param_0 = make_shared<op::Parameter>(element::dynamic, Shape{2, 4});
+
+    auto r0 = make_shared<op::Any>(param_0, AxisSet{0});
+    ASSERT_EQ(r0->get_element_type(), element::boolean);
+    ASSERT_EQ(r0->get_shape(), (Shape{4}));
+
+    auto r1 = make_shared<op::Any>(param_0, AxisSet{1});
+    ASSERT_EQ(r1->get_element_type(), element::boolean);
+    ASSERT_EQ(r1->get_shape(), (Shape{2}));
+
+    auto r01 = make_shared<op::Any>(param_0, AxisSet{0, 1});
+    ASSERT_EQ(r01->get_element_type(), element::boolean);
+    ASSERT_EQ(r01->get_shape(), (Shape{}));
+
+    auto r_none = make_shared<op::Any>(param_0, AxisSet{});
+    ASSERT_EQ(r_none->get_element_type(), element::boolean);
+    ASSERT_EQ(r_none->get_shape(), (Shape{2, 4}));
+}
+
+TEST(type_prop, any_et_non_boolean)
+{
+    auto param_0 = make_shared<op::Parameter>(element::i32, Shape{2, 4});
+
+    try
+    {
+        auto r = make_shared<op::Any>(param_0, AxisSet{0, 1});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect invalid element type for Any";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input element type must be boolean"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, any_axis_oob)
+{
+    auto param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+
+    try
+    {
+        auto r = make_shared<op::Any>(param_0, AxisSet{0, 2, 1});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect out-of-bound axis for Any";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis (2) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, any_partial_rank_dynamic)
+{
+    auto param = make_shared<op::Parameter>(element::boolean, PartialShape::dynamic());
+    auto axes = AxisSet{2385, 0, 4404}; // arbitrary
+    auto any = make_shared<op::Any>(param, axes);
+
+    EXPECT_EQ(any->get_output_element_type(0), element::boolean);
+    EXPECT_TRUE(any->get_output_partial_shape(0).is_dynamic());
+}
+
+TEST(type_prop, any_partial_rank_static_dynamic_ok_result_static)
+{
+    auto param = make_shared<op::Parameter>(element::boolean,
+                                            PartialShape{1, 2, Dimension::dynamic(), 4, 5});
+    auto axes = AxisSet{2, 3};
+    auto any = make_shared<op::Any>(param, axes);
+
+    EXPECT_EQ(any->get_output_element_type(0), element::boolean);
+    EXPECT_EQ(any->get_shape(), (Shape{1, 2, 5}));
+}
+
+TEST(type_prop, any_partial_rank_static_dynamic_ok_result_dynamic)
+{
+    auto param = make_shared<op::Parameter>(
+        element::boolean, PartialShape{1, 2, Dimension::dynamic(), 4, Dimension::dynamic()});
+    auto axes = AxisSet{2, 3};
+    auto any = make_shared<op::Any>(param, axes);
+
+    EXPECT_EQ(any->get_output_element_type(0), element::boolean);
+    EXPECT_TRUE(
+        any->get_output_partial_shape(0).same_scheme(PartialShape{1, 2, Dimension::dynamic()}));
+}
+
+TEST(type_prop, any_partial_rank_static_dynamic_axes_oob)
+{
+    auto param = make_shared<op::Parameter>(
+        element::boolean, PartialShape{1, 2, Dimension::dynamic(), 4, Dimension::dynamic()});
+    auto axes = AxisSet{2, 5, 1};
+
+    try
+    {
+        auto any = make_shared<op::Any>(param, axes);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect out-of-bound axis for Any (rank-static dynamic input)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis (5) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, all_deduce)
+{
+    auto param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+
+    auto r0 = make_shared<op::All>(param_0, AxisSet{0});
+    ASSERT_EQ(r0->get_element_type(), element::boolean);
+    ASSERT_EQ(r0->get_shape(), (Shape{4}));
+
+    auto r1 = make_shared<op::All>(param_0, AxisSet{1});
+    ASSERT_EQ(r1->get_element_type(), element::boolean);
+    ASSERT_EQ(r1->get_shape(), (Shape{2}));
+
+    auto r01 = make_shared<op::All>(param_0, AxisSet{0, 1});
+    ASSERT_EQ(r01->get_element_type(), element::boolean);
+    ASSERT_EQ(r01->get_shape(), (Shape{}));
+
+    auto r_none = make_shared<op::All>(param_0, AxisSet{});
+    ASSERT_EQ(r_none->get_element_type(), element::boolean);
+    ASSERT_EQ(r_none->get_shape(), (Shape{2, 4}));
+}
+
+TEST(type_prop, all_deduce_et_dynamic)
+{
+    auto param_0 = make_shared<op::Parameter>(element::dynamic, Shape{2, 4});
+
+    auto r0 = make_shared<op::All>(param_0, AxisSet{0});
+    ASSERT_EQ(r0->get_element_type(), element::boolean);
+    ASSERT_EQ(r0->get_shape(), (Shape{4}));
+
+    auto r1 = make_shared<op::All>(param_0, AxisSet{1});
+    ASSERT_EQ(r1->get_element_type(), element::boolean);
+    ASSERT_EQ(r1->get_shape(), (Shape{2}));
+
+    auto r01 = make_shared<op::All>(param_0, AxisSet{0, 1});
+    ASSERT_EQ(r01->get_element_type(), element::boolean);
+    ASSERT_EQ(r01->get_shape(), (Shape{}));
+
+    auto r_none = make_shared<op::All>(param_0, AxisSet{});
+    ASSERT_EQ(r_none->get_element_type(), element::boolean);
+    ASSERT_EQ(r_none->get_shape(), (Shape{2, 4}));
+}
+
+TEST(type_prop, all_et_non_boolean)
+{
+    auto param_0 = make_shared<op::Parameter>(element::i32, Shape{2, 4});
+
+    try
+    {
+        auto r = make_shared<op::All>(param_0, AxisSet{0, 1});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect invalid element type for All";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input element type must be boolean"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, all_axis_oob)
+{
+    auto param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+
+    try
+    {
+        auto r = make_shared<op::All>(param_0, AxisSet{0, 2, 1});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect out-of-bound axis for All";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis (2) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, all_partial_rank_dynamic)
+{
+    auto param = make_shared<op::Parameter>(element::boolean, PartialShape::dynamic());
+    auto axes = AxisSet{2385, 0, 4404}; // arbitrary
+    auto all = make_shared<op::All>(param, axes);
+
+    EXPECT_EQ(all->get_output_element_type(0), element::boolean);
+    EXPECT_TRUE(all->get_output_partial_shape(0).is_dynamic());
+}
+
+TEST(type_prop, all_partial_rank_static_dynamic_ok_result_static)
+{
+    auto param = make_shared<op::Parameter>(element::boolean,
+                                            PartialShape{1, 2, Dimension::dynamic(), 4, 5});
+    auto axes = AxisSet{2, 3};
+    auto all = make_shared<op::All>(param, axes);
+
+    EXPECT_EQ(all->get_output_element_type(0), element::boolean);
+    EXPECT_EQ(all->get_shape(), (Shape{1, 2, 5}));
+}
+
+TEST(type_prop, all_partial_rank_static_dynamic_ok_result_dynamic)
+{
+    auto param = make_shared<op::Parameter>(
+        element::boolean, PartialShape{1, 2, Dimension::dynamic(), 4, Dimension::dynamic()});
+    auto axes = AxisSet{2, 3};
+    auto all = make_shared<op::All>(param, axes);
+
+    EXPECT_EQ(all->get_output_element_type(0), element::boolean);
+    EXPECT_TRUE(
+        all->get_output_partial_shape(0).same_scheme(PartialShape{1, 2, Dimension::dynamic()}));
+}
+
+TEST(type_prop, all_partial_rank_static_dynamic_axes_oob)
+{
+    auto param = make_shared<op::Parameter>(
+        element::boolean, PartialShape{1, 2, Dimension::dynamic(), 4, Dimension::dynamic()});
+    auto axes = AxisSet{2, 5, 1};
+
+    try
+    {
+        auto all = make_shared<op::All>(param, axes);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect out-of-bound axis for All (rank-static dynamic input)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis (5) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }

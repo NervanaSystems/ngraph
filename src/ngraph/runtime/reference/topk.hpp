@@ -28,6 +28,19 @@ namespace ngraph
     {
         namespace reference
         {
+            // Had to split out these two functions. They used to be lambda expressions but
+            // MSVC had difficulty compiling. This way is more explicit.
+            template <typename T, typename U>
+            static bool compare_max(const std::tuple<T, U>& a, const std::tuple<T, U>& b)
+            {
+                return a > b;
+            }
+            template <typename T, typename U>
+            static bool compare_min(const std::tuple<T, U>& a, const std::tuple<T, U>& b)
+            {
+                return a < b;
+            }
+
             template <typename T, typename U>
             void topk(const T* arg,
                       U* out_indices,
@@ -74,12 +87,14 @@ namespace ngraph
                         i++;
                     }
                     // Sort the temp vector
-                    sort(
-                        workspace.begin(),
-                        workspace.end(),
-                        compute_max
-                        ? [](const tuple<T, U>& a, const tuple<T, U>& b) -> bool { return a > b; }
-                        : [](const tuple<T, U>& a, const tuple<T, U>& b) -> bool { return a < b; });
+                    if (compute_max)
+                    {
+                        sort(workspace.begin(), workspace.end(), compare_max<T, U>);
+                    }
+                    else
+                    {
+                        sort(workspace.begin(), workspace.end(), compare_min<T, U>);
+                    }
                     // Write temp vector to output
                     for (size_t j = 0; j < k; j++)
                     {
