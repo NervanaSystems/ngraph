@@ -1852,6 +1852,33 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
         else
         {
+            static const auto ddebug = std::getenv("NGRAPH_DEX_DEBUG");
+            if (ddebug != nullptr)
+            {
+                if (ctx->first_iteration)
+                {
+                    string filename =
+                        file_util::path_join(s_debug_dir, m_function_name + "_debug.txt");
+                    std::stringstream ss;
+
+                    ss << "EXECUTION PLAN:\n";
+                    for (size_t i = 0; i < functors.size(); i++)
+                    {
+                        ss << op_names.at(i) << "will be executed with the following inputs:\n";
+                        for (auto is : this->m_op_attrs.at(i).Inputs)
+                        {
+                            ss << "\t" << is << " = " << this->get_tensor_data(is) << std::endl;
+                        }
+                        ss << "and outputs :\n";
+                        for (auto os : this->m_op_attrs.at(i).Outputs)
+                        {
+                            ss << "\t" << os << " = " << this->get_tensor_data(os) << std::endl;
+                        }
+                    }
+                    write_to_file(ss.str(), s_debug_dir, filename);
+                }
+            }
+
             for (; ctx->pc < functors.size(); ctx->pc++)
             {
                 auto index = profiler_count++;
