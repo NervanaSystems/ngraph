@@ -251,7 +251,7 @@ void ngraph::runtime::plaidml::ImplAvgPoolBackprop::Apply()
 
 void ngraph::runtime::plaidml::ImplMaxPoolBackprop::Apply()
 {
-    check_inputs(2);
+    check_inputs_ge(2);
     check_outputs(1);
 
     auto src_dims = op().get_inputs()[0].get_shape().size() - 2;
