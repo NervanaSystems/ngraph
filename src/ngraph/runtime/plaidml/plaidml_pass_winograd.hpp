@@ -16,10 +16,7 @@
 
 #pragma once
 
-#include <plaidml/plaidml++.h>
-
-#include <memory>
-#include <string>
+#include "ngraph/pass/graph_rewrite.hpp"
 
 namespace ngraph
 {
@@ -27,18 +24,18 @@ namespace ngraph
     {
         namespace plaidml
         {
-            struct Config;
-
-            Config parse_config_string(const char* configuration_string);
+            namespace pass
+            {
+                class Winograd;
+            }
         }
     }
 }
 
-struct ngraph::runtime::plaidml::Config
+// Applies Winograd to selected convolutions; see
+// <http://arxiv.org/abs/1509.09308> for details.
+class ngraph::runtime::plaidml::pass::Winograd final : public ngraph::pass::GraphRewrite
 {
-    std::shared_ptr<vertexai::ctx> ctx;
-    std::shared_ptr<vertexai::plaidml::device> dev;
-    bool debug;
-    bool winograd;
-    std::string graphviz;
+public:
+    Winograd();
 };

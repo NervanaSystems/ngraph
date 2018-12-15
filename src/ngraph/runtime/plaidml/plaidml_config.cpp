@@ -77,6 +77,7 @@ ngraph::runtime::plaidml::Config
     bool help = false;
     bool list = false;
     bool debug = false;
+    bool winograd = false;
     std::size_t device_idx = 0;
     std::string eventlog_config;
     std::string graphviz;
@@ -241,6 +242,14 @@ ngraph::runtime::plaidml::Config
             continue;
         }
 
+        // Check for Winograd.  (Winograd is sometimes a performance
+        // boost, but not always, so we make it optional.)
+        if (is_opt("winograd"))
+        {
+            winograd = true;
+            continue;
+        }
+
         // Reject unknown options
         err = true;
     }
@@ -248,7 +257,7 @@ ngraph::runtime::plaidml::Config
     constexpr char help_text[] =
         "PlaidML Backend Specification: \""
         "PlaidML[:[device_index][,debug][,help][,list_devices][,"
-        "eventlog=<filename>][,graphviz=<filename>]]\".  For example: \"PlaidML\", \""
+        "eventlog=<filename>][,graphviz=<filename>][,winograd]]\".  For example: \"PlaidML\", \""
         "PlaidML:0,list_devices\"";
     if (err)
     {
@@ -282,6 +291,8 @@ ngraph::runtime::plaidml::Config
     result.debug = debug;
 
     result.graphviz = graphviz;
+
+    result.winograd = winograd;
 
     return result;
 }

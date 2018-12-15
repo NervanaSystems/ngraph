@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include <plaidml/plaidml++.h>
-
 #include <memory>
-#include <string>
+
+#include "ngraph/op/op.hpp"
+#include "ngraph/runtime/plaidml/plaidml_ops_convolution.hpp"
 
 namespace ngraph
 {
@@ -27,18 +27,24 @@ namespace ngraph
     {
         namespace plaidml
         {
-            struct Config;
-
-            Config parse_config_string(const char* configuration_string);
+            namespace op
+            {
+                class Winograd;
+            }
         }
     }
 }
 
-struct ngraph::runtime::plaidml::Config
+class ngraph::runtime::plaidml::op::Winograd final : public ngraph::op::Op
 {
-    std::shared_ptr<vertexai::ctx> ctx;
-    std::shared_ptr<vertexai::plaidml::device> dev;
-    bool debug;
-    bool winograd;
-    std::string graphviz;
+public:
+    Winograd(std::shared_ptr<Convolution> conv, const NodeVector& args);
+
+    void validate_and_infer_types() final;
+
+    std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const final;
+
+    const std::shared_ptr<Convolution> get_conv() const { return m_conv; }
+private:
+    std::shared_ptr<Convolution> m_conv;
 };

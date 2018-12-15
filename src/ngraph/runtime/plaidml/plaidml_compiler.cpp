@@ -34,6 +34,7 @@
 #include "ngraph/runtime/plaidml/plaidml_pass_implicit_broadcast.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_lower_convolutions.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_reshape_elision.hpp"
+#include "ngraph/runtime/plaidml/plaidml_pass_winograd.hpp"
 
 namespace
 {
@@ -96,6 +97,10 @@ std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ImplicitBroadcast>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReshapeElision>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::LowerConvolutions>();
+    if (m_config->winograd)
+    {
+        pass_manager.register_pass<ngraph::runtime::plaidml::pass::Winograd>();
+    }
     if (!m_config->graphviz.empty())
     {
         pass_manager.register_pass<ngraph::pass::VisualizeTree>(m_config->graphviz);
