@@ -34,6 +34,13 @@ bool runtime::hybrid::pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
     size_t backend_index = 0;
     for (auto backend : m_placement_backends)
     {
+        if (node->description() == "GetOutputElement")
+        {
+            auto parent = node->get_arguments().at(0);
+            NGRAPH_INFO << "GetOutputElement input node " << *parent;
+            NGRAPH_INFO << "GetOutputElement input placement " << parent->get_placement_index();
+        
+        }
         if (backend->is_supported(*node))
         {
             node->set_placement_index(backend_index);

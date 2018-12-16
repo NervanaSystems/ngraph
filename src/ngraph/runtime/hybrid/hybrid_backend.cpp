@@ -23,6 +23,7 @@
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
 #include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
+#include "ngraph/runtime/hybrid/pass/fix_get_output_element.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
@@ -61,6 +62,7 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         // Run placement pass
         ngraph::pass::Manager pass_manager;
         pass_manager.register_pass<runtime::hybrid::pass::AssignPlacement>(m_backend_list);
+        pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
         pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png");
         pass_manager.run_passes(instance.m_function);
 
@@ -195,9 +197,9 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
         }
 
         // Call
-        NGRAPH_INFO;
+        NGRAPH_INFO << "call";
         backend->call(sub_function, results, parameters);
-        NGRAPH_INFO;
+        NGRAPH_INFO << "done with call";
 
         // Need to copy any results to the correct device
         // backend_list[0] is the "default" backend and is the backend which created the

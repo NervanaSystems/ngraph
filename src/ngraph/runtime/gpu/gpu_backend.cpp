@@ -233,9 +233,10 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& op) const
                                    "AllReduce",
                                    "SelectAndScatter",
                                    "StopGradient",
-                                   "EmbeddingLookup"};
+                                   "EmbeddingLookup",
+                                   "GenerateMask"};
 
-    set<string> float_only = {"MaxPoolBackprop", "MaxPool"};
+    set<string> float_only = {"MaxPoolBackprop", "AvgPoolBackprop", "MaxPool", "Dot"};
 
     if (unsupported_ops.find(op.description()) != unsupported_ops.end())
     {
@@ -269,8 +270,6 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& op) const
             return false;
         }
     }
-
-    NGRAPH_INFO << op;
 
     return true;
 }

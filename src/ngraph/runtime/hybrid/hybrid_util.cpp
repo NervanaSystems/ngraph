@@ -150,6 +150,7 @@ static vector<unordered_set<shared_ptr<Node>>>
 // |     <------[3]------+     |  |  |     <------[7]------+     |  |     <------[11]-----+     |
 // +-----+               +-----+  |  +-----+               +-----+  +-----+               +-----+
 
+#ifdef OLD_METHOD
 pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     insert_result_parameter_split(const shared_ptr<Node>& src_node,
                                   const shared_ptr<Node>& dst_node)
@@ -176,83 +177,6 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
 
     return make_pair(res_node, par_node);
 }
-
-// static map<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
-//     insert_result_parameter_split(const shared_ptr<Node>& src_node,
-//                                   const shared_ptr<Node>& dst_node)
-// {
-//     // if (src_node->get_output_size() != 1)
-//     // {
-//     //     throw ngraph_error("Multiple output per op not supported in graph partition yet.");
-//     // }
-
-//     NGRAPH_INFO << src_node->get_output_size();
-//     NGRAPH_INFO << "source node " << *src_node;
-//     NGRAPH_INFO << "target node " << *dst_node;
-//     map<shared_ptr<op::Result>, shared_ptr<op::Parameter>> result_map;
-
-//     size_t index = 0;
-//     for (descriptor::Input& input : dst_node->get_inputs())
-//     {
-//         NGRAPH_INFO << *input.get_node();
-//         NGRAPH_INFO << *input.get_output().get_node();
-//         if (input.get_output().get_node() == src_node)
-//         {
-//             NGRAPH_INFO << "found input";
-//             descriptor::Input* dst_input = &input;
-//             NGRAPH_INFO;
-//             descriptor::Output* src_output = &input.get_output();
-
-//             // Make parameter node
-//             NGRAPH_INFO;
-//             shared_ptr<op::Parameter> par_node =
-//                 make_shared<op::Parameter>(src_output->get_element_type(), src_output->get_shape());
-//             NGRAPH_INFO;
-//             par_node->set_placement_index(dst_node->get_placement_index());
-
-//             // Fix input / output among src, dst and par
-//             // Remove [0]
-//             NGRAPH_INFO;
-//             src_output->remove_input(dst_input);
-
-//             // Remove [0] (again), add [8], remove [1], add [9]
-//             NGRAPH_INFO;
-//             dst_input->replace_output(par_node, index);
-
-//             // Add res node
-//             NGRAPH_INFO;
-//             shared_ptr<op::Result> res_node =
-//                 make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
-//             NGRAPH_INFO;
-//             res_node->set_placement_index(src_node->get_placement_index());
-
-//             NGRAPH_INFO;
-//             result_map.insert({res_node, par_node});
-//         }
-//         index++;
-//     }
-//     return result_map;
-
-//     // descriptor::Input* dst_input = dst_node->get_input_from(src_node);
-//     // NGRAPH_INFO;
-//     // descriptor::Output* src_output = src_node->get_output_to(dst_node);
-//     // NGRAPH_INFO;
-
-//     // // Make parameter node
-//     // shared_ptr<op::Parameter> par_node = make_shared<op::Parameter>(
-//     //     src_output->get_element_type(), src_output->get_shape());
-//     // par_node->set_placement_index(dst_node->get_placement_index());
-
-//     // // Fix input / output among src, dst and par
-//     // src_output->remove_input(dst_input);    // Remove [0]
-//     // dst_input->replace_output(par_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
-
-//     // // Add res node
-//     // shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
-//     // res_node->set_placement_index(src_node->get_placement_index());
-
-//     // return make_pair(res_node, par_node);
-// }
 
 pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>>>
     runtime::hybrid::split_function_by_placement(const shared_ptr<Function>& f)
@@ -316,83 +240,135 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
         }
         auto sub_function = make_shared<Function>(res_vector, par_vector);
         sub_functions.push_back(sub_function);
-        // ngraph::pass::Manager pass_manager;
-        // pass_manager.register_pass<ngraph::pass::VisualizeTree>("subgraph_"+to_string(index++)+".png");
-        // pass_manager.run_passes(sub_function);
+        ngraph::pass::Manager pass_manager;
+        pass_manager.register_pass<ngraph::pass::VisualizeTree>("subgraph_" + to_string(index++) +
+                                                                ".png");
+        pass_manager.run_passes(sub_function);
     }
 
     return make_pair(sub_functions, map_parameter_to_result);
 }
+#else
+static map<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
+    insert_result_parameter_split(const shared_ptr<Node>& src_node,
+                                  const shared_ptr<Node>& dst_node)
+{
+    // if (src_node->get_output_size() != 1)
+    // {
+    //     throw ngraph_error("Multiple output per op not supported in graph partition yet.");
+    // }
 
-// //  will be removed when the backends move to the latest Hybrid backend
-// pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>>>
-//     runtime::hybrid::split_function_by_placement(const shared_ptr<Function>& f)
-// {
-//     // Split functions to clusters of nodes that can be computed together
-//     vector<unordered_set<shared_ptr<Node>>> clusters = ::group_function_nodes_to_clusters(f);
+    NGRAPH_INFO << src_node->get_output_size();
+    NGRAPH_INFO << "source node " << *src_node;
+    NGRAPH_INFO << "target node " << *dst_node;
+    map<shared_ptr<op::Result>, shared_ptr<op::Parameter>> result_map;
 
-//     // Map from (intermediate) parameter to result node, for guiding data copy among devices
-//     unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>> map_parameter_to_result;
+    NGRAPH_INFO << "dst_node has " << dst_node->get_inputs().size() << " inputs";
+    for (descriptor::Input& input : dst_node->get_inputs())
+    {
+        if (input.get_output().get_node() == src_node)
+        {
+            descriptor::Input* dst_input = &input;
+            descriptor::Output* src_output = &input.get_output();
 
-//     // Split neighboring nodes if they belong to different clusters
-//     // TODO: optimization to group multiple result node from the same source,
-//     //       and to group the parameter node in the same cluster with the same result node source
-//     unordered_map<shared_ptr<Node>, unordered_set<shared_ptr<Node>>*> map_node_to_cluster;
-//     for (auto& cluster : clusters)
-//     {
-//         for (auto node : cluster)
-//         {
-//             map_node_to_cluster[node] = &cluster;
-//         }
-//     }
-//     for (auto dst_node : f->get_ordered_ops())
-//     {
-//         for (auto src_node : dst_node->get_arguments())
-//         {
-//             auto src_cluster = map_node_to_cluster.at(src_node);
-//             auto dst_cluster = map_node_to_cluster.at(dst_node);
-//             if (src_cluster != dst_cluster)
-//             {
-//                 // Split src_node and dst_node
-//                 map<shared_ptr<op::Result>, shared_ptr<op::Parameter>> res_par_pair_map =
-//                     ::insert_result_parameter_split(src_node, dst_node);
-//                 for (const auto& res_par_pair : res_par_pair_map)
-//                 {
-//                     shared_ptr<op::Result> res_node = res_par_pair.first;
-//                     shared_ptr<op::Parameter> par_node = res_par_pair.second;
-//                     map_parameter_to_result[par_node] = res_node;
+            // Make parameter node
+            shared_ptr<op::Parameter> par_node =
+                make_shared<op::Parameter>(src_output->get_element_type(), src_output->get_shape());
+            par_node->set_placement_index(dst_node->get_placement_index());
 
-//                     // Insert newly created nodes into clusters
-//                     src_cluster->insert(res_node);
-//                     dst_cluster->insert(par_node);
-//                 }
-//             }
-//         }
-//     }
+            // Fix input / output among src, dst and par
+            // Remove [0]
+            src_output->remove_input(dst_input);
 
-//     // Create functions from clusters
-//     vector<shared_ptr<Function>> sub_functions;
-//     for (auto cluster : clusters)
-//     {
-//         ParameterVector par_vector;
-//         ResultVector res_vector;
-//         for (auto node : cluster)
-//         {
-//             if (auto res_node = dynamic_pointer_cast<op::Result>(node))
-//             {
-//                 res_vector.push_back(res_node);
-//             }
-//             else if (auto par_node = dynamic_pointer_cast<op::Parameter>(node))
-//             {
-//                 par_vector.push_back(par_node);
-//             }
-//         }
-//         auto sub_function = make_shared<Function>(res_vector, par_vector);
-//         sub_functions.push_back(sub_function);
-//     }
+            // Remove [0] (again), add [8], remove [1], add [9]
+            dst_input->replace_output(par_node, 0);
 
-//     return make_pair(sub_functions, map_parameter_to_result);
-// }
+            // Add res node
+            shared_ptr<op::Result> res_node =
+                make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
+            res_node->set_placement_index(src_node->get_placement_index());
+
+            result_map.insert({res_node, par_node});
+        }
+    }
+    return result_map;
+}
+
+//  will be removed when the backends move to the latest Hybrid backend
+pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>>>
+    runtime::hybrid::split_function_by_placement(const shared_ptr<Function>& f)
+{
+    // Split functions to clusters of nodes that can be computed together
+    vector<unordered_set<shared_ptr<Node>>> clusters = ::group_function_nodes_to_clusters(f);
+
+    // Map from (intermediate) parameter to result node, for guiding data copy among devices
+    unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>> map_parameter_to_result;
+
+    // Split neighboring nodes if they belong to different clusters
+    // TODO: optimization to group multiple result node from the same source,
+    //       and to group the parameter node in the same cluster with the same result node source
+    unordered_map<shared_ptr<Node>, unordered_set<shared_ptr<Node>>*> map_node_to_cluster;
+    for (auto& cluster : clusters)
+    {
+        for (auto node : cluster)
+        {
+            map_node_to_cluster[node] = &cluster;
+        }
+    }
+    for (auto dst_node : f->get_ordered_ops())
+    {
+        for (auto src_node : dst_node->get_arguments())
+        {
+            auto src_cluster = map_node_to_cluster.at(src_node);
+            auto dst_cluster = map_node_to_cluster.at(dst_node);
+            if (src_cluster != dst_cluster)
+            {
+                // Split src_node and dst_node
+                map<shared_ptr<op::Result>, shared_ptr<op::Parameter>> res_par_pair_map =
+                    ::insert_result_parameter_split(src_node, dst_node);
+                for (const auto& res_par_pair : res_par_pair_map)
+                {
+                    shared_ptr<op::Result> res_node = res_par_pair.first;
+                    shared_ptr<op::Parameter> par_node = res_par_pair.second;
+                    map_parameter_to_result[par_node] = res_node;
+
+                    // Insert newly created nodes into clusters
+                    src_cluster->insert(res_node);
+                    dst_cluster->insert(par_node);
+                }
+            }
+        }
+    }
+
+    // Create functions from clusters
+    vector<shared_ptr<Function>> sub_functions;
+    size_t index = 0;
+    for (auto cluster : clusters)
+    {
+        ParameterVector par_vector;
+        ResultVector res_vector;
+        for (auto node : cluster)
+        {
+            if (auto res_node = dynamic_pointer_cast<op::Result>(node))
+            {
+                res_vector.push_back(res_node);
+            }
+            else if (auto par_node = dynamic_pointer_cast<op::Parameter>(node))
+            {
+                par_vector.push_back(par_node);
+            }
+        }
+        auto sub_function = make_shared<Function>(res_vector, par_vector);
+        sub_functions.push_back(sub_function);
+        ngraph::pass::Manager pass_manager;
+        pass_manager.register_pass<ngraph::pass::VisualizeTree>("subgraph_" + to_string(index++) +
+                                                                ".png");
+        pass_manager.run_passes(sub_function);
+    }
+
+    return make_pair(sub_functions, map_parameter_to_result);
+}
+#endif
 
 // Assert that nodes in the function is colocated and return that placement
 size_t runtime::hybrid::get_colocated_function_placement(shared_ptr<Function> func)
