@@ -285,6 +285,7 @@ namespace ngraph
                 std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
                 std::vector<runtime::PerformanceCounter> m_perf_counters;
+                bool m_reuse_memory;
 
 #if defined(NGRAPH_HALIDE)
                 std::unordered_map<std::string, Halide::Func> halide_functions;

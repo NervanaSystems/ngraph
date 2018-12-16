@@ -297,3 +297,12 @@ void print_results(std::vector<char>& ref_data, std::vector<char>& actual_data, 
     }
     std::cout << std::endl;
 }
+
+std::shared_ptr<Function> make_function(const std::string& file_name)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    return func;
+}

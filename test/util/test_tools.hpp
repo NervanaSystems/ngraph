@@ -25,6 +25,7 @@
 
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/file_util.hpp"
+#include "ngraph/function.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
@@ -184,3 +185,5 @@ void print_results(std::vector<T>& ref_data, std::vector<T>& actual_data, size_t
 
 template <>
 void print_results(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results);
+
+std::shared_ptr<ngraph::Function> make_function(const std::string& file_name);

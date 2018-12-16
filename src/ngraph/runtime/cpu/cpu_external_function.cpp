@@ -171,6 +171,7 @@
 #include "ngraph/runtime/cpu/pass/cpu_horizontal_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_memory_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_memory_optimization.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
@@ -227,6 +228,7 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_compiled_function(nullptr)
     , m_function_name(function->get_name())
     , m_is_built(false)
+    , m_reuse_memory(std::getenv("NGRAPH_REUSE_MEMORY"))
 {
 }
 
@@ -1447,7 +1449,8 @@ void runtime::cpu::CPU_ExternalFunction::build()
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::PropagateCacheability>(
         runtime::cpu::get_annotations_factory());
-    pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
+    pass_manager.register_pass<runtime::cpu::pass::CPUMemoryAssignment>(
+        size_t(s_memory_pool_alignment), !m_reuse_memory);
     pass_manager.run_passes(m_function, false);
 
     // Store layouts assigned for arguments
@@ -1602,7 +1605,16 @@ void runtime::cpu::CPU_ExternalFunction::build()
         op_names.push_back(node->get_name());
         handler->second(this, node.get(), in, out);
 
-        bool disable_caching = computes_result(node.get()) || possibly_overwritten(node.get());
+        auto cacheable = true;
+        if (node->is_op())
+        {
+            auto op = std::static_pointer_cast<ngraph::op::Op>(node);
+            auto op_annotations = op->get_op_annotations();
+            cacheable = op_annotations->is_cacheable();
+        }
+
+        bool disable_caching =
+            !cacheable || computes_result(node.get()) || possibly_overwritten(node.get());
 
         vector<reference_wrapper<bool>> in_stale, out_stale;
         for (const auto& name : in_names)

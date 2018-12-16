@@ -665,3 +665,47 @@ TEST(cpu_test, convolution_large_padding)
     auto cpu_f = make_function();
     compare_backends(int_f, cpu_f, "INTERPRETER", "CPU", 1e-4, 1e-4);
 }
+
+TEST(cpu_test, memory_reuse_mxnet_densenet121)
+{
+    const std::string file_name("mxnet/mxnet_densenet121_inference_batch1_float32.json");
+    auto cpu_f = make_function(file_name);
+
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto cpu_results = execute(cpu_f, args, "CPU");
+
+    for (auto it = 0; it < 5; it++)
+    {
+        auto cpu_f_new = make_function(file_name);
+        auto cpu_results_new = execute(cpu_f_new, args, "CPU");
+        for (size_t i = 0; i < cpu_results.size(); i++)
+        {
+            EXPECT_TRUE(
+                test::all_close(cpu_results.at(i), cpu_results_new.at(i), 1.0e-4f, 1.0e-4f));
+        }
+    }
+
+    if (setenv("NGRAPH_REUSE_MEMORY", "1", 1) == -1)
+    {
+        return;
+    }
+    for (auto it = 0; it < 5; it++)
+    {
+        auto cpu_f_new_reuse = make_function(file_name);
+        auto cpu_results_new_reuse = execute(cpu_f_new_reuse, args, "CPU");
+        for (size_t i = 0; i < cpu_results.size(); i++)
+        {
+            EXPECT_TRUE(
+                test::all_close(cpu_results.at(i), cpu_results_new_reuse.at(i), 1.0e-4f, 1.0e-4f));
+        }
+    }
+}
