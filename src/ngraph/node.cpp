@@ -241,6 +241,16 @@ std::ostream& Node::write_long_description(std::ostream& out) const
             << arg->get_output_partial_shape(0) << "";
         sep = ", ";
     }
+    out << ") -> (";
+    sep = "";
+    for (const auto& o : get_outputs())
+    {
+        auto output = o.get_node();
+        out << sep << NodeDescription(*output, true) << ": "
+            << pretty_element_type(output->get_output_element_type(0))
+            << output->get_output_partial_shape(0) << "";
+        sep = ", ";
+    }
     out << ")";
 
     return out;
