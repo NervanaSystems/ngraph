@@ -142,6 +142,7 @@
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/runtime/reference/allreduce.hpp"
 #include "ngraph/runtime/reference/mpi_bcast.hpp"
+#include <mpi.h>
 #endif
 
 namespace ngraph
@@ -920,11 +921,7 @@ private:
             break;
         }
         case OP_TYPEID::MPI_Broadcast: {
-#ifdef NGRAPH_DISTRIBUTED
-            reference::mpi_bcast<T>(static_cast<const T*>(args[0]),
-                                    node.get_input_element_type(0),
-                                    static_cast<int>(shape_size(node.get_input_shape(0))));
-#endif
+            // we do not support this op in interpreter for now
             break;
         }
         case OP_TYPEID::Multiply:

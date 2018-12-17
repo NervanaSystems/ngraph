@@ -63,7 +63,7 @@
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
-#include "ngraph/op/mmpi_bcast.hpp"
+#include "ngraph/op/mpi_bcast.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/not.hpp"

@@ -59,26 +59,23 @@ TEST(distributed_${BACKEND_NAME}, mpi_bcast)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::MPI_Broadcast>(A), ParameterVector{A});
 
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto backend = runtime::Backend::create("CPU");
     int comm_size;
 
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 
-    auto v = vector<float>(4, 0);
+    auto v = vector<float>{1, 2, 3, 4};
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>(4, 0));
 
     int Rank_ID;
     MPI_Comm_rank(MPI_COMM_WORLD, &Rank_ID);
     if (Rank_ID==0) {
-       v = {1, 2, 3, 4};
+       copy_data(a, v);
     }
 
     auto result = backend->create_tensor(element::f32, shape);
 
-    std::transform(
-        v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
-
-    backend->call_with_validate(backend->compile(f), {result}, {a});
-    EXPECT_EQ(v, read_vector<float>(result));
+    backend->call_with_validate(backend->compile(f), {a}, {a});
+    EXPECT_EQ(v, read_vector<float>(a));
 }

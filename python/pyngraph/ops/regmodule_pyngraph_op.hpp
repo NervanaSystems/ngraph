@@ -54,6 +54,7 @@
 #include "pyngraph/ops/maximum.hpp"
 #include "pyngraph/ops/min.hpp"
 #include "pyngraph/ops/minimum.hpp"
+#include "pyngraph/ops/mpi_bcast.hpp"
 #include "pyngraph/ops/multiply.hpp"
 #include "pyngraph/ops/negative.hpp"
 #include "pyngraph/ops/not.hpp"

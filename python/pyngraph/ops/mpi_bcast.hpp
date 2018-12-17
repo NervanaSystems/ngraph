@@ -16,35 +16,8 @@
 
 #pragma once
 
-#ifdef NGRAPH_DISTRIBUTED
+#include <pybind11/pybind11.h>
 
-#include <mpi.h>
-#include "ngraph/type/element_type.hpp"
+namespace py = pybind11;
 
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace reference
-        {
-            template <typename T>
-            void mpi_bcast(T* arg, const element::Type element_type, int count)
-            {
-                auto data_type = MPI_FLOAT;
-
-                if (element_type == element::f32)
-                {
-                    data_type = MPI_FLOAT;
-                }
-                else if (element_type == element::f64)
-                {
-                    data_type = MPI_DOUBLE;
-                }
-
-                MPI_Bcast(arg, count, data_type, 0, MPI_COMM_WORLD);
-            }
-        }
-    }
-}
-
-#endif
+void regclass_pyngraph_op_MPI_Broadcast(py::module m);

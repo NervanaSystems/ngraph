@@ -53,6 +53,7 @@ set(SRC
     builder/max.cpp
     builder/max_pool.cpp
     builder/min.cpp
+    builder/mpi_bcast.cpp
     builder/one_hot.cpp
     builder/relu.cpp
     builder/pad.cpp
