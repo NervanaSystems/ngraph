@@ -13,20 +13,17 @@ the existing DL tools may need to build something new off a "stock" framework,
 or someting entirely from scratch. For this category of developer, we have 
 :doc:`documented several ways <../howto/execute>` you can incorporate built-in 
 compiler support for users of your framework; this includes out-of-box support 
-for things like Intel® MKL-DNN and PlaidML. 
+for things like Intel® MKL-DNN and PlaidML when your framework supports nGraph 
+as a "backend" or engine. 
 
-For such cases, some sort of :term:`bridge code` will need to be written so 
-that inputs into your framework can be read by the nGraph 
-:abbr:`Intermediate Representation (IR)`. It is assumed that framework developers 
-will make use of the :doc:`Core ops<../ops/about>` to create custom bridge code 
-connecting the two. 
-
-
-.. important:: It is important to note that nGraph does not provide an interface 
-   for "users" of frameworks (we cannot dictate how Tensorflow or MXNet presents 
-   things to their users, for example). Keep in mind that designing and documenting 
-   a user interface (UI) is entirely in the realm of the framework and beyond the 
-   scope of the nGraph Compiler stack.
+   .. important:: nGraph does not provide an interface for "users" of frameworks 
+      (for example, we cannot dictate or control how Tensorflow* or MXNet* presents 
+      interfaces to users). Please keep in mind that designing and documenting 
+      the :abbr:`User Interface (UI)` of step 3 above is entirely in the realm 
+      of the framework owner or developer and beyond the scope of the nGraph 
+      Compiler stack. However, any framework can be designed to make direct use 
+      of nGraph Compiler stack-based features and then expose an accompanying UI, 
+      output message, or other detail to a user.
  
 The nGraph :abbr:`IR Intermediate Representation` is format that can understand 
 inputs from a framework. Today, there are two primary tasks that can be accomplished 
@@ -202,7 +199,9 @@ increasing bandwidth demands on the Intel® Ultra-Path Interconnect (Intel® UPI
 This situation is exacerbated with larger number of sockets found in 4, 8, and 
 16-socket systems. We believe that users need to be aware of system level 
 optimizations in addition to framework specific configuration parameters to 
-achieve the best performance for NN workloads on CPU platforms. 
+achieve the best performance for NN workloads on CPU platforms. The nGraph 
+Compiler stack runs on transformers handled by Intel® Architecture (IA), and 
+thus can make more efficient use of the underlying hardware.
 
 
 .. _KMP options: https://software.intel.com/en-us/node/522691

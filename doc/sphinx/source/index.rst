@@ -24,12 +24,11 @@ Welcome
 See the latest :doc:`project/release-notes`. 
 
 nGraph is an open-source C++ library, compiler stack, and runtime accelerator 
-for software engineering in the :abbr:`Deep Learning (DL)` ecosystem. nGraph 
-simplifies development and makes it possible to design, write, compile, and
-deploy :abbr:`Deep Neural Network (DNN)`-based solutions that can be adapted and 
-deployed across many frameworks and backends. A more detailed explanation, as
-well as a high-level overview, can be found on our project :doc:`project/about`.  
-For more generalized discussion on the ecosystem, see the `ecosystem`_ document.
+for software and neural network engineering within the :abbr:`Deep Learning (DL)` 
+ecosystem. nGraph simplifies development and makes it possible to design, write, 
+compile, and deploy :abbr:`Deep Neural Network (DNN)`-based solutions that can 
+be adapted and deployed across many frameworks and backends. See our project 
+:doc:`project/about` and `ecosystem`_ for more details.
 
 .. figure:: graphics/ngcompiler-ecosystem.png
    :width: 650px
@@ -51,9 +50,11 @@ We have many documentation pages to help you get started.
    * `TensorFlow bridge to nGraph`_ 
    * `Compiling MXNet with nGraph`_
    
-   .. note:: Note that the ``pip`` packages work only with Ubuntu 16.04 
-      or greater and Intel® Xeon® CPUs. CPUs without AVX512 will not run 
-      these packages; the alternative is to build from source: 
+   .. note:: Note that the ``pip`` package option works only with Ubuntu 16.04 
+      or greater and Intel® Xeon® CPUs. CPUs without Intel® Advanced Vector Extensions 
+      512 (Intel® AVX-512) will not run these packages; the alternative is to 
+      build from source. Wider support for other CPUs will be offered starting 
+      in early 2019.
 
 * **Data scientists** interested in the `ONNX`_ format will find the 
   `nGraph ONNX companion tool`_ of interest. 
@@ -116,7 +117,7 @@ Contents
    :maxdepth: 1
    :caption: Core Documentation
 
-   buildlb.rst
+   buildlb.rst   
    framework-integration-guides.rst
    frameworks/validation.rst
    frameworks/index.rst
@@ -129,7 +130,7 @@ Contents
    distr/index.rst
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Project Metadata
 
    project/index.rst

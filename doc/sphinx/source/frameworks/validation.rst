@@ -4,7 +4,7 @@
 Validated Models and Workloads
 ##############################
 
-We validated performance[#1]_ for the following TensorFlow\* and MXNet\* workloads:
+We validated performance for the following TensorFlow\* and MXNet\* workloads:
 
 
 TensorFlow 

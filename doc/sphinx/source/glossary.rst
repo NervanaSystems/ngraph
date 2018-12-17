@@ -25,9 +25,10 @@ Glossary
 
    framework
 
-      The software component built for the ingestion of data in a 
-      machine-learning environment; TensorFlow\*, PaddlePaddle\*, MXNet\*, 
-      PyTorch\*, and Caffe\* are all examples of frameworks.
+      A higher-level and user-facing software component which includes 
+      the ingestion of data in a machine-learning environment: TensorFlow\*, 
+      PaddlePaddle\*, MXNet\*, PyTorch\*, and Caffe\* are all examples of 
+      frameworks.
 
    function graph
 
