@@ -35,12 +35,6 @@ if (${CMAKE_VERSION} VERSION_LESS 3.6)
         PATCH_COMMAND ""
         CONFIGURE_COMMAND ./autogen.sh && ./configure --disable-shared CXXFLAGS=-fPIC
         BUILD_COMMAND ${MAKE}
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
         EXCLUDE_FROM_ALL TRUE
         )
 else()
@@ -56,12 +50,6 @@ else()
         PATCH_COMMAND ""
         CONFIGURE_COMMAND ./autogen.sh && ./configure --disable-shared CXXFLAGS=-fPIC
         BUILD_COMMAND ${MAKE}
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
         EXCLUDE_FROM_ALL TRUE
         )
 endif()

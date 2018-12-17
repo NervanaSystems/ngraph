@@ -45,12 +45,6 @@ if (${CMAKE_VERSION} VERSION_LESS 3.6)
                         -DPROTOBUF_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
                         -DPROTOBUF_SRC_ROOT_FOLDER=${Protobuf_SRC_ROOT_FOLDER}
                         -DONNX_ML=TRUE
-            TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/tmp"
-            STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/stamp"
-            DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/download"
-            SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/src"
-            BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/bin"
-            INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx"
             EXCLUDE_FROM_ALL TRUE
     )
 else()
@@ -68,12 +62,6 @@ else()
                         -DProtobuf_LIBRARY=${Protobuf_LIBRARY}
                         -DProtobuf_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
                         -DONNX_ML=TRUE
-            TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/tmp"
-            STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/stamp"
-            DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/download"
-            SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/src"
-            BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx/bin"
-            INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/onnx"
             EXCLUDE_FROM_ALL TRUE
     )
 endif()
