@@ -1549,6 +1549,75 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place)
     EXPECT_EQ((vector<float>{10, 12, 14, 16, 18, 20, 22, 24}), read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place_twice)
+{
+    Shape shape_a{4, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_r{1, 4};
+    auto B = make_shared<op::Slice>(A, Coordinate{0, 0}, Coordinate{2, 4});
+    auto D = make_shared<op::Slice>(B, Coordinate{1, 0}, Coordinate{2, 4});
+    auto E = make_shared<op::Slice>(A, Coordinate{2, 0}, Coordinate{3, 4});
+    auto r = make_shared<op::Add>(D, E);
+    auto f = make_shared<Function>(r, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call_with_validate(backend->compile(f), {result}, {a});
+    EXPECT_EQ((vector<float>{14, 16, 18, 20}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place_twice_overlap)
+{
+    Shape shape_a{5, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_r{2, 4};
+    auto B = make_shared<op::Slice>(A, Coordinate{1, 0}, Coordinate{5, 4});
+    auto D = make_shared<op::Slice>(B, Coordinate{1, 0}, Coordinate{3, 4});
+    auto E = make_shared<op::Slice>(B, Coordinate{2, 0}, Coordinate{4, 4});
+    auto r = make_shared<op::Add>(D, E);
+    auto f = make_shared<Function>(r, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a,
+              vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call_with_validate(backend->compile(f), {result}, {a});
+    EXPECT_EQ((vector<float>{22, 24, 26, 28, 30, 32, 34, 36}), read_vector<float>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_axis_0_in_place_with_reshape)
+{
+    Shape shape_a{4, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_r{2, 4};
+    auto B = make_shared<op::Slice>(A, Coordinate{1, 0}, Coordinate{4, 5});
+    auto C = make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{5, 3});
+    auto D = make_shared<op::Slice>(C, Coordinate{1, 0}, Coordinate{5, 3});
+    auto E = make_shared<op::Reshape>(D, AxisVector{1, 0}, Shape{3, 4});
+    auto r = make_shared<op::Slice>(E, Coordinate{1, 0}, Coordinate{3, 4});
+    auto f = make_shared<Function>(r, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a,
+              vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    backend->call_with_validate(backend->compile(f), {result}, {a});
+    EXPECT_EQ((vector<float>{12, 13, 14, 15, 17, 18, 19, 20}), read_vector<float>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, slice_matrix_strided)
 {
     Shape shape_a{4, 4};
