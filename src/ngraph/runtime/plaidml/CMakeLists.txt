@@ -53,6 +53,7 @@ set(SRC
     plaidml_pass_implicit_broadcast.cpp
     plaidml_pass_lower_convolutions.cpp
     plaidml_pass_replicate_combination.cpp
+    plaidml_pass_replicate_elision.cpp
     plaidml_pass_reshape_elision.cpp
     plaidml_pass_winograd.cpp
     plaidml_tensor.cpp
