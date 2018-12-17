@@ -76,6 +76,21 @@ something like:
    export LD_LIBRARY_PATH=path/to/ngraph_dist/lib/
 
 
+
+FMV
+===
+
+FMV stands for :abbr:`Function Multi-Versioning`, and it can also provide a 
+number of generic ways to patch or bring architecture-based optimizations to 
+the :abbr:`Operating System (OS)` that is handling your ML environment. See 
+the `GCC wiki for details`_.
+
+If your nGraph build is a Neural Network configured on Clear Linux* OS 
+for Intel® Architecture, and it includes at least one older CPU, the 
+`following article may be helpful`_.
+
+
+
 Training Deep Neural Networks
 ==============================
 
@@ -183,7 +198,7 @@ Intel® Xeon® processor-based platforms, which is a key requirement for
 many kinds of inference-engine computations. See the next section on NUMA 
 performance to learn more about this performance feature available to systems 
 utilizing nGraph. 
-
+   
 
 NUMA performance 
 ~~~~~~~~~~~~~~~~~
@@ -204,7 +219,11 @@ Compiler stack runs on transformers handled by Intel® Architecture (IA), and
 thus can make more efficient use of the underlying hardware.
 
 
+
+
 .. _KMP options: https://software.intel.com/en-us/node/522691
 .. _MKL-DNN: https://github.com/intel/mkl-dnn
 .. _gnu.org site: https://gcc.gnu.org/onlinedocs/libgomp/Environment-Variables.html
 .. _Movidius: https://www.movidius.com/
+.. _GCC wiki for details: https://gcc.gnu.org/wiki/FunctionMultiVersioning
+.. _following article may be helpful: https://clearlinux.org/documentation/clear-linux/tutorials/fmv
