@@ -35,33 +35,17 @@ if(NOT DEFINED LLVM_SHA1_HASH)
     endif()
 endif()
 
-# The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
-if(${CMAKE_VERSION} VERSION_LESS 3.2)
-    ExternalProject_Add(
-        ext_llvm
-        URL ${LLVM_TARBALL_URL}
-        URL_HASH SHA1=${LLVM_SHA1_HASH}
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        UPDATE_COMMAND ""
-        DOWNLOAD_NO_PROGRESS TRUE
-        EXCLUDE_FROM_ALL TRUE
-        )
-else()
-    ExternalProject_Add(
-        ext_llvm
-        URL ${LLVM_TARBALL_URL}
-        URL_HASH SHA1=${LLVM_SHA1_HASH}
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-        UPDATE_COMMAND ""
-        DOWNLOAD_NO_PROGRESS TRUE
-        BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/ext_llvm-prefix/src/ext_llvm/lib/libLLVMCore.a"
-        EXCLUDE_FROM_ALL TRUE
-        )
-endif()
+ExternalProject_Add(
+    ext_llvm
+    URL ${LLVM_TARBALL_URL}
+    URL_HASH SHA1=${LLVM_SHA1_HASH}
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    UPDATE_COMMAND ""
+    DOWNLOAD_NO_PROGRESS TRUE
+    EXCLUDE_FROM_ALL TRUE
+    )
 
 ExternalProject_Get_Property(ext_llvm SOURCE_DIR)
 
