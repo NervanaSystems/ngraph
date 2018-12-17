@@ -63,7 +63,7 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         ngraph::pass::Manager pass_manager;
         pass_manager.register_pass<runtime::hybrid::pass::AssignPlacement>(m_backend_list);
         pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
-        pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png");
+        // pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png");
         pass_manager.run_passes(instance.m_function);
 
         // Split function to sub_functions
@@ -110,14 +110,10 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
     node_map_t map_node_to_tensor;
     for (size_t i = 0; i < inputs.size(); ++i)
     {
-        NGRAPH_INFO << "input[" << i << "] " << instance.m_function->get_parameters()[i]->get_name()
-                    << " " << get_placement_name(inputs[i].get());
         map_node_to_tensor[instance.m_function->get_parameters()[i]] = inputs[i];
     }
     for (size_t i = 0; i < outputs.size(); ++i)
     {
-        NGRAPH_INFO << "output[" << i << "] " << instance.m_function->get_results()[i]->get_name()
-                    << " " << get_placement_name(outputs[i].get());
         map_node_to_tensor[instance.m_function->get_results()[i]] = outputs[i];
     }
 
@@ -127,24 +123,20 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
         // Init backend
         size_t placement = runtime::hybrid::get_colocated_function_placement(sub_function);
         auto backend = m_backend_list[placement];
-        NGRAPH_INFO << get_placement_name(backend.get());
 
         // Prepare parameter Tensors
         vector<shared_ptr<runtime::Tensor>> parameters;
         for (const shared_ptr<op::Parameter>& parameter_node : sub_function->get_parameters())
         {
-            NGRAPH_INFO << parameter_node->get_name();
             auto it = map_node_to_tensor.find(parameter_node);
             if (it != map_node_to_tensor.end())
             {
                 if (it->second->get_parent() == backend.get())
                 {
-                    NGRAPH_INFO << "parameter on same backend";
                     parameters.push_back(it->second);
                 }
                 else
                 {
-                    NGRAPH_INFO << "input tensor on wrong backend";
                     auto parameter = backend->create_tensor(parameter_node->get_element_type(),
                                                             parameter_node->get_shape());
                     parameter->copy_from(*(it->second));
@@ -153,7 +145,7 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
             }
             else
             {
-                NGRAPH_INFO << "THIS IS NOT RIGHT";
+                // Handle temporary tensors that go between subgraphs
                 auto result_node = instance.m_map_parameter_to_result.at(parameter_node);
                 auto result = map_node_to_tensor.at(result_node);
                 auto parameter = backend->create_tensor(parameter_node->get_element_type(),
@@ -174,12 +166,10 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
             {
                 if (it->second->get_parent() == backend.get())
                 {
-                    NGRAPH_INFO << "result on same backend";
                     results.push_back(it->second);
                 }
                 else
                 {
-                    NGRAPH_INFO << "output tensor on wrong backend";
                     auto result = backend->create_tensor(result_node->get_element_type(),
                                                          result_node->get_shape());
                     results.push_back(result);
@@ -188,7 +178,7 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
             }
             else
             {
-                NGRAPH_INFO;
+                // Handle temporary tensors that go between subgraphs
                 auto result = backend->create_tensor(result_node->get_element_type(),
                                                      result_node->get_shape());
                 map_node_to_tensor[result_node] = result;
@@ -197,9 +187,7 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
         }
 
         // Call
-        NGRAPH_INFO << "call";
         backend->call(sub_function, results, parameters);
-        NGRAPH_INFO << "done with call";
 
         // Need to copy any results to the correct device
         // backend_list[0] is the "default" backend and is the backend which created the
@@ -207,7 +195,6 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
         backend = m_backend_list[0];
         for (const auto& p : copy_back)
         {
-            NGRAPH_INFO << "copy results back";
             p.second->copy_from(*p.first);
         }
     }
@@ -241,7 +228,7 @@ string runtime::hybrid::HybridBackend::get_placement_name(const runtime::Backend
     }
     else if (dynamic_cast<const runtime::gpu::GPU_Backend*>(t) != nullptr)
     {
-        rc = "GPU_Backend Backend";
+        rc = "GPU_Backend";
     }
     return rc;
 }
@@ -252,7 +239,6 @@ size_t runtime::hybrid::HybridBackend::get_placement(const runtime::Tensor* t)
     {
         if (t->get_parent() == be.get())
         {
-            NGRAPH_INFO << "found tensor parent";
             return index;
         }
         index++;

@@ -39,7 +39,6 @@ bool runtime::hybrid::pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
             auto parent = node->get_arguments().at(0);
             NGRAPH_INFO << "GetOutputElement input node " << *parent;
             NGRAPH_INFO << "GetOutputElement input placement " << parent->get_placement_index();
-        
         }
         if (backend->is_supported(*node))
         {

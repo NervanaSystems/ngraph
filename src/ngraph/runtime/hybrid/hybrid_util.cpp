@@ -240,10 +240,10 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
         }
         auto sub_function = make_shared<Function>(res_vector, par_vector);
         sub_functions.push_back(sub_function);
-        ngraph::pass::Manager pass_manager;
-        pass_manager.register_pass<ngraph::pass::VisualizeTree>("subgraph_" + to_string(index++) +
-                                                                ".png");
-        pass_manager.run_passes(sub_function);
+        // ngraph::pass::Manager pass_manager;
+        // pass_manager.register_pass<ngraph::pass::VisualizeTree>("subgraph_" + to_string(index++) +
+        //                                                         ".png");
+        // pass_manager.run_passes(sub_function);
     }
 
     return make_pair(sub_functions, map_parameter_to_result);
@@ -253,17 +253,8 @@ static map<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     insert_result_parameter_split(const shared_ptr<Node>& src_node,
                                   const shared_ptr<Node>& dst_node)
 {
-    // if (src_node->get_output_size() != 1)
-    // {
-    //     throw ngraph_error("Multiple output per op not supported in graph partition yet.");
-    // }
-
-    NGRAPH_INFO << src_node->get_output_size();
-    NGRAPH_INFO << "source node " << *src_node;
-    NGRAPH_INFO << "target node " << *dst_node;
     map<shared_ptr<op::Result>, shared_ptr<op::Parameter>> result_map;
 
-    NGRAPH_INFO << "dst_node has " << dst_node->get_inputs().size() << " inputs";
     for (descriptor::Input& input : dst_node->get_inputs())
     {
         if (input.get_output().get_node() == src_node)
@@ -360,10 +351,10 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
         }
         auto sub_function = make_shared<Function>(res_vector, par_vector);
         sub_functions.push_back(sub_function);
-        ngraph::pass::Manager pass_manager;
-        pass_manager.register_pass<ngraph::pass::VisualizeTree>("subgraph_" + to_string(index++) +
-                                                                ".png");
-        pass_manager.run_passes(sub_function);
+        // ngraph::pass::Manager pass_manager;
+        // pass_manager.register_pass<ngraph::pass::VisualizeTree>("subgraph_" + to_string(index++) +
+        //                                                         ".png");
+        // pass_manager.run_passes(sub_function);
     }
 
     return make_pair(sub_functions, map_parameter_to_result);
