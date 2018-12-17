@@ -20,6 +20,10 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed.")
 endif()
 
+if("${CMAKE_GENERATOR}" STREQUAL "Ninja")
+    message(FATAL_ERROR "Ninja generator not supported.")
+endif()
+
 include(cmake/Modules/git_tags.cmake)
 
 NGRAPH_GET_VERSION_LABEL()
