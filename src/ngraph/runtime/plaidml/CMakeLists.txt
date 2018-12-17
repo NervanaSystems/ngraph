@@ -41,12 +41,14 @@ set(SRC
     plaidml_ops_pool.cpp
     plaidml_ops_reduce.cpp
     plaidml_ops_replace_slice.cpp
+    plaidml_ops_replicate.cpp
     plaidml_ops_reverse.cpp
     plaidml_ops_slice.cpp
     plaidml_ops_softmax.cpp
     plaidml_ops_tile.cpp
     plaidml_ops_transcendental.cpp
     plaidml_ops_winograd.cpp
+    plaidml_pass_concat_elision.cpp
     plaidml_pass_explicit_logicals.cpp
     plaidml_pass_implicit_broadcast.cpp
     plaidml_pass_lower_convolutions.cpp

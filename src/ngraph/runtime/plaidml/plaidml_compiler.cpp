@@ -30,6 +30,7 @@
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 #include "ngraph/runtime/plaidml/plaidml_logger.hpp"
+#include "ngraph/runtime/plaidml/plaidml_pass_concat_elision.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_explicit_logicals.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_implicit_broadcast.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_lower_convolutions.hpp"
@@ -94,6 +95,7 @@ std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     // backprop
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ExplicitLogicals>();
+    pass_manager.register_pass<ngraph::runtime::plaidml::pass::ConcatElision>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ImplicitBroadcast>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReshapeElision>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::LowerConvolutions>();
