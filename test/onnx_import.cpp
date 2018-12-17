@@ -51,8 +51,7 @@ namespace
         return file_content;
     }
 
-}   // anonymous namespace
-
+} // anonymous namespace
 
 TEST(onnx, model_add_abc)
 {
