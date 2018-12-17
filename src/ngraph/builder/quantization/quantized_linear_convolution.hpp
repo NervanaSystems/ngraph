@@ -39,6 +39,24 @@ namespace ngraph
                                            std::shared_ptr<Node> filter_zero_point,
                                            std::shared_ptr<Node> output_scale,
                                            std::shared_ptr<Node> output_zero_point);
+
+
+            std::shared_ptr<Node>
+                QuantizedLinearConvolutionBias(std::shared_ptr<Node> input,
+                                           std::shared_ptr<Node> filter,
+                                           std::shared_ptr<Node> bias,
+                                           const Strides& window_movement_strides,
+                                           const Strides& window_dilation_strides,
+                                           const CoordinateDiff& padding_below,
+                                           const CoordinateDiff& padding_above,
+                                           const Strides& data_dilation_strides,
+                                           std::shared_ptr<Node> input_scale,
+                                           std::shared_ptr<Node> input_zero_point,
+                                           std::shared_ptr<Node> filter_scale,
+                                           std::shared_ptr<Node> filter_zero_point,
+                                           std::shared_ptr<Node> output_scale,
+                                           std::shared_ptr<Node> output_zero_point);
+
         }
     }
 }

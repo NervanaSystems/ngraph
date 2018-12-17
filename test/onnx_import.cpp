@@ -1545,6 +1545,6 @@ TEST(onnx, model_lin_quant_resnet50)
 
     Inputs inputs{read_binary_file<float>("onnx/final_int8_resnet50_input0.bin")};
     Outputs expected_output{read_binary_file<float>("onnx/final_int8_resnet50_output0.bin")};
-    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    Outputs outputs{execute(function, inputs, "CPU")};
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }

@@ -42,7 +42,7 @@ namespace onnxruntime
             ngraph::Shape y_scale_shape = y_scale->get_shape();
             ngraph::Shape y_zero_point_shape = y_zero_point->get_shape();
             ngraph::AxisSet axis_set{
-                ngraph::onnx_import::reshape::get_default_axis_vector(x_shape.size())};
+                ngraph::onnx_import::reshape::get_default_axis_vector(0)};
 
             try
             {
