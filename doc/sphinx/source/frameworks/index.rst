@@ -49,11 +49,11 @@ popular frameworks:
    .. important:: nGraph does not provide an interface for "users" of frameworks 
       (for example, we cannot dictate or control how Tensorflow* or MXNet* presents 
       interfaces to users). Please keep in mind that designing and documenting 
-      the :abbr:`User Interface (UI)` of step 3 above is entirely in the realm 
-      of the framework owner or developer and beyond the scope of the nGraph 
-      Compiler stack. However, any framework can be designed to make direct use 
-      of nGraph Compiler stack-based features and then expose an accompanying UI, 
-      output message, or other detail to a user.
+      the :abbr:`User Interface (UI)` is entirely in the realm of the framework owner 
+      or developer and beyond the scope of the nGraph Compiler stack. However, any 
+      framework can be designed to make direct use of nGraph Compiler stack-based 
+      features and then expose an accompanying UI, output message, or other detail 
+      to a user.
 
 Clearly, one challenge of the framework developer is to differentiate from 
 the pack by providing a means for the data scientist to obtain reproducible 
