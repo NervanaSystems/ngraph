@@ -11,7 +11,7 @@ Enabling Deep Learning paradigms
 Framework architects or engineers who can't quite find what they need among 
 the existing DL tools may need to build something new off a "stock" framework, 
 or someting entirely from scratch. For this category of developer, we have 
-:doc:`documented several ways <../howto/execute>` you can incorporate built-in 
+:doc:`documented several ways <../howto/index>` you can incorporate built-in 
 compiler support for users of your framework; this includes out-of-box support 
 for things like Intel® MKL-DNN and PlaidML when your framework supports nGraph 
 as a "backend" or engine. 
