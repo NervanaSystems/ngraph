@@ -27,7 +27,7 @@ namespace onnxruntime
     {
         void register_custom_ops()
         {
-            constexpr const char* ms_domain = "com.microsoft";
+            constexpr char[] ms_domain = "com.microsoft";
 
             ngraph::onnx_import::register_operator(
                 "DequantizeLinear", 9, ms_domain, dequantize_linear);
