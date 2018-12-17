@@ -68,6 +68,7 @@ class Computation(object):
         self.function = ng_function
         self.parameters = ng_function.get_parameters()
         self.results = ng_function.get_results()
+        self.handle = self.runtime.backend.compile(self.function)
 
         self.tensor_views = []  # type: List[Tensor]
         for parameter in self.parameters:
@@ -92,7 +93,7 @@ class Computation(object):
                 value = np.array(value)
             Computation._write_ndarray_to_tensor_view(value, tensor_view)
 
-        self.runtime.backend.call(self.function, self.result_views, self.tensor_views)
+        self.runtime.backend.call(self.handle, self.result_views, self.tensor_views)
 
         results = []
         for result_view in self.result_views:

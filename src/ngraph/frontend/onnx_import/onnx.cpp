@@ -87,6 +87,18 @@ namespace ngraph
             OperatorsBridge::register_operator(name, version, domain, std::move(fn));
         }
 
+        std::set<std::string> get_supported_operators(std::int64_t version,
+                                                      const std::string& domain)
+        {
+            OperatorSet op_set{OperatorsBridge::get_operator_set(version, domain)};
+            std::set<std::string> op_list{};
+            for (const auto& op : op_set)
+            {
+                op_list.emplace(op.first);
+            }
+            return op_list;
+        }
+
     } // namespace onnx_import
 
 } // namespace ngraph

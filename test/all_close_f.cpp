@@ -150,9 +150,12 @@ protected:
 
 TEST_P(all_close_f_param_test, test_boundaries)
 {
-    // Print short string documenting which test is being run
-    std::cout << "[   INFO   ] Test params: (" << expected << ", " << mantissa_bits << ", "
-              << tolerance_bits << ")\n";
+    if (std::getenv("NGRAPH_GTEST_INFO") != nullptr)
+    {
+        // Print short string documenting which test is being run
+        std::cout << "[   INFO   ] Test params: (" << expected << ", " << mantissa_bits << ", "
+                  << tolerance_bits << ")\n";
+    }
 
     // Format verbose info to only print out in case of test failure
     stringstream ss;
@@ -190,9 +193,6 @@ TEST_P(all_close_f_param_test, test_boundaries)
         << ss.str();
 }
 
-// Avoid warning with how gtest defines INSTANTIATE_TEST_CASE_P
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-variable-declarations"
 INSTANTIATE_TEST_CASE_P(
     test_simple_floats_with_range_of_precisions,
     all_close_f_param_test,
@@ -213,7 +213,6 @@ INSTANTIATE_TEST_CASE_P(
                      testing::Values(8,
                                      24), // For broader range of testing use testing::Range(8, 25)
                      testing::Range(0, 5)), );
-#pragma GCC diagnostic pop
 
 class all_close_f_double_param_test : public testing::TestWithParam<::std::tuple<double, int>>
 {
@@ -282,8 +281,11 @@ protected:
 
 TEST_P(all_close_f_double_param_test, test_boundaries)
 {
-    // Print short string documenting which test is being run
-    std::cout << "[   INFO   ] Test params: (" << expected << ", " << tolerance_bits << ")\n";
+    if (std::getenv("NGRAPH_GTEST_INFO") != nullptr)
+    {
+        // Print short string documenting which test is being run
+        std::cout << "[   INFO   ] Test params: (" << expected << ", " << tolerance_bits << ")\n";
+    }
 
     // Format verbose info to only print out in case of test failure
 
@@ -316,9 +318,6 @@ TEST_P(all_close_f_double_param_test, test_boundaries)
         << ss.str();
 }
 
-// Avoid warning with how gtest defines INSTANTIATE_TEST_CASE_P
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-variable-declarations"
 INSTANTIATE_TEST_CASE_P(
     test_simple_doubles_with_range_of_precisions,
     all_close_f_double_param_test,
@@ -326,7 +325,6 @@ INSTANTIATE_TEST_CASE_P(
         testing::Values(
             0., -0., 1., -1., 10., -10., 0.75, -0.75, 0.5, -0.5, 0.25, -0.25, 0.125, -0.125),
         testing::Range(0, 17)), );
-#pragma GCC diagnostic pop
 
 // Test the exact bounds near +0.f
 //

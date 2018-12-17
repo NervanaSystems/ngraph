@@ -45,6 +45,7 @@
 #include <CPP/topology.hpp>
 
 #include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/any_all_replacement.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -73,6 +74,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
@@ -135,6 +137,21 @@ static void arguments_check(const shared_ptr<Node>& op, size_t input, size_t out
         os << "Operation \"" << op->description() << "\" input and output sizes mismatch."
            << " Expected input size=" << input << ", provided=" << op->get_input_size()
            << ". Expected output size=" << output << ", provided=" << op->get_output_size();
+        throw invalid_argument(os.str());
+    }
+}
+
+static void
+    memory_size_check(size_t memory_size, const shared_ptr<Node>& node, const string& function_name)
+{
+    const size_t tensor_size = shape_size(node->get_shape()) * node->get_element_type().size();
+
+    if (memory_size != tensor_size)
+    {
+        ostringstream os;
+        os << "IntelGPU backend failed memory check. In \"" << function_name << "\" with Node \""
+           << node->get_name() << "\" and " << node->get_shape() << " mismatched memory sizes "
+           << tensor_size << " and " << memory_size;
         throw invalid_argument(os.str());
     }
 }
@@ -381,12 +398,12 @@ shared_ptr<runtime::Tensor> runtime::intelgpu::IntelGPUBackend::create_tensor(
         element_type, shape, *ocl_engine, memory_pointer);
 }
 
-bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 {
     FunctionInstance& instance = ocl_networks[func];
     if (instance.ocl_network != nullptr)
     {
-        return true;
+        return func;
     }
 
     set<cldnn::primitive_id> func_output_names;
@@ -401,6 +418,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     {
         ngraph::pass::Manager pass_manager;
 
+        pass_manager.register_pass<ngraph::pass::AnyAllReplacement>();
         pass_manager.register_pass<ngraph::pass::NopElimination>();
         pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -911,7 +929,10 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             }
             else
             {
-                do_equal_propagation(topology, get_input_name(op), get_output_name(op));
+                const cldnn::tensor new_shape =
+                    intelgpu_space::create_cldnn_tensor(get_output_shape(op));
+                const cldnn::reshape reshape_op(get_output_name(op), get_input_name(op), new_shape);
+                topology.add(reshape_op);
             }
             break;
         }
@@ -962,7 +983,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
 
             const shared_ptr<op::Reduce> red_op = static_pointer_cast<op::Reduce>(op);
             const AxisSet& axis = red_op->get_reduction_axes();
-            vector<shared_ptr<Function>> func = red_op->get_functions();
+            vector<shared_ptr<Function>> f = red_op->get_functions();
 
             // Empty axis is not a case for do_equal_propagation()
             do_reduce_func_call(topology,
@@ -974,7 +995,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
                                 get_output_shape(op),
                                 get_output_type(op),
                                 axis,
-                                func);
+                                f);
             break;
         }
         case OP_TYPEID::Abs:
@@ -1692,7 +1713,10 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
             topology.add(lrn);
             break;
         }
+        case OP_TYPEID::All:
         case OP_TYPEID::AllReduce:
+        case OP_TYPEID::Any:
+        case OP_TYPEID::BroadcastLike:
         case OP_TYPEID::FunctionCall:
         case OP_TYPEID::Dequantize:
         case OP_TYPEID::Quantize:
@@ -1700,10 +1724,12 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::ReverseSequence:
+        case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::SelectAndScatter:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::TopK:
+        case OP_TYPEID::EmbeddingLookup:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");
@@ -1730,7 +1756,7 @@ bool runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)
     instance.ocl_network =
         make_shared<cldnn::network>(*ocl_engine, topology, network_build_options);
 
-    return true;
+    return func;
 }
 
 bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
@@ -1748,15 +1774,11 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
         mem_before_call = get_max_memory_rss();
         timer_compile.start();
     }
-    validate_call(func, outputs, inputs);
 
     FunctionInstance& instance = ocl_networks[func];
     if (instance.ocl_network == nullptr)
     {
-        if (!compile(func))
-        {
-            return false;
-        }
+        throw runtime_error("compile() must be called before call().");
     }
 
     if (m_profile_enable)
@@ -1788,11 +1810,22 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     // we try to match them by index number in vectors.
     for (size_t i = 0; i < func->get_output_size(); i++)
     {
+        const shared_ptr<Node>& dst_node = func->get_output_op(i);
+        const size_t dst_shape_size = shape_size(dst_node->get_shape());
+
+        // We should not touch destination memory if it is not existed
+        if (!dst_shape_size)
+        {
+            continue;
+        }
+
         shared_ptr<runtime::intelgpu::IntelGPUTensorView> ngraph_res =
             static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(outputs[i]);
-        const string& tensor_name = get_input_name(func->get_output_op(i));
-
+        const string& tensor_name = get_input_name(dst_node);
         auto result_memory = result.at(tensor_name).get_memory().pointer<char>();
+
+        memory_size_check(result_memory.size(), dst_node, func->get_name());
+
         ngraph_res->write(result_memory.data(), 0, result_memory.size());
     }
 

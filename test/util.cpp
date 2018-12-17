@@ -100,6 +100,10 @@ TEST(DISABLED_util, dump)
     dump(cout, text.data(), text.size());
 }
 
+#ifdef _WIN32
+#include "windows.h"
+#define usleep(a) Sleep(a / 1000)
+#endif
 TEST(util, stopwatch)
 {
     stopwatch t1;

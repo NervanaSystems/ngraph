@@ -37,6 +37,7 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/quantize.hpp"
@@ -58,6 +59,7 @@
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
+#include "ngraph/runtime/cpu/op/update_slice.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -171,6 +173,16 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::GetOutputElement)
+                {
+                    auto goe = static_cast<op::GetOutputElement*>(node);
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    op_annotations->add_in_place_oi_pair({0, goe->get_n(), false});
+                    goe->set_op_annotations(op_annotations);
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::ConvolutionAdd)
                 {
                     auto convolution = static_cast<op::ConvolutionAdd*>(node);
@@ -280,7 +292,8 @@ namespace ngraph
                         data_dilated = data_dilated || (s != 1);
                     }
 
-                    if (!data_dilated && data_rank == 4 && delta_rank == 4 &&
+                    if (!data_dilated && data_rank == delta_rank &&
+                        (data_rank == 4 || data_rank == 5) &&
                         node->get_input_element_type(0) == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -425,6 +438,21 @@ namespace ngraph
                         op_annotations->add_in_place_oi_pair({0, 0, true});
                     }
                     replace_slice->set_op_annotations(op_annotations);
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::UpdateSlice)
+                {
+                    auto update_slice = static_cast<op::UpdateSlice*>(node);
+
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    if (get_user_count(node->get_argument(0).get()) == 1)
+                    {
+                        // Safe to overwrite input
+                        op_annotations->add_in_place_oi_pair({0, 0, true});
+                    }
+                    update_slice->set_op_annotations(op_annotations);
                 }
 
                 template <>
@@ -838,6 +866,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Slice), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Slice>},
     {TI(ngraph::op::ReplaceSlice),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReplaceSlice>},
+    {TI(ngraph::op::UpdateSlice),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::UpdateSlice>},
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ConvolutionAdd>},
     {TI(ngraph::op::QuantizedConvolutionRelu),
@@ -853,6 +883,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Quantize>},
     {TI(ngraph::op::Dequantize),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Dequantize>},
+    {TI(ngraph::op::GetOutputElement),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::GetOutputElement>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

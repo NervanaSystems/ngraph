@@ -102,18 +102,6 @@ namespace ngraph
                     {
                         return false;
                     }
-                    // Temporarily disable MKLDNN for large paddings due to
-                    // a bug in v0.16 - MKFDNN-982
-                    for (auto s : convolution->get_padding_below())
-                    {
-                        if (s >= 7)
-                            return false;
-                    }
-                    for (auto s : convolution->get_padding_above())
-                    {
-                        if (s >= 7)
-                            return false;
-                    }
 
                     return true;
                 }

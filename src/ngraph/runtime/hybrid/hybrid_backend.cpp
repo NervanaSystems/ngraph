@@ -16,8 +16,9 @@
 
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/pass/assign_placement.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/hybrid/hybrid_util.hpp"
+#include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 using namespace ngraph;
@@ -65,7 +66,7 @@ shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
     return it->second->create_tensor(element_type, shape, memory_pointer);
 }
 
-bool runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
 {
     if (m_function_map.find(func) == m_function_map.end())
     {
@@ -80,8 +81,8 @@ bool runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
         instance.m_function = clone_function(*func);
 
         // Run placement pass
-        pass::Manager pass_manager;
-        pass_manager.register_pass<pass::AssignPlacement>(backend_list);
+        ngraph::pass::Manager pass_manager;
+        pass_manager.register_pass<runtime::hybrid::pass::AssignPlacement>(backend_list);
         pass_manager.run_passes(instance.m_function);
 
         // Split function to sub_functions
@@ -93,13 +94,19 @@ bool runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
         for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
         {
             size_t placement = get_colocated_function_placement_size(sub_function);
-            auto backend =
-                m_backend_list[(placement - 1)]; // (placement-1) as 0 is default placement
+            auto backend = m_backend_list[placement];
             backend.second->compile(sub_function);
+
+            // Compile will replace nodes so we need to make one more pass through all
+            // ops to reset placement
+            for (auto op : sub_function->get_ops())
+            {
+                op->set_placement_index(placement);
+            }
         }
     }
 
-    return true;
+    return func;
 }
 
 bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
@@ -108,12 +115,11 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
 {
     // Get FunctionInstance
     bool rc = true;
-    compile(func);
 
     auto it = m_function_map.find(func);
     if (it == m_function_map.end())
     {
-        throw runtime_error("Unable to compile hybrid backend");
+        throw runtime_error("compile() must be called before call().");
     }
     FunctionInstance& instance = it->second;
 
@@ -133,8 +139,7 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
     {
         // Init backend
         size_t placement = get_colocated_function_placement_size(sub_function);
-        // (placement-1) as 0 is default placement
-        auto backend = m_backend_list[(placement - 1)].second;
+        auto backend = m_backend_list[placement].second;
 
         // Prepare parameter TensorViews
         vector<shared_ptr<runtime::Tensor>> parameter_tvs;
