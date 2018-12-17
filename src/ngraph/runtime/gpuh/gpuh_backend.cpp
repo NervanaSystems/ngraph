@@ -25,8 +25,6 @@
 using namespace ngraph;
 using namespace std;
 
-// #define DEBUG_MODE_INT
-
 extern "C" const char* get_ngraph_version_string()
 {
     return NGRAPH_VERSION;
@@ -42,16 +40,8 @@ vector<string> get_excludes()
     return vector<string>{{"Not"}};
 }
 
-#ifdef DEBUG_MODE_INT
-runtime::gpuh::GPUHBackend::GPUHBackend()
-    : HybridBackend({make_shared<ngraph::runtime::interpreter::INTBackend>(get_excludes()),
-                     make_shared<ngraph::runtime::interpreter::INTBackend>()})
-{
-}
-#else
 runtime::gpuh::GPUHBackend::GPUHBackend()
     : HybridBackend({make_shared<ngraph::runtime::gpu::GPU_Backend>(),
                      make_shared<ngraph::runtime::interpreter::INTBackend>()})
 {
 }
-#endif
