@@ -4,7 +4,7 @@
 Connecting Frameworks   
 #####################
 
-While a :abbr:`Deep Learning (DL)`:term:`framework` is ultimately meant for 
+While a :abbr:`Deep Learning (DL)` :term:`framework` is ultimately meant for 
 end use by data scientists, or for deployment in cloud container environments, 
 nGraph Core ops and the nGraph C++ Library are designed for framework builders 
 themselves. We invite anyone working on new and novel frameworks or neural 
