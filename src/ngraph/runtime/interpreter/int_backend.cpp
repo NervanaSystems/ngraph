@@ -376,6 +376,5 @@ void runtime::interpreter::INTBackend::perform_nan_check(
 
 bool runtime::interpreter::INTBackend::is_supported(const Node& node) const
 {
-    NGRAPH_INFO << "test " << node.description() << " against " << join(m_unsupported_op_name_list);
     return m_unsupported_op_name_list.find(node.description()) == m_unsupported_op_name_list.end();
 }
