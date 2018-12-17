@@ -33,6 +33,27 @@ using Inputs = std::vector<std::vector<float>>;
 using Outputs = std::vector<std::vector<float>>;
 using Model = std::vector<std::shared_ptr<Function>>;
 
+namespace
+{
+    template <typename T>
+    std::vector<T> read_binary_file(const std::string& path)
+    {
+        std::vector<T> file_content;
+        std::ifstream inputs_fs{file_util::path_join(SERIALIZED_ZOO, path),
+                                std::ios::in | std::ios::binary};
+        EXPECT_TRUE(inputs_fs);
+
+        inputs_fs.seekg(0, std::ios::end);
+        auto size = inputs_fs.tellg();
+        inputs_fs.seekg(0, std::ios::beg);
+        file_content.resize(size / sizeof(T));
+        inputs_fs.read((char*)file_content.data(), size);
+        return file_content;
+    }
+
+}   // anonymous namespace
+
+
 TEST(onnx, model_add_abc)
 {
     auto function = onnx_import::import_onnx_function(
@@ -1515,4 +1536,14 @@ TEST(onnx, model_matmul_vec_ten3d)
 
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_lin_quant_resnet50)
+{
+    auto function = onnx_import::import_onnx_function(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/final_int8_resnet50.onnx"));
+
+    // Inputs inputs{read_binary_file<float>("onnx/input_0.pb");
+    // Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    // EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }

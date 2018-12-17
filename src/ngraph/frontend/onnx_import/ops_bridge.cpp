@@ -96,6 +96,8 @@
 #include "op/xor.hpp"
 #include "ops_bridge.hpp"
 
+#include "op/com.microsoft/register_custom_ops.hpp"
+
 namespace ngraph
 {
     namespace onnx_import
@@ -148,6 +150,7 @@ namespace ngraph
 
         OperatorsBridge::OperatorsBridge()
         {
+            onnxruntime::ngraph_ep::register_custom_ops();
             REGISTER_OPERATOR("Abs", 1, abs);
             REGISTER_OPERATOR("Acos", 1, acos);
             REGISTER_OPERATOR("Add", 1, add);
