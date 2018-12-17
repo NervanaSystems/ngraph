@@ -34,6 +34,7 @@
 #include "ngraph/runtime/plaidml/plaidml_pass_explicit_logicals.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_implicit_broadcast.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_lower_convolutions.hpp"
+#include "ngraph/runtime/plaidml/plaidml_pass_replicate_combination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_reshape_elision.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_winograd.hpp"
 
@@ -96,6 +97,7 @@ std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ExplicitLogicals>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ConcatElision>();
+    pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReplicateCombination>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ImplicitBroadcast>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReshapeElision>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::LowerConvolutions>();
