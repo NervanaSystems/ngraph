@@ -265,7 +265,6 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_by_zero_int32)
             }
             catch (...)
             {
-                NGRAPH_INFO << "**********************";
                 abort();
             }
         },

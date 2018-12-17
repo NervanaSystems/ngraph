@@ -32,8 +32,6 @@ bool runtime::hybrid::pass::FixGetOutputElement::run_on_node(shared_ptr<Node> no
     if (node->description() == "GetOutputElement")
     {
         auto parent = node->get_arguments().at(0);
-        NGRAPH_INFO << "GetOutputElement input node " << *parent;
-        NGRAPH_INFO << "GetOutputElement input placement " << parent->get_placement_index();
         node->set_placement_index(parent->get_placement_index());
     }
     return false;
