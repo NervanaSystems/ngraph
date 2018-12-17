@@ -14,12 +14,22 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_executable(mnist_mlp mnist_loader.cpp mnist_mlp.cpp)
-add_dependencies(mnist_mlp ngraph cpu_backend)
-target_link_libraries(mnist_mlp ngraph cpu_backend)
-if (NGRAPH_DISTRIBUTED_ENABLE)
-    add_executable(dist_mnist_mlp mnist_loader.cpp dist_mnist_mlp.cpp)
-    target_compile_definitions(dist_mnist_mlp PRIVATE NGRAPH_DISTRIBUTED)
-    target_include_directories(dist_mnist_mlp SYSTEM PRIVATE libmlsl)
-    target_link_libraries(dist_mnist_mlp ngraph cpu_backend libmlsl)
-endif()
+function(MODE_APPLY_FILE PATH)
+    execute_process(COMMAND git update-index --add --chmod=-x ${PATH}
+        OUTPUT_VARIABLE RESULT)
+endfunction()
+
+set(DIRECTORIES_OF_INTEREST
+    src
+    doc
+    test
+    python/pyngraph
+)
+
+foreach(DIRECTORY ${DIRECTORIES_OF_INTEREST})
+    set(DIR "${NGRAPH_SOURCE_DIR}/${DIRECTORY}/*.?pp")
+    file(GLOB_RECURSE XPP_FILES ${DIR})
+    foreach(FILE ${XPP_FILES})
+        mode_apply_file(${FILE})
+    endforeach(FILE)
+endforeach(DIRECTORY)

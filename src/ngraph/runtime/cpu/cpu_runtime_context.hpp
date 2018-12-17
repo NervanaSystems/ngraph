@@ -26,6 +26,10 @@
 #include <tbb/global_control.h>
 #include <tbb/task_scheduler_init.h>
 
+#ifdef NGRAPH_DISTRIBUTED
+#include <mlsl.hpp>
+#endif
+
 namespace mkldnn
 {
     class primitive;
@@ -65,6 +69,10 @@ namespace ngraph
                 State* const* states;
                 std::set<size_t> breakpoints;
                 size_t pc;
+#ifdef NGRAPH_DISTRIBUTED
+                MLSL::Environment* mlsl_env;
+                MLSL::Distribution* mlsl_dist;
+#endif
             };
             }
 

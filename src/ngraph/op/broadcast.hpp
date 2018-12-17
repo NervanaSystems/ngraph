@@ -70,17 +70,17 @@ namespace ngraph
             ///
             /// \param arg The argument to be broadcast.
             /// \param like_arg Provides the shape for the result.
-            /// \param broadcast_axes indicates which axes will be broadcast. If empty,
-            /// arg must be scalar and all axes are broadcast.
+            /// \param initial_broadcast_axes indicates which axes will be broadcast. If empty,
+            ///        arg must be scalar and all axes are broadcast.
             BroadcastLike(const std::shared_ptr<Node>& arg,
                           const std::shared_ptr<Node>& like_arg,
-                          const AxisSet& broadcast_axes);
+                          const AxisSet& initial_broadcast_axes);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             void infer_shape() override;
-
+            const AxisSet& get_initial_broadcast_axes() const { return m_initial_broadcast_axes; }
         protected:
             AxisSet m_initial_broadcast_axes;
         };

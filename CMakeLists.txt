@@ -238,6 +238,12 @@ add_custom_target(style-apply
     -P ${CMAKE_MODULE_PATH}style_apply.cmake
 )
 
+add_custom_target(fix-mode
+    COMMAND ${CMAKE_COMMAND}
+    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    -P ${CMAKE_MODULE_PATH}fix_mode.cmake
+)
+
 #-----------------------------------------------------------------------------------------------
 # enable or disable output from NGRAPH_DEBUG statements
 #-----------------------------------------------------------------------------------------------
@@ -290,6 +296,10 @@ else()
 endif()
 
 include(cmake/external_tbb.cmake)
+if (NGRAPH_DISTRIBUTED_ENABLE)
+    include(cmake/external_mlsl.cmake)
+endif()
+
 
 if (NGRAPH_HALIDE)
     message(WARNING "Halide build system integration is currently using an older LLVM release \

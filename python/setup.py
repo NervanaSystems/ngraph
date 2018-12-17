@@ -278,13 +278,13 @@ data_files = [
     (
         'licenses',
         [
-            PYNGRAPH_ROOT_DIR + '/../licenses/' + license
-            for license in os.listdir(PYNGRAPH_ROOT_DIR + '/../licenses')
+            NGRAPH_CPP_DIST_DIR + '/licenses/' + license
+            for license in os.listdir(NGRAPH_CPP_DIST_DIR + '/licenses')
         ],
     ),
     (
         '',
-        [PYNGRAPH_ROOT_DIR + '/../LICENSE'],
+        [NGRAPH_CPP_DIST_DIR + '/LICENSE'],
     ),
 ]
 

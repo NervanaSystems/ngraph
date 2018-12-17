@@ -17,7 +17,7 @@
 #include <fstream>
 #include <sstream>
 
-#include <mpi.h>
+#include <mlsl.hpp>
 
 #include "gtest/gtest.h"
 
@@ -36,9 +36,7 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
-    int comm_size;
-
-    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    auto comm_size = MLSL::Environment::GetEnv().GetProcessCount();
 
     auto v = vector<float>{1, 2, 3, 4};
     auto a = backend->create_tensor(element::f32, shape);
