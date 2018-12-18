@@ -43,13 +43,20 @@ runtime::cpu::pass::CPUMemoryAssignment::CPUMemoryAssignment(size_t alignment,
 
 bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph::Function> function)
 {
+    // memory manager for non-cacheable ops, memory allocation will be freed when not longer in use
     ngraph::pass::MemoryManager mm(m_alignment, m_disable_memory_sharing);
+    // memory manager for cacheable ops, memory allocation will never be freed
     ngraph::pass::MemoryManager mm_caching(m_alignment, true);
 
+    // Tensors should not be freed due to the following reasons:
+    // Several tensors may have the same offset because of in place propagation, only one of them should be freed.
+    // Tensors got offset 0 from parameter or constant due to in place propagation and should never be freed.
     std::set<const descriptor::Tensor*> io_no_free;
 
     if (!m_disable_memory_sharing)
     {
+        // Set of tensors in the chain of in place propagation ops where the beginning of the chain is parameter, constant,
+        // of a node whose output has multiple users.
         std::set<const descriptor::Tensor*> io_from_param_or_const_or_multi;
         // build caching map from cacheability
         for (shared_ptr<Node> node : function->get_ordered_ops())
@@ -80,7 +87,6 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                 auto op_annotations = op->get_op_annotations();
 
                 //if it is last concat node of in-place-concat-chain, put it in caching map
-                //if it is in place node other than concat, put it in caching map
                 auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
                 if (in_place_oi_pairs.size() > 0)
                 {
@@ -123,10 +129,13 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                                 node->liveness_new_list.count(output) != 0)
 
                             {
+                                // input tensor and output tensor has the same offset, should not free input tensor, only free output tensor.
                                 io_no_free.insert(input);
 
                                 auto input_output_inputs =
                                     node->get_inputs().at(oi_pair.input).get_output().get_inputs();
+                                // tensors in the chain of in place propagation ops where the beginning of the chain is parameter, constant,
+                                // of a node whose output has multiple users. Those tensors should not be freed.
                                 if (input_node->is_parameter() || input_node->is_constant() ||
                                     input_output_inputs.size() > 1 ||
                                     io_from_param_or_const_or_multi.count(input))
@@ -183,6 +192,14 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
             if (in_place_outputs.count(tensor))
             {
                 offset = in_place_outputs.at(tensor)->get_pool_offset();
+                // For input tensor and output tensor pair,
+                // if the input tensor is not cacheable, the output tensor is not cacheable;
+                // if the input tensor is cacheable, the output tensor could be cacaheable or not. If the output tensor is not cacheable,
+                // need to put output tensor into the caching map for in place op. Otherwise, mm will try to free memory allocated by mm_caching.
+                // For example, suppose we have op1 \
+                //                              op2 - op3, op1 is cacheable, op2 and op3 are not. Due to in place propagation, op3 gets the offset
+                // from op1, which is 1000 allocated by mm_caching. There is another 1000 allocated to op4 by mm. If op3 is not put into caching
+                // map, mm will be called to free 1000, which is allocated to op4.
                 if (m_tensor_caching.count(in_place_outputs.at(tensor)))
                 {
                     m_tensor_caching.insert(tensor);
