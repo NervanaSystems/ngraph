@@ -57,22 +57,26 @@ public:
     std::string m_cname;
 };
 
-static map<element::Type_t, TypeInfo> s_type_info_map{
-    {element::Type_t::undefined,
-     TypeInfo(std::numeric_limits<size_t>::max(), false, false, false, "undefined")},
-    {element::Type_t::dynamic, TypeInfo(0, false, false, false, "dynamic")},
-    {element::Type_t::boolean, TypeInfo(8, false, true, false, "char")},
-    {element::Type_t::bf16, TypeInfo(16, true, true, false, "bfloat16")},
-    {element::Type_t::f32, TypeInfo(32, true, true, false, "float")},
-    {element::Type_t::f64, TypeInfo(64, true, true, false, "double")},
-    {element::Type_t::i8, TypeInfo(8, false, true, true, "int8_t")},
-    {element::Type_t::i16, TypeInfo(16, false, true, false, "int16_t")},
-    {element::Type_t::i32, TypeInfo(32, false, true, true, "int32_t")},
-    {element::Type_t::i64, TypeInfo(64, false, true, false, "int64_t")},
-    {element::Type_t::u8, TypeInfo(8, false, false, true, "uint8_t")},
-    {element::Type_t::u16, TypeInfo(16, false, false, false, "uint16_t")},
-    {element::Type_t::u32, TypeInfo(32, false, false, false, "uint32_t")},
-    {element::Type_t::u64, TypeInfo(64, false, false, false, "uint64_t")},
+static const map<element::Type_t, const TypeInfo> get_type_info_map()
+{
+    static map<element::Type_t, const TypeInfo> s_type_info_map{
+        {element::Type_t::undefined,
+         TypeInfo(std::numeric_limits<size_t>::max(), false, false, false, "undefined")},
+        {element::Type_t::dynamic, TypeInfo(0, false, false, false, "dynamic")},
+        {element::Type_t::boolean, TypeInfo(8, false, true, false, "char")},
+        {element::Type_t::bf16, TypeInfo(16, true, true, false, "bfloat16")},
+        {element::Type_t::f32, TypeInfo(32, true, true, false, "float")},
+        {element::Type_t::f64, TypeInfo(64, true, true, false, "double")},
+        {element::Type_t::i8, TypeInfo(8, false, true, true, "int8_t")},
+        {element::Type_t::i16, TypeInfo(16, false, true, false, "int16_t")},
+        {element::Type_t::i32, TypeInfo(32, false, true, true, "int32_t")},
+        {element::Type_t::i64, TypeInfo(64, false, true, false, "int64_t")},
+        {element::Type_t::u8, TypeInfo(8, false, false, true, "uint8_t")},
+        {element::Type_t::u16, TypeInfo(16, false, false, false, "uint16_t")},
+        {element::Type_t::u32, TypeInfo(32, false, false, false, "uint32_t")},
+        {element::Type_t::u64, TypeInfo(64, false, false, false, "uint64_t")},
+    };
+    return s_type_info_map;
 };
 
 std::vector<const element::Type*> element::Type::get_known_types()
@@ -96,7 +100,7 @@ std::vector<const element::Type*> element::Type::get_known_types()
 element::Type::Type(
     size_t bitwidth, bool is_real, bool is_signed, bool is_quantized, const std::string& cname)
 {
-    for (const pair<element::Type_t, TypeInfo>& t : s_type_info_map)
+    for (const pair<element::Type_t, TypeInfo>& t : get_type_info_map())
     {
         const TypeInfo& info = t.second;
         if (bitwidth == info.m_bitwidth && is_real == info.m_is_real &&
@@ -110,7 +114,7 @@ element::Type::Type(
 
 const std::string& element::Type::c_type_string() const
 {
-    return s_type_info_map.at(m_type).m_cname;
+    return get_type_info_map().at(m_type).m_cname;
 }
 
 bool element::Type::operator==(const element::Type& other) const
@@ -242,25 +246,25 @@ bool element::Type::merge(element::Type& dst, const element::Type& t1, const ele
 
 bool element::Type::is_static() const
 {
-    return s_type_info_map.at(m_type).m_bitwidth != 0;
+    return get_type_info_map().at(m_type).m_bitwidth != 0;
 }
 
 bool element::Type::is_real() const
 {
-    return s_type_info_map.at(m_type).m_is_real;
+    return get_type_info_map().at(m_type).m_is_real;
 }
 
 bool element::Type::is_signed() const
 {
-    return s_type_info_map.at(m_type).m_is_signed;
+    return get_type_info_map().at(m_type).m_is_signed;
 }
 
 bool element::Type::is_quantized() const
 {
-    return s_type_info_map.at(m_type).m_is_quantized;
+    return get_type_info_map().at(m_type).m_is_quantized;
 }
 
 size_t element::Type::bitwidth() const
 {
-    return s_type_info_map.at(m_type).m_bitwidth;
+    return get_type_info_map().at(m_type).m_bitwidth;
 }
