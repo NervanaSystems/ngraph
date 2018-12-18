@@ -55,6 +55,7 @@ ExternalProject_Add(
     INSTALL_COMMAND ""
     UPDATE_COMMAND ""
     CMAKE_ARGS ${GTEST_CMAKE_ARGS}
+    BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/build"
     EXCLUDE_FROM_ALL TRUE
     )
 
