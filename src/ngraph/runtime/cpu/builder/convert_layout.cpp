@@ -50,11 +50,11 @@ namespace ngraph
                     input_desc = result_desc;
                 }
                 else if (input_desc.data.format == mkldnn_nchw &&
-                    result_desc.data.format == mkldnn_OIhw4i16o4i_s8s8)
-                    {
-                        input_desc.data.format = mkldnn_oihw;
-                        result_desc.data.format = mkldnn_OIhw4i16o4i;
-                    }
+                         result_desc.data.format == mkldnn_OIhw4i16o4i_s8s8)
+                {
+                    input_desc.data.format = mkldnn_oihw;
+                    result_desc.data.format = mkldnn_OIhw4i16o4i;
+                }
                 else if (input_desc.data.format == mkldnn_nchw && input_desc.data.ndims == 4 &&
                          result_desc.data.ndims == 5 && node->get_users().size() == 1)
                 {
