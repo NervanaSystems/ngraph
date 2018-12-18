@@ -1,7 +1,7 @@
-.. frameworks/generic-configs.rst
+.. frameworks/generic-configs.rst:
 
 
-Configurations available to any Framework
+Configurations available to any framework
 #########################################
 
 

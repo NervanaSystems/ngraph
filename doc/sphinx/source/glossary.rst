@@ -25,10 +25,10 @@ Glossary
 
    framework
 
-      A higher-level and user-facing software component which includes 
-      the ingestion of data in a machine-learning environment: TensorFlow\*, 
+      Frameworks provide expressive user-facing APIs for constructing, 
+      training, validating, and deploying DL/ML models: TensorFlow\*, 
       PaddlePaddle\*, MXNet\*, PyTorch\*, and Caffe\* are all examples of 
-      frameworks.
+      well-known frameworks.
 
    function graph
 
