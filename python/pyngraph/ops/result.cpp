@@ -14,33 +14,19 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <istream>
-#include <memory>
-#include <string>
-#include <vector>
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <string>
 
-#include "ngraph/frontend/onnx_import/onnx.hpp"
-#include "ngraph/function.hpp"
-#include "pyngraph/onnx_import/onnx_import.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/result.hpp"
+#include "pyngraph/ops/result.hpp"
 
 namespace py = pybind11;
 
-static std::shared_ptr<ngraph::Function> import_onnx_model(const std::string& model_proto)
+void regclass_pyngraph_op_Result(py::module m)
 {
-    std::istringstream iss(model_proto, std::ios_base::binary | std::ios_base::in);
-    return ngraph::onnx_import::import_onnx_model(iss);
-}
-
-static std::shared_ptr<ngraph::Function> import_onnx_model_file(const std::string& filename)
-{
-    return ngraph::onnx_import::import_onnx_model(filename);
-}
-
-void regmodule_pyngraph_onnx_import(py::module mod)
-{
-    mod.def("import_onnx_model", &import_onnx_model);
-    mod.def("import_onnx_model_file", &import_onnx_model_file);
+    py::class_<ngraph::op::Result, std::shared_ptr<ngraph::op::Result>, ngraph::Node> result(
+        m, "Result");
+    result.doc() = "ngraph.impl.op.Result wraps ngraph::op::Result";
 }
