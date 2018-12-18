@@ -147,7 +147,8 @@ namespace onnxruntime
             {
                 if (groups > 1)
                 {
-                    throw "NO SUPPORT FOR QUANTIZED GROUP CONV+BIAS";
+                    throw ngraph::onnx_import::error::NotSupported(
+                        "No support for quantized group conv+bias.");
                 }
                 else
                 {
@@ -194,11 +195,11 @@ namespace onnxruntime
                                    (groups <= filters->get_shape().at(0))))
                 << "incorrect value of 'group' attribute: " << groups;
 
-            auto strides = ngraph::onnx_import::convpool::get_strides(node);
-            auto dilations = ngraph::onnx_import::convpool::get_dilations(node);
+            ngraph::Strides strides = ngraph::onnx_import::convpool::get_strides(node);
+            ngraph::Strides filter_dilations = ngraph::onnx_import::convpool::get_dilations(node);
             auto paddings = ngraph::onnx_import::convpool::get_pads(node);
-            const auto& padding_below = paddings.first;
-            const auto& padding_above = paddings.second;
+            const ngraph::CoordinateDiff& padding_below = paddings.first;
+            const ngraph::CoordinateDiff& padding_above = paddings.second;
 
             std::shared_ptr<ngraph::Node> conv_node = nullptr;
 
