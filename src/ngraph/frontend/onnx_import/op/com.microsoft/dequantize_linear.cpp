@@ -24,7 +24,6 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/shape.hpp"
 #include "quantize_linear.hpp"
-#include "utils/reshape.hpp"
 
 namespace onnxruntime
 {
@@ -41,7 +40,7 @@ namespace onnxruntime
             ngraph::Shape x_shape = x->get_shape();
             ngraph::Shape y_scale_shape = y_scale->get_shape();
             ngraph::Shape y_zero_point_shape = y_zero_point->get_shape();
-            ngraph::AxisSet axis_set{ngraph::onnx_import::reshape::get_default_axis_vector(0)};
+            ngraph::AxisSet axis_set{};
 
             try
             {
