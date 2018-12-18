@@ -28,6 +28,16 @@ namespace ngraph
     {
         namespace intelgpu
         {
+            void do_all_any_op(cldnn::topology& topology,
+                               const std::string& input0_name,
+                               const Shape& input0_shape,
+                               const std::string& output_name,
+                               const Shape& output_shape,
+                               const element::Type& output_type,
+                               const AxisSet& axis,
+                               const std::string& operation,
+                               const std::string& init_val);
+
             void do_reduce_func_call(cldnn::topology& topology,
                                      const std::string& input0_name,
                                      const Shape& input0_shape,
