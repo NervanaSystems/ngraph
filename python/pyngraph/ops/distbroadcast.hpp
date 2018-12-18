@@ -14,18 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/op/mpi_bcast.hpp"
-#include "pyngraph/ops/mpi_bcast.hpp"
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_MPI_Broadcast(py::module m)
-{
-    py::class_<ngraph::op::MPI_Broadcast, std::shared_ptr<ngraph::op::MPI_Boroadcast>, ngraph::op::Op>
-        mpi_bcast(m, "MPI_Broadcast");
-    mpi_bcast.doc() = "ngraph.impl.op.MPI_Broadcast wraps ngraph::op::MPI_Broadcast";
-    mpi_bcast.def(py::init<const std::shared_ptr<ngraph::Node>&>());
-}
+void regclass_pyngraph_op_DistBroadcast(py::module m);

@@ -14,37 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#ifdef NGRAPH_DISTRIBUTED
+#include "ngraph/op/distbroadcast.hpp"
+#include "pyngraph/ops/distbroadcast.hpp"
 
-#include <mpi.h>
-#include "ngraph/type/element_type.hpp"
+namespace py = pybind11;
 
-namespace ngraph
+void regclass_pyngraph_op_DistBroadcast(py::module m)
 {
-    namespace runtime
-    {
-        namespace reference
-        {
-            template <typename T>
-            void mpi_bcast(T* arg, const element::Type element_type, int count)
-            {
-                auto data_type = MPI_FLOAT;
-
-                if (element_type == element::f32)
-                {
-                    data_type = MPI_FLOAT;
-                }
-                else if (element_type == element::f64)
-                {
-                    data_type = MPI_DOUBLE;
-                }
-
-                MPI_Bcast(arg, count, data_type, 0, MPI_COMM_WORLD);
-            }
-        }
-    }
+    py::class_<ngraph::op::DistBroadcast, std::shared_ptr<ngraph::op::DistBroadcast>, ngraph::op::Op>
+        distbroadcast(m, "DistBroadcast");
+    distbroadcast.doc() = "ngraph.impl.op.DistBroadcast wraps ngraph::op::DistBroadcast";
+    distbroadcast.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }
-
-#endif

@@ -42,6 +42,7 @@
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/distbroadcast.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
@@ -63,7 +64,6 @@
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
-#include "ngraph/op/mpi_bcast.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/not.hpp"
@@ -898,9 +898,9 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Minimum>(args[0], args[1]);
                 break;
             }
-            case OP_TYPEID::MPI_Broadcast:
+            case OP_TYPEID::DistBroadcast:
             {
-                node = make_shared<op::MPI_Broadcast>(args[0]);
+                node = make_shared<op::DistBroadcast>(args[0]);
                 break;
             }
             case OP_TYPEID::Multiply:
@@ -1519,7 +1519,7 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Minimum: { break;
     }
-    case OP_TYPEID::MPI_Broadcast: { break;
+    case OP_TYPEID::DistBroadcast: { break;
     }
     case OP_TYPEID::Multiply: { break;
     }

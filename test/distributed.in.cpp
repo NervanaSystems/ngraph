@@ -51,24 +51,22 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     EXPECT_EQ(v, read_vector<float>(result));
 }
 
-TEST(distributed_${BACKEND_NAME}, mpi_bcast)
+TEST(distributed_${BACKEND_NAME}, distbroadcast)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::MPI_Broadcast>(A), ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::DistBroadcast>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("CPU");
-    int comm_size;
+    auto comm_size = MLSL::Environment::GetEnv().GetProcessCount();
 
-    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 
     auto v = vector<float>{1, 2, 3, 4};
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>(4, 0));
 
-    int Rank_ID;
-    MPI_Comm_rank(MPI_COMM_WORLD, &Rank_ID);
-    if (Rank_ID==0) {
+    auto processIdx = MLSL::Environment::GetEnv().GetProcessIdx();
+    if (processIdx==0) {
        copy_data(a, v);
     }
 

@@ -140,8 +140,8 @@
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/runtime/reference/allreduce.hpp"
-#include "ngraph/runtime/reference/mpi_bcast.hpp"
-#include <mpi.h>
+#include "ngraph/runtime/reference/distbroadcast.hpp"
+#include <mlsl.hpp>
 #endif
 
 namespace ngraph
@@ -921,7 +921,7 @@ private:
                                   element_count);
             break;
         }
-        case OP_TYPEID::MPI_Broadcast: {
+        case OP_TYPEID::DistBroadcast: {
             // we do not support this op in interpreter for now
             break;
         }

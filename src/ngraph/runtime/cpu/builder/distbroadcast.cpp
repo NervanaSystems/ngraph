@@ -15,8 +15,8 @@
 //*****************************************************************************
 #ifdef NGRAPH_DISTRIBUTED
 
-#include "ngraph/op/mpi_bcast.hpp"
-#include <mpi.h>
+#include "ngraph/op/distbroadcast.hpp"
+#include <mlsl.hpp>
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 
 using namespace std;
@@ -29,33 +29,34 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::MPI_Broadcast)
+            void Builder::BUILDER_DECL(ngraph::op::DistBroadcast)
             {
                 auto& functors = external_function->get_functors();
 
                 auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
                 auto count = static_cast<int>(args[0].get_size());
-                auto data_type = MPI_FLOAT;
+                auto data_type = MLSL::DT_FLOAT;
 
                 if (args[0].get_element_type() == element::f32)
                 {
-                    data_type = MPI_FLOAT;
+                    data_type = MLSL::DT_FLOAT;
                 }
                 else if (args[0].get_element_type() == element::f64)
                 {
-                    data_type = MPI_DOUBLE;
+                    data_type = MLSL::DT_DOUBLE;
                 }
 
                 auto functor = [&, count, data_type](CPURuntimeContext* ctx,
                                                      CPUExecutionContext* ectx) {
-                    MPI_Bcast(
-                        arg_tensor, count, data_type, 0, MPI_COMM_WORLD);
+                    MLSL::CommReq* req = ctx->mlsl_dist->Bcast(
+                        arg_tensor, count, data_type, 0, MLSL::GT_DATA);
+                    ctx->mlsl_env->Wait(req);
                 };
 
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(MPI_Broadcast);
+            REGISTER_OP_BUILDER(DistBroadcast);
         }
     }
 }

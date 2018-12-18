@@ -84,7 +84,6 @@
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
-#include "ngraph/op/mpi_bcast.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/not.hpp"
@@ -180,7 +179,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/op/allreduce.hpp"
-#include "ngraph/op/mpi_bcast.hpp"
+#include "ngraph/op/distbroadcast.hpp"
 #endif
 
 using namespace std;
@@ -290,7 +289,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::CPU_Emitter::emit<op::Add>},
 #ifdef NGRAPH_DISTRIBUTED
     {TI(ngraph::op::AllReduce), &runtime::cpu::CPU_Emitter::emit<op::AllReduce>},
-    {TI(ngraph::op::MPI_Broadcast), &runtime::cpu::CPU_Emitter::emit<op::MPI_Broadcast>},
+    {TI(ngraph::op::DistBroadcast), &runtime::cpu::CPU_Emitter::emit<op::DistBroadcast>},
 #endif
     {TI(ngraph::op::MatmulBias), &runtime::cpu::CPU_Emitter::emit<op::MatmulBias>},
     {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::emit<op::Dot>},

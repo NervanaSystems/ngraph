@@ -58,6 +58,7 @@ set (SRC
     op/cos.cpp
     op/cosh.cpp
     op/dequantize.cpp
+    op/distbroadcast.cpp
     op/divide.cpp
     op/dot.cpp
     op/embedding_lookup.cpp
@@ -84,7 +85,6 @@ set (SRC
     op/max_pool.cpp
     op/min.cpp
     op/minimum.cpp
-    op/mpi_bcast.cpp
     op/multiply.cpp
     op/negative.cpp
     op/not.cpp

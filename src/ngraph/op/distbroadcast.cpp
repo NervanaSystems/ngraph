@@ -14,18 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/mpi_bcast.hpp"
+#include "ngraph/op/distbroadcast.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::MPI_Broadcast::MPI_Broadcast(const shared_ptr<Node>& arg)
-    : Op("MPI_Broadcast", check_single_output_args({arg}))
+op::DistBroadcast::DistBroadcast(const shared_ptr<Node>& arg)
+    : Op("DistBroadcast", check_single_output_args({arg}))
 {
     constructor_validate_and_infer_types();
 }
 
-void op::MPI_Broadcast::validate_and_infer_types()
+void op::DistBroadcast::validate_and_infer_types()
 {
     NODE_VALIDATION_ASSERT(this,
                            get_input_element_type(0).is_dynamic() ||
@@ -37,8 +37,8 @@ void op::MPI_Broadcast::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
-shared_ptr<Node> op::MPI_Broadcast::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::DistBroadcast::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<MPI_Broadcast>(new_args.at(0));
+    return make_shared<DistBroadcast>(new_args.at(0));
 }

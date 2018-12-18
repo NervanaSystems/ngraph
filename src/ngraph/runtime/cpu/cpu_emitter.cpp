@@ -67,7 +67,7 @@
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
-#include "ngraph/op/mpi_bcast.hpp"
+#include "ngraph/op/distbroadcast.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/not.hpp"
@@ -224,24 +224,25 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::MPI_Broadcast)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::DistBroadcast)
             {
                 const element::Type& element_type = args[0].get_element_type();
-                auto data_type = "MPI_FLOAT";
+                auto data_type = "MLSL::DT_FLOAT";
 
                 if (element_type == element::f32)
                 {
-                    data_type = "MPI_FLOAT";
+                    data_type = "MLSL::DT_FLOAT";
                 }
                 else if (element_type == element::f64)
                 {
-                    data_type = "MPI_DOUBLE";
+                    data_type = "MLSL::DT_DOUBLE";
                 }
 
                 writer.block_begin();
-                writer << "MPI_Bcast(" << args[0].get_name() << ", " << out[0].get_name()
-                       << ", " << out[0].get_size() << ", " << data_type
-                       << ", MPI_COMM_WORLD);\n";
+                writer << "MLSL::CommReq* req = ctx->mlsl_dist->DistBroadcast(" << args[0].get_name() 
+                       << ", " << out[0].get_name() << ", " << out[0].get_size() << ", " 
+                       << data_type << ", MLSL::RT_SUM, MLSL::GT_DATA);\n";
+                writer << "ctx->mlsl_env->Wait(req);\n";
                 writer.block_end();
             }
 #endif

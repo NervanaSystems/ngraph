@@ -221,7 +221,7 @@ sources = [
     'pyngraph/ops/tanh.cpp',
     'pyngraph/ops/topk.cpp',
     'pyngraph/ops/allreduce.cpp',
-    'pyngraph/ops/mpi_bcast.cpp',
+    'pyngraph/ops/distbroadcast.cpp',
     'pyngraph/ops/function_call.cpp',
     'pyngraph/ops/get_output_element.cpp',
     'pyngraph/ops/min.cpp',
