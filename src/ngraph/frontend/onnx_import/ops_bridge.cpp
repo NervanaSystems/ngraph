@@ -241,12 +241,12 @@ namespace ngraph
             REGISTER_OPERATOR("Xor", 1, logical_xor);
 
             // Register custom operators.
-            m_map["com.microsoft"]["DequantizeLinear"].emplace(1,
-                std::bind(onnxruntime::ngraph_ep::dequantize_linear, std::placeholders::_1));
-            m_map["com.microsoft"]["QuantizeLinear"].emplace(1,
-                std::bind(onnxruntime::ngraph_ep::quantize_linear, std::placeholders::_1));
-            m_map["com.microsoft"]["QLinearConv"].emplace(1,
-                std::bind(onnxruntime::ngraph_ep::quant_conv, std::placeholders::_1));
+            m_map["com.microsoft"]["DequantizeLinear"].emplace(
+                1, std::bind(onnxruntime::ngraph_ep::dequantize_linear, std::placeholders::_1));
+            m_map["com.microsoft"]["QuantizeLinear"].emplace(
+                1, std::bind(onnxruntime::ngraph_ep::quantize_linear, std::placeholders::_1));
+            m_map["com.microsoft"]["QLinearConv"].emplace(
+                1, std::bind(onnxruntime::ngraph_ep::quant_conv, std::placeholders::_1));
         }
 
     } // namespace onnx_import
