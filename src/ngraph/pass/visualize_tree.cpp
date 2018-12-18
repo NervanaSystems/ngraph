@@ -151,9 +151,8 @@ std::string pass::VisualizeTree::get_file_ext()
 
 void pass::VisualizeTree::render() const
 {
-#ifdef GRAPHVIZ_FOUND
-    auto tmp_file = m_name + ".tmp";
-    ofstream out(tmp_file);
+    auto dot_file = m_name + ".dot";
+    ofstream out(dot_file);
     if (out)
     {
         out << "digraph ngraph\n{\n";
@@ -163,15 +162,12 @@ void pass::VisualizeTree::render() const
 
         stringstream ss;
 
-        ss << "dot -T" << get_file_ext() << " " << tmp_file << " -o " << m_name;
+        ss << "dot -T" << get_file_ext() << " " << dot_file << " -o " << m_name;
         auto cmd = ss.str();
         auto stream = popen(cmd.c_str(), "r");
         if (stream)
         {
             pclose(stream);
         }
-
-        remove(tmp_file.c_str());
     }
-#endif
 }
