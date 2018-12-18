@@ -25,6 +25,8 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/all_close.hpp"
 #include "util/autodiff/backprop_function.hpp"
@@ -408,4 +410,17 @@ TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
     auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D}, true);
     std::list<std::shared_ptr<Node>> expected{A, D, add, mul};
     ASSERT_EQ(expected, sorted);
+}
+
+TEST(pass, visualize_tree)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
+
+    ngraph::pass::Manager pm;
+    pm.register_pass<pass::VisualizeTree>("test_viz.png");
+    pm.run_passes(f);
 }
