@@ -16,37 +16,16 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
     namespace pass
     {
-        class CoreFusion;
+        class ReshapeSinking : public ngraph::pass::FunctionPass
+        {
+        public:
+            bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+        };
     }
 }
-
-class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
-{
-public:
-    CoreFusion()
-        : GraphRewrite()
-    {
-        construct_relu();
-        construct_folded_batch_norm();
-        construct_conv_affine_folding();
-        construct_sigmoid();
-        construct_sigmoid_bprop();
-        construct_optimized_strided_conv();
-        construct_reshape_broadcast();
-        construct_reshape_softmax_reshape();
-    }
-    void construct_relu();
-    void construct_folded_batch_norm();
-    void construct_conv_affine_folding();
-    void construct_sigmoid();
-    void construct_sigmoid_bprop();
-    void construct_optimized_strided_conv();
-    void construct_reshape_broadcast();
-    void construct_reshape_softmax_reshape();
-};

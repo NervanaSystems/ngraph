@@ -149,6 +149,7 @@ set (SRC
     pass/pass_config.cpp
     pass/propagate_cacheability.cpp
     pass/reshape_elimination.cpp
+    pass/reshape_sinking.cpp
     pass/zero_dim_tensor_elimination.cpp
     pass/validate_graph.cpp
     pass/visualize_tree.cpp
@@ -259,7 +260,9 @@ install(TARGETS ngraph DESTINATION ${NGRAPH_INSTALL_LIB})  # libngraph.so
 install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph"
-    FILES_MATCHING PATTERN "*.hpp"
+    FILES_MATCHING
+        PATTERN "*.hpp"
+        PATTERN "*.h"
 )
 
 set(CPACK_GENERATOR "DEB")
