@@ -234,7 +234,6 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
 
     // Create functions from clusters
     vector<shared_ptr<Function>> sub_functions;
-    size_t index = 0;
     for (auto cluster : clusters)
     {
         ParameterVector par_vector;

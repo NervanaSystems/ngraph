@@ -99,12 +99,12 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
 
     using node_map_t = unordered_map<shared_ptr<Node>, shared_ptr<runtime::Tensor>>;
 
-    auto it = m_function_map.find(func);
-    if (it == m_function_map.end())
+    auto fit = m_function_map.find(func);
+    if (fit == m_function_map.end())
     {
         throw runtime_error("compile() must be called before call().");
     }
-    FunctionInstance& instance = it->second;
+    FunctionInstance& instance = fit->second;
 
     // Parameter and result node in sub_function maps to one Tensor
     node_map_t map_node_to_tensor;
