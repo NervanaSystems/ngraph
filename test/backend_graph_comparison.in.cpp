@@ -427,7 +427,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
         auto bk_result = backend->create_tensor(out->get_element_type(), out->get_shape());
         bk_isolated_results.push_back(bk_result);
     }
-    auto handle = backend->compile(bk_isolated_func);
+    handle = backend->compile(bk_isolated_func);
     backend->call_with_validate(handle, bk_isolated_results, bk_args);
 
     compare_results(new_results, ref_results, bk_results, bk_isolated_results);
