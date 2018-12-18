@@ -59,6 +59,7 @@
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
@@ -1764,6 +1765,92 @@ void ngraph::runtime::cpu::pass::CPUFusion::
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(
         prelu, callback, "CPUFusion.GroupconvBatchNormGlobalStatsFoldingRelu");
+    this->add_matcher(m);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_folding()
+{
+    Shape data_batch_shape{100, 512, 4, 4};
+    Shape filters_shape{64, 512, 4, 4};
+    auto data_label = std::make_shared<pattern::op::Label>(element::f32, data_batch_shape);
+    auto filters = std::make_shared<pattern::op::Label>(element::f32, filters_shape);
+    Shape conv_out_shape{100, 64, 1, 1};
+    auto out_delta = std::make_shared<pattern::op::Label>(element::f32, conv_out_shape);
+
+    auto conv = std::make_shared<op::ConvolutionBackpropData>(data_label->get_shape(),
+                                                              filters,
+                                                              out_delta,
+                                                              Strides{1, 1},
+                                                              Strides{1, 1},
+                                                              CoordinateDiff{0, 0},
+                                                              CoordinateDiff{0, 0},
+                                                              Strides{1, 1});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+
+    auto mean = std::make_shared<pattern::op::Label>(element::f32, Shape{512});
+    auto var = std::make_shared<pattern::op::Label>(element::f32, Shape{512});
+    auto gamma = std::make_shared<pattern::op::Label>(element::f32, Shape{512});
+    auto beta = std::make_shared<pattern::op::Label>(element::f32, Shape{512});
+    double eps = 0.001;
+    auto bn = std::make_shared<op::BatchNormInference>(eps, gamma, beta, conv_label, mean, var);
+
+    ngraph::pattern::graph_rewrite_callback callback =
+        [data_label, filters, out_delta, conv_label, mean, var, gamma, beta, eps](
+            pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In callback for deconv affine folding against node = "
+                         << m.get_match_root()->get_name();
+            auto pattern_map = m.get_pattern_map();
+
+            auto m_bn = std::dynamic_pointer_cast<op::BatchNormInference>(m.get_match_root());
+            auto conv_m =
+                std::static_pointer_cast<op::ConvolutionBackpropData>(pattern_map[conv_label]);
+
+            if (conv_m->get_users().size() > 1)
+            {
+                return false;
+            }
+
+            if (conv_m->get_shape().size() != 4) // CHECK: is this still valid?
+            {
+                return false;
+            }
+
+            // new weights = old weights * gamma / sqrt(variance + epsilon)
+            // new biases = (-mean) * gamma / sqrt(variance + epsilon) + beta
+
+            auto bn_eps = op::Constant::create(element::f32, Shape{}, {m_bn->get_eps_value()});
+
+            auto var_eps = std::make_shared<op::Add>(
+                pattern_map[var],
+                std::make_shared<op::Broadcast>(bn_eps, pattern_map[var]->get_shape(), AxisSet{0}));
+            auto sqrt_var_eps = std::make_shared<op::Sqrt>(var_eps);
+
+            auto weight_scaling = std::make_shared<op::Divide>(pattern_map[gamma], sqrt_var_eps);
+
+            auto weight_scaling_bcast = std::make_shared<op::Broadcast>(
+                weight_scaling, pattern_map[filters]->get_shape(), AxisSet{0, 2, 3});
+
+            auto new_weights =
+                std::make_shared<op::Multiply>(pattern_map[filters], weight_scaling_bcast);
+            auto mean_gamma = std::make_shared<op::Multiply>(pattern_map[mean], weight_scaling);
+            auto new_biases = std::make_shared<op::Subtract>(pattern_map[beta], mean_gamma);
+
+            auto g_conv_bprop_data_bias = std::make_shared<op::DeconvolutionBias>(
+                conv_m->get_data_batch_shape(),
+                new_weights,
+                pattern_map[out_delta],
+                new_biases,
+                conv_m->get_window_movement_strides_forward(),
+                conv_m->get_window_dilation_strides_forward(),
+                conv_m->get_padding_below_forward(),
+                conv_m->get_padding_above_forward(),
+                conv_m->get_data_dilation_strides_forward(),
+                false);
+            ngraph::replace_node(m.get_match_root(), g_conv_bprop_data_bias);
+            return true;
+        };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(bn, callback);
     this->add_matcher(m);
 }
 

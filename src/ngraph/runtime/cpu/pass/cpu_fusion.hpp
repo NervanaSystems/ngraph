@@ -81,6 +81,7 @@ public:
             construct_conv_add_relu();
             construct_update_slice();
             construct_fuse_lstm_recurrent_state();
+            construct_deconvolution_affine_folding();
         }
     }
 
@@ -110,4 +111,5 @@ private:
     void construct_groupconv_batchnorm_global_stats_folding_relu();
     void construct_update_slice();
     void construct_fuse_lstm_recurrent_state();
+    void construct_deconvolution_affine_folding();
 };

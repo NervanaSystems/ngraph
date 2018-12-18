@@ -92,6 +92,7 @@ set(SRC
     op/conv_bias.cpp
     op/conv_relu.cpp
     op/convert_layout.cpp
+    op/deconv.cpp
     op/group_conv.cpp
     op/group_conv_bias.cpp
     op/halide_op.cpp
