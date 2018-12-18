@@ -473,7 +473,7 @@ void codegen::CompilerCore::configure_search_path()
 #endif
 
 #ifdef NGRAPH_DISTRIBUTED
-    add_header_search_path(MPI_HEADER_PATH);
+    add_header_search_path(MLSL_HEADER_PATH);
 #endif
 }
 

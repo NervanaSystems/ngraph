@@ -106,7 +106,7 @@ float test_accuracy(MNistDataLoader& loader,
            static_cast<float>(sample_count);
 }
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
     ngraph::Distributed dist;
 

@@ -48,10 +48,10 @@ def test_unary_op_array(ng_api_fn, numpy_fn, range_start, range_end):
     input_data = range_start + np.random.rand(2, 3, 4) * (range_end - range_start)
     expected = numpy_fn(input_data)
 
-    result = run_op_node([input_data], ng_api_fn)
+    result = run_op_node([input_data], ng_api_fn)[0]
     np.testing.assert_allclose(result, expected, rtol=0.001)
 
-    result = run_op_numeric_data(input_data, ng_api_fn)
+    result = run_op_numeric_data(input_data, ng_api_fn)[0]
     np.testing.assert_allclose(result, expected, rtol=0.001)
 
 

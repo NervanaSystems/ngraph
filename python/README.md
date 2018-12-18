@@ -1,81 +1,59 @@
-# Python binding for the nGraph Library
+## nGraph Neural Network compiler
 
-## Build the nGraph Library (required)
+[nGraph][ngraph_github] is Intel's open-source graph compiler and runtime for Neural Network models. Frameworks using nGraph to execute workloads have shown up to [45X](https://ai.intel.com/ngraph-compiler-stack-beta-release/) performance boost compared to native implementations.
 
-Follow the [build instructions] to build nGraph. When you get to the `cmake` 
-command, be sure to specify the option that enables ONNX support in the Library: 
+nGraph can be used directly thought it's [Python API][api_python] or [C++ API][api_cpp]. Alternatively it can be used through one of its frontends, e.g. [TensorFlow][frontend_tf], [MXNet][frontend_mxnet] and [ONNX][frontend_onnx].
 
-    $ cmake ../ -DNGRAPH_ONNX_IMPORT_ENABLE=ON 
+## Installation
 
+nGraph is available as binary wheels you can install from PyPI. nGraph binary wheels are currently tested on Ubuntu 16.04 and require a CPU with AVX-512 instructions, if you're using a different system, you may want to [build][ngraph_building] nGraph from sources.
 
-Next, clone the `pybind11` repository:
+Installing nGraph Python API from PyPI is easy:
 
-    $ cd ngraph/python
-    $ git clone --recursive https://github.com/pybind/pybind11.git
+    pip install ngraph-core
 
+## Usage example
 
-Set the environment variables:
+Using nGraph's Python API to construct a computation graph and execute a computation is simple. The following example shows how to create a simple `(A + B) * C` computation graph and calculate a result using 3 numpy arrays as input.
 
-    export NGRAPH_CPP_BUILD_PATH=$HOME/ngraph_dist
-    export LD_LIBRARY_PATH=$HOME/ngraph_dist/lib
-    export DYLD_LIBRARY_PATH=$HOME/ngraph_dist/lib # (Only needed on MacOS)
-    export PYBIND_HEADERS_PATH=pybind11
+```python
+import numpy as np
+import ngraph as ng
 
+A = ng.parameter(shape=[2, 2], name='A', dtype=np.float32)
+B = ng.parameter(shape=[2, 2], name='B', dtype=np.float32)
+C = ng.parameter(shape=[2, 2], name='C', dtype=np.float32)
+# >>> print(A)
+# <Parameter: 'A' ([2, 2], float)>
 
-Install the wrapper (Python binding):
+model = (A + B) * C
+# >>> print(model)
+# <Multiply: 'Multiply_14' ([2, 2])>
 
-    $ python setup.py install
+runtime = ng.runtime(backend_name='CPU')
+# >>> print(runtime)
+# <Runtime: Backend='CPU'>
 
+computation = runtime.computation(model, A, B, C)
+# >>> print(computation)
+# <Computation: Multiply_14(A, B, C)>
 
-Unit tests require additional packages be installed:
+value_a = np.array([[1, 2], [3, 4]], dtype=np.float32)
+value_b = np.array([[5, 6], [7, 8]], dtype=np.float32)
+value_c = np.array([[9, 10], [11, 12]], dtype=np.float32)
 
-    $ pip install -r test_requirements.txt
+result = computation(value_a, value_b, value_c)
+# >>> print(result)
+# [[ 54.  80.]
+#  [110. 144.]]
 
+print('Result = ', result)
+```
 
-Then run a test:
-
-    $ pytest test/test_ops.py
-    $ pytest test/ngraph/
-
-
-## Running tests with tox
-
-[Tox] is a Python [virtualenv] management and test command line tool. In our 
-project it automates:
-
-* running of unit tests with [pytest]
-* checking that code style is compliant with [PEP8] using [Flake8]
-* static type checking using [MyPy]
-* testing across Python 2 and 3
-
-
-Installing and running test with Tox:
-
-    $ pip install tox
-    $ tox
-
-
-You can run tests using only Python 3 or 2 using the `-e` (environment) switch:
-
-    $ tox -e py36
-    $ tox -e py27
-
-
-You can check styles in a particular code directory by specifying the path:
-
-    $ tox ngraph/
-
-
-If you run into any problems, try recreating the virtual environments by 
-deleting the `.tox` directory:
-
-    $ rm -rf .tox
-    $ tox
-
-[build instructions]:http://ngraph.nervanasys.com/docs/latest/buildlb.html
-[Tox]:https://tox.readthedocs.io/
-[virtualenv]:https://virtualenv.pypa.io/
-[pytest]:https://docs.pytest.org/
-[PEP8]:https://www.python.org/dev/peps/pep-0008
-[Flake8]:http://flake8.pycqa.org
-[MyPy]:http://mypy.readthedocs.io
+[frontend_onnx]: https://pypi.org/project/ngraph-onnx/
+[frontend_mxnet]: https://pypi.org/project/ngraph-mxnet/ 
+[frontend_tf]: https://pypi.org/project/ngraph-tensorflow-bridge/
+[ngraph_github]: https://github.com/NervanaSystems/ngraph "nGraph on GitHub"
+[ngraph_building]: https://github.com/NervanaSystems/ngraph/blob/master/python/BUILDING.md "Building nGraph"
+[api_python]: https://ngraph.nervanasys.com/docs/latest/python_api/ "nGraph's Python API documentation"
+[api_cpp]: https://ngraph.nervanasys.com/docs/latest/howto/ 

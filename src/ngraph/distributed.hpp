@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 namespace ngraph
 {
     class Distributed
@@ -23,7 +25,7 @@ namespace ngraph
     public:
         Distributed();
         ~Distributed();
-        int get_size() const;
-        int get_rank() const;
+        size_t get_size() const;
+        size_t get_rank() const;
     };
 }

@@ -27,7 +27,7 @@
 #include <vector>
 
 #include "ngraph/except.hpp"
-#include "ngraph/log.hpp"
+#include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/type/bfloat16.hpp"
 
 namespace ngraph
@@ -131,6 +131,20 @@ namespace ngraph
         private:
             Type_t m_type;
         };
+
+        extern NGRAPH_API const Type dynamic;
+        extern NGRAPH_API const Type boolean;
+        extern NGRAPH_API const Type bf16;
+        extern NGRAPH_API const Type f32;
+        extern NGRAPH_API const Type f64;
+        extern NGRAPH_API const Type i8;
+        extern NGRAPH_API const Type i16;
+        extern NGRAPH_API const Type i32;
+        extern NGRAPH_API const Type i64;
+        extern NGRAPH_API const Type u8;
+        extern NGRAPH_API const Type u16;
+        extern NGRAPH_API const Type u32;
+        extern NGRAPH_API const Type u64;
 
         template <typename T>
         const Type& from()
