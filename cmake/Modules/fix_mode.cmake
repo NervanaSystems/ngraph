@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018 Intel Corporation
+# Copyright 2017-2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,24 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ******************************************************************************
-"""
-Package: ngraph
-Low level wrappers for the nGraph c++ api in ngraph::onnx_import.
-"""
 
-# flake8: noqa
+function(MODE_APPLY_FILE PATH)
+    execute_process(COMMAND git update-index --add --chmod=-x ${PATH}
+        OUTPUT_VARIABLE RESULT)
+endfunction()
 
-import sys
-import six
+set(DIRECTORIES_OF_INTEREST
+    src
+    doc
+    test
+    python/pyngraph
+)
 
-# workaround to load the libngraph.so with RTLD_GLOBAL
-if six.PY3:
-    import os
-    flags = os.RTLD_NOW | os.RTLD_GLOBAL
-else:
-    import ctypes
-    flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-sys.setdlopenflags(flags)
-
-from _pyngraph_onnx_import import import_onnx_model
-from _pyngraph_onnx_import import import_onnx_model_file
+foreach(DIRECTORY ${DIRECTORIES_OF_INTEREST})
+    set(DIR "${NGRAPH_SOURCE_DIR}/${DIRECTORY}/*.?pp")
+    file(GLOB_RECURSE XPP_FILES ${DIR})
+    foreach(FILE ${XPP_FILES})
+        mode_apply_file(${FILE})
+    endforeach(FILE)
+endforeach(DIRECTORY)

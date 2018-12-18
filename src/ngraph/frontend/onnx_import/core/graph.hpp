@@ -38,6 +38,7 @@ namespace ngraph
             const std::vector<Node>& get_nodes() const { return m_nodes; }
             const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }
             const std::vector<ValueInfo>& get_outputs() const { return m_outputs; }
+            NodeVector get_ng_outputs() const;
             const ParameterVector& get_ng_parameters() const { return m_parameters; }
             std::shared_ptr<ngraph::Node> get_ng_node_from_cache(const std::string& name) const
             {

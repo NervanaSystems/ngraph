@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 op::LeakyRelu::LeakyRelu(shared_ptr<Node> arg, float alpha)
-    : Op("LeakyRelu", check_single_output_args({arg}))
+    : UnaryElementwiseArithmetic("LeakyRelu", {arg})
     , m_alpha(alpha)
 {
     constructor_validate_and_infer_types();
