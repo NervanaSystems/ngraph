@@ -811,7 +811,7 @@ size_t MKLDNNEmitter::build_relu_forward(const mkldnn::memory::desc& input_desc,
     size_t input_index = build_memory_primitive(input_desc);
     size_t result_index = build_memory_primitive(result_desc);
 
-    size_t primitive_index = insert_primitive(new mkldnn::relu_forward(
+    size_t primitive_index = insert_primitive(new mkldnn::eltwise_forward(
         {{mkldnn::prop_kind::forward_training, mkldnn::algorithm::eltwise_relu, input_desc, 0, 0},
          executor::global_cpu_engine},
         *m_mkldnn_primitives[input_index],
@@ -829,7 +829,7 @@ size_t MKLDNNEmitter::build_relu_backward(const mkldnn::memory::desc& input_desc
     size_t delta_index = build_memory_primitive(delta_desc);
     size_t result_index = build_memory_primitive(result_desc);
 
-    size_t primitive_index = insert_primitive(new mkldnn::relu_backward(
+    size_t primitive_index = insert_primitive(new mkldnn::eltwise_backward(
         {{mkldnn::algorithm::eltwise_relu, delta_desc, input_desc, 0, 0},
          executor::global_cpu_engine,
          {{mkldnn::prop_kind::forward, mkldnn::algorithm::eltwise_relu, input_desc, 0, 0},
