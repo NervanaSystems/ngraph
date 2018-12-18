@@ -28,6 +28,7 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph::runtime::cpu;
@@ -1025,7 +1026,9 @@ size_t MKLDNNEmitter::build_rnn_forward(const mkldnn::memory::desc& src_layer_de
                                         const mkldnn::memory::desc& weights_iter_desc,
                                         const mkldnn::memory::desc& bias_desc,
                                         const mkldnn::memory::desc& dst_layer_desc,
-                                        const mkldnn::memory::desc& dst_iter_desc)
+                                        const mkldnn::memory::desc& dst_iter_desc,
+                                        const mkldnn::rnn_direction& rnn_direction,
+                                        const mkldnn::algorithm& rnn_algorithm)
 {
     size_t src_layer_index = build_memory_primitive(src_layer_desc);
     size_t src_iter_index = build_memory_primitive(src_iter_desc);
@@ -1035,18 +1038,18 @@ size_t MKLDNNEmitter::build_rnn_forward(const mkldnn::memory::desc& src_layer_de
     size_t dst_layer_index = build_memory_primitive(dst_layer_desc);
     size_t dst_iter_index = build_memory_primitive(dst_iter_desc);
 
-    mkldnn::rnn_cell::desc rnn_cell(mkldnn::algorithm::vanilla_lstm);
-    mkldnn::rnn_forward::desc rnn_layer_desc(
-        mkldnn::prop_kind::forward_training,
-        rnn_cell,
-        mkldnn::rnn_direction::bidirectional_concat /*unidirectional_left2right*/,
-        src_layer_desc,
-        src_iter_desc,
-        weights_layer_desc,
-        weights_iter_desc,
-        bias_desc,
-        dst_layer_desc,
-        dst_iter_desc);
+    mkldnn::rnn_cell::desc rnn_cell(rnn_algorithm);
+    mkldnn::rnn_forward::desc rnn_layer_desc(mkldnn::prop_kind::forward_training,
+                                             rnn_cell,
+                                             rnn_direction,
+                                             src_layer_desc,
+                                             src_iter_desc,
+                                             weights_layer_desc,
+                                             weights_iter_desc,
+                                             bias_desc,
+                                             dst_layer_desc,
+                                             dst_iter_desc);
+
     auto rnn_layer_prim_desc =
         mkldnn::rnn_forward::primitive_desc(rnn_layer_desc, executor::global_cpu_engine);
     auto workspace_index =
@@ -1054,6 +1057,7 @@ size_t MKLDNNEmitter::build_rnn_forward(const mkldnn::memory::desc& src_layer_de
     auto workspace = std::unique_ptr<MKLDNNWorkspace>(
         new MKLDNNWorkspace(rnn_layer_prim_desc.workspace_primitive_desc().get_size()));
     auto workspace_buf_index = insert_workspace(workspace);
+
     size_t rnn_index = insert_primitive(new mkldnn::rnn_forward(
         rnn_layer_prim_desc,
         mkldnn::primitive::at(*m_mkldnn_primitives[src_layer_index]),

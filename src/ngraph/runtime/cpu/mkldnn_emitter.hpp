@@ -526,6 +526,23 @@ namespace ngraph
                     auto rnn_cell_n_states =
                         static_cast<unsigned long>(rnn_node->get_num_cell_states());
 
+                    auto get_mkldnn_rnn_cell_type = [&]() {
+                        switch (rnn_cell_n_gates)
+                        {
+                        case 1: return mkldnn::algorithm::vanilla_rnn;
+                        case 3: return mkldnn::algorithm::vanilla_gru;
+                        case 4: return mkldnn::algorithm::vanilla_lstm;
+                        }
+                    };
+
+                    auto get_mkldnn_rnn_direction = [&]() {
+                        switch (direction)
+                        {
+                        case 1: return mkldnn::rnn_direction::unidirectional_left2right;
+                        case 2: return mkldnn::rnn_direction::bidirectional_concat;
+                        }
+                    };
+
                     if (out[0].get_shape().size() == 2 &&
                         (out[0].get_shape()[1] != direction * feature_size))
                     {
@@ -584,7 +601,9 @@ namespace ngraph
                                              wei_iter_md,
                                              bias_md,
                                              dst_layer_md,
-                                             dst_iter_md);
+                                             dst_iter_md,
+                                             get_mkldnn_rnn_direction(),
+                                             get_mkldnn_rnn_cell_type());
                 }
 
                 size_t build_rnn_forward(const mkldnn::memory::desc& src_layer_desc,
@@ -593,7 +612,9 @@ namespace ngraph
                                          const mkldnn::memory::desc& weights_iter_desc,
                                          const mkldnn::memory::desc& bias_desc,
                                          const mkldnn::memory::desc& dst_layer_desc,
-                                         const mkldnn::memory::desc& dst_iter_desc);
+                                         const mkldnn::memory::desc& dst_iter_desc,
+                                         const mkldnn::rnn_direction& rnn_direction,
+                                         const mkldnn::algorithm& rnn_algorithm);
 
                 size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                     const mkldnn::memory::desc& result_desc,
