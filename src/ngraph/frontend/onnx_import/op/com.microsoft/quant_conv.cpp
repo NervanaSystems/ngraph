@@ -56,9 +56,10 @@ namespace onnxruntime
                 make_ng_quant_conv(const std::shared_ptr<ngraph::Node>& data,
                                    const std::shared_ptr<ngraph::Node>& filters,
                                    const ngraph::Strides& strides,
-                                   const ngraph::Strides& dilations,
+                                   const ngraph::Strides& filter_dilations,
                                    const ngraph::CoordinateDiff& padding_below,
                                    const ngraph::CoordinateDiff& padding_above,
+                                   const ngraph::Strides& data_dilations,
                                    int groups,
                                    const OpScale& op_scale,
                                    const OpZeroPoint& op_zero_point)
@@ -99,10 +100,10 @@ namespace onnxruntime
                                 sliced_data,
                                 sliced_filters,
                                 strides,
-                                dilations,
+                                filter_dilations,
                                 padding_below,
                                 padding_above,
-                                ngraph::Strides(),
+                                data_dilations,
                                 op_scale.data_scale,
                                 op_zero_point.data_zero_point,
                                 op_scale.filter_scale,
@@ -120,10 +121,10 @@ namespace onnxruntime
                         data,
                         filters,
                         strides,
-                        dilations,
+                        filter_dilations,
                         padding_below,
                         padding_above,
-                        dilations,
+                        data_dilations,
                         op_scale.data_scale,
                         op_zero_point.data_zero_point,
                         op_scale.filter_scale,
@@ -138,9 +139,10 @@ namespace onnxruntime
                                         const std::shared_ptr<ngraph::Node>& filters,
                                         const std::shared_ptr<ngraph::Node>& bias,
                                         const ngraph::Strides& strides,
-                                        const ngraph::Strides& dilations,
+                                        const ngraph::Strides& filter_dilations,
                                         const ngraph::CoordinateDiff& padding_below,
                                         const ngraph::CoordinateDiff& padding_above,
+                                        const ngraph::Strides& data_dilations,
                                         int groups,
                                         const OpScale& op_scale,
                                         const OpZeroPoint& op_zero_point)
@@ -157,10 +159,10 @@ namespace onnxruntime
                         filters,
                         bias,
                         strides,
-                        dilations,
+                        filter_dilations,
                         padding_below,
                         padding_above,
-                        dilations,
+                        data_dilations,
                         op_scale.data_scale,
                         op_zero_point.data_zero_point,
                         op_scale.filter_scale,
@@ -197,6 +199,8 @@ namespace onnxruntime
 
             ngraph::Strides strides = ngraph::onnx_import::convpool::get_strides(node);
             ngraph::Strides filter_dilations = ngraph::onnx_import::convpool::get_dilations(node);
+            ngraph::Strides data_dilations =
+                ngraph::Strides(ngraph::onnx_import::convpool::get_kernel_shape(node).size(), 1UL);
             auto paddings = ngraph::onnx_import::convpool::get_pads(node);
             const ngraph::CoordinateDiff& padding_below = paddings.first;
             const ngraph::CoordinateDiff& padding_above = paddings.second;
@@ -209,9 +213,10 @@ namespace onnxruntime
                 conv_node = make_ng_quant_conv(data,
                                                filters,
                                                strides,
-                                               dilations,
+                                               filter_dilations,
                                                padding_below,
                                                padding_above,
+                                               data_dilations,
                                                groups,
                                                OpScale{data_scale, filters_scale, output_scale},
                                                OpZeroPoint{data_zp, filters_zp, output_zp});
@@ -224,9 +229,10 @@ namespace onnxruntime
                                             filters,
                                             bias,
                                             strides,
-                                            dilations,
+                                            filter_dilations,
                                             padding_below,
                                             padding_above,
+                                            data_dilations,
                                             groups,
                                             OpScale{data_scale, filters_scale, output_scale},
                                             OpZeroPoint{data_zp, filters_zp, output_zp});
