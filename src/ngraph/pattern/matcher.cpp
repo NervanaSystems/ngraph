@@ -190,6 +190,23 @@ namespace ngraph
             add_node(graph_node);
             size_t watermark = m_matched_list.size() - 1;
 
+            // we can skip multi-output nodes since their shapes will be compared
+            // when their individual GOE are matched
+            // this also gives a bit more flexibility since we don't have to worry
+            // about *all* outputs of a pattern node but only the ones we want to match.
+            if (m_strict_mode && graph_node->get_outputs().size() == 1)
+            {
+                bool shape_match = pattern_node->get_output_partial_shape(0).compatible(
+                    graph_node->get_output_partial_shape(0));
+                bool et_match =
+                    pattern_node->get_element_type().compatible(graph_node->get_element_type());
+
+                if (!shape_match || !et_match)
+                {
+                    return abort_match(watermark, false);
+                }
+            }
+
             // This env var allows one to specify node name patterns to abort pattern matching
             // at particular nodes. The upshot is that one can quickly zero in on an offending fusion by
             // disabling individual fusions or optimizations that use Matcher.
