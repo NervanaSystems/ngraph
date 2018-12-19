@@ -63,3 +63,13 @@ bool ngraph::pass::PassConfig::get_pass_enable(std::string name)
     }
     return m_enables[name];
 }
+
+void ngraph::pass::PassConfig::set_reuse_memory(bool reuse_memory)
+{
+    m_reuse_memory = reuse_memory;
+}
+
+bool ngraph::pass::PassConfig::get_reuse_memory()
+{
+    return m_reuse_memory;
+}

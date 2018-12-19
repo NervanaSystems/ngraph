@@ -33,7 +33,10 @@ public:
     const std::map<std::string, bool>& get_enables() { return m_enables; }
     void set_pass_enable(std::string name, bool enable);
     bool get_pass_enable(std::string name);
+    void set_reuse_memory(bool reuse_memory);
+    bool get_reuse_memory();
 
 private:
     std::map<std::string, bool> m_enables;
+    bool m_reuse_memory = false;
 };

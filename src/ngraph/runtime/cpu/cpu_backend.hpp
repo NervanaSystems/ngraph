@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 
+#include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/backend.hpp"
 
 namespace ngraph
@@ -46,6 +47,8 @@ namespace ngraph
                                   const Shape& shape) override;
 
                 Handle compile(std::shared_ptr<Function> func) override;
+                Handle compile_with_pass_config(std::shared_ptr<Function> func,
+                                                ngraph::pass::PassConfig pass_config);
 
                 bool call(std::shared_ptr<Function> func,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,

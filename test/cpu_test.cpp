@@ -31,6 +31,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -681,6 +682,7 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
         args.push_back(tensor_val);
     }
 
+    // without memory reuse
     auto cpu_results = execute(cpu_f, args, "CPU");
 
     for (auto it = 0; it < 5; it++)
@@ -694,14 +696,43 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
         }
     }
 
-    if (setenv("NGRAPH_REUSE_MEMORY", "1", 1) == -1)
+    // with memory reuse
+    auto backend = runtime::Backend::create("CPU");
+    auto parms = cpu_f->get_parameters();
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors(args.size());
+    for (size_t i = 0; i < args.size(); i++)
     {
-        return;
+        auto t = backend->create_tensor(parms.at(i)->get_element_type(), parms.at(i)->get_shape());
+        copy_data(t, args.at(i));
+        arg_tensors.at(i) = t;
     }
+
+    auto results = cpu_f->get_results();
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> result_tensors(results.size());
+
+    for (size_t i = 0; i < results.size(); i++)
+    {
+        result_tensors.at(i) =
+            backend->create_tensor(results.at(i)->get_element_type(), results.at(i)->get_shape());
+    }
+
+    ngraph::pass::PassConfig pass_config;
+    pass_config.set_reuse_memory(true);
+    auto cpu_backend = std::unique_ptr<runtime::cpu::CPU_Backend>(
+        static_cast<runtime::cpu::CPU_Backend*>(backend.release()));
     for (auto it = 0; it < 5; it++)
     {
         auto cpu_f_new_reuse = make_function(file_name);
-        auto cpu_results_new_reuse = execute(cpu_f_new_reuse, args, "CPU");
+
+        auto handle = cpu_backend->compile_with_pass_config(cpu_f_new_reuse, pass_config);
+        cpu_backend->call_with_validate(handle, result_tensors, arg_tensors);
+
+        std::vector<std::vector<float>> cpu_results_new_reuse;
+        for (auto rt : result_tensors)
+        {
+            cpu_results_new_reuse.push_back(read_vector<float>(rt));
+        }
+
         for (size_t i = 0; i < cpu_results.size(); i++)
         {
             EXPECT_TRUE(

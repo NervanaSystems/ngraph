@@ -104,6 +104,9 @@ namespace ngraph
 
                 CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      bool release_function = true);
+                CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                                     ngraph::pass::PassConfig pass_config,
+                                     bool release_function = true);
                 ~CPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame> make_call_frame();
 
