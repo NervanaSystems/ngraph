@@ -541,6 +541,29 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(add_label1, add + a));
     ASSERT_EQ(n.get_pattern_map()[label1], a);
     ASSERT_EQ(n.get_pattern_map()[label2], add);
+
+    // strict mode
+    {
+        TestMatcher sm(nullptr, nullptr, "TestMatcher", true);
+        // exact shape and type
+        auto scalar_param = make_shared<op::Parameter>(element::i32, Shape{});
+        auto label_dynamic_shape =
+            make_shared<pattern::op::Label>(element::i32, PartialShape::dynamic());
+        auto param = make_shared<op::Parameter>(element::f32, Shape{});
+        ASSERT_TRUE(sm.match(label_dynamic_shape, scalar_param));
+        // wrong type
+        auto scalar_param_wrong_type = make_shared<op::Parameter>(element::f32, Shape{});
+        ASSERT_FALSE(sm.match(label, scalar_param_wrong_type));
+        // dynamic dimension
+        auto label_dynamic_dimension =
+            make_shared<pattern::op::Label>(element::i32, PartialShape{Dimension::dynamic()});
+        auto vector_param = make_shared<op::Parameter>(element::i32, Shape{10});
+        ASSERT_TRUE(sm.match(label_dynamic_dimension, vector_param));
+        // dynamic type
+        auto label_dynamic_type =
+            make_shared<pattern::op::Label>(element::dynamic, PartialShape{Dimension::dynamic()});
+        ASSERT_TRUE(sm.match(label_dynamic_type, vector_param));
+    }
 }
 
 TEST(pattern, sum)
