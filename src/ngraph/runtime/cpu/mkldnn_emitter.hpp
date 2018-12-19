@@ -532,6 +532,7 @@ namespace ngraph
                         case 1: return mkldnn::algorithm::vanilla_rnn;
                         case 3: return mkldnn::algorithm::vanilla_gru;
                         case 4: return mkldnn::algorithm::vanilla_lstm;
+                        default: throw ngraph_error("unsupported mkldnn rnn algorithm");
                         }
                     };
 
@@ -540,6 +541,7 @@ namespace ngraph
                         {
                         case 1: return mkldnn::rnn_direction::unidirectional_left2right;
                         case 2: return mkldnn::rnn_direction::bidirectional_concat;
+                        default: throw ngraph_error("unsupported mkldnn rnn direction");
                         }
                     };
 

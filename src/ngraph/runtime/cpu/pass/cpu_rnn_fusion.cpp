@@ -771,14 +771,13 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
     auto rnn_ltor_goe0_reshape =
         std::make_shared<pattern::op::Skip>(rnn_left_to_right_goe0, reshape_pred);
 
-    auto sequence_len = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
+    auto sequence_len_node = std::make_shared<pattern::op::Label>(element::f32, Shape{1});
     auto reverse_seq =
-        std::make_shared<op::ReverseSequence>(rnn_rtol_goe0_reshape, sequence_len, 0, 0);
+        std::make_shared<op::ReverseSequence>(rnn_rtol_goe0_reshape, sequence_len_node, 0, 0);
     auto concat = std::make_shared<op::Concat>(NodeVector{rnn_ltor_goe0_reshape, reverse_seq}, 0);
 
     // Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::graph_rewrite_callback callback = [sequence_len,
-                                                        rnn_left_to_right,
+    ngraph::pattern::graph_rewrite_callback callback = [rnn_left_to_right,
                                                         rnn_right_to_left](pattern::Matcher& m) {
 
         auto pattern_map = m.get_pattern_map();
@@ -811,9 +810,14 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
             return false;
         }
 
+        if (rnn_ltor_node->get_src_sequence_length() != rnn_rtol_node->get_src_sequence_length())
+        {
+            NGRAPH_DEBUG << " Not fusing, sequence length  of rnn's in both direction should match";
+            return false;
+        }
+
         size_t num_time_steps = rnn_ltor_node->get_num_timesteps();
         size_t lstm_n_gates = rnn_ltor_node->get_gates_per_cell();
-        size_t batch_size = rnn_ltor_node->get_batch_size();
         size_t sequence_len = rnn_ltor_node->get_src_sequence_length();
         size_t num_rnn_cell_states = rnn_ltor_node->get_num_cell_states();
         size_t rnn_direction = 2;
