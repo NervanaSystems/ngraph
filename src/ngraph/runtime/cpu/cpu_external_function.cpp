@@ -1089,7 +1089,6 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(ngraph::pass::Ma
 {
     auto pass_map = pass_manager.get_pass_config().get_enables();
 
-    REGISTER_KNOBBED_PASS(AnyAllReplacement, false, ngraph::pass);
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass);
