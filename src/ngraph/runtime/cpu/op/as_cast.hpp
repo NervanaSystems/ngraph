@@ -123,39 +123,12 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
 
-#define BACKEND_OPS                                                                                \
-    NGRAPH_OP(BatchDot, ngraph::op)                                                                \
-    NGRAPH_OP(BatchNormInferenceRelu, ngraph::op)                                                  \
-    NGRAPH_OP(BatchNormTrainingRelu, ngraph::op)                                                   \
-    NGRAPH_OP(BoundedRelu, ngraph::op)                                                             \
-    NGRAPH_OP(ConvertLayout, ngraph::runtime::cpu::op)                                             \
-    NGRAPH_OP(ConvolutionAdd, ngraph::op)                                                          \
-    NGRAPH_OP(ConvolutionBiasAdd, ngraph::op)                                                      \
-    NGRAPH_OP(ConvolutionBiasBackpropFiltersBias, ngraph::op)                                      \
-    NGRAPH_OP(ConvolutionBias, ngraph::op)                                                         \
-    NGRAPH_OP(ConvolutionRelu, ngraph::op)                                                         \
-    NGRAPH_OP(GroupConvolutionBias, ngraph::op)                                                    \
-    NGRAPH_OP(GroupConvolution, ngraph::op)                                                        \
-    NGRAPH_OP(LeakyRelu, ngraph::op)                                                               \
-    NGRAPH_OP(LoopKernel, ngraph::runtime::cpu::op)                                                \
-    NGRAPH_OP(Lstm, ngraph::op)                                                                    \
-    NGRAPH_OP(MatmulBias, ngraph::op)                                                              \
-    NGRAPH_OP(MaxPoolWithIndicesBackprop, ngraph::op)                                              \
-    NGRAPH_OP(MaxPoolWithIndices, ngraph::op)                                                      \
-    NGRAPH_OP(QuantizedConvolutionBiasAdd, ngraph::op)                                             \
-    NGRAPH_OP(QuantizedConvolutionBias, ngraph::op)                                                \
-    NGRAPH_OP(QuantizedConvolutionBiasSignedAdd, ngraph::op)                                       \
-    NGRAPH_OP(QuantizedConvolutionRelu, ngraph::op)                                                \
-    NGRAPH_OP(Rnn, ngraph::op)                                                                     \
-    NGRAPH_OP(SigmoidMultiplyBackprop, ngraph::op)                                                 \
-    NGRAPH_OP(SigmoidMultiply, ngraph::op)                                                         \
-    NGRAPH_OP(UpdateSlice, ngraph::op)
-
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
-#include "ngraph/op/op_tbl.hpp"
-    BACKEND_OPS
+
+#include "ngraph/runtime/cpu/op/op_tbl.hpp"
+
 };
 #undef NGRAPH_OP
 
@@ -172,8 +145,7 @@ struct Hash
         typedef Class::Name OutputType;                                                            \
     };
 
-#include "ngraph/op/op_tbl.hpp"
-BACKEND_OPS
+#include "ngraph/runtime/cpu/op/op_tbl.hpp"
 
 #undef NGRAPH_OP
 
@@ -181,8 +153,11 @@ static OP_TYPEID get_typeid(const std::string& s)
 {
 #define NGRAPH_OP(a, b) {#a, OP_TYPEID::a},
     static const std::unordered_map<std::string, OP_TYPEID> typeid_map{
-#include "ngraph/op/op_tbl.hpp"
-        BACKEND_OPS};
+
+#include "ngraph/runtime/cpu/op/op_tbl.hpp"
+
+    };
+
 #undef NGRAPH_OP
     auto it = typeid_map.find(s);
     if (it == typeid_map.end())
