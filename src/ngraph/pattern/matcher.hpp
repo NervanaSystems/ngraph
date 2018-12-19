@@ -68,11 +68,13 @@ namespace ngraph
             /// \param callback is a callback function that will be called on a successful match
             Matcher(const std::shared_ptr<Node> pattern_node = nullptr,
                     graph_rewrite_callback callback = nullptr,
-                    const std::string& name = "Unnamed")
+                    const std::string& name = "Unnamed",
+                    bool strict_mode = false)
                 : m_pattern_node(pattern_node)
                 , m_callback(callback)
                 , m_depth(0)
                 , m_name(name)
+                , m_strict_mode(strict_mode)
             {
             }
 
@@ -171,6 +173,7 @@ namespace ngraph
             graph_rewrite_callback m_callback;
             size_t m_depth;
             std::string m_name;
+            bool m_strict_mode;
         };
 
         class RecurrentMatcher
