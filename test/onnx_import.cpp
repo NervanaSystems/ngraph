@@ -14,8 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cmath>
 #include <cstdint>
 #include <fstream>
+#include <iterator>
+#include <limits>
 #include <sstream>
 #include <vector>
 
@@ -1532,6 +1535,48 @@ TEST(onnx, model_matmul_vec_ten3d)
 
     Outputs expected_output{test::NDArray<float, 2>{{1.f}, {3.f}, {5.f}}};
 
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_softplus)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/ActivationOpTest_Softplus.onnx"));
+
+    // -1.0f, 0, 1.0f,                                            normal input values for activation
+    // 100.0f, -100.0f, 1000.0f, -1000.0f,                        input values that leads to exp() overflow
+    // FLT_MIN, FLT_MIN / 10, -FLT_MIN / 10,                      min, denorm, -denorm
+    // FLT_MAX, -FLT_MAX, std::numeric_limits<float>::infinity()  max, -max, inf;
+    Inputs inputs{std::vector<float>{-1.0f,
+                                     0,
+                                     1.0f,
+                                     100.0f,
+                                     -100.0f,
+                                     1000.0f,
+                                     -1000.0f,
+                                     FLT_MIN,
+                                     FLT_MIN / 10,
+                                     -FLT_MIN / 10,
+                                     FLT_MAX,
+                                     -FLT_MAX,
+                                     std::numeric_limits<float>::infinity()}};
+
+    std::vector<float>& input = inputs.back();
+    std::vector<float> output;
+    std::transform(
+        std::begin(input), std::end(input), std::back_inserter(output), [](float x) -> float {
+            if (x > 0)
+            {
+                return x + std::log(std::exp(-x) + 1);
+            }
+            else
+            {
+                return std::log(std::exp(x) + 1);
+            }
+        });
+
+    Outputs expected_output{output};
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
