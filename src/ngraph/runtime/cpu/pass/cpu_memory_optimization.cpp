@@ -132,8 +132,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
                 if (!std::dynamic_pointer_cast<op::Concat>(arg))
                 {
-                    if (auto op = std::dynamic_pointer_cast<op::Op>(arg))
+                    if (arg->is_op())
                     {
+                        auto op = std::static_pointer_cast<op::Op>(arg);
                         auto annotation = op->get_op_annotations();
                         if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
 
@@ -174,8 +175,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     {
                         if ((user != concat))
                         {
-                            if (auto op = std::dynamic_pointer_cast<op::Op>(user))
+                            if (user->is_op())
                             {
+                                auto op = std::static_pointer_cast<op::Op>(user);
                                 if (auto op_annotations = op->get_op_annotations())
                                 {
                                     if (op_annotations->get_in_place_oi_pairs().size() > 0)
@@ -233,11 +235,30 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             auto upper_bounds = slice->get_upper_bounds();
 
             auto arg = slice->get_argument(0);
-            if (std::dynamic_pointer_cast<op::Constant>(arg) ||
-                std::dynamic_pointer_cast<op::Parameter>(arg))
+
+            if (arg->is_constant())
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
-                             << ": constant or parameter, no in place slice";
+                             << ": constant, no in place slice";
+                continue;
+            }
+
+            bool no_in_place_slice = false;
+            if (arg->is_parameter())
+            {
+                for (auto user : slice->get_users())
+                {
+                    if (user->is_output())
+                    {
+                        NGRAPH_DEBUG << "cpu_memory_optimization: slice between function input and "
+                                        "output, no in place slice";
+                        no_in_place_slice = true;
+                        break;
+                    }
+                }
+            }
+            if (no_in_place_slice)
+            {
                 continue;
             }
 
@@ -280,12 +301,16 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                 continue;
             }
 
-            // check if input layout is padded
-            AxisVector axis_list = ngraph::get_default_order(in_shape);
-            if (mkldnn_utils::is_mkldnn_padded_layout(input_md, axis_list))
+            // If input layout is in non-native layout, we need more complicated checks for
+            // slice contiguity. Bail out for now.
+            auto input_tensor = slice->get_inputs().at(0).get_output().get_tensor_ptr();
+            auto native_md = mkldnn_utils::create_blocked_mkldnn_md(
+                in_shape,
+                input_tensor->get_tensor_layout()->get_strides(),
+                slice->get_input_element_type(0));
+            if (!mkldnn_utils::compare_mkldnn_mds(input_md, native_md))
             {
-                NGRAPH_DEBUG << "cpu_memory_optimization: padded input layout, no in place slice";
-
+                NGRAPH_DEBUG << "cpu_memory_optimization: Non-native layout for MKLDNN slice input";
                 continue;
             }
 

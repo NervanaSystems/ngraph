@@ -30,6 +30,7 @@ namespace ngraph
         class ExternalFunction;
         class Tensor;
         class Backend;
+        using Handle = std::shared_ptr<Function>;
     }
 }
 
@@ -79,8 +80,8 @@ public:
 
     /// \brief Compiles a Function.
     /// \param func The function to compile
-    /// \returns true if compile is successful, false otherwise
-    virtual bool compile(std::shared_ptr<Function> func) = 0;
+    /// \returns compiled function or nullptr on failure
+    virtual Handle compile(std::shared_ptr<Function> func) = 0;
 
     /// \brief Executes a single iteration of a Function. If func is not compiled the call will
     ///     compile it.
@@ -98,7 +99,7 @@ public:
                             const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                             const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
     {
-        validate_call(func, outputs, inputs);
+        validate(func, outputs, inputs);
         return call(func, outputs, inputs);
     }
 
@@ -123,8 +124,7 @@ public:
     /// \returns true if the op is supported, false otherwise.
     virtual bool is_supported(const Node& node) const;
 
-protected:
-    void validate_call(std::shared_ptr<const Function> func,
-                       const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                       const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+    void validate(std::shared_ptr<const Function> func,
+                  const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                  const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 };

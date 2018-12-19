@@ -17,6 +17,7 @@
 #include "ngraph/runtime/plaidml/plaidml_compiler.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/any_all_replacement.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
@@ -74,6 +75,7 @@ std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     ngraph::pass::Manager pass_manager;
 
     // We apply the same general-purposes passes as the CPU backend.
+    pass_manager.register_pass<ngraph::pass::AnyAllReplacement>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();

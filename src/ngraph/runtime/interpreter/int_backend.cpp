@@ -25,14 +25,13 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
-
-const int runtime::interpreter::INTBackend::m_alignment = 64;
 
 extern "C" const char* get_ngraph_version_string()
 {
@@ -56,7 +55,7 @@ shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer, "external");
 }
 
-bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
+runtime::Handle runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
 {
     FunctionInstance& instance = m_function_map[function];
     if (!instance.m_is_compiled)
@@ -66,11 +65,11 @@ bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
         pass_manager.register_pass<pass::LikeReplacement>();
         pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
         pass_manager.register_pass<pass::Liveness>();
-        pass_manager.register_pass<pass::MemoryLayout>(m_alignment);
+        pass_manager.register_pass<pass::MemoryLayout>(get_alignment());
         pass_manager.run_passes(function);
 
         size_t memory_pool_size = function->get_temporary_pool_size();
-        instance.m_temporary_memory.reset(new AlignedBuffer(memory_pool_size, m_alignment));
+        instance.m_temporary_memory.reset(new AlignedBuffer(memory_pool_size, get_alignment()));
 
         for (const shared_ptr<Node>& node : function->get_ordered_ops())
         {
@@ -78,17 +77,19 @@ bool runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
         }
     }
 
-    return true;
+    return function;
 }
 
 bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
                                             const vector<shared_ptr<runtime::Tensor>>& outputs,
                                             const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    validate_call(function, outputs, inputs);
-
-    compile(function);
-    FunctionInstance& instance = m_function_map[function];
+    auto fit = m_function_map.find(function);
+    if (fit == m_function_map.end())
+    {
+        throw runtime_error("compile() must be called before call().");
+    }
+    FunctionInstance& instance = fit->second;
 
     // convert inputs to HostTensor
     vector<void*> func_inputs;

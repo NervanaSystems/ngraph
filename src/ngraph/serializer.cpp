@@ -23,8 +23,10 @@
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
@@ -42,6 +44,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
@@ -458,6 +461,12 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Add>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::All:
+            {
+                auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+                node = make_shared<op::All>(args[0], reduction_axes);
+                break;
+            }
             case OP_TYPEID::AllReduce:
             {
                 node = make_shared<op::AllReduce>(args[0]);
@@ -466,6 +475,12 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::And:
             {
                 node = make_shared<op::And>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::Any:
+            {
+                auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+                node = make_shared<op::Any>(args[0], reduction_axes);
                 break;
             }
             case OP_TYPEID::ArgMin:
@@ -556,6 +571,12 @@ static shared_ptr<ngraph::Function>
                 auto shape = node_js.at("shape").get<vector<size_t>>();
                 auto axes = node_js.at("axes").get<set<size_t>>();
                 node = make_shared<op::Broadcast>(args[0], shape, axes);
+                break;
+            }
+            case OP_TYPEID::BroadcastLike:
+            {
+                auto initial_axes = node_js.at("initial_axes").get<set<size_t>>();
+                node = make_shared<op::BroadcastLike>(args[0], args[1], initial_axes);
                 break;
             }
             case OP_TYPEID::Ceiling:
@@ -712,6 +733,11 @@ static shared_ptr<ngraph::Function>
                     size_t reduction_axes_count = obj.get<size_t>();
                     node = make_shared<op::Dot>(args[0], args[1], reduction_axes_count);
                 }
+                break;
+            }
+            case OP_TYPEID::EmbeddingLookup:
+            {
+                node = make_shared<op::EmbeddingLookup>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::Equal:
@@ -1006,6 +1032,12 @@ static shared_ptr<ngraph::Function>
                     make_shared<op::ReverseSequence>(args[0], args[1], batch_axis, sequence_axis);
                 break;
             }
+            case OP_TYPEID::ScalarConstantLike:
+            {
+                double value = node_js.at("value").get<double>();
+                node = make_shared<op::ScalarConstantLike>(args[0], value);
+                break;
+            }
             case OP_TYPEID::Select:
             {
                 node = make_shared<op::Select>(args[0], args[1], args[2]);
@@ -1252,9 +1284,21 @@ static json write(const Node& n, bool binary_constant_data)
         node["index_element_type"] = write_element_type(tmp->get_element_type());
         break;
     }
+    case OP_TYPEID::All:
+    {
+        auto tmp = dynamic_cast<const op::All*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
+        break;
+    }
     case OP_TYPEID::AllReduce: { break;
     }
     case OP_TYPEID::And: { break;
+    }
+    case OP_TYPEID::Any:
+    {
+        auto tmp = dynamic_cast<const op::Any*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
+        break;
     }
     case OP_TYPEID::Asin: { break;
     }
@@ -1304,6 +1348,12 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::Broadcast*>(&n);
         node["axes"] = tmp->get_broadcast_axes();
         node["shape"] = tmp->get_broadcast_shape();
+        break;
+    }
+    case OP_TYPEID::BroadcastLike:
+    {
+        auto tmp = dynamic_cast<const op::BroadcastLike*>(&n);
+        node["initial_axes"] = tmp->get_initial_broadcast_axes();
         break;
     }
     case OP_TYPEID::Ceiling: { break;
@@ -1381,6 +1431,8 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::Dot*>(&n);
         node["reduction_axes_count"] = tmp->get_reduction_axes_count();
         break;
+    }
+    case OP_TYPEID::EmbeddingLookup: { break;
     }
     case OP_TYPEID::Equal: { break;
     }
@@ -1557,6 +1609,14 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::ReverseSequence*>(&n);
         node["batch_axis"] = tmp->get_batch_axis();
         node["sequence_axis"] = tmp->get_sequence_axis();
+        break;
+    }
+    case OP_TYPEID::ScalarConstantLike:
+    {
+        auto tmp = dynamic_cast<const op::ScalarConstantLikeBase*>(&n);
+        auto constant = tmp->as_constant();
+        node["value"] = constant->get_value_strings()[0];
+        node["element_type"] = write_element_type(constant->get_element_type());
         break;
     }
     case OP_TYPEID::Select: { break;

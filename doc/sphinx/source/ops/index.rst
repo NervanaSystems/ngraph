@@ -50,13 +50,17 @@ Not currently a comprehensive list.
    * :doc:`abs`
    * :doc:`acos`
    * :doc:`add`
+   * :doc:`all`
    * :doc:`allreduce`
    * :doc:`and`
+   * :doc:`any`
    * :doc:`asin`
    * :doc:`atan`
    * :doc:`avg_pool`
    * :doc:`avg_pool_backprop`
-   * :doc:`batch_norm`
+   * :doc:`batch_norm_inference`
+   * :doc:`batch_norm_training`
+   * :doc:`batch_norm_training_backprop`
    * :doc:`broadcast`
    * :doc:`ceiling`
    * :doc:`concat`
@@ -117,13 +121,17 @@ Not currently a comprehensive list.
    abs.rst
    acos.rst
    add.rst
+   all.rst
    allreduce.rst
    and.rst
+   any.rst
    asin.rst
    atan.rst
    avg_pool.rst
    avg_pool_backprop.rst
-   batch_norm.rst
+   batch_norm_inference.rst
+   batch_norm_training.rst
+   batch_norm_training_backprop.rst
    broadcast.rst
    ceiling.rst
    concat.rst

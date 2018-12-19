@@ -1,4 +1,4 @@
-# nGraph Compiler Stack
+# nGraph Compiler Stack (Beta)
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph/blob/master/LICENSE) [![Build Status][build-status-badge]][build-status] 
 
@@ -16,12 +16,12 @@ workloads on CPU for inference, please refer to the links below.
 
 |  Framework (Version)       | Installation guide                     | Notes  
 |----------------------------|----------------------------------------|-----------------------------------
-| TensorFlow* 1.12           | [Pip package] or [Build from source]   | 17 [Validated workloads]
-| MXNet* 1.4                 | [Enable the module] or [Source compile]| 17 [Validated workloads]   
-| ONNX 1.3                   | [Pip package]                          | 14 [Validated workloads] 
+| TensorFlow* 1.12           | [Pip install](https://github.com/NervanaSystems/ngraph-tf/tree/v0.8.0#option-1-use-a-pre-built-ngraph-tensorflow-bridge) or [Build from source](https://github.com/NervanaSystems/ngraph-tf/tree/v0.8.0#option-2-build-ngraph-bridge-from-source-using-tensorflow-source)   | 20 [Validated workloads]
+| MXNet* 1.3                 | [Pip install](https://github.com/NervanaSystems/ngraph-mxnet#Installation) or [Build from source](https://github.com/NervanaSystems/ngraph-mxnet#building-with-ngraph-support)| 18 [Validated workloads]   
+| ONNX 1.3                   | [Pip install](https://github.com/NervanaSystems/ngraph-onnx#installation)                          | 14 [Validated workloads] 
 
 Frameworks using nGraph Compiler stack to execute workloads have shown 
-**up to 45X** performance boost when compared to native framework 
+[**up to 45X**](https://ai.intel.com/ngraph-compiler-stack-beta-release/) performance boost when compared to native framework 
 implementations. We've also seen performance boosts running workloads that 
 are not included on the list of [Validated workloads], thanks to our 
 powerful subgraph pattern matching.
@@ -79,7 +79,7 @@ to improve it:
   accepted, your pull request will be merged to the repository.
 
 
-[Ecosystem]: ecosystem-overview
+[Ecosystem]: ./ecosystem-overview.md
 [Architecture and features]:https://ngraph.nervanasys.com/docs/latest/project/about.html
 [Documentation]: https://ngraph.nervanasys.com/docs/latest
 [build the Library]: https://ngraph.nervanasys.com/docs/latest/buildlb.html
@@ -93,16 +93,13 @@ to improve it:
 [contrib guide]: https://ngraph.nervanasys.com/docs/latest/project/code-contributor-README.html
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
 [how to import]: https://ngraph.nervanasys.com/docs/latest/howto/import.html
-[ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/ngraph_wireframes_with_notice.png "nGraph wireframe"
+[ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/readme_stack.png "nGraph wireframe"
 [ngraph-compiler-stack-readme]: doc/sphinx/source/graphics/ngraph-compiler-stack-readme.png "nGraph Compiler Stack"
 [build-status]: https://travis-ci.org/NervanaSystems/ngraph/branches
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
 [develop-without-lockin]: doc/sphinx/source/graphics/develop-without-lockin.png "Develop on any part of the stack wtihout lockin"
 [Movidius™ Myriad™ 2]:https://www.movidius.com/solutions/vision-processing-unit
 [PlaidML]: https://github.com/plaidml/plaidml
-[Pip package]: https://github.com/NervanaSystems/ngraph-onnx#installing-ngraph-onnx
-[Build from source]: https://github.com/NervanaSystems/ngraph-tf
-[Enable the module]: https://github.com/NervanaSystems/ngraph/blob/mbrookhart/mxnet_tutorial/doc/sphinx/source/shared/mxnet_tutorial.rst
 [Source compile]: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/README.md
 [nGraph-ONNX]: https://github.com/NervanaSystems/ngraph-onnx/blob/master/README.md
 [nGraph-ONNX adaptable]: https://ai.intel.com/adaptable-deep-learning-solutions-with-ngraph-compiler-and-onnx/

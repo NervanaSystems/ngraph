@@ -106,9 +106,6 @@ non-device-specific optimizations:
     with nGraph.
 -   **Memory management** -- Prevent peak memory usage by intercepting
     a graph with or by a "saved checkpoint," and to enable data auditing.
--   **Data layout abstraction** -- Make abstraction easier and faster
-    with nGraph translating element order to work best for whatever given
-    or available device.
 
 Beta Limitations
 ----------------
@@ -120,7 +117,7 @@ release of nGraph. nGraph currently has limited support for dynamic graphs.
 Current nGraph Compiler full stack
 ----------------------------------
 
-![](doc/sphinx/source/graphics/full-ngstck.png)
+![](doc/sphinx/source/graphics/about_fullstack.png)
 
 
 In addition to IA and NNP transformers, nGraph Compiler stack has transformers
