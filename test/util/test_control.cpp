@@ -64,6 +64,6 @@ string ngraph::combine_test_backend_and_case(const string& backend_name,
     }
     else
     {
-        return backend_name + "_" + test_casename;
+        return backend_name + "/" + test_casename;
     }
 }
