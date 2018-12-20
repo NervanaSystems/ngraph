@@ -1207,3 +1207,21 @@ size_t MKLDNNEmitter::build_bounded_relu(const mkldnn::memory::desc& input_desc,
     m_primitive_deps[primitive_index] = {input_index, result_index};
     return primitive_index;
 }
+
+size_t MKLDNNEmitter::convolution_forward_init(bool with_bias)
+{
+    size_t size = m_mkldnn_primitives.size();
+    if (with_bias)
+    {
+        // Inputs, Weights, Bias, Results, Conv
+        m_mkldnn_primitives.resize(size + 5, nullptr);
+        m_primitive_deps[m_mkldnn_primitives.size() - 1] = {size, size + 1, size + 2, size + 3};
+    }
+    else
+    {
+        // Inputs, Weights, Results, Conv
+        m_mkldnn_primitives.resize(size + 4, nullptr);
+        m_primitive_deps[m_mkldnn_primitives.size() - 1] = {size, size + 1, size + 2};
+    }
+    return m_mkldnn_primitives.size() - 1;
+}
