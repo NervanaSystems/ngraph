@@ -172,7 +172,7 @@ class Develop(develop):
     def run(self):
         develop.run(self)
         if self.uninstall:
-            pass
+            return
         # Copy nGraph library to a path accessible in develop mode
         libs = os.listdir(build_shared_lib)
         for lib in libs:
