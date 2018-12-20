@@ -24,6 +24,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
+#include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_memory_assignment.hpp"
 #include "ngraph/util.hpp"
 
@@ -50,13 +51,13 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
 
     // Tensors should not be freed due to the following reasons:
     // Several tensors may have the same offset because of in place propagation, only one of them should be freed.
-    // Tensors got offset 0 from parameter or constant due to in place propagation and should never be freed.
+    // Tensors get offset 0 from parameter or constant due to in place propagation and should never be freed.
     std::set<const descriptor::Tensor*> io_no_free;
 
     if (!m_disable_memory_sharing)
     {
         // Set of tensors in the chain of in place propagation ops where the beginning of the chain is parameter, constant,
-        // of a node whose output has multiple users.
+        // or a node whose output has multiple users.
         std::set<const descriptor::Tensor*> io_from_param_or_const_or_multi;
         // build caching map from cacheability
         for (shared_ptr<Node> node : function->get_ordered_ops())
@@ -92,24 +93,10 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                 {
                     if (auto concat = std::dynamic_pointer_cast<ngraph::op::Concat>(node))
                     {
-                        bool found_last_concat = true;
-                        for (auto user : concat->get_users())
-                        {
-                            if (auto user_concat = dynamic_pointer_cast<ngraph::op::Concat>(user))
-                            {
-                                if (auto user_op_annotations = user_concat->get_op_annotations())
-                                {
-                                    auto user_in_place_oi_pairs =
-                                        user_op_annotations->get_in_place_oi_pairs();
-                                    if (user_in_place_oi_pairs.size() > 0)
-                                    {
-                                        found_last_concat = false;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        if (found_last_concat)
+                        auto cpu_op_annotations =
+                            std::static_pointer_cast<runtime::cpu::CPUOpAnnotations>(
+                                op_annotations);
+                        if (!cpu_op_annotations->can_free_memory())
                         {
                             shared_ptr<descriptor::Tensor> tv = node->get_output_tensor_ptr(0);
                             m_tensor_caching.insert(tv.get());
@@ -129,13 +116,13 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                                 node->liveness_new_list.count(output) != 0)
 
                             {
-                                // input tensor and output tensor has the same offset, should not free input tensor, only free output tensor.
+                                // input tensor and output tensor have the same offset, should not free input tensor, only free output tensor.
                                 io_no_free.insert(input);
 
                                 auto input_output_inputs =
                                     node->get_inputs().at(oi_pair.input).get_output().get_inputs();
                                 // tensors in the chain of in place propagation ops where the beginning of the chain is parameter, constant,
-                                // of a node whose output has multiple users. Those tensors should not be freed.
+                                // or a node whose output has multiple users. Those tensors should not be freed.
                                 if (input_node->is_parameter() || input_node->is_constant() ||
                                     input_output_inputs.size() > 1 ||
                                     io_from_param_or_const_or_multi.count(input))

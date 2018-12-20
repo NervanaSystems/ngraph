@@ -34,8 +34,11 @@ namespace ngraph
                 CPUOpAnnotations() {}
                 bool is_mkldnn_op() { return m_mkldnn_op; }
                 void set_mkldnn_op(bool val) { m_mkldnn_op = val; }
+                bool can_free_memory() { return m_free_memory; }
+                void set_free_memory(bool val) { m_free_memory = val; }
             private:
                 bool m_mkldnn_op = false;
+                bool m_free_memory = true;
             };
 
             std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)>

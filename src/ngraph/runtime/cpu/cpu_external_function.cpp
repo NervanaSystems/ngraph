@@ -214,25 +214,6 @@ using namespace ngraph;
     }
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
-    const shared_ptr<ngraph::Function>& function, bool release_function)
-    : m_function(function)
-    , m_release_function(release_function)
-    , m_emit_timing(false)
-    , m_use_tbb(std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
-#if !defined(NGRAPH_DEX_ONLY)
-    , m_is_compiled(false)
-    , m_direct_execution(!std::getenv("NGRAPH_CODEGEN"))
-#else
-    , m_direct_execution(true)
-#endif
-    , m_compiled_function(nullptr)
-    , m_function_name(function->get_name())
-    , m_is_built(false)
-    , m_reuse_memory(std::getenv("NGRAPH_REUSE_MEMORY"))
-{
-}
-
-runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     const shared_ptr<ngraph::Function>& function,
     ngraph::pass::PassConfig pass_config,
     bool release_function)
@@ -249,8 +230,12 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_compiled_function(nullptr)
     , m_function_name(function->get_name())
     , m_is_built(false)
-    , m_reuse_memory(pass_config.get_reuse_memory())
+    , m_pass_config(pass_config)
 {
+    if (std::getenv("NGRAPH_REUSE_MEMORY"))
+    {
+        m_pass_config.set_reuse_memory(true);
+    }
 }
 
 runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
@@ -1327,26 +1312,9 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_concat(
                                      << old_offset << ", new offset is " << offset << std::endl;
                         offset += input_tensor->size();
                     }
-
-                    bool found_last_concat = true;
-                    for (auto user : concat->get_users())
-                    {
-                        if (auto user_concat = dynamic_pointer_cast<ngraph::op::Concat>(user))
-                        {
-                            if (auto user_op_annotations = user_concat->get_op_annotations())
-                            {
-                                auto user_in_place_oi_pairs =
-                                    user_op_annotations->get_in_place_oi_pairs();
-                                if (user_in_place_oi_pairs.size() > 0)
-                                {
-                                    found_last_concat = false;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    if (found_last_concat)
+                    auto cpu_op_annotations =
+                        std::static_pointer_cast<runtime::cpu::CPUOpAnnotations>(op_annotations);
+                    if (!cpu_op_annotations->can_free_memory())
                     {
                         for (auto arg : concat->get_arguments())
                         {
@@ -1471,7 +1439,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
     pass_manager.register_pass<ngraph::pass::PropagateCacheability>(
         runtime::cpu::get_annotations_factory());
     pass_manager.register_pass<runtime::cpu::pass::CPUMemoryAssignment>(
-        size_t(s_memory_pool_alignment), !m_reuse_memory);
+        size_t(s_memory_pool_alignment), !m_pass_config.get_reuse_memory());
     pass_manager.run_passes(m_function, false);
 
     // Store layouts assigned for arguments

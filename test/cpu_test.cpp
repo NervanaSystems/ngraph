@@ -724,7 +724,7 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
     {
         auto cpu_f_new_reuse = make_function(file_name);
 
-        auto handle = cpu_backend->compile_with_pass_config(cpu_f_new_reuse, pass_config);
+        auto handle = cpu_backend->compile(cpu_f_new_reuse, pass_config);
         cpu_backend->call_with_validate(handle, result_tensors, arg_tensors);
 
         std::vector<std::vector<float>> cpu_results_new_reuse;

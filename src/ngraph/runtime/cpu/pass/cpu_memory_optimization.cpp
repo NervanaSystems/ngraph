@@ -219,6 +219,31 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     op_annotations->add_in_place_oi_pair({0, 0, false});
                     concat->set_op_annotations(op_annotations);
                 }
+
+                // check if it is the last in place concat
+                bool found_last_concat = true;
+                for (auto user : concat->get_users())
+                {
+                    if (auto user_concat = std::dynamic_pointer_cast<ngraph::op::Concat>(user))
+                    {
+                        if (auto user_op_annotations = user_concat->get_op_annotations())
+                        {
+                            auto user_in_place_oi_pairs =
+                                user_op_annotations->get_in_place_oi_pairs();
+                            if (user_in_place_oi_pairs.size() > 0)
+                            {
+                                found_last_concat = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (found_last_concat)
+                {
+                    auto cpu_op_annotations =
+                        std::static_pointer_cast<runtime::cpu::CPUOpAnnotations>(op_annotations);
+                    cpu_op_annotations->set_free_memory(false);
+                }
             }
         }
     }

@@ -102,11 +102,10 @@ namespace ngraph
                     INTERMEDIATE
                 };
 
-                CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                     bool release_function = true);
-                CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                     ngraph::pass::PassConfig pass_config,
-                                     bool release_function = true);
+                CPU_ExternalFunction(
+                    const std::shared_ptr<ngraph::Function>& function,
+                    ngraph::pass::PassConfig pass_config = ngraph::pass::PassConfig(),
+                    bool release_function = true);
                 ~CPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame> make_call_frame();
 
@@ -288,7 +287,7 @@ namespace ngraph
                 std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
                 std::vector<runtime::PerformanceCounter> m_perf_counters;
-                bool m_reuse_memory;
+                ngraph::pass::PassConfig m_pass_config;
 
 #if defined(NGRAPH_HALIDE)
                 std::unordered_map<std::string, Halide::Func> halide_functions;

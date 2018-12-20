@@ -69,20 +69,12 @@ shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(
 
 runtime::Handle runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
 {
-    FunctionInstance& instance = m_function_map[func];
-    if (instance.m_external_function == nullptr)
-    {
-        instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
-        instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
-        auto cf = instance.m_external_function->make_call_frame();
-        instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
-    }
-    return func;
+    ngraph::pass::PassConfig pass_config;
+    return compile(func, pass_config);
 }
 
-runtime::Handle
-    runtime::cpu::CPU_Backend::compile_with_pass_config(shared_ptr<Function> func,
-                                                        ngraph::pass::PassConfig pass_config)
+runtime::Handle runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func,
+                                                   ngraph::pass::PassConfig pass_config)
 {
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
