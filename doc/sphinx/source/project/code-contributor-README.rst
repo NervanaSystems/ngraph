@@ -1,8 +1,8 @@
 .. code-contributor-README:
 
-###########################
-Core Contributor Guidelines
-###########################
+######################
+Code Contributor Guide
+######################
 
 License
 =======
@@ -13,7 +13,7 @@ contributed with another license will need the license reviewed by
 Intel before it can be accepted.
 
 Code formatting
-================
+===============
 
 All C/C++ source code in the repository, including the test code, must
 adhere to the source-code formatting and style guidelines described
@@ -260,4 +260,4 @@ it is automatically enforced and reduces merge conflicts.
 
 
 .. _Apache 2: https://www.apache.org/licenses/LICENSE-2.0
-.. _repo wiki: 
+.. _repo wiki: https://github.com/NervanaSystems/ngraph/wiki
