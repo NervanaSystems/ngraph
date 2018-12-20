@@ -58,8 +58,6 @@ TEST(distributed_${BACKEND_NAME}, distbroadcast)
     auto f = make_shared<Function>(make_shared<op::DistBroadcast>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("CPU");
-    auto comm_size = MLSL::Environment::GetEnv().GetProcessCount();
-
 
     auto v = vector<float>{1, 2, 3, 4};
     auto a = backend->create_tensor(element::f32, shape);
