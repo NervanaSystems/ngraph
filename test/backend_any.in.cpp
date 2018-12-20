@@ -48,7 +48,8 @@ NGRAPH_TEST(${BACKEND_NAME}, any_trivial)
     copy_data(a, vector<char>{0, 1, 1, 0});
     auto result = backend->create_tensor(element::boolean, shape);
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ((vector<char>{0, 1, 1, 0}), read_vector<char>(result));
 }
 
@@ -65,7 +66,8 @@ NGRAPH_TEST(${BACKEND_NAME}, any_2x2_to_scalar_true)
     copy_data(a, vector<char>{0, 1, 1, 0});
     auto result = backend->create_tensor(element::boolean, Shape{});
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ((vector<char>{1}), read_vector<char>(result));
 }
 
@@ -82,7 +84,8 @@ NGRAPH_TEST(${BACKEND_NAME}, any_2x2_to_scalar_false)
     copy_data(a, vector<char>{0, 0, 0, 0});
     auto result = backend->create_tensor(element::boolean, Shape{});
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ((vector<char>{0}), read_vector<char>(result));
 }
 
@@ -98,7 +101,8 @@ NGRAPH_TEST(${BACKEND_NAME}, any_2x0_to_scalar)
     auto a = backend->create_tensor(element::boolean, shape);
     auto result = backend->create_tensor(element::boolean, Shape{});
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ((vector<char>{0}), read_vector<char>(result));
 }
 
@@ -115,7 +119,8 @@ NGRAPH_TEST(${BACKEND_NAME}, any_2x3_eliminate_col_dim)
     copy_data(a, test::NDArray<char, 2>({{0, 1, 0}, {0, 0, 0}}).get_vector());
     auto result = backend->create_tensor(element::boolean, Shape{2});
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ((vector<char>{1, 0}), read_vector<char>(result));
 }
 
@@ -132,7 +137,8 @@ NGRAPH_TEST(${BACKEND_NAME}, any_2x3_eliminate_row_dim)
     copy_data(a, test::NDArray<char, 2>({{0, 1, 0}, {0, 0, 1}}).get_vector());
     auto result = backend->create_tensor(element::boolean, Shape{3});
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ((vector<char>{0, 1, 1}), read_vector<char>(result));
 }
 
@@ -150,7 +156,8 @@ NGRAPH_TEST(${BACKEND_NAME}, any_2x2x3_eliminate_dim_0)
         a, test::NDArray<char, 3>({{{0, 1, 0}, {0, 0, 1}}, {{1, 0, 1}, {0, 0, 0}}}).get_vector());
     auto result = backend->create_tensor(element::boolean, Shape{2, 3});
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ((vector<char>{1, 1, 1, 0, 0, 1}), read_vector<char>(result));
 }
 
@@ -168,7 +175,8 @@ NGRAPH_TEST(${BACKEND_NAME}, any_2x2x3_eliminate_dim_1)
         a, test::NDArray<char, 3>({{{0, 1, 0}, {0, 0, 1}}, {{1, 0, 1}, {0, 0, 0}}}).get_vector());
     auto result = backend->create_tensor(element::boolean, Shape{2, 3});
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ((vector<char>{0, 1, 1, 1, 0, 1}), read_vector<char>(result));
 }
 
@@ -186,7 +194,8 @@ NGRAPH_TEST(${BACKEND_NAME}, any_2x2x3_eliminate_dim_2)
         a, test::NDArray<char, 3>({{{0, 1, 0}, {0, 0, 1}}, {{1, 0, 1}, {0, 0, 0}}}).get_vector());
     auto result = backend->create_tensor(element::boolean, Shape{2, 2});
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ((vector<char>{1, 1, 1, 0}), read_vector<char>(result));
 }
 
@@ -204,7 +213,8 @@ NGRAPH_TEST(${BACKEND_NAME}, any_2x2x3_eliminate_dims_0_1)
         a, test::NDArray<char, 3>({{{0, 1, 0}, {0, 0, 1}}, {{1, 0, 1}, {0, 0, 0}}}).get_vector());
     auto result = backend->create_tensor(element::boolean, Shape{3});
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ((vector<char>{1, 1, 1}), read_vector<char>(result));
 }
 
@@ -222,7 +232,8 @@ NGRAPH_TEST(${BACKEND_NAME}, any_2x2x3_eliminate_dims_0_2)
         a, test::NDArray<char, 3>({{{0, 1, 0}, {0, 0, 1}}, {{1, 0, 1}, {0, 0, 0}}}).get_vector());
     auto result = backend->create_tensor(element::boolean, Shape{2});
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ((vector<char>{1, 1}), read_vector<char>(result));
 }
 
@@ -240,7 +251,8 @@ NGRAPH_TEST(${BACKEND_NAME}, any_2x2x3_eliminate_dims_1_2)
         a, test::NDArray<char, 3>({{{0, 1, 0}, {0, 0, 1}}, {{1, 0, 1}, {0, 0, 0}}}).get_vector());
     auto result = backend->create_tensor(element::boolean, Shape{2});
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ((vector<char>{1, 1}), read_vector<char>(result));
 }
 
@@ -258,6 +270,7 @@ NGRAPH_TEST(${BACKEND_NAME}, any_2x2x3_eliminate_dims_0_1_2)
         a, test::NDArray<char, 3>({{{0, 1, 0}, {0, 0, 1}}, {{1, 0, 1}, {0, 0, 0}}}).get_vector());
     auto result = backend->create_tensor(element::boolean, Shape{});
 
-    backend->call_with_validate(backend->compile(f), {result}, {a});
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ((vector<char>{1}), read_vector<char>(result));
 }
