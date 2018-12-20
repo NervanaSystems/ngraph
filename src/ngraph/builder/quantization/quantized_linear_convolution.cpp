@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
@@ -46,9 +47,9 @@ namespace ngraph
                                            std::shared_ptr<Node> output_scale,
                                            std::shared_ptr<Node> output_zero_point)
             {
-                // TODO: need to verify that zero points are 0 or otherwise handle
-                // TODO: not entirely sure this is correct
-                auto requantization_scale = input_scale * filter_scale / output_scale;
+                // TODO: need to handle the case where offset is provided (assuming 0)
+                // TODO: need to establish cross-nGraph view of scale (mult or div)
+                auto requantization_scale = output_scale / (input_scale * filter_scale);
 
                 return make_shared<op::QuantizedConvolution>(input,
                                                              filter,
@@ -76,9 +77,10 @@ namespace ngraph
                                                std::shared_ptr<Node> output_scale,
                                                std::shared_ptr<Node> output_zero_point)
             {
-                // TODO: need to verify that zero points are 0 or otherwise handle
-                // TODO: not entirely sure this is correct
-                auto requantization_scale = input_scale * filter_scale / output_scale;
+                // TODO: need to handle the case where offset is provided (assuming 0)
+                // TODO: need to establish cross-nGraph view of scale (mult or div)
+                auto requantization_scale = output_scale / (input_scale * filter_scale);
+
 
                 return make_shared<op::QuantizedConvolutionBias>(input,
                                                                  filter,
