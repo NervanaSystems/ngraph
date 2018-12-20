@@ -30,8 +30,7 @@ set(OMPRT_INSTALL_PREFIX ${EXTERNAL_PROJECTS_ROOT}/omprt)
 ExternalProject_Add(
     ext_omprt
     DEPENDS ext_mkldnn
-    GIT_REPOSITORY https://github.com/llvm-mirror/openmp.git
-    GIT_TAG 366ce74b85790ed41f94fba7f17a0911bde83500
+    URL http://releases.llvm.org/7.0.1/openmp-7.0.1.src.tar.xz
     CMAKE_ARGS
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}

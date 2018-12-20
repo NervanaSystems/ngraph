@@ -52,16 +52,16 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
             pass
         return obj
     # convert to list, imap is evaluated on-demand
-    retval = [result for result in multiprocessing.pool.ThreadPool().imap(_single_compile, objects)]
+    if sys.version_info < (3, 6):
+        retval = [result for result in multiprocessing.pool.ThreadPool().imap(_single_compile, objects)]
+    else:
+        retval = [result for result in multiprocessing.pool.ThreadPool().map(_single_compile, objects)]
     return retval
 
 
-if sys.version_info < (3, 6):
-    distutils.ccompiler.CCompiler.compile=parallelCCompile
+distutils.ccompiler.CCompiler.compile=parallelCCompile
 
 
-# As of Python 3.6, CCompiler has a `has_flag` method.
-# cf http://bugs.python.org/issue26689
 def has_flag(compiler, flagname):
     """
     Return a boolean indicating whether a flag name is supported on
@@ -246,6 +246,19 @@ class BdistWheel(bdist_wheel):
         return tag
 
 
+setup_requires=['numpy']
+try:
+    import pip
+    try:
+        from pip import main as pipmain
+    except:
+        from pip._internal import main as pipmain
+    pipmain(['install', '--no-cache-dir'] + setup_requires)
+    setup_requires = []
+except Exception:
+    pass
+
+
 setup(
     name='ngraph-core',
     description='nGraph - Intel\'s graph compiler and runtime for Neural Networks',
@@ -261,7 +274,7 @@ setup(
     packages=packages,
     cmdclass={'build_ext': BuildExt, 'bdist_wheel': BdistWheel, 'develop': Develop},
     data_files=data_files,
-    setup_requires=['numpy'],
+    setup_requires=setup_requires,
     install_requires=requirements,
     zip_safe=False,
 )

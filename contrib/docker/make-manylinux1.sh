@@ -35,7 +35,7 @@ fi
 
 if [ ! -z "${https_proxy}" ] ; then
     DOCKER_HTTPS_PROXY="--build-arg https_proxy=${https_proxy}"
-    DOCKER_RUN_HTTP_PROXY="-e https_proxy=${https_proxy}"
+    DOCKER_RUN_HTTPS_PROXY="-e https_proxy=${https_proxy}"
 else
     DOCKER_HTTPS_PROXY=' '
     DOCKER_RUN_HTTPS_PROXY=' '
