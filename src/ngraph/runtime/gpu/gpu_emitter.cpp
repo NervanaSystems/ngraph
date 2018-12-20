@@ -52,6 +52,7 @@
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/distbroadcast.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
@@ -597,6 +598,11 @@ void runtime::gpu::GPU_Emitter::emit_Cos(EMIT_ARGS)
 void runtime::gpu::GPU_Emitter::emit_Cosh(EMIT_ARGS)
 {
     emit_elementwise<ngraph::op::Cosh>(external_function, writer, node, args, out);
+}
+
+void runtime::gpu::GPU_Emitter::emit_DistBroadcast(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 void runtime::gpu::GPU_Emitter::emit_Divide(EMIT_ARGS)

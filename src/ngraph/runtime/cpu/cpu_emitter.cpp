@@ -43,6 +43,7 @@
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/distbroadcast.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
@@ -67,7 +68,6 @@
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
-#include "ngraph/op/distbroadcast.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/not.hpp"
@@ -239,9 +239,10 @@ namespace ngraph
                 }
 
                 writer.block_begin();
-                writer << "MLSL::CommReq* req = ctx->mlsl_dist->DistBroadcast(" << args[0].get_name() 
-                       << ", " << out[0].get_name() << ", " << out[0].get_size() << ", " 
-                       << data_type << ", MLSL::RT_SUM, MLSL::GT_DATA);\n";
+                writer << "MLSL::CommReq* req = ctx->mlsl_dist->DistBroadcast("
+                       << args[0].get_name() << ", " << out[0].get_name() << ", "
+                       << out[0].get_size() << ", " << data_type
+                       << ", MLSL::RT_SUM, MLSL::GT_DATA);\n";
                 writer << "ctx->mlsl_env->Wait(req);\n";
                 writer.block_end();
             }

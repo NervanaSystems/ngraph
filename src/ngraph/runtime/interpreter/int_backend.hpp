@@ -139,9 +139,9 @@
 #include "ngraph/state/rng_state.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
+#include <mlsl.hpp>
 #include "ngraph/runtime/reference/allreduce.hpp"
 #include "ngraph/runtime/reference/distbroadcast.hpp"
-#include <mlsl.hpp>
 #endif
 
 namespace ngraph
@@ -921,7 +921,8 @@ private:
                                   element_count);
             break;
         }
-        case OP_TYPEID::DistBroadcast: {
+        case OP_TYPEID::DistBroadcast:
+        {
             // we do not support this op in interpreter for now
             break;
         }

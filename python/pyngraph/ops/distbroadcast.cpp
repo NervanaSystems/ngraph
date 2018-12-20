@@ -24,7 +24,9 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_DistBroadcast(py::module m)
 {
-    py::class_<ngraph::op::DistBroadcast, std::shared_ptr<ngraph::op::DistBroadcast>, ngraph::op::Op>
+    py::class_<ngraph::op::DistBroadcast,
+               std::shared_ptr<ngraph::op::DistBroadcast>,
+               ngraph::op::Op>
         distbroadcast(m, "DistBroadcast");
     distbroadcast.doc() = "ngraph.impl.op.DistBroadcast wraps ngraph::op::DistBroadcast";
     distbroadcast.def(py::init<const std::shared_ptr<ngraph::Node>&>());

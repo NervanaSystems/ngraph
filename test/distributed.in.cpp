@@ -64,8 +64,9 @@ TEST(distributed_${BACKEND_NAME}, distbroadcast)
     copy_data(a, vector<float>(4, 0));
 
     auto processIdx = MLSL::Environment::GetEnv().GetProcessIdx();
-    if (processIdx==0) {
-       copy_data(a, v);
+    if (processIdx == 0)
+    {
+        copy_data(a, v);
     }
 
     auto result = backend->create_tensor(element::f32, shape);

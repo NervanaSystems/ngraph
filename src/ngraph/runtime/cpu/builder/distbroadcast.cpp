@@ -48,8 +48,8 @@ namespace ngraph
 
                 auto functor = [&, count, data_type](CPURuntimeContext* ctx,
                                                      CPUExecutionContext* ectx) {
-                    MLSL::CommReq* req = ctx->mlsl_dist->Bcast(
-                        arg_tensor, count, data_type, 0, MLSL::GT_DATA);
+                    MLSL::CommReq* req =
+                        ctx->mlsl_dist->Bcast(arg_tensor, count, data_type, 0, MLSL::GT_DATA);
                     ctx->mlsl_env->Wait(req);
                 };
 
