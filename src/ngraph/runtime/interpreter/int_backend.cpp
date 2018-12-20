@@ -84,8 +84,6 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
                                             const vector<shared_ptr<runtime::Tensor>>& outputs,
                                             const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    validate_call(function, outputs, inputs);
-
     auto fit = m_function_map.find(function);
     if (fit == m_function_map.end())
     {

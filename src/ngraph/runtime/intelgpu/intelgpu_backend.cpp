@@ -65,6 +65,8 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/all.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -418,7 +420,6 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
     {
         ngraph::pass::Manager pass_manager;
 
-        pass_manager.register_pass<ngraph::pass::AnyAllReplacement>();
         pass_manager.register_pass<ngraph::pass::NopElimination>();
         pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
@@ -957,6 +958,50 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
                 const cldnn_activation_additional_params param = {-1.f, 0.f};
                 do_unary_operation(topology, op, activation_linear, param);
             }
+            break;
+        }
+        case OP_TYPEID::All:
+        {
+            arguments_check(op, 1, 1);
+
+            const shared_ptr<op::All> all_op = static_pointer_cast<op::All>(op);
+            const AxisSet& axis = all_op->get_reduction_axes();
+            const shared_ptr<Node> def_val = all_op->get_default_value();
+            const shared_ptr<op::Constant> def_const = static_pointer_cast<op::Constant>(def_val);
+            const vector<std::string>& values = def_const->get_value_strings();
+
+            // Empty axis is not a case for do_equal_propagation()
+            do_all_any_op(topology,
+                          get_input_name(op, 0),
+                          get_input_shape(op, 0),
+                          get_output_name(op),
+                          get_output_shape(op),
+                          get_output_type(op),
+                          axis,
+                          "lhs && rhs",
+                          values.at(0));
+            break;
+        }
+        case OP_TYPEID::Any:
+        {
+            arguments_check(op, 1, 1);
+
+            const shared_ptr<op::Any> any_op = static_pointer_cast<op::Any>(op);
+            const AxisSet& axis = any_op->get_reduction_axes();
+            const shared_ptr<Node> def_val = any_op->get_default_value();
+            const shared_ptr<op::Constant> def_const = static_pointer_cast<op::Constant>(def_val);
+            const vector<std::string>& values = def_const->get_value_strings();
+
+            // Empty axis is not a case for do_equal_propagation()
+            do_all_any_op(topology,
+                          get_input_name(op, 0),
+                          get_input_shape(op, 0),
+                          get_output_name(op),
+                          get_output_shape(op),
+                          get_output_type(op),
+                          axis,
+                          "lhs || rhs",
+                          values.at(0));
             break;
         }
         case OP_TYPEID::Relu:
@@ -1713,9 +1758,7 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
             topology.add(lrn);
             break;
         }
-        case OP_TYPEID::All:
         case OP_TYPEID::AllReduce:
-        case OP_TYPEID::Any:
         case OP_TYPEID::BroadcastLike:
         case OP_TYPEID::FunctionCall:
         case OP_TYPEID::Dequantize:

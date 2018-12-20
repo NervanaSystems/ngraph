@@ -1,10 +1,11 @@
-.. distr/index: 
+.. distr/index.rst: 
 
+##############################
 Distributed Training in nGraph
-==============================
+##############################
 
 Why distributed training?
--------------------------
+=========================
 
 A tremendous amount of data is required to train DNNs in diverse areas -- from 
 computer vision to natural language processing. Meanwhile, computation used in 
@@ -22,7 +23,7 @@ nGraph backend computes the gradients in back-propagation, aggregates the gradie
 across all workers, and then update the weights. 
 
 How? (Generic frameworks)
--------------------------
+=========================
 
 * :doc:`../howto/distribute-train`
 
@@ -54,12 +55,8 @@ mini-batch training, one could train ResNet-50 with Imagenet-1k data to the
 `arxiv.org/abs/1709.05011`_. 
 
 
-
-
-
-
 MXNet
------
+=====
 
 We implemented a KVStore in MXNet\* (KVStore is unique to MXNet) to modify 
 the SGD update op so the nGraph graph will contain the allreduce op and generate
@@ -71,14 +68,11 @@ I1K training in MXNet 1, 2, 4, (and 8 if available) nodes, x-axis is the number
 of nodes while y-axis is the throughput (images/sec).
 
 
-
 .. TODO add figure graphics/distributed-training-ngraph-backends.png
    
 
-
-
 TensorFlow
-----------
+==========
 
 We plan to support the same in nGraph-TensorFlow. It is still work in progress.
 Meanwhile, users could still use Horovod and the current nGraph TensorFlow, 
@@ -87,8 +81,9 @@ Figure: a bar chart shows preliminary results Resnet-50 I1K training in TF 1,
 2, 4, (and 8 if available) nodes, x-axis is the number of nodes while y-axis 
 is the throughput (images/sec).
 
+
 Future work
------------
+===========
 
 Model parallelism with more communication ops support is in the works. For 
 more general parallelism, such as model parallel, we plan to add more 
