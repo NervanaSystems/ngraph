@@ -52,31 +52,6 @@ namespace ngraph
         std::set<std::string> get_supported_operators(std::int64_t version,
                                                       const std::string& domain);
 
-        /// \brief Convert an ONNX model to nGraph functions
-        /// The function translated serialized ONNX model to nGraph functions. The serialized
-        /// ONNX model is read from input stream.
-        /// \param sin       input stream (e.g. file stream, memory stream, etc),
-        /// \param weights  weights associated with the model. If weights are embedded into
-        ///                   the model this parameter shall be empty. Having weights in a model
-        ///                   and providing through this parameters is invalid (the weights from
-        ///                   the model  will take precedence).
-        /// \return The function returns a vector of nGraph functions. The number of functions
-        ///          depends on number of outputs from ONNX graph.
-        std::vector<std::shared_ptr<Function>> load_onnx_model(std::istream& sin,
-                                                               const Weights& weights = {});
-        /// \brief Convert an ONNX model to nGraph functions
-        /// The function translated serialized ONNX model to nGraph functions. The ONNX model
-        /// is read from ONNX file.
-        /// \param filename  file name (relative or absolute path name),
-        /// \param weights  weights associated with the model. If weights are embedded into
-        ///                   the model this parameter shall be empty. Having weights in a model
-        ///                   and providing through this parameters is invalid (the weights from
-        ///                   the model  will take precedence).
-        /// \return The function returns a vector of nGraph functions. The number of functions
-        ///          depends on number of outputs from ONNX graph.
-        std::vector<std::shared_ptr<Function>> load_onnx_model(const std::string& filename,
-                                                               const Weights& weights = {});
-
         /// \brief Convert an ONNX model to nGraph function
         /// The function translated serialized ONNX model to nGraph function. The serialized
         /// ONNX model is read from input stream.
@@ -86,8 +61,7 @@ namespace ngraph
         ///                   and providing through this parameters is invalid (the weights from
         ///                   the model  will take precedence).
         /// \return The function returns a nGraph function representing single output from graph.
-        std::shared_ptr<Function> import_onnx_function(std::istream& sin,
-                                                       const Weights& weights = {});
+        std::shared_ptr<Function> import_onnx_model(std::istream& sin, const Weights& weights = {});
 
         /// \brief Convert an ONNX model to nGraph functions
         /// The function translated serialized ONNX model to nGraph functions. The ONNX model
@@ -98,8 +72,8 @@ namespace ngraph
         ///                   and providing through this parameters is invalid (the weights from
         ///                   the model  will take precedence).
         /// \return The function returns a nGraph function representing single output from graph.
-        std::shared_ptr<Function> import_onnx_function(const std::string& filename,
-                                                       const Weights& weights = {});
+        std::shared_ptr<Function> import_onnx_model(const std::string& filename,
+                                                    const Weights& weights = {});
 
     } // namespace onnx_import
 
