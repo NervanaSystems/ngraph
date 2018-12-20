@@ -207,7 +207,8 @@ TEST(gpu_test, topk_fanout_graph_transform)
     auto r2 = backend->create_tensor(element::f32, out_shape);
     auto r3 = backend->create_tensor(element::f32, out_shape);
 
-    backend->call_with_validate(backend->compile(gpu_f), {r0, r1, r2, r3}, {a, b, c, d, e});
+    auto handle = backend->compile(gpu_f);
+    backend->call_with_validate(handle, {r0, r1, r2, r3}, {a, b, c, d, e});
 
     EXPECT_EQ((vector<int32_t>{2, 1, 1, 2, 1, 2, 0, 1}), read_vector<int32_t>(r0));
     EXPECT_EQ((vector<int32_t>{2, 1, 1, 2, 1, 2, 0, 1}), read_vector<int32_t>(r1));

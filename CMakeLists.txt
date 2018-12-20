@@ -56,26 +56,6 @@ if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
-SET(GCC_MIN_VERSION 4.8)
-SET(CLANG_MIN_VERSION 3.8)
-SET(APPLE_CLANG_MIN_VERSION 8.1)
-
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS GCC_MIN_VERSION)
-        message(FATAL_ERROR "GCC version must be at least ${GCC_MIN_VERSION}!")
-    endif()
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS CLANG_MIN_VERSION)
-        message(FATAL_ERROR "Clang version must be at least ${CLANG_MIN_VERSION}!")
-    endif()
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS APPLE_CLANG_MIN_VERSION)
-        message(FATAL_ERROR "Apple Clang version must be at least ${APPLE_CLANG_MIN_VERSION}!")
-    endif()
-else()
-    message(WARNING "You are using an unsupported compiler.")
-endif()
-
 # Prevent Eigen from using any LGPL3 code
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY -DTBB_USE_THREADING_TOOLS")
 
@@ -91,14 +71,15 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 include(var_functions)
 
+set(NGRAPH_HYBRID_ENABLE TRUE)
 option(NGRAPH_UNIT_TEST_ENABLE "Control the building of unit tests" TRUE)
 option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
 option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
 option(NGRAPH_INTELGPU_ENABLE "Control the building of the Intel GPU backend with clDNN" FALSE)
 option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
-option(NGRAPH_HYBRID_ENABLE "Control the building of the HYBRID backend" FALSE)
 option(NGRAPH_NOP_ENABLE "Control the building of the NOP backend" TRUE)
+option(NGRAPH_GPUH_ENABLE "Control the building of the Hybrid GPU backend" FALSE)
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
@@ -166,8 +147,8 @@ message(STATUS "NGRAPH_CPU_ENABLE:            ${NGRAPH_CPU_ENABLE}")
 message(STATUS "NGRAPH_INTELGPU_ENABLE:       ${NGRAPH_INTELGPU_ENABLE}")
 message(STATUS "NGRAPH_GPU_ENABLE:            ${NGRAPH_GPU_ENABLE}")
 message(STATUS "NGRAPH_INTERPRETER_ENABLE:    ${NGRAPH_INTERPRETER_ENABLE}")
-message(STATUS "NGRAPH_HYBRID_ENABLE:         ${NGRAPH_HYBRID_ENABLE}")
 message(STATUS "NGRAPH_NOP_ENABLE:            ${NGRAPH_NOP_ENABLE}")
+message(STATUS "NGRAPH_GPUH_ENABLE:           ${NGRAPH_GPUH_ENABLE}")
 message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:    ${NGRAPH_DISTRIBUTED_ENABLE}")
 message(STATUS "NGRAPH_DEBUG_ENABLE:          ${NGRAPH_DEBUG_ENABLE}")
 message(STATUS "NGRAPH_ONNX_IMPORT_ENABLE:    ${NGRAPH_ONNX_IMPORT_ENABLE}")
@@ -211,7 +192,7 @@ set(NGRAPH_INSTALL_LIB "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 set(NGRAPH_INSTALL_INCLUDE "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
 set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}")
 set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
-if (NOT APPLE)
+if (LINUX)
     if (DEFINED NGRAPH_RPATH)
         set(CMAKE_INSTALL_RPATH "$ORIGIN:${NGRAPH_RPATH}")
     else()
@@ -229,9 +210,19 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     include( cmake/clang_4_0_flags.cmake )
 endif()
 
-include(cmake/sdl.cmake)
+if (WIN32)
+    set (CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_FLAGS "/W0 /EHsc")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
+    set(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
+    # These can be uncommented once we have visibility fully in place
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden")
+endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+include(cmake/sdl.cmake)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (DEFINED NGRAPH_USE_CXX_ABI)
@@ -246,21 +237,22 @@ if (${NGRAPH_WARNINGS_AS_ERRORS})
     message(STATUS "Warnings as errors")
 endif()
 
-SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
-SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
-
 if (NGRAPH_CODE_COVERAGE_ENABLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
 endif()
 
 # Enable build target CPU features
-set(NGRAPH_TARGET_ARCH native CACHE STRING "Target CPU architecture to build for. Defaults to the native CPU architecture")
+if(NOT WIN32)
+    set(NGRAPH_TARGET_ARCH native CACHE
+        STRING "Target CPU architecture to build for. Defaults to the native CPU architecture")
 
-if (NOT "${NGRAPH_TARGET_ARCH}" STREQUAL "native")
-    message(WARNING "Build target architecture was overridden. The resulting build might not work correctly on the host CPU.")
+    if (NOT "${NGRAPH_TARGET_ARCH}" STREQUAL "native")
+        message(WARNING
+            "Build target architecture was overridden. The resulting build might not work correctly on the host CPU.")
+    endif()
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=${NGRAPH_TARGET_ARCH}")
 endif()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=${NGRAPH_TARGET_ARCH}")
 
 if (DEFINED NGRAPH_TUNE_ARCH)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=${NGRAPH_TUNE_ARCH}")
@@ -273,6 +265,7 @@ endif()
 if(WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOMINMAX")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_CRT_SECURE_NO_WARNINGS")
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
@@ -299,6 +292,12 @@ add_custom_target(style-apply
     -P ${CMAKE_MODULE_PATH}style_apply.cmake
 )
 
+add_custom_target(fix-mode
+    COMMAND ${CMAKE_COMMAND}
+    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    -P ${CMAKE_MODULE_PATH}fix_mode.cmake
+)
+
 #-----------------------------------------------------------------------------------------------
 # enable or disable output from NGRAPH_DEBUG statements
 #-----------------------------------------------------------------------------------------------
@@ -311,6 +310,12 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 set(NGRAPH_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/ngraph)
+if (WIN32)
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    set(CMAKE_PDB_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+endif()
 
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
 
@@ -346,6 +351,10 @@ else()
 endif()
 
 include(cmake/external_tbb.cmake)
+if (NGRAPH_DISTRIBUTED_ENABLE)
+    include(cmake/external_mlsl.cmake)
+endif()
+
 
 if (NGRAPH_HALIDE)
     message(WARNING "Halide build system integration is currently using an older LLVM release \
@@ -358,6 +367,8 @@ add_definitions(-DPROJECT_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")
 message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
+message(STATUS "CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}")
+message(STATUS "CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}")
 add_subdirectory(src)
 
 if (NGRAPH_UNIT_TEST_ENABLE)

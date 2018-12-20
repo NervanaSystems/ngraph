@@ -21,17 +21,37 @@
 #pragma once
 
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "ngraph/except.hpp"
+#include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/type/bfloat16.hpp"
 
 namespace ngraph
 {
     namespace element
     {
+        enum class Type_t
+        {
+            undefined,
+            dynamic,
+            boolean,
+            bf16,
+            f32,
+            f64,
+            i8,
+            i16,
+            i32,
+            i64,
+            u8,
+            u16,
+            u32,
+            u64
+        };
+
         class Type;
 
         extern const Type dynamic;
@@ -51,36 +71,42 @@ namespace ngraph
         class Type
         {
         public:
-            Type() {}
+            Type()
+                : m_type{element::Type_t::undefined}
+            {
+            }
             Type(const Type&) = default;
+            Type(const Type_t t)
+                : m_type{t}
+            {
+            }
             Type(size_t bitwidth,
                  bool is_real,
                  bool is_signed,
                  bool is_quantized,
                  const std::string& cname);
-            Type& operator=(const Type&);
-            virtual ~Type() {}
+            ~Type() {}
+            Type& operator=(const Type&) = default;
+            Type_t get_type_enum() const { return m_type; }
             const std::string& c_type_string() const;
             size_t size() const;
             size_t hash() const;
-            bool is_static() const { return (*this != dynamic); }
+            bool is_static() const;
             bool is_dynamic() const { return !is_static(); }
-            bool is_real() const { return m_is_real; }
-            bool is_signed() const { return m_is_signed; }
-            bool is_quantized() const { return m_is_quantized; }
-            size_t bitwidth() const { return m_bitwidth; }
+            bool is_real() const;
+            bool is_signed() const;
+            bool is_quantized() const;
+            size_t bitwidth() const;
             bool operator==(const Type& other) const;
             bool operator!=(const Type& other) const { return !(*this == other); }
             bool operator<(const Type& other) const;
             friend std::ostream& operator<<(std::ostream&, const Type&);
             static std::vector<const Type*> get_known_types();
 
-            /// Returns true if the type is floating point, else false.
-            bool get_is_real() const { return m_is_real; }
             /// \brief Checks whether this element type is merge-compatible with `t`.
             /// \param t The element type to compare this element type to.
             /// \return `true` if this element type is compatible with `t`, else `false`.
-            bool compatible(element::Type t) const;
+            bool compatible(const element::Type& t) const;
 
             /// \brief Merges two element types t1 and t2, writing the result into dst and
             ///        returning true if successful, else returning false.
@@ -103,12 +129,22 @@ namespace ngraph
             static bool merge(element::Type& dst, const element::Type& t1, const element::Type& t2);
 
         private:
-            size_t m_bitwidth{0};
-            bool m_is_real{false};
-            bool m_is_signed{false};
-            bool m_is_quantized{false};
-            std::string m_cname{"dynamic"};
+            Type_t m_type;
         };
+
+        extern NGRAPH_API const Type dynamic;
+        extern NGRAPH_API const Type boolean;
+        extern NGRAPH_API const Type bf16;
+        extern NGRAPH_API const Type f32;
+        extern NGRAPH_API const Type f64;
+        extern NGRAPH_API const Type i8;
+        extern NGRAPH_API const Type i16;
+        extern NGRAPH_API const Type i32;
+        extern NGRAPH_API const Type i64;
+        extern NGRAPH_API const Type u8;
+        extern NGRAPH_API const Type u16;
+        extern NGRAPH_API const Type u32;
+        extern NGRAPH_API const Type u64;
 
         template <typename T>
         const Type& from()

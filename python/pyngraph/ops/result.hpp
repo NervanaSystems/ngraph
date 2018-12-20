@@ -16,22 +16,8 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
+#include <pybind11/pybind11.h>
 
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace cpu
-        {
-            namespace pass
-            {
-                class CPUReshapeSinking : public ngraph::pass::FunctionPass
-                {
-                public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-                };
-            }
-        }
-    }
-}
+namespace py = pybind11;
+
+void regclass_pyngraph_op_Result(py::module m);
