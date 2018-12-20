@@ -57,7 +57,7 @@ public:
     std::string m_cname;
 };
 
-static const map<element::Type_t, const TypeInfo> get_type_info_map()
+static const map<element::Type_t, const TypeInfo>& get_type_info_map()
 {
     static map<element::Type_t, const TypeInfo> s_type_info_map{
         {element::Type_t::undefined,
