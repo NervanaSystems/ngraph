@@ -59,7 +59,8 @@ public:
             ss << "Comparing results for " << result_node->get_name() << "\n";
             if (result_node->get_arguments().size() > 0)
             {
-                ss << "  inputs:" << "\n";
+                ss << "  inputs:"
+                   << "\n";
                 for (auto& p : result_node->get_arguments())
                 {
                     ss << "    " << p->get_name() << " " << p->get_element_type() << "\n";

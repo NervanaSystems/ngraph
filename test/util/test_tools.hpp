@@ -169,7 +169,8 @@ std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& fu
 }
 
 template <typename T>
-std::string get_results_str(std::vector<T>& ref_data, std::vector<T>& actual_data, size_t max_results = 16)
+std::string
+    get_results_str(std::vector<T>& ref_data, std::vector<T>& actual_data, size_t max_results = 16)
 {
     std::stringstream ss;
     size_t num_results = std::min(static_cast<size_t>(max_results), ref_data.size());
@@ -177,8 +178,8 @@ std::string get_results_str(std::vector<T>& ref_data, std::vector<T>& actual_dat
     for (size_t i = 0; i < num_results; ++i)
     {
         ss << "\n"
-                  << std::setw(4) << i << " ref: " << std::setw(16) << std::left << ref_data[i]
-                  << "  actual: " << std::setw(16) << std::left << actual_data[i];
+           << std::setw(4) << i << " ref: " << std::setw(16) << std::left << ref_data[i]
+           << "  actual: " << std::setw(16) << std::left << actual_data[i];
     }
     ss << "\n";
 
@@ -186,4 +187,6 @@ std::string get_results_str(std::vector<T>& ref_data, std::vector<T>& actual_dat
 }
 
 template <>
-std::string get_results_str(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results);
+std::string get_results_str(std::vector<char>& ref_data,
+                            std::vector<char>& actual_data,
+                            size_t max_results);
