@@ -1541,42 +1541,68 @@ TEST(onnx, model_matmul_vec_ten3d)
 
 TEST(onnx, model_softplus)
 {
-    auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/ActivationOpTest_Softplus.onnx"));
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/softplus.onnx"));
 
-    // -1.0f, 0, 1.0f,                                            normal input values for activation
-    // 100.0f, -100.0f, 1000.0f, -1000.0f,                        input values that leads to exp() overflow
-    // FLT_MIN, FLT_MIN / 10, -FLT_MIN / 10,                      min, denorm, -denorm
-    // FLT_MAX, -FLT_MAX, std::numeric_limits<float>::infinity()  max, -max, inf;
+    // -1.0f, 0, 1.0f, 10.f,                    normal input values for activation
+    // 100.0f, -100.0f, 1000.0f, -1000.0f,      input values that leads to exp() overflow
+    // FLT_MIN, FLT_MIN / 10, -FLT_MIN / 10,    min, denorm, -denorm
+    // FLT_MAX, -FLT_MAX,                       max, -max;
     Inputs inputs{std::vector<float>{-1.0f,
                                      0,
                                      1.0f,
+                                     10.f,
                                      100.0f,
                                      -100.0f,
                                      1000.0f,
                                      -1000.0f,
                                      FLT_MIN,
-                                     FLT_MIN / 10,
-                                     -FLT_MIN / 10,
+                                     FLT_MIN / 16,
+                                     -FLT_MIN / 16,
                                      FLT_MAX,
-                                     -FLT_MAX,
-                                     std::numeric_limits<float>::infinity()}};
+                                     -FLT_MAX}};
 
     std::vector<float>& input = inputs.back();
     std::vector<float> output;
-    std::transform(
-        std::begin(input), std::end(input), std::back_inserter(output), [](float x) -> float {
-            if (x > 0)
-            {
-                return x + std::log(std::exp(-x) + 1);
-            }
-            else
-            {
-                return std::log(std::exp(x) + 1);
-            }
-        });
+    auto softplus_impl = [](float x) -> float {
+        if (x > 0)
+        {
+            return x + std::log(std::exp(-x) + 1);
+        }
+        else
+        {
+            return std::log(std::exp(x) + 1);
+        }
+    };
+
+    std::transform(std::begin(input), std::end(input), std::back_inserter(output), softplus_impl);
 
     Outputs expected_output{output};
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+
+    inputs.clear();
+    outputs.clear();
+    expected_output.clear();
+
+    inputs.emplace_back(std::vector<float>{std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity()});
+    input = inputs.back();
+    outputs = execute(function, inputs, "INTERPRETER");
+
+    for (float v : outputs.front())
+    {
+        EXPECT_TRUE(std::isinf(v));
+    }
 }
