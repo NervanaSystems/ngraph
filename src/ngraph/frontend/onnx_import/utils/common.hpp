@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <cmath>       // std::floor
+#include <cmath>       // std::floor, std::min
 #include <cstddef>     // std::size_t
 #include <iterator>    // std::begin, std::end
 #include <memory>      // std::shared_ptr, std::make_shared
@@ -133,6 +133,29 @@ namespace ngraph
                 }
 
                 return node;
+            }
+
+            /// \brief      Handle negative axis value.
+            ///
+            /// \param[in]  axis        The requested axis value.
+            /// \param[in]  tensor_dim  The corresponding tensor dimensionality.
+            ///
+            /// \tparam     T           Provided axis value type.
+            ///
+            /// \return     If negative axis, then return sum of tensor dimension and axis.
+            ///
+            template <typename T,
+                      typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+            std::int64_t convert_negative_axis(T axis, std::size_t tensor_dim)
+            {
+                if (axis >= 0)
+                {
+                    return std::min(axis, static_cast<T>(tensor_dim));
+                }
+                else
+                {
+                    return static_cast<std::int64_t>(tensor_dim) + axis;
+                }
             }
 
         } // namespace  common

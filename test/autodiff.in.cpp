@@ -69,7 +69,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
 
     auto C = make_shared<op::Parameter>(element::i32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -107,7 +108,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
 
     auto C = make_shared<op::Parameter>(element::i32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -148,7 +150,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max_pad1x2_2x3
 
     auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     EXPECT_EQ(expected, read_vector<float>(output));
 }
 
@@ -184,7 +187,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
 
     auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == dataEp);
 }
 
@@ -217,7 +221,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
 
     auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -316,7 +321,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
 
     auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -1583,7 +1589,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
 
     auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
@@ -1620,13 +1627,14 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
 
     auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {output}, {input, ep});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training)
 {
-    const Shape input_shape{5, 3, 2, 2};
+    const Shape input_shape{10, 4, 5, 5};
     const Shape channel_shape{input_shape.at(1)};
     const double eps = 1e-3;
     const element::Type& et = element::f32;
@@ -1647,19 +1655,19 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training)
         goes.push_back(mean);
         goes.push_back(variance);
         // TODO autodiff testing with more than one result
-        auto f = make_shared<Function>(ResultVector{normed_input /* , mean, variance*/},
-                                       ParameterVector{input, gamma, beta});
+        auto f =
+            make_shared<Function>(ResultVector{normed_input}, ParameterVector{input, gamma, beta});
         return f;
     };
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
-    test::Uniform<T> rng(-1.0, 1.0);
+    test::Uniform<T> rng(-5.0, 2.0);
     auto input = rng.initialize(backend->create_tensor<T>(input_shape));
     auto gamma = rng.initialize(backend->create_tensor<T>(channel_shape));
     auto beta = rng.initialize(backend->create_tensor<T>(channel_shape));
 
     EXPECT_TRUE(
-        autodiff_numeric_compare<T>(backend.get(), make_graph, {input, gamma, beta}, .001, .001));
+        autodiff_numeric_compare<T>(backend.get(), make_graph, {input, gamma, beta}, .005, .005));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n3_c2_h3)
@@ -1697,7 +1705,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n3_c2_h3)
 
     auto C = make_shared<op::Parameter>(element::i32, shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {da, db}, {a, b, c});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {da, db}, {a, b, c});
     ASSERT_EQ(read_vector<int>(da), expected);
 }
 
@@ -1747,6 +1756,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n4d2c3h2w2)
 
     auto C = make_shared<op::Parameter>(element::i32, shape);
     auto df = autodiff::backprop_function(f);
-    backend->call_with_validate(backend->compile(df), {da, db}, {a, b, c});
+    auto handle = backend->compile(df);
+    backend->call_with_validate(handle, {da, db}, {a, b, c});
     ASSERT_EQ(read_vector<int>(da), expected);
 }

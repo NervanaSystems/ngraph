@@ -92,7 +92,7 @@ public:
                     test::all_close<char>(ref_data_vector, bk_isolated_data_vector);
                 EXPECT_TRUE(all_close_graph && all_close_isolated);
             }
-            else if ((et == element::f32) || (et == element::f64))
+            else if (et == element::f32)
             {
                 vector<float> ref_data_vector = read_float_vector(ref_data);
                 vector<float> bk_data_vector = read_float_vector(bk_data);
@@ -102,6 +102,26 @@ public:
                 bool all_close_graph = test::all_close_f(ref_data_vector, bk_data_vector);
                 cout << "Test backed op run isolated w/ inputs from ref graph run:" << endl;
                 print_results(ref_data_vector, bk_isolated_data_vector);
+                bool all_close_isolated =
+                    test::all_close_f(ref_data_vector, bk_isolated_data_vector);
+                EXPECT_TRUE(all_close_graph && all_close_isolated);
+            }
+            else if (et == element::f64)
+            {
+                vector<double> ref_data_vector = read_vector<double>(ref_data);
+                vector<double> bk_data_vector = read_vector<double>(bk_data);
+                vector<double> bk_isolated_data_vector = read_vector<double>(bk_isolated_data);
+                cout << "Test backed op run w/ original graph dependencies:" << endl;
+                print_results(ref_data_vector, bk_data_vector);
+
+                // When testing with original graph dependencies test w/ loose f64 tolerance
+                constexpr int tolerance_bits = 30;
+                bool all_close_graph =
+                    test::all_close_f(ref_data_vector, bk_data_vector, tolerance_bits);
+                cout << "Test backed op run isolated w/ inputs from ref graph run:" << endl;
+                print_results(ref_data_vector, bk_isolated_data_vector);
+
+                // When testing with isolated graph dependencies test w/ default (tight) f64 tolerance
                 bool all_close_isolated =
                     test::all_close_f(ref_data_vector, bk_isolated_data_vector);
                 EXPECT_TRUE(all_close_graph && all_close_isolated);
@@ -362,7 +382,8 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
             "Number of backend runtime results and allocated results don't match");
     }
     ref->call_with_validate(ref->compile(ref_func), ref_results, ref_args);
-    backend->call_with_validate(backend->compile(bk_func), bk_results, bk_args);
+    auto handle = backend->compile(bk_func);
+    backend->call_with_validate(handle, bk_results, bk_args);
 
     // Now create isolated function for backend being tested where each node of the
     // original graph is tested with inputs copied from reference backend rather
@@ -406,7 +427,8 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
         auto bk_result = backend->create_tensor(out->get_element_type(), out->get_shape());
         bk_isolated_results.push_back(bk_result);
     }
-    backend->call_with_validate(backend->compile(bk_isolated_func), bk_isolated_results, bk_args);
+    handle = backend->compile(bk_isolated_func);
+    backend->call_with_validate(handle, bk_isolated_results, bk_args);
 
     compare_results(new_results, ref_results, bk_results, bk_isolated_results);
 }

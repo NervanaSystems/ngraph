@@ -74,6 +74,53 @@ TEST(core_fusion, sigmoid_fprop_fusion)
     ASSERT_EQ(ccg, 1);
 }
 
+TEST(core_fusion, sigmoid_fprop_fusion_no_broadcast)
+{
+    auto make_function = []() {
+        auto input = std::make_shared<op::Parameter>(element::f32, Shape{3, 4});
+        auto neg_input = std::make_shared<op::Negative>(input);
+        auto exp_neg_input = std::make_shared<op::Exp>(neg_input);
+
+        auto constant =
+            op::Constant::create(element::f32, Shape{3, 4}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
+
+        auto add_exp = std::make_shared<op::Add>(exp_neg_input, constant);
+        auto divide_1_over_exp = std::make_shared<op::Divide>(constant, add_exp);
+        return make_shared<Function>(NodeVector{divide_1_over_exp}, ParameterVector{input});
+    };
+    auto func = make_function();
+
+    // Check fusion happens
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>();
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::Sigmoid>(func);
+    ASSERT_EQ(ccg, 1);
+}
+
+TEST(core_fusion, sigmoid_fprop_fusion_no_broadcast2)
+{
+    auto make_function = []() {
+        auto input = std::make_shared<op::Parameter>(element::f32, Shape{3, 4});
+        auto neg_input = std::make_shared<op::Negative>(input);
+        auto exp_neg_input = std::make_shared<op::Exp>(neg_input);
+
+        auto constant =
+            op::Constant::create(element::f32, Shape{3, 4}, {1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1});
+
+        auto add_exp = std::make_shared<op::Add>(exp_neg_input, constant);
+        auto divide_1_over_exp = std::make_shared<op::Divide>(constant, add_exp);
+        return make_shared<Function>(NodeVector{divide_1_over_exp}, ParameterVector{input});
+    };
+    auto func = make_function();
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>();
+    pass_manager.run_passes(func);
+    size_t ccg = count_ops_of_type<op::Sigmoid>(func);
+    ASSERT_EQ(ccg, 0);
+}
+
 TEST(core_fusion, sigmoid_bprop_fusion)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_fprop_sigmoid.json");
@@ -85,6 +132,91 @@ TEST(core_fusion, sigmoid_bprop_fusion)
     backend->compile(df);
     size_t ccg = count_ops_of_type<op::SigmoidBackprop>(df);
     ASSERT_EQ(ccg, 1);
+}
+
+TEST(core_fusion, reshape_broadcast)
+{
+    auto generate_func = []() {
+        auto input = make_shared<op::Parameter>(element::f32, Shape{10});
+        auto reshape1 = make_shared<op::Reshape>(input, AxisVector{0}, Shape{1, 10, 1});
+        auto broadcast =
+            make_shared<op::Broadcast>(reshape1, Shape{1, 5, 10, 8, 1, 20}, AxisSet{1, 3, 5});
+        auto f = make_shared<Function>(broadcast, ParameterVector{input});
+        return f;
+    };
+
+    auto baseline_f = generate_func();
+    auto optimized_f = generate_func();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>();
+    pass_manager.run_passes(optimized_f);
+
+    test::Uniform<float> rng(0.0f, 100.0f);
+    vector<vector<float>> args;
+    vector<float> tensor_val(shape_size(baseline_input_shape));
+    rng.initialize(tensor_val);
+    args.push_back(tensor_val);
+
+    auto baseline_results = execute(baseline_f, args, "INTERPRETER");
+    auto optimized_results = execute(optimized_f, args, "INTERPRETER");
+
+    EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+}
+
+TEST(core_fusion, reshape_broadcast_graph_optimized)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{10});
+    auto reshape1 = make_shared<op::Reshape>(input, AxisVector{0}, Shape{1, 10, 1});
+    auto broadcast =
+        make_shared<op::Broadcast>(reshape1, Shape{1, 5, 10, 8, 1, 20}, AxisSet{1, 3, 5});
+    auto optimized_f = make_shared<Function>(broadcast, ParameterVector{input});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>();
+    pass_manager.run_passes(optimized_f);
+
+    auto new_broadcast =
+        std::dynamic_pointer_cast<op::Broadcast>(optimized_f->get_results().at(0)->get_argument(0));
+    EXPECT_EQ(new_broadcast->get_argument(0), input);
+    EXPECT_EQ(new_broadcast->get_broadcast_axes(), (AxisSet{0, 1, 3, 4, 5}));
+}
+
+TEST(core_fusion, reshape_broadcast_adds_one)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{10});
+    auto reshape1 = make_shared<op::Reshape>(input, AxisVector{0}, Shape{1, 10, 1});
+    auto broadcast =
+        make_shared<op::Broadcast>(reshape1, Shape{1, 5, 10, 8, 1, 20, 1}, AxisSet{1, 3, 5, 6});
+    auto optimized_f = make_shared<Function>(broadcast, ParameterVector{input});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>();
+    pass_manager.run_passes(optimized_f);
+
+    auto new_broadcast =
+        std::dynamic_pointer_cast<op::Broadcast>(optimized_f->get_results().at(0)->get_argument(0));
+    EXPECT_EQ(new_broadcast, broadcast);
+    EXPECT_EQ(new_broadcast->get_argument(0), reshape1);
+}
+
+TEST(core_fusion, reshape_broadcast_wrong_reshape)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{10});
+    auto reshape1 = make_shared<op::Reshape>(input, AxisVector{0}, Shape{1, 5, 2});
+    auto broadcast =
+        make_shared<op::Broadcast>(reshape1, Shape{1, 5, 5, 8, 2, 20}, AxisSet{1, 3, 5});
+    auto optimized_f = make_shared<Function>(broadcast, ParameterVector{input});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>();
+    pass_manager.run_passes(optimized_f);
+
+    auto new_broadcast =
+        std::dynamic_pointer_cast<op::Broadcast>(optimized_f->get_results().at(0)->get_argument(0));
+    EXPECT_EQ(new_broadcast, broadcast);
+    EXPECT_EQ(new_broadcast->get_argument(0), reshape1);
 }
 
 TEST(core_fusion, sparsity_opt_56x56)
