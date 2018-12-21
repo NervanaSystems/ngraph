@@ -89,8 +89,32 @@ else()
     set(MKLDNN_PATCH_FILE mkldnn_no_so_link.patch)
 endif()
 
-# The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
-if(${CMAKE_VERSION} VERSION_LESS 3.2)
+if (WIN32)
+    ExternalProject_Add(
+        ext_mkldnn
+        DEPENDS ext_mkl
+        GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
+        GIT_TAG ${MKLDNN_GIT_TAG}
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND
+        CMAKE_ARGS
+            -DWITH_TEST=FALSE
+            -DWITH_EXAMPLE=FALSE
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+            -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
+            -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
+            -DMKLROOT=${MKL_ROOT}
+        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
+        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
+        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
+        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/src"
+        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/build"
+        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn"
+        EXCLUDE_FROM_ALL TRUE
+        )
+else()
     ExternalProject_Add(
         ext_mkldnn
         DEPENDS ext_mkl
@@ -124,41 +148,8 @@ if(${CMAKE_VERSION} VERSION_LESS 3.2)
         INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn"
         EXCLUDE_FROM_ALL TRUE
         )
-else()
-    ExternalProject_Add(
-        ext_mkldnn
-        DEPENDS ext_mkl
-        GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
-        GIT_TAG ${MKLDNN_GIT_TAG}
-        UPDATE_COMMAND ""
-        # Patch gets mad if it applied for a second time so:
-        #    --forward tells patch to ignore if it has already been applied
-        #    --reject-file tells patch to not right a reject file
-        #    || exit 0 changes the exit code for the PATCH_COMMAND to zero so it is not an error
-        # I don't like it, but it works
-        PATCH_COMMAND patch -p1 --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE} || exit 0
-        # Uncomment below with any in-flight MKL-DNN patches
-        # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
-        CMAKE_ARGS
-            -DWITH_TEST=FALSE
-            -DWITH_EXAMPLE=FALSE
-            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-            -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
-            -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
-            -DMKLROOT=${MKL_ROOT}
-            "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH}"
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/build"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn"
-        BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/mkldnn/include/mkldnn.hpp"
-        EXCLUDE_FROM_ALL TRUE
-        )
 endif()
+
 
 ExternalProject_Add_Step(
     ext_mkldnn
@@ -177,7 +168,7 @@ add_library(libmkldnn INTERFACE)
 add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 target_link_libraries(libmkldnn INTERFACE
-    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}
+    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${CMAKE_SHARED_LIBRARY_PREFIX}mkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}
     libmkl
     )
 

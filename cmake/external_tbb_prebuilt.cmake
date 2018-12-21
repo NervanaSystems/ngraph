@@ -21,7 +21,7 @@ if (WIN32)
 endif()
 
 if(WIN32)
-    set(TBB_SHA1_HASH 8c8ce5cb5e057aa6806275c3f28cd09b09f48b9b)
+    set(TBB_SHA1_HASH 1989458a49e780d76248edac13b963f80c9a460c)
 endif()
 
 ExternalProject_Add(

@@ -24,7 +24,6 @@ include(ExternalProject)
 SET(GTEST_GIT_REPO_URL https://github.com/google/googletest.git)
 SET(GTEST_GIT_LABEL release-1.8.1)
 
-set(COMPILE_FLAGS -fPIC)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (DEFINED NGRAPH_USE_CXX_ABI)
         set(COMPILE_FLAGS "${COMPILE_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
@@ -44,6 +43,8 @@ if(WIN32)
         -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG=${GTEST_OUTPUT_DIR}
         -Dgtest_force_shared_crt=TRUE
     )
+else()
+    set(COMPILE_FLAGS -fPIC)
 endif()
 
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
