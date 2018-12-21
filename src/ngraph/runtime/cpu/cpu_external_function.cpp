@@ -733,6 +733,7 @@ using namespace ngraph::runtime;
             for (size_t i = 0; i < param->get_output_size(); ++i)
             {
                 shared_ptr<descriptor::Tensor> tv = param->get_output_tensor_ptr(i);
+                function_input_name_index[tv->get_name()] = arg_index;
                 const element::Type& et = tv->get_element_type();
                 string type = et.c_type_string();
                 stringstream ss;
@@ -756,12 +757,23 @@ using namespace ngraph::runtime;
                 for (descriptor::Tensor* tensor : node->liveness_new_list)
                 {
                     stringstream ss;
-                    ss << "((" << tensor->get_element_type().c_type_string()
-                       << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
-                    if (m_tensor_roles.find(tensor->get_name()) == m_tensor_roles.end())
+                    auto ele = m_variable_input_index_offset_map.find(tensor->get_name());
+                    if (ele != m_variable_input_index_offset_map.end())
                     {
+                        ss << "(((" << tensor->get_element_type().c_type_string() << "*)(inputs["
+                           << ele->second.first << "])) + "
+                           << ele->second.second / tensor->get_element_type().size() << ")";
                         m_variable_name_map[tensor->get_name()] = ss.str();
-                        m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
+                    }
+                    else
+                    {
+                        ss << "((" << tensor->get_element_type().c_type_string()
+                           << "*)(pool_base_ptr + " << tensor->get_pool_offset() << "))";
+                        if (m_tensor_roles.find(tensor->get_name()) == m_tensor_roles.end())
+                        {
+                            m_variable_name_map[tensor->get_name()] = ss.str();
+                            m_tensor_roles[tensor->get_name()] = CPUTensorRole::INTERMEDIATE;
+                        }
                     }
                 }
             }
@@ -1395,13 +1407,6 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
                     auto arg = input->get_output().get_node();
                     auto index = input->get_output().get_index();
                     auto input_tensor = &arg->get_output_tensor(index);
-                    if (m_tensor_roles.find(input_tensor->get_name()) != m_tensor_roles.end() &&
-                        m_tensor_roles[input_tensor->get_name()] == CPUTensorRole::INPUT)
-                    {
-                        NGRAPH_DEBUG << "cpu_external_function: function input pointer passed to "
-                                        "slice, do not change offset.";
-                        continue;
-                    }
                     auto offset = input_tensor->get_pool_offset();
                     auto lower_bounds = slice->get_lower_bounds();
                     auto start = 0, accumulated = 1;
@@ -1411,13 +1416,118 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
                         start += lower_bounds[i] * accumulated;
                         accumulated *= in_shape[i];
                     }
-                    offset += node->get_element_type().size() * start;
                     auto output_tensor = &slice->get_output_tensor();
-                    auto old_offset = output_tensor->get_pool_offset();
 
-                    output_tensor->set_pool_offset(offset);
-                    NGRAPH_DEBUG << "cpu_external_function: slice, change offset, old offset is "
-                                 << old_offset << ", new offset is " << offset;
+                    if (m_tensor_roles.find(output_tensor->get_name()) != m_tensor_roles.end() &&
+                        m_tensor_roles[output_tensor->get_name()] == CPUTensorRole::INPUT)
+                    {
+                        //already processed in propagate_in_place_slice
+                        NGRAPH_DEBUG << "cpu_external_function: " << slice->get_name()
+                                     << " already processed in propagate_in_place_slice.";
+                        continue;
+                    }
+
+                    if (m_tensor_roles.find(input_tensor->get_name()) != m_tensor_roles.end() &&
+                        m_tensor_roles[input_tensor->get_name()] == CPUTensorRole::INPUT)
+                    {
+                        NGRAPH_DEBUG << "cpu_external_function: function input pointer passed to "
+                                        "slice.";
+
+                        auto name = input_tensor->get_name();
+                        if (tensor_alias.count(name))
+                        {
+                            name = tensor_alias[name];
+                        }
+                        auto input_index = function_input_name_index[name];
+                        auto input_offset = slice->get_element_type().size() * start;
+                        intermediate_input_index_offset.emplace_back(
+                            tensor_data[output_tensor->get_name()], input_index, input_offset);
+
+                        // for codegen
+                        m_variable_input_index_offset_map[output_tensor->get_name()] =
+                            std::pair<size_t, size_t>(input_index, input_offset);
+
+                        m_tensor_roles[output_tensor->get_name()] = CPUTensorRole::INPUT;
+
+                        for (size_t i = 0; i < slice->get_output_size(); ++i)
+                        {
+                            NGRAPH_DEBUG << "cpu_external_function: call propagate_in_place_slice "
+                                            "for output "
+                                         << i << " of " << slice->get_name() << std::endl;
+                            propagate_in_place_slice(
+                                &slice->get_outputs().at(i), input_index, input_offset);
+                        }
+                    }
+                    else
+                    {
+                        offset += node->get_element_type().size() * start;
+                        auto old_offset = output_tensor->get_pool_offset();
+
+                        output_tensor->set_pool_offset(offset);
+                        NGRAPH_DEBUG
+                            << "cpu_external_function: slice, change offset, old offset is "
+                            << old_offset << ", new offset is " << offset;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void runtime::cpu::CPU_ExternalFunction::propagate_in_place_slice(
+    ngraph::descriptor::Output* output, size_t input_index, size_t input_offset)
+{
+    std::deque<std::pair<ngraph::descriptor::Output*, size_t>> stack;
+    stack.push_front(std::pair<ngraph::descriptor::Output*, size_t>(output, input_offset));
+
+    while (stack.size() > 0)
+    {
+        ngraph::descriptor::Output* it = stack.front().first;
+        auto offset = stack.front().second;
+        stack.pop_front();
+        for (auto input : it->get_inputs())
+        {
+            auto input_node = input->get_node();
+            if (!input_node->is_op() || input_node->is_output() ||
+                std::dynamic_pointer_cast<ngraph::op::Concat>(input_node))
+            {
+                continue;
+            }
+
+            auto c_op = std::static_pointer_cast<ngraph::op::Op>(input_node);
+
+            if (auto op_annotations = c_op->get_op_annotations())
+            {
+                for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
+                {
+                    if (oi_pair.input == input->get_index() && !oi_pair.destructive)
+                    {
+                        size_t output_index = oi_pair.output;
+                        auto& output_tensor = c_op->get_outputs().at(output_index).get_tensor();
+                        auto temp_offset = offset;
+                        if (auto slice = std::dynamic_pointer_cast<ngraph::op::Slice>(input_node))
+                        {
+                            auto lower_bounds = slice->get_lower_bounds();
+                            auto start = 0, accumulated = 1;
+                            auto in_shape = slice->get_input_shape(0);
+                            for (int i = in_shape.size() - 1; i >= 0; i--)
+                            {
+                                start += lower_bounds[i] * accumulated;
+                                accumulated *= in_shape[i];
+                            }
+                            temp_offset += slice->get_element_type().size() * start;
+                        }
+                        intermediate_input_index_offset.emplace_back(
+                            tensor_data[output_tensor.get_name()], input_index, temp_offset);
+                        stack.push_back(std::pair<ngraph::descriptor::Output*, size_t>(
+                            &c_op->get_outputs().at(output_index), temp_offset));
+
+                        // for codegen
+                        m_variable_input_index_offset_map[output_tensor.get_name()] =
+                            std::pair<size_t, size_t>(input_index, temp_offset);
+
+                        m_tensor_roles[output_tensor.get_name()] = CPUTensorRole::INPUT;
+                    }
                 }
             }
         }
@@ -1511,6 +1621,7 @@ void runtime::cpu::CPU_ExternalFunction::build()
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
             shared_ptr<descriptor::Tensor> tv = param->get_output_tensor_ptr(i);
+            function_input_name_index[tv->get_name()] = arg_index;
             function_input_index.emplace_back(
                 tensor_data[tv->get_name()], arg_index, tensor_stale[tv->get_name()]);
             m_tensor_roles[tv->get_name()] = CPUTensorRole::INPUT;
@@ -1733,6 +1844,11 @@ void runtime::cpu::CPU_ExternalFunction::build()
             }
         }
 
+        for (auto& p : intermediate_input_index_offset)
+        {
+            get<0>(p).get() = static_cast<uint8_t*>(inputs[get<1>(p)]) + get<2>(p);
+        }
+
         for (const auto& p : function_input_index)
         {
             get<0>(p).get() = inputs[get<1>(p)];
@@ -1852,6 +1968,33 @@ void runtime::cpu::CPU_ExternalFunction::build()
         }
         else
         {
+            static const auto ddebug = std::getenv("NGRAPH_DEX_DEBUG");
+            if (ddebug != nullptr)
+            {
+                if (ctx->first_iteration)
+                {
+                    string filename =
+                        file_util::path_join(s_debug_dir, m_function_name + "_debug.txt");
+                    std::stringstream ss;
+
+                    ss << "EXECUTION PLAN:\n";
+                    for (size_t i = 0; i < functors.size(); i++)
+                    {
+                        ss << op_names.at(i) << "will be executed with the following inputs:\n";
+                        for (auto is : this->m_op_attrs.at(i).Inputs)
+                        {
+                            ss << "\t" << is << " = " << this->get_tensor_data(is) << std::endl;
+                        }
+                        ss << "and outputs :\n";
+                        for (auto os : this->m_op_attrs.at(i).Outputs)
+                        {
+                            ss << "\t" << os << " = " << this->get_tensor_data(os) << std::endl;
+                        }
+                    }
+                    write_to_file(ss.str(), s_debug_dir, filename);
+                }
+            }
+
             for (; ctx->pc < functors.size(); ctx->pc++)
             {
                 auto index = profiler_count++;
