@@ -152,6 +152,7 @@ sources = [
     'pyngraph/parameter_vector.cpp',
     'pyngraph/pyngraph.cpp',
     'pyngraph/util.cpp',
+    'pyngraph/result_vector.cpp',
     'pyngraph/ops/util/arithmetic_reduction.cpp',
     'pyngraph/ops/util/binary_elementwise_comparison.cpp',
     'pyngraph/ops/util/op_annotations.cpp',
@@ -226,6 +227,7 @@ sources = [
     'pyngraph/ops/min.cpp',
     'pyngraph/ops/batch_norm.cpp',
     'pyngraph/ops/softmax.cpp',
+    'pyngraph/ops/result.cpp',
     'pyngraph/runtime/backend.cpp',
     'pyngraph/runtime/regmodule_pyngraph_runtime.cpp',
     'pyngraph/runtime/tensor.cpp',
@@ -277,13 +279,13 @@ data_files = [
     (
         'licenses',
         [
-            PYNGRAPH_ROOT_DIR + '/../licenses/' + license
-            for license in os.listdir(PYNGRAPH_ROOT_DIR + '/../licenses')
+            NGRAPH_CPP_DIST_DIR + '/licenses/' + license
+            for license in os.listdir(NGRAPH_CPP_DIST_DIR + '/licenses')
         ],
     ),
     (
         '',
-        [PYNGRAPH_ROOT_DIR + '/../LICENSE'],
+        [NGRAPH_CPP_DIST_DIR + '/LICENSE'],
     ),
 ]
 

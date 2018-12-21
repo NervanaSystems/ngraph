@@ -1,23 +1,48 @@
-.. frameworks/generic.rst
+.. frameworks/generic-configs.rst:
 
 
-Working with other frameworks
-##############################
+Configurations available to any framework
+#########################################
 
-An engineer may want to work with a deep learning framework that does not yet 
-have bridge code written. For non-supported or "generic" frameworks, it is 
-expected that engineers will use the nGraph library to create custom bridge code, 
-and/or to design and document a user interface (UI) with specific runtime 
-options for whatever custom use case they need. 
 
-The two primary tasks that can be accomplished in the “bridge code” space of the 
-nGraph abstraction layer are: (1) compiling a dataflow graph and (2) executing 
-a pre-compiled graph. See the :doc:`../framework-integration-guides` for how we 
-have built bridges with other frameworks. For more in-depth help in writing 
+Enabling Deep Learning paradigms  
+================================
+
+Framework architects or engineers who can't quite find what they need among 
+the existing DL tools may need to build something new off a "stock" framework, 
+or someting entirely from scratch. For this category of developer, we have 
+:doc:`documented several ways <../howto/index>` you can incorporate built-in 
+compiler support for users of your framework; this includes out-of-box support 
+for things like Intel® MKL-DNN and PlaidML when your framework supports nGraph 
+as a "backend" or engine. 
+
+   .. important:: nGraph does not provide an interface for "users" of frameworks 
+      (for example, we cannot dictate or control how Tensorflow* or MXNet* presents 
+      interfaces to users). Please keep in mind that designing and documenting 
+      the :abbr:`User Interface (UI)` of step 3 above is entirely in the realm 
+      of the framework owner or developer and beyond the scope of the nGraph 
+      Compiler stack. However, any framework can be designed to make direct use 
+      of nGraph Compiler stack-based features and then expose an accompanying UI, 
+      output message, or other detail to a user.
+ 
+The nGraph :abbr:`IR Intermediate Representation` is format that can understand 
+inputs from a framework. Today, there are two primary tasks that can be accomplished 
+in the “bridge code” space of the nGraph IR: 
+
+#. Compiling a dataflow graph 
+#. Executing a pre-compiled graph. 
+
+See the :doc:`../framework-integration-guides` for how we built bridges with our 
+initially-supported frameworks. For more in-depth help in writing things like 
 graph optimizations and bridge code, we provide articles on how to 
 :doc:`../fusion/index`, and programmatically :doc:`../howto/execute` that can 
 target various compute resources using nGraph when a framework provides some 
 inputs to be computed.
+
+.. note:: Configuration options can be added manually on the command line or via 
+   scripting. Please keep in mind that fine-tuning of parameters is as much of 
+   an art as it is a science; there are virtually limitless ways to do so and 
+   our documentation provides only a sampling.  
 
 
 Integrating nGraph with new frameworks
@@ -51,6 +76,21 @@ something like:
    export LD_LIBRARY_PATH=path/to/ngraph_dist/lib/
 
 
+
+FMV
+===
+
+FMV stands for :abbr:`Function Multi-Versioning`, and it can also provide a 
+number of generic ways to patch or bring architecture-based optimizations to 
+the :abbr:`Operating System (OS)` that is handling your ML environment. See 
+the `GCC wiki for details`_.
+
+If your nGraph build is a Neural Network configured on Clear Linux* OS 
+for Intel® Architecture, and it includes at least one older CPU, the 
+`following article may be helpful`_.
+
+
+
 Training Deep Neural Networks
 ==============================
 
@@ -68,14 +108,14 @@ For CPU (and most cuDNN) backends, the preferred layout is currently ``NCHW``.
 * **H** -- Height of the image
 * **W** -- Width of the image
 
-MKL-DNN
--------
+Intel® Math Kernel Library for Deep Neural Networks 
+---------------------------------------------------
 
-The following `KMP options`_ were originally optimized for `MKLDNN`_ projects 
-running models with the ``NCHW`` data layout; however, other configurations can 
-be explored. MKL-DNN is automatically enabled as part of an nGraph build; you do 
-*not* need to add MKL-DNN separately or as an additional component to be able to 
-use these configuration settings.   
+-The following `KMP options`_ were originally optimized for models using the 
+Intel® `MKL-DNN`_ to train models with the ``NCHW`` data layout; however, other 
+configurations can be explored. MKL-DNN is automatically enabled as part of an 
+nGraph compilation; you do *not* need to add MKL-DNN separately or as an 
+additional component to be able to use these configuration settings.   
 
 * ``KMP_BLOCKTIME`` Sets the time, in milliseconds, that a thread should wait 
   after completing the execution of a parallel region, before sleeping.
@@ -158,7 +198,7 @@ Intel® Xeon® processor-based platforms, which is a key requirement for
 many kinds of inference-engine computations. See the next section on NUMA 
 performance to learn more about this performance feature available to systems 
 utilizing nGraph. 
-
+   
 
 NUMA performance 
 ~~~~~~~~~~~~~~~~~
@@ -174,10 +214,16 @@ increasing bandwidth demands on the Intel® Ultra-Path Interconnect (Intel® UPI
 This situation is exacerbated with larger number of sockets found in 4, 8, and 
 16-socket systems. We believe that users need to be aware of system level 
 optimizations in addition to framework specific configuration parameters to 
-achieve the best performance for NN workloads on CPU platforms. 
+achieve the best performance for NN workloads on CPU platforms. The nGraph 
+Compiler stack runs on transformers handled by Intel® Architecture (IA), and 
+thus can make more efficient use of the underlying hardware.
+
+
 
 
 .. _KMP options: https://software.intel.com/en-us/node/522691
-.. _MKLDNN: https://github.com/intel/mkl-dnn
+.. _MKL-DNN: https://github.com/intel/mkl-dnn
 .. _gnu.org site: https://gcc.gnu.org/onlinedocs/libgomp/Environment-Variables.html
 .. _Movidius: https://www.movidius.com/
+.. _GCC wiki for details: https://gcc.gnu.org/wiki/FunctionMultiVersioning
+.. _following article may be helpful: https://clearlinux.org/documentation/clear-linux/tutorials/fmv

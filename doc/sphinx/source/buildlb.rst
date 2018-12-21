@@ -1,8 +1,8 @@
 .. buildlb.rst:
 
-##################
-Build the Library 
-##################
+######################
+Build the C++ Library 
+######################
 
 * :ref:`ubuntu`
 * :ref:`centos`

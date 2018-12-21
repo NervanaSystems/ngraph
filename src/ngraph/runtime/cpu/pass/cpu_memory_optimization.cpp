@@ -278,10 +278,29 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             auto upper_bounds = slice->get_upper_bounds();
 
             auto arg = slice->get_argument(0);
-            if (arg->is_constant() || arg->is_parameter())
+            if (arg->is_constant())
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
-                             << ": constant or parameter, no in place slice";
+                             << ": constant, no in place slice";
+                continue;
+            }
+
+            bool no_in_place_slice = false;
+            if (arg->is_parameter())
+            {
+                for (auto user : slice->get_users())
+                {
+                    if (user->is_output())
+                    {
+                        NGRAPH_DEBUG << "cpu_memory_optimization: slice between function input and "
+                                        "output, no in place slice";
+                        no_in_place_slice = true;
+                        break;
+                    }
+                }
+            }
+            if (no_in_place_slice)
+            {
                 continue;
             }
 

@@ -238,6 +238,12 @@ add_custom_target(style-apply
     -P ${CMAKE_MODULE_PATH}style_apply.cmake
 )
 
+add_custom_target(fix-mode
+    COMMAND ${CMAKE_COMMAND}
+    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    -P ${CMAKE_MODULE_PATH}fix_mode.cmake
+)
+
 #-----------------------------------------------------------------------------------------------
 # enable or disable output from NGRAPH_DEBUG statements
 #-----------------------------------------------------------------------------------------------

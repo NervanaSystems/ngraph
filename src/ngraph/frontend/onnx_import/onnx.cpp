@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <fstream>
+#include <memory>
 
 #include "core/graph.hpp"
 #include "core/model.hpp"
@@ -50,45 +51,32 @@ namespace ngraph
             } // namespace error
         }     // namespace detail
 
-        std::vector<std::shared_ptr<Function>> load_onnx_model(std::istream& sin,
-                                                               const Weights& weights)
+        std::shared_ptr<Function> import_onnx_model(std::istream& sin, const Weights& weights)
         {
             onnx::ModelProto model_proto;
             if (!model_proto.ParseFromIstream(&sin))
             {
                 throw detail::error::stream_parse{sin};
             }
-            std::vector<std::shared_ptr<Function>> output_functions;
             Model model{model_proto};
             Graph graph{model_proto.graph(), model, weights};
-            for (const auto& output : graph.get_outputs())
+            auto function = std::make_shared<Function>(
+                graph.get_ng_outputs(), graph.get_ng_parameters(), graph.get_name());
+            for (std::size_t i{0}; i < function->get_output_size(); ++i)
             {
-                output_functions.emplace_back(std::make_shared<Function>(
-                    graph.get_ng_node_from_cache(output.get_name()), graph.get_ng_parameters()));
+                function->get_output_op(i)->set_name(graph.get_outputs().at(i).get_name());
             }
-            return output_functions;
+            return function;
         }
 
-        std::vector<std::shared_ptr<Function>> load_onnx_model(const std::string& path,
-                                                               const Weights& weights)
+        std::shared_ptr<Function> import_onnx_model(const std::string& path, const Weights& weights)
         {
             std::ifstream ifs{path, std::ios::in | std::ios::binary};
             if (!ifs.is_open())
             {
                 throw detail::error::file_open{path};
             }
-            return load_onnx_model(ifs, weights);
-        }
-
-        std::shared_ptr<Function> import_onnx_function(std::istream& sin, const Weights& weights)
-        {
-            return load_onnx_model(sin, weights).front();
-        }
-
-        std::shared_ptr<Function> import_onnx_function(const std::string& path,
-                                                       const Weights& weights)
-        {
-            return load_onnx_model(path, weights).front();
+            return import_onnx_model(ifs, weights);
         }
 
         void register_operator(const std::string& name,
@@ -97,6 +85,18 @@ namespace ngraph
                                Operator fn)
         {
             OperatorsBridge::register_operator(name, version, domain, std::move(fn));
+        }
+
+        std::set<std::string> get_supported_operators(std::int64_t version,
+                                                      const std::string& domain)
+        {
+            OperatorSet op_set{OperatorsBridge::get_operator_set(version, domain)};
+            std::set<std::string> op_list{};
+            for (const auto& op : op_set)
+            {
+                op_list.emplace(op.first);
+            }
+            return op_list;
         }
 
     } // namespace onnx_import
