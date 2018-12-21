@@ -78,8 +78,8 @@ namespace ngraph
                 virtual void
                     get_performance_data(std::vector<runtime::PerformanceCounter>& rc) const = 0;
 
-                static const size_t s_memory_pool_alignment;
-                static const std::string s_output_dir;
+                static size_t get_memory_alignment();
+                static std::string get_output_dir();
 
             protected:
                 virtual void compile_function() = 0;

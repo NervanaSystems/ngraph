@@ -550,7 +550,7 @@ void runtime::gpu::GPUExternalFunction::emit_functions()
 void runtime::gpu::GPUExternalFunction::store_emitted_functions(const string& code)
 {
     // TODO: Cleanup and make this a utility function
-    string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
+    string filename = file_util::path_join(get_output_dir(), m_function_name + "_codegen.cpp");
     ofstream out(filename);
     out << code;
     out.close();

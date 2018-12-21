@@ -48,7 +48,18 @@
 using namespace std;
 using namespace ngraph;
 
-const std::string runtime::gpu::GPUCompiledFunction::s_output_dir = "gpu_codegen";
+std::string runtime::gpu::GPUCompiledFunction::get_output_dir()
+{
+    static std::string output_dir = "gpu_codegen";
+    return output_dir;
+}
+
+size_t runtime::gpu::GPUCompiledFunction::get_memory_alignment()
+{
+    static size_t memory_pool_alignment = 64;
+    return memory_pool_alignment;
+}
+
 static std::mutex s_compilation;
 
 class GPUStaticInitializers
@@ -56,14 +67,13 @@ class GPUStaticInitializers
 public:
     GPUStaticInitializers()
     {
-        file_util::remove_directory(runtime::gpu::GPUCompiledFunction::s_output_dir);
-        file_util::make_directory(runtime::gpu::GPUCompiledFunction::s_output_dir);
+        file_util::remove_directory(runtime::gpu::GPUCompiledFunction::get_output_dir());
+        file_util::make_directory(runtime::gpu::GPUCompiledFunction::get_output_dir());
     }
 };
 
 static GPUStaticInitializers s_static_initializers;
 
-const size_t runtime::gpu::GPUCompiledFunction::GPUCompiledFunction::s_memory_pool_alignment = 64;
 
 runtime::gpu::GPUCompiledFunction::GPUCompiledFunction(
     const shared_ptr<ngraph::Function>& function,
@@ -139,10 +149,10 @@ void runtime::gpu::GPUCompiledFunction::compile()
     pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
-    pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
+    pass_manager.register_pass<ngraph::pass::MemoryLayout>(get_memory_alignment());
     pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(
         *allocator, m_tensor_memory_buffers);
-    string dump_filename = file_util::path_join(s_output_dir, m_function_name + "_ops.txt");
+    string dump_filename = file_util::path_join(get_output_dir(), m_function_name + "_ops.txt");
     pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
     pass_manager.run_passes(m_function);
 

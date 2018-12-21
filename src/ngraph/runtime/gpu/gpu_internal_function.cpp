@@ -141,7 +141,7 @@ runtime::gpu::GPUInternalFunction::~GPUInternalFunction()
 {
     if (m_trace)
     {
-        string filename = file_util::path_join(s_output_dir, m_function_name + "_trace.txt");
+        string filename = file_util::path_join(get_output_dir(), m_function_name + "_trace.txt");
         ofstream out(filename);
         out << m_trace->get_code();
         out.close();
@@ -418,7 +418,7 @@ void runtime::gpu::GPUInternalFunction::compile_function()
 
 void runtime::gpu::GPUInternalFunction::save_manifest_to_disk() const
 {
-    string filename = file_util::path_join(s_output_dir, m_function_name + "_manifest.txt");
+    string filename = file_util::path_join(get_output_dir(), m_function_name + "_manifest.txt");
     ofstream out(filename);
     out << m_manifest.get_code();
     out.close();
