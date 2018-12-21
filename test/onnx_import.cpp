@@ -1539,7 +1539,7 @@ TEST(onnx, model_matmul_vec_ten3d)
 TEST(onnx, model_argmax_int32)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/ReductionOpTest_ArgMax_int32.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/argmax_int32.onnx"));
 
     std::vector<std::vector<std::int32_t>> inputs{
         std::vector<std::int32_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}};
@@ -1555,7 +1555,7 @@ TEST(onnx, model_argmax_int32)
 TEST(onnx, model_argmin_int32)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/ReductionOpTest_ArgMin_int32.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/argmin_int32.onnx"));
 
     std::vector<std::vector<std::int32_t>> inputs{
         std::vector<std::int32_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}};
