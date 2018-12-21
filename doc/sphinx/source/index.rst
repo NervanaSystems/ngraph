@@ -23,18 +23,18 @@ Welcome
 
 See the latest :doc:`project/release-notes`. 
 
-
-.. figure:: graphics/599px-Intel-ngraph-ecosystem.png
-   :width: 599px
-
-
 nGraph is an open-source C++ library, compiler stack, and runtime accelerator 
-for software engineering in the :abbr:`Deep Learning (DL)` ecosystem. nGraph 
-simplifies development and makes it possible to design, write, compile, and
-deploy :abbr:`Deep Neural Network (DNN)`-based solutions that can be adapted and 
-deployed across many frameworks and backends. A more detailed explanation, as
-well as a high-level overview, can be found on our project :doc:`project/about`.  
-For more generalized discussion on the ecosystem, see the `ecosystem`_ document.
+for software and neural network engineering within the :abbr:`Deep Learning (DL)` 
+ecosystem. nGraph simplifies development and makes it possible to design, write, 
+compile, and deploy :abbr:`Deep Neural Network (DNN)`-based solutions that can 
+be adapted and deployed across many frameworks and backends. See our project 
+:doc:`project/about` and `ecosystem`_ for more details.
+
+.. figure:: graphics/ngcompiler-ecosystem.png
+   :width: 650px
+   :alt: ecosystem 
+
+   The Intel nGraph Compiler stack supports a broad ecosystem of frameworks and backends. 
 
 
 .. _quickstart:
@@ -44,10 +44,17 @@ Quick Start
 
 We have many documentation pages to help you get started.  
 
-* **TensorFlow or MXNet users** can get started with :doc:`framework-integration-guides`; see also: 
+* **TensorFlow or MXNet users** can get started with 
+  :doc:`framework-integration-guides`. 
 
    * `TensorFlow bridge to nGraph`_ 
-   * `Compiling MXNet with nGraph`_ 
+   * `Compiling MXNet with nGraph`_
+   
+   .. note:: Note that the ``pip`` package option works only with Ubuntu 16.04 
+      or greater and Intel® Xeon® CPUs. CPUs without Intel® Advanced Vector Extensions 
+      512 (Intel® AVX-512) will not run these packages; the alternative is to 
+      build from source. Wider support for other CPUs will be offered starting 
+      in early 2019.
 
 * **Data scientists** interested in the `ONNX`_ format will find the 
   `nGraph ONNX companion tool`_ of interest. 
@@ -55,7 +62,7 @@ We have many documentation pages to help you get started.
 * **Framework authors and architects** will likely want to :doc:`buildlb` 
   and learn how nGraph can be used to :doc:`howto/execute`. For examples 
   of generic configurations or optimizations available when designing or 
-  bridging a framework directly with nGraph, see :doc:`frameworks/generic`.
+  bridging a framework directly with nGraph, see :doc:`frameworks/index`.
 
 * To start learning about nGraph's set of **Core ops** and how they can 
   be used with Ops from other frameworks, go to :doc:`ops/index`.
@@ -102,20 +109,32 @@ Contents
 
 .. toctree::
    :maxdepth: 1
-   :name: tocmaster
-   :caption: Documentation
+   :caption: Python Ops for ONNX
 
-   buildlb.rst
+   python_api/index.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Core Documentation
+
+   buildlb.rst   
+   framework-integration-guides.rst
+   frameworks/validation.rst
+   frameworks/index.rst
    graph-basics.rst
    howto/index.rst
+   ops/about.rst
    ops/index.rst
-   framework-integration-guides.rst
-   frameworks/index.rst
    fusion/index.rst
    programmable/index.rst
    distr/index.rst
-   python_api/index.rst
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Project Metadata
+
    project/index.rst
+   glossary.rst
 
 
 Indices and tables
