@@ -295,17 +295,19 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
                   << " mantissa bits.\n";
     }
 
-    msg << "passing criteria: " << (mantissa_bits - tolerance_bits) << " mantissa bits ("
-        << mantissa_bits << " mantissa bits w/ " << tolerance_bits << " tolerance bits)\n";
+    msg << "passing criteria - mismatch allowed  @ mantissa bit: "
+        << (mantissa_bits - tolerance_bits) << " or later (" << mantissa_bits
+        << " mantissa bits w/ " << tolerance_bits << " tolerance bits)\n";
     msg << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
-        << "tightest match:   " << matching_mantissa_bits(min_distance) << " mantissa bits ("
-        << a[min_distance_index] << " vs " << b[min_distance_index] << " at [" << min_distance_index
-        << "])\n";
+        << "tightest match   - mismatch occurred @ mantissa bit: "
+        << matching_mantissa_bits(min_distance) << " or next bit (" << a[min_distance_index]
+        << " vs " << b[min_distance_index] << " at [" << min_distance_index << "])\n";
     msg << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
-        << "loosest match:    " << matching_mantissa_bits(max_distance) << " mantissa bits ("
-        << a[max_distance_index] << " vs " << b[max_distance_index] << " at [" << max_distance_index
-        << "])\n";
-    msg << "median match:     " << matching_mantissa_bits(median_distance) << " mantissa bits\n";
+        << "loosest match    - mismatch occurred @ mantissa bit: "
+        << matching_mantissa_bits(max_distance) << " or next bit (" << a[max_distance_index]
+        << " vs " << b[max_distance_index] << " at [" << max_distance_index << "])\n";
+    msg << "median match     - mismatch occurred @ mantissa bit: "
+        << matching_mantissa_bits(median_distance) << " or next bit\n";
 
     ::testing::AssertionResult res =
         rc ? ::testing::AssertionSuccess() : ::testing::AssertionFailure();
@@ -383,17 +385,19 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
                   << " mantissa bits.\n";
     }
 
-    msg << "passing criteria: " << (mantissa_bits - tolerance_bits) << " mantissa bits ("
-        << mantissa_bits << " mantissa bits w/ " << tolerance_bits << " tolerance bits)\n";
+    msg << "passing criteria - mismatch allowed  @ mantissa bit: "
+        << (mantissa_bits - tolerance_bits) << " or later (" << mantissa_bits
+        << " mantissa bits w/ " << tolerance_bits << " tolerance bits)\n";
     msg << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
-        << "tightest match:   " << matching_mantissa_bits(min_distance) << " mantissa bits ("
-        << a[min_distance_index] << " vs " << b[min_distance_index] << " at [" << min_distance_index
-        << "])\n";
+        << "tightest match   - mismatch occurred @ mantissa bit: "
+        << matching_mantissa_bits(min_distance) << " or next bit (" << a[min_distance_index]
+        << " vs " << b[min_distance_index] << " at [" << min_distance_index << "])\n";
     msg << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
-        << "loosest match:    " << matching_mantissa_bits(max_distance) << " mantissa bits ("
-        << a[max_distance_index] << " vs " << b[max_distance_index] << " at [" << max_distance_index
-        << "])\n";
-    msg << "median match:     " << matching_mantissa_bits(median_distance) << " mantissa bits\n";
+        << "loosest match    - mismatch occurred @ mantissa bit: "
+        << matching_mantissa_bits(max_distance) << " or next bit (" << a[max_distance_index]
+        << " vs " << b[max_distance_index] << " at [" << max_distance_index << "])\n";
+    msg << "median match     - mismatch occurred @ mantissa bit: "
+        << matching_mantissa_bits(median_distance) << " or next bit\n";
 
     ::testing::AssertionResult res =
         rc ? ::testing::AssertionSuccess() : ::testing::AssertionFailure();

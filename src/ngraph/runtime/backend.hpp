@@ -99,7 +99,7 @@ public:
                             const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                             const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
     {
-        validate_call(func, outputs, inputs);
+        validate(func, outputs, inputs);
         return call(func, outputs, inputs);
     }
 
@@ -124,8 +124,7 @@ public:
     /// \returns true if the op is supported, false otherwise.
     virtual bool is_supported(const Node& node) const;
 
-protected:
-    void validate_call(std::shared_ptr<const Function> func,
-                       const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                       const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+    void validate(std::shared_ptr<const Function> func,
+                  const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                  const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 };
