@@ -59,6 +59,10 @@ namespace ngraph
                 size_t num_fused_layers);
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const NodeVector& deltas) override;
+
             size_t get_num_timesteps() const { return m_num_timesteps; }
             size_t get_src_sequence_length() const { return m_src_sequence_length; }
             size_t get_gates_per_cell() const { return m_num_gates_per_cell; }
@@ -82,6 +86,20 @@ namespace ngraph
             size_t m_num_cell_states;
             size_t m_direction;
             size_t m_num_fused_layers;
+        };
+
+        class RnnBackprop : public Op
+        {
+        public:
+            RnnBackprop(std::shared_ptr<Node> fprop_src_layer,
+                        std::shared_ptr<Node> fprop_src_iter,
+                        std::shared_ptr<Node> fprop_weights_layer,
+                        std::shared_ptr<Node> fprop_weights_iter,
+                        std::shared_ptr<Node> fprop_bias,
+                        std::shared_ptr<Node> fprop_dst_layer,
+                        std::shared_ptr<Node> fprop_dst_iter);
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
         };
     }
 }

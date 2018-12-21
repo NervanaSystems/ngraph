@@ -16,6 +16,7 @@
 
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -51,7 +52,7 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
              size_t num_cell_states,
              size_t direction,
              size_t num_fused_layers)
-    : Op("Rnn", check_single_output_args({src_layer, src_iter, weights_layer, weights_iter, bias}))
+    : Op("rnn", check_single_output_args({src_layer, src_iter, weights_layer, weights_iter, bias}))
     , m_num_timesteps(num_timesteps)
     , m_num_gates_per_cell(num_gates_per_cell)
     , m_src_sequence_length(src_sequence_length)
@@ -113,4 +114,61 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
                     src_layer->get_element_type(),
                     Shape{(m_num_cell_states * m_direction * m_num_fused_layers * m_batch_size),
                           m_src_iter_feature_size});
+}
+
+void op::Rnn::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+{
+    auto delta_dst_layer = deltas.at(0);
+    auto delta_dst_iter = deltas.at(1);
+
+    auto src_layer = get_argument(0);
+    auto src_iter = get_argument(1);
+    auto weights_layer = get_argument(2);
+    auto weights_iter = get_argument(3);
+    auto bias = get_argument(4);
+
+    auto rnn_bprop = std::make_shared<op::RnnBackprop>(
+        src_layer, src_iter, weights_layer, weights_iter, bias, delta_dst_layer, delta_dst_iter);
+
+    auto diff_src_layer = std::make_shared<op::GetOutputElement>(rnn_bprop, 0);
+    auto diff_src_iter = std::make_shared<op::GetOutputElement>(rnn_bprop, 1);
+    auto diff_weights_layer = std::make_shared<op::GetOutputElement>(rnn_bprop, 2);
+    auto diff_weights_iter = std::make_shared<op::GetOutputElement>(rnn_bprop, 3);
+    auto diff_bias = std::make_shared<op::GetOutputElement>(rnn_bprop, 4);
+
+    adjoints.add_delta(src_layer, diff_src_layer);
+    adjoints.add_delta(src_iter, diff_src_iter);
+    adjoints.add_delta(weights_layer, diff_weights_layer);
+    adjoints.add_delta(weights_iter, diff_weights_iter);
+    adjoints.add_delta(bias, diff_bias);
+}
+
+op::RnnBackprop::RnnBackprop(std::shared_ptr<Node> fprop_src_layer,
+                             std::shared_ptr<Node> fprop_src_iter,
+                             std::shared_ptr<Node> fprop_weights_layer,
+                             std::shared_ptr<Node> fprop_weights_iter,
+                             std::shared_ptr<Node> fprop_bias,
+                             std::shared_ptr<Node> fprop_dst_layer,
+                             std::shared_ptr<Node> fprop_dst_iter)
+    : Op("RnnBackprop",
+         check_single_output_args({fprop_src_layer,
+                                   fprop_src_iter,
+                                   fprop_weights_layer,
+                                   fprop_weights_iter,
+                                   fprop_bias,
+                                   fprop_dst_layer,
+                                   fprop_dst_iter}))
+{
+    set_output_size(5);
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::RnnBackprop::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 7)
+    {
+        throw ngraph_error("Incorrect number of new arguments");
+    }
+    return make_shared<RnnBackprop>(
+        new_args[0], new_args[1], new_args[2], new_args[3], new_args[4], new_args[5], new_args[6]);
 }
