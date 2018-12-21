@@ -25,8 +25,10 @@ Glossary
 
    framework
 
-      A machine learning environment, such as TensorFlow, MXNet, or
-      neon.
+      Frameworks provide expressive user-facing APIs for constructing, 
+      training, validating, and deploying DL/ML models: TensorFlow\*, 
+      PaddlePaddle\*, MXNet\*, PyTorch\*, and Caffe\* are all examples of 
+      well-known frameworks.
 
    function graph
 
