@@ -14,12 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
 #include <cstdlib>
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cudnn.h>
 #include <fstream>
+#include <locale>
 #include <mutex>
 #include <string>
 #include <tuple>
@@ -74,7 +76,6 @@ public:
 
 static GPUStaticInitializers s_static_initializers;
 
-
 runtime::gpu::GPUCompiledFunction::GPUCompiledFunction(
     const shared_ptr<ngraph::Function>& function,
     std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
@@ -90,6 +91,29 @@ runtime::gpu::GPUCompiledFunction::~GPUCompiledFunction()
 {
 }
 
+std::vector<std::string> get_case_variants(std::vector<std::string> cases)
+{
+    std::vector<std::string> results;
+    for (auto& c : cases)
+    {
+        results.push_back(c);
+        if (std::all_of(c.begin(), c.end(), ::isdigit))
+        {
+            continue;
+        }
+        for (auto i = 0u; i < c.size(); i++)
+        {
+            c[i] = std::toupper(c[i], std::locale());
+            if (i == 0)
+            {
+                results.emplace_back(c);
+            }
+        }
+        results.emplace_back(c);
+    }
+    return results;
+}
+
 std::shared_ptr<runtime::gpu::GPUCompiledFunction> runtime::gpu::GPUCompiledFunction::make(
     const std::shared_ptr<ngraph::Function>& function,
     std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
@@ -102,11 +126,12 @@ std::shared_ptr<runtime::gpu::GPUCompiledFunction> runtime::gpu::GPUCompiledFunc
     if (auto env = std::getenv("NGRAPH_CODEGEN"))
     {
         std::string env_codegen(env);
-        if (env_codegen == "0" || env_codegen == "false" || env_codegen == "False" ||
-            env_codegen == "FALSE" || env_codegen == "no" || env_codegen == "No" ||
-            env_codegen == "NO")
+        for (auto& opt : get_case_variants({"0", "false"}))
         {
-            use_codegen = false;
+            if (env_codegen == opt)
+            {
+                use_codegen = false;
+            }
         }
     }
     if (use_codegen)

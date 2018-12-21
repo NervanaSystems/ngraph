@@ -51,7 +51,7 @@ namespace ngraph
             {
             public:
                 GPUExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                     std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
+                                    std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
                 virtual ~GPUExternalFunction();
 
                 virtual std::string

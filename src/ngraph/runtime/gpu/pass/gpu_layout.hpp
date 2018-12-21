@@ -20,7 +20,7 @@
 #include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
 
 #define LAYOUT_DECL(op_type)                                                                       \
-    layout<op_type>(ngraph::runtime::gpu::GPUCompiledFunction * compiled_function,                \
+    layout<op_type>(ngraph::runtime::gpu::GPUCompiledFunction * compiled_function,                 \
                     std::shared_ptr<ngraph::Node> node)
 
 namespace ngraph
@@ -47,9 +47,8 @@ namespace ngraph
                         run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override;
 
                     template <typename OP>
-                    static void
-                        layout(ngraph::runtime::gpu::GPUCompiledFunction* compiled_function,
-                               std::shared_ptr<ngraph::Node> node);
+                    static void layout(ngraph::runtime::gpu::GPUCompiledFunction* compiled_function,
+                                       std::shared_ptr<ngraph::Node> node);
 
                 private:
                     GPUCompiledFunction* m_compiled_function;

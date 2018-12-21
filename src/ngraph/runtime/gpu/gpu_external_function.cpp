@@ -146,10 +146,10 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
 }
 
 std::string runtime::gpu::GPUExternalFunction::emit_op(GPUCompiledFunction* external_function,
-                                                        const std::string& function_name,
-                                                        const ngraph::Node* node,
-                                                        const std::vector<GPUTensorWrapper>& args,
-                                                        const std::vector<GPUTensorWrapper>& out)
+                                                       const std::string& function_name,
+                                                       const ngraph::Node* node,
+                                                       const std::vector<GPUTensorWrapper>& args,
+                                                       const std::vector<GPUTensorWrapper>& out)
 {
     auto emit_function = GPU_Emitter::get_emit_function(*node);
     return emit_function(external_function, function_name, node, args, out);
@@ -620,7 +620,7 @@ void runtime::gpu::GPUExternalFunction::emit_debug_function_exit(Node* node)
 }
 
 string runtime::gpu::GPUExternalFunction::emit_op_as_function(const Node& node,
-                                                               const string& function_name)
+                                                              const string& function_name)
 {
     codegen::CodeWriter writer;
     writer << "static void " << function_name << "(";
@@ -682,8 +682,8 @@ string runtime::gpu::GPUExternalFunction::emit_op_as_function(const Node& node,
     return rc;
 }
 
-void runtime::gpu::GPUExternalFunction::propagate_in_place_input(
-    ngraph::descriptor::Output* output, std::string input_name)
+void runtime::gpu::GPUExternalFunction::propagate_in_place_input(ngraph::descriptor::Output* output,
+                                                                 std::string input_name)
 {
     std::deque<ngraph::descriptor::Output*> stack;
     stack.push_front(output);

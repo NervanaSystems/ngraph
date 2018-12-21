@@ -315,7 +315,6 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
                                                   apb->get_padding_below(),
                                                   apb->get_padding_above());
 
-
         return compiled_function->add_to_runtime(index, function_name, args, out);
     }
     else

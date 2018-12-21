@@ -33,7 +33,7 @@
 #include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
 
 #define EMIT_ARGS                                                                                  \
-    runtime::gpu::GPUCompiledFunction *compiled_function, const std::string &function_name,       \
+    runtime::gpu::GPUCompiledFunction *compiled_function, const std::string &function_name,        \
         const Node *node, const std::vector<runtime::gpu::GPUTensorWrapper> &args,                 \
         const std::vector<runtime::gpu::GPUTensorWrapper> &out
 
@@ -52,7 +52,7 @@ namespace ngraph
 
             public:
                 GPUCompiledFunction(const std::shared_ptr<ngraph::Function>& function,
-                                     std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
+                                    std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
                 virtual ~GPUCompiledFunction();
 
                 static std::shared_ptr<GPUCompiledFunction>
