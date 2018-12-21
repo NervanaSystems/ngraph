@@ -48,7 +48,7 @@
 using namespace std;
 using namespace ngraph;
 
-const std::string runtime::gpu::GPU_CompiledFunction::s_output_dir = "gpu_codegen";
+const std::string runtime::gpu::GPUCompiledFunction::s_output_dir = "gpu_codegen";
 static std::mutex s_compilation;
 
 class GPUStaticInitializers
@@ -56,16 +56,16 @@ class GPUStaticInitializers
 public:
     GPUStaticInitializers()
     {
-        file_util::remove_directory(runtime::gpu::GPU_CompiledFunction::s_output_dir);
-        file_util::make_directory(runtime::gpu::GPU_CompiledFunction::s_output_dir);
+        file_util::remove_directory(runtime::gpu::GPUCompiledFunction::s_output_dir);
+        file_util::make_directory(runtime::gpu::GPUCompiledFunction::s_output_dir);
     }
 };
 
 static GPUStaticInitializers s_static_initializers;
 
-const size_t runtime::gpu::GPU_CompiledFunction::GPU_CompiledFunction::s_memory_pool_alignment = 64;
+const size_t runtime::gpu::GPUCompiledFunction::GPUCompiledFunction::s_memory_pool_alignment = 64;
 
-runtime::gpu::GPU_CompiledFunction::GPU_CompiledFunction(
+runtime::gpu::GPUCompiledFunction::GPUCompiledFunction(
     const shared_ptr<ngraph::Function>& function,
     std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
     : m_runtime(nullptr)
@@ -76,16 +76,16 @@ runtime::gpu::GPU_CompiledFunction::GPU_CompiledFunction(
 {
 }
 
-runtime::gpu::GPU_CompiledFunction::~GPU_CompiledFunction()
+runtime::gpu::GPUCompiledFunction::~GPUCompiledFunction()
 {
 }
 
-std::shared_ptr<runtime::gpu::GPU_CompiledFunction> runtime::gpu::GPU_CompiledFunction::make(
+std::shared_ptr<runtime::gpu::GPUCompiledFunction> runtime::gpu::GPUCompiledFunction::make(
     const std::shared_ptr<ngraph::Function>& function,
     std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
 {
 #if defined(NGRAPH_DEX_ONLY)
-    return std::make_shared<runtime::gpu::GPU_InternalFunction>(function, shared_context);
+    return std::make_shared<runtime::gpu::GPUInternalFunction>(function, shared_context);
 #else
     // For now codegen is default unless explicitly disabled
     bool use_codegen = true;
@@ -101,16 +101,16 @@ std::shared_ptr<runtime::gpu::GPU_CompiledFunction> runtime::gpu::GPU_CompiledFu
     }
     if (use_codegen)
     {
-        return std::make_shared<runtime::gpu::GPU_ExternalFunction>(function, shared_context);
+        return std::make_shared<runtime::gpu::GPUExternalFunction>(function, shared_context);
     }
     else
     {
-        return std::make_shared<runtime::gpu::GPU_InternalFunction>(function, shared_context);
+        return std::make_shared<runtime::gpu::GPUInternalFunction>(function, shared_context);
     }
 #endif
 }
 
-void runtime::gpu::GPU_CompiledFunction::compile()
+void runtime::gpu::GPUCompiledFunction::compile()
 {
     if (m_is_compiled)
     {

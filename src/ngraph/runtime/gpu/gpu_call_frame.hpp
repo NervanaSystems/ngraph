@@ -36,7 +36,7 @@ namespace ngraph
 
                 GPUCallFrame(const size_t& num_inputs, const size_t& num_outputs);
                 void resolve_reservations(
-                    const GPU_CompiledFunction* compiled_function,
+                    const GPUCompiledFunction* compiled_function,
                     const std::unordered_map<std::string, size_t>& memory_reservations);
                 void resolve_inputs(void** inputs);
                 void resolve_inputs(const std::vector<void*>& inputs);

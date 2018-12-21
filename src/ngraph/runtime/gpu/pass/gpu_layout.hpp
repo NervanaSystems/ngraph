@@ -20,7 +20,7 @@
 #include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
 
 #define LAYOUT_DECL(op_type)                                                                       \
-    layout<op_type>(ngraph::runtime::gpu::GPU_CompiledFunction * compiled_function,                \
+    layout<op_type>(ngraph::runtime::gpu::GPUCompiledFunction * compiled_function,                \
                     std::shared_ptr<ngraph::Node> node)
 
 namespace ngraph
@@ -32,14 +32,14 @@ namespace ngraph
             namespace pass
             {
                 using LayoutFunction =
-                    std::function<void(GPU_CompiledFunction*, std::shared_ptr<ngraph::Node>)>;
+                    std::function<void(GPUCompiledFunction*, std::shared_ptr<ngraph::Node>)>;
 
                 using LayoutOpMap = std::unordered_map<std::type_index, LayoutFunction>;
 
                 class GPULayout : public ngraph::pass::CallGraphPass
                 {
                 public:
-                    GPULayout(GPU_CompiledFunction* compiled_function)
+                    GPULayout(GPUCompiledFunction* compiled_function)
                         : m_compiled_function(compiled_function)
                     {
                     }
@@ -48,11 +48,11 @@ namespace ngraph
 
                     template <typename OP>
                     static void
-                        layout(ngraph::runtime::gpu::GPU_CompiledFunction* compiled_function,
+                        layout(ngraph::runtime::gpu::GPUCompiledFunction* compiled_function,
                                std::shared_ptr<ngraph::Node> node);
 
                 private:
-                    GPU_CompiledFunction* m_compiled_function;
+                    GPUCompiledFunction* m_compiled_function;
                 };
 
                 NodeVector insert_new_reshape_after(NodeVector& parents,

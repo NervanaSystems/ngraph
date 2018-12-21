@@ -29,7 +29,7 @@ namespace ngraph
         {
             static size_t alignment = 64;
 
-            class GPU_CompiledFunction;
+            class GPUCompiledFunction;
             class GPUPrimitiveEmitter;
             struct GPURuntimeContext;
             class CudaContextManager;
@@ -83,7 +83,7 @@ namespace ngraph
                 class FunctionInstance
                 {
                 public:
-                    std::shared_ptr<GPU_CompiledFunction> m_compiled_function;
+                    std::shared_ptr<GPUCompiledFunction> m_compiled_function;
                     bool m_performance_counters_enabled = false;
                     EntryPoint m_runtime;
                     std::vector<void*> m_inputs;

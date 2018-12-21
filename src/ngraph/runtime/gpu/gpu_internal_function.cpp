@@ -120,7 +120,7 @@
 using namespace std;
 using namespace ngraph;
 
-std::string runtime::gpu::GPU_InternalFunction::emit_op(GPU_CompiledFunction* compiled_function,
+std::string runtime::gpu::GPUInternalFunction::emit_op(GPUCompiledFunction* compiled_function,
                                                         const std::string& function_name,
                                                         const ngraph::Node* node,
                                                         const std::vector<GPUTensorWrapper>& args,
@@ -130,14 +130,14 @@ std::string runtime::gpu::GPU_InternalFunction::emit_op(GPU_CompiledFunction* co
     return emit_function(compiled_function, function_name, node, args, out);
 };
 
-runtime::gpu::GPU_InternalFunction::GPU_InternalFunction(
+runtime::gpu::GPUInternalFunction::GPUInternalFunction(
     const shared_ptr<ngraph::Function>& function,
     std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
-    : GPU_CompiledFunction(function, shared_context)
+    : GPUCompiledFunction(function, shared_context)
 {
 }
 
-runtime::gpu::GPU_InternalFunction::~GPU_InternalFunction()
+runtime::gpu::GPUInternalFunction::~GPUInternalFunction()
 {
     if (m_trace)
     {
@@ -148,7 +148,7 @@ runtime::gpu::GPU_InternalFunction::~GPU_InternalFunction()
     }
 }
 
-std::string runtime::gpu::GPU_InternalFunction::add_to_runtime(
+std::string runtime::gpu::GPUInternalFunction::add_to_runtime(
     size_t primitive_index,
     const std::string& function_name,
     const std::vector<runtime::gpu::GPUTensorWrapper>& args,
@@ -200,7 +200,7 @@ std::string runtime::gpu::GPU_InternalFunction::add_to_runtime(
     return compose_manifest(primitive_index, args, out);
 }
 
-std::string runtime::gpu::GPU_InternalFunction::add_call_to_runtime(
+std::string runtime::gpu::GPUInternalFunction::add_call_to_runtime(
     const std::string& caller,
     const std::string& callee,
     const std::vector<runtime::gpu::GPUTensorWrapper>& args,
@@ -224,7 +224,7 @@ std::string runtime::gpu::GPU_InternalFunction::add_call_to_runtime(
     return writer.get_code();
 }
 
-std::string runtime::gpu::GPU_InternalFunction::compose_manifest(
+std::string runtime::gpu::GPUInternalFunction::compose_manifest(
     const size_t& primitive_index,
     const std::vector<runtime::gpu::GPUTensorWrapper>& args,
     const std::vector<runtime::gpu::GPUTensorWrapper>& out) const
@@ -246,7 +246,7 @@ std::string runtime::gpu::GPU_InternalFunction::compose_manifest(
     return writer.get_code();
 }
 
-void runtime::gpu::GPU_InternalFunction::build_functions()
+void runtime::gpu::GPUInternalFunction::build_functions()
 {
     for (const auto& p : m_function_ordered_ops)
     {
@@ -382,11 +382,11 @@ void runtime::gpu::GPU_InternalFunction::build_functions()
     }
 }
 
-void runtime::gpu::GPU_InternalFunction::add_passes(ngraph::pass::Manager& pass_manager)
+void runtime::gpu::GPUInternalFunction::add_passes(ngraph::pass::Manager& pass_manager)
 {
 }
 
-void runtime::gpu::GPU_InternalFunction::emit()
+void runtime::gpu::GPUInternalFunction::emit()
 {
     m_runtime_constructor =
         runtime::gpu::make_unique<GPURuntimeConstructor>(m_function_ordered_ops);
@@ -400,7 +400,7 @@ void runtime::gpu::GPU_InternalFunction::emit()
     build_functions();
 }
 
-void runtime::gpu::GPU_InternalFunction::compile_function()
+void runtime::gpu::GPUInternalFunction::compile_function()
 {
     GPUCallFrame call_frame(m_function->get_parameters().size(), m_function->get_output_size());
 
@@ -416,7 +416,7 @@ void runtime::gpu::GPU_InternalFunction::compile_function()
     m_is_compiled = true;
 }
 
-void runtime::gpu::GPU_InternalFunction::save_manifest_to_disk() const
+void runtime::gpu::GPUInternalFunction::save_manifest_to_disk() const
 {
     string filename = file_util::path_join(s_output_dir, m_function_name + "_manifest.txt");
     ofstream out(filename);
@@ -424,7 +424,7 @@ void runtime::gpu::GPU_InternalFunction::save_manifest_to_disk() const
     out.close();
 }
 
-void runtime::gpu::GPU_InternalFunction::propagate_in_place_input(
+void runtime::gpu::GPUInternalFunction::propagate_in_place_input(
     ngraph::descriptor::Output* output, std::string input_name)
 {
     // std::deque<ngraph::descriptor::Output*> stack;
@@ -463,7 +463,7 @@ void runtime::gpu::GPU_InternalFunction::propagate_in_place_input(
     // }
 }
 
-void runtime::gpu::GPU_InternalFunction::propagate_in_place_output(
+void runtime::gpu::GPUInternalFunction::propagate_in_place_output(
     ngraph::descriptor::Output* res_src_output, std::string output_name)
 {
     // // we start with a particular output
@@ -506,7 +506,7 @@ void runtime::gpu::GPU_InternalFunction::propagate_in_place_output(
     // } while (propagate_further);
 }
 
-void runtime::gpu::GPU_InternalFunction::get_performance_data(
+void runtime::gpu::GPUInternalFunction::get_performance_data(
     std::vector<runtime::PerformanceCounter>& rc) const
 {
     // auto* engine = this->m_execution_engine.get();

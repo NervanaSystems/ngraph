@@ -67,7 +67,7 @@ public:
         return out;
     }
 
-    std::string generate_temporary_name(std::string prefix = "tempvar")
+    std::string generate_temporary_name(const std::string& prefix = "tempvar")
     {
         std::stringstream ss;
 

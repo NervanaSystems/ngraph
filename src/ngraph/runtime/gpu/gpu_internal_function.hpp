@@ -44,12 +44,12 @@ namespace ngraph
             class GPURuntimeConstructor;
             struct GPURuntimeContext;
 
-            class GPU_InternalFunction : public GPU_CompiledFunction
+            class GPUInternalFunction : public GPUCompiledFunction
             {
             public:
-                GPU_InternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                GPUInternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
-                virtual ~GPU_InternalFunction();
+                virtual ~GPUInternalFunction();
 
                 virtual std::string
                     add_to_runtime(size_t primitive_index,

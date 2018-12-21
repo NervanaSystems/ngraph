@@ -47,12 +47,12 @@ namespace ngraph
             class GPU_Emitter;
             struct GPURuntimeContext;
 
-            class GPU_ExternalFunction : public GPU_CompiledFunction
+            class GPUExternalFunction : public GPUCompiledFunction
             {
             public:
-                GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
+                GPUExternalFunction(const std::shared_ptr<ngraph::Function>& function,
                                      std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
-                virtual ~GPU_ExternalFunction();
+                virtual ~GPUExternalFunction();
 
                 virtual std::string
                     add_to_runtime(size_t primitive_index,
