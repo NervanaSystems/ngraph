@@ -137,28 +137,31 @@ if (NGRAPH_HALIDE)
 endif()
 
 if (NGRAPH_TBB_ENABLE)
-    include(${TBB_ROOT}/cmake/TBBBuild.cmake)
-    tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
-                tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
-    find_package(TBB REQUIRED tbb)
-    if (NOT TBB_FOUND)
-        message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
+    if (WIN32)
     else()
-        message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
+        include(${TBB_ROOT}/cmake/TBBBuild.cmake)
+        tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
+                    tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
+        find_package(TBB REQUIRED tbb)
+        if (NOT TBB_FOUND)
+            message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
+        else()
+            message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
+        endif()
+
+        set_source_files_properties(cpu_external_function.cpp
+            PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
+
+        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
+            DESTINATION ${NGRAPH_INSTALL_LIB}
+            FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
+        )
+        add_library(libtbb INTERFACE)
+        target_link_libraries(libtbb INTERFACE
+            ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
+        )
+        target_include_directories(libtbb SYSTEM INTERFACE ${TBB_ROOT}/include)
     endif()
-
-    set_source_files_properties(cpu_external_function.cpp
-        PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
-
-    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
-        DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
-    )
-    add_library(libtbb INTERFACE)
-    target_link_libraries(libtbb INTERFACE
-        ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
-    )
-    target_include_directories(libtbb SYSTEM INTERFACE ${TBB_ROOT}/include)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
@@ -210,5 +213,8 @@ if (NGRAPH_CPU_ENABLE)
         set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
     endif()
 
-    install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+    if (WIN32)
+    else()  
+        install(TARGETS cpu_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+    endif()
 endif()
