@@ -2289,6 +2289,15 @@ TEST(cpu_fusion, fuse_1_layer_rnn)
     }
 }
 
+static std::shared_ptr<Function> make_function(const std::string& file_name)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    return func;
+}
+
 TEST(cpu_fusion, rnn_fusion_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");

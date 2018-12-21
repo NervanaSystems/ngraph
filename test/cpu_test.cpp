@@ -644,6 +644,15 @@ TEST(cpu_test, mkldnn_layouts_eltwise)
     compare_backends(int_f, cpu_f, "INTERPRETER", "CPU");
 }
 
+static std::shared_ptr<Function> make_function(const std::string& file_name)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    return func;
+}
+
 TEST(cpu_test, convolution_large_padding)
 {
     Shape input_shape{1, 1, 100, 100};
