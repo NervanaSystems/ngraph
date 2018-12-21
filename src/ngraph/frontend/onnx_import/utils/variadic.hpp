@@ -46,9 +46,8 @@ namespace ngraph
                 NodeVector ng_inputs{node.get_ng_inputs()};
 
                 // Templated binary operation - Creates Add, Minimum, Maximum, etc.
-                auto binary_operation = [] (const std::shared_ptr<ngraph::Node>& arg0,
-                                            const std::shared_ptr<ngraph::Node>& arg1)
-                {
+                auto binary_operation = [](const std::shared_ptr<ngraph::Node>& arg0,
+                                           const std::shared_ptr<ngraph::Node>& arg1) {
                     return std::make_shared<T>(arg0, arg1);
                 };
 
@@ -76,9 +75,8 @@ namespace ngraph
                 NodeVector ng_inputs{node.get_ng_inputs()};
 
                 // Templated binary operation - Creates Add, Minimum, Maximum, etc.
-                auto binary_operation = [] (const std::shared_ptr<ngraph::Node>& arg0,
-                                            const std::shared_ptr<ngraph::Node>& arg1)
-                {
+                auto binary_operation = [](const std::shared_ptr<ngraph::Node>& arg0,
+                                           const std::shared_ptr<ngraph::Node>& arg1) {
                     NodeVector args{numpy_style_broadcast_for_binary_operation(arg0, arg1)};
                     return std::make_shared<T>(args.at(0), args.at(1));
                 };
