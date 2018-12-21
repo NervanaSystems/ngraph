@@ -91,8 +91,9 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                 auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
                 if (in_place_oi_pairs.size() > 0)
                 {
-                    if (auto concat = std::dynamic_pointer_cast<ngraph::op::Concat>(node))
+                    if (node->description() == "Concat")
                     {
+                        auto concat = std::static_pointer_cast<ngraph::op::Concat>(node);
                         auto cpu_op_annotations =
                             std::static_pointer_cast<runtime::cpu::CPUOpAnnotations>(
                                 op_annotations);
@@ -147,7 +148,7 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
         {
             auto op = std::static_pointer_cast<op::Op>(node);
             // concat in_place_oi should be treated differently
-            if (!std::dynamic_pointer_cast<op::Concat>(node))
+            if (node->description() != "Concat")
             {
                 if (auto op_annotations = op->get_op_annotations())
                 {

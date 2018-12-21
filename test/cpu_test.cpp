@@ -694,7 +694,7 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
     // without memory reuse
     auto cpu_results = execute(cpu_f, args, "CPU");
 
-    for (auto it = 0; it < 5; it++)
+    for (auto it = 0; it < 2; it++)
     {
         auto cpu_f_new = make_function(file_name);
         auto cpu_results_new = execute(cpu_f_new, args, "CPU");
@@ -729,7 +729,7 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
     pass_config.set_reuse_memory(true);
     auto cpu_backend = std::unique_ptr<runtime::cpu::CPU_Backend>(
         static_cast<runtime::cpu::CPU_Backend*>(backend.release()));
-    for (auto it = 0; it < 5; it++)
+    for (auto it = 0; it < 2; it++)
     {
         auto cpu_f_new_reuse = make_function(file_name);
 

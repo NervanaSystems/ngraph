@@ -48,6 +48,10 @@ ngraph::pass::PassConfig::PassConfig()
             }
         }
     }
+    if (std::getenv("NGRAPH_REUSE_MEMORY"))
+    {
+        m_reuse_memory = true;
+    }
 }
 
 void ngraph::pass::PassConfig::set_pass_enable(std::string name, bool enable)

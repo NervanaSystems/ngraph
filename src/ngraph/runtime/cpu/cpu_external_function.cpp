@@ -232,10 +232,6 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
     , m_is_built(false)
     , m_pass_config(pass_config)
 {
-    if (std::getenv("NGRAPH_REUSE_MEMORY"))
-    {
-        m_pass_config.set_reuse_memory(true);
-    }
 }
 
 runtime::cpu::CPU_ExternalFunction::~CPU_ExternalFunction()
@@ -1152,7 +1148,7 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_input(
         {
             auto input_node = input->get_node();
             if (!input_node->is_op() || input_node->is_output() ||
-                dynamic_pointer_cast<ngraph::op::Slice>(input_node))
+                input_node->description() == "Slice")
             {
                 continue;
             }
@@ -1249,7 +1245,7 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_output(
         propagate_further = false;
         auto it_node = it->get_node();
 
-        if (!it_node->is_op() || std::dynamic_pointer_cast<ngraph::op::Slice>(it_node))
+        if (!it_node->is_op() || it_node->description() == "Slice")
         {
             break;
         }
@@ -1294,8 +1290,9 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_concat(
 {
     for (shared_ptr<Node> node : nodes)
     {
-        if (auto concat = std::dynamic_pointer_cast<ngraph::op::Concat>(node))
+        if (node->description() == "Concat")
         {
+            auto concat = std::static_pointer_cast<ngraph::op::Concat>(node);
             if (auto op_annotations = concat->get_op_annotations())
             {
                 auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
@@ -1318,8 +1315,9 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_concat(
                     {
                         for (auto arg : concat->get_arguments())
                         {
-                            if (auto arg_concat = dynamic_pointer_cast<ngraph::op::Concat>(arg))
+                            if (arg->description() == "Concat")
                             {
+                                auto arg_concat = static_pointer_cast<ngraph::op::Concat>(arg);
                                 NGRAPH_DEBUG
                                     << "cpu_external_function: call propagate_in_place_concat for "
                                     << arg->get_name() << std::endl;
@@ -1359,8 +1357,9 @@ void runtime::cpu::CPU_ExternalFunction::propagate_in_place_concat(
                         << "cpu_external_function, propagate: concat, change offset, old offset is "
                         << old_offset << ", new offset is " << offset << std::endl;
                     offset += input_tensor->size();
-                    if (auto arg_concat = std::dynamic_pointer_cast<ngraph::op::Concat>(arg))
+                    if (arg->description() == "Concat")
                     {
+                        auto arg_concat = std::static_pointer_cast<ngraph::op::Concat>(arg);
                         stack.push_front(arg_concat);
                     }
                 }
@@ -1375,8 +1374,9 @@ void runtime::cpu::CPU_ExternalFunction::process_in_place_slice(
 {
     for (shared_ptr<Node>& node : nodes)
     {
-        if (auto slice = std::dynamic_pointer_cast<ngraph::op::Slice>(node))
+        if (node->description() == "Slice")
         {
+            auto slice = std::static_pointer_cast<ngraph::op::Slice>(node);
             if (auto op_annotations = slice->get_op_annotations())
             {
                 auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();

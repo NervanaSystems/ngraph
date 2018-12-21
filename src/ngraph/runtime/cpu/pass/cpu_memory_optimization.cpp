@@ -62,8 +62,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 {
     for (auto n : function->get_ordered_ops())
     {
-        if (auto concat = std::dynamic_pointer_cast<op::Concat>(n))
+        if (n->description() == "Concat")
         {
+            auto concat = std::static_pointer_cast<op::Concat>(n);
             auto shape = concat->get_input_shape(0);
             auto axis = concat->get_concatenation_axis();
             auto product = 1;
@@ -119,8 +120,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
                 const auto& output = input.get_output();
                 auto arg = output.get_node();
-                if (std::dynamic_pointer_cast<op::Constant>(arg) ||
-                    std::dynamic_pointer_cast<op::Parameter>(arg))
+                if (arg->is_constant() || arg->is_parameter())
                 {
                     NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
                                  << ": constant or parameter, no in place concat";
@@ -130,7 +130,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
                 NGRAPH_ASSERT(arg->get_output_size() == 1);
 
-                if (!std::dynamic_pointer_cast<op::Concat>(arg))
+                if (arg->description() != "Concat")
                 {
                     if (arg->is_op())
                     {
@@ -154,7 +154,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     for (auto output_input : output.get_inputs())
                     {
                         auto user = output_input->get_node();
-                        if (std::dynamic_pointer_cast<op::Concat>(user))
+                        if (user->description() == "Concat")
                         {
                             concat_count++;
                             if (concat_count == 2)
@@ -219,30 +219,47 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     op_annotations->add_in_place_oi_pair({0, 0, false});
                     concat->set_op_annotations(op_annotations);
                 }
+            }
+        }
+    }
 
-                // check if it is the last in place concat
-                bool found_last_concat = true;
-                for (auto user : concat->get_users())
+    //mark last concat
+    for (auto n : function->get_ordered_ops())
+    {
+        if (n->description() == "Concat")
+        {
+            auto concat = std::static_pointer_cast<op::Concat>(n);
+            if (auto op_annotations = concat->get_op_annotations())
+            {
+                auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                if (in_place_oi_pairs.size() > 0)
                 {
-                    if (auto user_concat = std::dynamic_pointer_cast<ngraph::op::Concat>(user))
+                    // check if it is the last in place concat
+                    bool found_last_concat = true;
+                    for (auto user : concat->get_users())
                     {
-                        if (auto user_op_annotations = user_concat->get_op_annotations())
+                        if (user->description() == "Concat")
                         {
-                            auto user_in_place_oi_pairs =
-                                user_op_annotations->get_in_place_oi_pairs();
-                            if (user_in_place_oi_pairs.size() > 0)
+                            auto user_concat = std::static_pointer_cast<ngraph::op::Concat>(user);
+                            if (auto user_op_annotations = user_concat->get_op_annotations())
                             {
-                                found_last_concat = false;
-                                break;
+                                auto user_in_place_oi_pairs =
+                                    user_op_annotations->get_in_place_oi_pairs();
+                                if (user_in_place_oi_pairs.size() > 0)
+                                {
+                                    found_last_concat = false;
+                                    break;
+                                }
                             }
                         }
                     }
-                }
-                if (found_last_concat)
-                {
-                    auto cpu_op_annotations =
-                        std::static_pointer_cast<runtime::cpu::CPUOpAnnotations>(op_annotations);
-                    cpu_op_annotations->set_free_memory(false);
+                    if (found_last_concat)
+                    {
+                        auto cpu_op_annotations =
+                            std::static_pointer_cast<runtime::cpu::CPUOpAnnotations>(
+                                op_annotations);
+                        cpu_op_annotations->set_free_memory(false);
+                    }
                 }
             }
         }
@@ -250,8 +267,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
     for (auto n : function->get_ordered_ops())
     {
-        if (auto slice = std::dynamic_pointer_cast<op::Slice>(n))
+        if (n->description() == "Slice")
         {
+            auto slice = std::static_pointer_cast<op::Slice>(n);
             auto in_shape = slice->get_input_shape(0);
             auto out_shape = slice->get_output_shape(0);
             auto strides = slice->get_strides();
@@ -260,8 +278,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             auto upper_bounds = slice->get_upper_bounds();
 
             auto arg = slice->get_argument(0);
-            if (std::dynamic_pointer_cast<op::Constant>(arg) ||
-                std::dynamic_pointer_cast<op::Parameter>(arg))
+            if (arg->is_constant() || arg->is_parameter())
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
                              << ": constant or parameter, no in place slice";
