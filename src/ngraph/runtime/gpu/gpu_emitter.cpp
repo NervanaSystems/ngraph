@@ -33,8 +33,10 @@
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
@@ -52,6 +54,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
@@ -158,6 +161,11 @@ std::string runtime::gpu::GPU_Emitter::emit_Add(EMIT_ARGS)
     return emit_elementwise<ngraph::op::Add>(compiled_function, function_name, node, args, out);
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_All(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
@@ -166,6 +174,11 @@ std::string runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)
 std::string runtime::gpu::GPU_Emitter::emit_And(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::And>(compiled_function, function_name, node, args, out);
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_Any(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_ArgMax(EMIT_ARGS)
@@ -302,16 +315,13 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
                                                   apb->get_padding_below(),
                                                   apb->get_padding_above());
 
-        // cuDNN backwards pooling requests input and output tensors from
-        // the forward pass but does not use them. It also behaves differently
-        // for max pool vs avg pool. The repetition of args below is to address
-        // this interface in a way that supports both max and avg pooling
-        // writer << "void* input[] = {" << node_names(args, {0, 0}) << "};\n";
-        // writer << "void* output[] = {" << node_names(out) << "};\n";
-        // writer << "gpu::invoke_primitive(ctx, " << index << ", input, output);\n";
+
         return compiled_function->add_to_runtime(index, function_name, args, out);
     }
-    return "";
+    else
+    {
+        throw ngraph_error("AvgPoolBackprop currently only supports tensors of rank 4 and greater");
+    }
 }
 
 template <typename T>
@@ -413,6 +423,11 @@ std::string runtime::gpu::GPU_Emitter::emit_Broadcast(EMIT_ARGS)
             {{args[0].get_type(), out[0].get_type()}}, result_shape, axes);
     }
     return compiled_function->add_to_runtime(index, function_name, args, out);
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_BroadcastLike(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Ceiling(EMIT_ARGS)
@@ -572,6 +587,11 @@ std::string runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_EmbeddingLookup(EMIT_ARGS)
+{
+    throw ngraph_error("EmbeddingLookup is not yet implemented for NVIDIA GPU");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Equal>(compiled_function, function_name, node, args, out);
@@ -661,46 +681,12 @@ std::string runtime::gpu::GPU_Emitter::emit_Max(EMIT_ARGS)
     }
 
     const ngraph::op::Max* max = static_cast<const ngraph::op::Max*>(node);
-
-    size_t index;
-    if ((args[0].get_element_type() == element::i32) || (args[0].get_element_type() == element::i8))
-    {
-        // one of args0 axes has zero size, zero output, use args1 value
-        if (args[0].get_size() == 0)
-        {
-            // writer << out[0].get_type()
-            //        << " init_value = " << TypeInfo::Get(args[0].get_type())->min() << ";\n";
-            // writer << "vector<" << out[0].get_type() << "> temp(" << out[0].get_size()
-            //        << ", init_value);\n";
-            // writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
-            //        << ", (void*)temp.data(), " << out[0].get_size() << " * "
-            //        << out[0].get_element_type().size() << ");\n";
-            return "";
-        }
-        else if (args[0].get_size() == out[0].get_size())
-        {
-            auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
-            index = host_emitter->build_memcpy(
-                cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size());
-        }
-        else
-        {
-            vector<string> dtypes;
-            dtypes.push_back(args[0].get_type());
-            dtypes.push_back(out[0].get_type());
-            auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
-            index = cuda_emitter->build_reduce<ngraph::op::Max>(dtypes,
-                                                                out[0].get_element_type().size(),
-                                                                args[0].get_shape(),
-                                                                max->get_reduction_axes());
-        }
-    }
-    else
-    {
-        auto& cudnn_emitter = compiled_function->get_primitive_emitter()->get_cudnn_emitter();
-        index = cudnn_emitter->build_primitive(max);
-    }
-
+    vector<element::Type> dtypes;
+    dtypes.push_back(args[0].get_element_type());
+    dtypes.push_back(out[0].get_element_type());
+    auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
+    size_t index = cuda_emitter->build_reduce<ngraph::op::Max>(
+        dtypes, args[0].get_shape(), out[0].get_shape(), max->get_reduction_axes());
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
@@ -786,51 +772,17 @@ std::string runtime::gpu::GPU_Emitter::emit_Min(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
-        // return;
         return "";
     }
 
     const ngraph::op::Min* min = static_cast<const ngraph::op::Min*>(node);
 
-    size_t index;
-    if ((args[0].get_element_type() == element::i32) || (args[0].get_element_type() == element::i8))
-    {
-        // one of args0 axes has zero size, zero output, use args1 value
-        if (args[0].get_size() == 0)
-        {
-            // writer << out[0].get_type()
-            //        << " init_value = " << TypeInfo::Get(args[0].get_type())->max() << ";\n";
-            // writer << "vector<" << out[0].get_type() << "> temp(" << out[0].get_size()
-            //        << ", init_value);\n";
-            // writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
-            //        << ", (void*)temp.data(), " << out[0].get_size() << " * "
-            //        << out[0].get_element_type().size() << ");\n";
-            return "";
-        }
-        else if (args[0].get_size() == out[0].get_size())
-        {
-            auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
-            index = host_emitter->build_memcpy(
-                cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size());
-        }
-        else
-        {
-            vector<string> dtypes;
-            dtypes.push_back(args[0].get_type());
-            dtypes.push_back(out[0].get_type());
-            auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
-            index = cuda_emitter->build_reduce<ngraph::op::Min>(dtypes,
-                                                                out[0].get_element_type().size(),
-                                                                args[0].get_shape(),
-                                                                min->get_reduction_axes());
-        }
-    }
-    else
-    {
-        auto& cudnn_emitter = compiled_function->get_primitive_emitter()->get_cudnn_emitter();
-        index = cudnn_emitter->build_primitive(min);
-    }
-
+    vector<element::Type> dtypes;
+    dtypes.push_back(args[0].get_element_type());
+    dtypes.push_back(out[0].get_element_type());
+    auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
+    size_t index = cuda_emitter->build_reduce<ngraph::op::Min>(
+        dtypes, args[0].get_shape(), out[0].get_shape(), min->get_reduction_axes());
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
@@ -929,55 +881,14 @@ std::string runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
         return "";
     }
 
-    size_t prod_index;
+    vector<element::Type> dtypes;
+    dtypes.push_back(args[0].get_element_type());
+    dtypes.push_back(out[0].get_element_type());
+    auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
+    size_t index = cuda_emitter->build_reduce<ngraph::op::Multiply>(
+        dtypes, args[0].get_shape(), out[0].get_shape(), prod->get_reduction_axes());
 
-    // one of args[] axes has zero size, fill output with 1
-    if (args[0].get_size() == 0)
-    {
-        // writer << out[0].get_type() << " init_value = 1;\n";
-        // writer << "vector<" << out[0].get_type() << "> temp(" << out[0].get_size()
-        //        << ", init_value);\n";
-        // writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
-        //        << ", (void*)temp.data(), " << out[0].get_size() << " * "
-        //        << out[0].get_element_type().size() << ");\n";
-        return "";
-    }
-    else if (args[0].get_size() == out[0].get_size())
-    {
-        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
-        prod_index = host_emitter->build_memcpy(
-            cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size());
-    }
-    // descriptors for tensors  with <= 4 dimensions
-    else
-    {
-        if ((args[0].get_element_type() == element::i32) ||
-            (args[0].get_element_type() == element::i8))
-        {
-            vector<string> dtypes;
-            dtypes.push_back(args[0].get_type());
-            dtypes.push_back(out[0].get_type());
-            auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
-            prod_index =
-                cuda_emitter->build_reduce<ngraph::op::Multiply>(dtypes,
-                                                                 out[0].get_element_type().size(),
-                                                                 args[0].get_shape(),
-                                                                 prod->get_reduction_axes());
-        }
-        else
-        {
-            std::vector<element::Type> dtypes{args[0].get_element_type(),
-                                              out[0].get_element_type()};
-            auto& cudnn_emitter = compiled_function->get_primitive_emitter()->get_cudnn_emitter();
-            prod_index = cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MUL,
-                                                             dtypes,
-                                                             args[0].get_shape(),
-                                                             prod->get_reduction_axes(),
-                                                             CUDNNEmitter::ReductionMode::Reduce);
-        }
-    }
-
-    return compiled_function->add_to_runtime(prod_index, function_name, args, out);
+    return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Quantize(EMIT_ARGS)
@@ -987,115 +898,73 @@ std::string runtime::gpu::GPU_Emitter::emit_Quantize(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
 {
-    // reduction function supported by GPU
-    // CUDNN_REDUCE_TENSOR_ADD
-    // CUDNN_REDUCE_TENSOR_MUL
-    // CUDNN_REDUCE_TENSOR_MIN
-    // CUDNN_REDUCE_TENSOR_MAX
-    // CUDNN_REDUCE_TENSOR_AMAX
-    // CUDNN_REDUCE_TENSOR_AVG
-    // CUDNN_REDUCE_TENSOR_NORM1
-    // CUDNN_REDUCE_TENSOR_NORM2
-    // CUDNN_REDUCE_TENSOR_MUL_NO_ZEROS
-
-    static const unordered_map<type_index, cudnnReduceTensorOp_t> reduce_map{
-        {TI(ngraph::op::Add), CUDNN_REDUCE_TENSOR_ADD},
-        {TI(ngraph::op::Multiply), CUDNN_REDUCE_TENSOR_MUL},
-        {TI(ngraph::op::Maximum), CUDNN_REDUCE_TENSOR_MAX},
-        {TI(ngraph::op::Minimum), CUDNN_REDUCE_TENSOR_MIN}};
-    const ngraph::op::Reduce* reduce_op = static_cast<const ngraph::op::Reduce*>(node);
     if (out[0].get_size() == 0)
     {
         return "";
     }
 
+    const ngraph::op::Reduce* reduce_op = static_cast<const ngraph::op::Reduce*>(node);
+
+    auto axes_set = reduce_op->get_reduction_axes();
+    std::vector<element::Type> dtypes;
+    dtypes.push_back(args[0].get_element_type());
+    dtypes.push_back(out[0].get_element_type());
+    auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
+    auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
+
     size_t emitter_index;
-    // one of args0 axes has zero size, zero output, use args1 value
-    if (args[0].get_size() == 0)
+    // Reduction function should only have one op
+    std::shared_ptr<Node> reduce_func;
+    std::string op_name;
+    int op_count = 0;
+    for (auto op : reduction_function_ops)
     {
-        // writer << out[0].get_type() << " init_value;\n";
-        // writer << "runtime::gpu::cuda_memcpyDtH(&init_value, " << args[1].get_name() << " ,"
-        //        << args[1].get_element_type().size() << ");\n";
-        // writer << "vector<" << out[0].get_type() << "> temp(" << out[0].get_size()
-        //        << ", init_value);\n";
-        // writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
-        //        << ", (void*)temp.data(), " << out[0].get_size() << " * "
-        //        << out[0].get_element_type().size() << ");\n";
-        return "";
+        if (op->is_constant() || op->is_parameter() || op->is_output())
+        {
+            continue;
+        }
+        op_count++;
+        op_name = op->get_name();
+        reduce_func = op;
+        if (op_count != 1)
+        {
+            throw runtime_error("reduce with more than one op is not implement yet.");
+        }
     }
-    else if (args[0].get_size() == out[0].get_size())
+
+    if (dynamic_pointer_cast<ngraph::op::Add>(reduce_func))
     {
-        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
-        emitter_index = host_emitter->build_memcpy(
-            cudaMemcpyDeviceToDevice, out[0].get_size() * out[0].get_element_type().size());
+        emitter_index = cuda_emitter->build_reduce<ngraph::op::Add>(
+            dtypes, args[0].get_shape(), out[0].get_shape(), axes_set, true);
+    }
+    else if (dynamic_pointer_cast<ngraph::op::Multiply>(reduce_func))
+    {
+        emitter_index = cuda_emitter->build_reduce<ngraph::op::Multiply>(
+            dtypes, args[0].get_shape(), out[0].get_shape(), axes_set, true);
+    }
+    else if (dynamic_pointer_cast<ngraph::op::Maximum>(reduce_func))
+    {
+        emitter_index = cuda_emitter->build_reduce<ngraph::op::Maximum>(
+            dtypes, args[0].get_shape(), out[0].get_shape(), axes_set, true);
+    }
+    else if (dynamic_pointer_cast<ngraph::op::Minimum>(reduce_func))
+    {
+        emitter_index = cuda_emitter->build_reduce<ngraph::op::Minimum>(
+            dtypes, args[0].get_shape(), out[0].get_shape(), axes_set, true);
+    }
+    else if (dynamic_pointer_cast<ngraph::op::And>(reduce_func))
+    {
+        emitter_index = cuda_emitter->build_reduce<ngraph::op::And>(
+            dtypes, args[0].get_shape(), out[0].get_shape(), axes_set, true);
+    }
+    else if (dynamic_pointer_cast<ngraph::op::Or>(reduce_func))
+    {
+        emitter_index = cuda_emitter->build_reduce<ngraph::op::Or>(
+            dtypes, args[0].get_shape(), out[0].get_shape(), axes_set, true);
     }
     else
     {
-        auto axes_set = reduce_op->get_reduction_axes();
-        ngraph::AxisVector axes_vec;
-        for (auto a : axes_set)
-        {
-            axes_vec.push_back(a);
-        }
-        std::vector<string> dtypes;
-        dtypes.push_back(args[0].get_type());
-        dtypes.push_back(out[0].get_type());
-        auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
-        auto reduction_function_ops = reduce_op->get_functions()[0]->get_ops();
-
-        // Reduction function should only have one op
-        std::shared_ptr<Node> reduce_func;
-        std::string op_name;
-        int op_count = 0;
-        for (auto op : reduction_function_ops)
-        {
-            if (op->is_constant() || op->is_parameter() || op->is_output())
-            {
-                continue;
-            }
-            op_count++;
-            op_name = op->get_name();
-            reduce_func = op;
-            if (op_count != 1)
-            {
-                throw runtime_error("reduce with more than one op is not implement yet.");
-            }
-        }
-
-        if (dynamic_pointer_cast<ngraph::op::Add>(reduce_func))
-        {
-            emitter_index = cuda_emitter->build_reduce<ngraph::op::Add>(
-                dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
-        }
-        else if (dynamic_pointer_cast<ngraph::op::Multiply>(reduce_func))
-        {
-            emitter_index = cuda_emitter->build_reduce<ngraph::op::Multiply>(
-                dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
-        }
-        else if (dynamic_pointer_cast<ngraph::op::Maximum>(reduce_func))
-        {
-            emitter_index = cuda_emitter->build_reduce<ngraph::op::Maximum>(
-                dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
-        }
-        else if (dynamic_pointer_cast<ngraph::op::Minimum>(reduce_func))
-        {
-            emitter_index = cuda_emitter->build_reduce<ngraph::op::Minimum>(
-                dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
-        }
-        else if (dynamic_pointer_cast<ngraph::op::And>(reduce_func))
-        {
-            emitter_index = cuda_emitter->build_reduce<ngraph::op::And>(
-                dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
-        }
-        else if (dynamic_pointer_cast<ngraph::op::Or>(reduce_func))
-        {
-            emitter_index = cuda_emitter->build_reduce<ngraph::op::Or>(
-                dtypes, out[0].get_element_type().size(), args[0].get_shape(), axes_vec);
-        }
-        else
-        {
-            throw runtime_error("reduce with function " + op_name + " is not implement yet.");
-        }
+        throw runtime_error("reduce with function " + op_name + " is not implement yet.");
     }
 
     return compiled_function->add_to_runtime(emitter_index, function_name, args, out);
@@ -1121,15 +990,7 @@ std::string runtime::gpu::GPU_Emitter::emit_ReduceWindow(EMIT_ARGS)
     // one of args0 axes has zero size, zero output, use args1 value
     if (args[0].get_size() == 0)
     {
-        // writer << out[0].get_type() << " init_value;\n";
-        // writer << "runtime::gpu::cuda_memcpyDtH(&init_value, " << args[1].get_name() << " ,"
-        //        << args[1].get_element_type().size() << ");\n";
-        // writer << "vector<" << out[0].get_type() << "> temp(" << out[0].get_size()
-        //        << ", init_value);\n";
-        // writer << "runtime::gpu::cuda_memcpyHtD(" << out[0].get_name()
-        //        << ", (void*)temp.data(), " << out[0].get_size() << " * "
-        //        << out[0].get_element_type().size() << ");\n";
-        return "";
+        throw ngraph_error("ReduceWindow for zero-size input is not currently supported");
     }
     else if (args[0].get_size() == out[0].get_size())
     {
@@ -1225,8 +1086,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Reshape(EMIT_ARGS)
 
     if (out[0].get_name() == args[0].get_name() && out[0].get_offset() == args[0].get_offset())
     {
-        // writer << "// Logical reshape eliminated\n";
-        return "";
+        return "// Logical reshape eliminated\n";
     }
 
     auto arg_shape = args[0].get_shape();
@@ -1346,8 +1206,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Result(EMIT_ARGS)
 {
     if (args[0].get_name() == out[0].get_name())
     {
-        // writer << "// Skipping generation for " << node->get_name() << "\n";
-        return "";
+        return "// Skipping generation for " + node->get_name() + "\n";
     }
 
     auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
@@ -1425,6 +1284,11 @@ std::string runtime::gpu::GPU_Emitter::emit_Rnn(EMIT_ARGS)
 }
 #endif
 
+std::string runtime::gpu::GPU_Emitter::emit_ScalarConstantLike(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_Select(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Select>(compiled_function, function_name, node, args, out);
@@ -1501,17 +1365,13 @@ std::string runtime::gpu::GPU_Emitter::emit_Slice(EMIT_ARGS)
 std::string runtime::gpu::GPU_Emitter::emit_Softmax(EMIT_ARGS)
 {
     auto softmax = static_cast<const ngraph::op::Softmax*>(node);
+
     auto axes_set = softmax->get_axes();
-    ngraph::AxisVector axes_vec;
-    for (auto a : axes_set)
-    {
-        axes_vec.push_back(a);
-    }
-    std::vector<string> dtypes;
-    dtypes.push_back(args[0].get_type());
-    dtypes.push_back(out[0].get_type());
+    std::vector<element::Type> dtypes;
+    dtypes.push_back(args[0].get_element_type());
+    dtypes.push_back(out[0].get_element_type());
     auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
-    size_t index = cuda_emitter->build_softmax(dtypes, args[0].get_shape(), axes_vec);
+    size_t index = cuda_emitter->build_softmax(dtypes, args[0].get_shape(), axes_set);
 
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
@@ -1534,56 +1394,30 @@ std::string runtime::gpu::GPU_Emitter::emit_Subtract(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Sum(EMIT_ARGS)
 {
-    if ((args[0].get_element_type() == element::i32) || (args[0].get_element_type() == element::i8))
-    {
-        return runtime::gpu::GPU_Emitter::emit_Sum_0(
-            compiled_function, function_name, node, args, out);
-    }
-    else
-    {
-        return runtime::gpu::GPU_Emitter::emit_Sum_1(
-            compiled_function, function_name, node, args, out);
-    }
+    return runtime::gpu::GPU_Emitter::emit_Sum_0(compiled_function, function_name, node, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Sum_0(EMIT_ARGS)
 /* emit_Sum_0 uses native cuda kernels to perform Sum reduction. This method
-   is faster than cudnn implementation but in its current state is less precise
-   than cudnn reduce. That is causing tensorflow tests aimed at testing stabilty
-   to fail */
+is faster than cudnn implementation but in its current state is less precise
+than cudnn reduce. That is causing tensorflow tests aimed at testing stabilty
+to fail */
 {
-    const ngraph::op::Sum* sum = static_cast<const ngraph::op::Sum*>(node);
     if (out[0].get_size() == 0)
     {
         return "";
     }
-    size_t index;
-    // one of args[] axes has zero size, zero output
-    if (args[0].get_size() == 0)
-    {
-        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
-        index =
-            host_emitter->build_zero_out(0, out[0].get_size() * out[0].get_element_type().size());
-    }
-    else if (args[0].get_size() == out[0].get_size())
-    {
-        auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
-        index = host_emitter->build_memcpy(cudaMemcpyDeviceToDevice,
-                                           out[0].get_size() * out[0].get_element_type().size());
-    }
-    else
-    {
-        vector<string> dtypes;
-        dtypes.push_back(args[0].get_type());
-        dtypes.push_back(out[0].get_type());
-        auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
-        index = cuda_emitter->build_reduce<ngraph::op::Add>(dtypes,
-                                                            out[0].get_element_type().size(),
-                                                            args[0].get_shape(),
-                                                            sum->get_reduction_axes());
-    }
+    const ngraph::op::Sum* sum = static_cast<const ngraph::op::Sum*>(node);
 
-    return compiled_function->add_to_runtime(index, function_name, args, out);
+    auto axes_set = sum->get_reduction_axes();
+    vector<element::Type> dtypes;
+    dtypes.push_back(args[0].get_element_type());
+    dtypes.push_back(out[0].get_element_type());
+    auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
+    auto sum_index = cuda_emitter->build_reduce<ngraph::op::Add>(
+        dtypes, args[0].get_shape(), out[0].get_shape(), axes_set);
+
+    return compiled_function->add_to_runtime(sum_index, function_name, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Sum_1(EMIT_ARGS)

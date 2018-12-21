@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/embedding_lookup.hpp"
 
 #include <memory>
 using namespace std;
@@ -208,7 +209,7 @@ TEST(type_prop, batchnorm_training_rank_less_than_2)
     auto dummy = make_shared<op::Parameter>(element::f32, Shape{1});
     try
     {
-        auto bc = make_shared<op::BatchNormTraining>(0.001, dummy, dummy, dummy);
+        auto bc = make_shared<op::BatchNormTraining>(dummy, dummy, dummy, 0.001);
         FAIL() << "BatchNorm c-tor should throw for tensors whose rank is less than 2";
     }
     catch (const NodeValidationError& error)
@@ -229,7 +230,7 @@ TEST(type_prop, batchnorm_training_zero_channel_check)
     auto beta = make_shared<op::Parameter>(element::f32, Shape{0});
     try
     {
-        auto bc = make_shared<op::BatchNormTraining>(0.001, gamma, beta, data_batch);
+        auto bc = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, 0.001);
         FAIL() << "BatchNorm c-tor should throw for tensors w/ zero-dimension channels";
     }
     catch (const NodeValidationError& error)
@@ -250,7 +251,7 @@ TEST(type_prop, batchnorm_training_et_check)
 
     try
     {
-        auto bc = make_shared<op::BatchNormTraining>(0.001, gamma, beta, data_batch);
+        auto bc = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, 0.001);
         FAIL() << "BatchNorm c-tor should throw for different element types";
     }
     catch (const NodeValidationError& error)
@@ -271,7 +272,7 @@ TEST(type_prop, batchnorm_training_shape_check)
 
     try
     {
-        auto bc = make_shared<op::BatchNormTraining>(0.001, gamma, beta, data_batch);
+        auto bc = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, 0.001);
         FAIL() << "BatchNorm c-tor should throw if gamma and beta shapes don't match";
     }
     catch (const NodeValidationError& error)
@@ -296,7 +297,7 @@ TEST(type_prop, batchnorm_training_backprop_et_check)
     try
     {
         auto bc = make_shared<op::BatchNormTrainingBackprop>(
-            0.001, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, 0.001);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
     catch (const NodeValidationError& error)
@@ -321,7 +322,7 @@ TEST(type_prop, batchnorm_training_backprop_shape_check)
     try
     {
         auto bc = make_shared<op::BatchNormTrainingBackprop>(
-            0.001, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, 0.001);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
     catch (const NodeValidationError& error)
@@ -345,7 +346,7 @@ TEST(type_prop, batchnorm_training_backprop_delta_check)
     try
     {
         auto bc = make_shared<op::BatchNormTrainingBackprop>(
-            0.001, dummy, dummy, param, dummy, dummy, delta);
+            param, dummy, dummy, dummy, dummy, delta, 0.001);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
     catch (const NodeValidationError& error)
@@ -379,7 +380,7 @@ TEST(type_prop, batchnorm_inference_partial_all_rank_dynamic)
     auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
     auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
 
-    auto bn = make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+    auto bn = make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 1);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -407,7 +408,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_ok)
     auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
     auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
 
-    auto bn = make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+    auto bn = make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 1);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -439,7 +440,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_zero_chann
     try
     {
         auto bn =
-            make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+            make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Zero channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -472,7 +473,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_dynamic_some_rank_static_
     auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
     auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
 
-    auto bn = make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+    auto bn = make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 1);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -502,7 +503,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_dynamic_some_rank_static_
     try
     {
         auto bn =
-            make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+            make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Wrong gamma/beta/mean/variance shape not detected";
     }
     catch (const NodeValidationError& error)
@@ -541,7 +542,7 @@ TEST(type_prop,
     try
     {
         auto bn =
-            make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+            make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Inconsistent gamma/beta/mean/variance shape not detected";
     }
     catch (const NodeValidationError& error)
@@ -579,7 +580,7 @@ TEST(type_prop,
     try
     {
         auto bn =
-            make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+            make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Inconsistent gamma/beta/mean/variance channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -613,7 +614,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_some_stati
     auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
     auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
 
-    auto bn = make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+    auto bn = make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 1);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -645,7 +646,7 @@ TEST(type_prop,
     try
     {
         auto bn =
-            make_shared<op::BatchNormInference>(epsilon, gamma, beta, data_batch, mean, variance);
+            make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Inconsistent input/gamma/beta/mean/variance channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -674,7 +675,7 @@ TEST(type_prop, batchnorm_training_partial_all_rank_dynamic)
     auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
     auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
 
-    auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+    auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -700,7 +701,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_batch_size_
     auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
     auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
 
-    auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+    auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -727,7 +728,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_channel_cou
     auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
     auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
 
-    auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+    auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -755,7 +756,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_zero_channe
     auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
     try
     {
-        auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+        auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Zero channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -782,7 +783,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_dynamic_some_rank_static_d
     auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
     auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
 
-    auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+    auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -809,7 +810,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_dynamic_some_rank_static_d
 
     try
     {
-        auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+        auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Wrong gamma/beta shape not detected";
     }
     catch (const NodeValidationError& error)
@@ -840,7 +841,7 @@ TEST(type_prop,
 
     try
     {
-        auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+        auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Inconsistent gamma/beta shape not detected";
     }
     catch (const NodeValidationError& error)
@@ -870,7 +871,7 @@ TEST(type_prop,
 
     try
     {
-        auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+        auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Inconsistent gamma/beta channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -897,7 +898,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_some_static
     auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
     auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
 
-    auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+    auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -926,7 +927,7 @@ TEST(type_prop,
 
     try
     {
-        auto bn = make_shared<op::BatchNormTraining>(epsilon, gamma, beta, data_batch);
+        auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Inconsistent input/gamma/beta channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -970,7 +971,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_all_rank_dynamic)
     auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
 
     auto bn = make_shared<op::BatchNormTrainingBackprop>(
-        epsilon, gamma, beta, data_batch, mean, variance, delta);
+        data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -1006,7 +1007,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_input_rank_static_dynamic_ok
     auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
 
     auto bn = make_shared<op::BatchNormTrainingBackprop>(
-        epsilon, gamma, beta, data_batch, mean, variance, delta);
+        data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -1045,7 +1046,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_input_rank_static_dynamic_ze
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Zero channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -1082,7 +1083,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_ok
     auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
 
     auto bn = make_shared<op::BatchNormTrainingBackprop>(
-        epsilon, gamma, beta, data_batch, mean, variance, delta);
+        data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -1118,7 +1119,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_ch
     auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
 
     auto bn = make_shared<op::BatchNormTrainingBackprop>(
-        epsilon, gamma, beta, data_batch, mean, variance, delta);
+        data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -1156,7 +1157,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_ze
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Zero channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -1194,7 +1195,7 @@ TEST(type_prop,
     auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
 
     auto bn = make_shared<op::BatchNormTrainingBackprop>(
-        epsilon, gamma, beta, data_batch, mean, variance, delta);
+        data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -1233,7 +1234,7 @@ TEST(
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Wrong gamma/beta/mean/variance shape not detected";
     }
     catch (const NodeValidationError& error)
@@ -1276,7 +1277,7 @@ TEST(
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Wrong gamma/beta/mean/variance shape not detected";
     }
     catch (const NodeValidationError& error)
@@ -1318,7 +1319,7 @@ TEST(
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "nconsistent gamma/beta/mean/variance channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -1357,7 +1358,7 @@ TEST(type_prop,
     auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
 
     auto bn = make_shared<op::BatchNormTrainingBackprop>(
-        epsilon, gamma, beta, data_batch, mean, variance, delta);
+        data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -1396,7 +1397,7 @@ TEST(
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Inconsistent delta/gamma/beta/mean/variance channel count not detected";
     }
     catch (const NodeValidationError& error)
@@ -1439,7 +1440,7 @@ TEST(
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Inconsistent input/delta batch size not detected";
     }
     catch (const NodeValidationError& error)
@@ -1483,7 +1484,7 @@ TEST(
     try
     {
         auto bn = make_shared<op::BatchNormTrainingBackprop>(
-            epsilon, gamma, beta, data_batch, mean, variance, delta);
+            data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Inconsistent input/delta spatial dimensions not detected";
     }
     catch (const NodeValidationError& error)
@@ -2383,6 +2384,64 @@ TEST(type_prop, or_bad_arguments)
         "Or", [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
             return make_shared<op::Or>(x, y);
         });
+}
+
+TEST(type_prop, embedding_lookup_non_matrix_weights)
+{
+    auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+    auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::boolean, Shape{2, 4, 5});
+    try
+    {
+        auto bc = make_shared<op::EmbeddingLookup>(tv0_2_4_param_0, tv0_2_4_param_1);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect incorrect element types for arithmetic operator";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("weights are expected to be a matrix"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, embedding_lookup_static_shapes)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{8, 10, 12});
+    auto weights = make_shared<op::Parameter>(element::f32, Shape{5, 10});
+    auto embed = make_shared<op::EmbeddingLookup>(data, weights);
+    ASSERT_EQ(embed->get_element_type(), element::f32);
+    ASSERT_EQ(embed->get_shape(), (Shape{8, 10, 12, 10}));
+}
+
+TEST(type_prop, embedding_lookup_dynamic_shape_arg0)
+{
+    auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto weights = make_shared<op::Parameter>(element::f32, Shape{5, 10});
+    auto embed = make_shared<op::EmbeddingLookup>(data, weights);
+    ASSERT_EQ(embed->get_element_type(), element::f32);
+    ASSERT_TRUE(embed->get_output_partial_shape(0).rank().is_dynamic());
+}
+
+TEST(type_prop, embedding_lookup_dynamic_shape_arg1)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{8, 10, 12});
+    auto weights = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto embed = make_shared<op::EmbeddingLookup>(data, weights);
+    ASSERT_EQ(embed->get_element_type(), element::f32);
+    PartialShape expected{8, 10, 12, Dimension::dynamic()};
+    ASSERT_TRUE(embed->get_output_partial_shape(0).same_scheme(expected));
+}
+
+TEST(type_prop, embedding_lookup_shape_arg1_dynamic_embedding_length)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{8, 10, 12});
+    auto weights = make_shared<op::Parameter>(element::f32, PartialShape{5, Dimension::dynamic()});
+    auto embed = make_shared<op::EmbeddingLookup>(data, weights);
+    ASSERT_EQ(embed->get_element_type(), element::f32);
+    PartialShape expected{8, 10, 12, Dimension::dynamic()};
+    ASSERT_TRUE(embed->get_output_partial_shape(0).same_scheme(expected));
 }
 
 TEST(type_prop, comparison_good)
@@ -13597,4 +13656,278 @@ TEST(type_prop, shape_of_partial_rank_dynamic)
 
     ASSERT_EQ(so->get_output_element_type(0), element::u64);
     ASSERT_TRUE(so->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
+}
+
+TEST(type_prop, any_deduce)
+{
+    auto param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+
+    auto r0 = make_shared<op::Any>(param_0, AxisSet{0});
+    ASSERT_EQ(r0->get_element_type(), element::boolean);
+    ASSERT_EQ(r0->get_shape(), (Shape{4}));
+
+    auto r1 = make_shared<op::Any>(param_0, AxisSet{1});
+    ASSERT_EQ(r1->get_element_type(), element::boolean);
+    ASSERT_EQ(r1->get_shape(), (Shape{2}));
+
+    auto r01 = make_shared<op::Any>(param_0, AxisSet{0, 1});
+    ASSERT_EQ(r01->get_element_type(), element::boolean);
+    ASSERT_EQ(r01->get_shape(), (Shape{}));
+
+    auto r_none = make_shared<op::Any>(param_0, AxisSet{});
+    ASSERT_EQ(r_none->get_element_type(), element::boolean);
+    ASSERT_EQ(r_none->get_shape(), (Shape{2, 4}));
+}
+
+TEST(type_prop, any_deduce_et_dynamic)
+{
+    auto param_0 = make_shared<op::Parameter>(element::dynamic, Shape{2, 4});
+
+    auto r0 = make_shared<op::Any>(param_0, AxisSet{0});
+    ASSERT_EQ(r0->get_element_type(), element::boolean);
+    ASSERT_EQ(r0->get_shape(), (Shape{4}));
+
+    auto r1 = make_shared<op::Any>(param_0, AxisSet{1});
+    ASSERT_EQ(r1->get_element_type(), element::boolean);
+    ASSERT_EQ(r1->get_shape(), (Shape{2}));
+
+    auto r01 = make_shared<op::Any>(param_0, AxisSet{0, 1});
+    ASSERT_EQ(r01->get_element_type(), element::boolean);
+    ASSERT_EQ(r01->get_shape(), (Shape{}));
+
+    auto r_none = make_shared<op::Any>(param_0, AxisSet{});
+    ASSERT_EQ(r_none->get_element_type(), element::boolean);
+    ASSERT_EQ(r_none->get_shape(), (Shape{2, 4}));
+}
+
+TEST(type_prop, any_et_non_boolean)
+{
+    auto param_0 = make_shared<op::Parameter>(element::i32, Shape{2, 4});
+
+    try
+    {
+        auto r = make_shared<op::Any>(param_0, AxisSet{0, 1});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect invalid element type for Any";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input element type must be boolean"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, any_axis_oob)
+{
+    auto param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+
+    try
+    {
+        auto r = make_shared<op::Any>(param_0, AxisSet{0, 2, 1});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect out-of-bound axis for Any";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis (2) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, any_partial_rank_dynamic)
+{
+    auto param = make_shared<op::Parameter>(element::boolean, PartialShape::dynamic());
+    auto axes = AxisSet{2385, 0, 4404}; // arbitrary
+    auto any = make_shared<op::Any>(param, axes);
+
+    EXPECT_EQ(any->get_output_element_type(0), element::boolean);
+    EXPECT_TRUE(any->get_output_partial_shape(0).is_dynamic());
+}
+
+TEST(type_prop, any_partial_rank_static_dynamic_ok_result_static)
+{
+    auto param = make_shared<op::Parameter>(element::boolean,
+                                            PartialShape{1, 2, Dimension::dynamic(), 4, 5});
+    auto axes = AxisSet{2, 3};
+    auto any = make_shared<op::Any>(param, axes);
+
+    EXPECT_EQ(any->get_output_element_type(0), element::boolean);
+    EXPECT_EQ(any->get_shape(), (Shape{1, 2, 5}));
+}
+
+TEST(type_prop, any_partial_rank_static_dynamic_ok_result_dynamic)
+{
+    auto param = make_shared<op::Parameter>(
+        element::boolean, PartialShape{1, 2, Dimension::dynamic(), 4, Dimension::dynamic()});
+    auto axes = AxisSet{2, 3};
+    auto any = make_shared<op::Any>(param, axes);
+
+    EXPECT_EQ(any->get_output_element_type(0), element::boolean);
+    EXPECT_TRUE(
+        any->get_output_partial_shape(0).same_scheme(PartialShape{1, 2, Dimension::dynamic()}));
+}
+
+TEST(type_prop, any_partial_rank_static_dynamic_axes_oob)
+{
+    auto param = make_shared<op::Parameter>(
+        element::boolean, PartialShape{1, 2, Dimension::dynamic(), 4, Dimension::dynamic()});
+    auto axes = AxisSet{2, 5, 1};
+
+    try
+    {
+        auto any = make_shared<op::Any>(param, axes);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect out-of-bound axis for Any (rank-static dynamic input)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis (5) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, all_deduce)
+{
+    auto param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+
+    auto r0 = make_shared<op::All>(param_0, AxisSet{0});
+    ASSERT_EQ(r0->get_element_type(), element::boolean);
+    ASSERT_EQ(r0->get_shape(), (Shape{4}));
+
+    auto r1 = make_shared<op::All>(param_0, AxisSet{1});
+    ASSERT_EQ(r1->get_element_type(), element::boolean);
+    ASSERT_EQ(r1->get_shape(), (Shape{2}));
+
+    auto r01 = make_shared<op::All>(param_0, AxisSet{0, 1});
+    ASSERT_EQ(r01->get_element_type(), element::boolean);
+    ASSERT_EQ(r01->get_shape(), (Shape{}));
+
+    auto r_none = make_shared<op::All>(param_0, AxisSet{});
+    ASSERT_EQ(r_none->get_element_type(), element::boolean);
+    ASSERT_EQ(r_none->get_shape(), (Shape{2, 4}));
+}
+
+TEST(type_prop, all_deduce_et_dynamic)
+{
+    auto param_0 = make_shared<op::Parameter>(element::dynamic, Shape{2, 4});
+
+    auto r0 = make_shared<op::All>(param_0, AxisSet{0});
+    ASSERT_EQ(r0->get_element_type(), element::boolean);
+    ASSERT_EQ(r0->get_shape(), (Shape{4}));
+
+    auto r1 = make_shared<op::All>(param_0, AxisSet{1});
+    ASSERT_EQ(r1->get_element_type(), element::boolean);
+    ASSERT_EQ(r1->get_shape(), (Shape{2}));
+
+    auto r01 = make_shared<op::All>(param_0, AxisSet{0, 1});
+    ASSERT_EQ(r01->get_element_type(), element::boolean);
+    ASSERT_EQ(r01->get_shape(), (Shape{}));
+
+    auto r_none = make_shared<op::All>(param_0, AxisSet{});
+    ASSERT_EQ(r_none->get_element_type(), element::boolean);
+    ASSERT_EQ(r_none->get_shape(), (Shape{2, 4}));
+}
+
+TEST(type_prop, all_et_non_boolean)
+{
+    auto param_0 = make_shared<op::Parameter>(element::i32, Shape{2, 4});
+
+    try
+    {
+        auto r = make_shared<op::All>(param_0, AxisSet{0, 1});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect invalid element type for All";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input element type must be boolean"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, all_axis_oob)
+{
+    auto param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
+
+    try
+    {
+        auto r = make_shared<op::All>(param_0, AxisSet{0, 2, 1});
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect out-of-bound axis for All";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis (2) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, all_partial_rank_dynamic)
+{
+    auto param = make_shared<op::Parameter>(element::boolean, PartialShape::dynamic());
+    auto axes = AxisSet{2385, 0, 4404}; // arbitrary
+    auto all = make_shared<op::All>(param, axes);
+
+    EXPECT_EQ(all->get_output_element_type(0), element::boolean);
+    EXPECT_TRUE(all->get_output_partial_shape(0).is_dynamic());
+}
+
+TEST(type_prop, all_partial_rank_static_dynamic_ok_result_static)
+{
+    auto param = make_shared<op::Parameter>(element::boolean,
+                                            PartialShape{1, 2, Dimension::dynamic(), 4, 5});
+    auto axes = AxisSet{2, 3};
+    auto all = make_shared<op::All>(param, axes);
+
+    EXPECT_EQ(all->get_output_element_type(0), element::boolean);
+    EXPECT_EQ(all->get_shape(), (Shape{1, 2, 5}));
+}
+
+TEST(type_prop, all_partial_rank_static_dynamic_ok_result_dynamic)
+{
+    auto param = make_shared<op::Parameter>(
+        element::boolean, PartialShape{1, 2, Dimension::dynamic(), 4, Dimension::dynamic()});
+    auto axes = AxisSet{2, 3};
+    auto all = make_shared<op::All>(param, axes);
+
+    EXPECT_EQ(all->get_output_element_type(0), element::boolean);
+    EXPECT_TRUE(
+        all->get_output_partial_shape(0).same_scheme(PartialShape{1, 2, Dimension::dynamic()}));
+}
+
+TEST(type_prop, all_partial_rank_static_dynamic_axes_oob)
+{
+    auto param = make_shared<op::Parameter>(
+        element::boolean, PartialShape{1, 2, Dimension::dynamic(), 4, Dimension::dynamic()});
+    auto axes = AxisSet{2, 5, 1};
+
+    try
+    {
+        auto all = make_shared<op::All>(param, axes);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Did not detect out-of-bound axis for All (rank-static dynamic input)";
+    }
+    catch (const NodeValidationError& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Reduction axis (5) is out of bounds"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }

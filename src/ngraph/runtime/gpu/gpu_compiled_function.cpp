@@ -31,6 +31,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/any_all_replacement.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
@@ -133,6 +134,7 @@ void runtime::gpu::GPU_CompiledFunction::compile()
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
 #endif
     pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
+    pass_manager.register_pass<ngraph::pass::AnyAllReplacement>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();

@@ -16,31 +16,8 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include <pybind11/pybind11.h>
 
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace cpu
-        {
-            namespace pass
-            {
-                class ConcatInputs;
-            }
-        }
-    }
-}
+namespace py = pybind11;
 
-class ngraph::runtime::cpu::pass::ConcatInputs : public ngraph::pass::GraphRewrite
-{
-public:
-    ConcatInputs()
-        : GraphRewrite()
-    {
-        concat_lstm_inputs();
-    }
-
-private:
-    void concat_lstm_inputs();
-};
+void regclass_pyngraph_ResultVector(py::module m);

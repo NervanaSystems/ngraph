@@ -51,7 +51,7 @@ namespace ngraph
                     create_tensor(const ngraph::element::Type& element_type,
                                   const Shape& shape) override;
 
-                bool compile(std::shared_ptr<Function> func) override;
+                Handle compile(std::shared_ptr<Function> func) override;
 
                 bool call(std::shared_ptr<Function> func,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
@@ -70,6 +70,7 @@ namespace ngraph
                     BackendContext();
                     ~BackendContext();
                     void prepare_runtime_context();
+                    void bind_cuda_context_to_thread();
 
                     std::unique_ptr<GPURuntimeContext> m_runtime_context;
                     std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;

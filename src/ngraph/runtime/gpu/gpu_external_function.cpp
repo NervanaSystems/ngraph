@@ -319,8 +319,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_constant_declarations()
                 // get an allocator for transient per kernel gpu memory
                 runtime::gpu::GPUAllocator allocator =
                     m_shared_context->m_primitive_emitter->get_memory_allocator();
-                size_t idx = allocator.reserve_argspace(c->get_data_ptr(),
-                                                        tv->size() * tv->get_element_type().size());
+                size_t idx = allocator.reserve_argspace(c->get_data_ptr(), tv->size());
                 m_writer << "static size_t " << tv->get_name() << "_idx = " << idx << ";\n";
                 m_writer << "static " << tv->get_element_type().c_type_string() << "* "
                          << tv->get_name() << " = nullptr;\n";
@@ -695,12 +694,13 @@ void runtime::gpu::GPU_ExternalFunction::propagate_in_place_input(
         stack.pop_front();
         for (auto input : it->get_inputs())
         {
-            auto c_op = std::dynamic_pointer_cast<ngraph::op::Op>(input->get_node());
-            if (!c_op || c_op->is_output())
+            auto input_node = input->get_node();
+            if (!input_node->is_op() || input_node->is_output())
             {
                 continue;
             }
 
+            auto c_op = std::static_pointer_cast<ngraph::op::Op>(input_node);
             if (auto op_annotations = c_op->get_op_annotations())
             {
                 for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
@@ -734,11 +734,11 @@ void runtime::gpu::GPU_ExternalFunction::propagate_in_place_output(
     do
     {
         propagate_further = false;
-        auto arg = std::dynamic_pointer_cast<ngraph::op::Op>(it->get_node());
-        if (!arg)
+        if (!it->get_node()->is_op())
         {
             break;
         }
+        auto arg = std::static_pointer_cast<ngraph::op::Op>(it->get_node());
         if (auto op_annotations = arg->get_op_annotations())
         {
             for (auto oi_pair : op_annotations->get_in_place_oi_pairs())

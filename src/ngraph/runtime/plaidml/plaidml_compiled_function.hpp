@@ -58,5 +58,7 @@ private:
     std::shared_ptr<Function> m_func;
     std::unordered_map<descriptor::Tensor*, std::string> m_input_names;
     std::unordered_map<descriptor::Tensor*, std::string> m_output_names;
+    mutable std::vector<std::weak_ptr<runtime::Tensor>> m_bound_inputs;
+    mutable std::vector<std::weak_ptr<runtime::Tensor>> m_bound_outputs;
     mutable vertexai::plaidml::invoker m_invoker;
 };

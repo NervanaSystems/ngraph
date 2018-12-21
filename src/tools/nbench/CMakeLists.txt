@@ -21,7 +21,15 @@ set (SRC
 
 add_executable(nbench ${SRC})
 
+if (APPLE)
+    set_property(TARGET nbench APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-rpath,@loader_path/../lib")
+endif()
 target_link_libraries(nbench ngraph)
+# if (WIN32)
+#     set_target_properties(nbench
+#         PROPERTIES
+#             LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+# endif()
 if (NGRAPH_CPU_ENABLE)
     target_link_libraries(nbench cpu_backend)
 endif()
@@ -36,6 +44,11 @@ if (NGRAPH_INTERPRETER_ENABLE)
 endif()
 if (NGRAPH_PLAIDML_ENABLE)
     target_link_libraries(nbench plaidml_backend)
+endif()
+
+if (NGRAPH_DISTRIBUTED_ENABLE)
+    target_compile_definitions(nbench PRIVATE NGRAPH_DISTRIBUTED)
+    target_link_libraries(nbench libmlsl)
 endif()
 
 install(TARGETS nbench RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})
