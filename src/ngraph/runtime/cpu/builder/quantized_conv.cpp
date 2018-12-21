@@ -60,7 +60,6 @@ namespace ngraph
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) mutable {
                         // Create MKLDNN convolution primitive during the first iteration.
                         // Assumes the scales dont change for the duration of the graph
-                        // if (ctx->first_iteration && rebuild)
                         if (ctx->first_iteration)
                         {
                             vector<float> dyn_scales;
