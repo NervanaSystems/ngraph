@@ -227,6 +227,20 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
                                              int mantissa_bits,
                                              int tolerance_bits)
 {
+    // TODO: For debug only - Remove this code before merging to master
+    std::cout << "a size = " << a.size() << std::endl;
+    std::cout << "b size = " << b.size() << std::endl << std::endl;
+
+    for (uint32_t i = 0; i < a.size(); ++i)
+    {
+        if (a[i] > 1e-2 || b[i] > 1e-2) {
+        std::cout << "index    = " << i << std::endl;
+        std::cout << "actual   = " << b[i] << std::endl;
+        std::cout << "expected = " << a[i] << std::endl << std::endl;
+        }
+    }
+    // END CODE BLOCK
+
     bool rc = true;
     stringstream msg;
     if (a.size() != b.size())
