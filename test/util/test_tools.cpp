@@ -284,16 +284,20 @@ void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine
 }
 
 template <>
-void print_results(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results)
+string
+    get_results_str(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results)
 {
+    stringstream ss;
     size_t num_results = std::min(static_cast<size_t>(max_results), ref_data.size());
-    std::cout << "First " << num_results << " results";
+    ss << "First " << num_results << " results";
     for (size_t i = 0; i < num_results; ++i)
     {
-        std::cout << "\n"
-                  << std::setw(4) << i << " ref: " << std::setw(16) << std::left
-                  << static_cast<int>(ref_data[i]) << "  actual: " << std::setw(16) << std::left
-                  << static_cast<int>(actual_data[i]);
+        ss << "\n"
+           << std::setw(4) << i << " ref: " << std::setw(16) << std::left
+           << static_cast<int>(ref_data[i]) << "  actual: " << std::setw(16) << std::left
+           << static_cast<int>(actual_data[i]);
     }
-    std::cout << std::endl;
+    ss << "\n";
+
+    return ss.str();
 }
