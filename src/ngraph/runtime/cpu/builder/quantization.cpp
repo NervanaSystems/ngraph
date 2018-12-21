@@ -52,16 +52,57 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    size_t dequantize_index =
-                        mkldnn_emitter->build_dequantization(node, input_desc, result_desc);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(dequantize_index);
-                    functor = [&, dequantize_index](CPURuntimeContext* ctx,
-                                                    CPUExecutionContext* ectx) {
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, dequantize_index);
-                    };
-                    functors.emplace_back(functor);
+                    auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                        dequantize->get_argument(1));
+                    std::vector<float> scales;
+                    if (scale_const_op == nullptr)
+                    {
+                        auto& arg1_tensor = external_function->get_tensor_data(args[1].get_name());
+                        auto scales_size = shape_size(args[1].get_shape());
+
+                        size_t dequantize_index =
+                            mkldnn_emitter->build_dequantization(node, input_desc, result_desc);
+                        auto& deps = mkldnn_emitter->get_primitive_deps(dequantize_index);
+                        functor = [&, input_desc, result_desc, scales_size, dequantize_index](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            // Create MKLDNN reorder primitive during the first iteration.
+                            // Assumes the scales dont change for the duration of the graph
+                            if (ctx->first_iteration)
+                            {
+                                mkldnn::primitive_attr attr;
+                                vector<float> dyn_scales;
+                                dyn_scales.assign(static_cast<float*>(arg1_tensor),
+                                                  static_cast<float*>(arg1_tensor) + scales_size);
+                                attr.set_output_scales(0, dyn_scales);
+                                attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
+                                auto reorder_desc = mkldnn::reorder::primitive_desc(
+                                    {input_desc, executor::global_cpu_engine},
+                                    {result_desc, executor::global_cpu_engine},
+                                    attr);
+                                *ctx->mkldnn_primitives[dequantize_index] =
+                                    mkldnn::reorder(reorder_desc,
+                                                    *ctx->mkldnn_primitives[deps[0]],
+                                                    *ctx->mkldnn_primitives[deps[1]]);
+                            }
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, dequantize_index);
+                        };
+                        functors.emplace_back(functor);
+                    }
+                    else
+                    {
+                        size_t dequantize_index =
+                            mkldnn_emitter->build_dequantization(node, input_desc, result_desc);
+                        auto& deps = mkldnn_emitter->get_primitive_deps(dequantize_index);
+                        functor = [&, dequantize_index](CPURuntimeContext* ctx,
+                                                        CPUExecutionContext* ectx) {
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], arg0_tensor);
+                            cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], out_tensor);
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, dequantize_index);
+                        };
+                        functors.emplace_back(functor);
+                    }
                 }
                 else
                 {
@@ -223,6 +264,7 @@ namespace ngraph
                                 vector<float> dyn_scales;
                                 dyn_scales.assign(static_cast<float*>(arg1_tensor),
                                                   static_cast<float*>(arg1_tensor) + scales_size);
+                                dyn_scales[0] = 1.0 / dyn_scales[0];
                                 attr.set_output_scales(0, dyn_scales);
                                 attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
                                 auto reorder_desc = mkldnn::reorder::primitive_desc(
