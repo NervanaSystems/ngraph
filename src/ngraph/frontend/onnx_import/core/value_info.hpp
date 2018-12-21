@@ -45,7 +45,8 @@ namespace ngraph
                 {
                     explicit unsupported_element_type(TensorProto_DataType type)
                         : ngraph_error{"unsupported value info element type: " +
-                                       onnx::TensorProto_DataType_Name(static_cast<onnx::TensorProto_DataType>(type))}
+                                       onnx::TensorProto_DataType_Name(
+                                           static_cast<onnx::TensorProto_DataType>(type))}
                     {
                     }
                 };

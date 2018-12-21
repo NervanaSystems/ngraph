@@ -17,8 +17,8 @@
 #pragma once
 
 #include <onnx-ml.pb.h>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -42,7 +42,8 @@ namespace ngraph
                 {
                     explicit invalid_data_type(TensorProto_DataType type)
                         : ngraph_error{"invalid data type: " +
-                                       onnx::TensorProto_DataType_Name(static_cast<onnx::TensorProto_DataType>(type))}
+                                       onnx::TensorProto_DataType_Name(
+                                           static_cast<onnx::TensorProto_DataType>(type))}
                     {
                     }
                 };
@@ -51,7 +52,8 @@ namespace ngraph
                 {
                     explicit unsupported_data_type(TensorProto_DataType type)
                         : ngraph_error{"unsupported data type: " +
-                                       onnx::TensorProto_DataType_Name(static_cast<onnx::TensorProto_DataType>(type))}
+                                       onnx::TensorProto_DataType_Name(
+                                           static_cast<onnx::TensorProto_DataType>(type))}
                     {
                     }
                 };
