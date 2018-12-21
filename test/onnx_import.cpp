@@ -1558,7 +1558,7 @@ TEST(onnx, model_matmul_vec_ten3d)
 
 TEST(onnx, model_lin_quant_resnet50)
 {
-    auto function = onnx_import::import_onnx_function(
+    auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/final_int8_resnet50_static_shapes.onnx"));
 
     Inputs inputs{read_binary_file<float>("onnx/final_int8_resnet50_input0.bin")};
