@@ -55,6 +55,7 @@ set(SRC
     serialize.cpp
     shape.cpp
     tensor.cpp
+    tools.cpp
     type_prop.cpp
     util.cpp
     uuid.cpp
@@ -201,6 +202,13 @@ if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for graph_partition, convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
     target_link_libraries(unit-test PRIVATE libmkldnn)
+endif()
+
+if (NGRAPH_TOOLS_ENABLE)
+    get_property(NBENCH_PATH TARGET nbench PROPERTY BINARY_DIR)
+    set(NBENCH "${NBENCH_PATH}/nbench")
+    target_compile_definitions(unit-test PRIVATE NBENCH_PATH="${NBENCH}")
+    add_dependencies(unit-test nbench)
 endif()
 
 if (NGRAPH_PLAIDML_ENABLE)
