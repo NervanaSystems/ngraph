@@ -47,8 +47,9 @@ namespace ngraph
             class GPUInternalFunction : public GPUCompiledFunction
             {
             public:
-                GPUInternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                    std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
+                GPUInternalFunction(
+                    const std::shared_ptr<ngraph::Function>& function,
+                    const std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
                 virtual ~GPUInternalFunction();
 
                 virtual std::string
@@ -73,7 +74,7 @@ namespace ngraph
                 void build_functions();
                 std::string emit_op(EMIT_ARGS);
                 std::string
-                    compose_manifest(const size_t& primitive_index,
+                    compose_manifest(size_t primitive_index,
                                      const std::vector<runtime::gpu::GPUTensorWrapper>& args,
                                      const std::vector<runtime::gpu::GPUTensorWrapper>& out) const;
                 void save_manifest_to_disk() const;
@@ -81,11 +82,11 @@ namespace ngraph
                 // For non-destructive passthrough kernels, propagate function
                 // input buffers to internal ops
                 virtual void propagate_in_place_input(ngraph::descriptor::Output* output,
-                                                      std::string input_name) override;
+                                                      const std::string& input_name) override;
                 // For in-place kernels, propagate function output buffers to
                 // internal ops
                 virtual void propagate_in_place_output(ngraph::descriptor::Output* res_src_output,
-                                                       std::string output_name) override;
+                                                       const std::string& output_name) override;
                 std::unordered_map<
                     std::string,
                     std::tuple<runtime::gpu::GPUTensorWrapper::TensorType, size_t, std::string>>

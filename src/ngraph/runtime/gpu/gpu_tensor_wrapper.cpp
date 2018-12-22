@@ -31,11 +31,10 @@ runtime::gpu::GPUTensorWrapper::GPUTensorWrapper(const shared_ptr<descriptor::Te
 {
 }
 
-runtime::gpu::GPUTensorWrapper::GPUTensorWrapper(
-    const std::shared_ptr<descriptor::Tensor>& tv,
-    const runtime::gpu::GPUTensorWrapper::TensorType& type,
-    const size_t& offset,
-    const std::string& alias)
+runtime::gpu::GPUTensorWrapper::GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>& tv,
+                                                 runtime::gpu::GPUTensorWrapper::TensorType type,
+                                                 size_t offset,
+                                                 const std::string& alias)
     : m_tensor(tv)
     , m_alias(alias)
     , m_offset(std::make_pair(type, offset))
@@ -90,7 +89,7 @@ std::ostream& ngraph::runtime::gpu::operator<<(std::ostream& out,
 {
     static std::vector<std::string> types{"CONSTANT", "INTERMEDIATE", "INPUT", "OUTPUT", "UNKNOWN"};
     out << "gpu::tensor { name: " << obj.m_tensor->get_name()
-        << " tensor_type: " << types.at(obj.m_offset.first)
+        << " tensor_type: " << types.at(static_cast<size_t>(obj.m_offset.first))
         << ", offset/index: " << obj.m_offset.second << ", dtype: " << obj.get_element_type()
         << ", shape: " << obj.get_shape() << ", size: " << obj.get_size()
         << ", alias: " << obj.m_alias << " }";

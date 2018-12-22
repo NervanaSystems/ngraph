@@ -132,7 +132,7 @@ std::string runtime::gpu::GPUInternalFunction::emit_op(GPUCompiledFunction* comp
 
 runtime::gpu::GPUInternalFunction::GPUInternalFunction(
     const shared_ptr<ngraph::Function>& function,
-    std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
+    const std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
     : GPUCompiledFunction(function, shared_context)
 {
 }
@@ -225,7 +225,7 @@ std::string runtime::gpu::GPUInternalFunction::add_call_to_runtime(
 }
 
 std::string runtime::gpu::GPUInternalFunction::compose_manifest(
-    const size_t& primitive_index,
+    size_t primitive_index,
     const std::vector<runtime::gpu::GPUTensorWrapper>& args,
     const std::vector<runtime::gpu::GPUTensorWrapper>& out) const
 {
@@ -425,7 +425,7 @@ void runtime::gpu::GPUInternalFunction::save_manifest_to_disk() const
 }
 
 void runtime::gpu::GPUInternalFunction::propagate_in_place_input(ngraph::descriptor::Output* output,
-                                                                 std::string input_name)
+                                                                 const std::string& input_name)
 {
     // std::deque<ngraph::descriptor::Output*> stack;
     // stack.push_front(output);
@@ -464,7 +464,7 @@ void runtime::gpu::GPUInternalFunction::propagate_in_place_input(ngraph::descrip
 }
 
 void runtime::gpu::GPUInternalFunction::propagate_in_place_output(
-    ngraph::descriptor::Output* res_src_output, std::string output_name)
+    ngraph::descriptor::Output* res_src_output, const std::string& output_name)
 {
     // // we start with a particular output
     // // which is an argument to a given op::Result

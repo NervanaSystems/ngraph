@@ -36,10 +36,10 @@ namespace ngraph
 
             public:
                 size_t build_memcpy(const cudaMemcpyKind& kind,
-                                    const size_t& size,
-                                    const size_t& dst = 0,
-                                    const size_t& src = 0);
-                size_t build_zero_out(const size_t& dst, const size_t& size, bool is_local = false);
+                                    size_t size,
+                                    size_t dst = 0,
+                                    size_t src = 0);
+                size_t build_zero_out(size_t dst, size_t size, bool is_local = false);
 
             private:
                 HostEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx);

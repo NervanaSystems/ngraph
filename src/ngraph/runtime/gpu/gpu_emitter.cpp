@@ -1397,10 +1397,10 @@ std::string runtime::gpu::GPU_Emitter::emit_Sum(EMIT_ARGS)
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Sum_0(EMIT_ARGS)
-/* emit_Sum_0 uses native cuda kernels to perform Sum reduction. This method
-is faster than cudnn implementation but in its current state is less precise
-than cudnn reduce. That is causing tensorflow tests aimed at testing stabilty
-to fail */
+// emit_Sum_0 uses native cuda kernels to perform Sum reduction. This method
+// is faster than cudnn implementation but in its current state is less precise
+// than cudnn reduce. That is causing tensorflow tests aimed at testing stabilty
+// to fail
 {
     if (out[0].get_size() == 0)
     {
@@ -1420,10 +1420,9 @@ to fail */
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Sum_1(EMIT_ARGS)
-
-/* emit_Sum_1 uses cudnn to perform Sum reduction. This method, although
-   slower than the native cuda implementation is more precise and fixes the issue with
-   tensorflow test failures*/
+// emit_Sum_1 uses cudnn to perform Sum reduction. This method, although
+// slower than the native cuda implementation is more precise and fixes the issue with
+// tensorflow test failures
 {
     const ngraph::op::Sum* sum = static_cast<const ngraph::op::Sum*>(node);
     std::vector<element::Type> dtypes{args[0].get_element_type(), out[0].get_element_type()};

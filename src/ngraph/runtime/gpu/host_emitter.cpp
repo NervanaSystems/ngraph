@@ -34,9 +34,9 @@ runtime::gpu::HostEmitter::HostEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeC
 }
 
 size_t runtime::gpu::HostEmitter::build_memcpy(const cudaMemcpyKind& kind,
-                                               const size_t& size,
-                                               const size_t& dst,
-                                               const size_t& src)
+                                               size_t size,
+                                               size_t dst,
+                                               size_t src)
 {
     std::stringstream ss;
     ss << "memcpy" << kind << "_dst" << dst << "_src" << src << "_sz" << size;
@@ -57,8 +57,7 @@ size_t runtime::gpu::HostEmitter::build_memcpy(const cudaMemcpyKind& kind,
     return this->m_primitive_emitter->register_primitive(launch_kernel, hash);
 }
 
-size_t
-    runtime::gpu::HostEmitter::build_zero_out(const size_t& dst, const size_t& size, bool is_local)
+size_t runtime::gpu::HostEmitter::build_zero_out(size_t dst, size_t size, bool is_local)
 {
     std::stringstream ss;
     ss << "zero"

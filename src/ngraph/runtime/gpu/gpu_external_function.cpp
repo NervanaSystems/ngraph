@@ -157,7 +157,7 @@ std::string runtime::gpu::GPUExternalFunction::emit_op(GPUCompiledFunction* exte
 
 runtime::gpu::GPUExternalFunction::GPUExternalFunction(
     const shared_ptr<ngraph::Function>& function,
-    std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
+    const std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
     : GPUCompiledFunction(function, shared_context)
 {
 }
@@ -683,7 +683,7 @@ string runtime::gpu::GPUExternalFunction::emit_op_as_function(const Node& node,
 }
 
 void runtime::gpu::GPUExternalFunction::propagate_in_place_input(ngraph::descriptor::Output* output,
-                                                                 std::string input_name)
+                                                                 const std::string& input_name)
 {
     std::deque<ngraph::descriptor::Output*> stack;
     stack.push_front(output);
@@ -723,7 +723,7 @@ void runtime::gpu::GPUExternalFunction::propagate_in_place_input(ngraph::descrip
 }
 
 void runtime::gpu::GPUExternalFunction::propagate_in_place_output(
-    ngraph::descriptor::Output* res_src_output, std::string output_name)
+    ngraph::descriptor::Output* res_src_output, const std::string& output_name)
 {
     // we start with a particular output
     // which is an argument to a given op::Result
