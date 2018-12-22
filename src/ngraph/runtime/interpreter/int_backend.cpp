@@ -90,6 +90,10 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         throw runtime_error("compile() must be called before call().");
     }
     FunctionInstance& instance = fit->second;
+    if (!instance.m_is_compiled)
+    {
+        throw runtime_error("compile() must be called before call().");
+    }
 
     // convert inputs to HostTensor
     vector<void*> func_inputs;
