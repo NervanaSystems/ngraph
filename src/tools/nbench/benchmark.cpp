@@ -15,7 +15,9 @@
 //*****************************************************************************
 
 #include <random>
+#ifdef __i386__
 #include <xmmintrin.h>
+#endif
 
 #include "benchmark.hpp"
 #include "ngraph/file_util.hpp"
