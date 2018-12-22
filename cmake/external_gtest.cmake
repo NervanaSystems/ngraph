@@ -32,6 +32,10 @@ endif()
 
 set(GTEST_OUTPUT_DIR ${EXTERNAL_PROJECTS_ROOT}/gtest/build/googlemock/gtest)
 
+if (APPLE OR LINUX)
+    set(COMPILE_FLAGS -fPIC)
+endif()
+
 set(GTEST_CMAKE_ARGS
     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -43,8 +47,6 @@ if(WIN32)
         -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG=${GTEST_OUTPUT_DIR}
         -Dgtest_force_shared_crt=TRUE
     )
-else()
-    set(COMPILE_FLAGS -fPIC)
 endif()
 
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
