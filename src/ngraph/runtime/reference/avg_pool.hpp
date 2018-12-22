@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <numeric>
+#include <stdexcept>
 #include <vector>
 
 #include "ngraph/axis_vector.hpp"
