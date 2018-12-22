@@ -106,6 +106,10 @@ if (NGRAPH_PLAIDML_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
 endif()
 
+if (NGRAPH_RPI_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} RPI)
+endif()
+
 add_subdirectory(models)
 add_subdirectory(files)
 add_subdirectory(util)

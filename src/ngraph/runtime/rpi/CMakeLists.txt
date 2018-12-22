@@ -14,34 +14,18 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(interpreter)
-
-if (NGRAPH_HYBRID_ENABLE)
-    add_subdirectory(hybrid)
-endif()
-
-if (NGRAPH_CPU_ENABLE)
-    add_subdirectory(cpu)
-endif()
-
-if (NGRAPH_INTELGPU_ENABLE)
-    add_subdirectory(intelgpu)
-endif()
-
-if (NGRAPH_GPU_ENABLE)
-    add_subdirectory(gpu)
-endif()
-
-if (NGRAPH_NOP_ENABLE)
-    add_subdirectory(nop)
-endif()
-
-if (NGRAPH_GPUH_ENABLE)
-    add_subdirectory(gpuh)
-endif()
-
 if (NGRAPH_RPI_ENABLE)
-    add_subdirectory(rpi)
-endif()
+    add_library(rpi_backend SHARED rpi_backend.cpp node_wrapper.cpp)
+    if(NGRAPH_LIB_VERSIONING_ENABLE)
+        set_target_properties(rpi_backend PROPERTIES
+            VERSION ${NGRAPH_VERSION}
+            SOVERSION ${NGRAPH_API_VERSION})
+    endif()
+    target_link_libraries(rpi_backend PUBLIC ngraph)
+    set_target_properties(rpi_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
-add_subdirectory(plaidml)
+    install(TARGETS rpi_backend
+        LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
+        ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
+    )
+endif()
