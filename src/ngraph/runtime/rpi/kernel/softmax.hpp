@@ -19,48 +19,48 @@
 #include <cmath>
 
 #include "ngraph/coordinate_transform.hpp"
-#include "ngraph/shape_util.hpp"
 #include "ngraph/runtime/rpi/kernel/sum.hpp"
+#include "ngraph/shape_util.hpp"
 
 namespace ngraph
 {
-namespace runtime
-{
-namespace rpi
-{
-namespace kernel
-{
-template <typename T>
-void softmax(const T *arg, T *out, const Shape &shape, const AxisSet &axes)
-{
-    auto temp_shape = reduce(shape, axes);
-    auto temp_elements = std::accumulate(
-        temp_shape.begin(), temp_shape.end(), 1, std::multiplies<size_t>());
-    auto temp_ptr = new T[temp_elements];
-
-    max(arg, temp_ptr, shape, temp_shape, axes);
-
-    CoordinateTransform transform(shape);
-    CoordinateTransform temp_transform(temp_shape);
-    for (const Coordinate &coord : transform)
+    namespace runtime
     {
-        Coordinate temp_coord = reduce(coord, axes);
-        out[transform.index(coord)] =
-            std::exp(arg[transform.index(coord)] -
-                     temp_ptr[temp_transform.index(temp_coord)]);
+        namespace rpi
+        {
+            namespace kernel
+            {
+                template <typename T>
+                void softmax(const T* arg, T* out, const Shape& shape, const AxisSet& axes)
+                {
+                    auto temp_shape = reduce(shape, axes);
+                    auto temp_elements = std::accumulate(
+                        temp_shape.begin(), temp_shape.end(), 1, std::multiplies<size_t>());
+                    auto temp_ptr = new T[temp_elements];
+
+                    max(arg, temp_ptr, shape, temp_shape, axes);
+
+                    CoordinateTransform transform(shape);
+                    CoordinateTransform temp_transform(temp_shape);
+                    for (const Coordinate& coord : transform)
+                    {
+                        Coordinate temp_coord = reduce(coord, axes);
+                        out[transform.index(coord)] =
+                            std::exp(arg[transform.index(coord)] -
+                                     temp_ptr[temp_transform.index(temp_coord)]);
+                    }
+
+                    sum(out, temp_ptr, shape, temp_shape, axes);
+
+                    for (const Coordinate& coord : transform)
+                    {
+                        Coordinate temp_coord = reduce(coord, axes);
+                        out[transform.index(coord)] /= temp_ptr[temp_transform.index(temp_coord)];
+                    }
+
+                    delete[] temp_ptr;
+                }
+            }
+        }
     }
-
-    sum(out, temp_ptr, shape, temp_shape, axes);
-
-    for (const Coordinate &coord : transform)
-    {
-        Coordinate temp_coord = reduce(coord, axes);
-        out[transform.index(coord)] /= temp_ptr[temp_transform.index(temp_coord)];
-    }
-
-    delete[] temp_ptr;
-}
-}
-}
-}
 }

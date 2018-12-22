@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cmath>
+#include <omp.h>
 #include <utility>
 
 #include "ngraph/coordinate_transform.hpp"
@@ -71,6 +72,7 @@ namespace ngraph
                     // for the dotted axes.
                     CoordinateTransform dot_axes_transform(dot_axis_sizes);
 
+#pragma omp parallel
                     for (const Coordinate& arg0_projected_coord : arg0_projected_transform)
                     {
                         for (const Coordinate& arg1_projected_coord : arg1_projected_transform)

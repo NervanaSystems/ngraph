@@ -144,69 +144,71 @@
 
 namespace ngraph
 {
-namespace runtime
-{
-namespace rpi
-{
-class RPIBackend;
-}
-}
+    namespace runtime
+    {
+        namespace rpi
+        {
+            class RPIBackend;
+        }
+    }
 }
 
 class ngraph::runtime::rpi::RPIBackend : public Backend
 {
-  public:
-    std::shared_ptr<Tensor>
-    create_tensor(const element::Type &type, const Shape &shape, void *memory_pointer) override;
+public:
+    RPIBackend();
 
-    std::shared_ptr<Tensor> create_tensor(const element::Type &type, const Shape &shape) override;
+    std::shared_ptr<Tensor>
+        create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
+
+    std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
 
     Handle compile(std::shared_ptr<Function> function) override;
 
     bool call(std::shared_ptr<Function> function,
-              const std::vector<std::shared_ptr<Tensor>> &outputs,
-              const std::vector<std::shared_ptr<Tensor>> &intputs) override;
+              const std::vector<std::shared_ptr<Tensor>>& outputs,
+              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
 
     void set_nan_check(std::shared_ptr<Function> func, bool);
 
     void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
     std::vector<PerformanceCounter>
-    get_performance_data(std::shared_ptr<Function> func) const override;
+        get_performance_data(std::shared_ptr<Function> func) const override;
 
-    bool is_supported(const Node &node) const override { return true; }
-  private:
+    bool is_supported(const Node& node) const override { return true; }
+private:
     int get_alignment() const { return 64; }
     class FunctionInstance
     {
-      public:
+    public:
         bool m_is_compiled = false;
         bool m_nan_check_enabled = false;
         bool m_performance_counters_enabled = false;
-        std::unordered_map<const Node *, stopwatch> m_timer_map;
+        std::unordered_map<const Node*, stopwatch> m_timer_map;
         std::vector<NodeWrapper> m_wrapped_nodes;
-        std::unordered_map<const Node *, std::shared_ptr<RNGState>> m_states;
+        std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
         std::shared_ptr<AlignedBuffer> m_temporary_memory;
 
-        void *get_temporary_pointer(size_t offset) { return m_temporary_memory->get_ptr(offset); }
+        void* get_temporary_pointer(size_t offset) { return m_temporary_memory->get_ptr(offset); }
     };
     std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
 
-    static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>> &,
-                                  const Node *op = nullptr);
+    static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
+                                  const Node* op = nullptr);
 
-    void generate_calls(const element::Type &type,
-                        const NodeWrapper &op,
-                        const std::vector<void *> &outputs,
-                        const std::vector<const void *> &inputs,
-                        FunctionInstance &instance);
+    void generate_calls(const element::Type& type,
+                        const NodeWrapper& op,
+                        const std::vector<void*>& outputs,
+                        const std::vector<const void*>& inputs,
+                        FunctionInstance& instance);
 
     template <typename T>
-    void op_engine(const NodeWrapper &node_wrapper,
-                   const std::vector<void *> &out,
-                   const std::vector<const void *> &args,
-                   FunctionInstance &instance)
+    void op_engine(const NodeWrapper& node_wrapper,
+                   const std::vector<void*>& out,
+                   const std::vector<const void*>& args,
+                   FunctionInstance& instance)
     {
-        const Node &node = node_wrapper.get_node();
+        const Node& node = node_wrapper.get_node();
         std::string node_op = node.description();
 
 // We want to check that every OP_TYPEID enumeration is included in the list.
@@ -221,41 +223,38 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::Abs:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::abs<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+            kernel::abs<T>(static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::Acos:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::acos<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+            kernel::acos<T>(static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::Add:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::add<T>(static_cast<const T *>(args[0]),
-                           static_cast<const T *>(args[1]),
-                           static_cast<T *>(out[0]),
+            kernel::add<T>(static_cast<const T*>(args[0]),
+                           static_cast<const T*>(args[1]),
+                           static_cast<T*>(out[0]),
                            element_count);
             break;
         }
         case OP_TYPEID::All:
         {
-            const op::All *all = static_cast<const op::All *>(&node);
-            kernel::all(static_cast<const char *>(args[0]),
-                        static_cast<char *>(out[0]),
+            const op::All* all = static_cast<const op::All*>(&node);
+            kernel::all(static_cast<const char*>(args[0]),
+                        static_cast<char*>(out[0]),
                         node.get_input_shape(0),
                         node.get_output_shape(0),
                         all->get_reduction_axes());
             break;
         }
-        case OP_TYPEID::AllReduce:
-        {
+        case OP_TYPEID::AllReduce: {
 #ifdef NGRAPH_DISTRIBUTED
-            kernel::allreduce<T>(static_cast<T *>(const_cast<void *>(args[0])),
-                                 static_cast<T *>(out[0]),
+            kernel::allreduce<T>(static_cast<T*>(const_cast<void*>(args[0])),
+                                 static_cast<T*>(out[0]),
                                  node.get_input_element_type(0),
                                  static_cast<int>(shape_size(node.get_input_shape(0))));
 #endif
@@ -264,17 +263,17 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::And:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::logical_and(static_cast<const T *>(args[0]),
-                                static_cast<const T *>(args[1]),
-                                static_cast<T *>(out[0]),
+            kernel::logical_and(static_cast<const T*>(args[0]),
+                                static_cast<const T*>(args[1]),
+                                static_cast<T*>(out[0]),
                                 element_count);
             break;
         }
         case OP_TYPEID::Any:
         {
-            const op::Any *any = static_cast<const op::Any *>(&node);
-            kernel::any(static_cast<const char *>(args[0]),
-                        static_cast<char *>(out[0]),
+            const op::Any* any = static_cast<const op::Any*>(&node);
+            kernel::any(static_cast<const char*>(args[0]),
+                        static_cast<char*>(out[0]),
                         node.get_input_shape(0),
                         node.get_output_shape(0),
                         any->get_reduction_axes());
@@ -282,20 +281,20 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::ArgMin:
         {
-            const op::ArgMin *argmin = static_cast<const op::ArgMin *>(&node);
+            const op::ArgMin* argmin = static_cast<const op::ArgMin*>(&node);
             auto element_type = node.get_output_element_type(0);
             if (element_type == element::i64)
             {
-                kernel::argmin<T, int64_t>(static_cast<const T *>(args[0]),
-                                           static_cast<int64_t *>(out[0]),
+                kernel::argmin<T, int64_t>(static_cast<const T*>(args[0]),
+                                           static_cast<int64_t*>(out[0]),
                                            node.get_input_shape(0),
                                            node.get_output_shape(0),
                                            argmin->get_reduction_axis());
             }
             else if (element_type == element::i32)
             {
-                kernel::argmin<T, int32_t>(static_cast<const T *>(args[0]),
-                                           static_cast<int32_t *>(out[0]),
+                kernel::argmin<T, int32_t>(static_cast<const T*>(args[0]),
+                                           static_cast<int32_t*>(out[0]),
                                            node.get_input_shape(0),
                                            node.get_output_shape(0),
                                            argmin->get_reduction_axis());
@@ -308,20 +307,20 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::ArgMax:
         {
-            const op::ArgMax *argmax = static_cast<const op::ArgMax *>(&node);
+            const op::ArgMax* argmax = static_cast<const op::ArgMax*>(&node);
             auto element_type = node.get_output_element_type(0);
             if (element_type == element::i64)
             {
-                kernel::argmax<T, int64_t>(static_cast<const T *>(args[0]),
-                                           static_cast<int64_t *>(out[0]),
+                kernel::argmax<T, int64_t>(static_cast<const T*>(args[0]),
+                                           static_cast<int64_t*>(out[0]),
                                            node.get_input_shape(0),
                                            node.get_output_shape(0),
                                            argmax->get_reduction_axis());
             }
             else if (element_type == element::i32)
             {
-                kernel::argmax<T, int32_t>(static_cast<const T *>(args[0]),
-                                           static_cast<int32_t *>(out[0]),
+                kernel::argmax<T, int32_t>(static_cast<const T*>(args[0]),
+                                           static_cast<int32_t*>(out[0]),
                                            node.get_input_shape(0),
                                            node.get_output_shape(0),
                                            argmax->get_reduction_axis());
@@ -335,23 +334,21 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::Asin:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::asin<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+            kernel::asin<T>(static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::Atan:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::atan<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+            kernel::atan<T>(static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::AvgPool:
         {
-            const op::AvgPool *avg_pool = static_cast<const op::AvgPool *>(&node);
+            const op::AvgPool* avg_pool = static_cast<const op::AvgPool*>(&node);
 
-            kernel::avg_pool<T>(static_cast<const T *>(args[0]),
-                                static_cast<T *>(out[0]),
+            kernel::avg_pool<T>(static_cast<const T*>(args[0]),
+                                static_cast<T*>(out[0]),
                                 node.get_input_shape(0),
                                 node.get_output_shape(0),
                                 avg_pool->get_window_shape(),
@@ -365,78 +362,77 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         {
             if (instance.m_states.count(&node) == 0)
             {
-                const op::GenerateMask *gm = static_cast<const op::GenerateMask *>(&node);
+                const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
                 instance.m_states[&node] = std::unique_ptr<ngraph::RNGState>(
                     ngraph::RNGState::create_rng_state(gm->get_seed(), gm->get_probability()));
             }
 
-            bool training = static_cast<bool>(static_cast<const T *>(args[0])[0]);
+            bool training = static_cast<bool>(static_cast<const T*>(args[0])[0]);
             auto state = instance.m_states.at(&node).get();
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::generate_mask<T>(
-                reinterpret_cast<T *>(out[0]), element_count, state, training);
+            kernel::generate_mask<T>(reinterpret_cast<T*>(out[0]), element_count, state, training);
             break;
         }
         case OP_TYPEID::GetOutputElement:
         {
-            const op::GetOutputElement *get_output_element =
-                static_cast<const op::GetOutputElement *>(&node);
+            const op::GetOutputElement* get_output_element =
+                static_cast<const op::GetOutputElement*>(&node);
             size_t n = get_output_element->get_n();
             size_t element_count = shape_size(node.get_output_shape(0));
             size_t num_bytes = element_count * node.get_output_element_type(0).size();
-            std::memcpy(static_cast<T *>(out[0]), args[n], num_bytes);
+            std::memcpy(static_cast<T*>(out[0]), args[n], num_bytes);
             break;
         }
         case OP_TYPEID::BatchNormTraining:
         {
-            const ngraph::op::BatchNormTraining *bn =
-                static_cast<const ngraph::op::BatchNormTraining *>(&node);
+            const ngraph::op::BatchNormTraining* bn =
+                static_cast<const ngraph::op::BatchNormTraining*>(&node);
             kernel::batch_norm_training<T>(bn->get_eps_value(),
-                                           static_cast<const T *>(args[0]),
-                                           static_cast<const T *>(args[1]),
-                                           static_cast<const T *>(args[2]),
-                                           static_cast<T *>(out[0]),
-                                           static_cast<T *>(out[1]),
-                                           static_cast<T *>(out[2]),
+                                           static_cast<const T*>(args[0]),
+                                           static_cast<const T*>(args[1]),
+                                           static_cast<const T*>(args[2]),
+                                           static_cast<T*>(out[0]),
+                                           static_cast<T*>(out[1]),
+                                           static_cast<T*>(out[2]),
                                            node.get_input_shape(2));
             break;
         }
         case OP_TYPEID::BatchNormInference:
         {
-            const ngraph::op::BatchNormInference *bn =
-                static_cast<const ngraph::op::BatchNormInference *>(&node);
+            const ngraph::op::BatchNormInference* bn =
+                static_cast<const ngraph::op::BatchNormInference*>(&node);
             kernel::batch_norm_inference<T>(bn->get_eps_value(),
-                                            static_cast<const T *>(args[0]),
-                                            static_cast<const T *>(args[1]),
-                                            static_cast<const T *>(args[2]),
-                                            static_cast<const T *>(args[3]),
-                                            static_cast<const T *>(args[4]),
-                                            static_cast<T *>(out[0]),
+                                            static_cast<const T*>(args[0]),
+                                            static_cast<const T*>(args[1]),
+                                            static_cast<const T*>(args[2]),
+                                            static_cast<const T*>(args[3]),
+                                            static_cast<const T*>(args[4]),
+                                            static_cast<T*>(out[0]),
                                             node.get_input_shape(2));
             break;
         }
         case OP_TYPEID::BatchNormTrainingBackprop:
         {
-            const ngraph::op::BatchNormTrainingBackprop *bn_bprop =
-                static_cast<const ngraph::op::BatchNormTrainingBackprop *>(&node);
+            const ngraph::op::BatchNormTrainingBackprop* bn_bprop =
+                static_cast<const ngraph::op::BatchNormTrainingBackprop*>(&node);
             kernel::batch_norm_backprop(bn_bprop->get_eps_value(),
-                                        static_cast<const T *>(args[0]),
-                                        static_cast<const T *>(args[1]),
-                                        static_cast<const T *>(args[2]),
-                                        static_cast<const T *>(args[3]),
-                                        static_cast<const T *>(args[4]),
-                                        static_cast<const T *>(args[5]),
-                                        static_cast<T *>(out[0]),
-                                        static_cast<T *>(out[1]),
-                                        static_cast<T *>(out[2]),
+                                        static_cast<const T*>(args[0]),
+                                        static_cast<const T*>(args[1]),
+                                        static_cast<const T*>(args[2]),
+                                        static_cast<const T*>(args[3]),
+                                        static_cast<const T*>(args[4]),
+                                        static_cast<const T*>(args[5]),
+                                        static_cast<T*>(out[0]),
+                                        static_cast<T*>(out[1]),
+                                        static_cast<T*>(out[2]),
                                         node.get_input_shape(2));
             break;
         }
         case OP_TYPEID::AvgPoolBackprop:
         {
-            const op::AvgPoolBackprop *apb = static_cast<const op::AvgPoolBackprop *>(&node);
-            kernel::avg_pool_backprop<T>(static_cast<const T *>(args[0]),
-                                         static_cast<T *>(out[0]),
+            const op::AvgPoolBackprop* apb = static_cast<const op::AvgPoolBackprop*>(&node);
+            kernel::avg_pool_backprop<T>(static_cast<const T*>(args[0]),
+                                         static_cast<T*>(out[0]),
                                          node.get_input_shape(0),
                                          node.get_output_shape(0),
                                          apb->get_window_shape(),
@@ -448,38 +444,37 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::Broadcast:
         {
-            const op::Broadcast *broadcast = static_cast<const op::Broadcast *>(&node);
+            const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
             Shape in_shape = node.get_input_shape(0);
             Shape out_shape = node.get_output_shape(0);
             AxisSet broadcast_axes = broadcast->get_broadcast_axes();
-            kernel::broadcast<T>(static_cast<const T *>(args[0]),
-                                 static_cast<T *>(out[0]),
+            kernel::broadcast<T>(static_cast<const T*>(args[0]),
+                                 static_cast<T*>(out[0]),
                                  in_shape,
                                  out_shape,
                                  broadcast_axes);
             break;
         }
-        case OP_TYPEID::BroadcastLike:
-            break;
+        case OP_TYPEID::BroadcastLike: break;
         case OP_TYPEID::Ceiling:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             kernel::ceiling<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+                static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::Concat:
         {
-            const op::Concat *concat = static_cast<const op::Concat *>(&node);
-            std::vector<const T *> in_args;
+            const op::Concat* concat = static_cast<const op::Concat*>(&node);
+            std::vector<const T*> in_args;
             std::vector<Shape> in_shapes;
             for (size_t i = 0; i < node.get_input_size(); i++)
             {
-                in_args.push_back(static_cast<const T *>(args[i]));
+                in_args.push_back(static_cast<const T*>(args[i]));
                 in_shapes.push_back(node.get_input_shape(i));
             }
             kernel::concat<T>(in_args,
-                              static_cast<T *>(out[0]),
+                              static_cast<T*>(out[0]),
                               in_shapes,
                               node.get_output_shape(0),
                               concat->get_concatenation_axis());
@@ -490,8 +485,7 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
             // Constant is handled in the main loop
             break;
         }
-        case OP_TYPEID::ScalarConstantLike:
-            break;
+        case OP_TYPEID::ScalarConstantLike: break;
         case OP_TYPEID::Convert:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
@@ -502,47 +496,47 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
             {
             case element::Type_t::boolean:
                 kernel::convert<T>(
-                    static_cast<const T *>(args[0]), static_cast<char *>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<char*>(out[0]), element_count);
                 break;
             case element::Type_t::f32:
                 kernel::convert<T>(
-                    static_cast<const T *>(args[0]), static_cast<float *>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<float*>(out[0]), element_count);
                 break;
             case element::Type_t::f64:
                 kernel::convert<T>(
-                    static_cast<const T *>(args[0]), static_cast<double *>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<double*>(out[0]), element_count);
                 break;
             case element::Type_t::i8:
                 kernel::convert<T>(
-                    static_cast<const T *>(args[0]), static_cast<int8_t *>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<int8_t*>(out[0]), element_count);
                 break;
             case element::Type_t::i16:
                 kernel::convert<T>(
-                    static_cast<const T *>(args[0]), static_cast<int16_t *>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<int16_t*>(out[0]), element_count);
                 break;
             case element::Type_t::i32:
                 kernel::convert<T>(
-                    static_cast<const T *>(args[0]), static_cast<int32_t *>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<int32_t*>(out[0]), element_count);
                 break;
             case element::Type_t::i64:
                 kernel::convert<T>(
-                    static_cast<const T *>(args[0]), static_cast<int64_t *>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<int64_t*>(out[0]), element_count);
                 break;
             case element::Type_t::u8:
                 kernel::convert<T>(
-                    static_cast<const T *>(args[0]), static_cast<uint8_t *>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<uint8_t*>(out[0]), element_count);
                 break;
             case element::Type_t::u16:
                 kernel::convert<T>(
-                    static_cast<const T *>(args[0]), static_cast<uint16_t *>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<uint16_t*>(out[0]), element_count);
                 break;
             case element::Type_t::u32:
                 kernel::convert<T>(
-                    static_cast<const T *>(args[0]), static_cast<uint32_t *>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<uint32_t*>(out[0]), element_count);
                 break;
             case element::Type_t::u64:
                 kernel::convert<T>(
-                    static_cast<const T *>(args[0]), static_cast<uint64_t *>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<uint64_t*>(out[0]), element_count);
                 break;
             case element::Type_t::undefined:
             case element::Type_t::dynamic:
@@ -554,10 +548,10 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::Convolution:
         {
-            const op::Convolution *c = static_cast<const op::Convolution *>(&node);
-            kernel::convolution<T>(static_cast<const T *>(args[0]),
-                                   static_cast<const T *>(args[1]),
-                                   static_cast<T *>(out[0]),
+            const op::Convolution* c = static_cast<const op::Convolution*>(&node);
+            kernel::convolution<T>(static_cast<const T*>(args[0]),
+                                   static_cast<const T*>(args[1]),
+                                   static_cast<T*>(out[0]),
                                    node.get_input_shape(0),
                                    node.get_input_shape(1),
                                    node.get_output_shape(0),
@@ -577,11 +571,11 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::ConvolutionBackpropFilters:
         {
-            const op::ConvolutionBackpropFilters *c =
-                static_cast<const op::ConvolutionBackpropFilters *>(&node);
-            kernel::convolution<T>(static_cast<const T *>(args[0]),
-                                   static_cast<const T *>(args[1]),
-                                   static_cast<T *>(out[0]),
+            const op::ConvolutionBackpropFilters* c =
+                static_cast<const op::ConvolutionBackpropFilters*>(&node);
+            kernel::convolution<T>(static_cast<const T*>(args[0]),
+                                   static_cast<const T*>(args[1]),
+                                   static_cast<T*>(out[0]),
                                    node.get_input_shape(0),
                                    node.get_input_shape(1),
                                    node.get_output_shape(0),
@@ -602,11 +596,11 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::ConvolutionBackpropData:
         {
             // Note that args[1] and args[0] are switched here from the usual order.
-            const op::ConvolutionBackpropData *c =
-                static_cast<const op::ConvolutionBackpropData *>(&node);
-            kernel::convolution<T>(static_cast<const T *>(args[1]),
-                                   static_cast<const T *>(args[0]),
-                                   static_cast<T *>(out[0]),
+            const op::ConvolutionBackpropData* c =
+                static_cast<const op::ConvolutionBackpropData*>(&node);
+            kernel::convolution<T>(static_cast<const T*>(args[1]),
+                                   static_cast<const T*>(args[0]),
+                                   static_cast<T*>(out[0]),
                                    node.get_input_shape(1),
                                    node.get_input_shape(0),
                                    node.get_output_shape(0),
@@ -627,38 +621,36 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::Cos:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::cos<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+            kernel::cos<T>(static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::Cosh:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::cosh<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+            kernel::cosh<T>(static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::Dequantize:
         {
-            const op::Dequantize *dequantize = static_cast<const op::Dequantize *>(&node);
+            const op::Dequantize* dequantize = static_cast<const op::Dequantize*>(&node);
             auto type = dequantize->get_element_type();
 
             if (type == element::f32)
             {
-                kernel::dequantize<T>(static_cast<const T *>(args[0]),
-                                      static_cast<const float *>(args[1]),
-                                      static_cast<const T *>(args[2]),
-                                      static_cast<float *>(out[0]),
+                kernel::dequantize<T>(static_cast<const T*>(args[0]),
+                                      static_cast<const float*>(args[1]),
+                                      static_cast<const T*>(args[2]),
+                                      static_cast<float*>(out[0]),
                                       node.get_input_shape(0),
                                       node.get_input_shape(1),
                                       dequantize->get_axes());
             }
             else if (type == element::f64)
             {
-                kernel::dequantize<T>(static_cast<const T *>(args[0]),
-                                      static_cast<const double *>(args[1]),
-                                      static_cast<const T *>(args[2]),
-                                      static_cast<double *>(out[0]),
+                kernel::dequantize<T>(static_cast<const T*>(args[0]),
+                                      static_cast<const double*>(args[1]),
+                                      static_cast<const T*>(args[2]),
+                                      static_cast<double*>(out[0]),
                                       node.get_input_shape(0),
                                       node.get_input_shape(1),
                                       dequantize->get_axes());
@@ -675,19 +667,19 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::Divide:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::divide<T>(static_cast<const T *>(args[0]),
-                              static_cast<const T *>(args[1]),
-                              static_cast<T *>(out[0]),
+            kernel::divide<T>(static_cast<const T*>(args[0]),
+                              static_cast<const T*>(args[1]),
+                              static_cast<T*>(out[0]),
                               element_count);
             break;
         }
         case OP_TYPEID::Dot:
         {
-            const op::Dot *dot = static_cast<const op::Dot *>(&node);
+            const op::Dot* dot = static_cast<const op::Dot*>(&node);
 
-            kernel::dot(static_cast<const T *>(args[0]),
-                        static_cast<const T *>(args[1]),
-                        static_cast<T *>(out[0]),
+            kernel::dot(static_cast<const T*>(args[0]),
+                        static_cast<const T*>(args[1]),
+                        static_cast<T*>(out[0]),
                         node.get_input_shape(0),
                         node.get_input_shape(1),
                         node.get_output_shape(0),
@@ -696,39 +688,39 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::EmbeddingLookup:
         {
-            const op::EmbeddingLookup *embed = static_cast<const op::EmbeddingLookup *>(&node);
+            const op::EmbeddingLookup* embed = static_cast<const op::EmbeddingLookup*>(&node);
             auto type = embed->get_argument(0)->get_element_type();
             size_t element_count = shape_size(embed->get_argument(0)->get_shape());
 
             if (type == element::f32)
             {
-                kernel::embedding<T, float>(static_cast<const float *>(args[0]),
-                                            static_cast<const T *>(args[1]),
-                                            static_cast<T *>(out[0]),
+                kernel::embedding<T, float>(static_cast<const float*>(args[0]),
+                                            static_cast<const T*>(args[1]),
+                                            static_cast<T*>(out[0]),
                                             element_count,
                                             embed->get_shape());
             }
             else if (type == element::f64)
             {
-                kernel::embedding<T, double>(static_cast<const double *>(args[0]),
-                                             static_cast<const T *>(args[1]),
-                                             static_cast<T *>(out[0]),
+                kernel::embedding<T, double>(static_cast<const double*>(args[0]),
+                                             static_cast<const T*>(args[1]),
+                                             static_cast<T*>(out[0]),
                                              element_count,
                                              embed->get_shape());
             }
             else if (type == element::i32)
             {
-                kernel::embedding<T, int>(static_cast<const int *>(args[0]),
-                                          static_cast<const T *>(args[1]),
-                                          static_cast<T *>(out[0]),
+                kernel::embedding<T, int>(static_cast<const int*>(args[0]),
+                                          static_cast<const T*>(args[1]),
+                                          static_cast<T*>(out[0]),
                                           element_count,
                                           embed->get_shape());
             }
             else if (type == element::i64)
             {
-                kernel::embedding<T, int64_t>(static_cast<const int64_t *>(args[0]),
-                                              static_cast<const T *>(args[1]),
-                                              static_cast<T *>(out[0]),
+                kernel::embedding<T, int64_t>(static_cast<const int64_t*>(args[0]),
+                                              static_cast<const T*>(args[1]),
+                                              static_cast<T*>(out[0]),
                                               element_count,
                                               embed->get_shape());
             }
@@ -742,24 +734,23 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::Equal:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::equal<T>(static_cast<const T *>(args[0]),
-                             static_cast<const T *>(args[1]),
-                             static_cast<char *>(out[0]),
+            kernel::equal<T>(static_cast<const T*>(args[0]),
+                             static_cast<const T*>(args[1]),
+                             static_cast<char*>(out[0]),
                              element_count);
             break;
         }
         case OP_TYPEID::Exp:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::exp<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+            kernel::exp<T>(static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::Floor:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             kernel::floor<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+                static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::FunctionCall:
@@ -783,7 +774,7 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
                 element::Type et = parameter->get_element_type();
                 Shape shape = parameter->get_shape();
                 auto host_tensor =
-                    std::make_shared<HostTensor>(et, shape, const_cast<void *>(args[i]));
+                    std::make_shared<HostTensor>(et, shape, const_cast<void*>(args[i]));
                 inputs.push_back(std::static_pointer_cast<runtime::Tensor>(host_tensor));
             }
 
@@ -794,51 +785,50 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::Greater:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::greater<T>(static_cast<const T *>(args[0]),
-                               static_cast<const T *>(args[1]),
-                               static_cast<char *>(out[0]),
+            kernel::greater<T>(static_cast<const T*>(args[0]),
+                               static_cast<const T*>(args[1]),
+                               static_cast<char*>(out[0]),
                                element_count);
             break;
         }
         case OP_TYPEID::GreaterEq:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::greater_eq<T>(static_cast<const T *>(args[0]),
-                                  static_cast<const T *>(args[1]),
-                                  static_cast<char *>(out[0]),
+            kernel::greater_eq<T>(static_cast<const T*>(args[0]),
+                                  static_cast<const T*>(args[1]),
+                                  static_cast<char*>(out[0]),
                                   element_count);
             break;
         }
         case OP_TYPEID::Less:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::less<T>(static_cast<const T *>(args[0]),
-                            static_cast<const T *>(args[1]),
-                            static_cast<char *>(out[0]),
+            kernel::less<T>(static_cast<const T*>(args[0]),
+                            static_cast<const T*>(args[1]),
+                            static_cast<char*>(out[0]),
                             element_count);
             break;
         }
         case OP_TYPEID::LessEq:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::less_eq<T>(static_cast<const T *>(args[0]),
-                               static_cast<const T *>(args[1]),
-                               static_cast<char *>(out[0]),
+            kernel::less_eq<T>(static_cast<const T*>(args[0]),
+                               static_cast<const T*>(args[1]),
+                               static_cast<char*>(out[0]),
                                element_count);
             break;
         }
         case OP_TYPEID::Log:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::log<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+            kernel::log<T>(static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::LRN:
         {
-            const op::LRN *lrn = static_cast<const op::LRN *>(&node);
-            kernel::lrn<T>(static_cast<const T *>(args[0]),
-                           static_cast<T *>(out[0]),
+            const op::LRN* lrn = static_cast<const op::LRN*>(&node);
+            kernel::lrn<T>(static_cast<const T*>(args[0]),
+                           static_cast<T*>(out[0]),
                            node.get_input_shape(0),
                            lrn->get_alpha(),
                            lrn->get_beta(),
@@ -848,9 +838,9 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::Max:
         {
-            const op::Max *max = static_cast<const op::Max *>(&node);
-            kernel::max<T>(static_cast<const T *>(args[0]),
-                           static_cast<T *>(out[0]),
+            const op::Max* max = static_cast<const op::Max*>(&node);
+            kernel::max<T>(static_cast<const T*>(args[0]),
+                           static_cast<T*>(out[0]),
                            node.get_input_shape(0),
                            node.get_output_shape(0),
                            max->get_reduction_axes());
@@ -859,18 +849,18 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::Maximum:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::maximum<T>(static_cast<const T *>(args[0]),
-                               static_cast<const T *>(args[1]),
-                               static_cast<T *>(out[0]),
+            kernel::maximum<T>(static_cast<const T*>(args[0]),
+                               static_cast<const T*>(args[1]),
+                               static_cast<T*>(out[0]),
                                element_count);
             break;
         }
         case OP_TYPEID::MaxPool:
         {
-            const op::MaxPool *max_pool = static_cast<const op::MaxPool *>(&node);
+            const op::MaxPool* max_pool = static_cast<const op::MaxPool*>(&node);
 
-            kernel::max_pool<T>(static_cast<const T *>(args[0]),
-                                static_cast<T *>(out[0]),
+            kernel::max_pool<T>(static_cast<const T*>(args[0]),
+                                static_cast<T*>(out[0]),
                                 node.get_input_shape(0),
                                 node.get_output_shape(0),
                                 max_pool->get_window_shape(),
@@ -881,12 +871,12 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::MaxPoolBackprop:
         {
-            const op::MaxPoolBackprop *max_pool_backprop =
-                static_cast<const op::MaxPoolBackprop *>(&node);
+            const op::MaxPoolBackprop* max_pool_backprop =
+                static_cast<const op::MaxPoolBackprop*>(&node);
 
-            kernel::max_pool_backprop<T>(static_cast<const T *>(args[0]),
-                                         static_cast<const T *>(args[1]),
-                                         static_cast<T *>(out[0]),
+            kernel::max_pool_backprop<T>(static_cast<const T*>(args[0]),
+                                         static_cast<const T*>(args[1]),
+                                         static_cast<T*>(out[0]),
                                          node.get_input_shape(1),
                                          node.get_output_shape(0),
                                          max_pool_backprop->get_window_shape(),
@@ -897,9 +887,9 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::Min:
         {
-            const op::Min *min = static_cast<const op::Min *>(&node);
-            kernel::min<T>(static_cast<const T *>(args[0]),
-                           static_cast<T *>(out[0]),
+            const op::Min* min = static_cast<const op::Min*>(&node);
+            kernel::min<T>(static_cast<const T*>(args[0]),
+                           static_cast<T*>(out[0]),
                            node.get_input_shape(0),
                            node.get_output_shape(0),
                            min->get_reduction_axes());
@@ -908,18 +898,18 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::Minimum:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::minimum<T>(static_cast<const T *>(args[0]),
-                               static_cast<const T *>(args[1]),
-                               static_cast<T *>(out[0]),
+            kernel::minimum<T>(static_cast<const T*>(args[0]),
+                               static_cast<const T*>(args[1]),
+                               static_cast<T*>(out[0]),
                                element_count);
             break;
         }
         case OP_TYPEID::Multiply:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::multiply<T>(static_cast<const T *>(args[0]),
-                                static_cast<const T *>(args[1]),
-                                static_cast<T *>(out[0]),
+            kernel::multiply<T>(static_cast<const T*>(args[0]),
+                                static_cast<const T*>(args[1]),
+                                static_cast<T*>(out[0]),
                                 element_count);
             break;
         }
@@ -927,30 +917,30 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             kernel::negate<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+                static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::Not:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             kernel::logical_not(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+                static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::NotEqual:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::not_equal<T>(static_cast<const T *>(args[0]),
-                                 static_cast<const T *>(args[1]),
-                                 static_cast<char *>(out[0]),
+            kernel::not_equal<T>(static_cast<const T*>(args[0]),
+                                 static_cast<const T*>(args[1]),
+                                 static_cast<char*>(out[0]),
                                  element_count);
             break;
         }
         case OP_TYPEID::OneHot:
         {
-            const op::OneHot *oh = static_cast<const op::OneHot *>(&node);
-            kernel::one_hot<T>(static_cast<const T *>(args[0]),
-                               static_cast<T *>(out[0]),
+            const op::OneHot* oh = static_cast<const op::OneHot*>(&node);
+            kernel::one_hot<T>(static_cast<const T*>(args[0]),
+                               static_cast<T*>(out[0]),
                                node.get_input_shape(0),
                                node.get_output_shape(0),
                                oh->get_one_hot_axis());
@@ -959,21 +949,20 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::Or:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::logical_or(static_cast<const T *>(args[0]),
-                               static_cast<const T *>(args[1]),
-                               static_cast<T *>(out[0]),
+            kernel::logical_or(static_cast<const T*>(args[0]),
+                               static_cast<const T*>(args[1]),
+                               static_cast<T*>(out[0]),
                                element_count);
             break;
         }
-        case OP_TYPEID::Parameter:
-            break;
+        case OP_TYPEID::Parameter: break;
         case OP_TYPEID::Pad:
         {
-            const op::Pad *pad = static_cast<const op::Pad *>(&node);
+            const op::Pad* pad = static_cast<const op::Pad*>(&node);
 
-            kernel::pad(static_cast<const T *>(args[0]),
-                        static_cast<const T *>(args[1]),
-                        static_cast<T *>(out[0]),
+            kernel::pad(static_cast<const T*>(args[0]),
+                        static_cast<const T*>(args[1]),
+                        static_cast<T*>(out[0]),
                         node.get_inputs().at(0).get_shape(),
                         node.get_output_shape(0),
                         pad->get_padding_below(),
@@ -984,17 +973,17 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::Power:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::power<T>(static_cast<const T *>(args[0]),
-                             static_cast<const T *>(args[1]),
-                             static_cast<T *>(out[0]),
+            kernel::power<T>(static_cast<const T*>(args[0]),
+                             static_cast<const T*>(args[1]),
+                             static_cast<T*>(out[0]),
                              element_count);
             break;
         }
         case OP_TYPEID::Product:
         {
-            const op::Product *product = static_cast<const op::Product *>(&node);
-            kernel::product<T>(static_cast<const T *>(args[0]),
-                               static_cast<T *>(out[0]),
+            const op::Product* product = static_cast<const op::Product*>(&node);
+            kernel::product<T>(static_cast<const T*>(args[0]),
+                               static_cast<T*>(out[0]),
                                node.get_input_shape(0),
                                node.get_output_shape(0),
                                product->get_reduction_axes());
@@ -1002,15 +991,15 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::Quantize:
         {
-            const op::Quantize *quantize = static_cast<const op::Quantize *>(&node);
+            const op::Quantize* quantize = static_cast<const op::Quantize*>(&node);
             auto type = quantize->get_element_type();
 
             if (type == element::u8)
             {
-                kernel::quantize<T>(static_cast<const T *>(args[0]),
-                                    static_cast<const T *>(args[1]),
-                                    static_cast<const uint8_t *>(args[2]),
-                                    static_cast<uint8_t *>(out[0]),
+                kernel::quantize<T>(static_cast<const T*>(args[0]),
+                                    static_cast<const T*>(args[1]),
+                                    static_cast<const uint8_t*>(args[2]),
+                                    static_cast<uint8_t*>(out[0]),
                                     node.get_input_shape(0),
                                     node.get_input_shape(1),
                                     quantize->get_axes(),
@@ -1018,10 +1007,10 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
             }
             else if (type == element::i8)
             {
-                kernel::quantize<T>(static_cast<const T *>(args[0]),
-                                    static_cast<const T *>(args[1]),
-                                    static_cast<const int8_t *>(args[2]),
-                                    static_cast<int8_t *>(out[0]),
+                kernel::quantize<T>(static_cast<const T*>(args[0]),
+                                    static_cast<const T*>(args[1]),
+                                    static_cast<const int8_t*>(args[2]),
+                                    static_cast<int8_t*>(out[0]),
                                     node.get_input_shape(0),
                                     node.get_input_shape(1),
                                     quantize->get_axes(),
@@ -1029,10 +1018,10 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
             }
             else if (type == element::i32)
             {
-                kernel::quantize<T>(static_cast<const T *>(args[0]),
-                                    static_cast<const T *>(args[1]),
-                                    static_cast<const int32_t *>(args[2]),
-                                    static_cast<int32_t *>(out[0]),
+                kernel::quantize<T>(static_cast<const T*>(args[0]),
+                                    static_cast<const T*>(args[1]),
+                                    static_cast<const int32_t*>(args[2]),
+                                    static_cast<int32_t*>(out[0]),
                                     node.get_input_shape(0),
                                     node.get_input_shape(1),
                                     quantize->get_axes(),
@@ -1049,7 +1038,7 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::Reduce:
         {
-            const op::Reduce *reduce = static_cast<const op::Reduce *>(&node);
+            const op::Reduce* reduce = static_cast<const op::Reduce*>(&node);
             std::shared_ptr<Function> reduction_function = reduce->get_functions()[0];
 
             std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
@@ -1064,9 +1053,9 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
                 return *(tr->get_data_ptr<T>());
             };
 
-            kernel::reduce(static_cast<const T *>(args[0]),
-                           static_cast<const T *>(args[1]),
-                           static_cast<T *>(out[0]),
+            kernel::reduce(static_cast<const T*>(args[0]),
+                           static_cast<const T*>(args[1]),
+                           static_cast<T*>(out[0]),
                            node.get_inputs().at(0).get_shape(),
                            node.get_output_shape(0),
                            reduce->get_reduction_axes(),
@@ -1075,7 +1064,7 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::ReduceWindow:
         {
-            const op::ReduceWindow *reduce_window = static_cast<const op::ReduceWindow *>(&node);
+            const op::ReduceWindow* reduce_window = static_cast<const op::ReduceWindow*>(&node);
             std::shared_ptr<Function> reduction_function = reduce_window->get_functions()[0];
 
             std::function<T(T, T)> f = [this, &node, reduction_function](T x, T y) -> T {
@@ -1094,9 +1083,9 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
                 return *(tr->get_data_ptr<T>());
             };
 
-            kernel::reduce_window(static_cast<const T *>(args[0]),
-                                  static_cast<const T *>(args[1]),
-                                  static_cast<T *>(out[0]),
+            kernel::reduce_window(static_cast<const T*>(args[0]),
+                                  static_cast<const T*>(args[1]),
+                                  static_cast<T*>(out[0]),
                                   node.get_inputs().at(0).get_shape(),
                                   node.get_output_shape(0),
                                   f,
@@ -1107,25 +1096,24 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::Relu:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::relu<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+            kernel::relu<T>(static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::ReluBackprop:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::relu_backprop<T>(static_cast<const T *>(args[0]),
-                                     static_cast<const T *>(args[1]),
-                                     static_cast<T *>(out[0]),
+            kernel::relu_backprop<T>(static_cast<const T*>(args[0]),
+                                     static_cast<const T*>(args[1]),
+                                     static_cast<T*>(out[0]),
                                      element_count);
             break;
         }
         case OP_TYPEID::ReplaceSlice:
         {
-            const op::ReplaceSlice *slice = static_cast<const op::ReplaceSlice *>(&node);
-            kernel::replace_slice<T>(static_cast<const T *>(args[0]),
-                                     static_cast<const T *>(args[1]),
-                                     static_cast<T *>(out[0]),
+            const op::ReplaceSlice* slice = static_cast<const op::ReplaceSlice*>(&node);
+            kernel::replace_slice<T>(static_cast<const T*>(args[0]),
+                                     static_cast<const T*>(args[1]),
+                                     static_cast<T*>(out[0]),
                                      node.get_input_shape(1),
                                      slice->get_lower_bounds(),
                                      slice->get_upper_bounds(),
@@ -1135,9 +1123,9 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::Reshape:
         {
-            const op::Reshape *reshape = static_cast<const op::Reshape *>(&node);
-            kernel::reshape(static_cast<const T *>(args[0]),
-                            static_cast<T *>(out[0]),
+            const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
+            kernel::reshape(static_cast<const T*>(args[0]),
+                            static_cast<T*>(out[0]),
                             node.get_input_shape(0),
                             reshape->get_input_order(),
                             node.get_output_shape(0));
@@ -1145,17 +1133,17 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::Result:
         {
-            const op::Result *res = static_cast<const op::Result *>(&node);
-            kernel::result(static_cast<const T *>(args[0]),
-                           static_cast<T *>(out[0]),
+            const op::Result* res = static_cast<const op::Result*>(&node);
+            kernel::result(static_cast<const T*>(args[0]),
+                           static_cast<T*>(out[0]),
                            shape_size(res->get_shape()));
             break;
         }
         case OP_TYPEID::Reverse:
         {
-            const op::Reverse *reverse = static_cast<const op::Reverse *>(&node);
-            kernel::reverse(static_cast<const T *>(args[0]),
-                            static_cast<T *>(out[0]),
+            const op::Reverse* reverse = static_cast<const op::Reverse*>(&node);
+            kernel::reverse(static_cast<const T*>(args[0]),
+                            static_cast<T*>(out[0]),
                             node.get_input_shape(0),
                             node.get_output_shape(0),
                             reverse->get_reversed_axes());
@@ -1163,16 +1151,16 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::ReverseSequence:
         {
-            const op::ReverseSequence *reverse = static_cast<const op::ReverseSequence *>(&node);
+            const op::ReverseSequence* reverse = static_cast<const op::ReverseSequence*>(&node);
 
             if (node.get_input_element_type(1) == element::i32)
             {
-                kernel::reverse_sequence<T, int32_t>(static_cast<const T *>(args[0]),
-                                                     static_cast<T *>(out[0]),
+                kernel::reverse_sequence<T, int32_t>(static_cast<const T*>(args[0]),
+                                                     static_cast<T*>(out[0]),
                                                      node.get_input_shape(0),
                                                      reverse->get_batch_axis(),
                                                      reverse->get_sequence_axis(),
-                                                     static_cast<const int32_t *>(args[1]));
+                                                     static_cast<const int32_t*>(args[1]));
             }
             else
             {
@@ -1183,17 +1171,17 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::Select:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::select<T>(static_cast<const char *>(args[0]),
-                              static_cast<const T *>(args[1]),
-                              static_cast<const T *>(args[2]),
-                              static_cast<T *>(out[0]),
+            kernel::select<T>(static_cast<const char*>(args[0]),
+                              static_cast<const T*>(args[1]),
+                              static_cast<const T*>(args[2]),
+                              static_cast<T*>(out[0]),
                               element_count);
             break;
         }
         case OP_TYPEID::SelectAndScatter:
         {
-            const ngraph::op::SelectAndScatter *select_and_scatter =
-                static_cast<const ngraph::op::SelectAndScatter *>(&node);
+            const ngraph::op::SelectAndScatter* select_and_scatter =
+                static_cast<const ngraph::op::SelectAndScatter*>(&node);
 
             std::shared_ptr<ngraph::Function> selection_function =
                 select_and_scatter->get_functions()[0];
@@ -1224,10 +1212,10 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
                 return *(tr->get_data_ptr<T>());
             };
 
-            kernel::select_and_scatter<T>(static_cast<const T *>(args[0]),
-                                          static_cast<const T *>(args[1]),
-                                          static_cast<const T *>(args[2]),
-                                          static_cast<T *>(out[0]),
+            kernel::select_and_scatter<T>(static_cast<const T*>(args[0]),
+                                          static_cast<const T*>(args[1]),
+                                          static_cast<const T*>(args[2]),
+                                          static_cast<T*>(out[0]),
                                           node.get_input_shape(0),
                                           node.get_input_shape(1),
                                           node.get_output_shape(0),
@@ -1239,51 +1227,48 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::ShapeOf:
         {
-            kernel::shape_of(node.get_input_shape(0), static_cast<uint64_t *>(out[0]));
+            kernel::shape_of(node.get_input_shape(0), static_cast<uint64_t*>(out[0]));
             break;
         }
         case OP_TYPEID::Sigmoid:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             kernel::sigmoid<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+                static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::SigmoidBackprop:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::sigmoid_backprop<T>(static_cast<const T *>(args[0]),
-                                        static_cast<const T *>(args[1]),
-                                        static_cast<T *>(out[0]),
+            kernel::sigmoid_backprop<T>(static_cast<const T*>(args[0]),
+                                        static_cast<const T*>(args[1]),
+                                        static_cast<T*>(out[0]),
                                         element_count);
             break;
         }
         case OP_TYPEID::Sign:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::sign<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+            kernel::sign<T>(static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::Sin:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::sin<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+            kernel::sin<T>(static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::Sinh:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::sinh<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+            kernel::sinh<T>(static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::Slice:
         {
-            const op::Slice *slice = static_cast<const op::Slice *>(&node);
-            kernel::slice<T>(static_cast<const T *>(args[0]),
-                             static_cast<T *>(out[0]),
+            const op::Slice* slice = static_cast<const op::Slice*>(&node);
+            kernel::slice<T>(static_cast<const T*>(args[0]),
+                             static_cast<T*>(out[0]),
                              node.get_input_shape(0),
                              slice->get_lower_bounds(),
                              slice->get_upper_bounds(),
@@ -1293,9 +1278,9 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         }
         case OP_TYPEID::Softmax:
         {
-            const op::Softmax *softmax = static_cast<const op::Softmax *>(&node);
-            kernel::softmax<T>(static_cast<const T *>(args[0]),
-                               static_cast<T *>(out[0]),
+            const op::Softmax* softmax = static_cast<const op::Softmax*>(&node);
+            kernel::softmax<T>(static_cast<const T*>(args[0]),
+                               static_cast<T*>(out[0]),
                                node.get_output_shape(0),
                                softmax->get_axes());
             break;
@@ -1303,28 +1288,25 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::Sqrt:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::sqrt<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+            kernel::sqrt<T>(static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
-        case OP_TYPEID::StopGradient:
-        {
-            throw unsupported_op("Unsupported op 'StopGradient'");
+        case OP_TYPEID::StopGradient: { throw unsupported_op("Unsupported op 'StopGradient'");
         }
         case OP_TYPEID::Subtract:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::subtract<T>(static_cast<const T *>(args[0]),
-                                static_cast<const T *>(args[1]),
-                                static_cast<T *>(out[0]),
+            kernel::subtract<T>(static_cast<const T*>(args[0]),
+                                static_cast<const T*>(args[1]),
+                                static_cast<T*>(out[0]),
                                 element_count);
             break;
         }
         case OP_TYPEID::Sum:
         {
-            const op::Sum *sum = static_cast<const op::Sum *>(&node);
-            kernel::sum<T>(static_cast<const T *>(args[0]),
-                           static_cast<T *>(out[0]),
+            const op::Sum* sum = static_cast<const op::Sum*>(&node);
+            kernel::sum<T>(static_cast<const T*>(args[0]),
+                           static_cast<T*>(out[0]),
                            node.get_input_shape(0),
                            node.get_output_shape(0),
                            sum->get_reduction_axes());
@@ -1333,25 +1315,23 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
         case OP_TYPEID::Tan:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::tan<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+            kernel::tan<T>(static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::Tanh:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
-            kernel::tanh<T>(
-                static_cast<const T *>(args[0]), static_cast<T *>(out[0]), element_count);
+            kernel::tanh<T>(static_cast<const T*>(args[0]), static_cast<T*>(out[0]), element_count);
             break;
         }
         case OP_TYPEID::TopK:
         {
-            const op::TopK *topk = static_cast<const op::TopK *>(&node);
+            const op::TopK* topk = static_cast<const op::TopK*>(&node);
             if (node.get_output_element_type(0) == element::i64)
             {
-                kernel::topk<T, int64_t>(static_cast<const T *>(args[0]),
-                                         static_cast<int64_t *>(out[0]),
-                                         static_cast<T *>(out[1]),
+                kernel::topk<T, int64_t>(static_cast<const T*>(args[0]),
+                                         static_cast<int64_t*>(out[0]),
+                                         static_cast<T*>(out[1]),
                                          node.get_input_shape(0),
                                          node.get_output_shape(0),
                                          topk->get_top_k_axis(),
@@ -1360,9 +1340,9 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
             }
             else if (node.get_output_element_type(0) == element::i32)
             {
-                kernel::topk<T, int32_t>(static_cast<const T *>(args[0]),
-                                         static_cast<int32_t *>(out[0]),
-                                         static_cast<T *>(out[1]),
+                kernel::topk<T, int32_t>(static_cast<const T*>(args[0]),
+                                         static_cast<int32_t*>(out[0]),
+                                         static_cast<T*>(out[1]),
                                          node.get_input_shape(0),
                                          node.get_output_shape(0),
                                          topk->get_top_k_axis(),
@@ -1375,8 +1355,7 @@ class ngraph::runtime::rpi::RPIBackend : public Backend
             }
             break;
         }
-        default:
-            throw unsupported_op("Unsupported op '" + node.description() + "'");
+        default: throw unsupported_op("Unsupported op '" + node.description() + "'");
 #pragma GCC diagnostic pop
         }
     }

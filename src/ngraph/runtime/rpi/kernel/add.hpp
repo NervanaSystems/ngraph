@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstddef>
+#include <omp.h>
 
 namespace ngraph
 {
@@ -29,6 +30,7 @@ namespace ngraph
                 template <typename T>
                 void add(const T* arg0, const T* arg1, T* out, size_t count)
                 {
+#pragma omp parallel for schedule(static)
                     for (size_t i = 0; i < count; i++)
                     {
                         out[i] = arg0[i] + arg1[i];

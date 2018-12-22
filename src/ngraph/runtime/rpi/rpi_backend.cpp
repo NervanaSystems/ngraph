@@ -14,7 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/rpi/rpi_backend.hpp"
+#include <omp.h>
+
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/op/convert.hpp"
@@ -26,6 +27,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/rpi/rpi_backend.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -41,6 +43,14 @@ extern "C" const char* get_ngraph_version_string()
 extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
     return new runtime::rpi::RPIBackend();
+}
+
+runtime::rpi::RPIBackend::RPIBackend()
+{
+    NGRAPH_INFO << omp_get_num_threads();
+    NGRAPH_INFO << omp_get_max_threads();
+    omp_set_num_threads(4);
+    NGRAPH_INFO << omp_get_num_threads();
 }
 
 shared_ptr<runtime::Tensor> runtime::rpi::RPIBackend::create_tensor(const element::Type& type,

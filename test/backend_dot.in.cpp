@@ -401,10 +401,10 @@ NGRAPH_TEST(${BACKEND_NAME}, dot1d)
 
 NGRAPH_TEST(${BACKEND_NAME}, dot2d)
 {
-    Shape shape{2, 2};
+    Shape shape{500, 500};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    Shape shape_r{2, 2};
+    Shape shape_r{500, 500};
     auto f = make_shared<Function>(make_shared<op::Dot>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
