@@ -240,8 +240,8 @@ namespace ngraph
 
                 writer.block_begin();
                 writer << "MLSL::CommReq* req = ctx->mlsl_dist->Bcast(" << args[0].get_name()
-                       << ", " << args[0].get_size() << ", " << data_type << ", " << 0
-                       << ", MLSL::GT_DATA);\n";
+                       << ", " << args[0].get_size() << ", " << data_type
+                       << ", 0, MLSL::GT_DATA);\n";
                 writer << "ctx->mlsl_env->Wait(req);\n";
                 writer.block_end();
             }

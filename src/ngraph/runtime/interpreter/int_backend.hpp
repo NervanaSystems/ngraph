@@ -141,7 +141,6 @@
 #ifdef NGRAPH_DISTRIBUTED
 #include <mlsl.hpp>
 #include "ngraph/runtime/reference/allreduce.hpp"
-#include "ngraph/runtime/reference/distbroadcast.hpp"
 #endif
 
 namespace ngraph
