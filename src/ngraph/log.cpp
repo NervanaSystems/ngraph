@@ -30,7 +30,7 @@ using namespace ngraph;
 
 void ngraph::default_logger_handler_func(const string& s)
 {
-    cout << s << endl;
+    cout << s + "\n";
 }
 
 LogHelper::LogHelper(LOG_TYPE type,

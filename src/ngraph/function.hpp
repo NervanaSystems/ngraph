@@ -87,6 +87,8 @@ namespace ngraph
 
         void validate_nodes_and_infer_types();
 
+        void set_placement(size_t p) { m_placement = p; }
+        size_t get_placement() const { return m_placement; }
     protected:
         ResultVector m_results;
         ParameterVector m_parameters;
@@ -101,5 +103,6 @@ namespace ngraph
         size_t m_instance_id;
         std::string m_name;
         const std::string m_unique_name;
+        size_t m_placement = -1;
     };
 }
