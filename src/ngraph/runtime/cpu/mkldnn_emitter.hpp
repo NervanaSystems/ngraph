@@ -30,6 +30,7 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
@@ -39,6 +40,8 @@
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type/element_type.hpp"
+
+#define MKLDNN_DIMS(X) mkldnn::memory::dims(X.begin(), X.end())
 
 namespace ngraph
 {
@@ -135,15 +138,15 @@ namespace ngraph
                 template <typename OP>
                 std::vector<float> extract_scale_value(const ngraph::Node* node, int index)
                 {
-                    auto qc = dynamic_cast<const OP*>(node);
+                    auto qc = static_cast<const OP*>(node);
+                    std::vector<float> scale_val = {1.0f};
                     auto scale_const_op =
                         std::dynamic_pointer_cast<ngraph::op::Constant>(qc->get_arguments()[index]);
-                    if (scale_const_op == nullptr)
+                    if (scale_const_op != nullptr)
                     {
-                        throw ngraph_error("Scale must be a Constant");
+                        scale_val = scale_const_op->template get_vector<float>();
                     }
 
-                    auto scale_val = scale_const_op->template get_vector<float>();
                     return scale_val;
                 }
 
@@ -197,53 +200,7 @@ namespace ngraph
                         ops.append_sum(2.0 * sum_scale_val[0]);
                     }
 
-                    auto add_relu = [&]() {
-                        if (dynamic_cast<const ngraph::op::ConvolutionBias*>(node))
-                        {
-                            return (dynamic_cast<const ngraph::op::ConvolutionBias*>(node))
-                                ->with_relu();
-                        }
-                        if (dynamic_cast<const ngraph::op::ConvolutionBiasAdd*>(node))
-                        {
-                            return (dynamic_cast<const ngraph::op::ConvolutionBiasAdd*>(node))
-                                ->with_relu();
-                        }
-                        if (dynamic_cast<const ngraph::op::ConvolutionAdd*>(node))
-                        {
-                            return (dynamic_cast<const ngraph::op::ConvolutionAdd*>(node))
-                                ->with_relu();
-                        }
-                        if (dynamic_cast<const ngraph::op::ConvolutionRelu*>(node))
-                        {
-                            return true;
-                        }
-                        if (dynamic_cast<const ngraph::op::QuantizedConvolutionRelu*>(node))
-                        {
-                            return true;
-                        }
-                        if (dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node))
-                        {
-                            return (dynamic_cast<const ngraph::op::QuantizedConvolutionBias*>(node))
-                                ->with_relu();
-                        }
-                        if (dynamic_cast<const ngraph::op::QuantizedConvolutionBiasAdd*>(node))
-                        {
-                            return (dynamic_cast<const ngraph::op::QuantizedConvolutionBiasAdd*>(
-                                        node))
-                                ->with_relu();
-                        }
-                        if (dynamic_cast<const ngraph::op::QuantizedConvolutionBiasSignedAdd*>(
-                                node))
-                        {
-                            return (dynamic_cast<
-                                        const ngraph::op::QuantizedConvolutionBiasSignedAdd*>(node))
-                                ->with_relu();
-                        }
-
-                        return false;
-                    };
-
-                    if (add_relu())
+                    if (has_relu<OP>(node))
                     {
                         const float ops_scale = 1.f;
                         const float ops_alpha = -0.f; // relu negative slope
@@ -626,6 +583,244 @@ namespace ngraph
                 size_t build_quantize_reorder(const mkldnn::memory::desc& input_desc,
                                               const mkldnn::memory::desc& result_desc,
                                               const std::vector<float>& scales);
+                template <typename OP>
+                size_t get_scale_index()
+                {
+                    if (std::is_same<OP, ngraph::op::QuantizedConvolution>() ||
+                        std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
+                    {
+                        return 2;
+                    }
+                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBias>())
+                    {
+                        return 3;
+                    }
+                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
+                    {
+                        return 4;
+                    }
+                }
+
+                template <typename OP, typename T>
+                std::vector<T> get_output_scale(const ngraph::Node* node)
+                {
+                    auto index = get_scale_index<OP>();
+                    std::vector<T> scale_val = {0};
+                    auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                        node->get_arguments()[index]);
+                    if (scale_const_op != nullptr)
+                    {
+                        scale_val = scale_const_op->template get_vector<T>();
+                    }
+
+                    return scale_val;
+                }
+
+                template <typename OP,
+                          typename std::enable_if<
+                              (std::is_same<OP, ngraph::op::Convolution>::value ||
+                               std::is_same<OP, ngraph::op::QuantizedConvolution>::value),
+                              std::nullptr_t>::type = nullptr>
+                bool has_relu(const ngraph::Node* node)
+                {
+                    return false;
+                }
+
+                template <typename OP,
+                          typename std::enable_if<
+                              (!std::is_same<OP, ngraph::op::Convolution>::value &&
+                               !std::is_same<OP, ngraph::op::QuantizedConvolution>::value),
+                              std::nullptr_t>::type = nullptr>
+                bool has_relu(const ngraph::Node* node)
+                {
+                    return static_cast<const OP*>(node)->with_relu();
+                }
+
+                template <typename OP>
+                bool has_bias()
+                {
+                    if (std::is_same<OP, ngraph::op::ConvolutionBias>() ||
+                        std::is_same<OP, ngraph::op::ConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::QuantizedConvolutionBias>() ||
+                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+
+                template <typename OP>
+                bool is_quantized_conv()
+                {
+                    if (std::is_same<OP, ngraph::op::QuantizedConvolution>() ||
+                        std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>() ||
+                        std::is_same<OP, ngraph::op::QuantizedConvolutionBias>() ||
+                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+
+                template <typename OP>
+                mkldnn::convolution_forward::desc
+                    get_convolution_forward_desc(const ngraph::Node* node,
+                                                 const std::vector<TensorViewWrapper>& args,
+                                                 const std::vector<TensorViewWrapper>& out)
+                {
+                    auto convolution = static_cast<const OP*>(node);
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
+                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    Strides window_dilation_strides_adjusted;
+
+                    for (size_t s : convolution->get_window_dilation_strides())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    // MKLDNN relies on named formats for kernel selection
+                    if (weights_desc.data.format == mkldnn_nchw)
+                        weights_desc.data.format = mkldnn_oihw;
+                    if (weights_desc.data.format == mkldnn_ncdhw)
+                        weights_desc.data.format = mkldnn_oidhw;
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    if (has_bias<OP>())
+                    {
+                        auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                        return mkldnn::convolution_forward::desc(
+                            mkldnn::prop_kind::forward,
+                            mkldnn::algorithm::convolution_direct,
+                            data_desc,
+                            weights_desc,
+                            bias_desc,
+                            result_desc,
+                            MKLDNN_DIMS(convolution->get_window_movement_strides()),
+                            MKLDNN_DIMS(window_dilation_strides_adjusted),
+                            MKLDNN_DIMS(convolution->get_padding_below()),
+                            MKLDNN_DIMS(convolution->get_padding_above()),
+                            mkldnn::padding_kind::zero);
+                    }
+                    else
+                    {
+                        return mkldnn::convolution_forward::desc(
+                            mkldnn::prop_kind::forward,
+                            mkldnn::algorithm::convolution_direct,
+                            data_desc,
+                            weights_desc,
+                            result_desc,
+                            MKLDNN_DIMS(convolution->get_window_movement_strides()),
+                            MKLDNN_DIMS(window_dilation_strides_adjusted),
+                            MKLDNN_DIMS(convolution->get_padding_below()),
+                            MKLDNN_DIMS(convolution->get_padding_above()),
+                            mkldnn::padding_kind::zero);
+                    }
+                }
+
+                template <typename OP>
+                mkldnn::primitive_attr get_convolution_forward_attr(const ngraph::Node* node)
+                {
+                    mkldnn::post_ops ops;
+
+                    if (std::is_same<OP, ngraph::op::ConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::ConvolutionAdd>())
+                    {
+                        ops.append_sum(1.f);
+                    }
+
+                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>())
+                    {
+                        auto sum_scale_val =
+                            extract_scale_value<ngraph::op::QuantizedConvolutionBiasAdd>(node, 5);
+                        ops.append_sum(sum_scale_val[0]);
+                    }
+
+                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
+                    {
+                        auto sum_scale_val =
+                            extract_scale_value<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node,
+                                                                                               5);
+                        ops.append_sum(2.0 * sum_scale_val[0]);
+                    }
+
+                    if (has_relu<OP>(node))
+                    {
+                        const float ops_scale = 1.f;
+                        const float ops_alpha = -0.f; // relu negative slope
+                        const float ops_beta = 0.f;
+                        ops.append_eltwise(
+                            ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+                    }
+
+                    mkldnn::primitive_attr conv_attr;
+                    conv_attr.set_post_ops(ops);
+                    if (is_quantized_conv<OP>())
+                    {
+                        conv_attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
+                        conv_attr.set_output_scales(0, get_output_scale<OP, float>(node));
+                    }
+                    return conv_attr;
+                }
+
+                size_t convolution_forward_init(bool with_bias = false);
+
+                template <bool with_bias>
+                void convolution_forward(const mkldnn::convolution_forward::desc& desc,
+                                         const mkldnn::primitive_attr& attr,
+                                         const mkldnn::engine& engine,
+                                         size_t& conv_idx)
+                {
+                    size_t input_idx, weights_idx, results_idx, bias_idx;
+                    input_idx = m_primitive_deps[conv_idx][0];
+                    weights_idx = m_primitive_deps[conv_idx][1];
+                    m_mkldnn_primitives[input_idx] =
+                        new mkldnn::memory({{desc.data.src_desc}, engine}, nullptr);
+                    m_mkldnn_primitives[weights_idx] =
+                        new mkldnn::memory({{desc.data.weights_desc}, engine}, nullptr);
+                    if (with_bias)
+                    {
+                        bias_idx = m_primitive_deps[conv_idx][2];
+                        results_idx = m_primitive_deps[conv_idx][3];
+                        m_mkldnn_primitives[bias_idx] =
+                            new mkldnn::memory({{desc.data.bias_desc}, engine}, nullptr);
+                    }
+                    else
+                    {
+                        results_idx = m_primitive_deps[conv_idx][2];
+                    }
+                    m_mkldnn_primitives[results_idx] =
+                        new mkldnn::memory({{desc.data.dst_desc}, engine}, nullptr);
+
+                    mkldnn::primitive* prim;
+                    if (with_bias)
+                    {
+                        prim = new mkldnn::convolution_forward({desc, attr, engine},
+                                                               *m_mkldnn_primitives[input_idx],
+                                                               *m_mkldnn_primitives[weights_idx],
+                                                               *m_mkldnn_primitives[bias_idx],
+                                                               *m_mkldnn_primitives[results_idx]);
+                    }
+                    else
+                    {
+                        prim = new mkldnn::convolution_forward({desc, attr, engine},
+                                                               *m_mkldnn_primitives[input_idx],
+                                                               *m_mkldnn_primitives[weights_idx],
+                                                               *m_mkldnn_primitives[results_idx]);
+                    }
+
+                    m_mkldnn_primitives[conv_idx] = prim;
+                }
 
             private:
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;
