@@ -245,9 +245,8 @@ std::ostream& Node::write_long_description(std::ostream& out) const
     sep = "";
     for (const auto& o : get_outputs())
     {
-       out << sep << pretty_element_type(o.get_element_type())
-            << o.get_partial_shape();
-       sep = ", ";
+        out << sep << pretty_element_type(o.get_element_type()) << o.get_partial_shape();
+        sep = ", ";
     }
     out << ")";
 
