@@ -63,7 +63,9 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         ngraph::pass::Manager pass_manager;
         pass_manager.register_pass<runtime::hybrid::pass::AssignPlacement>(m_backend_list);
         pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
-        // pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png");
+#ifdef GPUH_DEBUG
+        pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png");
+#endif
         pass_manager.run_passes(instance.m_function);
 
         // Split function to sub_functions
@@ -190,9 +192,6 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
         backend->call(sub_function, results, parameters);
 
         // Need to copy any results to the correct device
-        // backend_list[0] is the "default" backend and is the backend which created the
-        // input and output tensors.
-        backend = m_backend_list[0];
         for (const auto& p : copy_back)
         {
             p.second->copy_from(*p.first);
