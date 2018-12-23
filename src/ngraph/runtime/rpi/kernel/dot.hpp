@@ -41,37 +41,17 @@ namespace ngraph
                          const Shape& out_shape,
                          size_t reduction_axes_count)
                 {
-                    NGRAPH_INFO << arg0_shape.size();
-                    NGRAPH_INFO << arg1_shape.size();
-                    NGRAPH_INFO << out_shape.size();
-                    if (arg0_shape.size() == 2 && arg1_shape.size() == 2)
+                    if (arg0_shape.size() == 2 && arg1_shape.size() == 2 && out_shape.size() == 2)
                     {
-                        Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic> stride(2, 1);
                         Eigen::Map<
-                            Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>,
-                            Eigen::Unaligned,
-                            Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>
-                            a0(const_cast<T*>(arg0), arg0_shape[0], arg0_shape[1], stride);
+                            Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+                            a0(const_cast<T*>(arg0), arg0_shape[0], arg0_shape[1]);
                         Eigen::Map<
-                            Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>,
-                            Eigen::Unaligned,
-                            Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>
-                            a1(const_cast<T*>(arg1), arg1_shape[0], arg1_shape[1], stride);
+                            Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+                            a1(const_cast<T*>(arg1), arg1_shape[0], arg1_shape[1]);
                         Eigen::Map<
-                            Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>,
-                            Eigen::Unaligned,
-                            Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>>
-                            o(const_cast<T*>(out), out_shape[0], out_shape[1], stride);
-                        // Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>> a1(
-                        //     const_cast<T*>(arg1),
-                        //     arg1_shape[0],
-                        //     arg1_shape[1],
-                        //     Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(2, 1));
-                        // Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>> o(
-                        //     out,
-                        //     out_shape[0],
-                        //     out_shape[1],
-                        //     Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>(2, 1));
+                            Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
+                            o(const_cast<T*>(out), out_shape[0], out_shape[1]);
                         o = a0 * a1;
                     }
                     else

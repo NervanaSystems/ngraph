@@ -47,10 +47,6 @@ extern "C" runtime::Backend* new_backend(const char* configuration_string)
 
 runtime::rpi::RPIBackend::RPIBackend()
 {
-    NGRAPH_INFO << omp_get_num_threads();
-    NGRAPH_INFO << omp_get_max_threads();
-    omp_set_num_threads(4);
-    NGRAPH_INFO << omp_get_num_threads();
 }
 
 shared_ptr<runtime::Tensor> runtime::rpi::RPIBackend::create_tensor(const element::Type& type,
