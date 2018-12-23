@@ -26,7 +26,7 @@ if (NGRAPH_RPI_ENABLE)
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
-    target_link_libraries(rpi_backend PUBLIC ngraph)
+    target_link_libraries(rpi_backend PUBLIC ngraph libeigen)
     target_compile_options(rpi_backend PUBLIC -fopenmp)
     set_target_properties(rpi_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
