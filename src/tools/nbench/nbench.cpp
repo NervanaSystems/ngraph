@@ -322,6 +322,7 @@ OPTIONS
     }
 
     vector<PerfShape> aggregate_perf_data;
+    int rc = 0;
     for (const string& model : models)
     {
         cout << "\n";
@@ -405,10 +406,12 @@ OPTIONS
         catch (ngraph::unsupported_op& ue)
         {
             cout << "Unsupported op '" << ue.what() << "' in model " << model << endl;
+            rc += 1;
         }
         catch (exception& e)
         {
             cout << "Exception caught on '" << model << "'\n" << e.what() << endl;
+            rc += 1;
         }
     }
 
@@ -421,5 +424,5 @@ OPTIONS
         print_results(aggregate_perf_data, timing_detail);
     }
 
-    return 0;
+    return rc;
 }

@@ -21,6 +21,8 @@
 #include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 
 #include "ngraph/node.hpp"
+#include "ngraph/op/all.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/avg_pool.hpp"
@@ -208,6 +210,15 @@ void print_node_parameters(ostringstream& writer, const shared_ptr<Node>& node)
             static_pointer_cast<op::util::ArithmeticReduction>(node);
 
         writer << print_table_row_dims("reduction_axis", arith_op->get_reduction_axes());
+        break;
+    }
+    case OP_TYPEID::All:
+    case OP_TYPEID::Any:
+    {
+        const shared_ptr<op::util::LogicalReduction> logical_op =
+            static_pointer_cast<op::util::LogicalReduction>(node);
+
+        writer << print_table_row_dims("reduction_axis", logical_op->get_reduction_axes());
         break;
     }
     case OP_TYPEID::ArgMin:

@@ -16,11 +16,10 @@
 
 #include <istream>
 #include <memory>
-#include <string>
-#include <vector>
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <string>
+#include <vector>
 
 #include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "ngraph/function.hpp"
