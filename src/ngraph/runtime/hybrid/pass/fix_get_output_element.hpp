@@ -30,20 +30,17 @@ namespace ngraph
         {
             namespace pass
             {
-                class AssignPlacement;
+                class FixGetOutputElement;
             }
         }
     }
 }
 
-class ngraph::runtime::hybrid::pass::AssignPlacement : public ngraph::pass::NodePass
+class ngraph::runtime::hybrid::pass::FixGetOutputElement : public ngraph::pass::NodePass
 {
 public:
-    AssignPlacement(
-        const std::vector<std::shared_ptr<ngraph::runtime::Backend>>& placement_backends);
+    FixGetOutputElement();
 
 private:
     bool run_on_node(std::shared_ptr<Node> node) override;
-
-    std::vector<std::shared_ptr<ngraph::runtime::Backend>> m_placement_backends;
 };

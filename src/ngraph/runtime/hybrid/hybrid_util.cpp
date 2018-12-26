@@ -15,11 +15,13 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-static Node* take_independent_node_with_placement_priority_size(
+static Node* take_independent_node_with_placement_priority(
     map<size_t, deque<Node*>>& independent_nodes_by_placement, size_t placement)
 {
     Node* selected_node = nullptr;
@@ -45,7 +47,7 @@ static Node* take_independent_node_with_placement_priority_size(
 }
 
 static vector<unordered_set<shared_ptr<Node>>>
-    group_function_nodes_to_clusters_size(const shared_ptr<Function>& f)
+    group_function_nodes_to_clusters(const shared_ptr<Function>& f)
 {
     // Topologically sort nodes by picking independent node with the same placement as the
     // previously picked node greedily
@@ -66,7 +68,7 @@ static vector<unordered_set<shared_ptr<Node>>>
 
     list<shared_ptr<Node>> sorted_nodes;
     size_t previous_placement = 0;
-    while (Node* independent_node = take_independent_node_with_placement_priority_size(
+    while (Node* independent_node = ::take_independent_node_with_placement_priority(
                independent_nodes_by_placement, previous_placement))
     {
         previous_placement = independent_node->get_placement_index();
@@ -148,42 +150,48 @@ static vector<unordered_set<shared_ptr<Node>>>
 // |     <------[3]------+     |  |  |     <------[7]------+     |  |     <------[11]-----+     |
 // +-----+               +-----+  |  +-----+               +-----+  +-----+               +-----+
 
-// Suffix *_size  as a part of function name is temporary, this suffix
-//  will be removed when the backends move to the latest Hybrid backend
-pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
-    insert_result_parameter_split_size(const shared_ptr<Node>& src_node,
-                                       const shared_ptr<Node>& dst_node)
+static map<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
+    insert_result_parameter_split(const shared_ptr<Node>& src_node,
+                                  const shared_ptr<Node>& dst_node)
 {
-    if (src_node->get_output_size() != 1)
+    map<shared_ptr<op::Result>, shared_ptr<op::Parameter>> result_map;
+
+    for (descriptor::Input& input : dst_node->get_inputs())
     {
-        throw ngraph_error("Multiple output per op not supported in graph partition yet.");
+        if (input.get_output().get_node() == src_node)
+        {
+            descriptor::Input* dst_input = &input;
+            descriptor::Output* src_output = &input.get_output();
+
+            // Make parameter node
+            shared_ptr<op::Parameter> par_node =
+                make_shared<op::Parameter>(src_output->get_element_type(), src_output->get_shape());
+            par_node->set_placement_index(dst_node->get_placement_index());
+
+            // Fix input / output among src, dst and par
+            // Remove [0]
+            src_output->remove_input(dst_input);
+
+            // Remove [0] (again), add [8], remove [1], add [9]
+            dst_input->replace_output(par_node, 0);
+
+            // Add res node
+            shared_ptr<op::Result> res_node =
+                make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
+            res_node->set_placement_index(src_node->get_placement_index());
+
+            result_map.insert({res_node, par_node});
+        }
     }
-
-    // Make parameter node
-    shared_ptr<op::Parameter> par_node = make_shared<op::Parameter>(
-        src_node->get_output_element_type(0), src_node->get_output_shape(0));
-    par_node->set_placement_index(dst_node->get_placement_index());
-
-    // Fix input / output among src, dst and par
-    descriptor::Input* dst_input = dst_node->get_input_from(src_node);
-    descriptor::Output* src_output = src_node->get_output_to(dst_node);
-    src_output->remove_input(dst_input);    // Remove [0]
-    dst_input->replace_output(par_node, 0); // Remove [0] (again), add [8], remove [1], add [9]
-
-    // Add res node
-    shared_ptr<op::Result> res_node = make_shared<op::Result>(src_node); // Add [4], [5], [6], [7]
-    res_node->set_placement_index(src_node->get_placement_index());
-
-    return make_pair(res_node, par_node);
+    return result_map;
 }
 
-// Suffix *_size  as a part of function name is temporary, this suffix
 //  will be removed when the backends move to the latest Hybrid backend
 pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>>>
-    runtime::hybrid::split_function_by_placement_size(const shared_ptr<Function>& f)
+    runtime::hybrid::split_function_by_placement(const shared_ptr<Function>& f)
 {
     // Split functions to clusters of nodes that can be computed together
-    vector<unordered_set<shared_ptr<Node>>> clusters = group_function_nodes_to_clusters_size(f);
+    vector<unordered_set<shared_ptr<Node>>> clusters = ::group_function_nodes_to_clusters(f);
 
     // Map from (intermediate) parameter to result node, for guiding data copy among devices
     unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>> map_parameter_to_result;
@@ -208,15 +216,18 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
             if (src_cluster != dst_cluster)
             {
                 // Split src_node and dst_node
-                pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>> res_par_pair =
-                    insert_result_parameter_split_size(src_node, dst_node);
-                shared_ptr<op::Result> res_node = res_par_pair.first;
-                shared_ptr<op::Parameter> par_node = res_par_pair.second;
-                map_parameter_to_result[par_node] = res_node;
+                map<shared_ptr<op::Result>, shared_ptr<op::Parameter>> res_par_pair_map =
+                    ::insert_result_parameter_split(src_node, dst_node);
+                for (const auto& res_par_pair : res_par_pair_map)
+                {
+                    shared_ptr<op::Result> res_node = res_par_pair.first;
+                    shared_ptr<op::Parameter> par_node = res_par_pair.second;
+                    map_parameter_to_result[par_node] = res_node;
 
-                // Insert newly created nodes into clusters
-                src_cluster->insert(res_node);
-                dst_cluster->insert(par_node);
+                    // Insert newly created nodes into clusters
+                    src_cluster->insert(res_node);
+                    dst_cluster->insert(par_node);
+                }
             }
         }
     }
@@ -240,15 +251,19 @@ pair<vector<shared_ptr<Function>>, unordered_map<shared_ptr<op::Parameter>, shar
         }
         auto sub_function = make_shared<Function>(res_vector, par_vector);
         sub_functions.push_back(sub_function);
+#ifdef HYBRID_DEBUG
+        ngraph::pass::Manager pass_manager;
+        pass_manager.register_pass<ngraph::pass::VisualizeTree>("subgraph_" + to_string(index++) +
+                                                                ".png");
+        pass_manager.run_passes(sub_function);
+#endif
     }
 
     return make_pair(sub_functions, map_parameter_to_result);
 }
 
-// Suffix *_size  as a part of function name is temporary, this suffix
-//  will be removed when the backends move to the latest Hybrid backend
 // Assert that nodes in the function is colocated and return that placement
-size_t runtime::hybrid::get_colocated_function_placement_size(shared_ptr<Function> func)
+size_t runtime::hybrid::get_colocated_function_placement(shared_ptr<Function> func)
 {
     auto ops = func->get_ops();
 
@@ -259,7 +274,7 @@ size_t runtime::hybrid::get_colocated_function_placement_size(shared_ptr<Functio
         size_t node_placement = op->get_placement_index();
         if (node_placement == Node::placement_invalid)
         {
-            throw ngraph_error("Node should have a device placement");
+            throw ngraph_error("Node " + op->get_name() + " should have a device placement");
         }
         if (function_placement != node_placement)
         {

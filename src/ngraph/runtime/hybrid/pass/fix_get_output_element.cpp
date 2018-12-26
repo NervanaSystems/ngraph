@@ -14,36 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/runtime/hybrid/pass/fix_get_output_element.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/placement.hpp"
+#include "ngraph/runtime/backend.hpp"
 
-#include <exception>
-#include <functional>
-#include <sstream>
+using namespace ngraph;
+using namespace std;
 
-#include "ngraph/pass/pass.hpp"
-
-namespace ngraph
+runtime::hybrid::pass::FixGetOutputElement::FixGetOutputElement()
 {
-    namespace runtime
-    {
-        namespace hybrid
-        {
-            namespace pass
-            {
-                class AssignPlacement;
-            }
-        }
-    }
 }
 
-class ngraph::runtime::hybrid::pass::AssignPlacement : public ngraph::pass::NodePass
+bool runtime::hybrid::pass::FixGetOutputElement::run_on_node(shared_ptr<Node> node)
 {
-public:
-    AssignPlacement(
-        const std::vector<std::shared_ptr<ngraph::runtime::Backend>>& placement_backends);
-
-private:
-    bool run_on_node(std::shared_ptr<Node> node) override;
-
-    std::vector<std::shared_ptr<ngraph::runtime::Backend>> m_placement_backends;
-};
+    if (node->description() == "GetOutputElement")
+    {
+        auto parent = node->get_arguments().at(0);
+        node->set_placement_index(parent->get_placement_index());
+    }
+    return false;
+}
