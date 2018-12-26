@@ -20,16 +20,16 @@ include(ExternalProject)
 # Fetch and install MKL-DNN
 #------------------------------------------------------------------------------
 
-set(MKLDNN_LIB libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(MKLDNN_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mkldnn${CMAKE_SHARED_LIBRARY_SUFFIX})
 if (LINUX)
-    set(MKLML_LIB libmklml_intel.so)
-    set(OMP_LIB libiomp5.so)
+    set(MKLML_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mklml_intel${CMAKE_SHARED_LIBRARY_PREFIX})
+    set(OMP_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_PREFIX})
 elseif (APPLE)
-    set(MKLML_LIB libmklml.dylib)
-    set(OMP_LIB libiomp5.dylib)
+    set(MKLML_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mklml${CMAKE_SHARED_LIBRARY_PREFIX})
+    set(OMP_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_PREFIX})
 elseif (WIN32)
-    set(MKLML_LIB mklml.dll)
-    set(OMP_LIB libiomp5md.dll)
+    set(MKLML_LIB mklml${CMAKE_SHARED_LIBRARY_PREFIX})
+    set(OMP_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}iomp5md${CMAKE_SHARED_LIBRARY_PREFIX})
 endif()
 
 if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
@@ -114,7 +114,7 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
 else()
     set(MKLDNN_PATCH_FILE mkldnn_no_so_link.patch)
 endif()
-set(MKLDNN_LIBS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/libmkldnn${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(MKLDNN_LIBS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB})
 
 # The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
 if(${CMAKE_VERSION} VERSION_LESS 3.2)
