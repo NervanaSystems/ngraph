@@ -60,9 +60,9 @@ if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
-if (CMAKE_GENERATOR MATCHES "^(Visual Studio).*")
+if ("${CMAKE_GENERATOR}" MATCHES "^Visual Studio.*$")
     set(MSVS TRUE)
-endif
+endif()
 
 # Setup CMAKE_ARGS to be forwarded to External Projects
 set(NGRAPH_FORWARD_CMAKE_ARGS
