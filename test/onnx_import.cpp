@@ -1556,19 +1556,38 @@ TEST(onnx, model_matmul_vec_ten3d)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx, model_lin_quant_resnet50)
+class lin_quant_model_param_test : public testing::TestWithParam<std::uint32_t>
+{
+protected:
+    lin_quant_model_param_test()
+        : input_filename("")
+        , output_filename("")
+    {
+        test_set_id = GetParam();
+    }
+
+    void SetUp() override
+    {
+        input_filename = "onnx/final_int8_resnet50_input" + std::to_string(test_set_id) + ".bin";
+        output_filename = "onnx/final_int8_resnet50_output" + std::to_string(test_set_id) + ".bin";
+    }
+
+    std::uint32_t test_set_id;
+    std::string input_filename;
+    std::string output_filename;
+};
+
+TEST_P(lin_quant_model_param_test, model_resnet50)
 {
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/final_int8_resnet50_static_shapes.onnx"));
 
-    for (int i = 0; i <= 8; ++i)
-    {
-        std::string input_filename = "onnx/final_int8_resnet50_input" + std::to_string(i) + ".bin";
-        std::string output_filename = "onnx/final_int8_resnet50_output" + std::to_string(i) +
-                                      ".bin";
-        Inputs inputs{read_binary_file<float>(input_filename)};
-        Outputs expected_output{read_binary_file<float>(output_filename)};
-        Outputs outputs{execute(function, inputs, "CPU")};
-        EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
-    }
+    Inputs inputs{read_binary_file<float>(input_filename)};
+    Outputs expected_output{read_binary_file<float>(output_filename)};
+    Outputs outputs{execute(function, inputs, "CPU")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
+
+INSTANTIATE_TEST_CASE_P(onnx,
+                        lin_quant_model_param_test,
+                        testing::Range(std::uint32_t{0}, std::uint32_t{9}));
