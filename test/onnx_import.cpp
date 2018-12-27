@@ -1561,8 +1561,14 @@ TEST(onnx, model_lin_quant_resnet50)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/final_int8_resnet50_static_shapes.onnx"));
 
-    Inputs inputs{read_binary_file<float>("onnx/final_int8_resnet50_input0.bin")};
-    Outputs expected_output{read_binary_file<float>("onnx/final_int8_resnet50_output0.bin")};
-    Outputs outputs{execute(function, inputs, "CPU")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    for (int i = 0; i <= 8; ++i)
+    {
+        std::string input_filename = "onnx/final_int8_resnet50_input" + std::to_string(i) + ".bin";
+        std::string output_filename = "onnx/final_int8_resnet50_output" + std::to_string(i) +
+                                      ".bin";
+        Inputs inputs{read_binary_file<float>(input_filename)};
+        Outputs expected_output{read_binary_file<float>(output_filename)};
+        Outputs outputs{execute(function, inputs, "CPU")};
+        EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+    }
 }
