@@ -108,11 +108,9 @@ ExternalProject_Add(
     # Uncomment below with any in-flight MKL-DNN patches
     # PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/third-party/patches/mkldnn-cmake-openmp.patch
     CMAKE_ARGS
+        ${NGRAPH_FORWARD_CMAKE_ARGS}
         -DWITH_TEST=FALSE
         -DWITH_EXAMPLE=FALSE
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
         -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
         -DMKLROOT=${MKL_ROOT}

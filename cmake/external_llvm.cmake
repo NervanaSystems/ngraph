@@ -61,12 +61,10 @@ ExternalProject_Add(
     DEPENDS ext_clang ext_openmp
     GIT_REPOSITORY https://github.com/llvm-mirror/llvm.git
     GIT_TAG da4a2839d80ac52958be0129b871beedfe90136e
-    CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+    CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}
                 -DCMAKE_ASM_COMPILER=${LLVM_CMAKE_ASM_COMPILER}
-                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                 -DCMAKE_CXX_FLAGS=${COMPILE_FLAGS}
                 -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/llvm
-                -DCMAKE_BUILD_TYPE=Release
                 -DLLVM_ENABLE_ASSERTIONS=OFF
                 -DLLVM_INCLUDE_TESTS=OFF
                 -DLLVM_INCLUDE_EXAMPLES=OFF
