@@ -65,7 +65,53 @@ namespace ngraph
                 };
                 functors.emplace_back(functor);
             }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::RnnBackprop)
+            {
+                if (!runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                {
+                    throw ngraph_error(
+                        "RnnBackprop is supported only through MKLDNN and doesnt have reference "
+                        "INTERPRETER implementation");
+                }
+
+                auto& functors = external_function->get_functors();
+
+                auto& fprop_src_layer_tensor =
+                    external_function->get_tensor_data(args[0].get_name());
+                auto& fprop_src_iter_tensor =
+                    external_function->get_tensor_data(args[1].get_name());
+                auto& fprop_weights_layer_tensor =
+                    external_function->get_tensor_data(args[2].get_name());
+                auto& fprop_weights_iter_tensor =
+                    external_function->get_tensor_data(args[3].get_name());
+                auto& fprop_bias_tensor = external_function->get_tensor_data(args[4].get_name());
+                auto& fprop_dst_layer_tensor =
+                    external_function->get_tensor_data(args[5].get_name());
+                auto& fprop_dst_iter_tensor =
+                    external_function->get_tensor_data(args[6].get_name());
+
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto rnn_bprop_index = mkldnn_emitter->build_rnn_backward(node, args, out);
+                auto& deps = mkldnn_emitter->get_primitive_deps(rnn_bprop_index);
+                auto functor = [&, rnn_bprop_index](CPURuntimeContext* ctx,
+                                                    CPUExecutionContext* ectx) {
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], fprop_src_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], fprop_src_iter_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], fprop_weights_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], fprop_weights_iter_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[4], fprop_bias_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[5], fprop_dst_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[6], fprop_dst_iter_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, deps[7], ctx->mkldnn_workspaces[deps[8]]);
+                    cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, rnn_bprop_index);
+                };
+                functors.emplace_back(functor);
+            }
             REGISTER_OP_BUILDER(Rnn);
+            REGISTER_OP_BUILDER(RnnBackprop);
         }
     }
 }

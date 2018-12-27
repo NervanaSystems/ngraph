@@ -1076,6 +1076,120 @@ size_t MKLDNNEmitter::build_rnn_forward(const mkldnn::memory::desc& src_layer_de
     return rnn_index;
 }
 
+size_t MKLDNNEmitter::build_rnn_backward(const ngraph::Node* node,
+                                         const std::vector<TensorViewWrapper>& args,
+                                         const std::vector<TensorViewWrapper>& out)
+{
+    auto src_layer_md = build_memory_descriptor(
+        args[0].get_shape(), args[0].get_element_type(), mkldnn::memory::format::tnc);
+    auto src_iter_md = build_memory_descriptor(
+        args[1].get_shape(), args[1].get_element_type(), mkldnn::memory::format::ldsnc);
+    auto wei_layer_md = build_memory_descriptor(
+        args[2].get_shape(), args[2].get_element_type(), mkldnn::memory::format::any);
+    auto wei_iter_md = build_memory_descriptor(
+        args[3].get_shape(), args[3].get_element_type(), mkldnn::memory::format::any);
+    auto bias_md = build_memory_descriptor(
+        args[4].get_shape(), args[4].get_element_type(), mkldnn::memory::format::any);
+    auto dst_layer_md = build_memory_descriptor(
+        args[5].get_shape(), args[5].get_element_type(), mkldnn::memory::format::tnc);
+    auto dst_iter_md = build_memory_descriptor(
+        args[6].get_shape(), args[6].get_element_type(), mkldnn::memory::format::any);
+
+    auto diff_src_layer_md = build_memory_descriptor(
+        args[0].get_shape(), args[0].get_element_type(), mkldnn::memory::format::tnc);
+    auto diff_src_iter_md = build_memory_descriptor(
+        args[1].get_shape(), args[1].get_element_type(), mkldnn::memory::format::ldsnc);
+    auto diff_wei_layer_md = build_memory_descriptor(
+        args[2].get_shape(), args[2].get_element_type(), mkldnn::memory::format::any);
+    auto diff_wei_iter_md = build_memory_descriptor(
+        args[3].get_shape(), args[3].get_element_type(), mkldnn::memory::format::any);
+    auto diff_bias_md = build_memory_descriptor(
+        args[4].get_shape(), args[4].get_element_type(), mkldnn::memory::format::any);
+    auto diff_dst_layer_md = build_memory_descriptor(
+        args[5].get_shape(), args[5].get_element_type(), mkldnn::memory::format::tnc);
+    auto diff_dst_iter_md = build_memory_descriptor(
+        args[6].get_shape(), args[6].get_element_type(), mkldnn::memory::format::any);
+
+    size_t src_layer_index = build_memory_primitive(src_layer_md);
+    size_t src_iter_index = build_memory_primitive(src_iter_md);
+    size_t weights_layer_index = build_memory_primitive(wei_layer_md);
+    size_t weights_iter_index = build_memory_primitive(wei_iter_md);
+    size_t bias_index = build_memory_primitive(bias_md);
+    size_t dst_layer_index = build_memory_primitive(dst_layer_md);
+    size_t dst_iter_index = build_memory_primitive(dst_iter_md);
+
+    size_t diff_src_layer_index = build_memory_primitive(diff_src_layer_md);
+    size_t diff_src_iter_index = build_memory_primitive(diff_src_iter_md);
+    size_t diff_weights_layer_index = build_memory_primitive(diff_wei_layer_md);
+    size_t diff_weights_iter_index = build_memory_primitive(diff_wei_iter_md);
+    size_t diff_bias_index = build_memory_primitive(diff_bias_md);
+    size_t diff_dst_layer_index = build_memory_primitive(diff_dst_layer_md);
+    size_t diff_dst_iter_index = build_memory_primitive(diff_dst_iter_md);
+
+    mkldnn::rnn_cell::desc rnn_cell(mkldnn::algorithm::vanilla_lstm);
+    mkldnn::rnn_backward::desc rnn_layer_desc(mkldnn::prop_kind::backward,
+                                              rnn_cell,
+                                              mkldnn::rnn_direction::unidirectional_left2right,
+                                              src_layer_md,
+                                              src_iter_md,
+                                              wei_layer_md,
+                                              wei_iter_md,
+                                              bias_md,
+                                              dst_layer_md,
+                                              dst_iter_md,
+                                              diff_src_layer_md,
+                                              diff_src_iter_md,
+                                              diff_wei_layer_md,
+                                              diff_wei_iter_md,
+                                              diff_bias_md,
+                                              diff_dst_layer_md,
+                                              diff_dst_iter_md);
+
+    auto rnn_layer_prim_desc =
+        mkldnn::rnn_backward::primitive_desc(rnn_layer_desc, executor::global_cpu_engine);
+    auto workspace_index =
+        build_memory_primitive(rnn_layer_prim_desc.workspace_primitive_desc().desc());
+    auto workspace = std::unique_ptr<MKLDNNWorkspace>(
+        new MKLDNNWorkspace(rnn_layer_prim_desc.workspace_primitive_desc().get_size()));
+    auto workspace_buf_index = insert_workspace(workspace);
+    size_t rnn_index = insert_primitive(new mkldnn::rnn_backward(
+        rnn_layer_prim_desc,
+        mkldnn::primitive::at(*m_mkldnn_primitives[src_layer_index]),
+        mkldnn::primitive::at(*m_mkldnn_primitives[src_iter_index]),
+        mkldnn::primitive::at(*m_mkldnn_primitives[weights_layer_index]),
+        mkldnn::primitive::at(*m_mkldnn_primitives[weights_iter_index]),
+        mkldnn::primitive::at(*m_mkldnn_primitives[bias_index]),
+        mkldnn::primitive::at(*m_mkldnn_primitives[dst_layer_index]),
+        mkldnn::primitive::at(*m_mkldnn_primitives[dst_iter_index]),
+        static_cast<mkldnn::memory>(*m_mkldnn_primitives[diff_src_layer_index]),
+        static_cast<mkldnn::memory>(*m_mkldnn_primitives[diff_src_iter_index]),
+        static_cast<mkldnn::memory>(*m_mkldnn_primitives[diff_weights_layer_index]),
+        static_cast<mkldnn::memory>(*m_mkldnn_primitives[diff_weights_iter_index]),
+        static_cast<mkldnn::memory>(*m_mkldnn_primitives[diff_bias_index]),
+        mkldnn::primitive::at(*m_mkldnn_primitives[diff_dst_layer_index]),
+        mkldnn::primitive::at(*m_mkldnn_primitives[diff_dst_iter_index]),
+        static_cast<mkldnn::memory>(*m_mkldnn_primitives[workspace_index])));
+
+    m_primitive_deps[rnn_index] = {src_layer_index,
+                                   src_iter_index,
+                                   weights_layer_index,
+                                   weights_iter_index,
+                                   bias_index,
+                                   dst_layer_index,
+                                   dst_iter_index,
+                                   diff_src_layer_index,
+                                   diff_src_iter_index,
+                                   diff_weights_layer_index,
+                                   diff_weights_iter_index,
+                                   diff_bias_index,
+                                   diff_dst_layer_index,
+                                   diff_dst_iter_index,
+                                   workspace_index,
+                                   workspace_buf_index};
+
+    return rnn_index;
+}
+
 size_t MKLDNNEmitter::build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                    const mkldnn::memory::desc& result_desc,
                                    const size_t concat_dim)
