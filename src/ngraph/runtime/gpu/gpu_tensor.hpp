@@ -16,9 +16,9 @@
 
 #pragma once
 
-#include <cuda.h>
 #include <memory>
 
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -36,8 +36,11 @@ namespace ngraph
 class ngraph::runtime::gpu::GPUTensor : public ngraph::runtime::Tensor
 {
 public:
-    GPUTensor(const ngraph::element::Type& element_type, const Shape& shape);
-    GPUTensor(const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer);
+    GPUTensor(const ngraph::element::Type& element_type, const Shape& shape, const Backend* parent);
+    GPUTensor(const ngraph::element::Type& element_type,
+              const Shape& shape,
+              void* memory_pointer,
+              const Backend* parent);
     virtual ~GPUTensor() override;
 
     /// \brief Write bytes directly into the tensor

@@ -52,22 +52,6 @@ namespace ngraph
             u64
         };
 
-        class Type;
-
-        extern const Type dynamic;
-        extern const Type boolean;
-        extern const Type bf16;
-        extern const Type f32;
-        extern const Type f64;
-        extern const Type i8;
-        extern const Type i16;
-        extern const Type i32;
-        extern const Type i64;
-        extern const Type u8;
-        extern const Type u16;
-        extern const Type u32;
-        extern const Type u64;
-
         class Type
         {
         public:
