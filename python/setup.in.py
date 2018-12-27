@@ -90,8 +90,19 @@ def cpp_flag(compiler):
 
 PYNGRAPH_SOURCE_DIR = '${CMAKE_CURRENT_SOURCE_DIR}'
 PYBIND11_INCLUDE_DIR = '${PYBIND11_SOURCE_DIR}/include'
+if os.environ.get('PYBIND_HEADER_PATH'):
+    PYBIND11_INCLUDE_DIR = os.environ.get('PYBIND_HEADER_PATH')
 NGRAPH_CPP_INCLUDE_DIR = '${NGRAPH_DEPS_INCLUDE}'
 NGRAPH_CPP_LIBRARY_DIR = '${NGRAPH_DEPS_LIB}'
+if os.environ.get('NGRAPH_CPP_BUILD_PATH'):
+    BUILD_PATH =  os.environ.get('NGRAPH_CPP_BUILD_PATH')
+    if BUILD_PATH not in ['INBUILD']:
+        NGRAPH_CPP_INCLUDE_DIR = BUILD_PATH + '/' + '${CMAKE_INSTALL_INCLUDEDIR}'
+        NGRAPH_CPP_LIBRARY_DIR = BUILD_PATH + '/' + '${CMAKE_INSTALL_LIBDIR}'
+NGRAPH_ONNX_IMPORT_ENABLE = '${NGRAPH_ONNX_IMPORT_ENABLE}'
+if os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE'):
+    NGRAPH_ONNX_IMPORT_ENABLE =  os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE')
+
 
 pyngraph_prefix = PYNGRAPH_SOURCE_DIR + '/'
 sources = []
@@ -102,7 +113,7 @@ for root, dirs, files in os.walk(pyngraph_prefix):
     if root.startswith(pyngraph_prefix + 'pyngraph'):
         sources += [root + '/' + f for f in files if f.endswith('.cpp')]
     elif root.startswith(pyngraph_prefix + 'ngraph'):
-        if '${NGRAPH_ONNX_IMPORT_ENABLE}' not in ['TRUE', 'ON', True] and 'onnx_import' in root:
+        if NGRAPH_ONNX_IMPORT_ENABLE not in ['TRUE', 'ON', True] and 'onnx_import' in root:
             continue
         if '__init__.py' in files:
             package_name = root[len(pyngraph_prefix):].replace('/', '.')
@@ -121,7 +132,7 @@ libraries    = ['ngraph',
                ]
 
 extra_compile_args = []
-if '${NGRAPH_ONNX_IMPORT_ENABLE}' in ['TRUE', 'ON', True]:
+if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
     extra_compile_args.append('-DNGRAPH_ONNX_IMPORT_ENABLE')
 
 extra_link_args = []
