@@ -97,7 +97,9 @@ namespace ngraph
                         std::shared_ptr<Node> fprop_weights_iter,
                         std::shared_ptr<Node> fprop_bias,
                         std::shared_ptr<Node> fprop_dst_layer,
-                        std::shared_ptr<Node> fprop_dst_iter);
+                        std::shared_ptr<Node> fprop_dst_iter,
+                        std::shared_ptr<Node> diff_dst_layer,
+                        std::shared_ptr<Node> diff_dst_iter);
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
         };

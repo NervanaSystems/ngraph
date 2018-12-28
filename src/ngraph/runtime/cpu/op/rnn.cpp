@@ -118,8 +118,8 @@ op::Rnn::Rnn(std::shared_ptr<Node> src_layer,
 
 void op::Rnn::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-    auto delta_dst_layer = deltas.at(0);
-    auto delta_dst_iter = deltas.at(1);
+    auto diff_dst_layer = deltas.at(0);
+    auto diff_dst_iter = deltas.at(1);
 
     auto src_layer = get_argument(0);
     auto src_iter = get_argument(1);
@@ -127,8 +127,19 @@ void op::Rnn::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
     auto weights_iter = get_argument(3);
     auto bias = get_argument(4);
 
-    auto rnn_bprop = std::make_shared<op::RnnBackprop>(
-        src_layer, src_iter, weights_layer, weights_iter, bias, delta_dst_layer, delta_dst_iter);
+    auto goes = op::get_output_elements(shared_from_this());
+    auto fprop_dst_layer = goes.at(0);
+    auto fprop_dst_iter = goes.at(1);
+
+    auto rnn_bprop = std::make_shared<op::RnnBackprop>(src_layer,
+                                                       src_iter,
+                                                       weights_layer,
+                                                       weights_iter,
+                                                       bias,
+                                                       fprop_dst_layer,
+                                                       fprop_dst_iter,
+                                                       diff_dst_layer,
+                                                       diff_dst_iter);
 
     auto diff_src_layer = std::make_shared<op::GetOutputElement>(rnn_bprop, 0);
     auto diff_src_iter = std::make_shared<op::GetOutputElement>(rnn_bprop, 1);
@@ -149,7 +160,9 @@ op::RnnBackprop::RnnBackprop(std::shared_ptr<Node> fprop_src_layer,
                              std::shared_ptr<Node> fprop_weights_iter,
                              std::shared_ptr<Node> fprop_bias,
                              std::shared_ptr<Node> fprop_dst_layer,
-                             std::shared_ptr<Node> fprop_dst_iter)
+                             std::shared_ptr<Node> fprop_dst_iter,
+                             std::shared_ptr<Node> diff_dst_layer,
+                             std::shared_ptr<Node> diff_dst_iter)
     : Op("RnnBackprop",
          check_single_output_args({fprop_src_layer,
                                    fprop_src_iter,
@@ -165,10 +178,17 @@ op::RnnBackprop::RnnBackprop(std::shared_ptr<Node> fprop_src_layer,
 
 shared_ptr<Node> op::RnnBackprop::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 7)
+    if (new_args.size() != 9)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<RnnBackprop>(
-        new_args[0], new_args[1], new_args[2], new_args[3], new_args[4], new_args[5], new_args[6]);
+    return make_shared<RnnBackprop>(new_args[0],
+                                    new_args[1],
+                                    new_args[2],
+                                    new_args[3],
+                                    new_args[4],
+                                    new_args[5],
+                                    new_args[6],
+                                    new_args[7],
+                                    new_args[8]);
 }

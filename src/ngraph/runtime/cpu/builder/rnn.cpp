@@ -92,6 +92,17 @@ namespace ngraph
                 auto& fprop_dst_iter_tensor =
                     external_function->get_tensor_data(args[6].get_name());
 
+                auto& diff_src_layer_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto& diff_src_iter_tensor = external_function->get_tensor_data(out[1].get_name());
+                auto& diff_weights_layer_tensor =
+                    external_function->get_tensor_data(out[2].get_name());
+                auto& diff_weights_iter_tensor =
+                    external_function->get_tensor_data(out[3].get_name());
+                auto& diff_bias_tensor = external_function->get_tensor_data(out[4].get_name());
+                auto& diff_dst_layer_tensor =
+                    external_function->get_tensor_data(args[7].get_name());
+                auto& diff_dst_iter_tensor = external_function->get_tensor_data(args[8].get_name());
+
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto rnn_bprop_index = mkldnn_emitter->build_rnn_backward(node, args, out);
                 auto& deps = mkldnn_emitter->get_primitive_deps(rnn_bprop_index);
@@ -104,8 +115,15 @@ namespace ngraph
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[4], fprop_bias_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[5], fprop_dst_layer_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[6], fprop_dst_iter_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[7], diff_src_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[8], diff_src_iter_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[9], diff_weights_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[10], diff_weights_iter_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[11], diff_bias_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[12], diff_dst_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[13], diff_dst_iter_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(
-                        ctx, deps[7], ctx->mkldnn_workspaces[deps[8]]);
+                        ctx, deps[14], ctx->mkldnn_workspaces[deps[15]]);
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, rnn_bprop_index);
                 };
                 functors.emplace_back(functor);
