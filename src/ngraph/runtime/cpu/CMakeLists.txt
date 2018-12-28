@@ -150,13 +150,20 @@ if (NGRAPH_TBB_ENABLE)
     set_source_files_properties(cpu_external_function.cpp
         PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
 
-    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(TBB_LIB_NAME tbb)
+        set(TBB_BUILDDIR_NAME tbb_debug)
+    else()
+        set(TBB_LIB_NAME tbb_debug)
+        set(TBB_BUILDDIR_NAME tbb_release)
+    endif()
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/${TBB_BUILDDIR_NAME}/
         DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
+        FILES_MATCHING REGEX "/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
     add_library(libtbb INTERFACE)
     target_link_libraries(libtbb INTERFACE
-        ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
+        ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/${TBB_BUILDDIR_NAME}/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
     )
     target_include_directories(libtbb SYSTEM INTERFACE ${TBB_ROOT}/include)
 endif()
