@@ -151,10 +151,10 @@ if (NGRAPH_TBB_ENABLE)
         PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
 
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(TBB_LIB_NAME tbb)
+        set(TBB_LIB_NAME tbb_debug)
         set(TBB_BUILDDIR_NAME tbb_debug)
     else()
-        set(TBB_LIB_NAME tbb_debug)
+        set(TBB_LIB_NAME tbb)
         set(TBB_BUILDDIR_NAME tbb_release)
     endif()
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/${TBB_BUILDDIR_NAME}/
