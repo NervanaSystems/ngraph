@@ -39,6 +39,9 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
             GIT_TAG ${ONNX_GIT_BRANCH}
             INSTALL_COMMAND ""
             UPDATE_COMMAND ""
+            CMAKE_GENERATOR ${CMAKE_GENERATOR}
+            CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+            CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
             CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}
                        -DONNX_GEN_PB_TYPE_STUBS=OFF
                        -DProtobuf_PROTOC_EXECUTABLE=${Protobuf_PROTOC_EXECUTABLE}
@@ -64,6 +67,9 @@ else()
                 GIT_TAG ${ONNX_GIT_BRANCH}
                 INSTALL_COMMAND ""
                 UPDATE_COMMAND ""
+                CMAKE_GENERATOR ${CMAKE_GENERATOR}
+                CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+                CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
                 CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}
                            -DONNX_GEN_PB_TYPE_STUBS=OFF
                            -DProtobuf_PROTOC_EXECUTABLE=${Protobuf_PROTOC_EXECUTABLE}
@@ -92,6 +98,9 @@ else()
                 GIT_SHALLOW TRUE
                 INSTALL_COMMAND ""
                 UPDATE_COMMAND ""
+                CMAKE_GENERATOR ${CMAKE_GENERATOR}
+                CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+                CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
                 CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}
                            -DONNX_GEN_PB_TYPE_STUBS=OFF
                            -DProtobuf_PROTOC_EXECUTABLE=${Protobuf_PROTOC_EXECUTABLE}

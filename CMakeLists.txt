@@ -66,7 +66,6 @@ endif()
 
 # Setup CMAKE_ARGS to be forwarded to External Projects
 set(NGRAPH_FORWARD_CMAKE_ARGS
-        -G${CMAKE_GENERATOR}
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         )
@@ -83,20 +82,8 @@ if (NOT MSVS)
                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                 )
     endif()
-else()
-    if(CMAKE_GENERATOR_PLATFORM)
-        set(NGRAPH_FORWARD_CMAKE_ARGS
-                ${NGRAPH_FORWARD_CMAKE_ARGS}
-                -A${CMAKE_GENERATOR_PLATFORM}
-                )
-    endif()
-    if(CMAKE_GENERATOR_TOOLSET)
-        set(NGRAPH_FORWARD_CMAKE_ARGS
-                ${NGRAPH_FORWARD_CMAKE_ARGS}
-                -T${CMAKE_GENERATOR_TOOLSET}
-                )
-    endif()
 endif()
+message(STATUS "NGRAPH_FORWARD_CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}")
 
 # Prevent Eigen from using any LGPL3 code
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY -DTBB_USE_THREADING_TOOLS")
