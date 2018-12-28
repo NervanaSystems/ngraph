@@ -60,6 +60,31 @@ if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
+if ("${CMAKE_GENERATOR}" MATCHES "^Visual Studio.*$")
+    set(MSVS TRUE)
+endif()
+
+# Setup CMAKE_ARGS to be forwarded to External Projects
+set(NGRAPH_FORWARD_CMAKE_ARGS
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        )
+
+if (NOT MSVS)
+    if(NOT CMAKE_BUILD_TYPE)
+        set(NGRAPH_FORWARD_CMAKE_ARGS
+                ${NGRAPH_FORWARD_CMAKE_ARGS}
+                -DCMAKE_BUILD_TYPE=Release
+                )
+    else()
+        set(NGRAPH_FORWARD_CMAKE_ARGS
+                ${NGRAPH_FORWARD_CMAKE_ARGS}
+                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                )
+    endif()
+endif()
+message(STATUS "NGRAPH_FORWARD_CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}")
+
 # Prevent Eigen from using any LGPL3 code
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY -DTBB_USE_THREADING_TOOLS")
 
