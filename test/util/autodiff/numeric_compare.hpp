@@ -25,13 +25,12 @@
 //       derivative does not work with int types
 // TODO: Always compute the numerical derivatives in double
 template <typename T>
-::testing::AssertionResult
-    autodiff_numeric_compare(ngraph::runtime::Backend* backend,
-                             std::shared_ptr<ngraph::Function> f,
-                             std::shared_ptr<ngraph::Function> g,
-                             const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
-                             T rtol,
-                             T atol)
+bool autodiff_numeric_compare(ngraph::runtime::Backend* backend,
+                              std::shared_ptr<ngraph::Function> f,
+                              std::shared_ptr<ngraph::Function> g,
+                              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
+                              T rtol,
+                              T atol)
 {
     T delta = static_cast<T>(0.0009765625f); // Binary-representable number near 0.001
 
@@ -76,18 +75,17 @@ template <typename T>
 }
 
 template <typename T>
-::testing::AssertionResult
-    autodiff_numeric_compare(ngraph::runtime::Backend* backend,
-                             std::function<std::shared_ptr<ngraph::Function>()> make_graph,
-                             const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
-                             T rtol,
-                             T atol)
+bool autodiff_numeric_compare(ngraph::runtime::Backend* backend,
+                              std::function<std::shared_ptr<ngraph::Function>()> make_graph,
+                              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
+                              T rtol,
+                              T atol)
 {
     return autodiff_numeric_compare(backend, make_graph(), make_graph(), args, rtol, atol);
 }
 
 template <typename T>
-::testing::AssertionResult autodiff_numeric_compare_selective(
+bool autodiff_numeric_compare_selective(
     ngraph::runtime::Backend* backend,
     std::shared_ptr<ngraph::Function> f,
     std::shared_ptr<ngraph::Function> g,
@@ -162,7 +160,7 @@ template <typename T>
 }
 
 template <typename T>
-::testing::AssertionResult autodiff_numeric_compare_selective(
+bool autodiff_numeric_compare_selective(
     ngraph::runtime::Backend* backend,
     std::function<std::shared_ptr<ngraph::Function>()> make_graph,
     const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& args,
