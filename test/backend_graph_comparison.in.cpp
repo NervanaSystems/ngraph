@@ -96,7 +96,7 @@ public:
                     test::all_close<char>(ref_data_vector, bk_isolated_data_vector);
                 EXPECT_TRUE(all_close_graph && all_close_isolated) << msg.str();
             }
-            else if (et == element::f32)
+            else if ((et == element::f32) || (et == element::f64))
             {
                 vector<float> ref_data_vector = read_float_vector(ref_data);
                 vector<float> bk_data_vector = read_float_vector(bk_data);
@@ -108,28 +108,6 @@ public:
                 msg << "Test backed op run isolated w/ inputs from ref graph run:"
                     << "\n";
                 msg << get_results_str(ref_data_vector, bk_isolated_data_vector);
-                bool all_close_isolated =
-                    test::all_close_f(ref_data_vector, bk_isolated_data_vector);
-                EXPECT_TRUE(all_close_graph && all_close_isolated) << msg.str();
-            }
-            else if (et == element::f64)
-            {
-                vector<double> ref_data_vector = read_vector<double>(ref_data);
-                vector<double> bk_data_vector = read_vector<double>(bk_data);
-                vector<double> bk_isolated_data_vector = read_vector<double>(bk_isolated_data);
-                msg << "Test backed op run w/ original graph dependencies:"
-                    << "\n";
-                msg << get_results_str(ref_data_vector, bk_data_vector);
-
-                // When testing with original graph dependencies test w/ loose f64 tolerance
-                constexpr int tolerance_bits = 30;
-                bool all_close_graph =
-                    test::all_close_f(ref_data_vector, bk_data_vector, tolerance_bits);
-                msg << "Test backed op run isolated w/ inputs from ref graph run:"
-                    << "\n";
-                msg << get_results_str(ref_data_vector, bk_isolated_data_vector);
-
-                // When testing with isolated graph dependencies test w/ default (tight) f64 tolerance
                 bool all_close_isolated =
                     test::all_close_f(ref_data_vector, bk_isolated_data_vector);
                 EXPECT_TRUE(all_close_graph && all_close_isolated) << msg.str();
