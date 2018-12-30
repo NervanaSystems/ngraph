@@ -95,14 +95,14 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
     return func;
 }
 
-bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
-                                          const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                          const vector<shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::hybrid::HybridBackend::execute(Handle func,
+                                             const std::vector<runtime::Tensor*>& outputs,
+                                             const std::vector<runtime::Tensor*>& inputs)
 {
     // Get FunctionInstance
     bool rc = true;
 
-    using node_map_t = unordered_map<shared_ptr<Node>, shared_ptr<runtime::Tensor>>;
+    using node_map_t = unordered_map<shared_ptr<Node>, runtime::Tensor*>;
 
     auto fit = m_function_map.find(func);
     if (fit == m_function_map.end())
@@ -130,7 +130,8 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
         auto backend = m_backend_list[placement];
 
         // Prepare parameter Tensors
-        vector<shared_ptr<runtime::Tensor>> parameters;
+        vector<runtime::Tensor*> parameters;
+        vector<shared_ptr<runtime::Tensor>> tmp_tensors;
         for (const shared_ptr<op::Parameter>& parameter_node : sub_function->get_parameters())
         {
             auto it = map_node_to_tensor.find(parameter_node);
@@ -145,7 +146,8 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
                     auto parameter = backend->create_tensor(parameter_node->get_element_type(),
                                                             parameter_node->get_shape());
                     parameter->copy_from(*(it->second));
-                    parameters.push_back(parameter);
+                    parameters.push_back(parameter.get());
+                    tmp_tensors.push_back(parameter);
                 }
             }
             else
@@ -156,13 +158,14 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
                 auto parameter = backend->create_tensor(parameter_node->get_element_type(),
                                                         parameter_node->get_shape());
                 parameter->copy_from(*result);
-                map_node_to_tensor[parameter_node] = parameter;
-                parameters.push_back(parameter);
+                map_node_to_tensor[parameter_node] = parameter.get();
+                parameters.push_back(parameter.get());
+                tmp_tensors.push_back(parameter);
             }
         }
 
         // Prepare result Tensors
-        vector<shared_ptr<runtime::Tensor>> results;
+        vector<runtime::Tensor*> results;
         map<runtime::Tensor*, runtime::Tensor*> copy_back;
         for (const shared_ptr<op::Result>& result_node : sub_function->get_results())
         {
@@ -177,8 +180,9 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
                 {
                     auto result = backend->create_tensor(result_node->get_element_type(),
                                                          result_node->get_shape());
-                    results.push_back(result);
-                    copy_back.insert({result.get(), it->second.get()});
+                    tmp_tensors.push_back(result);
+                    results.push_back(result.get());
+                    copy_back.insert({result.get(), it->second});
                 }
             }
             else
@@ -186,13 +190,14 @@ bool runtime::hybrid::HybridBackend::call(shared_ptr<Function> func,
                 // Handle temporary tensors that go between subgraphs
                 auto result = backend->create_tensor(result_node->get_element_type(),
                                                      result_node->get_shape());
-                map_node_to_tensor[result_node] = result;
-                results.push_back(result);
+                tmp_tensors.push_back(result);
+                map_node_to_tensor[result_node] = result.get();
+                results.push_back(result.get());
             }
         }
 
         // Call
-        backend->call(sub_function, results, parameters);
+        backend->execute(sub_function, results, parameters);
 
         // Need to copy any results to the correct device
         for (const auto& p : copy_back)

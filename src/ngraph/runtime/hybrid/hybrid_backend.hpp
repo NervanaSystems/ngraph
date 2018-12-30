@@ -51,9 +51,9 @@ public:
     Handle compile(std::shared_ptr<ngraph::Function> func,
                    bool enable_performance_collection = false) override;
 
-    bool call(std::shared_ptr<ngraph::Function> func,
-              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& outputs,
-              const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>& inputs) override;
+    bool execute(Handle handle,
+                 const std::vector<runtime::Tensor*>& outputs,
+                 const std::vector<runtime::Tensor*>& inputs) override;
 
     bool is_supported(const ngraph::Node& node) const override;
 
