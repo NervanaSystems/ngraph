@@ -50,9 +50,9 @@ public:
     Handle compile(std::shared_ptr<Function> func,
                    bool enable_performance_collection = false) override;
 
-    bool call(std::shared_ptr<Function> func,
-              const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-              const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
+    bool execute(std::shared_ptr<Function> func,
+                 const std::vector<runtime::Tensor*>& outputs,
+                 const std::vector<runtime::Tensor*>& inputs) override;
 
     void remove_compiled_function(std::shared_ptr<Function> func) override;
     void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;

@@ -1806,9 +1806,9 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
     return func;
 }
 
-bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
-                                              const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                              const vector<shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::intelgpu::IntelGPUBackend::execute(shared_ptr<Function> func,
+                                                 const vector<runtime::Tensor*>& outputs,
+                                                 const vector<runtime::Tensor*>& inputs)
 {
     double mem_before_call = 0.0f;
     double mem_after_compilation = 0.0f;
@@ -1842,11 +1842,11 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
     // we try to match them by index number in vectors.
     for (size_t i = 0; i < inputs.size(); i++)
     {
-        shared_ptr<runtime::intelgpu::IntelGPUTensorView> tv =
-            static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(inputs[i]);
+        runtime::intelgpu::IntelGPUTensorView* tensor =
+            static_cast<runtime::intelgpu::IntelGPUTensorView*>(inputs[i]);
         const ParameterVector& input_params = func->get_parameters();
         const string& tensor_name = input_params[i]->get_output_tensor().get_name();
-        network->set_input_data(tensor_name, *tv->get_data_ptr());
+        network->set_input_data(tensor_name, *tensor->get_data_ptr());
     }
 
     // Execute network
@@ -1866,8 +1866,8 @@ bool runtime::intelgpu::IntelGPUBackend::call(shared_ptr<Function> func,
             continue;
         }
 
-        shared_ptr<runtime::intelgpu::IntelGPUTensorView> ngraph_res =
-            static_pointer_cast<runtime::intelgpu::IntelGPUTensorView>(outputs[i]);
+        runtime::intelgpu::IntelGPUTensorView* ngraph_res =
+            static_cast<runtime::intelgpu::IntelGPUTensorView*>(outputs[i]);
         const string& tensor_name = get_input_name(dst_node);
         auto result_memory = result.at(tensor_name).get_memory().pointer<char>();
 
