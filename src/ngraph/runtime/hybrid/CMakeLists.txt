@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_library(hybrid_base STATIC
+add_library(hybrid_base STATIC EXCLUDE_FROM_ALL
     hybrid_backend.cpp
     hybrid_util.cpp
     pass/assign_placement.cpp

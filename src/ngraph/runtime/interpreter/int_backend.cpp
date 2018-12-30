@@ -67,10 +67,12 @@ shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
 runtime::Handle runtime::interpreter::INTBackend::compile(shared_ptr<Function> function,
                                                           bool enable_performance_collection)
 {
-    FunctionInstance& instance = m_function_map[function];
-    if (!instance.m_is_compiled)
+    shared_ptr<FunctionInstance> instance = make_shared<FunctionInstance>();
+    m_instances.push_back(instance);
+    Handle handle = instance.get();
+    if (!instance->m_is_compiled)
     {
-        instance.m_is_compiled = true;
+        instance->m_is_compiled = true;
         pass::Manager pass_manager;
         pass_manager.register_pass<pass::LikeReplacement>();
         pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
@@ -79,29 +81,24 @@ runtime::Handle runtime::interpreter::INTBackend::compile(shared_ptr<Function> f
         pass_manager.run_passes(function);
 
         size_t memory_pool_size = function->get_temporary_pool_size();
-        instance.m_temporary_memory.reset(new AlignedBuffer(memory_pool_size, get_alignment()));
+        instance->m_temporary_memory.reset(new AlignedBuffer(memory_pool_size, get_alignment()));
 
         for (const shared_ptr<Node>& node : function->get_ordered_ops())
         {
-            instance.m_wrapped_nodes.emplace_back(node);
+            instance->m_wrapped_nodes.emplace_back(node);
         }
 
-        set_parameters_and_results(*function);
+        set_parameters_and_results(handle, *function);
     }
 
-    return function;
+    return handle;
 }
 
-bool runtime::interpreter::INTBackend::execute(Handle function,
+bool runtime::interpreter::INTBackend::execute(Handle handle,
                                                const vector<runtime::Tensor*>& outputs,
                                                const vector<runtime::Tensor*>& inputs)
 {
-    auto fit = m_function_map.find(function);
-    if (fit == m_function_map.end())
-    {
-        throw runtime_error("compile() must be called before call().");
-    }
-    FunctionInstance& instance = fit->second;
+    FunctionInstance& instance = *static_cast<FunctionInstance*>(handle);
     if (!instance.m_is_compiled)
     {
         throw runtime_error("compile() must be called before call().");
@@ -126,7 +123,7 @@ bool runtime::interpreter::INTBackend::execute(Handle function,
     // map function params -> HostTensor
     unordered_map<descriptor::Tensor*, void*> tensor_map;
     size_t input_count = 0;
-    for (auto param : function->get_parameters())
+    for (auto param : get_parameters(handle))
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
@@ -136,15 +133,15 @@ bool runtime::interpreter::INTBackend::execute(Handle function,
     }
 
     // map function outputs -> HostTensor
-    for (size_t output_count = 0; output_count < function->get_output_size(); ++output_count)
+    size_t output_count = 0;
+    for (auto output : get_results(handle))
     {
-        auto output = function->get_output_op(output_count);
         if (!dynamic_pointer_cast<op::Result>(output))
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
         descriptor::Tensor* tensor = output->get_output_tensor_ptr(0).get();
-        tensor_map.insert({tensor, func_outputs[output_count]});
+        tensor_map.insert({tensor, func_outputs[output_count++]});
     }
 
     // for each ordered op in the graph
@@ -260,18 +257,12 @@ void runtime::interpreter::INTBackend::generate_calls(const element::Type& type,
     }
 }
 
-void runtime::interpreter::INTBackend::enable_performance_data(shared_ptr<Function> func,
-                                                               bool enable)
-{
-    FunctionInstance& instance = m_function_map[func];
-    instance.m_performance_counters_enabled = enable;
-}
-
 vector<runtime::PerformanceCounter>
-    runtime::interpreter::INTBackend::get_performance_data(shared_ptr<Function> func) const
+    runtime::interpreter::INTBackend::get_performance_data(Handle handle) const
 {
+    FunctionInstance& instance = *static_cast<FunctionInstance*>(handle);
+
     vector<runtime::PerformanceCounter> rc;
-    const FunctionInstance& instance = m_function_map.at(func);
     for (const pair<const Node*, stopwatch> p : instance.m_timer_map)
     {
         rc.emplace_back(p.first->get_name().c_str(),

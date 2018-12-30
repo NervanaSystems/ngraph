@@ -54,62 +54,53 @@ shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
 runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func,
                                                         bool enable_performance_collection)
 {
-    if (m_function_map.find(func) == m_function_map.end())
-    {
-        // Clone function
-        FunctionInstance instance;
-        instance.m_function = clone_function(*func);
+    // Clone function
+    shared_ptr<FunctionInstance> instance;
+    m_instances.push_back(instance);
+    instance->m_function = clone_function(*func);
 
-        // Run placement pass
-        ngraph::pass::Manager pass_manager;
-        pass_manager.register_pass<runtime::hybrid::pass::AssignPlacement>(m_backend_list);
-        pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
+    // Run placement pass
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::hybrid::pass::AssignPlacement>(m_backend_list);
+    pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
 #ifdef GPUH_DEBUG
-        pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png");
+    pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png");
 #endif
-        pass_manager.run_passes(instance.m_function);
+    pass_manager.run_passes(instance->m_function);
 
-        // Split function to sub_functions
-        tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
-            runtime::hybrid::split_function_by_placement(instance.m_function);
-        m_function_map.insert({func, instance});
+    // Split function to sub_functions
+    tie(instance->m_sub_functions, instance->m_map_parameter_to_result) =
+        runtime::hybrid::split_function_by_placement(instance->m_function);
 
-        // Compile subfunctions in corresponding backends
-        for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
+    // Compile subfunctions in corresponding backends
+    for (shared_ptr<Function>& sub_function : instance->m_sub_functions)
+    {
+        size_t placement = runtime::hybrid::get_colocated_function_placement(sub_function);
+        auto backend = m_backend_list[placement];
+        Handle handle = backend->compile(sub_function, enable_performance_collection);
+        m_subfunction_map[handle] = sub_function;
+
+        // Compile will replace nodes so we need to make one more pass through all
+        // ops to reset placement
+        for (auto op : sub_function->get_ops())
         {
-            size_t placement = runtime::hybrid::get_colocated_function_placement(sub_function);
-            auto backend = m_backend_list[placement];
-            backend->compile(sub_function, enable_performance_collection);
-
-            // Compile will replace nodes so we need to make one more pass through all
-            // ops to reset placement
-            for (auto op : sub_function->get_ops())
-            {
-                op->set_placement_index(placement);
-            }
+            op->set_placement_index(placement);
         }
-
-        set_parameters_and_results(*func);
     }
 
-    return func;
+    set_parameters_and_results(*func);
+
+    return instance.get();
 }
 
-bool runtime::hybrid::HybridBackend::execute(Handle func,
+bool runtime::hybrid::HybridBackend::execute(Handle handle,
                                              const std::vector<runtime::Tensor*>& outputs,
                                              const std::vector<runtime::Tensor*>& inputs)
 {
-    // Get FunctionInstance
+    FunctionInstance& instance = *static_cast<FunctionInstance*>(handle);
     bool rc = true;
 
     using node_map_t = unordered_map<shared_ptr<Node>, runtime::Tensor*>;
-
-    auto fit = m_function_map.find(func);
-    if (fit == m_function_map.end())
-    {
-        throw runtime_error("compile() must be called before call().");
-    }
-    FunctionInstance& instance = fit->second;
 
     // Parameter and result node in sub_function maps to one Tensor
     node_map_t map_node_to_tensor;

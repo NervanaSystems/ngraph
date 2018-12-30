@@ -175,9 +175,7 @@ public:
                  const std::vector<runtime::Tensor*>& outputs,
                  const std::vector<runtime::Tensor*>& inputs) override;
 
-    void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
-    std::vector<PerformanceCounter>
-        get_performance_data(std::shared_ptr<Function> func) const override;
+    std::vector<PerformanceCounter> get_performance_data(Handle handle) const override;
 
     bool is_supported(const Node& node) const override;
 
@@ -195,7 +193,7 @@ private:
 
         void* get_temporary_pointer(size_t offset) { return m_temporary_memory->get_ptr(offset); }
     };
-    std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
+    std::vector<std::shared_ptr<FunctionInstance>> m_instances;
     std::set<std::string> m_unsupported_op_name_list;
 
     void generate_calls(const element::Type& type,

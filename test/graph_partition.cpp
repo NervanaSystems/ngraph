@@ -56,150 +56,150 @@ static function<Placement(shared_ptr<Node>)> int_with_cpu_mul_policy = [](shared
 //
 // By default, HybridBackend operates on INTERPRETER (for example, the tensor view is
 // INTERPRETER tensor view). It falls back to CPU when requested by placement.
-class HybridBackend
-{
-public:
-    HybridBackend(const function<Placement(shared_ptr<Node>)>& placement_policy)
-        : m_placement_policy(placement_policy)
-    {
-    }
+// class HybridBackend
+// {
+// public:
+//     HybridBackend(const function<Placement(shared_ptr<Node>)>& placement_policy)
+//         : m_placement_policy(placement_policy)
+//     {
+//     }
 
-    ~HybridBackend() {}
-    shared_ptr<runtime::Tensor> create_tensor(const element::Type& element_type, const Shape& shape)
-    {
-        return get_cached_backend(Placement::INTERPRETER)->create_tensor(element_type, shape);
-    }
+//     ~HybridBackend() {}
+//     shared_ptr<runtime::Tensor> create_tensor(const element::Type& element_type, const Shape& shape)
+//     {
+//         return get_cached_backend(Placement::INTERPRETER)->create_tensor(element_type, shape);
+//     }
 
-    bool compile(const shared_ptr<Function>& func)
-    {
-        if (m_function_map.find(func) == m_function_map.end())
-        {
-            // Clone function
-            FunctionInstance instance;
-            instance.m_function = clone_function(*func);
+//     bool compile(const shared_ptr<Function>& func)
+//     {
+//         if (m_function_map.find(func) == m_function_map.end())
+//         {
+//             // Clone function
+//             FunctionInstance instance;
+//             instance.m_function = clone_function(*func);
 
-            // Run placement pass
-            pass::Manager pass_manager;
-            pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
-            pass_manager.run_passes(instance.m_function);
+//             // Run placement pass
+//             pass::Manager pass_manager;
+//             pass_manager.register_pass<pass::AssignPlacement>(int_with_cpu_mul_policy);
+//             pass_manager.run_passes(instance.m_function);
 
-            // Split function to sub_functions
-            tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
-                split_function_by_placement(instance.m_function);
-            m_function_map.insert({func, instance});
+//             // Split function to sub_functions
+//             tie(instance.m_sub_functions, instance.m_map_parameter_to_result) =
+//                 split_function_by_placement(instance.m_function);
+//             m_function_map.insert({func, instance});
 
-            // Compile subfunctions in corresponding backends
-            for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
-            {
-                Placement placement = get_colocated_function_placement(sub_function);
-                auto backend = get_cached_backend(placement);
-                backend->compile(sub_function);
-            }
-        }
-        return true;
-    }
+//             // Compile subfunctions in corresponding backends
+//             for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
+//             {
+//                 Placement placement = get_colocated_function_placement(sub_function);
+//                 auto backend = get_cached_backend(placement);
+//                 backend->compile(sub_function);
+//             }
+//         }
+//         return true;
+//     }
 
-    bool call_with_validate(const shared_ptr<Function>& func,
-                            const vector<shared_ptr<runtime::Tensor>>& outputs,
-                            const vector<shared_ptr<runtime::Tensor>>& inputs)
-    {
-        // Get FunctionInstance
-        bool rc = true;
-        auto it = m_function_map.find(func);
-        if (it == m_function_map.end())
-        {
-            compile(func);
-            it = m_function_map.find(func);
-        }
-        if (it == m_function_map.end())
-        {
-            throw runtime_error("Error constructing backend.");
-        }
-        FunctionInstance& instance = it->second;
+//     bool call_with_validate(const shared_ptr<Function>& func,
+//                             const vector<shared_ptr<runtime::Tensor>>& outputs,
+//                             const vector<shared_ptr<runtime::Tensor>>& inputs)
+//     {
+//         // Get FunctionInstance
+//         bool rc = true;
+//         auto it = m_function_map.find(func);
+//         if (it == m_function_map.end())
+//         {
+//             compile(func);
+//             it = m_function_map.find(func);
+//         }
+//         if (it == m_function_map.end())
+//         {
+//             throw runtime_error("Error constructing backend.");
+//         }
+//         FunctionInstance& instance = it->second;
 
-        // Parameter and result node in sub_function maps to one Tensor
-        unordered_map<shared_ptr<Node>, shared_ptr<runtime::Tensor>> map_node_to_tensor_view;
-        for (size_t i = 0; i < inputs.size(); ++i)
-        {
-            map_node_to_tensor_view[instance.m_function->get_parameters()[i]] = inputs[i];
-        }
-        for (size_t i = 0; i < outputs.size(); ++i)
-        {
-            map_node_to_tensor_view[instance.m_function->get_results()[i]] = outputs[i];
-        }
+//         // Parameter and result node in sub_function maps to one Tensor
+//         unordered_map<shared_ptr<Node>, shared_ptr<runtime::Tensor>> map_node_to_tensor_view;
+//         for (size_t i = 0; i < inputs.size(); ++i)
+//         {
+//             map_node_to_tensor_view[instance.m_function->get_parameters()[i]] = inputs[i];
+//         }
+//         for (size_t i = 0; i < outputs.size(); ++i)
+//         {
+//             map_node_to_tensor_view[instance.m_function->get_results()[i]] = outputs[i];
+//         }
 
-        // Call subfunctions
-        for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
-        {
-            // Init backend
-            Placement placement = get_colocated_function_placement(sub_function);
-            auto backend = get_cached_backend(placement);
+//         // Call subfunctions
+//         for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
+//         {
+//             // Init backend
+//             Placement placement = get_colocated_function_placement(sub_function);
+//             auto backend = get_cached_backend(placement);
 
-            // Prepare parameter TensorViews
-            vector<shared_ptr<runtime::Tensor>> parameter_tvs;
-            for (auto parameter_node : sub_function->get_parameters())
-            {
-                if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
-                {
-                    parameter_tvs.push_back(map_node_to_tensor_view.at(parameter_node));
-                }
-                else
-                {
-                    auto result_node = instance.m_map_parameter_to_result.at(parameter_node);
-                    auto result_tv = map_node_to_tensor_view.at(result_node);
-                    auto parameter_tv = backend->create_tensor(parameter_node->get_element_type(),
-                                                               parameter_node->get_shape());
-                    copy_data(parameter_tv, read_vector<float>(result_tv));
-                    map_node_to_tensor_view[parameter_node] = parameter_tv;
-                    parameter_tvs.push_back(parameter_tv);
-                }
-            }
+//             // Prepare parameter TensorViews
+//             vector<shared_ptr<runtime::Tensor>> parameter_tvs;
+//             for (auto parameter_node : sub_function->get_parameters())
+//             {
+//                 if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
+//                 {
+//                     parameter_tvs.push_back(map_node_to_tensor_view.at(parameter_node));
+//                 }
+//                 else
+//                 {
+//                     auto result_node = instance.m_map_parameter_to_result.at(parameter_node);
+//                     auto result_tv = map_node_to_tensor_view.at(result_node);
+//                     auto parameter_tv = backend->create_tensor(parameter_node->get_element_type(),
+//                                                                parameter_node->get_shape());
+//                     copy_data(parameter_tv, read_vector<float>(result_tv));
+//                     map_node_to_tensor_view[parameter_node] = parameter_tv;
+//                     parameter_tvs.push_back(parameter_tv);
+//                 }
+//             }
 
-            // Prepare result TensorViews
-            vector<shared_ptr<runtime::Tensor>> result_tvs;
-            for (auto result_node : sub_function->get_results())
-            {
-                if (map_node_to_tensor_view.find(result_node) != map_node_to_tensor_view.end())
-                {
-                    result_tvs.push_back(map_node_to_tensor_view.at(result_node));
-                }
-                else
-                {
-                    auto result_tv = backend->create_tensor(result_node->get_element_type(),
-                                                            result_node->get_shape());
-                    map_node_to_tensor_view[result_node] = result_tv;
-                    result_tvs.push_back(result_tv);
-                }
-            }
+//             // Prepare result TensorViews
+//             vector<shared_ptr<runtime::Tensor>> result_tvs;
+//             for (auto result_node : sub_function->get_results())
+//             {
+//                 if (map_node_to_tensor_view.find(result_node) != map_node_to_tensor_view.end())
+//                 {
+//                     result_tvs.push_back(map_node_to_tensor_view.at(result_node));
+//                 }
+//                 else
+//                 {
+//                     auto result_tv = backend->create_tensor(result_node->get_element_type(),
+//                                                             result_node->get_shape());
+//                     map_node_to_tensor_view[result_node] = result_tv;
+//                     result_tvs.push_back(result_tv);
+//                 }
+//             }
 
-            // Call
-            backend->call_with_validate(sub_function, result_tvs, parameter_tvs);
-        }
-        return rc;
-    }
+//             // Call
+//             backend->call_with_validate(sub_function, result_tvs, parameter_tvs);
+//         }
+//         return rc;
+//     }
 
-protected:
-    class FunctionInstance
-    {
-    public:
-        shared_ptr<Function> m_function;
-        vector<shared_ptr<Function>> m_sub_functions;
-        unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>> m_map_parameter_to_result;
-    };
+// protected:
+//     class FunctionInstance
+//     {
+//     public:
+//         shared_ptr<Function> m_function;
+//         vector<shared_ptr<Function>> m_sub_functions;
+//         unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>> m_map_parameter_to_result;
+//     };
 
-    shared_ptr<runtime::Backend> get_cached_backend(Placement placement)
-    {
-        if (m_cached_backends.find(placement) == m_cached_backends.end())
-        {
-            m_cached_backends[placement] = runtime::Backend::create(placement_to_string(placement));
-        }
-        return m_cached_backends.at(placement);
-    }
+//     shared_ptr<runtime::Backend> get_cached_backend(Placement placement)
+//     {
+//         if (m_cached_backends.find(placement) == m_cached_backends.end())
+//         {
+//             m_cached_backends[placement] = runtime::Backend::create(placement_to_string(placement));
+//         }
+//         return m_cached_backends.at(placement);
+//     }
 
-    map<Placement, shared_ptr<runtime::Backend>> m_cached_backends;
-    map<shared_ptr<Function>, FunctionInstance> m_function_map;
-    function<Placement(shared_ptr<Node>)> m_placement_policy;
-};
+//     map<Placement, shared_ptr<runtime::Backend>> m_cached_backends;
+//     map<shared_ptr<Function>, FunctionInstance> m_function_map;
+//     function<Placement(shared_ptr<Node>)> m_placement_policy;
+// };
 
 TEST(graph_partition, placement_all_cpu_policy)
 {

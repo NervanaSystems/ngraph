@@ -68,8 +68,9 @@ private:
             m_map_parameter_to_result;
     };
 
-    std::map<std::shared_ptr<ngraph::Function>, FunctionInstance> m_function_map;
+    std::vector<std::shared_ptr<FunctionInstance>> m_instances;
     std::vector<std::shared_ptr<runtime::Backend>> m_backend_list;
+    std::unordered_map<void*, std::shared_ptr<Function>> m_subfunction_map;
 
     std::string get_placement_name(const runtime::Tensor* t);
     std::string get_placement_name(const runtime::Backend* t);

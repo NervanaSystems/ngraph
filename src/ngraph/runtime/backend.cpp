@@ -39,17 +39,17 @@ vector<string> runtime::Backend::get_registered_devices()
     return BackendManager::get_registered_backends();
 }
 
-void runtime::Backend::remove_compiled_function(shared_ptr<Function> func)
+void runtime::Backend::remove_compiled_function(Handle handle)
 {
 }
 
 vector<ngraph::runtime::PerformanceCounter>
-    runtime::Backend::get_performance_data(shared_ptr<Function> func) const
+    runtime::Backend::get_performance_data(Handle handle) const
 {
     return vector<PerformanceCounter>();
 }
 
-bool runtime::Backend::call(shared_ptr<Function> function,
+bool runtime::Backend::call(Handle handle,
                             const vector<shared_ptr<runtime::Tensor>>& outputs,
                             const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
@@ -63,10 +63,10 @@ bool runtime::Backend::call(shared_ptr<Function> function,
     {
         in.push_back(input.get());
     }
-    execute(function, out, in);
+    execute(handle, out, in);
 }
 
-bool runtime::Backend::call_with_validate(shared_ptr<Function> func,
+bool runtime::Backend::call_with_validate(Handle handle,
                                           const vector<shared_ptr<runtime::Tensor>>& outputs,
                                           const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
@@ -80,64 +80,63 @@ bool runtime::Backend::call_with_validate(shared_ptr<Function> func,
     {
         in.push_back(input.get());
     }
-    validate(func, out, in);
-    return execute(func, out, in);
+    validate(handle, out, in);
+    return execute(handle, out, in);
 }
 
-void runtime::Backend::validate(shared_ptr<const Function> function,
+void runtime::Backend::validate(Handle handle,
                                 const vector<runtime::Tensor*>& outputs,
                                 const vector<runtime::Tensor*>& inputs)
 {
-    const ParameterVector& input_parameters = function->get_parameters();
-    if (input_parameters.size() != inputs.size())
+    const ParameterVector& parameters = get_parameters(handle);
+    const ResultVector& results = get_results(handle);
+    if (parameters.size() != inputs.size())
     {
         stringstream ss;
         ss << "Call input count " << inputs.size() << " does not match Function's Parameter count "
-           << input_parameters.size();
+           << parameters.size();
         throw runtime_error(ss.str());
     }
-    if (function->get_output_size() != outputs.size())
+    if (results.size() != outputs.size())
     {
         stringstream ss;
         ss << "Call output count " << outputs.size() << " does not match Function's Result count "
-           << function->get_output_size();
+           << results.size();
         throw runtime_error(ss.str());
     }
 
-    for (size_t i = 0; i < input_parameters.size(); i++)
+    for (size_t i = 0; i < parameters.size(); i++)
     {
-        if (input_parameters[i]->get_element_type() != inputs[i]->get_element_type())
+        if (parameters[i]->get_element_type() != inputs[i]->get_element_type())
         {
             stringstream ss;
             ss << "Input " << i << " type '" << inputs[i]->get_element_type()
-               << "' does not match Parameter type '" << input_parameters[i]->get_element_type()
-               << "'";
+               << "' does not match Parameter type '" << parameters[i]->get_element_type() << "'";
             throw runtime_error(ss.str());
         }
-        if (input_parameters[i]->get_shape() != inputs[i]->get_shape())
+        if (parameters[i]->get_shape() != inputs[i]->get_shape())
         {
             stringstream ss;
             ss << "Input " << i << " shape {" << join(inputs[i]->get_shape())
-               << "} does not match Parameter shape {" << join(input_parameters[i]->get_shape())
-               << "}";
+               << "} does not match Parameter shape {" << join(parameters[i]->get_shape()) << "}";
             throw runtime_error(ss.str());
         }
     }
 
-    for (size_t i = 0; i < function->get_output_size(); i++)
+    for (size_t i = 0; i < results.size(); i++)
     {
-        if (function->get_output_element_type(i) != outputs[i]->get_element_type())
+        if (results[i]->get_element_type() != outputs[i]->get_element_type())
         {
             stringstream ss;
             ss << "Output " << i << " type '" << outputs[i]->get_element_type()
-               << "' does not match Result type '" << function->get_output_element_type(i) << "'";
+               << "' does not match Result type '" << results[i]->get_element_type() << "'";
             throw runtime_error(ss.str());
         }
-        if (function->get_output_shape(i) != outputs[i]->get_shape())
+        if (results[i]->get_shape() != outputs[i]->get_shape())
         {
             stringstream ss;
             ss << "Output " << i << " shape {" << join(outputs[i]->get_shape())
-               << "} does not match Result shape {" << join(function->get_output_shape(i)) << "}";
+               << "} does not match Result shape {" << join(results[i]->get_shape()) << "}";
             throw runtime_error(ss.str());
         }
     }
@@ -152,20 +151,26 @@ bool runtime::Backend::is_supported(const Node& node) const
 
 const ngraph::ParameterVector& runtime::Backend::get_parameters(Handle handle) const
 {
-    return m_parameters;
+    auto it = m_parameters.find(handle);
+    if (it == m_parameters.end())
+    {
+        throw runtime_error("Handle passed to Backend::get_parameters is invalid");
+    }
+    return it->second;
 }
 
 const ngraph::ResultVector& runtime::Backend::get_results(Handle handle) const
 {
-    return m_results;
+    auto it = m_results.find(handle);
+    if (it == m_results.end())
+    {
+        throw runtime_error("Handle passed to Backend::get_results is invalid");
+    }
+    return it->second;
 }
 
-void runtime::Backend::set_parameters_and_results(const Function& func)
+void runtime::Backend::set_parameters_and_results(Handle handle, const Function& func)
 {
-    m_parameters = func.get_parameters();
-    m_results = func.get_results();
-}
-
-void runtime::Backend::enable_performance_data(std::shared_ptr<Function> func, bool enable)
-{
+    m_parameters[handle] = func.get_parameters();
+    m_results[handle] = func.get_results();
 }
