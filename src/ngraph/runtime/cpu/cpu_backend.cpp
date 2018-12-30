@@ -70,42 +70,36 @@ shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(
 runtime::Handle runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func,
                                                    bool enable_performance_collection)
 {
-    FunctionInstance& instance = m_function_map[func];
-    if (instance.m_external_function == nullptr)
-    {
-        instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
-        instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
-        auto cf = instance.m_external_function->make_call_frame();
-        instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
+    shared_ptr<FunctionInstance> instance = make_shared<FunctionInstance>();
+    m_instances.push_back(instance);
+    Handle handle = instance.get();
 
-        set_parameters_and_results(*func);
+    if (instance->m_external_function == nullptr)
+    {
+        instance->m_external_function = make_shared<CPU_ExternalFunction>(func);
+        instance->m_external_function->m_emit_timing = instance->m_performance_counters_enabled;
+        auto cf = instance->m_external_function->make_call_frame();
+        instance->m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
+
+        set_parameters_and_results(handle, *func);
     }
-    return func;
+    return handle;
 }
 
 std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
-    runtime::cpu::CPU_Backend::get_call_frame(std::shared_ptr<Function> func)
+    runtime::cpu::CPU_Backend::get_call_frame(Handle handle)
 {
-    FunctionInstance& instance = m_function_map[func];
-    if (instance.m_external_function == nullptr)
-    {
-        auto rc = compile(func);
-        if (!rc)
-        {
-            throw ngraph_error("couldn't compile a function");
-        }
-    }
-
+    FunctionInstance& instance = *static_cast<FunctionInstance*>(handle);
     return instance.m_call_frame;
 }
 
-bool runtime::cpu::CPU_Backend::execute(Handle func,
+bool runtime::cpu::CPU_Backend::execute(Handle handle,
                                         const std::vector<runtime::Tensor*>& outputs,
                                         const std::vector<runtime::Tensor*>& inputs)
 {
     bool rc = true;
 
-    FunctionInstance& instance = m_function_map[func];
+    FunctionInstance& instance = *static_cast<FunctionInstance*>(handle);
     if (instance.m_external_function == nullptr)
     {
         throw runtime_error("compile() must be called before call().");
@@ -116,35 +110,29 @@ bool runtime::cpu::CPU_Backend::execute(Handle func,
     return rc;
 }
 
-void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Function> func)
+void runtime::cpu::CPU_Backend::remove_compiled_function(Handle handle)
 {
-    m_function_map.erase(func);
-}
-
-void runtime::cpu::CPU_Backend::enable_performance_data(shared_ptr<Function> func, bool enable)
-{
-    FunctionInstance& instance = m_function_map[func];
-    if (instance.m_external_function != nullptr)
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    for (auto it = m_instances.begin(); it != m_instances.end(); ++it)
     {
-        throw runtime_error("Performance data collection must be enabled prior to compiling.");
+        if ((*it).get() == instance)
+        {
+            m_instances.erase(it);
+            break;
+        }
     }
-    instance.m_performance_counters_enabled = enable;
 }
 
 vector<runtime::PerformanceCounter>
-    runtime::cpu::CPU_Backend::get_performance_data(shared_ptr<Function> func) const
+    runtime::cpu::CPU_Backend::get_performance_data(Handle handle) const
 {
+    FunctionInstance& instance = *static_cast<FunctionInstance*>(handle);
     vector<runtime::PerformanceCounter> rc;
-    auto it = m_function_map.find(func);
-    if (it != m_function_map.end())
+    if (instance.m_external_function != nullptr)
     {
-        const FunctionInstance& instance = it->second;
-        if (instance.m_external_function != nullptr)
-        {
-            rc.insert(rc.end(),
-                      instance.m_external_function->get_perf_counters().begin(),
-                      instance.m_external_function->get_perf_counters().end());
-        }
+        rc.insert(rc.end(),
+                  instance.m_external_function->get_perf_counters().begin(),
+                  instance.m_external_function->get_perf_counters().end());
     }
     return rc;
 }

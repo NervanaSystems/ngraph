@@ -59,16 +59,17 @@ runtime::Handle runtime::nop::NOPBackend::compile(shared_ptr<Function> function,
 {
     shared_ptr<FunctionInstance> instance = make_shared<FunctionInstance>();
     m_instances.push_back(instance);
+    Handle handle = instance.get();
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
     pass_manager.run_passes(function);
 
-    set_parameters_and_results(instance.get(), *function);
+    set_parameters_and_results(handle, *function);
 
     // Return some non-null value. The actual value is unused.
-    return instance.get();
+    return handle;
 }
 
 bool runtime::nop::NOPBackend::execute(Handle handle,

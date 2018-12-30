@@ -310,6 +310,7 @@ public:
         auto Variance = make_shared<op::Parameter>(etype, channel_shape);
         auto BN = make_shared<op::BatchNormInference>(Input, Gamma, Beta, Mean, Variance, epsilon);
         m_function = make_shared<Function>(BN, ParameterVector{Input, Gamma, Beta, Mean, Variance});
+        m_handle = m_backend->compile(m_function);
 
         m_input = backend->create_tensor(etype, input_shape);
         m_gamma = backend->create_tensor(etype, channel_shape);
@@ -331,9 +332,8 @@ public:
         copy_data(m_beta, beta);
         copy_data(m_mean, mean);
         copy_data(m_variance, variance);
-        auto handle = m_backend->compile(m_function);
         m_backend->call_with_validate(
-            handle, {m_normed_input}, {m_input, m_gamma, m_beta, m_mean, m_variance});
+            m_handle, {m_normed_input}, {m_input, m_gamma, m_beta, m_mean, m_variance});
         auto res_normed_input = read_vector<T>(m_normed_input);
         return test::all_close(normed_input, res_normed_input);
     }
@@ -341,6 +341,7 @@ public:
 protected:
     const std::unique_ptr<ngraph::runtime::Backend>& m_backend;
     std::shared_ptr<Function> m_function;
+    runtime::Handle m_handle;
     std::shared_ptr<ngraph::runtime::Tensor> m_input;
     std::shared_ptr<ngraph::runtime::Tensor> m_gamma;
     std::shared_ptr<ngraph::runtime::Tensor> m_beta;
@@ -566,6 +567,7 @@ public:
         auto Variance = make_shared<op::Result>(make_shared<op::GetOutputElement>(BN, 2));
         m_function = make_shared<Function>(ResultVector{NormedInput, Mean, Variance},
                                            ParameterVector{Input, Gamma, Beta});
+        m_handle = m_backend->compile(m_function);
 
         m_input = backend->create_tensor(etype, input_shape);
         m_gamma = backend->create_tensor(etype, channel_shape);
@@ -585,9 +587,8 @@ public:
         copy_data(m_input, input);
         copy_data(m_gamma, gamma);
         copy_data(m_beta, beta);
-        auto handle = m_backend->compile(m_function);
         m_backend->call_with_validate(
-            handle, {m_normed_input, m_mean, m_variance}, {m_input, m_gamma, m_beta});
+            m_handle, {m_normed_input, m_mean, m_variance}, {m_input, m_gamma, m_beta});
         auto res_normed_input = read_vector<T>(m_normed_input);
         bool normed_input_test = test::all_close(normed_input, res_normed_input);
 
@@ -603,6 +604,7 @@ public:
 protected:
     const std::unique_ptr<ngraph::runtime::Backend>& m_backend;
     std::shared_ptr<Function> m_function;
+    runtime::Handle m_handle;
     std::shared_ptr<ngraph::runtime::Tensor> m_input;
     std::shared_ptr<ngraph::runtime::Tensor> m_gamma;
     std::shared_ptr<ngraph::runtime::Tensor> m_beta;
