@@ -51,7 +51,8 @@ namespace ngraph
                     create_tensor(const ngraph::element::Type& element_type,
                                   const Shape& shape) override;
 
-                Handle compile(std::shared_ptr<Function> func) override;
+                Handle compile(std::shared_ptr<Function> func,
+                               bool enable_performance_collection = false) override;
 
                 bool call(std::shared_ptr<Function> func,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,

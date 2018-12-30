@@ -67,7 +67,8 @@ shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(
     return make_shared<runtime::cpu::CPUTensorView>(element_type, shape, memory_pointer, this);
 }
 
-runtime::Handle runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func,
+                                                   bool enable_performance_collection)
 {
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)

@@ -51,7 +51,8 @@ shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
     return (*it)->create_tensor(element_type, shape, memory_pointer);
 }
 
-runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func,
+                                                        bool enable_performance_collection)
 {
     if (m_function_map.find(func) == m_function_map.end())
     {
@@ -78,7 +79,7 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         {
             size_t placement = runtime::hybrid::get_colocated_function_placement(sub_function);
             auto backend = m_backend_list[placement];
-            backend->compile(sub_function);
+            backend->compile(sub_function, enable_performance_collection);
 
             // Compile will replace nodes so we need to make one more pass through all
             // ops to reset placement

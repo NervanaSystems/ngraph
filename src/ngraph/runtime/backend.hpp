@@ -41,6 +41,7 @@ class ngraph::runtime::Backend
 {
 public:
     virtual ~Backend();
+
     /// \brief Create a new Backend object
     /// \param type The name of a registered backend, such as "CPU" or "GPU".
     ///   To select a subdevice use "GPU:N" where s`N` is the subdevice number.
@@ -80,8 +81,10 @@ public:
 
     /// \brief Compiles a Function.
     /// \param func The function to compile
+    /// \param enable_performance_collection Flag to add per-op performance profiling.
     /// \returns compiled function or nullptr on failure
-    virtual Handle compile(std::shared_ptr<Function> func) = 0;
+    virtual Handle compile(std::shared_ptr<Function> func,
+                           bool enable_performance_collection = false) = 0;
 
     /// \brief Executes a single iteration of a Function. If func is not compiled the call will
     ///     compile it.

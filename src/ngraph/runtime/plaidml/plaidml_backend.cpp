@@ -41,7 +41,8 @@ std::shared_ptr<ngraph::runtime::Tensor> ngraph::runtime::plaidml::PlaidML_Backe
         &m_config, element_type, shape, "direct_data", memory_pointer);
 }
 
-bool ngraph::runtime::plaidml::PlaidML_Backend::compile(std::shared_ptr<Function> func)
+bool ngraph::runtime::plaidml::PlaidML_Backend::compile(std::shared_ptr<Function> func,
+                                                        bool enable_performance_collection)
 {
     m_cache.compile(func, &m_compiler);
     return true;
