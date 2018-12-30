@@ -73,3 +73,10 @@ bool runtime::nop::NOPBackend::call(shared_ptr<Function> function,
 {
     return true;
 }
+
+bool runtime::nop::NOPBackend::execute(Handle handle,
+                                       const vector<runtime::Tensor*>& outputs,
+                                       const vector<runtime::Tensor*>& inputs)
+{
+    return true;
+}

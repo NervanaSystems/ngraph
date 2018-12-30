@@ -96,6 +96,23 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
                                             const vector<shared_ptr<runtime::Tensor>>& outputs,
                                             const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    vector<runtime::Tensor*> out;
+    vector<runtime::Tensor*> in;
+    for (auto output : outputs)
+    {
+        out.push_back(output.get());
+    }
+    for (auto input : inputs)
+    {
+        in.push_back(input.get());
+    }
+    execute(function, out, in);
+}
+
+bool runtime::interpreter::INTBackend::execute(Handle function,
+                                               const vector<runtime::Tensor*>& outputs,
+                                               const vector<runtime::Tensor*>& inputs)
+{
     auto fit = m_function_map.find(function);
     if (fit == m_function_map.end())
     {
@@ -109,23 +126,17 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 
     // convert inputs to HostTensor
     vector<void*> func_inputs;
-    vector<shared_ptr<runtime::HostTensor>> htv_inputs;
     for (auto tensor : inputs)
     {
-        auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
+        auto host_tensor = static_cast<runtime::HostTensor*>(tensor);
         func_inputs.push_back(static_cast<void*>(host_tensor->get_data_ptr()));
-        htv_inputs.push_back(host_tensor);
-    }
-    if (instance.m_nan_check_enabled)
-    {
-        perform_nan_check(htv_inputs);
     }
 
     // convert outputs to HostTensor
     vector<void*> func_outputs;
     for (auto tensor : outputs)
     {
-        auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
+        auto host_tensor = static_cast<runtime::HostTensor*>(tensor);
         func_outputs.push_back(static_cast<void*>(host_tensor->get_data_ptr()));
     }
 
@@ -179,7 +190,6 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
 
         // get op outputs from map or create
         vector<void*> op_outputs;
-        vector<shared_ptr<runtime::HostTensor>> htv_outputs;
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
             descriptor::Tensor* tensor = op->get_output_tensor_ptr(i).get();
@@ -196,8 +206,6 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
                 host_tensor = it->second;
             }
             op_outputs.push_back(host_tensor);
-            htv_outputs.push_back(make_shared<runtime::HostTensor>(
-                tensor->get_element_type(), tensor->get_shape(), host_tensor));
         }
 
         // get op type
@@ -236,10 +244,6 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         {
             instance.m_timer_map[op].stop();
         }
-        if (instance.m_nan_check_enabled)
-        {
-            perform_nan_check(htv_outputs, op);
-        }
     }
 
     return true;
@@ -273,12 +277,6 @@ void runtime::interpreter::INTBackend::generate_calls(const element::Type& type,
     }
 }
 
-void runtime::interpreter::INTBackend::set_nan_check(shared_ptr<Function> func, bool enable)
-{
-    FunctionInstance& instance = m_function_map[func];
-    instance.m_nan_check_enabled = enable;
-}
-
 void runtime::interpreter::INTBackend::enable_performance_data(shared_ptr<Function> func,
                                                                bool enable)
 {
@@ -298,55 +296,6 @@ vector<runtime::PerformanceCounter>
                         p.second.get_call_count());
     }
     return rc;
-}
-
-void runtime::interpreter::INTBackend::perform_nan_check(
-    const vector<shared_ptr<HostTensor>>& tensors, const Node* op)
-{
-    size_t arg_number = 1;
-    for (const shared_ptr<HostTensor>& tensor : tensors)
-    {
-        const element::Type& type = tensor->get_element_type();
-        if (type == element::f32)
-        {
-            const float* data = tensor->get_data_ptr<float>();
-            for (size_t i = 0; i < tensor->get_element_count(); i++)
-            {
-                if (std::isnan(data[i]))
-                {
-                    if (op)
-                    {
-                        throw runtime_error("nan found in op '" + op->get_name() + "' output");
-                    }
-                    else
-                    {
-                        throw runtime_error("nan found in function's input tensor number " +
-                                            to_string(arg_number));
-                    }
-                }
-            }
-        }
-        else if (type == element::f64)
-        {
-            const double* data = tensor->get_data_ptr<double>();
-            for (size_t i = 0; i < tensor->get_element_count(); i++)
-            {
-                if (std::isnan(data[i]))
-                {
-                    if (op)
-                    {
-                        throw runtime_error("nan found in op '" + op->get_name() + "' output");
-                    }
-                    else
-                    {
-                        throw runtime_error("nan found in function's input tensor number " +
-                                            to_string(arg_number));
-                    }
-                }
-            }
-        }
-        arg_number++;
-    }
 }
 
 bool runtime::interpreter::INTBackend::is_supported(const Node& node) const

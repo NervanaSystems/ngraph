@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "ngraph/deprecated.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/shape.hpp"
@@ -86,24 +87,40 @@ public:
     virtual Handle compile(std::shared_ptr<Function> func,
                            bool enable_performance_collection = false) = 0;
 
+    /// \deprecated use execute method
     /// \brief Executes a single iteration of a Function. If func is not compiled the call will
     ///     compile it.
     /// \param func The function to execute
     /// \returns true if iteration is successful, false otherwise
-    virtual bool call(std::shared_ptr<Function> func,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) = 0;
+    DEPRECATED virtual bool call(std::shared_ptr<Function> func,
+                                 const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                                 const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) = 0;
 
-    /// \brief Executes a single iteration of a Function. If func is not compiled the call will
-    ///     compile it. Optionally validates the inputs and outputs against the function graph.
+    /// \brief Executes a single iteration of a Function.
+    /// \param handle The Handle returned from compile or load
+    /// \param outputs vector of runtime::Tensor used as outputs
+    /// \param inputs vector of runtime::Tensor used as inputs
+    /// \returns true if iteration is successful, false otherwise
+    virtual bool execute(Handle handle,
+                         const std::vector<runtime::Tensor*>& outputs,
+                         const std::vector<runtime::Tensor*>& inputs) = 0;
+
+    /// \brief Executes a single iteration of a Function.
     /// \param func The function to execute
     /// \returns true if iteration is successful, false otherwise
-    bool call_with_validate(std::shared_ptr<Function> func,
-                            const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                            const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
+    DEPRECATED bool call_with_validate(std::shared_ptr<Function> func,
+                                       const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                                       const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+
+    /// \brief Validates and then Executes a single iteration of a Function.
+    /// \param handle The Handle returned from compile or load
+    /// \returns true if iteration is successful, false otherwise
+    bool validate_and_execute(Handle handle,
+                              const std::vector<runtime::Tensor*>& outputs,
+                              const std::vector<runtime::Tensor*>& inputs)
     {
-        validate(func, outputs, inputs);
-        return call(func, outputs, inputs);
+        validate(handle, outputs, inputs);
+        return execute(handle, outputs, inputs);
     }
 
     /// \brief Compiled functions may be cached. This function removes a compiled function
@@ -111,11 +128,17 @@ public:
     /// \param func The function to execute
     virtual void remove_compiled_function(std::shared_ptr<Function> func);
 
+    /// \brief Compiled functions may be cached. This function removes a compiled function
+    ///     from the cache.
+    /// \param handle The Handle returned from compile or load
+    // virtual void remove_compiled_function(Handle handle);
+
     /// \brief Enable the collection of per-op performance information on a specified Function.
     ///     Data collection is via the `get_performance_data` method.
     /// \param func The function to collect perfomance data on.
     /// \param enable Set to true to enable or false to disable data collection
-    virtual void enable_performance_data(std::shared_ptr<Function> func, bool enable) {}
+    DEPRECATED virtual void enable_performance_data(std::shared_ptr<Function> func, bool enable);
+
     /// \brief Collect performance information gathered on a Function.
     /// \param func The function to get collected data.
     /// \returns Vector of PerformanceCounter information.
@@ -128,8 +151,8 @@ public:
     virtual bool is_supported(const Node& node) const;
 
     void validate(std::shared_ptr<const Function> func,
-                  const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                  const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+                  const std::vector<runtime::Tensor*>& outputs,
+                  const std::vector<runtime::Tensor*>& inputs);
 
     /// \brief Query the input Parameters for a given Handle
     /// \param handle The Handle returned from compile or load

@@ -74,7 +74,6 @@ endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
-        backend_debug_api.cpp
         builder.cpp
         backend_api.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)

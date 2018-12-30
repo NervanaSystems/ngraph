@@ -175,7 +175,9 @@ public:
               const std::vector<std::shared_ptr<Tensor>>& outputs,
               const std::vector<std::shared_ptr<Tensor>>& intputs) override;
 
-    void set_nan_check(std::shared_ptr<Function> func, bool);
+    bool execute(Handle handle,
+                 const std::vector<runtime::Tensor*>& outputs,
+                 const std::vector<runtime::Tensor*>& inputs) override;
 
     void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
     std::vector<PerformanceCounter>
@@ -189,7 +191,6 @@ private:
     {
     public:
         bool m_is_compiled = false;
-        bool m_nan_check_enabled = false;
         bool m_performance_counters_enabled = false;
         std::unordered_map<const Node*, stopwatch> m_timer_map;
         std::vector<NodeWrapper> m_wrapped_nodes;
@@ -200,9 +201,6 @@ private:
     };
     std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
     std::set<std::string> m_unsupported_op_name_list;
-
-    static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
-                                  const Node* op = nullptr);
 
     void generate_calls(const element::Type& type,
                         const NodeWrapper& op,

@@ -50,4 +50,8 @@ public:
     bool call(std::shared_ptr<Function> function,
               const std::vector<std::shared_ptr<Tensor>>& outputs,
               const std::vector<std::shared_ptr<Tensor>>& intputs) override;
+
+    bool execute(Handle handle,
+                 const std::vector<runtime::Tensor*>& outputs,
+                 const std::vector<runtime::Tensor*>& inputs) override;
 };
