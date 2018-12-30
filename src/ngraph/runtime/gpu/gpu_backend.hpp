@@ -54,9 +54,9 @@ namespace ngraph
                 Handle compile(std::shared_ptr<Function> func,
                                bool enable_performance_collection = false) override;
 
-                bool call(std::shared_ptr<Function> func,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
+                bool execute(Handle handle,
+                             const std::vector<runtime::Tensor*>& outputs,
+                             const std::vector<runtime::Tensor*>& inputs) override;
 
                 void remove_compiled_function(std::shared_ptr<Function> func) override;
                 void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
@@ -96,9 +96,8 @@ namespace ngraph
                 /// \param target Pointer to a pre-allocated array of void* with
                 /// size >= source.size()
                 /// \param source Source vector of Tensors
-                static void
-                    initialize_io(void** target,
-                                  const std::vector<std::shared_ptr<runtime::Tensor>>& source);
+                static void initialize_io(void** target,
+                                          const std::vector<runtime::Tensor*>& source);
 
                 std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
                 std::shared_ptr<BackendContext> m_context;

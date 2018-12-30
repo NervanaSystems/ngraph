@@ -136,16 +136,14 @@ runtime::Handle runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func,
     return func;
 }
 
-void runtime::gpu::GPU_Backend::initialize_io(void** target,
-                                              const vector<shared_ptr<runtime::Tensor>>& source)
+void runtime::gpu::GPU_Backend::initialize_io(void** target, const vector<runtime::Tensor*>& source)
 {
     for (size_t i = 0; i < source.size(); i++)
     {
-        shared_ptr<runtime::gpu::GPUTensor> tv =
-            dynamic_pointer_cast<runtime::gpu::GPUTensor>(source[i]);
-        if (tv)
+        runtime::gpu::GPUTensor* tensor = dynamic_cast<runtime::gpu::GPUTensor*>(source[i]);
+        if (tensor)
         {
-            target[i] = tv->m_allocated_buffer_pool;
+            target[i] = tensor->m_allocated_buffer_pool;
         }
         else
         {
@@ -154,9 +152,9 @@ void runtime::gpu::GPU_Backend::initialize_io(void** target,
     }
 }
 
-bool runtime::gpu::GPU_Backend::call(shared_ptr<Function> func,
-                                     const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                     const vector<shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::gpu::GPU_Backend::execute(Handle func,
+                                        const vector<runtime::Tensor*>& outputs,
+                                        const vector<runtime::Tensor*>& inputs)
 {
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_external_function == nullptr)
