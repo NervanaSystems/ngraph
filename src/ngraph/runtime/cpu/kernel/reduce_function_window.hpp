@@ -44,7 +44,8 @@ namespace ngraph
                     auto backend = runtime::Backend::create("CPU");
 
                     auto reducer = [&](ElementType a, ElementType b) {
-                        TensorViewPtrs inputs, outputs;
+                        TensorViewPtrs inputs;
+                        TensorViewPtrs outputs;
 
                         ElementType p __attribute__((aligned(NGRAPH_CPU_ALIGNMENT))) = a;
                         ElementType q __attribute__((aligned(NGRAPH_CPU_ALIGNMENT))) = b;
@@ -56,9 +57,19 @@ namespace ngraph
                             ngraph::element::from<ElementType>(), Shape{}, &q));
                         outputs.emplace_back(backend->create_tensor(
                             ngraph::element::from<ElementType>(), Shape{}, &r));
+                        std::vector<runtime::Tensor*> out;
+                        std::vector<runtime::Tensor*> in;
+                        for (auto output : outputs)
+                        {
+                            out.push_back(output.get());
+                        }
+                        for (auto input : inputs)
+                        {
+                            in.push_back(input.get());
+                        }
 
                         auto call_frame = external_function->make_call_frame();
-                        call_frame->call(outputs, inputs);
+                        call_frame->call(out, in);
 
                         return r;
                     };

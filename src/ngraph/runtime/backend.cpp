@@ -48,6 +48,24 @@ vector<ngraph::runtime::PerformanceCounter>
 {
     return vector<PerformanceCounter>();
 }
+
+bool runtime::Backend::call(shared_ptr<Function> function,
+                            const vector<shared_ptr<runtime::Tensor>>& outputs,
+                            const vector<shared_ptr<runtime::Tensor>>& inputs)
+{
+    vector<runtime::Tensor*> out;
+    vector<runtime::Tensor*> in;
+    for (auto output : outputs)
+    {
+        out.push_back(output.get());
+    }
+    for (auto input : inputs)
+    {
+        in.push_back(input.get());
+    }
+    execute(function, out, in);
+}
+
 bool runtime::Backend::call_with_validate(shared_ptr<Function> func,
                                           const vector<shared_ptr<runtime::Tensor>>& outputs,
                                           const vector<shared_ptr<runtime::Tensor>>& inputs)

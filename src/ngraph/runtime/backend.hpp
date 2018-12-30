@@ -88,13 +88,12 @@ public:
                            bool enable_performance_collection = false) = 0;
 
     /// \deprecated use execute method
-    /// \brief Executes a single iteration of a Function. If func is not compiled the call will
-    ///     compile it.
+    /// \brief Executes a single iteration of a Function.
     /// \param func The function to execute
     /// \returns true if iteration is successful, false otherwise
     DEPRECATED virtual bool call(std::shared_ptr<Function> func,
                                  const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                                 const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) = 0;
+                                 const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
     /// \brief Executes a single iteration of a Function.
     /// \param handle The Handle returned from compile or load

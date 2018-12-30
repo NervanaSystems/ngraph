@@ -53,10 +53,10 @@ namespace ngraph
                 /// \brief Invoke the function with values matching the signature of the function.
                 ///
                 /// Tuples will be expanded into their tensor views to build the call frame.
-                void call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+                void call(const std::vector<runtime::Tensor*>& outputs,
+                          const std::vector<runtime::Tensor*>& inputs);
 
-                void propagate_layouts(const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
+                void propagate_layouts(const std::vector<runtime::Tensor*>& tvs,
                                        const LayoutDescriptorPtrs& layouts) const;
 
                 void setup_runtime_context();
@@ -67,8 +67,8 @@ namespace ngraph
                 CPU_CallFrame(CPU_CallFrame&&) = delete;
                 CPU_CallFrame& operator=(const CPU_CallFrame&) = delete;
 
-                void inner_call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                                const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+                void inner_call(const std::vector<runtime::Tensor*>& outputs,
+                                const std::vector<runtime::Tensor*>& inputs);
 
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;
                 EntryPoint m_compiled_function;

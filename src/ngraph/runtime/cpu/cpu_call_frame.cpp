@@ -42,24 +42,21 @@ runtime::cpu::CPU_CallFrame::~CPU_CallFrame()
     cleanup_runtime_context();
 }
 
-void runtime::cpu::CPU_CallFrame::inner_call(
-    const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
-    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
+void runtime::cpu::CPU_CallFrame::inner_call(const std::vector<runtime::Tensor*>& output_tvs,
+                                             const std::vector<runtime::Tensor*>& input_tvs)
 {
     vector<void*> inputs;
     vector<void*> outputs;
 
     for (size_t i = 0; i < input_tvs.size(); i++)
     {
-        shared_ptr<runtime::cpu::CPUTensorView> tv =
-            static_pointer_cast<runtime::cpu::CPUTensorView>(input_tvs[i]);
+        runtime::cpu::CPUTensorView* tv = static_cast<runtime::cpu::CPUTensorView*>(input_tvs[i]);
         ctx->p_en[i] = tv->get_stale();
         inputs.push_back(tv->get_data_ptr());
     }
     for (size_t i = 0; i < output_tvs.size(); i++)
     {
-        shared_ptr<runtime::cpu::CPUTensorView> tv =
-            static_pointer_cast<runtime::cpu::CPUTensorView>(output_tvs[i]);
+        runtime::cpu::CPUTensorView* tv = static_cast<runtime::cpu::CPUTensorView*>(output_tvs[i]);
         outputs.push_back(tv->get_data_ptr());
     }
 
@@ -81,18 +78,16 @@ void runtime::cpu::CPU_CallFrame::inner_call(
     }
 }
 
-void runtime::cpu::CPU_CallFrame::call(
-    const std::vector<std::shared_ptr<runtime::Tensor>>& output_tvs,
-    const std::vector<std::shared_ptr<runtime::Tensor>>& input_tvs)
+void runtime::cpu::CPU_CallFrame::call(const std::vector<runtime::Tensor*>& output_tvs,
+                                       const std::vector<runtime::Tensor*>& input_tvs)
 {
     ctx->pc = 0;
     propagate_layouts(output_tvs, m_external_function->get_result_layout_descriptors());
     inner_call(output_tvs, input_tvs);
 }
 
-void runtime::cpu::CPU_CallFrame::propagate_layouts(
-    const std::vector<std::shared_ptr<runtime::Tensor>>& tvs,
-    const LayoutDescriptorPtrs& layouts) const
+void runtime::cpu::CPU_CallFrame::propagate_layouts(const std::vector<runtime::Tensor*>& tvs,
+                                                    const LayoutDescriptorPtrs& layouts) const
 {
     if (layouts.size() != tvs.size())
     {

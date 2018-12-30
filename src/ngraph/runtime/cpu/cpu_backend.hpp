@@ -48,9 +48,9 @@ namespace ngraph
                 Handle compile(std::shared_ptr<Function> func,
                                bool enable_performance_collection = false) override;
 
-                bool call(std::shared_ptr<Function> func,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
+    bool execute(Handle handle,
+                 const std::vector<runtime::Tensor*>& outputs,
+                 const std::vector<runtime::Tensor*>& inputs) override;
 
                 void remove_compiled_function(std::shared_ptr<Function> func) override;
                 std::shared_ptr<CPU_CallFrame> get_call_frame(std::shared_ptr<Function> func);

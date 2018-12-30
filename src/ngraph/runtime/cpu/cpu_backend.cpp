@@ -99,9 +99,9 @@ std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     return instance.m_call_frame;
 }
 
-bool runtime::cpu::CPU_Backend::call(shared_ptr<Function> func,
-                                     const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                     const vector<shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::cpu::CPU_Backend::execute(Handle func,
+                                        const std::vector<runtime::Tensor*>& outputs,
+                                        const std::vector<runtime::Tensor*>& inputs)
 {
     bool rc = true;
 

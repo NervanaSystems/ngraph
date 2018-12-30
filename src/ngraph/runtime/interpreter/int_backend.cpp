@@ -92,23 +92,6 @@ runtime::Handle runtime::interpreter::INTBackend::compile(shared_ptr<Function> f
     return function;
 }
 
-bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
-                                            const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                            const vector<shared_ptr<runtime::Tensor>>& inputs)
-{
-    vector<runtime::Tensor*> out;
-    vector<runtime::Tensor*> in;
-    for (auto output : outputs)
-    {
-        out.push_back(output.get());
-    }
-    for (auto input : inputs)
-    {
-        in.push_back(input.get());
-    }
-    execute(function, out, in);
-}
-
 bool runtime::interpreter::INTBackend::execute(Handle function,
                                                const vector<runtime::Tensor*>& outputs,
                                                const vector<runtime::Tensor*>& inputs)
