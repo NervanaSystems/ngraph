@@ -88,6 +88,8 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
                 op->set_placement_index(placement);
             }
         }
+
+        set_parameters_and_results(*func);
     }
 
     return func;

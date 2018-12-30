@@ -45,6 +45,7 @@ bool ngraph::runtime::plaidml::PlaidML_Backend::compile(std::shared_ptr<Function
                                                         bool enable_performance_collection)
 {
     m_cache.compile(func, &m_compiler);
+    set_parameters_and_results(*func);
     return true;
 }
 

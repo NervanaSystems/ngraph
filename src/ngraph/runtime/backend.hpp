@@ -130,4 +130,24 @@ public:
     void validate(std::shared_ptr<const Function> func,
                   const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                   const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+
+    /// \brief Query the input Parameters for a given Handle
+    /// \param handle The Handle returned from compile or load
+    /// \returns an ngraph::op::ParameterVector of all input parameters
+    const ngraph::ParameterVector& get_parameters(Handle handle) const;
+
+    /// \brief Query the output Results for a given Handle
+    /// \param handle The Handle returned from compile or load
+    /// \returns an ngraph::ResultVector of all input parameters
+    const ngraph::ResultVector& get_results(Handle handle) const;
+
+protected:
+    /// \brief Called at the end of compile to the the values to be returned by get_parameters
+    ///     and get_results
+    /// \param func The function with Results fully resolved.
+    void set_parameters_and_results(const Function& func);
+
+private:
+    ngraph::ParameterVector m_parameters;
+    ngraph::ResultVector m_results;
 };

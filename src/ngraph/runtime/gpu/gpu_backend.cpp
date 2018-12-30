@@ -130,6 +130,8 @@ runtime::Handle runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func,
         instance.m_compiled_function = instance.m_external_function->m_compiled_function;
         instance.m_inputs.resize(func->get_parameters().size());
         instance.m_outputs.resize(func->get_output_size());
+
+        set_parameters_and_results(*func);
     }
     return func;
 }

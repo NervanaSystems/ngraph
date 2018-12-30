@@ -57,6 +57,13 @@ shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const elemen
 runtime::Handle runtime::nop::NOPBackend::compile(shared_ptr<Function> function,
                                                   bool enable_performance_collection)
 {
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::LikeReplacement>();
+    pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
+    pass_manager.run_passes(function);
+
+    set_parameters_and_results(*function);
+
     return function;
 }
 

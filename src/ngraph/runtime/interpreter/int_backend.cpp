@@ -85,6 +85,8 @@ runtime::Handle runtime::interpreter::INTBackend::compile(shared_ptr<Function> f
         {
             instance.m_wrapped_nodes.emplace_back(node);
         }
+
+        set_parameters_and_results(*function);
     }
 
     return function;

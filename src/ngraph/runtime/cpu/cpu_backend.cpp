@@ -77,6 +77,8 @@ runtime::Handle runtime::cpu::CPU_Backend::compile(shared_ptr<Function> func,
         instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
         auto cf = instance.m_external_function->make_call_frame();
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
+
+        set_parameters_and_results(*func);
     }
     return func;
 }

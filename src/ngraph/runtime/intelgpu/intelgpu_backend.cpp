@@ -436,6 +436,8 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
         {
             visualize_tree(func, "intelgpu_", "_opt");
         }
+
+        set_parameters_and_results(*func);
     }
 
     for (shared_ptr<Node> op : func->get_ops())

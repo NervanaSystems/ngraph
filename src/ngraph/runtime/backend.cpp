@@ -114,3 +114,19 @@ bool runtime::Backend::is_supported(const Node& node) const
     // then override this method and enhance.
     return false;
 }
+
+const ngraph::ParameterVector& runtime::Backend::get_parameters(Handle handle) const
+{
+    return m_parameters;
+}
+
+const ngraph::ResultVector& runtime::Backend::get_results(Handle handle) const
+{
+    return m_results;
+}
+
+void runtime::Backend::set_parameters_and_results(const Function& func)
+{
+    m_parameters = func.get_parameters();
+    m_results = func.get_results();
+}
