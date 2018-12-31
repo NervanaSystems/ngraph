@@ -58,10 +58,8 @@ namespace ngraph
                              const std::vector<runtime::Tensor*>& outputs,
                              const std::vector<runtime::Tensor*>& inputs) override;
 
-                void remove_compiled_function(std::shared_ptr<Function> func) override;
-                void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
-                std::vector<PerformanceCounter>
-                    get_performance_data(std::shared_ptr<Function> func) const override;
+                void remove_compiled_function(Handle handle) override;
+                std::vector<PerformanceCounter> get_performance_data(Handle handle) const override;
 
                 bool is_supported(const Node& node) const override;
 
@@ -99,7 +97,7 @@ namespace ngraph
                 static void initialize_io(void** target,
                                           const std::vector<runtime::Tensor*>& source);
 
-                std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
+                std::vector<std::shared_ptr<FunctionInstance>> m_instances;
                 std::shared_ptr<BackendContext> m_context;
             };
         }

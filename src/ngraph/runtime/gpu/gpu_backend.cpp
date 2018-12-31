@@ -120,20 +120,20 @@ shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
 runtime::Handle runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func,
                                                    bool enable_performance_collection)
 {
-    FunctionInstance& instance = m_function_map[func];
-    if (instance.m_external_function == nullptr)
-    {
-        m_context->bind_cuda_context_to_thread();
-        instance.m_external_function = make_shared<GPU_ExternalFunction>(func, m_context);
-        instance.m_external_function->m_emit_timing = instance.m_performance_counters_enabled;
-        instance.m_external_function->compile();
-        instance.m_compiled_function = instance.m_external_function->m_compiled_function;
-        instance.m_inputs.resize(func->get_parameters().size());
-        instance.m_outputs.resize(func->get_output_size());
+    shared_ptr<FunctionInstance> instance = make_shared<FunctionInstance>();
+    m_instances.push_back(instance);
+    Handle handle = instance.get();
+    m_context->bind_cuda_context_to_thread();
+    instance->m_external_function = make_shared<GPU_ExternalFunction>(func, m_context);
+    instance->m_external_function->m_emit_timing = instance->m_performance_counters_enabled;
+    instance->m_external_function->compile();
+    instance->m_compiled_function = instance->m_external_function->m_compiled_function;
+    instance->m_inputs.resize(func->get_parameters().size());
+    instance->m_outputs.resize(func->get_output_size());
 
-        set_parameters_and_results(*func);
-    }
-    return func;
+    set_parameters_and_results(handle, *func);
+
+    return handle;
 }
 
 void runtime::gpu::GPU_Backend::initialize_io(void** target, const vector<runtime::Tensor*>& source)
@@ -152,11 +152,11 @@ void runtime::gpu::GPU_Backend::initialize_io(void** target, const vector<runtim
     }
 }
 
-bool runtime::gpu::GPU_Backend::execute(Handle func,
+bool runtime::gpu::GPU_Backend::execute(Handle handle,
                                         const vector<runtime::Tensor*>& outputs,
                                         const vector<runtime::Tensor*>& inputs)
 {
-    FunctionInstance& instance = m_function_map[func];
+    FunctionInstance& instance = *static_cast<FunctionInstance*>(handle);
     if (instance.m_external_function == nullptr)
     {
         throw runtime_error("compile() must be called before call().");
@@ -175,48 +175,42 @@ bool runtime::gpu::GPU_Backend::execute(Handle func,
     return true;
 }
 
-void runtime::gpu::GPU_Backend::remove_compiled_function(shared_ptr<Function> func)
+void runtime::gpu::GPU_Backend::remove_compiled_function(Handle handle)
 {
-    m_function_map.erase(func);
-}
-
-void runtime::gpu::GPU_Backend::enable_performance_data(shared_ptr<Function> func, bool enable)
-{
-    FunctionInstance& instance = m_function_map[func];
-    if (instance.m_external_function != nullptr)
+    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
+    for (auto it = m_instances.begin(); it != m_instances.end(); ++it)
     {
-        throw runtime_error("Performance data collection must be enabled prior to compiling.");
+        if ((*it).get() == instance)
+        {
+            m_instances.erase(it);
+            break;
+        }
     }
-    instance.m_performance_counters_enabled = enable;
 }
 
 vector<runtime::PerformanceCounter>
-    runtime::gpu::GPU_Backend::get_performance_data(shared_ptr<Function> func) const
+    runtime::gpu::GPU_Backend::get_performance_data(Handle handle) const
 {
+    FunctionInstance& instance = *static_cast<FunctionInstance*>(handle);
     std::vector<runtime::PerformanceCounter> rc;
-    auto it = m_function_map.find(func);
-    if (it != m_function_map.end())
+    if (instance.m_external_function != nullptr)
     {
-        const FunctionInstance& instance = it->second;
-        if (instance.m_external_function != nullptr)
+        auto* engine = instance.m_external_function->m_execution_engine.get();
+        if (engine)
         {
-            auto* engine = instance.m_external_function->m_execution_engine.get();
-            if (engine)
-            {
-                auto get_count = engine->find_function<size_t()>("get_debug_timer_count");
-                auto get_name = engine->find_function<const char*(size_t)>("get_debug_timer_name");
-                auto get_microseconds =
-                    engine->find_function<size_t(size_t)>("get_debug_timer_microseconds");
-                auto get_call_count =
-                    engine->find_function<size_t(size_t)>("get_debug_timer_call_count");
+            auto get_count = engine->find_function<size_t()>("get_debug_timer_count");
+            auto get_name = engine->find_function<const char*(size_t)>("get_debug_timer_name");
+            auto get_microseconds =
+                engine->find_function<size_t(size_t)>("get_debug_timer_microseconds");
+            auto get_call_count =
+                engine->find_function<size_t(size_t)>("get_debug_timer_call_count");
 
-                if (get_count && get_name && get_microseconds && get_call_count)
+            if (get_count && get_name && get_microseconds && get_call_count)
+            {
+                size_t count = get_count();
+                for (size_t i = 0; i < count; i++)
                 {
-                    size_t count = get_count();
-                    for (size_t i = 0; i < count; i++)
-                    {
-                        rc.push_back({get_name(i), get_microseconds(i), get_call_count(i)});
-                    }
+                    rc.push_back({get_name(i), get_microseconds(i), get_call_count(i)});
                 }
             }
         }

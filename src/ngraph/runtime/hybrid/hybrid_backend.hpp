@@ -66,6 +66,7 @@ private:
         std::unordered_map<std::shared_ptr<ngraph::op::Parameter>,
                            std::shared_ptr<ngraph::op::Result>>
             m_map_parameter_to_result;
+        std::unordered_map<std::shared_ptr<Function>, runtime::Handle> m_handle_map;
     };
 
     std::vector<std::shared_ptr<FunctionInstance>> m_instances;

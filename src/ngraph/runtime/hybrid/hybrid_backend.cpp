@@ -57,6 +57,8 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
     // Clone function
     shared_ptr<FunctionInstance> instance;
     m_instances.push_back(instance);
+    Handle handle = instance.get();
+
     instance->m_function = clone_function(*func);
 
     // Run placement pass
@@ -78,7 +80,7 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         size_t placement = runtime::hybrid::get_colocated_function_placement(sub_function);
         auto backend = m_backend_list[placement];
         Handle handle = backend->compile(sub_function, enable_performance_collection);
-        m_subfunction_map[handle] = sub_function;
+        instance->m_handle_map[sub_function] = handle;
 
         // Compile will replace nodes so we need to make one more pass through all
         // ops to reset placement
@@ -88,9 +90,9 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         }
     }
 
-    set_parameters_and_results(*func);
+    set_parameters_and_results(handle, *func);
 
-    return instance.get();
+    return handle;
 }
 
 bool runtime::hybrid::HybridBackend::execute(Handle handle,
@@ -188,7 +190,7 @@ bool runtime::hybrid::HybridBackend::execute(Handle handle,
         }
 
         // Call
-        backend->execute(sub_function, results, parameters);
+        backend->execute(instance.m_handle_map.at(sub_function), results, parameters);
 
         // Need to copy any results to the correct device
         for (const auto& p : copy_back)
