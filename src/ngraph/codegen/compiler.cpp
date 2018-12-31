@@ -422,6 +422,7 @@ void codegen::CompilerCore::configure_search_path()
 #if defined(__APPLE__)
     // Is it OK to use AppleClang c++ headers for Clang?
     add_header_search_path("/Library/Developer/CommandLineTools/usr/include/c++/v1");
+    // add_header_search_path(CLANG_LIBCPP_HEADERS_PATH);
     add_header_search_path("/usr/local/include");
     add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
     add_header_search_path("/usr/include");

@@ -68,6 +68,7 @@ int main(int argc, char** argv)
 {
     time_t main_timestamp = get_timestamp(argv[0]);
     static vector<string> valid_ext = {".h", ".hpp", ".tcc", ""};
+    static vector<string> invalid_file = {"README"};
     string output_path;
     string base_name;
 
@@ -86,9 +87,13 @@ int main(int argc, char** argv)
 
     vector<ResourceInfo> include_paths;
 
-#ifdef __APPLE__
+#if defined(__APPLE__)
+    include_paths.push_back({CLANG_LIBCPP_HEADERS_PATH, {}, true});
+#endif
+    include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
+
 #ifdef EIGEN_HEADERS_PATH
-    include_paths.push_back({EIGEN_HEADERS_PATH, {}, true});
+    include_paths.push_back({EIGEN_HEADERS_PATH, {"Eigen"}, true});
 #endif
 #ifdef MKLDNN_HEADERS_PATH
     include_paths.push_back({MKLDNN_HEADERS_PATH, {}, true});
@@ -96,21 +101,7 @@ int main(int argc, char** argv)
 #ifdef TBB_HEADERS_PATH
     include_paths.push_back({TBB_HEADERS_PATH, {}, true});
 #endif
-    include_paths.push_back({NGRAPH_HEADERS_PATH, {}, true});
-    include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
-#else // __APPLE__
-    include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
-#ifdef EIGEN_HEADERS_PATH
-    include_paths.push_back({EIGEN_HEADERS_PATH, {}, true});
-#endif
-#ifdef MKLDNN_HEADERS_PATH
-    include_paths.push_back({MKLDNN_HEADERS_PATH, {}, true});
-#endif
-    include_paths.push_back({NGRAPH_HEADERS_PATH, {}, true});
-#ifdef TBB_HEADERS_PATH
-    include_paths.push_back({TBB_HEADERS_PATH, {}, true});
-#endif
-#endif
+    include_paths.push_back({NGRAPH_HEADERS_PATH, {"ngraph"}, true});
 
     if (output_path.empty())
     {
@@ -124,7 +115,10 @@ int main(int argc, char** argv)
     {
         // cout << "path " << path.source_path << " -> " << path.target_path << endl;
         vector<string> path_list;
-        path_list.push_back(path.search_path);
+        if(path.subdirs.empty())
+        {
+            path_list.push_back(path.search_path);
+        }
         for (const string& p : path.subdirs)
         {
             path_list.push_back(path_join(path.search_path, p));
@@ -135,11 +129,14 @@ int main(int argc, char** argv)
                           [&](const string& file, bool is_dir) {
                               if (!is_dir)
                               {
-                                  string ext = get_file_ext(file);
-                                  if (contains(valid_ext, ext))
+                                  if (!contains(invalid_file, file))
                                   {
-                                      //   cout << "add " << path.search_path << ", " << file << endl;
-                                      path.files.push_back(file);
+                                      string ext = get_file_ext(file);
+                                      if (contains(valid_ext, ext))
+                                      {
+                                          //   cout << "add " << path.search_path << ", " << file << endl;
+                                          path.files.push_back(file);
+                                      }
                                   }
                               }
                           },
