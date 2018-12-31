@@ -72,8 +72,7 @@ namespace ngraph
                                 out_shapes,
                                 out_types,
                                 out_tensors](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    TensorViewPtrs inputs;
-                    TensorViewPtrs outputs;
+                    TensorViewPtrs inputs, outputs;
                     vector<runtime::Tensor*> in;
                     vector<runtime::Tensor*> out;
                     for (int i = 0; i < arg_shapes.size(); i++)

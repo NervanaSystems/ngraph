@@ -99,8 +99,7 @@ namespace ngraph
                 };
 
                 auto scatter = [&, backend](float x, float y) {
-                    TensorViewPtrs inputs;
-                    TensorViewPtrs outputs;
+                    TensorViewPtrs inputs, outputs;
                     float output;
                     inputs.emplace_back(backend->create_tensor(element::f32, Shape{}, &x));
                     inputs.emplace_back(backend->create_tensor(element::f32, Shape{}, &y));

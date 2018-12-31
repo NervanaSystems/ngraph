@@ -44,8 +44,7 @@ namespace ngraph
                     auto backend = runtime::Backend::create("CPU");
 
                     auto reducer = [&](ElementType a, ElementType b) {
-                        TensorViewPtrs inputs;
-                        TensorViewPtrs outputs;
+                        TensorViewPtrs inputs, outputs;
 
                         ElementType p __attribute__((aligned(NGRAPH_CPU_ALIGNMENT))) = a;
                         ElementType q __attribute__((aligned(NGRAPH_CPU_ALIGNMENT))) = b;
