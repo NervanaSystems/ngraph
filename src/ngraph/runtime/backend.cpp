@@ -63,7 +63,7 @@ bool runtime::Backend::call(Handle handle,
     {
         in.push_back(input.get());
     }
-    execute(handle, out, in);
+    return execute(handle, out, in);
 }
 
 bool runtime::Backend::call_with_validate(Handle handle,

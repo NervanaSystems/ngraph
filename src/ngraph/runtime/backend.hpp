@@ -83,13 +83,13 @@ public:
     /// \brief Compiles a Function.
     /// \param func The function to compile
     /// \param enable_performance_collection Flag to add per-op performance profiling.
-    /// \returns compiled function or nullptr on failure
+    /// \returns Handle or nullptr on failure
     virtual Handle compile(std::shared_ptr<Function> func,
                            bool enable_performance_collection = false) = 0;
 
     /// \deprecated use execute method
     /// \brief Executes a single iteration of a Function.
-    /// \param func The function to execute
+    /// \param handle The Handle returned from compile or load
     /// \returns true if iteration is successful, false otherwise
     DEPRECATED virtual bool call(Handle handle,
                                  const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
@@ -105,7 +105,7 @@ public:
                          const std::vector<runtime::Tensor*>& inputs) = 0;
 
     /// \brief Executes a single iteration of a Function.
-    /// \param func The function to execute
+    /// \param handle The Handle returned from compile or load
     /// \returns true if iteration is successful, false otherwise
     DEPRECATED bool call_with_validate(Handle handle,
                                        const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
@@ -126,11 +126,6 @@ public:
     ///     from the cache.
     /// \param handle The Handle returned from compile or load
     virtual void remove_compiled_function(Handle handle);
-
-    /// \brief Compiled functions may be cached. This function removes a compiled function
-    ///     from the cache.
-    /// \param handle The Handle returned from compile or load
-    // virtual void remove_compiled_function(Handle handle);
 
     /// \brief Collect performance information gathered on a Function.
     /// \param handle The Handle returned from compile or load
