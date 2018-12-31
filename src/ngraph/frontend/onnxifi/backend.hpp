@@ -52,19 +52,19 @@ namespace ngraph
                 return get().compile(function);
             }
 
-            bool call(const std::shared_ptr<Function>& function,
+            bool call(runtime::Handle handle,
                       const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                       const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const
             {
-                return get().call(function, outputs, inputs);
+                return get().call(handle, outputs, inputs);
             }
 
             bool call_with_validate(
-                const std::shared_ptr<Function>& function,
+                runtime::Handle handle,
                 const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                 const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const
             {
-                return get().call_with_validate(function, outputs, inputs);
+                return get().call_with_validate(handle, outputs, inputs);
             }
 
         private:

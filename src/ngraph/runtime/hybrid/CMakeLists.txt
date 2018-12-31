@@ -21,7 +21,3 @@ add_library(hybrid_base STATIC EXCLUDE_FROM_ALL
     pass/fix_get_output_element.cpp)
 target_link_libraries(hybrid_base PUBLIC ngraph)
 set_target_properties(hybrid_base PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-
-install(TARGETS hybrid_base
-    ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
-)
