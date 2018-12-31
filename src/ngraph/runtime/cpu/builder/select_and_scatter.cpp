@@ -84,17 +84,17 @@ namespace ngraph
                     inputs.emplace_back(backend->create_tensor(element::f32, Shape{}, &y));
                     outputs.emplace_back(
                         backend->create_tensor(element::boolean, Shape{}, &output));
-                    vector<runtime::Tensor*> out;
-                    vector<runtime::Tensor*> in;
-                    for (auto output : outputs)
+                    vector<runtime::Tensor*> t_out;
+                    vector<runtime::Tensor*> t_in;
+                    for (auto o : outputs)
                     {
-                        out.push_back(output.get());
+                        t_out.push_back(o.get());
                     }
                     for (auto input : inputs)
                     {
-                        in.push_back(input.get());
+                        t_in.push_back(input.get());
                     }
-                    select_external_function->make_call_frame()->call(out, in);
+                    select_external_function->make_call_frame()->call(t_out, t_in);
                     return output;
                 };
 
@@ -104,17 +104,17 @@ namespace ngraph
                     inputs.emplace_back(backend->create_tensor(element::f32, Shape{}, &x));
                     inputs.emplace_back(backend->create_tensor(element::f32, Shape{}, &y));
                     outputs.emplace_back(backend->create_tensor(element::f32, Shape{}, &output));
-                    vector<runtime::Tensor*> out;
-                    vector<runtime::Tensor*> in;
-                    for (auto output : outputs)
+                    vector<runtime::Tensor*> t_out;
+                    vector<runtime::Tensor*> t_in;
+                    for (auto o : outputs)
                     {
-                        out.push_back(output.get());
+                        t_out.push_back(o.get());
                     }
                     for (auto input : inputs)
                     {
-                        in.push_back(input.get());
+                        t_in.push_back(input.get());
                     }
-                    scatter_external_function->make_call_frame()->call(out, in);
+                    scatter_external_function->make_call_frame()->call(t_out, t_in);
                     return output;
                 };
 

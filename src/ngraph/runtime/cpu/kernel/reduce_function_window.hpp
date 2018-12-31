@@ -56,19 +56,19 @@ namespace ngraph
                             ngraph::element::from<ElementType>(), Shape{}, &q));
                         outputs.emplace_back(backend->create_tensor(
                             ngraph::element::from<ElementType>(), Shape{}, &r));
-                        std::vector<runtime::Tensor*> out;
-                        std::vector<runtime::Tensor*> in;
-                        for (auto output : outputs)
+                        std::vector<runtime::Tensor*> t_out;
+                        std::vector<runtime::Tensor*> t_in;
+                        for (auto o : outputs)
                         {
-                            out.push_back(output.get());
+                            t_out.push_back(o.get());
                         }
-                        for (auto input : inputs)
+                        for (auto i : inputs)
                         {
-                            in.push_back(input.get());
+                            t_in.push_back(i.get());
                         }
 
                         auto call_frame = external_function->make_call_frame();
-                        call_frame->call(out, in);
+                        call_frame->call(t_out, t_in);
 
                         return r;
                     };
