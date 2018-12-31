@@ -50,14 +50,12 @@ public:
     Handle compile(std::shared_ptr<Function> func,
                    bool enable_performance_collection = false) override;
 
-    bool execute(std::shared_ptr<Function> func,
+    bool execute(Handle handle,
                  const std::vector<runtime::Tensor*>& outputs,
                  const std::vector<runtime::Tensor*>& inputs) override;
 
-    void remove_compiled_function(std::shared_ptr<Function> func) override;
-    void enable_performance_data(std::shared_ptr<Function> func, bool enable) override;
-    std::vector<PerformanceCounter>
-        get_performance_data(std::shared_ptr<Function> func) const override;
+    void remove_compiled_function(Handle handle) override;
+    std::vector<PerformanceCounter> get_performance_data(Handle handle) const override;
 
 private:
     class FunctionInstance
@@ -65,16 +63,18 @@ private:
     public:
         std::shared_ptr<cldnn::network> ocl_network = nullptr;
         bool m_performance_counters_enabled = false;
+        std::string m_function_name;
+        std::shared_ptr<Function> m_function;
     };
 
-    std::map<std::shared_ptr<Function>, FunctionInstance> ocl_networks;
+    std::vector<std::shared_ptr<FunctionInstance>> m_instances;
     std::shared_ptr<cldnn::engine> ocl_engine;
 
     bool m_disable_backend_optimizations = false;
 
     // Statistic related things
-    void print_call_performance(const std::shared_ptr<cldnn::network> network,
-                                const std::shared_ptr<Function> func,
+    void print_call_performance(Handle handle,
+                                const std::shared_ptr<cldnn::network> network,
                                 size_t time_compile,
                                 size_t time_call,
                                 double mem_before_call,
