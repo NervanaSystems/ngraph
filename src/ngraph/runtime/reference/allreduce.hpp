@@ -18,7 +18,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED
 
-#include "ngraph/mlsl.hpp"
+#include <mlsl.hpp>
 
 #include "ngraph/type/element_type.hpp"
 
