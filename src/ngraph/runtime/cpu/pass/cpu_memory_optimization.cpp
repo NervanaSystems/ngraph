@@ -305,8 +305,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             if (runtime::cpu::mkldnn_utils::get_mkldnn_data_type(dtype) ==
                 mkldnn::memory::data_type::data_undef)
             {
-                NGRAPH_DEBUG << slice->get_input_element_type(0).c_type_string()
-                             << " isn't supported";
+                NGRAPH_DEBUG << "cpu_memory_optimization: "
+                             << slice->get_input_element_type(0).c_type_string()
+                             << " isn't supported, no in place slice";
                 continue;
             }
 
