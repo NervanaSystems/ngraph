@@ -24,7 +24,7 @@ using namespace ngraph;
 using namespace std;
 
 runtime::hybrid::pass::AssignPlacement::AssignPlacement(
-    vector<shared_ptr<runtime::Backend>> placement_backends)
+    const vector<shared_ptr<runtime::Backend>>& placement_backends)
     : m_placement_backends(placement_backends)
 {
 }

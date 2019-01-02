@@ -39,8 +39,8 @@ namespace ngraph
 class ngraph::runtime::hybrid::pass::AssignPlacement : public ngraph::pass::NodePass
 {
 public:
-    // TODO: make policy a class
-    AssignPlacement(std::vector<std::shared_ptr<ngraph::runtime::Backend>> placement_backends);
+    AssignPlacement(
+        const std::vector<std::shared_ptr<ngraph::runtime::Backend>>& placement_backends);
 
 private:
     bool run_on_node(std::shared_ptr<Node> node) override;
