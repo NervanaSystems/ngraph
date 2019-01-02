@@ -1,17 +1,17 @@
-.. frameworks/validation-testing: 
+.. frameworks/validation.rst: 
 
+##############################
+Validated Models and Workloads
+##############################
 
-Validation and testing
-######################
-
-We validated performance for the following TensorFlow* and MXNet* workloads:
+We validated performance for the following TensorFlow\* and MXNet\* workloads:
 
 
 TensorFlow 
 ==========
 
 .. csv-table::
-   :header: "TensorFlow Workload", "Type"
+   :header: "TensorFlow Workload", "Genre of Deep Learning"
    :widths: 27, 53
    :escape: ~
 
@@ -40,7 +40,7 @@ MXNet
 =====
 
 .. csv-table::
-   :header: "MXNet Workload", "Type"
+   :header: "MXNet Workload", "Genre of Deep Learning"
    :widths: 27, 53
    :escape: ~
 
@@ -66,11 +66,12 @@ MXNet
 ONNX
 =====
 
-Additionally, we validated the following workloads are functional through nGraph ONNX importer: 
+Additionally, we validated the following workloads are functional through 
+`nGraph ONNX importer`_: 
 
 
 .. csv-table::
-   :header: "ONNX Workload", "Type"
+   :header: "ONNX Workload", "Genre of Deep Learning"
    :widths: 27, 53
    :escape: ~
 
@@ -90,31 +91,30 @@ Additionally, we validated the following workloads are functional through nGraph
    BVLC R-CNN ILSVRC13, Object detection 
 
 
-
-
-
 .. important:: Please see Intel's `Optimization Notice`_ for details on disclaimers. 
+
+.. rubric:: Footnotes
+
+.. [#1] Benchmarking performance of DL systems is a young discipline; it is a
+   good idea to be vigilant for results based on atypical distortions in the 
+   configuration parameters. Every topology is different, and performance 
+   changes can be attributed to multiple causes. Also watch out for the word 
+   "theoretical" in comparisons; actual performance should not be compared to 
+   theoretical performance.
+
 
 
 
 .. _Optimization Notice: https://software.intel.com/en-us/articles/optimization-notice
+.. _nGraph ONNX importer: https://github.com/NervanaSystems/ngraph-onnx/blob/master/README.md
 
-
-.. Notice revision #20110804: Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors. These optimizations include SSE2, SSE3, and SSSE3 instruction sets and other optimizations. Intel does not guarantee the availability, functionality, or effectiveness of any optimization on microprocessors not manufactured by Intel. Microprocessor-dependent optimizations in this product are intended for use with Intel microprocessors. Certain optimizations not specific to Intel microarchitecture are reserved for Intel microprocessors. Please refer to the applicable product User and Reference Guides for more information regarding the specific instruction sets covered by this notice.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.. Notice revision #20110804: Intel's compilers may or may not optimize to the same degree for 
+   non-Intel microprocessors for optimizations that are not unique to Intel microprocessors. 
+   These optimizations include SSE2, SSE3, and SSSE3 instruction sets and other optimizations. 
+   Intel does not guarantee the availability, functionality, or effectiveness of any optimization 
+   on microprocessors not manufactured by Intel. Microprocessor-dependent optimizations in this 
+   product are intended for use with Intel microprocessors. Certain optimizations not specific 
+   to Intel microarchitecture are reserved for Intel microprocessors. Please refer to the 
+   applicable product User and Reference Guides for more information regarding the specific 
+   instruction sets covered by this notice.
 

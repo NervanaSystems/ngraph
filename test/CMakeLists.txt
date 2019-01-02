@@ -55,6 +55,7 @@ set(SRC
     serialize.cpp
     shape.cpp
     tensor.cpp
+    tools.cpp
     type_prop.cpp
     util.cpp
     uuid.cpp
@@ -89,7 +90,7 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 
 if(NGRAPH_GPU_ENABLE)
-    list(APPEND SRC cudnn.cpp gpu_test.cpp gpu_fusion.cpp)
+    list(APPEND SRC gpu_test.cpp gpu_fusion.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
 endif()
 
@@ -200,6 +201,13 @@ if (NGRAPH_CPU_ENABLE)
     target_link_libraries(unit-test PRIVATE libmkldnn)
 endif()
 
+if (NGRAPH_TOOLS_ENABLE)
+    get_property(NBENCH_PATH TARGET nbench PROPERTY BINARY_DIR)
+    set(NBENCH "${NBENCH_PATH}/nbench")
+    target_compile_definitions(unit-test PRIVATE NBENCH_PATH="${NBENCH}")
+    add_dependencies(unit-test nbench)
+endif()
+
 if (NGRAPH_PLAIDML_ENABLE)
     target_link_libraries(unit-test PRIVATE plaidml_backend)
 endif()
@@ -215,10 +223,6 @@ endif()
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
-endif()
-
-if (NGRAPH_HYBRID_ENABLE)
-    target_link_libraries(unit-test PRIVATE hybrid_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)

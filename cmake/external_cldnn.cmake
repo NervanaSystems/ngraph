@@ -32,7 +32,7 @@ endif()
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (DEFINED NGRAPH_USE_CXX_ABI)
         set(COMPILE_FLAGS "${COMPILE_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
-    endif()    
+    endif()
 endif()
 
 ExternalProject_Add(
@@ -43,9 +43,12 @@ ExternalProject_Add(
     # Disable install step
     INSTALL_COMMAND ""
     UPDATE_COMMAND ""
-    CMAKE_ARGS 
+    CMAKE_GENERATOR ${CMAKE_GENERATOR}
+    CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+    CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
+    CMAKE_ARGS
+                ${NGRAPH_FORWARD_CMAKE_ARGS}
                 # -DCLDNN__OUTPUT_DIR=out/Debug
-                -DCMAKE_BUILD_TYPE=Release
                 -DCLDNN__BOOST_VERSION=${BOOST_VERSION}
                 -DCLDNN__INCLUDE_TESTS=FALSE
                 -DCLDNN__INCLUDE_TUTORIAL=FALSE

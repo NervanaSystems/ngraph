@@ -38,7 +38,8 @@ public:
     IntelGPUTensorView(const element::Type& element_type,
                        const Shape& shape,
                        const cldnn::engine& backend_engine,
-                       void* memory_pointer = nullptr);
+                       void* memory_pointer,
+                       const runtime::Backend* parent);
 
     /// \brief Write bytes directly into the tensor
     /// \param p Pointer to source of data

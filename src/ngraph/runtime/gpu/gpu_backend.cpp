@@ -20,6 +20,7 @@
 #include <cudnn.h>
 
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/batch_norm.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
@@ -107,13 +108,13 @@ runtime::gpu::GPU_Backend::BackendContext::~BackendContext()
 shared_ptr<runtime::Tensor>
     runtime::gpu::GPU_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
-    return make_shared<runtime::gpu::GPUTensor>(element_type, shape);
+    return make_shared<runtime::gpu::GPUTensor>(element_type, shape, this);
 }
 
 shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
-    return make_shared<runtime::gpu::GPUTensor>(element_type, shape, memory_pointer);
+    return make_shared<runtime::gpu::GPUTensor>(element_type, shape, memory_pointer, this);
 }
 
 runtime::Handle runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func)
@@ -222,33 +223,53 @@ vector<runtime::PerformanceCounter>
     return rc;
 }
 
-bool runtime::gpu::GPU_Backend::is_supported(const Node& node) const
+bool runtime::gpu::GPU_Backend::is_supported(const Node& op) const
 {
-    bool rc = true;
+    set<string> unsupported_ops = {"Quantize",
+                                   "Dequantize",
+                                   "ShapeOf",
+                                   "All",
+                                   "Any",
+                                   "AllReduce",
+                                   "SelectAndScatter",
+                                   "StopGradient",
+                                   "EmbeddingLookup",
+                                   "GenerateMask"};
 
-    // get op type
-    element::Type type;
-    if (node.description() == "Select")
+    set<string> float_only = {"MaxPoolBackprop", "AvgPoolBackprop", "MaxPool", "Dot"};
+
+    if (unsupported_ops.find(op.description()) != unsupported_ops.end())
     {
-        type = node.get_input_element_type(1);
-    }
-    else if (node.description() == "Constant")
-    {
-        type = node.get_outputs().at(0).get_element_type();
-    }
-    else if (node.description() == "Parameter")
-    {
-        type = node.get_outputs().at(0).get_element_type();
-    }
-    else
-    {
-        type = node.get_input_element_type(0);
+        return false;
     }
 
-    if (type != element::f32)
+    if (float_only.find(op.description()) != float_only.end())
     {
-        rc = false;
+        if (op.get_output_element_type(0) != element::f32 &&
+            op.get_output_element_type(0) != element::f64)
+        {
+            return false;
+        }
     }
 
-    return rc;
+    if (op.description() == "BatchNormInference")
+    {
+        const ngraph::op::BatchNormInference* bn =
+            static_cast<const ngraph::op::BatchNormInference*>(&op);
+        if (bn->get_eps_value() < CUDNN_BN_MIN_EPSILON)
+        {
+            return false;
+        }
+    }
+    else if (op.description() == "BatchNormTraining")
+    {
+        const ngraph::op::BatchNormTraining* bn =
+            static_cast<const ngraph::op::BatchNormTraining*>(&op);
+        if (bn->get_eps_value() < CUDNN_BN_MIN_EPSILON)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }

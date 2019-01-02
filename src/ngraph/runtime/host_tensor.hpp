@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -36,11 +37,20 @@ class ngraph::runtime::HostTensor : public ngraph::runtime::Tensor
 public:
     HostTensor(const ngraph::element::Type& element_type,
                const Shape& shape,
-               const std::string& name = "external");
+               const std::string& name = "external",
+               const Backend* parent = nullptr);
     HostTensor(const ngraph::element::Type& element_type,
                const Shape& shape,
                void* memory_pointer,
-               const std::string& name = "external");
+               const std::string& name = "external",
+               const Backend* parent = nullptr);
+    HostTensor(const ngraph::element::Type& element_type,
+               const Shape& shape,
+               const Backend* parent);
+    HostTensor(const ngraph::element::Type& element_type,
+               const Shape& shape,
+               void* memory_pointer,
+               const Backend* parent);
     virtual ~HostTensor() override;
 
     char* get_data_ptr();
