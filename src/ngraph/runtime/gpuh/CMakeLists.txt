@@ -21,7 +21,7 @@ if (NGRAPH_GPUH_ENABLE)
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
-    target_link_libraries(gpuh_backend PUBLIC ngraph hybrid_base gpu_backend)
+    target_link_libraries(gpuh_backend PUBLIC ngraph hybrid_base gpu_backend interpreter_backend)
     set_target_properties(gpuh_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     install(TARGETS gpuh_backend

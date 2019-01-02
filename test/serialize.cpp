@@ -93,13 +93,13 @@ TEST(serialize, main)
     copy_data(z, vector<float>{9, 10, 11, 12});
     auto result = backend->create_tensor(element::f32, shape);
 
-    backend->call_with_validate(handle, {result}, {x, y, z});
+    handle->call_with_validate({result}, {x, y, z});
     EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
-    backend->call_with_validate(handle, {result}, {y, x, z});
+    handle->call_with_validate({result}, {y, x, z});
     EXPECT_EQ((vector<float>{216, 320, 440, 576}), read_vector<float>(result));
 
-    backend->call_with_validate(handle, {result}, {x, z, y});
+    handle->call_with_validate({result}, {x, z, y});
     EXPECT_EQ((vector<float>{200, 288, 392, 512}), read_vector<float>(result));
 }
 #endif

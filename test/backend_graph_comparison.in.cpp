@@ -406,7 +406,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     }
     ref->call_with_validate(ref->compile(ref_func), ref_results, ref_args);
     auto handle = backend->compile(bk_func);
-    backend->call_with_validate(handle, bk_results, bk_args);
+    handle->call_with_validate(bk_results, bk_args);
 
     // Now create isolated function for backend being tested where each node of the
     // original graph is tested with inputs copied from reference backend rather
@@ -451,7 +451,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
         bk_isolated_results.push_back(bk_result);
     }
     handle = backend->compile(bk_isolated_func);
-    backend->call_with_validate(handle, bk_isolated_results, bk_args);
+    handle->call_with_validate(bk_isolated_results, bk_args);
 
     // ss has path of file tested, will now be used to accumulate
     // log message in case of test failure

@@ -183,8 +183,7 @@ void runtime::gpu::GPU_ExternalFunction::emit_op(GPU_ExternalFunction* external_
 const size_t runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction::s_memory_pool_alignment = 64;
 
 runtime::gpu::GPU_ExternalFunction::GPU_ExternalFunction(
-    const shared_ptr<ngraph::Function>& function,
-    std::shared_ptr<GPU_Backend::BackendContext>& shared_context)
+    const shared_ptr<ngraph::Function>& function, std::shared_ptr<BackendContext>& shared_context)
     : m_compiled_function(nullptr)
     , m_function(function)
     , m_emit_timing(false)

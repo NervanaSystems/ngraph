@@ -55,7 +55,7 @@ NGRAPH_TEST(${BACKEND_NAME}, equal)
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<char>{1, 1, 0, 0, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
@@ -76,7 +76,7 @@ NGRAPH_TEST(${BACKEND_NAME}, notequal)
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<char>{0, 0, 1, 1, 1, 0, 0, 1}), read_vector<char>(result));
 }
 
@@ -97,7 +97,7 @@ NGRAPH_TEST(${BACKEND_NAME}, greater)
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
@@ -118,7 +118,7 @@ NGRAPH_TEST(${BACKEND_NAME}, greatereq)
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<char>{1, 1, 1, 1, 0, 1, 1, 0}), read_vector<char>(result));
 }
 
@@ -139,7 +139,7 @@ NGRAPH_TEST(${BACKEND_NAME}, less)
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<char>{0, 0, 1, 0, 1, 0, 0, 1}), read_vector<char>(result));
 }
 
@@ -160,7 +160,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lesseq)
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<char>{1, 0, 1, 0, 1, 1, 0, 1}), read_vector<char>(result));
 }
 
@@ -184,6 +184,6 @@ NGRAPH_TEST(${BACKEND_NAME}, lesseq_bool)
     copy_data(result, vector<char>{1, 1, 1, 1, 1, 1, 1, 1});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<char>{0, 0, 0, 0, 0, 0, 0, 0}), read_vector<char>(result));
 }

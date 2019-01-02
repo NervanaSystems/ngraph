@@ -22,10 +22,10 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
+#include "ngraph/runtime/gpu/gpu_executable.hpp"
 #include "ngraph/runtime/gpu/gpu_external_function.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor.hpp"
-#include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -52,7 +52,7 @@ runtime::gpu::GPU_Backend::GPU_Backend()
 {
 }
 
-runtime::gpu::GPU_Backend::BackendContext::BackendContext()
+runtime::gpu::BackendContext::BackendContext()
     : m_runtime_context(new GPURuntimeContext)
     , m_primitive_emitter(new GPUPrimitiveEmitter(m_runtime_context))
     , m_cuda_manager(new CudaContextManager)
@@ -82,7 +82,7 @@ runtime::gpu::GPU_Backend::BackendContext::BackendContext()
     m_runtime_context->compiled_kernel_pool = new CudaFunctionPool;
 }
 
-void runtime::gpu::GPU_Backend::BackendContext::prepare_runtime_context()
+void runtime::gpu::BackendContext::prepare_runtime_context()
 {
     // set context current each time in case thread changed
     bind_cuda_context_to_thread();
@@ -91,12 +91,12 @@ void runtime::gpu::GPU_Backend::BackendContext::prepare_runtime_context()
     m_runtime_context->gpu_memory_primitives = m_primitive_emitter->get_memory_primitives().data();
 }
 
-void runtime::gpu::GPU_Backend::BackendContext::bind_cuda_context_to_thread()
+void runtime::gpu::BackendContext::bind_cuda_context_to_thread()
 {
     m_cuda_manager->SetContextCurrent();
 }
 
-runtime::gpu::GPU_Backend::BackendContext::~BackendContext()
+runtime::gpu::BackendContext::~BackendContext()
 {
     cublasDestroy(*m_runtime_context->cublas_handle);
     delete m_runtime_context->cublas_handle;
@@ -117,23 +117,13 @@ shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
     return make_shared<runtime::gpu::GPUTensor>(element_type, shape, memory_pointer, this);
 }
 
-runtime::Handle runtime::gpu::GPU_Backend::compile(shared_ptr<Function> func,
+runtime::Handle runtime::gpu::GPU_Backend::compile(std::shared_ptr<Function> func,
                                                    bool enable_performance_collection)
 {
-    shared_ptr<FunctionInstance> instance = make_shared<FunctionInstance>();
-    m_instances.push_back(instance);
-    Handle handle = instance.get();
-    m_context->bind_cuda_context_to_thread();
-    instance->m_external_function = make_shared<GPU_ExternalFunction>(func, m_context);
-    instance->m_external_function->m_emit_timing = instance->m_performance_counters_enabled;
-    instance->m_external_function->compile();
-    instance->m_compiled_function = instance->m_external_function->m_compiled_function;
-    instance->m_inputs.resize(func->get_parameters().size());
-    instance->m_outputs.resize(func->get_output_size());
+    std::unique_ptr<GPUExecutable> exec{
+        new GPUExecutable(this, m_context, func, enable_performance_collection)};
 
-    set_parameters_and_results(handle, *func);
-
-    return handle;
+    return exec;
 }
 
 void runtime::gpu::GPU_Backend::initialize_io(void** target, const vector<runtime::Tensor*>& source)
@@ -150,72 +140,6 @@ void runtime::gpu::GPU_Backend::initialize_io(void** target, const vector<runtim
             throw invalid_argument("Tensors passed to GPU backend must be GPU Tensors");
         }
     }
-}
-
-bool runtime::gpu::GPU_Backend::execute(Handle handle,
-                                        const vector<runtime::Tensor*>& outputs,
-                                        const vector<runtime::Tensor*>& inputs)
-{
-    FunctionInstance& instance = *static_cast<FunctionInstance*>(handle);
-    if (instance.m_external_function == nullptr)
-    {
-        throw runtime_error("compile() must be called before call().");
-    }
-
-    // ensure the GPURuntimeContext primitive pointers are valid
-    m_context->prepare_runtime_context();
-
-    // Device tensors
-    initialize_io(instance.m_inputs.data(), inputs);
-    initialize_io(instance.m_outputs.data(), outputs);
-
-    auto ctx = m_context->m_runtime_context.get();
-    instance.m_compiled_function(instance.m_inputs.data(), instance.m_outputs.data(), ctx);
-
-    return true;
-}
-
-void runtime::gpu::GPU_Backend::remove_compiled_function(Handle handle)
-{
-    FunctionInstance* instance = static_cast<FunctionInstance*>(handle);
-    for (auto it = m_instances.begin(); it != m_instances.end(); ++it)
-    {
-        if ((*it).get() == instance)
-        {
-            m_instances.erase(it);
-            break;
-        }
-    }
-}
-
-vector<runtime::PerformanceCounter>
-    runtime::gpu::GPU_Backend::get_performance_data(Handle handle) const
-{
-    FunctionInstance& instance = *static_cast<FunctionInstance*>(handle);
-    std::vector<runtime::PerformanceCounter> rc;
-    if (instance.m_external_function != nullptr)
-    {
-        auto* engine = instance.m_external_function->m_execution_engine.get();
-        if (engine)
-        {
-            auto get_count = engine->find_function<size_t()>("get_debug_timer_count");
-            auto get_name = engine->find_function<const char*(size_t)>("get_debug_timer_name");
-            auto get_microseconds =
-                engine->find_function<size_t(size_t)>("get_debug_timer_microseconds");
-            auto get_call_count =
-                engine->find_function<size_t(size_t)>("get_debug_timer_call_count");
-
-            if (get_count && get_name && get_microseconds && get_call_count)
-            {
-                size_t count = get_count();
-                for (size_t i = 0; i < count; i++)
-                {
-                    rc.push_back({get_name(i), get_microseconds(i), get_call_count(i)});
-                }
-            }
-        }
-    }
-    return rc;
 }
 
 bool runtime::gpu::GPU_Backend::is_supported(const Node& op) const

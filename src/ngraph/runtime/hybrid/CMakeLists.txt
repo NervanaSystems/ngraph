@@ -16,6 +16,7 @@
 
 add_library(hybrid_base STATIC EXCLUDE_FROM_ALL
     hybrid_backend.cpp
+    hybrid_executable.cpp
     hybrid_util.cpp
     pass/assign_placement.cpp
     pass/fix_get_output_element.cpp)

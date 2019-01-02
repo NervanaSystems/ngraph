@@ -47,7 +47,7 @@ void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>
 }
 
 template <typename T>
-std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
+std::vector<T> read_vector(ngraph::runtime::Tensor* tv)
 {
     if (ngraph::element::from<T>() != tv->get_tensor_layout()->get_element_type())
     {
@@ -58,6 +58,12 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
     std::vector<T> rc(element_count);
     tv->read(rc.data(), 0, size);
     return rc;
+}
+
+template <typename T>
+std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
+{
+    return read_vector<T>(tv.get());
 }
 
 std::vector<float> read_float_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
@@ -158,7 +164,7 @@ std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& fu
     }
 
     auto handle = backend->compile(function);
-    backend->call_with_validate(handle, result_tensors, arg_tensors);
+    handle->call_with_validate(result_tensors, arg_tensors);
 
     std::vector<std::vector<T1>> result_vectors;
     for (auto rt : result_tensors)

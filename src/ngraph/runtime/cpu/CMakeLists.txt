@@ -20,6 +20,7 @@ set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
     cpu_call_frame.cpp
+    cpu_executable.cpp
     cpu_executor.cpp
     cpu_external_function.cpp
     cpu_kernels.cpp

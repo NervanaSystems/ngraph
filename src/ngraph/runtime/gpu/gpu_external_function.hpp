@@ -52,10 +52,11 @@ namespace ngraph
             class GPU_ExternalFunction
             {
                 friend class GPU_Backend;
+                friend class GPUExecutable;
 
             public:
                 GPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                     std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
+                                     std::shared_ptr<BackendContext>& shared_context);
                 ~GPU_ExternalFunction();
 
                 std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
@@ -115,7 +116,7 @@ namespace ngraph
                 std::string m_function_name;
 
                 std::unordered_map<std::string, size_t> m_tensor_memory_buffers;
-                std::shared_ptr<GPU_Backend::BackendContext> m_shared_context;
+                std::shared_ptr<BackendContext> m_shared_context;
             };
         }
     }

@@ -15,7 +15,7 @@
 # ******************************************************************************
 
 if (NGRAPH_INTERPRETER_ENABLE)
-    add_library(interpreter_backend SHARED int_backend.cpp node_wrapper.cpp)
+    add_library(interpreter_backend SHARED int_backend.cpp int_executable.cpp node_wrapper.cpp)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(interpreter_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}

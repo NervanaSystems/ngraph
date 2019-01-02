@@ -157,7 +157,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_row)
     copy_data(b, dataB);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     vector<float> expected{11, 30, 38, 111};
     EXPECT_EQ(read_vector<float>(result), expected);
 }
@@ -189,7 +189,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_column)
     copy_data(b, dataB);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     vector<float> expected{11, 29, 39, 111};
     EXPECT_EQ(read_vector<float>(result), expected);
 }
@@ -225,7 +225,7 @@ TEST(cpu_fusion, gemm_cpu_broadcast_matrix)
     copy_data(b, dataB);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     vector<float> expected{10, 28, 37, 109};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -258,7 +258,7 @@ TEST(cpu_fusion, gemm_cpu_no_bias)
     copy_data(b, dataB);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     vector<float> expected{9, 27, 36, 108};
     ASSERT_TRUE(read_vector<float>(result) == expected);
 }
@@ -639,7 +639,7 @@ TEST(cpu_fusion, conv_bias_fprop_n1c1h3w3)
         convolution_bias, ParameterVector{conv_test.data, conv_test.weights, conv_test.bias});
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle,
+    handle->call_with_validate(
                                 {conv_test.result_val},
                                 {conv_test.data_val, conv_test.weights_val, conv_test.bias_val});
     auto result_vec = read_vector<float>(conv_test.result_val);
@@ -670,8 +670,9 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
     auto df = make_shared<Function>(
         NodeVector{d_data, d_weights, d_bias},
         ParameterVector{conv_test.data, conv_test.weights, conv_test.bias, conv_test.delta});
-    backend->call_with_validate(
-        backend->compile(df),
+    auto handle = backend->compile(df);
+    handle->call_with_validate(
+
         {conv_test.d_data_val, conv_test.d_weights_val, conv_test.d_bias_val},
         {conv_test.data_val, conv_test.weights_val, conv_test.bias_val, conv_test.delta_val});
 
@@ -774,7 +775,7 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
     auto result_variance_bnr = backend->create_tensor(element::f32, var_shape);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle,
+    handle->call_with_validate(
                                 {bn_output,
                                  result_mean,
                                  result_variance,
@@ -1306,8 +1307,9 @@ std::vector<shared_ptr<runtime::Tensor>> rnn_matrix_fusion_eval(const size_t tim
     copy_data(data_tensor, data_val);
     copy_data(weights_tensor, weights_val);
     copy_data(bias_tensor, bias_val);
-    backend->call_with_validate(
-        backend->compile(func), result_tensors, {data_tensor, weights_tensor, bias_tensor});
+    auto handle = backend->compile(func);
+    handle->call_with_validate(
+        result_tensors, {data_tensor, weights_tensor, bias_tensor});
     return result_tensors;
 }
 
@@ -1502,7 +1504,7 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     }
 
     auto handle = backend->compile(df);
-    backend->call_with_validate(handle, {output}, {input, ep});
+    handle->call_with_validate({output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
@@ -1527,7 +1529,7 @@ TEST(cpu_fusion, loop_kernel_one_input_one_output_halide)
     vector<float> expected{0, 4, 0, 4};
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a});
+    handle->call_with_validate({result}, {a});
 
     EXPECT_TRUE(test::all_close(read_vector<float>(result), expected));
 }
@@ -1588,7 +1590,7 @@ TEST(cpu_fusion, loop_kernel_embedded_graph_halide)
     copy_data(b, dataB);
     vector<float> expected{-2, -6, -4, -8};
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
     EXPECT_EQ(read_vector<float>(result), expected);
 }
 
@@ -1614,7 +1616,7 @@ TEST(cpu_fusion, loop_kernel_two_inputs_one_output_halide)
     vector<float> expected{2, 6, 4, 8};
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
 
     EXPECT_EQ(read_vector<float>(result), expected);
 }
@@ -1667,7 +1669,7 @@ TEST(cpu_fusion, loop_kernel_multiple_outputs_halide)
     copy_data(d, dataD);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {r1, r2, r3}, {a, b, c, d});
+    handle->call_with_validate({r1, r2, r3}, {a, b, c, d});
 
     vector<float> expected1{5, 11, 5, 17};
     vector<float> expected2{2, 7, 5, 14};
@@ -1730,7 +1732,7 @@ TEST(cpu_fusion, loop_kernel_copy_with_new_args)
     copy_data(d, dataD);
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {r1, r2, r3}, {a, b, c, d});
+    handle->call_with_validate({r1, r2, r3}, {a, b, c, d});
     backend->call_with_validate(
         backend->compile(copy_f), {copy_r1, copy_r2, copy_r3}, {a, b, c, d});
 
@@ -2166,8 +2168,8 @@ TEST(cpu_fusion, group_convolution)
         backend->create_tensor(element::f32, shape_ur, erv.data()));
     auto upper_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
         backend->create_tensor(element::f32, shape_ur, erv.data() + erv.size() / 2));
-    backend->call_with_validate(
-        backend->compile(f), {group_result, lower_result, upper_result}, {a_, b_, c_, d_, e_, f_});
+    auto handle = backend->compile(f); handle->call_with_validate(
+        {group_result, lower_result, upper_result}, {a_, b_, c_, d_, e_, f_});
     ASSERT_EQ(rv, erv);
 }
 
@@ -2222,8 +2224,8 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     copy_data(weights_iter_t, vector<float>(400 * 100, 1));
     copy_data(biases_t, vector<float>(400, 1));
 
-    backend->call_with_validate(
-        backend->compile(func),
+    auto handle = backend->compile(func);
+    handle->call_with_validate(
         {result_ht, result_ct},
         {src_layer_t, src_iter_t, weights_layer_t, weights_iter_t, biases_t});
     vector<float> expected_ht(10 * 100, 0.964028f);
@@ -2607,7 +2609,7 @@ void sigmoid_multiply_fusion_forward_compute(runtime::Backend* backend,
     auto mul_node = input_0_node * input_1_node;
     auto func = make_shared<Function>(mul_node, input_params);
     auto handle = backend->compile(func);
-    backend->call_with_validate(handle, {result_tensor}, input_tensors);
+    handle->call_with_validate({result_tensor}, input_tensors);
     EXPECT_TRUE(test::all_close(read_vector<float>(result_tensor), expected));
 }
 
@@ -2801,8 +2803,9 @@ void sigmoid_multiply_fusion_backward_compute(runtime::Backend* backend,
     auto d_input_0 = adjoints.backprop_node(input_0_adjoint);
     auto d_input_1 = adjoints.backprop_node(input_1_adjoint);
     auto df = make_shared<Function>(NodeVector{d_input_0, d_input_1}, back_params);
-    backend->call_with_validate(
-        backend->compile(df), {d_input_0_tensor, d_input_1_tensor}, input_tensors);
+    auto handle = backend->compile(df);
+    handle->call_with_validate(
+        {d_input_0_tensor, d_input_1_tensor}, input_tensors);
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
 }

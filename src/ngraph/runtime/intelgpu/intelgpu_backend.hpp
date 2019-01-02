@@ -50,27 +50,10 @@ public:
     Handle compile(std::shared_ptr<Function> func,
                    bool enable_performance_collection = false) override;
 
-    bool execute(Handle handle,
-                 const std::vector<runtime::Tensor*>& outputs,
-                 const std::vector<runtime::Tensor*>& inputs) override;
-
-    void remove_compiled_function(Handle handle) override;
-    std::vector<PerformanceCounter> get_performance_data(Handle handle) const override;
-
 private:
-    class FunctionInstance
-    {
-    public:
-        std::shared_ptr<cldnn::network> ocl_network = nullptr;
-        bool m_performance_counters_enabled = false;
-        std::string m_function_name;
-        std::shared_ptr<Function> m_function;
-    };
-
-    std::vector<std::shared_ptr<FunctionInstance>> m_instances;
     std::shared_ptr<cldnn::engine> ocl_engine;
 
-    bool m_disable_backend_optimizations = false;
+    // bool m_disable_backend_optimizations = false;
 
     // Statistic related things
     void print_call_performance(Handle handle,
@@ -81,12 +64,12 @@ private:
                                 double mem_after_compilation,
                                 double mem_after_call) const;
 
-    bool m_profile_enable = false;
-    long m_profile_lines_limit_count = 10;
-    bool m_dump_graph_enable = false;
-    bool m_cldnn_graph_optimize = true;
-    bool m_cldnn_dump_enable = false;
-    bool m_function_cache_disabled = false;
-    std::string m_cldnn_dump_dir = std::string("intelgpu_codegen");
-    std::string delim = std::string(":");
+    // bool m_profile_enable = false;
+    // long m_profile_lines_limit_count = 10;
+    // bool m_dump_graph_enable = false;
+    // bool m_cldnn_graph_optimize = true;
+    // bool m_cldnn_dump_enable = false;
+    // bool m_function_cache_disabled = false;
+    // std::string m_cldnn_dump_dir = std::string("intelgpu_codegen");
+    // std::string delim = std::string(":");
 };

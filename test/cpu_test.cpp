@@ -146,15 +146,15 @@ TEST(cpu_test, abc_tbb)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b, c});
+    handle->call_with_validate({result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    backend->call_with_validate(handle, {result}, {b, a, c});
+    handle->call_with_validate({result}, {b, a, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    backend->call_with_validate(handle, {result}, {a, c, b});
+    handle->call_with_validate({result}, {a, c, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 
@@ -215,7 +215,7 @@ TEST(cpu_test, mkldnn_layouts)
     }
 
     auto handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
 
     EXPECT_EQ(vector<float>{expected_result}, rv);
 }

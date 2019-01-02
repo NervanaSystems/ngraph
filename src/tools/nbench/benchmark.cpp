@@ -213,7 +213,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     {
         for (int i = 0; i < warmup_iterations; i++)
         {
-            backend->call(handle, results, args);
+            handle->call(results, args);
         }
     }
 
@@ -235,7 +235,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                 }
             }
         }
-        backend->call(handle, results, args);
+        handle->call(results, args);
         if (copy_data)
         {
             for (size_t result_index = 0; result_index < results.size(); result_index++)
@@ -252,6 +252,6 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     float time = t1.get_milliseconds();
     cout << time / iterations << "ms per iteration" << endl;
 
-    vector<runtime::PerformanceCounter> perf_data = backend->get_performance_data(handle);
+    vector<runtime::PerformanceCounter> perf_data = handle->get_performance_data();
     return perf_data;
 }

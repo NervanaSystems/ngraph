@@ -16,6 +16,7 @@
 
 set(SRC
     intelgpu_backend.cpp
+    intelgpu_executable.cpp
     intelgpu_tensor_view.cpp
     intelgpu_layout.cpp
     intelgpu_op_batchnorm.cpp

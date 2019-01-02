@@ -29,6 +29,7 @@
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_debugger.hpp"
+#include "ngraph/runtime/cpu/cpu_executable.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
@@ -61,8 +62,8 @@ TEST(debugger, add_breakpoint)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto handle = backend->compile(f);
-    auto cf = std::dynamic_pointer_cast<runtime::cpu::CPU_Backend>(backend)->get_call_frame(handle);
+    runtime::SharedHandle handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPUExecutable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -97,8 +98,8 @@ TEST(debugger, stepping)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto handle = backend->compile(f);
-    auto cf = std::dynamic_pointer_cast<runtime::cpu::CPU_Backend>(backend)->get_call_frame(handle);
+    runtime::SharedHandle handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPUExecutable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -134,8 +135,8 @@ TEST(debugger, delete_breakpoint)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto handle = backend->compile(f);
-    auto cf = std::dynamic_pointer_cast<runtime::cpu::CPU_Backend>(backend)->get_call_frame(handle);
+    runtime::SharedHandle handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPUExecutable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -174,8 +175,8 @@ TEST(debugger, while_stepping)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto handle = backend->compile(f);
-    auto cf = std::dynamic_pointer_cast<runtime::cpu::CPU_Backend>(backend)->get_call_frame(handle);
+    runtime::SharedHandle handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPUExecutable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -212,8 +213,8 @@ TEST(debugger, resume)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto handle = backend->compile(f);
-    auto cf = std::dynamic_pointer_cast<runtime::cpu::CPU_Backend>(backend)->get_call_frame(handle);
+    runtime::SharedHandle handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPUExecutable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -248,8 +249,8 @@ TEST(tracer, basic)
     copy_data(a, dataA);
     copy_data(b, dataB);
 
-    auto handle = backend->compile(f);
-    auto cf = std::dynamic_pointer_cast<runtime::cpu::CPU_Backend>(backend)->get_call_frame(handle);
+    runtime::SharedHandle handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPUExecutable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -281,8 +282,8 @@ TEST(tracer, count_tracepoint)
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shape);
 
-    auto handle = backend->compile(f);
-    auto cf = std::dynamic_pointer_cast<runtime::cpu::CPU_Backend>(backend)->get_call_frame(handle);
+    runtime::SharedHandle handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPUExecutable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
@@ -322,8 +323,8 @@ TEST(tracer, conditional_tracepoint)
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i32, shape);
 
-    auto handle = backend->compile(f);
-    auto cf = std::dynamic_pointer_cast<runtime::cpu::CPU_Backend>(backend)->get_call_frame(handle);
+    runtime::SharedHandle handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPUExecutable>(handle)->get_call_frame();
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 

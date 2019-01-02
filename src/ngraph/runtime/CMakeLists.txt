@@ -15,7 +15,6 @@
 # ******************************************************************************
 
 add_subdirectory(interpreter)
-add_subdirectory(hybrid)
 
 if (NGRAPH_CPU_ENABLE)
     add_subdirectory(cpu)
@@ -35,6 +34,7 @@ endif()
 
 if (NGRAPH_GPUH_ENABLE)
     add_subdirectory(gpuh)
+    add_subdirectory(hybrid)
 endif()
 
 add_subdirectory(plaidml)

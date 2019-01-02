@@ -47,26 +47,6 @@ namespace ngraph
 
                 Handle compile(std::shared_ptr<Function> func,
                                bool enable_performance_collection = false) override;
-
-                bool execute(Handle handle,
-                             const std::vector<runtime::Tensor*>& outputs,
-                             const std::vector<runtime::Tensor*>& inputs) override;
-
-                void remove_compiled_function(Handle handle) override;
-                std::shared_ptr<CPU_CallFrame> get_call_frame(Handle handle);
-
-                std::vector<PerformanceCounter> get_performance_data(Handle handle) const override;
-
-            private:
-                class FunctionInstance
-                {
-                public:
-                    std::shared_ptr<CPU_ExternalFunction> m_external_function;
-                    std::shared_ptr<CPU_CallFrame> m_call_frame;
-                    bool m_performance_counters_enabled = false;
-                };
-
-                std::vector<std::shared_ptr<FunctionInstance>> m_instances;
             };
         }
     }
