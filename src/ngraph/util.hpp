@@ -43,6 +43,8 @@ namespace ngraph
         class Value;
     }
 
+    std::string get_version();
+
     std::string to_cplusplus_sourcecode_literal(bool val);
 
     template <typename T>

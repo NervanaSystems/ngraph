@@ -37,6 +37,11 @@
 using namespace std;
 using namespace ngraph;
 
+string ngraph::get_version()
+{
+    return string(NGRAPH_VERSION);
+}
+
 std::string ngraph::to_cplusplus_sourcecode_literal(bool val)
 {
     return val ? "true" : "false";

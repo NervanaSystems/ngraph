@@ -42,6 +42,8 @@ namespace ngraph
             public:
                 GPU_Backend();
 
+                std::string get_version() override;
+
                 std::shared_ptr<ngraph::runtime::Tensor>
                     create_tensor(const ngraph::element::Type& element_type,
                                   const Shape& shape,

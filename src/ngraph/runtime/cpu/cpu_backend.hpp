@@ -33,6 +33,8 @@ namespace ngraph
             class CPU_Backend : public runtime::Backend
             {
             public:
+                std::string get_version() override;
+
                 std::shared_ptr<CPU_CallFrame>
                     make_call_frame(const std::shared_ptr<CPU_ExternalFunction>& external_function);
 

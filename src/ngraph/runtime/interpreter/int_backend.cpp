@@ -52,6 +52,11 @@ runtime::interpreter::INTBackend::INTBackend(const vector<string>& unsupported_o
 {
 }
 
+string runtime::interpreter::INTBackend::get_version()
+{
+    return string(NGRAPH_VERSION);
+}
+
 shared_ptr<runtime::Tensor>
     runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)
 {

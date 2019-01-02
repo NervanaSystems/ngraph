@@ -41,6 +41,9 @@ class ngraph::runtime::Backend
 {
 public:
     virtual ~Backend();
+
+    virtual std::string get_version() = 0;
+
     /// \brief Create a new Backend object
     /// \param type The name of a registered backend, such as "CPU" or "GPU".
     ///   To select a subdevice use "GPU:N" where s`N` is the subdevice number.

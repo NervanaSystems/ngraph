@@ -145,3 +145,8 @@ vector<runtime::PerformanceCounter>
     }
     return rc;
 }
+
+string runtime::cpu::CPU_Backend::get_version()
+{
+    return string(NGRAPH_VERSION);
+}

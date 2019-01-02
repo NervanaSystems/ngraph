@@ -273,3 +273,8 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& op) const
 
     return true;
 }
+
+string runtime::gpu::GPU_Backend::get_version()
+{
+    return string(NGRAPH_VERSION);
+}

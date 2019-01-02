@@ -39,6 +39,8 @@ namespace ngraph
 class ngraph::runtime::nop::NOPBackend : public Backend
 {
 public:
+    std::string get_version() override;
+
     std::shared_ptr<Tensor>
         create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
 

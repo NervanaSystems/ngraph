@@ -36,6 +36,11 @@ runtime::hybrid::HybridBackend::HybridBackend(
 {
 }
 
+string runtime::hybrid::HybridBackend::get_version()
+{
+    return string(NGRAPH_VERSION);
+}
+
 shared_ptr<runtime::Tensor>
     runtime::hybrid::HybridBackend::create_tensor(const element::Type& element_type,
                                                   const Shape& shape)

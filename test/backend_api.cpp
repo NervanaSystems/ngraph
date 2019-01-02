@@ -34,3 +34,12 @@ TEST(backend_api, invalid_name)
 {
     ASSERT_ANY_THROW(ngraph::runtime::Backend::create("COMPLETELY-BOGUS-NAME"));
 }
+
+TEST(backend_api, get_version)
+{
+    auto backend = ngraph::runtime::Backend::create("INTERPRETER");
+    string ngraph_version = ngraph::get_version();
+    string backend_version = backend->get_version();
+    EXPECT_NE(ngraph_version.size(), 0);
+    EXPECT_STREQ(ngraph_version.c_str(), backend_version.c_str());
+}

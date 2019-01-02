@@ -39,6 +39,9 @@ class ngraph::runtime::intelgpu::IntelGPUBackend : public runtime::Backend
 {
 public:
     IntelGPUBackend();
+
+    std::string get_version() override;
+
     std::shared_ptr<ngraph::runtime::Tensor>
         create_tensor(const ngraph::element::Type& element_type,
                       const Shape& shape,

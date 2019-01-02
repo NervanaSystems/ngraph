@@ -2109,3 +2109,8 @@ void runtime::intelgpu::IntelGPUBackend::print_call_performance(
 
     cout.flags(saved_stream_flags); // Restore stream configuration to leave it in original state
 }
+
+string runtime::intelgpu::IntelGPUBackend::get_version()
+{
+    return string(NGRAPH_VERSION);
+}
