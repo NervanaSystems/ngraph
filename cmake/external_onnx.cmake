@@ -39,7 +39,11 @@ if (${CMAKE_VERSION} VERSION_LESS 3.2)
             GIT_TAG ${ONNX_GIT_BRANCH}
             INSTALL_COMMAND ""
             UPDATE_COMMAND ""
-            CMAKE_ARGS -DONNX_GEN_PB_TYPE_STUBS=OFF
+            CMAKE_GENERATOR ${CMAKE_GENERATOR}
+            CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+            CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
+            CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}
+                       -DONNX_GEN_PB_TYPE_STUBS=OFF
                        -DProtobuf_PROTOC_EXECUTABLE=${Protobuf_PROTOC_EXECUTABLE}
                        -DProtobuf_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
                        -DPROTOBUF_LIBRARY=${Protobuf_LIBRARY}
@@ -63,7 +67,11 @@ else()
                 GIT_TAG ${ONNX_GIT_BRANCH}
                 INSTALL_COMMAND ""
                 UPDATE_COMMAND ""
-                CMAKE_ARGS -DONNX_GEN_PB_TYPE_STUBS=OFF
+                CMAKE_GENERATOR ${CMAKE_GENERATOR}
+                CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+                CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
+                CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}
+                           -DONNX_GEN_PB_TYPE_STUBS=OFF
                            -DProtobuf_PROTOC_EXECUTABLE=${Protobuf_PROTOC_EXECUTABLE}
                            -DProtobuf_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}
                            -DPROTOBUF_LIBRARY=${Protobuf_LIBRARY}
@@ -90,7 +98,11 @@ else()
                 GIT_SHALLOW TRUE
                 INSTALL_COMMAND ""
                 UPDATE_COMMAND ""
-                CMAKE_ARGS -DONNX_GEN_PB_TYPE_STUBS=OFF
+                CMAKE_GENERATOR ${CMAKE_GENERATOR}
+                CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+                CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
+                CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}
+                           -DONNX_GEN_PB_TYPE_STUBS=OFF
                            -DProtobuf_PROTOC_EXECUTABLE=${Protobuf_PROTOC_EXECUTABLE}
                            -DProtobuf_LIBRARY=${Protobuf_LIBRARY}
                            -DProtobuf_INCLUDE_DIR=${Protobuf_INCLUDE_DIR}

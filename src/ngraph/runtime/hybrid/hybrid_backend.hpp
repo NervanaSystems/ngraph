@@ -37,8 +37,7 @@ namespace ngraph
 class ngraph::runtime::hybrid::HybridBackend : public ngraph::runtime::Backend
 {
 public:
-    HybridBackend(
-        const std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>>& backend_list);
+    HybridBackend(const std::vector<std::shared_ptr<runtime::Backend>>& backend_list);
 
     std::shared_ptr<ngraph::runtime::Tensor>
         create_tensor(const ngraph::element::Type& element_type,
@@ -69,5 +68,9 @@ private:
     };
 
     std::map<std::shared_ptr<ngraph::Function>, FunctionInstance> m_function_map;
-    std::vector<std::pair<std::string, std::shared_ptr<runtime::Backend>>> m_backend_list;
+    std::vector<std::shared_ptr<runtime::Backend>> m_backend_list;
+
+    std::string get_placement_name(const runtime::Tensor* t);
+    std::string get_placement_name(const runtime::Backend* t);
+    size_t get_placement(const runtime::Tensor* t);
 };

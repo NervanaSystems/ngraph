@@ -390,14 +390,15 @@ shared_ptr<runtime::Tensor>
     runtime::intelgpu::IntelGPUBackend::create_tensor(const element::Type& element_type,
                                                       const Shape& shape)
 {
-    return make_shared<runtime::intelgpu::IntelGPUTensorView>(element_type, shape, *ocl_engine);
+    return make_shared<runtime::intelgpu::IntelGPUTensorView>(
+        element_type, shape, *ocl_engine, nullptr, this);
 }
 
 shared_ptr<runtime::Tensor> runtime::intelgpu::IntelGPUBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     return make_shared<runtime::intelgpu::IntelGPUTensorView>(
-        element_type, shape, *ocl_engine, memory_pointer);
+        element_type, shape, *ocl_engine, memory_pointer, this);
 }
 
 runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func)

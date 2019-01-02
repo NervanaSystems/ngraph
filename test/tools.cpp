@@ -14,32 +14,42 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
+#include <gtest/gtest.h>
+#include <sstream>
+
+#include "ngraph/cpio.hpp"
+#include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/placement.hpp"
-#include "ngraph/runtime/backend.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-runtime::hybrid::pass::AssignPlacement::AssignPlacement(
-    const vector<shared_ptr<runtime::Backend>>& placement_backends)
-    : m_placement_backends(placement_backends)
+TEST(tools, nbench_functional)
 {
-}
+    const string model = "mxnet/mnist_mlp_forward.json";
+    const string model_path = file_util::path_join(SERIALIZED_ZOO, model);
 
-bool runtime::hybrid::pass::AssignPlacement::run_on_node(shared_ptr<Node> node)
-{
-    size_t backend_index = 0;
-    for (auto backend : m_placement_backends)
+    stringstream ss;
+
+    ss << NBENCH_PATH << " -f " << model_path << " -b INTERPRETER -i 2 -w 2";
+    auto cmd = ss.str();
+    auto f = popen(cmd.c_str(), "r");
+    if (f)
     {
-        if (backend->is_supported(*node))
+        stringstream str;
+        char buffer[256];
+        while (!feof(f))
         {
-            node->set_placement_index(backend_index);
-            return false;
+            size_t count = fread(buffer, 1, sizeof(buffer), f);
+            string s = string(buffer, count);
+            str << s;
         }
-        backend_index++;
+        string output = str.str();
+        auto status = pclose(f);
+        ASSERT_EQ(status, 0) << output;
     }
-    throw runtime_error("Node " + node->get_name() + " not supported by any backend");
+    else
+    {
+        FAIL();
+    }
 }
