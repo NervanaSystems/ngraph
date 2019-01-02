@@ -312,6 +312,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
             // If input layout is in non-native layout, we need more complicated checks for
             // slice contiguity. Bail out for now.
+            auto input_tensor = slice->get_inputs().at(0).get_output().get_tensor_ptr();
             auto native_md = mkldnn_utils::create_blocked_mkldnn_md(
                 in_shape,
                 input_tensor->get_tensor_layout()->get_strides(),
