@@ -91,7 +91,8 @@ namespace ngraph
         class RnnBackprop : public Op
         {
         public:
-            RnnBackprop(std::shared_ptr<Node> fprop_src_layer,
+            RnnBackprop(std::shared_ptr<Node> result_forward,
+                        std::shared_ptr<Node> fprop_src_layer,
                         std::shared_ptr<Node> fprop_src_iter,
                         std::shared_ptr<Node> fprop_weights_layer,
                         std::shared_ptr<Node> fprop_weights_iter,

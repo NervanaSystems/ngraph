@@ -562,6 +562,23 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::RnnBackprop)
+                {
+                    auto src_layer_rank = node->get_input_shape(0).size();
+                    auto src_iter_rank = node->get_input_shape(1).size();
+                    auto weights_layer_rank = node->get_input_shape(2).size();
+                    auto weights_iter_rank = node->get_input_shape(3).size();
+                    auto bias_rank = node->get_input_shape(4).size();
+                    if ((src_layer_rank == 2 && src_iter_rank == 2 && weights_layer_rank == 2 &&
+                         weights_iter_rank == 2 && bias_rank == 1 &&
+                         node->get_input_element_type(0) == element::f32 &&
+                         node->get_input_element_type(1) == element::f32))
+                    {
+                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
+                    }
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Softmax)
                 {
                     auto softmax = static_cast<op::Softmax*>(node);
@@ -858,6 +875,7 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::SigmoidBackprop>},
     {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Lstm>},
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Rnn>},
+    {TI(ngraph::op::RnnBackprop), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::RnnBackprop>},
     {TI(ngraph::op::QuantizedMaxPool),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedMaxPool>},
     {TI(ngraph::op::QuantizedAvgPool),

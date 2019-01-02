@@ -396,6 +396,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Relu), &runtime::cpu::CPU_Emitter::emit<op::Relu>},
     {TI(ngraph::op::ReluBackprop), &runtime::cpu::CPU_Emitter::emit<op::ReluBackprop>},
     {TI(ngraph::op::Rnn), &runtime::cpu::CPU_Emitter::emit<op::Rnn>},
+    {TI(ngraph::op::RnnBackprop), &runtime::cpu::CPU_Emitter::emit<op::RnnBackprop>},
     {TI(ngraph::op::Sigmoid), &runtime::cpu::CPU_Emitter::emit<op::Sigmoid>},
     {TI(ngraph::op::SigmoidMultiply), &runtime::cpu::CPU_Emitter::emit<op::SigmoidMultiply>},
     {TI(ngraph::op::SigmoidMultiplyBackprop),
