@@ -26,19 +26,14 @@ namespace ngraph
         namespace plaidml
         {
             template <typename O>
-            class IndexReductionImpl : public BaseImpl<O>
+            class IndexReductionBase : public OpImpl<O>
             {
-            public:
-                IndexReductionImpl(Build* build, const O& op)
-                    : BaseImpl<O>{build, op}
-                {
-                }
-
+            protected:
                 void build_index_reduction(const char* agg_op);
             };
 
             template <typename O>
-            void IndexReductionImpl<O>::build_index_reduction(const char* agg_op)
+            void IndexReductionBase<O>::build_index_reduction(const char* agg_op)
             {
                 this->check_inputs(1);
                 this->check_outputs(1);
@@ -117,37 +112,20 @@ namespace ngraph
                         .finalize());
             }
 
-            template <>
-            struct ParentImpl<op::ArgMax>
-            {
-                using Type = IndexReductionImpl<op::ArgMax>;
-            };
-
-            template <>
-            struct ParentImpl<op::ArgMin>
-            {
-                using Type = IndexReductionImpl<op::ArgMin>;
-            };
-
-            // ArgMax computes the maximum index along a tensor axis.
-            template <>
-            void Impl<op::ArgMax>::operator()()
-            {
-                build_index_reduction(">");
-            }
-
-            // ArgMin computes the minimum index along a tensor axis.
-            template <>
-            void Impl<op::ArgMin>::operator()()
-            {
-                build_index_reduction("<");
-            }
-
-            namespace
-            {
-                Impl<op::ArgMax>::Registration register_argmax;
-                Impl<op::ArgMin>::Registration register_argmin;
-            }
+            NGRAPH_PLAIDML_OP_CLASS(ImplArgMax, IndexReductionBase<op::ArgMax>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplArgMin, IndexReductionBase<op::ArgMin>);
         }
     }
+}
+
+// ArgMax computes the maximum index along a tensor axis.
+void ngraph::runtime::plaidml::ImplArgMax::Apply()
+{
+    build_index_reduction(">");
+}
+
+// ArgMin computes the minimum index along a tensor axis.
+void ngraph::runtime::plaidml::ImplArgMin::Apply()
+{
+    build_index_reduction("<");
 }

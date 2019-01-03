@@ -14,9 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/convert.hpp"
-#include "ngraph/runtime/plaidml/plaidml_impl.hpp"
-#include "ngraph/runtime/plaidml/plaidml_translate.hpp"
+#pragma once
+
+#include "ngraph/pass/graph_rewrite.hpp"
 
 namespace ngraph
 {
@@ -24,20 +24,28 @@ namespace ngraph
     {
         namespace plaidml
         {
-            NGRAPH_PLAIDML_OP_CLASS(ImplConvert, OpImpl<op::Convert>);
+            namespace pass
+            {
+                class ImplicitBroadcast;
+            }
         }
     }
 }
 
-// Convert views a tensor as a new type.
-void ngraph::runtime::plaidml::ImplConvert::Apply()
+// The PlaidML nGraph runtime's implementation of the Broadcast
+// operation requires a contraction, and then the broadcasted output
+// needs to be read by the downstream operation.
+//
+// Most explicit Broadcast operations are passed as inputs to
+// elementwise operations.  When a tensor is used as an input to an
+// elementwise operation, PlaidML automatically provides NumPy
+// broadcast semantics.
+//
+// So eliding Broadcast operations can significantly reduce the IO
+// needed by an elementwise operation, and eliminates an unnecessary
+// contraction.
+class ngraph::runtime::plaidml::pass::ImplicitBroadcast final : public ngraph::pass::GraphRewrite
 {
-    check_inputs(1);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(), "I"})
-                   .add(builder::Output{"O"})
-                   .add(builder::Elementwise{
-                       "O", tile_converter("I", to_plaidml(op().get_convert_element_type()))})
-                   .finalize());
-}
+public:
+    ImplicitBroadcast();
+};

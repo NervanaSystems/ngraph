@@ -14,9 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/convert.hpp"
-#include "ngraph/runtime/plaidml/plaidml_impl.hpp"
-#include "ngraph/runtime/plaidml/plaidml_translate.hpp"
+#pragma once
+
+#include <tuple>
+#include <vector>
+
+#include <plaidml/plaidml++.h>
+
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -24,20 +29,29 @@ namespace ngraph
     {
         namespace plaidml
         {
-            NGRAPH_PLAIDML_OP_CLASS(ImplConvert, OpImpl<op::Convert>);
+            namespace op
+            {
+                /// An op directly representing PlaidML Tile code.
+                class Tile;
+            }
         }
     }
 }
 
-// Convert views a tensor as a new type.
-void ngraph::runtime::plaidml::ImplConvert::Apply()
+class ngraph::runtime::plaidml::op::Tile final : public Node
 {
-    check_inputs(1);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(), "I"})
-                   .add(builder::Output{"O"})
-                   .add(builder::Elementwise{
-                       "O", tile_converter("I", to_plaidml(op().get_convert_element_type()))})
-                   .finalize());
-}
+public:
+    Tile(const std::string& node_type,
+         vertexai::plaidml::function function,
+         const NodeVector& args,
+         std::vector<std::tuple<element::Type, PartialShape>> outputs);
+
+    void validate_and_infer_types() final;
+
+    std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const final;
+
+    vertexai::plaidml::function func() const { return m_function; }
+private:
+    vertexai::plaidml::function m_function;
+    std::vector<std::tuple<element::Type, PartialShape>> m_output_shapes;
+};
