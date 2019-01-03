@@ -124,6 +124,16 @@ public:
     /// \returns true if the op is supported, false otherwise.
     virtual bool is_supported(const Node& node) const;
 
+    /// \brief A set of properties supported by a backend
+    enum class Property
+    {
+        memory_attach /// A tansor can attach the user memory
+    };
+
+    /// \brief Test if a backend particular property is supported
+    /// \param prop is the feature to test.
+    /// \returns true if the property is supported, false otherwise.
+    virtual bool is_supported_property(const Property prop) const { return false; }
     void validate(std::shared_ptr<const Function> func,
                   const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                   const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);

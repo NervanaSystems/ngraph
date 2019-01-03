@@ -2109,3 +2109,13 @@ void runtime::intelgpu::IntelGPUBackend::print_call_performance(
 
     cout.flags(saved_stream_flags); // Restore stream configuration to leave it in original state
 }
+
+bool runtime::intelgpu::IntelGPUBackend::is_supported_property(const Property prop) const
+{
+    if (prop == Property::memory_attach)
+    {
+        return true;
+    }
+
+    return false;
+}
