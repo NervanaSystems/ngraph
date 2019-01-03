@@ -94,19 +94,22 @@ public:
     }
 
     ~HybridBackend() {}
-    shared_ptr<runtime::Tensor> create_tensor(const element::Type& element_type, const Shape& shape) override
+    shared_ptr<runtime::Tensor> create_tensor(const element::Type& element_type,
+                                              const Shape& shape) override
     {
         return get_cached_backend(Placement::INTERPRETER)->create_tensor(element_type, shape);
     }
 
     shared_ptr<runtime::Tensor> create_tensor(const element::Type& element_type,
-                                                                    const Shape& shape,
-                                                                    void* memory_pointer) override
+                                              const Shape& shape,
+                                              void* memory_pointer) override
     {
-        return get_cached_backend(Placement::INTERPRETER)->create_tensor(element_type, shape, memory_pointer);
+        return get_cached_backend(Placement::INTERPRETER)
+            ->create_tensor(element_type, shape, memory_pointer);
     }
 
-    runtime::Handle compile(shared_ptr<Function> function, bool enable_performance_collection=false) override;
+    runtime::Handle compile(shared_ptr<Function> function,
+                            bool enable_performance_collection = false) override;
 
     shared_ptr<runtime::Backend> get_cached_backend(Placement placement)
     {
@@ -150,7 +153,7 @@ public:
             m_handle_map[sub_function] = h;
         }
         set_parameters_and_results(*m_function);
-}
+    }
 
     bool execute(const vector<runtime::Tensor*>& outputs, const vector<runtime::Tensor*>& inputs)
     {
@@ -228,14 +231,14 @@ private:
     unordered_map<shared_ptr<Function>, runtime::SharedHandle> m_handle_map;
 };
 
-    runtime::Handle HybridBackend::compile(shared_ptr<Function> function,
-                                                    bool enable_performance_collection)
-    {
-        unique_ptr<HybridExecutable> exec{
-            new HybridExecutable(this, function, enable_performance_collection)};
+runtime::Handle HybridBackend::compile(shared_ptr<Function> function,
+                                       bool enable_performance_collection)
+{
+    unique_ptr<HybridExecutable> exec{
+        new HybridExecutable(this, function, enable_performance_collection)};
 
-        return exec;
-    }
+    return exec;
+}
 
 TEST(graph_partition, placement_int_with_cpu_mul_policy)
 {

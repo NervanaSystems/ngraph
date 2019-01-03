@@ -639,9 +639,8 @@ TEST(cpu_fusion, conv_bias_fprop_n1c1h3w3)
         convolution_bias, ParameterVector{conv_test.data, conv_test.weights, conv_test.bias});
 
     auto handle = backend->compile(f);
-    handle->call_with_validate(
-                                {conv_test.result_val},
-                                {conv_test.data_val, conv_test.weights_val, conv_test.bias_val});
+    handle->call_with_validate({conv_test.result_val},
+                               {conv_test.data_val, conv_test.weights_val, conv_test.bias_val});
     auto result_vec = read_vector<float>(conv_test.result_val);
 
     EXPECT_TRUE(
@@ -775,14 +774,13 @@ TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
     auto result_variance_bnr = backend->create_tensor(element::f32, var_shape);
 
     auto handle = backend->compile(f);
-    handle->call_with_validate(
-                                {bn_output,
-                                 result_mean,
-                                 result_variance,
-                                 bn_output_bnr,
-                                 result_mean_bnr,
-                                 result_variance_bnr},
-                                {input_t, gamma_t, beta_t});
+    handle->call_with_validate({bn_output,
+                                result_mean,
+                                result_variance,
+                                bn_output_bnr,
+                                result_mean_bnr,
+                                result_variance_bnr},
+                               {input_t, gamma_t, beta_t});
 
     EXPECT_TRUE(test::all_close(read_vector<float>(bn_output), read_vector<float>(bn_output_bnr)));
     EXPECT_TRUE(
@@ -1308,8 +1306,7 @@ std::vector<shared_ptr<runtime::Tensor>> rnn_matrix_fusion_eval(const size_t tim
     copy_data(weights_tensor, weights_val);
     copy_data(bias_tensor, bias_val);
     auto handle = backend->compile(func);
-    handle->call_with_validate(
-        result_tensors, {data_tensor, weights_tensor, bias_tensor});
+    handle->call_with_validate(result_tensors, {data_tensor, weights_tensor, bias_tensor});
     return result_tensors;
 }
 
@@ -2168,8 +2165,9 @@ TEST(cpu_fusion, group_convolution)
         backend->create_tensor(element::f32, shape_ur, erv.data()));
     auto upper_result = std::dynamic_pointer_cast<ngraph::runtime::cpu::CPUTensorView>(
         backend->create_tensor(element::f32, shape_ur, erv.data() + erv.size() / 2));
-    auto handle = backend->compile(f); handle->call_with_validate(
-        {group_result, lower_result, upper_result}, {a_, b_, c_, d_, e_, f_});
+    auto handle = backend->compile(f);
+    handle->call_with_validate({group_result, lower_result, upper_result},
+                               {a_, b_, c_, d_, e_, f_});
     ASSERT_EQ(rv, erv);
 }
 
@@ -2804,8 +2802,7 @@ void sigmoid_multiply_fusion_backward_compute(runtime::Backend* backend,
     auto d_input_1 = adjoints.backprop_node(input_1_adjoint);
     auto df = make_shared<Function>(NodeVector{d_input_0, d_input_1}, back_params);
     auto handle = backend->compile(df);
-    handle->call_with_validate(
-        {d_input_0_tensor, d_input_1_tensor}, input_tensors);
+    handle->call_with_validate({d_input_0_tensor, d_input_1_tensor}, input_tensors);
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_0_tensor), expected_0));
     EXPECT_TRUE(test::all_close(read_vector<float>(d_input_1_tensor), expected_1));
 }

@@ -33,6 +33,7 @@ namespace ngraph
             class CPUExecutable : public runtime::Executable
             {
                 friend class CPU_Backend;
+
             public:
                 bool execute(const std::vector<runtime::Tensor*>& outputs,
                              const std::vector<runtime::Tensor*>& inputs) override;

@@ -33,7 +33,6 @@ extern "C" runtime::Backend* new_backend(const char* configuration_string)
     // Force TBB to link to the backend
     tbb::TBB_runtime_interface_version();
     return new runtime::cpu::CPU_Backend();
-
 }
 
 extern "C" void delete_backend(runtime::Backend* backend)
