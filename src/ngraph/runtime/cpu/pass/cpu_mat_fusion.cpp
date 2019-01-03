@@ -332,13 +332,15 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             {
                 const auto old_slice =
                     std::static_pointer_cast<op::Slice>(op_seg_map[op].at(Type::DATA));
+
                 const auto& old_lower_bounds = old_slice->get_lower_bounds();
-                // lower bound matching the current time step
-                const Coordinate lower_bounds{old_lower_bounds[1], 0};
-                // striding by the number of data
-                const Strides strides{data_shape[1], 1};
-                auto slice_node =
-                    std::make_shared<op::Slice>(add_node, lower_bounds, add_shape, strides);
+                const auto& old_upper_bounds = old_slice->get_upper_bounds();
+                // calculate the lower and upper bounds for the slice of the new fused node
+                // ((<x0 | x1..|xt>*W)+b), which will used to replace the nodes matched in the pattern
+                const Coordinate lower_bounds{old_lower_bounds[0] * old_upper_bounds[1], 0};
+                const Coordinate upper_bounds{old_upper_bounds[0] * old_upper_bounds[1],
+                                              add_shape[1]};
+                auto slice_node = std::make_shared<op::Slice>(add_node, lower_bounds, upper_bounds);
 
                 // replace old nodes
                 function->replace_node(op, slice_node);
