@@ -46,9 +46,6 @@ namespace ngraph
 
             std::string tile_converter(const std::string& tensor_name,
                                        const ngraph::element::Type& element_type);
-
-            vertexai::plaidml::variable plaidml_logical_to_data(vertexai::plaidml::variable var,
-                                                                bool debug);
         }
     }
 }
