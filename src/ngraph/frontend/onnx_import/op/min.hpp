@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,6 +35,15 @@ namespace ngraph
                 }
 
             } // namespace set_1
+
+            namespace set_8
+            {
+                inline NodeVector min(const Node& node)
+                {
+                    return variadic::make_ng_variadic_op_with_broadcast<ngraph::op::Minimum>(node);
+                }
+
+            } // namespace set_8
 
         } //namespace op
 
