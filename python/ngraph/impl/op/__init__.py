@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ from _pyngraph.op import Constant
 """ Retrieve Constant inner data.
 
     Internally uses PyBind11 Numpy's buffer protocol.
-    
+
     :return Numpy array containing internally stored constant data.
 """
 Constant.get_data = lambda self: np.array(self, copy=True)

@@ -1,5 +1,5 @@
 // INTEL CONFIDENTIAL
-// Copyright 2018 Intel Corporation All Rights Reserved.
+// Copyright 2018-2019 Intel Corporation All Rights Reserved.
 // The source code contained or described herein and all documents related to the
 // source code ("Material") are owned by Intel Corporation or its suppliers or
 // licensors. Title to the Material remains with Intel Corporation or its
@@ -59,7 +59,7 @@ def generateMap(Closure method, configurationMaps) {
 def createStage(String stageName, Closure method, configurationMaps) {
     /**
     * Create pipeline stage.
-    * 
+    *
     * @param stageName Name of stage that will be create.
     * @param method Method that will be executed in each map(configuration).
     * @param configurationMaps Map of configuration that will be parallelized.
@@ -100,7 +100,7 @@ def createStage(String stageName, Closure method, configurationMaps) {
 def setConfigurationStatus(String stageName, String configurationName, String status) {
     /**
     * Set stage status.
-    * 
+    *
     * @param stageName The name of the stage in which the configuration is.
     * @param configurationName The name of the configuration whose status will be updated.
     * @param status Configuration status: SUCCESS or FAILURE.
@@ -120,7 +120,7 @@ def propagateStatus(String parentStageName, String parentConfigurationName) {
     * Popagate status in parent configuration fails.
     * This method will throw exeption "Propagating status of $parentStageName"
     * if parent configuration name status is FAILURE
-    * 
+    *
     * @param parentStageName The name of the stage in which the configuration is.
     * @param parentConfigurationName The name of the configuration whose status will be propagated.
     */
