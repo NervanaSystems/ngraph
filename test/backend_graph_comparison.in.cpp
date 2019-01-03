@@ -404,8 +404,9 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
         throw ngraph::ngraph_error(
             "Number of backend runtime results and allocated results don't match");
     }
-    ref->call_with_validate(ref->compile(ref_func), ref_results, ref_args);
-    auto handle = backend->compile(bk_func);
+    auto handle = ref->compile(ref_func);
+    handle->call_with_validate(ref_results, ref_args);
+    handle = backend->compile(bk_func);
     handle->call_with_validate(bk_results, bk_args);
 
     // Now create isolated function for backend being tested where each node of the
