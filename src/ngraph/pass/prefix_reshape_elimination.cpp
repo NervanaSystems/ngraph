@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/plaidml/plaidml_pass_reshape_elision.hpp"
+#include "ngraph/pass/prefix_reshape_elimination.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
@@ -24,7 +24,7 @@
 #include "ngraph/pattern/op/any_of.hpp"
 #include "ngraph/pattern/op/label.hpp"
 
-ngraph::runtime::plaidml::pass::ReshapeElision::ReshapeElision()
+ngraph::pass::PrefixReshapeElimination::PrefixReshapeElimination()
 {
     auto src_op = std::make_shared<pattern::op::Label>(
         element::i8, Shape{}, [](std::shared_ptr<Node>) { return true; });
