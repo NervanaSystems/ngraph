@@ -1,5 +1,5 @@
 // INTEL CONFIDENTIAL
-// Copyright 2018 Intel Corporation All Rights Reserved.
+// Copyright 2018-2019 Intel Corporation All Rights Reserved.
 // The source code contained or described herein and all documents related to the
 // source code ("Material") are owned by Intel Corporation or its suppliers or
 // licensors. Title to the Material remains with Intel Corporation or its
@@ -18,7 +18,7 @@
 // Set LABEL variable if empty or not declared
 try{ if(LABEL.trim() == "") {throw new Exception();} }catch(Exception e){LABEL="onnx && ci"}; echo "${LABEL}"
 // CI settings and constants
-PROJECT_NAME = "ngraph-onnx"            
+PROJECT_NAME = "ngraph-onnx"
 CI_ROOT = "ngraph/.ci/onnx/jenkins"
 DOCKER_CONTAINER_NAME = "jenkins_${PROJECT_NAME}_ci"
 NGRAPH_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph.git"
@@ -39,10 +39,10 @@ def killPreviousRunningJobs() {
 
     def job = Jenkins.instance.getItemByFullName(jobname)
     for (build in job.builds) {
-        if (!build.isBuilding()){ 
-            continue; 
+        if (!build.isBuilding()){
+            continue;
         }
-        if (buildnum == build.getNumber().toInteger()){ 
+        if (buildnum == build.getNumber().toInteger()){
             continue;
         }
         echo "Kill task = ${build}"
