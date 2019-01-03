@@ -103,7 +103,7 @@ std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ImplicitBroadcast>();
     pass_manager.register_pass<ngraph::pass::PrefixReshapeElimination>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::LowerConvolutions>();
-    if (m_config->winograd)
+    if (pass_manager.get_pass_config().get_pass_enable("Winograd"))
     {
         pass_manager.register_pass<ngraph::runtime::plaidml::pass::Winograd>();
     }
