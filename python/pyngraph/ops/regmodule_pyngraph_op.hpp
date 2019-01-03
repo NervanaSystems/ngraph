@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,6 +66,7 @@
 #include "pyngraph/ops/relu.hpp"
 #include "pyngraph/ops/replace_slice.hpp"
 #include "pyngraph/ops/reshape.hpp"
+#include "pyngraph/ops/result.hpp"
 #include "pyngraph/ops/reverse.hpp"
 #include "pyngraph/ops/select.hpp"
 #include "pyngraph/ops/sign.hpp"

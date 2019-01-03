@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,11 +16,19 @@
 
 cmake_minimum_required (VERSION 3.1)
 
+# set directory where the custom finders live
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed.")
 endif()
 
-include(cmake/Modules/git_tags.cmake)
+if("${CMAKE_GENERATOR}" STREQUAL "Ninja")
+    message(FATAL_ERROR "Ninja generator not supported.")
+endif()
+
+include(git_tags)
+include(var_functions)
 
 NGRAPH_GET_VERSION_LABEL()
 
@@ -56,22 +64,39 @@ if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
+if ("${CMAKE_GENERATOR}" MATCHES "^Visual Studio.*$")
+    set(MSVS TRUE)
+endif()
+
+# Setup CMAKE_ARGS to be forwarded to External Projects
+set(NGRAPH_FORWARD_CMAKE_ARGS
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        )
+
+if (NOT MSVS)
+    if(NOT CMAKE_BUILD_TYPE)
+        set(NGRAPH_FORWARD_CMAKE_ARGS
+                ${NGRAPH_FORWARD_CMAKE_ARGS}
+                -DCMAKE_BUILD_TYPE=Release
+                )
+    else()
+        set(NGRAPH_FORWARD_CMAKE_ARGS
+                ${NGRAPH_FORWARD_CMAKE_ARGS}
+                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                )
+    endif()
+endif()
+message(STATUS "NGRAPH_FORWARD_CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}")
+
 # Prevent Eigen from using any LGPL3 code
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY -DTBB_USE_THREADING_TOOLS")
 
-if($ENV{NGRAPH_USE_PREBUILT_LLVM})
-    set(NGRAPH_USE_PREBUILT_LLVM TRUE)
-endif()
+ngraph_var(NGRAPH_USE_PREBUILT_LLVM DEFAULT "FALSE")
 
 # Create compilation database compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# set directory where the custom finders live
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
-
-include(var_functions)
-
-set(NGRAPH_HYBRID_ENABLE TRUE)
 option(NGRAPH_UNIT_TEST_ENABLE "Control the building of unit tests" TRUE)
 option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
 option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
@@ -88,6 +113,10 @@ option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 option(NGRAPH_PYTHON_BUILD_ENABLE   "Enable build nGraph python package wheel" FALSE)
 
+if (NGRAPH_GPUH_ENABLE)
+    set(NGRAPH_GPU_ENABLE TRUE)
+endif()
+
 message(STATUS "NGRAPH_UNIT_TEST_ENABLE:      ${NGRAPH_UNIT_TEST_ENABLE}")
 message(STATUS "NGRAPH_TOOLS_ENABLE:          ${NGRAPH_TOOLS_ENABLE}")
 message(STATUS "NGRAPH_CPU_ENABLE:            ${NGRAPH_CPU_ENABLE}")
@@ -103,10 +132,7 @@ message(STATUS "NGRAPH_DEX_ONLY:              ${NGRAPH_DEX_ONLY}")
 message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:  ${NGRAPH_CODE_COVERAGE_ENABLE}")
 message(STATUS "NGRAPH_LIB_VERSIONING_ENABLE: ${NGRAPH_LIB_VERSIONING_ENABLE}")
 message(STATUS "NGRAPH_PYTHON_BUILD_ENABLE:   ${NGRAPH_PYTHON_BUILD_ENABLE}")
-
-if (NGRAPH_HYBRID_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_HYBRID_ENABLE")
-endif()
+message(STATUS "NGRAPH_USE_PREBUILT_LLVM:     ${NGRAPH_USE_PREBUILT_LLVM}")
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
@@ -236,6 +262,12 @@ add_custom_target(style-apply
     COMMAND ${CMAKE_COMMAND}
     -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
     -P ${CMAKE_MODULE_PATH}style_apply.cmake
+)
+
+add_custom_target(fix-mode
+    COMMAND ${CMAKE_COMMAND}
+    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    -P ${CMAKE_MODULE_PATH}fix_mode.cmake
 )
 
 #-----------------------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -91,4 +91,5 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Tan(m_op);
     regclass_pyngraph_op_Tanh(m_op);
     regclass_pyngraph_op_TopK(m_op);
+    regclass_pyngraph_op_Result(m_op);
 }

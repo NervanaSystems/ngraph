@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -93,6 +93,16 @@ namespace ngraph
                     m_ng_node_cache[node.output(i)] = ng_nodes[i];
                 }
             }
+        }
+
+        NodeVector Graph::get_ng_outputs() const
+        {
+            NodeVector results;
+            for (const auto& output : m_graph_proto->output())
+            {
+                results.emplace_back(get_ng_node_from_cache(output.name()));
+            }
+            return results;
         }
 
     } // namespace onnx_import

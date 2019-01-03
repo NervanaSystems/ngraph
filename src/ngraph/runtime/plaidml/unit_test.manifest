@@ -2,12 +2,8 @@
 backwards_reverse_sequence_n3_c2_h3     # No plans to implement ReverseSequence
 backwards_reverse_sequence_n4d2c3h2w2   # No plans to implement ReverseSequence
 divide_by_zero_int32                    # PlaidML does not die.
-product_matrix_rows_zero                # Out-of-range for PlaidML
-product_matrix_cols_zero                # Out-of-range for PlaidML
-product_vector_zero                     # Out-of-range for PlaidML
-product_matrix_to_scalar_zero_by_zero   # Out-of-range for PlaidML
-product_3d_eliminate_zero_dim           # Out-of-range for PlaidML
 max_matrix_rows_zero                    # Out-of-range for PlaidML
+max_matrix_rows_zero_int32              # Out-of-range for PlaidML
 max_matrix_cols_zero                    # Out-of-range for PlaidML
 max_vector_zero                         # Out-of-range for PlaidML
 max_matrix_to_scalar_zero_by_zero       # Out-of-range for PlaidML
@@ -53,10 +49,14 @@ backwards_maxpool_n2_c1_hw5_3x3_str2_max
 backwards_slice
 batchnorm_fprop_bprop  # To debug
 batchnorm_fprop_bprop_2step  # To debug
+batch_norm_inference_0eps_f64
+batch_norm_inference_f64
+batch_norm_training_0eps_f64
 softmax_axis_3d_double  # To debug
 replace_slice_matrix_inplace
 max_pool_2d_1channel_1image_overpadded
 max_pool_3d
+maxpool_bprop_larger_than_cache
 generate_mask
 avg_pool_3d
 avg_pool_3d_uneven_strided_padded_include_in_computation
@@ -88,18 +88,33 @@ quantize_clamp_uint8                    # Quantization/Dequantization is unimple
 dequantize                              # Quantization/Dequantization is unimplemented
 dequantize_axes                         # Quantization/Dequantization is unimplemented
 dequantize_int8                         # Quantization/Dequantization is unimplemented
-sum_matrix_rows_zero                    # Empty dims apparently should produce shaped 0s
-sum_matrix_cols_zero                    # Empty dims apparently should produce shaped 0s
-sum_vector_zero                         # Empty dims apparently should produce shaped 0s
-sum_matrix_to_scalar_zero_by_zero       # Empty dims apparently should produce shaped 0s
-sum_3d_eliminate_zero_dim               # Empty dims apparently should produce shaped 0s
-dot_0_0                                 # Empty dims apparently should produce shaped 0s
-dot_matrix_2x0_0x2                      # Empty dims apparently should produce shaped 0s
-dot_2x0_0                               # Empty dims apparently should produce shaped 0s
 numeric_float_nan
 numeric_double_nan
 shape_of_scalar
 shape_of_vector
 shape_of_matrix
 shape_of_5d
-
+sum_stable_acc_double  # To debug: precision errors
+embedding_lookup_4x5_reverse
+embedding_lookup_10x1_arbitrary
+embedding_lookup_10x1_arbitrary_index_type_int
+any_trivial                             # Requires boolean reduction in PlaidML
+any_2x2_to_scalar_true                  # Requires boolean reduction in PlaidML
+any_2x3_eliminate_row_dim               # Requires boolean reduction in PlaidML
+any_2x2x3_eliminate_dim_0               # Requires boolean reduction in PlaidML
+any_2x2x3_eliminate_dim_1               # Requires boolean reduction in PlaidML
+any_2x2x3_eliminate_dim_2               # Requires boolean reduction in PlaidML
+any_2x2x3_eliminate_dims_0_1            # Requires boolean reduction in PlaidML
+any_2x2x3_eliminate_dims_0_2            # Requires boolean reduction in PlaidML
+any_2x2x3_eliminate_dims_1_2            # Requires boolean reduction in PlaidML
+any_2x2x3_eliminate_dims_0_1_2          # Requires boolean reduction in PlaidML
+all_trivial                             # Requires boolean reduction in PlaidML
+all_2x2_to_scalar_false                 # Requires boolean reduction in PlaidML
+all_2x3_eliminate_col_dim               # Requires boolean reduction in PlaidML
+all_2x2x3_eliminate_dim_0               # Requires boolean reduction in PlaidML
+all_2x2x3_eliminate_dim_1               # Requires boolean reduction in PlaidML
+all_2x2x3_eliminate_dim_2               # Requires boolean reduction in PlaidML
+all_2x2x3_eliminate_dims_0_1            # Requires boolean reduction in PlaidML
+all_2x2x3_eliminate_dims_0_2            # Requires boolean reduction in PlaidML
+all_2x2x3_eliminate_dims_1_2            # Requires boolean reduction in PlaidML
+all_2x2x3_eliminate_dims_0_1_2          # Requires boolean reduction in PlaidML

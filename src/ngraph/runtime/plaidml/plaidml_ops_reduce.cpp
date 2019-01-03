@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,19 +31,14 @@ namespace ngraph
         namespace plaidml
         {
             template <typename O>
-            class ReductionImpl : public BaseImpl<O>
+            class ReductionBase : public OpImpl<O>
             {
             public:
-                ReductionImpl(Build* build, const O& op)
-                    : BaseImpl<O>{build, op}
-                {
-                }
-
                 void build_reduction(const char* agg_op);
             };
 
             template <typename O>
-            void ReductionImpl<O>::build_reduction(const char* agg_op)
+            void ReductionBase<O>::build_reduction(const char* agg_op)
             {
                 this->check_inputs(1);
                 this->check_outputs(1);
@@ -89,65 +84,34 @@ namespace ngraph
                         .finalize());
             }
 
-            template <>
-            struct ParentImpl<op::Max>
-            {
-                using Type = ReductionImpl<op::Max>;
-            };
-
-            template <>
-            struct ParentImpl<op::Min>
-            {
-                using Type = ReductionImpl<op::Min>;
-            };
-
-            template <>
-            struct ParentImpl<op::Product>
-            {
-                using Type = ReductionImpl<op::Product>;
-            };
-
-            template <>
-            struct ParentImpl<op::Sum>
-            {
-                using Type = ReductionImpl<op::Sum>;
-            };
-
-            // Max reduces a tensor, taking the maximum along the specified axes.
-            template <>
-            void Impl<op::Max>::operator()()
-            {
-                build_reduction(">");
-            }
-
-            // Min reduces a tensor, taking the minimum along the specified axes.
-            template <>
-            void Impl<op::Min>::operator()()
-            {
-                build_reduction("<");
-            }
-
-            // Min reduces a tensor, taking the product along the specified axes.
-            template <>
-            void Impl<op::Product>::operator()()
-            {
-                build_reduction("*");
-            }
-
-            // Sum reduces a tensor, summing the specified axes.
-            template <>
-            void Impl<op::Sum>::operator()()
-            {
-                build_reduction("+");
-            }
-
-            namespace
-            {
-                Impl<op::Max>::Registration register_max;
-                Impl<op::Min>::Registration register_min;
-                Impl<op::Product>::Registration register_product;
-                Impl<op::Sum>::Registration register_sum;
-            }
+            NGRAPH_PLAIDML_OP_CLASS(ImplMax, ReductionBase<op::Max>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplMin, ReductionBase<op::Min>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplProduct, ReductionBase<op::Product>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplSum, ReductionBase<op::Sum>);
         }
     }
+}
+
+// Max reduces a tensor, taking the maximum along the specified axes.
+void ngraph::runtime::plaidml::ImplMax::Apply()
+{
+    build_reduction(">");
+}
+
+// Min reduces a tensor, taking the minimum along the specified axes.
+void ngraph::runtime::plaidml::ImplMin::Apply()
+{
+    build_reduction("<");
+}
+
+// Min reduces a tensor, taking the product along the specified axes.
+void ngraph::runtime::plaidml::ImplProduct::Apply()
+{
+    build_reduction("*");
+}
+
+// Sum reduces a tensor, summing the specified axes.
+void ngraph::runtime::plaidml::ImplSum::Apply()
+{
+    build_reduction("+");
 }
