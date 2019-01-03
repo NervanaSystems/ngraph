@@ -72,47 +72,47 @@ public:
                       ConvPoolFormatter::DerivType deriv);
 
     // Formatted tensors
-    builder::Input F_in_header(vertexai::plaidml::variable var);
-    builder::Input I_in_header(vertexai::plaidml::variable var);
-    builder::Input O_in_header(vertexai::plaidml::variable var);
-    builder::Output F_out_header();
-    builder::Output I_out_header();
-    builder::Output O_out_header();
-    builder::ContractionOutput F_out_body();
-    builder::ContractionOutput I_out_body();
-    builder::ContractionOutput O_out_body();
-    builder::ContractionInput F_in_body();
-    builder::ContractionInput I_in_body();
-    builder::ContractionInput O_in_body();
+    builder::Input F_in_header(vertexai::plaidml::variable var) const;
+    builder::Input I_in_header(vertexai::plaidml::variable var) const;
+    builder::Input O_in_header(vertexai::plaidml::variable var) const;
+    builder::Output F_out_header() const;
+    builder::Output I_out_header() const;
+    builder::Output O_out_header() const;
+    builder::ContractionOutput F_out_body() const;
+    builder::ContractionOutput I_out_body() const;
+    builder::ContractionOutput O_out_body() const;
+    builder::ContractionInput F_in_body() const;
+    builder::ContractionInput I_in_body() const;
+    builder::ContractionInput O_in_body() const;
 
     // Special Operations
-    builder::UnaryContraction Broadcast_Ones();
-    builder::UnaryContraction Count();
-    builder::UnaryContraction PoolContraction();
-    builder::TernaryContraction PoolDerivContraction();
+    builder::UnaryContraction Broadcast_Ones() const;
+    builder::UnaryContraction Count() const;
+    builder::UnaryContraction PoolContraction() const;
+    builder::TernaryContraction PoolDerivContraction() const;
 
     // Index names / formulas
-    std::string c();
-    std::string ci();
-    std::string co();
-    std::string n();
-    std::vector<std::string> xfs();
-    std::vector<std::string> xis();
-    std::vector<std::string> xos();
+    std::string c() const;
+    std::string ci() const;
+    std::string co() const;
+    std::string n() const;
+    std::vector<std::string> xfs() const;
+    std::vector<std::string> xis() const;
+    std::vector<std::string> xos() const;
 
     // Dimension names / formulas
-    std::string C();
-    std::string CI();
-    std::string CO();
-    std::string N();
-    std::vector<std::string> XFs();
-    std::vector<std::string> XIs();
-    std::vector<std::string> XOs();
+    std::string C() const;
+    std::string CI() const;
+    std::string CO() const;
+    std::string N() const;
+    std::vector<std::string> XFs() const;
+    std::vector<std::string> XIs() const;
+    std::vector<std::string> XOs() const;
 
     // Tensor names
-    std::string F();
-    std::string I();
-    std::string O();
+    std::string F() const;
+    std::string I() const;
+    std::string O() const;
 
 private:
     std::size_t m_rank;
@@ -126,10 +126,10 @@ private:
     DerivType m_deriv = DerivType::None;
     ngraph::Shape m_filters_shape;
     ngraph::Shape m_data_batch_shape;
-    std::vector<std::string> m_xfs;
-    std::vector<std::string> m_xis;
-    std::vector<std::string> m_xos;
-    std::vector<std::string> m_XFs;
-    std::vector<std::string> m_XIs;
-    std::vector<std::string> m_XOs;
+    mutable std::vector<std::string> m_xfs;
+    mutable std::vector<std::string> m_xis;
+    mutable std::vector<std::string> m_xos;
+    mutable std::vector<std::string> m_XFs;
+    mutable std::vector<std::string> m_XIs;
+    mutable std::vector<std::string> m_XOs;
 };

@@ -29,6 +29,13 @@ namespace ngraph
         class Graph;
         class Model;
 
+        // Detecting automatically the underlying type used to store the information
+        // for data type of values an attribute is holding. A bug was discovered in
+        // protobuf which forced ONNX team to switch from `enum AttributeProto_AttributeType`
+        // to `int32` in order to workaround the bug. This line allows using both versions
+        // of ONNX generated wrappers.
+        using AttributeProto_AttributeType = decltype(onnx::AttributeProto{}.type());
+
         namespace error
         {
             namespace attribute
@@ -37,7 +44,7 @@ namespace ngraph
                 {
                     struct Attribute : ngraph_error
                     {
-                        Attribute(const std::string& msg, onnx::AttributeProto_AttributeType type)
+                        Attribute(const std::string& msg, AttributeProto_AttributeType type)
                             : ngraph_error{msg + ": " +
                                            onnx::AttributeProto_AttributeType_Name(type)}
                         {
@@ -48,7 +55,7 @@ namespace ngraph
 
                 struct InvalidData : detail::Attribute
                 {
-                    explicit InvalidData(onnx::AttributeProto_AttributeType type)
+                    explicit InvalidData(AttributeProto_AttributeType type)
                         : Attribute{"invalid attribute type", type}
                     {
                     }
@@ -56,7 +63,7 @@ namespace ngraph
 
                 struct UnsupportedType : detail::Attribute
                 {
-                    explicit UnsupportedType(onnx::AttributeProto_AttributeType type)
+                    explicit UnsupportedType(AttributeProto_AttributeType type)
                         : Attribute{"unsupported attribute type", type}
                     {
                     }
