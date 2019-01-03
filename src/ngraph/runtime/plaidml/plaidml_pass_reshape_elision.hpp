@@ -14,9 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/convert.hpp"
-#include "ngraph/runtime/plaidml/plaidml_impl.hpp"
-#include "ngraph/runtime/plaidml/plaidml_translate.hpp"
+#pragma once
+
+#include "ngraph/pass/graph_rewrite.hpp"
 
 namespace ngraph
 {
@@ -24,20 +24,19 @@ namespace ngraph
     {
         namespace plaidml
         {
-            NGRAPH_PLAIDML_OP_CLASS(ImplConvert, OpImpl<op::Convert>);
+            namespace pass
+            {
+                class ReshapeElision;
+            }
         }
     }
 }
 
-// Convert views a tensor as a new type.
-void ngraph::runtime::plaidml::ImplConvert::Apply()
+// A minor pass to elide unnecessary reshapes.  A reshape is
+// considered unnecessary if its output shape is the same as its input
+// shape, modulo leading size-1 axes.
+class ngraph::runtime::plaidml::pass::ReshapeElision final : public ngraph::pass::GraphRewrite
 {
-    check_inputs(1);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(), "I"})
-                   .add(builder::Output{"O"})
-                   .add(builder::Elementwise{
-                       "O", tile_converter("I", to_plaidml(op().get_convert_element_type()))})
-                   .finalize());
-}
+public:
+    ReshapeElision();
+};

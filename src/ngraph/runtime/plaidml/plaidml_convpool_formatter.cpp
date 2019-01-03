@@ -171,7 +171,7 @@ ngraph::runtime::plaidml::ConvPoolFormatter::ConvPoolFormatter(
 }
 
 ngraph::runtime::plaidml::builder::Input
-    ngraph::runtime::plaidml::ConvPoolFormatter::F_in_header(vertexai::plaidml::variable var)
+    ngraph::runtime::plaidml::ConvPoolFormatter::F_in_header(vertexai::plaidml::variable var) const
 {
     if (m_op != OpType::Conv)
     {
@@ -191,7 +191,7 @@ ngraph::runtime::plaidml::builder::Input
 }
 
 ngraph::runtime::plaidml::builder::Input
-    ngraph::runtime::plaidml::ConvPoolFormatter::I_in_header(vertexai::plaidml::variable var)
+    ngraph::runtime::plaidml::ConvPoolFormatter::I_in_header(vertexai::plaidml::variable var) const
 {
     if (m_deriv == DerivType::Data && m_op == OpType::Conv)
     {
@@ -216,7 +216,7 @@ ngraph::runtime::plaidml::builder::Input
 }
 
 ngraph::runtime::plaidml::builder::Input
-    ngraph::runtime::plaidml::ConvPoolFormatter::O_in_header(vertexai::plaidml::variable var)
+    ngraph::runtime::plaidml::ConvPoolFormatter::O_in_header(vertexai::plaidml::variable var) const
 {
     if (m_deriv == DerivType::None)
     {
@@ -240,7 +240,7 @@ ngraph::runtime::plaidml::builder::Input
 }
 
 ngraph::runtime::plaidml::builder::Output
-    ngraph::runtime::plaidml::ConvPoolFormatter::F_out_header()
+    ngraph::runtime::plaidml::ConvPoolFormatter::F_out_header() const
 {
     if (m_op != OpType::Conv)
     {
@@ -254,7 +254,7 @@ ngraph::runtime::plaidml::builder::Output
 }
 
 ngraph::runtime::plaidml::builder::Output
-    ngraph::runtime::plaidml::ConvPoolFormatter::I_out_header()
+    ngraph::runtime::plaidml::ConvPoolFormatter::I_out_header() const
 {
     if (m_deriv != DerivType::Data)
     {
@@ -272,7 +272,7 @@ ngraph::runtime::plaidml::builder::Output
 }
 
 ngraph::runtime::plaidml::builder::Output
-    ngraph::runtime::plaidml::ConvPoolFormatter::O_out_header()
+    ngraph::runtime::plaidml::ConvPoolFormatter::O_out_header() const
 {
     if (m_deriv != DerivType::None)
     {
@@ -282,7 +282,7 @@ ngraph::runtime::plaidml::builder::Output
 }
 
 ngraph::runtime::plaidml::builder::ContractionOutput
-    ngraph::runtime::plaidml::ConvPoolFormatter::F_out_body()
+    ngraph::runtime::plaidml::ConvPoolFormatter::F_out_body() const
 {
     if (m_op != OpType::Conv)
     {
@@ -307,7 +307,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput
 }
 
 ngraph::runtime::plaidml::builder::ContractionOutput
-    ngraph::runtime::plaidml::ConvPoolFormatter::I_out_body()
+    ngraph::runtime::plaidml::ConvPoolFormatter::I_out_body() const
 {
     if (m_deriv != DerivType::Data)
     {
@@ -353,7 +353,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput
 }
 
 ngraph::runtime::plaidml::builder::ContractionOutput
-    ngraph::runtime::plaidml::ConvPoolFormatter::O_out_body()
+    ngraph::runtime::plaidml::ConvPoolFormatter::O_out_body() const
 {
     if (m_deriv != DerivType::None && m_op == OpType::Conv)
     {
@@ -405,7 +405,7 @@ ngraph::runtime::plaidml::builder::ContractionOutput
 }
 
 ngraph::runtime::plaidml::builder::ContractionInput
-    ngraph::runtime::plaidml::ConvPoolFormatter::F_in_body()
+    ngraph::runtime::plaidml::ConvPoolFormatter::F_in_body() const
 {
     if (m_op != OpType::Conv)
     {
@@ -425,7 +425,7 @@ ngraph::runtime::plaidml::builder::ContractionInput
 }
 
 ngraph::runtime::plaidml::builder::ContractionInput
-    ngraph::runtime::plaidml::ConvPoolFormatter::I_in_body()
+    ngraph::runtime::plaidml::ConvPoolFormatter::I_in_body() const
 {
     if (m_deriv == DerivType::Data && m_op == OpType::Conv)
     {
@@ -449,7 +449,7 @@ ngraph::runtime::plaidml::builder::ContractionInput
 }
 
 ngraph::runtime::plaidml::builder::ContractionInput
-    ngraph::runtime::plaidml::ConvPoolFormatter::O_in_body()
+    ngraph::runtime::plaidml::ConvPoolFormatter::O_in_body() const
 {
     if (m_deriv == DerivType::None)
     {
@@ -482,7 +482,7 @@ ngraph::runtime::plaidml::builder::ContractionInput
 }
 
 ngraph::runtime::plaidml::builder::UnaryContraction
-    ngraph::runtime::plaidml::ConvPoolFormatter::Broadcast_Ones()
+    ngraph::runtime::plaidml::ConvPoolFormatter::Broadcast_Ones() const
 {
     if (m_op != OpType::AvgPool)
     {
@@ -501,7 +501,7 @@ ngraph::runtime::plaidml::builder::UnaryContraction
 }
 
 ngraph::runtime::plaidml::builder::UnaryContraction
-    ngraph::runtime::plaidml::ConvPoolFormatter::Count()
+    ngraph::runtime::plaidml::ConvPoolFormatter::Count() const
 {
     if (m_op != OpType::AvgPool)
     {
@@ -535,7 +535,7 @@ ngraph::runtime::plaidml::builder::UnaryContraction
 }
 
 ngraph::runtime::plaidml::builder::UnaryContraction
-    ngraph::runtime::plaidml::ConvPoolFormatter::PoolContraction()
+    ngraph::runtime::plaidml::ConvPoolFormatter::PoolContraction() const
 {
     std::string agg_op;
     switch (m_op)
@@ -558,7 +558,7 @@ ngraph::runtime::plaidml::builder::UnaryContraction
 }
 
 ngraph::runtime::plaidml::builder::TernaryContraction
-    ngraph::runtime::plaidml::ConvPoolFormatter::PoolDerivContraction()
+    ngraph::runtime::plaidml::ConvPoolFormatter::PoolDerivContraction() const
 {
     builder::ContractionOutput output{"DI"};
     output.add_indices({n(), c()}).add_dims({N(), C()});
@@ -595,27 +595,27 @@ ngraph::runtime::plaidml::builder::TernaryContraction
         .set_third(incoming_deriv);
 }
 
-std::string ngraph::runtime::plaidml::ConvPoolFormatter::c()
+std::string ngraph::runtime::plaidml::ConvPoolFormatter::c() const
 {
     return "c";
 }
 
-std::string ngraph::runtime::plaidml::ConvPoolFormatter::ci()
+std::string ngraph::runtime::plaidml::ConvPoolFormatter::ci() const
 {
     return "ci";
 }
 
-std::string ngraph::runtime::plaidml::ConvPoolFormatter::co()
+std::string ngraph::runtime::plaidml::ConvPoolFormatter::co() const
 {
     return "co";
 }
 
-std::string ngraph::runtime::plaidml::ConvPoolFormatter::n()
+std::string ngraph::runtime::plaidml::ConvPoolFormatter::n() const
 {
     return "n";
 }
 
-std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::xfs()
+std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::xfs() const
 {
     if (m_xfs.empty())
     {
@@ -629,7 +629,7 @@ std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::xfs()
     return m_xfs;
 }
 
-std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::xis()
+std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::xis() const
 {
     if (m_xis.empty())
     {
@@ -652,7 +652,7 @@ std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::xis()
     return m_xis;
 }
 
-std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::xos()
+std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::xos() const
 {
     if (m_xos.empty())
     {
@@ -666,27 +666,27 @@ std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::xos()
     return m_xos;
 }
 
-std::string ngraph::runtime::plaidml::ConvPoolFormatter::C()
+std::string ngraph::runtime::plaidml::ConvPoolFormatter::C() const
 {
     return "C";
 }
 
-std::string ngraph::runtime::plaidml::ConvPoolFormatter::CI()
+std::string ngraph::runtime::plaidml::ConvPoolFormatter::CI() const
 {
     return "CI";
 }
 
-std::string ngraph::runtime::plaidml::ConvPoolFormatter::CO()
+std::string ngraph::runtime::plaidml::ConvPoolFormatter::CO() const
 {
     return "CO";
 }
 
-std::string ngraph::runtime::plaidml::ConvPoolFormatter::N()
+std::string ngraph::runtime::plaidml::ConvPoolFormatter::N() const
 {
     return "N";
 }
 
-std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::XFs()
+std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::XFs() const
 {
     if (m_XFs.empty())
     {
@@ -707,7 +707,7 @@ std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::XFs()
     return m_XFs;
 }
 
-std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::XIs()
+std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::XIs() const
 {
     if (m_XIs.empty())
     {
@@ -728,7 +728,7 @@ std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::XIs()
     return m_XIs;
 }
 
-std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::XOs()
+std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::XOs() const
 {
     if (m_XOs.empty())
     {
@@ -765,7 +765,7 @@ std::vector<std::string> ngraph::runtime::plaidml::ConvPoolFormatter::XOs()
     return m_XOs;
 }
 
-std::string ngraph::runtime::plaidml::ConvPoolFormatter::F()
+std::string ngraph::runtime::plaidml::ConvPoolFormatter::F() const
 {
     if (m_deriv == DerivType::Filter)
     {
@@ -774,7 +774,7 @@ std::string ngraph::runtime::plaidml::ConvPoolFormatter::F()
     return "F";
 }
 
-std::string ngraph::runtime::plaidml::ConvPoolFormatter::I()
+std::string ngraph::runtime::plaidml::ConvPoolFormatter::I() const
 {
     if (m_deriv == DerivType::Data && m_op == OpType::Conv)
     {
@@ -783,7 +783,7 @@ std::string ngraph::runtime::plaidml::ConvPoolFormatter::I()
     return "I";
 }
 
-std::string ngraph::runtime::plaidml::ConvPoolFormatter::O()
+std::string ngraph::runtime::plaidml::ConvPoolFormatter::O() const
 {
     if (m_deriv != DerivType::None)
     {

@@ -25,44 +25,40 @@ namespace ngraph
     {
         namespace plaidml
         {
-            // Reverse reverses the selected axes within a tensor.
-            template <>
-            void Impl<op::Reverse>::operator()()
-            {
-                check_inputs(1);
-                check_outputs(1);
-
-                const auto& shape = op().get_shape();
-
-                set_output(start_tile_function()
-                               .add(builder::Input{op_input(), "I"}.add_dims("D", 0, shape.size()))
-                               .add(builder::Output{"O"})
-                               .add(builder::UnaryContraction{"="}
-                                        .set(builder::ContractionOutput{"O"}
-                                                 .add_indices("d", 0, shape.size())
-                                                 .add_dims("D", 0, shape.size()))
-                                        .set(builder::ContractionInput{"I"}.add_indices([&](
-                                            std::back_insert_iterator<std::list<std::string>> out) {
-                                            for (std::size_t idx = 0; idx < shape.size(); ++idx)
-                                            {
-                                                auto sidx = std::to_string(idx);
-                                                if (op().get_reversed_axes().count(idx))
-                                                {
-                                                    out = "D" + sidx + "-d" + sidx + "-1";
-                                                }
-                                                else
-                                                {
-                                                    out = "d" + sidx;
-                                                }
-                                            }
-                                        })))
-                               .finalize());
-            }
-
-            namespace
-            {
-                Impl<op::Reverse>::Registration register_reverse;
-            }
+            NGRAPH_PLAIDML_OP_CLASS(ImplReverse, OpImpl<op::Reverse>);
         }
     }
+}
+
+// Reverse reverses the selected axes within a tensor.
+void ngraph::runtime::plaidml::ImplReverse::Apply()
+{
+    check_inputs(1);
+    check_outputs(1);
+
+    const auto& shape = op().get_shape();
+
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(), "I"}.add_dims("D", 0, shape.size()))
+                   .add(builder::Output{"O"})
+                   .add(builder::UnaryContraction{"="}
+                            .set(builder::ContractionOutput{"O"}
+                                     .add_indices("d", 0, shape.size())
+                                     .add_dims("D", 0, shape.size()))
+                            .set(builder::ContractionInput{"I"}.add_indices(
+                                [&](std::back_insert_iterator<std::list<std::string>> out) {
+                                    for (std::size_t idx = 0; idx < shape.size(); ++idx)
+                                    {
+                                        auto sidx = std::to_string(idx);
+                                        if (op().get_reversed_axes().count(idx))
+                                        {
+                                            out = "D" + sidx + "-d" + sidx + "-1";
+                                        }
+                                        else
+                                        {
+                                            out = "d" + sidx;
+                                        }
+                                    }
+                                })))
+                   .finalize());
 }

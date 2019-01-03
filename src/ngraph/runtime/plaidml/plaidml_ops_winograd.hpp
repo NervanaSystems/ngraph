@@ -14,9 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/convert.hpp"
-#include "ngraph/runtime/plaidml/plaidml_impl.hpp"
-#include "ngraph/runtime/plaidml/plaidml_translate.hpp"
+#pragma once
+
+#include <memory>
+
+#include "ngraph/op/op.hpp"
+#include "ngraph/runtime/plaidml/plaidml_ops_convolution.hpp"
 
 namespace ngraph
 {
@@ -24,20 +27,24 @@ namespace ngraph
     {
         namespace plaidml
         {
-            NGRAPH_PLAIDML_OP_CLASS(ImplConvert, OpImpl<op::Convert>);
+            namespace op
+            {
+                class Winograd;
+            }
         }
     }
 }
 
-// Convert views a tensor as a new type.
-void ngraph::runtime::plaidml::ImplConvert::Apply()
+class ngraph::runtime::plaidml::op::Winograd final : public ngraph::op::Op
 {
-    check_inputs(1);
-    check_outputs(1);
-    set_output(start_tile_function()
-                   .add(builder::Input{op_input(), "I"})
-                   .add(builder::Output{"O"})
-                   .add(builder::Elementwise{
-                       "O", tile_converter("I", to_plaidml(op().get_convert_element_type()))})
-                   .finalize());
-}
+public:
+    Winograd(std::shared_ptr<Convolution> conv, const NodeVector& args);
+
+    void validate_and_infer_types() final;
+
+    std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const final;
+
+    const std::shared_ptr<Convolution> get_conv() const { return m_conv; }
+private:
+    std::shared_ptr<Convolution> m_conv;
+};
