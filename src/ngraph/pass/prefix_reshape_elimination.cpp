@@ -39,12 +39,9 @@ ngraph::pass::PrefixReshapeElimination::PrefixReshapeElimination()
             }
 
             // Validate that this isn't a reordering-reshape.
-            for (std::size_t idx = 0; idx < reshape->get_input_order().size(); ++idx)
+            if (reshape->get_is_transpose())
             {
-                if (idx != reshape->get_input_order().at(idx))
-                {
-                    return false;
-                }
+                return false;
             }
 
             // Make sure that logical dimension sizes match.
