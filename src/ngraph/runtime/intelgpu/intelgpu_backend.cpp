@@ -194,6 +194,8 @@ static void do_eltwise_operation(cldnn::topology& topology,
 {
     arguments_check(op, 2, 1);
 
+// Leave it here for some time
+#if USE_INTELGPU_CUSTOM_KERNELS
     if ((get_input_type(op) == element::i32 || get_input_type(op) == element::i64) &&
         (mode == cldnn::eltwise_mode::min || mode == cldnn::eltwise_mode::max))
     {
@@ -229,6 +231,12 @@ static void do_eltwise_operation(cldnn::topology& topology,
             get_output_name(op), {get_input_name(op, 0), get_input_name(op, 1)}, mode);
         topology.add(op_add);
     }
+#else
+
+    const cldnn::eltwise op_eltwise(
+        get_output_name(op), {get_input_name(op, 0), get_input_name(op, 1)}, mode);
+    topology.add(op_eltwise);
+#endif
 }
 
 static void do_unary_operation(cldnn::topology& topology,
