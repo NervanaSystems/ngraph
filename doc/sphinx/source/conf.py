@@ -63,7 +63,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'nGraph Compiler stack'
-copyright = '2018, Intel Corporation'
+copyright = '2018-2019, Intel Corporation'
 author = 'Intel Corporation'
 
 # License specifics see LICENSE of component
@@ -203,7 +203,7 @@ breathe_projects = {
 rst_epilog = u"""
 .. |codename| replace:: Intel nGraph
 .. |project| replace:: Intel nGraph Library
-.. |InG| replace:: Intel® nGraph 
+.. |InG| replace:: Intel® nGraph
 .. |nGl| replace:: nGraph library
 .. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
    :ltrim:
@@ -217,7 +217,7 @@ rst_epilog = u"""
    :ltrim:
 .. |reg|    unicode:: U+000AE .. REGISTERED TRADEMARK SIGN
    :ltrim:
-   
+
 """
 
 # -- autodoc Extension configuration --------------------------------------
