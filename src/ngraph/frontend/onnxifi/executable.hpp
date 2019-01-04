@@ -30,42 +30,36 @@ namespace ngraph
 {
     namespace onnxifi
     {
-        /// \brief ONNXIFI extensions to nGraph backend
-        class Backend
+        /// \brief ONNXIFI extensions to nGraph Executable
+        class Executable
         {
         public:
-            Backend(const Backend&) = delete;
-            Backend& operator=(const Backend&) = delete;
+            Executable(const Executable&) = delete;
+            Executable& operator=(const Executable&) = delete;
 
-            Backend(Backend&&) = default;
-            Backend& operator=(Backend&&) = default;
+            Executable(Executable&&) = default;
+            Executable& operator=(Executable&&) = default;
 
-            Backend() = delete;
-
-            explicit Backend(const std::string& type)
-                : m_type{type}
+            explicit Executable(const std::shared_ptr<runtime::Executable>& executable)
+                : m_executable{executable}
             {
             }
 
-            const std::string& get_type() const { return m_type; }
-            std::unique_ptr<runtime::Executable>
-                compile(const std::shared_ptr<Function>& function) const
+            bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const
             {
-                return get().compile(function);
+                return m_executable->call(outputs, inputs);
+            }
+
+            bool call_with_validate(
+                const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const
+            {
+                return m_executable->call_with_validate(outputs, inputs);
             }
 
         private:
-            std::string m_type{};
-            mutable std::shared_ptr<runtime::Backend> m_backend{nullptr};
-
-            runtime::Backend& get() const
-            {
-                if (m_backend == nullptr)
-                {
-                    m_backend = runtime::Backend::create(m_type);
-                }
-                return *m_backend;
-            }
+            mutable std::shared_ptr<runtime::Executable> m_executable{nullptr};
         };
 
     } // namespace onnxifi

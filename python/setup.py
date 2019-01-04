@@ -229,6 +229,7 @@ sources = [
     'pyngraph/ops/softmax.cpp',
     'pyngraph/ops/result.cpp',
     'pyngraph/runtime/backend.cpp',
+    'pyngraph/runtime/executable.cpp',
     'pyngraph/runtime/regmodule_pyngraph_runtime.cpp',
     'pyngraph/runtime/tensor.cpp',
     'pyngraph/passes/manager.cpp',

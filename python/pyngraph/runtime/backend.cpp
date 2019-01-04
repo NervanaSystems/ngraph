@@ -18,8 +18,10 @@
 #include <pybind11/stl.h>
 
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "pyngraph/runtime/backend.hpp"
+#include "pyngraph/runtime/executable.hpp"
 
 namespace py = pybind11;
 
@@ -35,20 +37,7 @@ void regclass_pyngraph_runtime_Backend(py::module m)
                     const ngraph::element::Type&, const ngraph::Shape&)) &
                     ngraph::runtime::Backend::create_tensor);
     backend.def("compile",
-                (std::shared_ptr<ngraph::Function>(ngraph::runtime::Backend::*)(
+                (std::unique_ptr<ngraph::runtime::Executable>(ngraph::runtime::Backend::*)(
                     std::shared_ptr<ngraph::Function>)) &
                     ngraph::runtime::Backend::compile);
-    backend.def("call",
-                (bool (ngraph::runtime::Backend::*)(
-                    ngraph::runtime::Handle,
-                    const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>&,
-                    const std::vector<std::shared_ptr<ngraph::runtime::Tensor>>&)) &
-                    ngraph::runtime::Backend::call);
-    backend.def("remove_compiled_function",
-                (void (ngraph::runtime::Backend::*)(ngraph::runtime::Handle)) &
-                    ngraph::runtime::Backend::remove_compiled_function);
-    backend.def("get_performance_data",
-                (std::vector<ngraph::runtime::PerformanceCounter>(ngraph::runtime::Backend::*)(
-                    ngraph::runtime::Handle)) &
-                    ngraph::runtime::Backend::get_performance_data);
 }
