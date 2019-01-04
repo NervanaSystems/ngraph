@@ -36,40 +36,28 @@ void runtime::gpu::GPUCallFrame::resolve_reservations(
     }
 }
 
-void runtime::gpu::GPUCallFrame::resolve_inputs(void** inputs)
+void runtime::gpu::GPUCallFrame::resolve_inputs(void** inputs, size_t num_inputs)
 {
-    for (size_t i = 0; i < m_inputs.size(); i++)
+    // num_inputs is > 0 iff we are resolving inputs from a nested function call
+    if (num_inputs == 0)
+    {
+        num_inputs = m_inputs.size();
+    }
+    for (size_t i = 0; i < num_inputs; i++)
     {
         void* input = inputs[i];
         m_inputs[i] = static_cast<unsigned char*>(input);
     }
 }
 
-void runtime::gpu::GPUCallFrame::resolve_inputs(const std::vector<void*>& inputs)
+void runtime::gpu::GPUCallFrame::resolve_outputs(void** outputs, size_t num_outputs)
 {
-    m_inputs.clear();
-    m_inputs.resize(inputs.size(), nullptr);
-    for (size_t i = 0; i < m_inputs.size(); i++)
+    // num_outputs is > 0 iff we are resolving outputs from a nested function call
+    if (num_outputs == 0)
     {
-        void* input = inputs[i];
-        m_inputs[i] = static_cast<unsigned char*>(input);
+        num_outputs = m_outputs.size();
     }
-}
-
-void runtime::gpu::GPUCallFrame::resolve_outputs(void** outputs)
-{
-    for (size_t i = 0; i < m_outputs.size(); i++)
-    {
-        void* output = outputs[i];
-        m_outputs[i] = static_cast<unsigned char*>(output);
-    }
-}
-
-void runtime::gpu::GPUCallFrame::resolve_outputs(const std::vector<void*>& outputs)
-{
-    m_outputs.clear();
-    m_outputs.resize(outputs.size(), nullptr);
-    for (size_t i = 0; i < m_outputs.size(); i++)
+    for (size_t i = 0; i < num_outputs; i++)
     {
         void* output = outputs[i];
         m_outputs[i] = static_cast<unsigned char*>(output);

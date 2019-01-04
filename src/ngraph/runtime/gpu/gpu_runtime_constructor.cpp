@@ -45,8 +45,8 @@ void runtime::gpu::GPURuntimeConstructor::add_call(
         // create a new call frame for the nested function
         GPUCallFrame callee_frame = caller_frame;
         // resolve the inputs of the new call frame
-        callee_frame.resolve_inputs(inputs);
-        callee_frame.resolve_outputs(outputs);
+        callee_frame.resolve_inputs(inputs.data(), inputs.size());
+        callee_frame.resolve_outputs(outputs.data(), outputs.size());
         for (auto const& step : runtime)
         {
             step(callee_frame, ctx);

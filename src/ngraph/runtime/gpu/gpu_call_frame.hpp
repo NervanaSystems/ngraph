@@ -38,10 +38,8 @@ namespace ngraph
                 void resolve_reservations(
                     const GPUCompiledFunction* compiled_function,
                     const std::unordered_map<std::string, size_t>& memory_reservations);
-                void resolve_inputs(void** inputs);
-                void resolve_inputs(const std::vector<void*>& inputs);
-                void resolve_outputs(void** outputs);
-                void resolve_outputs(const std::vector<void*>& outputs);
+                void resolve_inputs(void** inputs, size_t num_inputs = 0);
+                void resolve_outputs(void** outputs, size_t num_outputs = 0);
                 std::vector<void*> get_tensor_io(const std::vector<GPUTensorWrapper>& tensors);
 
             private:
