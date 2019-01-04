@@ -43,11 +43,11 @@ endif()
 
 # This section sets up MKL as an external project to be used later by MKLDNN
 
-set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.17/")
-set(MKLVERSION "2019.0.1.20180928")
+set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/v0.17.2/")
+set(MKLVERSION "2019.0.1.20181227")
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
-    set(MKL_SHA1_HASH 0d9cc8bfc2c1a1e3df5e0b07e2f363bbf934a7e9)
+    set(MKL_SHA1_HASH 155fe3ed6d30a772baedb224c41c0e9c784e4b46)
     set(MKL_LIBS libiomp5.so libmklml_intel.so)
 elseif (APPLE)
     set(MKLPACKAGE "mklml_mac_${MKLVERSION}.tgz")
@@ -84,7 +84,7 @@ set(MKL_LIBS ${TMP_PATHS})
 target_link_libraries(libmkl INTERFACE ${MKL_LIBS})
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
-set(MKLDNN_GIT_TAG "830a100")
+set(MKLDNN_GIT_TAG "fa5f6313d6b65e8f6444c6900432fb07ef5661e5")
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set(MKLDNN_PATCH_FILE mkldnn.patch)
 else()
