@@ -15,8 +15,9 @@
 //*****************************************************************************
 #ifdef NGRAPH_DISTRIBUTED
 
-#include "ngraph/op/distbroadcast.hpp"
 #include <mlsl.hpp>
+
+#include "ngraph/op/distbroadcast.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 
 using namespace std;

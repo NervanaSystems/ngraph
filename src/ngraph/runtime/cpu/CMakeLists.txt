@@ -43,6 +43,7 @@ set(SRC
     builder/convert.cpp
     builder/convert_layout.cpp
     builder/convolution.cpp
+    builder/distbroadcast.cpp
     builder/dot.cpp
     builder/embedding_lookup.cpp
     builder/function_call.cpp
@@ -53,7 +54,6 @@ set(SRC
     builder/max.cpp
     builder/max_pool.cpp
     builder/min.cpp
-    builder/distbroadcast.cpp
     builder/one_hot.cpp
     builder/relu.cpp
     builder/pad.cpp
