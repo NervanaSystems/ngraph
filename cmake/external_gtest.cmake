@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,8 +34,6 @@ endif()
 set(GTEST_OUTPUT_DIR ${EXTERNAL_PROJECTS_ROOT}/gtest/build/googlemock/gtest)
 
 set(GTEST_CMAKE_ARGS
-    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
     -DCMAKE_CXX_FLAGS=${COMPILE_FLAGS}
 )
 if(WIN32)
@@ -46,45 +44,23 @@ if(WIN32)
     )
 endif()
 
-# The 'BUILD_BYPRODUCTS' argument was introduced in CMake 3.2.
-if (${CMAKE_VERSION} VERSION_LESS 3.2)
-    ExternalProject_Add(
-        ext_gtest
-        PREFIX gtest
-        GIT_REPOSITORY ${GTEST_GIT_REPO_URL}
-        GIT_TAG ${GTEST_GIT_LABEL}
-        # Disable install step
-        INSTALL_COMMAND ""
-        UPDATE_COMMAND ""
-        CMAKE_ARGS ${GTEST_CMAKE_ARGS}
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/build"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest"
-        EXCLUDE_FROM_ALL TRUE
-        )
-else()
-    ExternalProject_Add(
-        ext_gtest
-        PREFIX gtest
-        GIT_REPOSITORY ${GTEST_GIT_REPO_URL}
-        GIT_TAG ${GTEST_GIT_LABEL}
-        # Disable install step
-        INSTALL_COMMAND ""
-        UPDATE_COMMAND ""
-        CMAKE_ARGS ${GTEST_CMAKE_ARGS}
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/build"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest"
-        BUILD_BYPRODUCTS "${EXTERNAL_PROJECTS_ROOT}/gtest/build/googlemock/gtest/libgtest.a"
-        EXCLUDE_FROM_ALL TRUE
-        )
-endif()
+ExternalProject_Add(
+    ext_gtest
+    PREFIX gtest
+    GIT_REPOSITORY ${GTEST_GIT_REPO_URL}
+    GIT_TAG ${GTEST_GIT_LABEL}
+    # Disable install step
+    INSTALL_COMMAND ""
+    UPDATE_COMMAND ""
+    CMAKE_GENERATOR ${CMAKE_GENERATOR}
+    CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+    CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
+    CMAKE_ARGS
+        ${NGRAPH_FORWARD_CMAKE_ARGS}
+        ${GTEST_CMAKE_ARGS}
+    BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/build"
+    EXCLUDE_FROM_ALL TRUE
+    )
 
 #------------------------------------------------------------------------------
 
@@ -93,4 +69,9 @@ ExternalProject_Get_Property(ext_gtest SOURCE_DIR BINARY_DIR)
 add_library(libgtest INTERFACE)
 add_dependencies(libgtest ext_gtest)
 target_include_directories(libgtest SYSTEM INTERFACE ${SOURCE_DIR}/googletest/include)
-target_link_libraries(libgtest INTERFACE ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(GTEST_LIB_NAME gtestd)
+else()
+    set(GTEST_LIB_NAME gtest)
+endif()
+target_link_libraries(libgtest INTERFACE ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${GTEST_LIB_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})

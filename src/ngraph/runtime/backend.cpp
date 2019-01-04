@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,9 +49,9 @@ vector<ngraph::runtime::PerformanceCounter>
     return vector<PerformanceCounter>();
 }
 
-void runtime::Backend::validate_call(shared_ptr<const Function> function,
-                                     const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                     const vector<shared_ptr<runtime::Tensor>>& inputs)
+void runtime::Backend::validate(shared_ptr<const Function> function,
+                                const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     const ParameterVector& input_parameters = function->get_parameters();
     if (input_parameters.size() != inputs.size())
