@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <initializer_list>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -157,6 +158,12 @@ namespace ngraph
 class ngraph::runtime::interpreter::INTBackend : public Backend
 {
 public:
+    INTBackend();
+    INTBackend(const std::vector<std::string>& unsupported_op_name_list);
+    INTBackend(const INTBackend&) = delete;
+    INTBackend(INTBackend&&) = delete;
+    INTBackend& operator=(const INTBackend&) = delete;
+
     std::shared_ptr<Tensor>
         create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
 
@@ -174,7 +181,8 @@ public:
     std::vector<PerformanceCounter>
         get_performance_data(std::shared_ptr<Function> func) const override;
 
-    bool is_supported(const Node& node) const override { return true; }
+    bool is_supported(const Node& node) const override;
+
 private:
     int get_alignment() const { return 64; }
     class FunctionInstance
@@ -191,6 +199,7 @@ private:
         void* get_temporary_pointer(size_t offset) { return m_temporary_memory->get_ptr(offset); }
     };
     std::map<std::shared_ptr<Function>, FunctionInstance> m_function_map;
+    std::set<std::string> m_unsupported_op_name_list;
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);
@@ -494,65 +503,57 @@ private:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
             element::Type type = node.get_element_type();
+            std::stringstream ss;
             size_t element_count = shape_size(node.get_output_shape(0));
-            if (type == element::boolean)
+            switch (type.get_type_enum())
             {
+            case element::Type_t::boolean:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<char*>(out[0]), element_count);
-            }
-            else if (type == element::f32)
-            {
+                break;
+            case element::Type_t::f32:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<float*>(out[0]), element_count);
-            }
-            else if (type == element::f64)
-            {
+                break;
+            case element::Type_t::f64:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<double*>(out[0]), element_count);
-            }
-            else if (type == element::i8)
-            {
+                break;
+            case element::Type_t::i8:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<int8_t*>(out[0]), element_count);
-            }
-            else if (type == element::i16)
-            {
+                break;
+            case element::Type_t::i16:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<int16_t*>(out[0]), element_count);
-            }
-            else if (type == element::i32)
-            {
+                break;
+            case element::Type_t::i32:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<int32_t*>(out[0]), element_count);
-            }
-            else if (type == element::i64)
-            {
+                break;
+            case element::Type_t::i64:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<int64_t*>(out[0]), element_count);
-            }
-            else if (type == element::u8)
-            {
+                break;
+            case element::Type_t::u8:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<uint8_t*>(out[0]), element_count);
-            }
-            else if (type == element::u16)
-            {
+                break;
+            case element::Type_t::u16:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<uint16_t*>(out[0]), element_count);
-            }
-            else if (type == element::u32)
-            {
+                break;
+            case element::Type_t::u32:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<uint32_t*>(out[0]), element_count);
-            }
-            else if (type == element::u64)
-            {
+                break;
+            case element::Type_t::u64:
                 reference::convert<T>(
                     static_cast<const T*>(args[0]), static_cast<uint64_t*>(out[0]), element_count);
-            }
-            else
-            {
-                std::stringstream ss;
+                break;
+            case element::Type_t::undefined:
+            case element::Type_t::dynamic:
+            case element::Type_t::bf16:
                 ss << "unsupported element type " << type << " op Convert";
                 throw std::runtime_error(ss.str());
             }

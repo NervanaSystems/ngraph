@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -148,10 +148,14 @@ size_t MKLDNNEmitter::build_dequantization(const ngraph::Node* node,
 {
     auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
     auto scale_const_op =
-        std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(1));
-    float scale = *(static_cast<float const*>(scale_const_op->get_data_ptr()));
+        std::dynamic_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(1));
+    std::vector<float> scale = {1.0f};
+    if (scale_const_op != nullptr)
+    {
+        scale = scale_const_op->get_vector<float>();
+    }
     std::vector<float> scales;
-    scales.push_back(scale);
+    scales.push_back(scale[0]);
     size_t dequantize_index = 0;
     dequantize_index = this->build_quantize_reorder(input_desc, result_desc, scales);
     return dequantize_index;
@@ -1202,4 +1206,22 @@ size_t MKLDNNEmitter::build_bounded_relu(const mkldnn::memory::desc& input_desc,
 
     m_primitive_deps[primitive_index] = {input_index, result_index};
     return primitive_index;
+}
+
+size_t MKLDNNEmitter::convolution_forward_init(bool with_bias)
+{
+    size_t size = m_mkldnn_primitives.size();
+    if (with_bias)
+    {
+        // Inputs, Weights, Bias, Results, Conv
+        m_mkldnn_primitives.resize(size + 5, nullptr);
+        m_primitive_deps[m_mkldnn_primitives.size() - 1] = {size, size + 1, size + 2, size + 3};
+    }
+    else
+    {
+        // Inputs, Weights, Results, Conv
+        m_mkldnn_primitives.resize(size + 4, nullptr);
+        m_primitive_deps[m_mkldnn_primitives.size() - 1] = {size, size + 1, size + 2};
+    }
+    return m_mkldnn_primitives.size() - 1;
 }

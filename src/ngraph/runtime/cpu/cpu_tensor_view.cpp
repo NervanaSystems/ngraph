@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,8 +35,9 @@ using namespace std;
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape,
                                            void* memory_pointer,
-                                           const string& name)
-    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name))
+                                           const runtime::Backend* parent)
+    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, "external"),
+                      parent)
     , buffer(nullptr)
     , aligned_buffer(nullptr)
 {
@@ -77,8 +78,8 @@ runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_
 
 runtime::cpu::CPUTensorView::CPUTensorView(const ngraph::element::Type& element_type,
                                            const Shape& shape,
-                                           const string& name)
-    : CPUTensorView(element_type, shape, nullptr, name)
+                                           const runtime::Backend* parent)
+    : CPUTensorView(element_type, shape, nullptr, parent)
 {
 }
 
