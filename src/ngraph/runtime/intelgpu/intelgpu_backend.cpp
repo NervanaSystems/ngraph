@@ -370,7 +370,7 @@ unique_ptr<runtime::Executable>
                                                 bool enable_performance_collection)
 {
     std::unique_ptr<IntelGPUExecutable> exec{
-        new IntelGPUExecutable(function, enable_performance_collection)};
+        new IntelGPUExecutable(ocl_engine, func, enable_performance_collection)};
 
     return exec;
 }
