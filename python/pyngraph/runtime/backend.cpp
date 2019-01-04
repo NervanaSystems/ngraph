@@ -21,7 +21,6 @@
 #include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "pyngraph/runtime/backend.hpp"
-#include "pyngraph/runtime/executable.hpp"
 
 namespace py = pybind11;
 
