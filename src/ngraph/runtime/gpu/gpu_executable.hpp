@@ -56,8 +56,7 @@ namespace ngraph
                 std::vector<void*> m_outputs;
                 std::shared_ptr<BackendContext> m_context;
 
-                GPUExecutable(Backend* backend,
-                              std::shared_ptr<BackendContext> context,
+                GPUExecutable(std::shared_ptr<BackendContext> context,
                               std::shared_ptr<Function> function,
                               bool enable_performance_collection);
 

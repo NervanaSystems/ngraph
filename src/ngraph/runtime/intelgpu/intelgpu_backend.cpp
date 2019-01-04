@@ -364,9 +364,14 @@ shared_ptr<runtime::Tensor> runtime::intelgpu::IntelGPUBackend::create_tensor(
         element_type, shape, *ocl_engine, memory_pointer, this);
 }
 
-unique_ptr<runtime::Executable> runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func,
-                                                            bool enable_performance_collection)
+unique_ptr<runtime::Executable>
+    runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function> func,
+                                                bool enable_performance_collection)
 {
+    std::unique_ptr<IntelGPUExecutable> exec{
+        new IntelGPUExecutable(function, enable_performance_collection)};
+
+    return exec;
 }
 
 // The cldnn::network contains something like "generic_layer_0_Parameter_254_0" names

@@ -61,7 +61,7 @@ unique_ptr<runtime::Executable> runtime::interpreter::INTBackend::compile(shared
                                                           bool enable_performance_collection)
 {
     std::unique_ptr<INTExecutable> exec{
-        new INTExecutable(this, function, enable_performance_collection)};
+        new INTExecutable(function, enable_performance_collection)};
 
     return exec;
 }

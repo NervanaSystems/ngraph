@@ -43,8 +43,7 @@ namespace ngraph
                 std::vector<PerformanceCounter> get_performance_data() const override;
 
             private:
-                CPUExecutable(Backend* backend,
-                              std::shared_ptr<Function> function,
+                CPUExecutable(std::shared_ptr<Function> function,
                               bool enable_performance_collection);
 
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;

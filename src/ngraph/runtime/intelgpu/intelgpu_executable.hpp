@@ -38,8 +38,7 @@ namespace ngraph
 class ngraph::runtime::intelgpu::IntelGPUExecutable : public runtime::Executable
 {
 public:
-    IntelGPUExecutable(runtime::Backend* backend,
-                       std::shared_ptr<cldnn::engine> ocl,
+    IntelGPUExecutable(std::shared_ptr<cldnn::engine> ocl,
                        std::shared_ptr<Function> func,
                        bool enable_performance_collection = false);
 

@@ -37,10 +37,9 @@ using namespace std;
 //     } s_cpu_static_init;
 // }
 
-runtime::cpu::CPUExecutable::CPUExecutable(Backend* backend,
+runtime::cpu::CPUExecutable::CPUExecutable(
                                            shared_ptr<Function> func,
                                            bool enable_performance_collection)
-    : Executable(backend)
 {
     m_external_function = make_shared<CPU_ExternalFunction>(func);
     m_external_function->m_emit_timing = m_performance_counters_enabled;

@@ -20,8 +20,7 @@
 using namespace ngraph;
 using namespace std;
 
-runtime::Executable::Executable(runtime::Backend* backend)
-    : m_backend{backend}
+runtime::Executable::Executable()
 {
 }
 
@@ -145,9 +144,4 @@ void runtime::Executable::set_parameters_and_results(const Function& func)
 vector<runtime::PerformanceCounter> runtime::Executable::get_performance_data() const
 {
     return vector<PerformanceCounter>();
-}
-
-runtime::Backend* runtime::Executable::get_backend()
-{
-    return m_backend;
 }

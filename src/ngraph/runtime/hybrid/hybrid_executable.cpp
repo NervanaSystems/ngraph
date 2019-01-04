@@ -32,12 +32,10 @@ using namespace ngraph;
 using namespace std;
 
 runtime::hybrid::HybridExecutable::HybridExecutable(
-    runtime::Backend* backend,
     const std::vector<std::shared_ptr<runtime::Backend>>& backend_list,
     std::shared_ptr<Function> func,
     bool enable_performance_collection)
-    : Executable(backend)
-    , m_backend_list(backend_list)
+    : m_backend_list(backend_list)
 {
     // Clone function
     m_function = clone_function(*func);
@@ -60,7 +58,8 @@ runtime::hybrid::HybridExecutable::HybridExecutable(
     {
         size_t placement = runtime::hybrid::get_colocated_function_placement(sub_function);
         auto backend = m_backend_list[placement];
-        SharedHandle handle = backend->compile(sub_function, enable_performance_collection);
+        shared_ptr<runtime::Executable> handle =
+            backend->compile(sub_function, enable_performance_collection);
         m_handle_map[sub_function] = handle;
 
         // Compile will replace nodes so we need to make one more pass through all

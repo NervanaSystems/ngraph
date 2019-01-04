@@ -308,12 +308,10 @@ static size_t get_max_memory_rss()
     return result;
 }
 
-runtime::intelgpu::IntelGPUExecutable::IntelGPUExecutable(runtime::Backend* backend,
-                                                          std::shared_ptr<cldnn::engine> ocl,
+runtime::intelgpu::IntelGPUExecutable::IntelGPUExecutable(std::shared_ptr<cldnn::engine> ocl,
                                                           std::shared_ptr<Function> func,
                                                           bool enable_performance_collection)
-    : Executable(backend)
-    , ocl_engine(ocl)
+    : ocl_engine(ocl)
 {
     bool profiling = false;
 

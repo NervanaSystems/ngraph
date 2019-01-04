@@ -59,7 +59,7 @@ public:
                  const std::vector<runtime::Tensor*>& inputs) override;
 
 private:
-    NOPExecutable(Backend* backend,
+    NOPExecutable(
                   std::shared_ptr<Function> function,
                   bool enable_performance_collection);
 };

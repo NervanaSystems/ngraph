@@ -31,12 +31,10 @@
 using namespace ngraph;
 using namespace std;
 
-runtime::gpu::GPUExecutable::GPUExecutable(Backend* backend,
-                                           shared_ptr<BackendContext> context,
+runtime::gpu::GPUExecutable::GPUExecutable(shared_ptr<BackendContext> context,
                                            shared_ptr<Function> func,
                                            bool enable_performance_collection)
-    : Executable(backend)
-    , m_context(context)
+    : m_context(context)
 {
     m_context->bind_cuda_context_to_thread();
     m_external_function = make_shared<GPU_ExternalFunction>(func, m_context);

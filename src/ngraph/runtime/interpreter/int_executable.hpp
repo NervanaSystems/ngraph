@@ -163,6 +163,8 @@ public:
     std::vector<PerformanceCounter> get_performance_data() const override;
 
 private:
+    INTExecutable(std::shared_ptr<Function> function, bool enable_performance_collection = false);
+
     void generate_calls(const element::Type& type,
                         const NodeWrapper& op,
                         const std::vector<void*>& outputs,
@@ -751,8 +753,8 @@ private:
                 inputs.push_back(std::static_pointer_cast<runtime::Tensor>(host_tensor));
             }
 
-            auto handle = get_backend()->compile(function);
-            handle->call(outputs, inputs);
+            std::unique_ptr<INTExecutable> exec(new INTExecutable(function));
+            exec->call(outputs, inputs);
             break;
         }
         case OP_TYPEID::Greater:
@@ -1022,8 +1024,8 @@ private:
                     node.get_inputs().at(1).get_element_type(), Shape{}, &y, "reduce_temp_y");
                 auto tr = std::make_shared<HostTensor>(
                     node.get_output_element_type(0), Shape{}, "reduce_temp_r");
-                auto handle = get_backend()->compile(reduction_function);
-                handle->call({tr}, {tx, ty});
+                std::unique_ptr<INTExecutable> exec(new INTExecutable(reduction_function));
+                exec->call({tr}, {tx, ty});
                 return *(tr->get_data_ptr<T>());
             };
 
@@ -1052,8 +1054,8 @@ private:
                                                        "reduce_window_temp_y");
                 auto tr = std::make_shared<HostTensor>(
                     node.get_output_element_type(0), Shape{}, "reduce_window_temp_r");
-                auto handle = get_backend()->compile(reduction_function);
-                handle->call({tr}, {tx, ty});
+                std::unique_ptr<INTExecutable> exec(new INTExecutable(reduction_function));
+                exec->call({tr}, {tx, ty});
                 return *(tr->get_data_ptr<T>());
             };
 
@@ -1168,8 +1170,8 @@ private:
                     node.get_inputs().at(1).get_element_type(), Shape{}, &y, "selection_temp_y");
                 auto tr = std::make_shared<runtime::HostTensor>(
                     element::boolean, Shape{}, "selection_temp_r");
-                auto handle = get_backend()->compile(selection_function);
-                handle->call({tr}, {tx, ty});
+                std::unique_ptr<INTExecutable> exec(new INTExecutable(selection_function));
+                exec->call({tr}, {tx, ty});
                 return *(tr->get_data_ptr<char>());
             };
 
@@ -1182,8 +1184,8 @@ private:
                     node.get_inputs().at(1).get_element_type(), Shape{}, &y, "scatter_temp_y");
                 auto tr = std::make_shared<runtime::HostTensor>(
                     node.get_output_element_type(0), Shape{}, "scatter_temp_r");
-                auto handle = get_backend()->compile(scatter_function);
-                handle->call({tr}, {tx, ty});
+                std::unique_ptr<INTExecutable> exec(new INTExecutable(scatter_function));
+                exec->call({tr}, {tx, ty});
                 return *(tr->get_data_ptr<T>());
             };
 
@@ -1340,10 +1342,6 @@ private:
 #pragma GCC diagnostic pop
         }
     }
-
-    INTExecutable(Backend* backend,
-                  std::shared_ptr<Function> function,
-                  bool enable_performance_collection);
 
     bool m_performance_counters_enabled = false;
     std::unordered_map<const Node*, stopwatch> m_timer_map;

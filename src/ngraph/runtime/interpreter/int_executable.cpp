@@ -25,10 +25,9 @@
 using namespace std;
 using namespace ngraph;
 
-runtime::interpreter::INTExecutable::INTExecutable(Backend* backend,
+runtime::interpreter::INTExecutable::INTExecutable(
                                                    shared_ptr<Function> function,
                                                    bool enable_performance_collection)
-    : runtime::Executable(backend)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();

@@ -108,8 +108,8 @@ public:
             ->create_tensor(element_type, shape, memory_pointer);
     }
 
-    std::unique_ptr<runtime::Executable> compile(shared_ptr<Function> function,
-                            bool enable_performance_collection = false) override;
+    std::unique_ptr<runtime::Executable>
+        compile(shared_ptr<Function> function, bool enable_performance_collection = false) override;
 
     shared_ptr<runtime::Backend> get_cached_backend(Placement placement)
     {
@@ -127,11 +127,10 @@ public:
 class HybridExecutable : public runtime::Executable
 {
 public:
-    HybridExecutable(runtime::Backend* backend,
+    HybridExecutable(HybridBackend* backend,
                      shared_ptr<Function> func,
                      bool enable_performance_collection)
-        : Executable(backend)
-        , m_hybrid_backend(static_cast<HybridBackend*>(backend))
+        : m_hybrid_backend(backend)
     {
         // Clone function
         m_function = clone_function(*func);
@@ -232,7 +231,7 @@ private:
 };
 
 unique_ptr<runtime::Executable> HybridBackend::compile(shared_ptr<Function> function,
-                                       bool enable_performance_collection)
+                                                       bool enable_performance_collection)
 {
     unique_ptr<HybridExecutable> exec{
         new HybridExecutable(this, function, enable_performance_collection)};

@@ -45,8 +45,7 @@ public:
                  const std::vector<runtime::Tensor*>& inputs) override;
 
 private:
-    HybridExecutable(Backend* backend,
-                     const std::vector<std::shared_ptr<runtime::Backend>>& backend_list,
+    HybridExecutable(const std::vector<std::shared_ptr<runtime::Backend>>& backend_list,
                      std::shared_ptr<Function> function,
                      bool enable_performance_collection);
     std::shared_ptr<ngraph::Function> m_function;

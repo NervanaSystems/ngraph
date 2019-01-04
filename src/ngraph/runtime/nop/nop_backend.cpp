@@ -58,15 +58,14 @@ unique_ptr<runtime::Executable> runtime::nop::NOPBackend::compile(shared_ptr<Fun
                                                   bool enable_performance_collection)
 {
     unique_ptr<NOPExecutable> exec{
-        new NOPExecutable(this, function, enable_performance_collection)};
+        new NOPExecutable(function, enable_performance_collection)};
 
     return exec;
 }
 
-runtime::nop::NOPExecutable::NOPExecutable(Backend* backend,
+runtime::nop::NOPExecutable::NOPExecutable(
                                            shared_ptr<Function> function,
                                            bool enable_performance_collection)
-    : Executable(backend)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
