@@ -356,6 +356,7 @@ INSTANTIATE_TEST_CASE_P(
 // Test the exact bounds near +0.f
 //
 // With tolerance_bits = 18
+// (equivalent to testing bfloat precision with 2 bits tolerance)
 //
 //                           Targeted bit
 //                           |
@@ -391,7 +392,7 @@ INSTANTIATE_TEST_CASE_P(
 // 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 TEST(all_close_f, mantissa_8_near_0)
 {
-    constexpr int tolerance_bits = 18;
+    constexpr int tolerance_bits = (FLOAT_MANTISSA_BITS - BFLOAT_MANTISSA_BITS + 2);
 
     // 0.f, the ground-truth value
     float expected = bits_to_float("0  00000000  000 0000 0000 0000 0000 0000");
@@ -425,6 +426,7 @@ TEST(all_close_f, mantissa_8_near_0)
 // Test the exact bounds near -0.f
 //
 // With tolerance_bits = 18
+// (equivalent to testing bfloat precision with 2 bits tolerance)
 //
 //                           Targeted bit
 //                           |
@@ -460,7 +462,7 @@ TEST(all_close_f, mantissa_8_near_0)
 // 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 TEST(all_close_f, mantissa_8_near_n0)
 {
-    constexpr int tolerance_bits = 18;
+    constexpr int tolerance_bits = (FLOAT_MANTISSA_BITS - BFLOAT_MANTISSA_BITS + 2);
 
     // 0.f, the ground-truth value
     float expected = bits_to_float("1  00000000  000 0000 0000 0000 0000 0000");
@@ -494,6 +496,7 @@ TEST(all_close_f, mantissa_8_near_n0)
 // Test the exact bounds near 1.f
 //
 // With tolerance_bits = 18
+// (equivalent to testing bfloat precision with 2 bits tolerance)
 //
 //                           Targeted bit
 //                           |
@@ -523,7 +526,7 @@ TEST(all_close_f, mantissa_8_near_n0)
 // 0 0 1 1 1 1 1 1 0 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 TEST(all_close_f, mantissa_8_near_1)
 {
-    constexpr int tolerance_bits = 18;
+    constexpr int tolerance_bits = (FLOAT_MANTISSA_BITS - BFLOAT_MANTISSA_BITS + 2);
 
     // 1.f, the ground-truth value
     float expected = bits_to_float("0  01111111  000 0000 0000 0000 0000 0000");
@@ -557,6 +560,7 @@ TEST(all_close_f, mantissa_8_near_1)
 // Test the exact bounds near -1.f
 //
 // With tolerance_bits = 18
+// (equivalent to testing bfloat precision with 2 bits tolerance)
 //
 //                           Targeted bit
 //                           |
@@ -586,7 +590,7 @@ TEST(all_close_f, mantissa_8_near_1)
 // 1 0 1 1 1 1 1 1 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 TEST(all_close_f, mantissa_8_near_n1)
 {
-    constexpr int tolerance_bits = 18;
+    constexpr int tolerance_bits = (FLOAT_MANTISSA_BITS - BFLOAT_MANTISSA_BITS + 2);
 
     // -1.f, the ground-truth value
     float expected = bits_to_float("1  01111111  000 0000 0000 0000 0000 0000");
@@ -630,7 +634,7 @@ TEST(all_close_f, mantissa_8_near_n1)
 //                           |  2 |<=
 TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
 {
-    constexpr int tolerance_bits = 18;
+    constexpr int tolerance_bits = (FLOAT_MANTISSA_BITS - BFLOAT_MANTISSA_BITS + 2);
 
     float expected;
     float upper_bound;

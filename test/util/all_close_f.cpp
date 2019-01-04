@@ -80,8 +80,6 @@ uint64_t test::float_distance(double a, double b)
 
 bool test::close_f(float a, float b, int tolerance_bits)
 {
-    constexpr int mantissa_bits = 24;
-
     // isfinite(a) => !isinf(a) && !isnan(a)
     if (!isfinite(a) || !isfinite(b))
     {
@@ -93,7 +91,7 @@ bool test::close_f(float a, float b, int tolerance_bits)
     // e.g. for float with 24 bit mantissa, 2 bit accuracy, and hard-coded 8 bit exponent_bits
     // tolerance_bit_shift = 32 -           (1 +  8 + (24 -     1         ) - 2             )
     //                       float_length    sign exp  mantissa implicit 1    tolerance_bits
-    uint32_t tolerance_bit_shift = 32 - (1 + 8 + (mantissa_bits - 1) - tolerance_bits);
+    uint32_t tolerance_bit_shift = 32 - (1 + 8 + (FLOAT_MANTISSA_BITS - 1) - tolerance_bits);
     uint32_t tolerance = static_cast<uint32_t>(1U) << tolerance_bit_shift;
 
     return distance <= tolerance;
@@ -101,8 +99,6 @@ bool test::close_f(float a, float b, int tolerance_bits)
 
 bool test::close_f(double a, double b, int tolerance_bits)
 {
-    constexpr int mantissa_bits = 53;
-
     // isfinite(a) => !isinf(a) && !isnan(a)
     if (!isfinite(a) || !isfinite(b))
     {
@@ -114,7 +110,7 @@ bool test::close_f(double a, double b, int tolerance_bits)
     // e.g. for double with 52 bit mantissa, 2 bit accuracy, and hard-coded 11 bit exponent_bits
     // tolerance_bit_shift = 64 -           (1 +  11 + (53 -     1         ) - 2             )
     //                       double_length   sign exp   mantissa implicit 1    tolerance_bits
-    uint64_t tolerance_bit_shift = 64 - (1 + 11 + (mantissa_bits - 1) - tolerance_bits);
+    uint64_t tolerance_bit_shift = 64 - (1 + 11 + (DOUBLE_MANTISSA_BITS - 1) - tolerance_bits);
     uint64_t tolerance = static_cast<uint64_t>(1U) << tolerance_bit_shift;
 
     return distance <= tolerance;
@@ -227,14 +223,13 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
 ::testing::AssertionResult
     test::all_close_f(const vector<float>& a, const vector<float>& b, int tolerance_bits)
 {
-    constexpr int mantissa_bits = 24;
     if (tolerance_bits < MIN_FLOAT_TOLERANCE_BITS)
     {
         tolerance_bits = MIN_FLOAT_TOLERANCE_BITS;
     }
-    if (tolerance_bits > mantissa_bits)
+    if (tolerance_bits >= FLOAT_MANTISSA_BITS)
     {
-        tolerance_bits = mantissa_bits;
+        tolerance_bits = FLOAT_MANTISSA_BITS - 1;
     }
 
     bool rc = true;
@@ -248,7 +243,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     // e.g. for float with 24 bit mantissa, 2 bit accuracy, and hard-coded 8 bit exponent_bits
     // tolerance_bit_shift = 32 -           (1 +  8 + (24 -     1         ) - 2             )
     //                       float_length    sign exp  mantissa implicit 1    tolerance_bits
-    uint32_t tolerance_bit_shift = 32 - (1 + 8 + (mantissa_bits - 1) - tolerance_bits);
+    uint32_t tolerance_bit_shift = 32 - (1 + 8 + (FLOAT_MANTISSA_BITS - 1) - tolerance_bits);
     uint32_t tolerance = static_cast<uint32_t>(1U) << tolerance_bit_shift;
     uint32_t max_distance = 0;
     uint32_t min_distance = UINT_MAX;
@@ -299,14 +294,14 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     if (rc && (std::getenv("NGRAPH_GTEST_INFO") != nullptr))
     {
         // Short unobtrusive message when passing
-        std::cout << "[   INFO   ] Verifying match of >= " << (mantissa_bits - tolerance_bits)
-                  << " mantissa bits (" << mantissa_bits << " bits precision - " << tolerance_bits
-                  << " tolerance). Loosest match found is " << matching_mantissa_bits(max_distance)
-                  << " mantissa bits.\n";
+        std::cout << "[   INFO   ] Verifying match of <= " << (FLOAT_MANTISSA_BITS - tolerance_bits)
+                  << " mantissa bits (" << FLOAT_MANTISSA_BITS << " bits precision - "
+                  << tolerance_bits << " tolerance). Loosest match found is "
+                  << matching_mantissa_bits(max_distance) << " mantissa bits.\n";
     }
 
     msg << "passing criteria - mismatch allowed  @ mantissa bit: "
-        << (mantissa_bits - tolerance_bits) << " or later (" << tolerance_bits
+        << (FLOAT_MANTISSA_BITS - tolerance_bits) << " or later (" << tolerance_bits
         << " tolerance bits)\n";
     msg << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
         << "tightest match   - mismatch occurred @ mantissa bit: "
@@ -328,14 +323,13 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
 ::testing::AssertionResult
     test::all_close_f(const vector<double>& a, const vector<double>& b, int tolerance_bits)
 {
-    constexpr int mantissa_bits = 53;
     if (tolerance_bits < 0)
     {
         tolerance_bits = 0;
     }
-    if (tolerance_bits > mantissa_bits)
+    if (tolerance_bits >= DOUBLE_MANTISSA_BITS)
     {
-        tolerance_bits = mantissa_bits;
+        tolerance_bits = DOUBLE_MANTISSA_BITS - 1;
     }
 
     bool rc = true;
@@ -349,7 +343,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     // e.g. for double with 52 bit mantissa, 2 bit accuracy, and hard-coded 11 bit exponent_bits
     // tolerance_bit_shift = 64 -           (1 +  11 + (53 -     1         ) - 2             )
     //                       double_length   sign exp   mantissa implicit 1    tolerance_bits
-    uint64_t tolerance_bit_shift = 64 - (1 + 11 + (mantissa_bits - 1) - tolerance_bits);
+    uint64_t tolerance_bit_shift = 64 - (1 + 11 + (DOUBLE_MANTISSA_BITS - 1) - tolerance_bits);
     uint64_t tolerance = static_cast<uint64_t>(1U) << tolerance_bit_shift;
     uint64_t max_distance = 0;
     uint64_t min_distance = ULLONG_MAX;
@@ -397,14 +391,15 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     if (rc && (std::getenv("NGRAPH_GTEST_INFO") != nullptr))
     {
         // Short unobtrusive message when passing
-        std::cout << "[   INFO   ] Verifying match of >= " << (mantissa_bits - tolerance_bits)
-                  << " mantissa bits (" << mantissa_bits << " bits precision - " << tolerance_bits
+        std::cout << "[   INFO   ] Verifying match of >= "
+                  << (DOUBLE_MANTISSA_BITS - tolerance_bits) << " mantissa bits ("
+                  << DOUBLE_MANTISSA_BITS << " bits precision - " << tolerance_bits
                   << " tolerance). Loosest match found is " << matching_mantissa_bits(max_distance)
                   << " mantissa bits.\n";
     }
 
     msg << "passing criteria - mismatch allowed  @ mantissa bit: "
-        << (mantissa_bits - tolerance_bits) << " or later (" << tolerance_bits
+        << (DOUBLE_MANTISSA_BITS - tolerance_bits) << " or later (" << tolerance_bits
         << " tolerance bits)\n";
     msg << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
         << "tightest match   - mismatch occurred @ mantissa bit: "

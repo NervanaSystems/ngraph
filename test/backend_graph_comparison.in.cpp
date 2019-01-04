@@ -104,13 +104,24 @@ public:
                 msg << "Test backed op run w/ original graph dependencies:"
                     << "\n";
                 msg << get_results_str(ref_data_vector, bk_data_vector);
-                ::testing::AssertionResult all_close_graph = test::all_close_f(
-                    ref_data_vector, bk_data_vector, DEFAULT_FLOAT_TOLERANCE_BITS + 14);
+                // Future work will better determine useful graph comparison thresholds.
+                // For a very small sample of tested graphs initial criteria is:
+                // * Comparison of ops using inputs from preceeding ops (original
+                //   graph dependencies) allows for a little better than 1/3 of
+                //   the possible bits to match
+                // * Isolated operation allows for 2/3 of the possible bits to match
+                constexpr int one_third_of_available_bits = (MAX_FLOAT_BITS + 1) / 3;
+                constexpr int in_graph_tolerance =
+                    FLOAT_MANTISSA_BITS - one_third_of_available_bits;
+                constexpr int isolated_tolerance =
+                    FLOAT_MANTISSA_BITS - (one_third_of_available_bits * 2);
+                ::testing::AssertionResult all_close_graph =
+                    test::all_close_f(ref_data_vector, bk_data_vector, in_graph_tolerance);
                 msg << "Test backed op run isolated w/ inputs from ref graph run:"
                     << "\n";
                 msg << get_results_str(ref_data_vector, bk_isolated_data_vector);
-                ::testing::AssertionResult all_close_isolated = test::all_close_f(
-                    ref_data_vector, bk_isolated_data_vector, DEFAULT_FLOAT_TOLERANCE_BITS + 6);
+                ::testing::AssertionResult all_close_isolated =
+                    test::all_close_f(ref_data_vector, bk_isolated_data_vector, isolated_tolerance);
                 if (!all_close_graph || !all_close_isolated)
                 {
                     cout << msg.str();

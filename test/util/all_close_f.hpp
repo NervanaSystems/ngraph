@@ -22,21 +22,42 @@
 #include "gtest/gtest.h"
 #include "test_tools.hpp"
 
-// Minimum tolerance bits possible
-#ifndef MIN_FLOAT_TOLERANCE_BITS
-#define MIN_FLOAT_TOLERANCE_BITS 0
+static constexpr int BFLOAT_MANTISSA_BITS = 8;
+static constexpr int FLOAT_MANTISSA_BITS = 24;
+static constexpr int DOUBLE_MANTISSA_BITS = 53;
+
+// Maximum available float bits
+#ifndef MAX_FLOAT_BITS
+#define MAX_FLOAT_BITS FLOAT_MANTISSA_BITS
 #endif
 
-static_assert((MIN_FLOAT_TOLERANCE_BITS >= 0) && (MIN_FLOAT_TOLERANCE_BITS < 24),
+// Minimum float tolerance bits possible
+#ifndef MIN_FLOAT_TOLERANCE_BITS
+#define MIN_FLOAT_TOLERANCE_BITS (FLOAT_MANTISSA_BITS - MAX_FLOAT_BITS)
+#endif
+
+static_assert((MAX_FLOAT_BITS > 0) && (MAX_FLOAT_BITS <= FLOAT_MANTISSA_BITS),
+              "MAX_FLOAT_BITS must be in range (0, 24]");
+static_assert((MIN_FLOAT_TOLERANCE_BITS >= 0) && (MIN_FLOAT_TOLERANCE_BITS < FLOAT_MANTISSA_BITS),
               "MIN_FLOAT_TOLERANCE_BITS must be in range [0, 24)");
 
-// Default tolerance bits
+// Default float tolerance bits
 #ifndef DEFAULT_FLOAT_TOLERANCE_BITS
 #define DEFAULT_FLOAT_TOLERANCE_BITS (MIN_FLOAT_TOLERANCE_BITS + 2)
 #endif
 
-static_assert((DEFAULT_FLOAT_TOLERANCE_BITS >= 0) && (DEFAULT_FLOAT_TOLERANCE_BITS < 24),
+// Default float tolerance bits
+#ifndef DEFAULT_DOUBLE_TOLERANCE_BITS
+#define DEFAULT_DOUBLE_TOLERANCE_BITS 2
+#endif
+
+static_assert((DEFAULT_FLOAT_TOLERANCE_BITS >= 0) &&
+                  (DEFAULT_FLOAT_TOLERANCE_BITS < FLOAT_MANTISSA_BITS),
               "DEFAULT_FLOAT_TOLERANCE_BITS must be in range [0, 24)");
+
+static_assert((DEFAULT_DOUBLE_TOLERANCE_BITS >= 0) &&
+                  (DEFAULT_DOUBLE_TOLERANCE_BITS < DOUBLE_MANTISSA_BITS),
+              "DEFAULT_DOUBLE_TOLERANCE_BITS must be in range [0, 53)");
 
 namespace ngraph
 {
@@ -120,7 +141,7 @@ namespace ngraph
         /// double (s1, e11, m52) has 52 + 1 = 53 bits of mantissa or bit_precision
         ///
         /// This function uses hard-coded value of 11 bit exponent_bits, so it's only valid for f64.
-        bool close_f(double a, double b, int tolerance_bits = DEFAULT_FLOAT_TOLERANCE_BITS);
+        bool close_f(double a, double b, int tolerance_bits = DEFAULT_DOUBLE_TOLERANCE_BITS);
 
         /// \brief Determine distances between two vectors of f32 numbers
         /// \param a Vector of floats to compare
@@ -170,7 +191,7 @@ namespace ngraph
         /// \returns ::testing::AssertionSuccess iff the two floating point vectors are close
         ::testing::AssertionResult all_close_f(const std::vector<double>& a,
                                                const std::vector<double>& b,
-                                               int tolerance_bits = DEFAULT_FLOAT_TOLERANCE_BITS);
+                                               int tolerance_bits = DEFAULT_DOUBLE_TOLERANCE_BITS);
 
         /// \brief Check if the two TensorViews are all close in float
         /// \param a First Tensor to compare
