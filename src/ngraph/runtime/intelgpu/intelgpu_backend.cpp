@@ -52,6 +52,7 @@
 #include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
+#include "ngraph/runtime/intelgpu/intelgpu_executable.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_batchnorm.hpp"
 #include "ngraph/runtime/intelgpu/intelgpu_op_broadcast.hpp"
