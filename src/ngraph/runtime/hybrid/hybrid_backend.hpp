@@ -48,8 +48,9 @@ public:
                       const ngraph::Shape& shape,
                       void* memory_pointer) override;
 
-    std::unique_ptr<runtime::Executable> compile(std::shared_ptr<ngraph::Function> func,
-                   bool enable_performance_collection = false) override;
+    std::unique_ptr<runtime::Executable>
+        compile(std::shared_ptr<ngraph::Function> func,
+                bool enable_performance_collection = false) override;
 
     bool is_supported(const ngraph::Node& node) const override;
 

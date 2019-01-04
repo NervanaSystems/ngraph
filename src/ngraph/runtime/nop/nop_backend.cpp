@@ -54,17 +54,16 @@ shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const elemen
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer, "external");
 }
 
-unique_ptr<runtime::Executable> runtime::nop::NOPBackend::compile(shared_ptr<Function> function,
-                                                  bool enable_performance_collection)
+unique_ptr<runtime::Executable>
+    runtime::nop::NOPBackend::compile(shared_ptr<Function> function,
+                                      bool enable_performance_collection)
 {
-    unique_ptr<NOPExecutable> exec{
-        new NOPExecutable(function, enable_performance_collection)};
+    unique_ptr<NOPExecutable> exec{new NOPExecutable(function, enable_performance_collection)};
 
     return exec;
 }
 
-runtime::nop::NOPExecutable::NOPExecutable(
-                                           shared_ptr<Function> function,
+runtime::nop::NOPExecutable::NOPExecutable(shared_ptr<Function> function,
                                            bool enable_performance_collection)
 {
     pass::Manager pass_manager;

@@ -37,8 +37,7 @@ using namespace std;
 //     } s_cpu_static_init;
 // }
 
-runtime::cpu::CPUExecutable::CPUExecutable(
-                                           shared_ptr<Function> func,
+runtime::cpu::CPUExecutable::CPUExecutable(shared_ptr<Function> func,
                                            bool enable_performance_collection)
 {
     m_external_function = make_shared<CPU_ExternalFunction>(func);

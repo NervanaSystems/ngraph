@@ -90,7 +90,8 @@ namespace ngraph
             auto c_vec = read_vector<T>(c_arg);
             fill(c_vec.begin(), c_vec.end(), static_cast<T>(0));
 
-            static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<runtime::Executable>>
+            static std::unordered_map<std::shared_ptr<Function>,
+                                      std::shared_ptr<runtime::Executable>>
                 s_compiled_functions;
             auto it = s_compiled_functions.find(df);
             std::shared_ptr<runtime::Executable> df_handle;
@@ -212,7 +213,8 @@ namespace ngraph
                 s_clone_fwd_map[f] = clone_function(*fprop_cache.fprop);
             }
             auto clone_fwd = s_clone_fwd_map[f];
-            static std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<runtime::Executable>>
+            static std::unordered_map<std::shared_ptr<Function>,
+                                      std::shared_ptr<runtime::Executable>>
                 s_compiled_functions;
             auto it = s_compiled_functions.find(clone_fwd);
             std::shared_ptr<runtime::Executable> clone_fwd_handle;

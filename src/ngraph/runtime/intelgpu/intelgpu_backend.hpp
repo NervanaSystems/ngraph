@@ -47,8 +47,9 @@ public:
     std::shared_ptr<ngraph::runtime::Tensor>
         create_tensor(const ngraph::element::Type& element_type, const Shape& shape) override;
 
-    std::unique_ptr<runtime::Executable> compile(std::shared_ptr<Function> func,
-                   bool enable_performance_collection = false) override;
+    std::unique_ptr<runtime::Executable>
+        compile(std::shared_ptr<Function> func,
+                bool enable_performance_collection = false) override;
 
 private:
     std::shared_ptr<cldnn::engine> ocl_engine;

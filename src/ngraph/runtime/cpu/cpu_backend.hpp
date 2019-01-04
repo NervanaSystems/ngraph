@@ -45,8 +45,9 @@ namespace ngraph
                     create_tensor(const ngraph::element::Type& element_type,
                                   const Shape& shape) override;
 
-                std::unique_ptr<runtime::Executable> compile(std::shared_ptr<Function> func,
-                               bool enable_performance_collection = false) override;
+                std::unique_ptr<runtime::Executable>
+                    compile(std::shared_ptr<Function> func,
+                            bool enable_performance_collection = false) override;
             };
         }
     }

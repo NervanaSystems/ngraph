@@ -55,8 +55,9 @@ public:
 
     std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
 
-    std::unique_ptr<runtime::Executable> compile(std::shared_ptr<Function> function,
-                   bool enable_performance_collection = false) override;
+    std::unique_ptr<runtime::Executable>
+        compile(std::shared_ptr<Function> function,
+                bool enable_performance_collection = false) override;
 
     bool is_supported(const Node& node) const override;
 

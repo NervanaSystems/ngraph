@@ -25,8 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-runtime::interpreter::INTExecutable::INTExecutable(
-                                                   shared_ptr<Function> function,
+runtime::interpreter::INTExecutable::INTExecutable(shared_ptr<Function> function,
                                                    bool enable_performance_collection)
 {
     pass::Manager pass_manager;
