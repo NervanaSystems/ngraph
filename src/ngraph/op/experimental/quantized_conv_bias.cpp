@@ -192,9 +192,8 @@ op::QuantizedConvolutionBiasSignedAdd::QuantizedConvolutionBiasSignedAdd(
     // TODO: call ngraph util
     // util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
 
-    auto output_et = with_relu ? element::u8 : element::i8;
     set_output_type(0,
-                    output_et,
+                    element::i8,
                     util::infer_convolution_output_shape(this,
                                                          data_batch_shape,
                                                          filters_shape,
