@@ -301,6 +301,16 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                 continue;
             }
 
+            const auto& dtype = slice->get_input_element_type(0);
+            if (runtime::cpu::mkldnn_utils::get_mkldnn_data_type(dtype) ==
+                mkldnn::memory::data_type::data_undef)
+            {
+                NGRAPH_DEBUG << "cpu_memory_optimization: "
+                             << slice->get_input_element_type(0).c_type_string()
+                             << " isn't supported, no in place slice";
+                continue;
+            }
+
             // If input layout is in non-native layout, we need more complicated checks for
             // slice contiguity. Bail out for now.
             auto input_tensor = slice->get_inputs().at(0).get_output().get_tensor_ptr();

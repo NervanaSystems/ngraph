@@ -172,6 +172,8 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC distributed.cpp)
 endif()
 
+configure_file(version.in.hpp version.hpp)
+
 add_library(ngraph SHARED ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
@@ -257,6 +259,8 @@ install(DIRECTORY
         PATTERN "*.hpp"
         PATTERN "*.h"
 )
+install(FILES ${CMAKE_BINARY_DIR}/src/ngraph/version.hpp
+    DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph")
 
 set(CPACK_GENERATOR "DEB")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
