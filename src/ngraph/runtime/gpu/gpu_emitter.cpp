@@ -143,8 +143,6 @@ function<std::string(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(co
 
     return it->second;
 }
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-variable"
 
 std::string runtime::gpu::GPU_Emitter::emit_Abs(EMIT_ARGS)
 {
@@ -1536,4 +1534,3 @@ Shape runtime::gpu::get_padded_shape(const Shape& input_shape,
     }
     return padded_shape;
 }
-#pragma clang diagnostic pop
