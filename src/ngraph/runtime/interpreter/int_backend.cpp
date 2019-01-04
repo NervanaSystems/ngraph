@@ -57,7 +57,7 @@ shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer, this);
 }
 
-runtime::Handle runtime::interpreter::INTBackend::compile(shared_ptr<Function> function,
+unique_ptr<runtime::Executable> runtime::interpreter::INTBackend::compile(shared_ptr<Function> function,
                                                           bool enable_performance_collection)
 {
     std::unique_ptr<INTExecutable> exec{

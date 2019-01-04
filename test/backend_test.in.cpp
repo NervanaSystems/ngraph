@@ -341,7 +341,7 @@ public:
 protected:
     const std::unique_ptr<ngraph::runtime::Backend>& m_backend;
     std::shared_ptr<Function> m_function;
-    runtime::Handle m_handle;
+    std::unique_ptr<runtime::Executable> m_handle;
     std::shared_ptr<ngraph::runtime::Tensor> m_input;
     std::shared_ptr<ngraph::runtime::Tensor> m_gamma;
     std::shared_ptr<ngraph::runtime::Tensor> m_beta;
@@ -604,7 +604,7 @@ public:
 protected:
     const std::unique_ptr<ngraph::runtime::Backend>& m_backend;
     std::shared_ptr<Function> m_function;
-    runtime::Handle m_handle;
+    std::unique_ptr<runtime::Executable> m_handle;
     std::shared_ptr<ngraph::runtime::Tensor> m_input;
     std::shared_ptr<ngraph::runtime::Tensor> m_gamma;
     std::shared_ptr<ngraph::runtime::Tensor> m_beta;

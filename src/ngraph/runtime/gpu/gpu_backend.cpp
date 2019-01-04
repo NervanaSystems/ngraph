@@ -117,7 +117,7 @@ shared_ptr<runtime::Tensor> runtime::gpu::GPU_Backend::create_tensor(
     return make_shared<runtime::gpu::GPUTensor>(element_type, shape, memory_pointer, this);
 }
 
-runtime::Handle runtime::gpu::GPU_Backend::compile(std::shared_ptr<Function> func,
+unique_ptr<runtime::Executable> runtime::gpu::GPU_Backend::compile(std::shared_ptr<Function> func,
                                                    bool enable_performance_collection)
 {
     std::unique_ptr<GPUExecutable> exec{

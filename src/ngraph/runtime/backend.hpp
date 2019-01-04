@@ -32,8 +32,8 @@ namespace ngraph
         class Tensor;
         class Backend;
         class Executable;
-        using Handle = std::unique_ptr<Executable>;
-        using SharedHandle = std::shared_ptr<Executable>;
+        // using Handle = std::unique_ptr<runtime::Executable>;
+        // using SharedHandle = std::shared_ptr<Executable>;
     }
 }
 
@@ -86,7 +86,7 @@ public:
     /// \param func The function to compile
     /// \param enable_performance_collection Flag to add per-op performance profiling.
     /// \returns Handle or nullptr on failure
-    virtual Handle compile(std::shared_ptr<Function> func,
+    virtual std::unique_ptr<runtime::Executable> compile(std::shared_ptr<Function> func,
                            bool enable_performance_collection = false) = 0;
 
     /// \brief Test if a backend is capable of supporting an op

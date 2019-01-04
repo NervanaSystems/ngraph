@@ -108,7 +108,7 @@ public:
             ->create_tensor(element_type, shape, memory_pointer);
     }
 
-    runtime::Handle compile(shared_ptr<Function> function,
+    std::unique_ptr<runtime::Executable> compile(shared_ptr<Function> function,
                             bool enable_performance_collection = false) override;
 
     shared_ptr<runtime::Backend> get_cached_backend(Placement placement)
@@ -148,8 +148,8 @@ public:
         for (shared_ptr<Function>& sub_function : m_sub_functions)
         {
             Placement placement = get_colocated_function_placement(sub_function);
-            auto backend = m_hybrid_backend->get_cached_backend(placement);
-            runtime::SharedHandle h = backend->compile(sub_function);
+            auto be = m_hybrid_backend->get_cached_backend(placement);
+            shared_ptr<runtime::Executable> h = be->compile(sub_function);
             m_handle_map[sub_function] = h;
         }
         set_parameters_and_results(*m_function);
@@ -228,10 +228,10 @@ private:
     shared_ptr<Function> m_function;
     vector<shared_ptr<Function>> m_sub_functions;
     unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Result>> m_map_parameter_to_result;
-    unordered_map<shared_ptr<Function>, runtime::SharedHandle> m_handle_map;
+    unordered_map<shared_ptr<Function>, shared_ptr<runtime::Executable>> m_handle_map;
 };
 
-runtime::Handle HybridBackend::compile(shared_ptr<Function> function,
+unique_ptr<runtime::Executable> HybridBackend::compile(shared_ptr<Function> function,
                                        bool enable_performance_collection)
 {
     unique_ptr<HybridExecutable> exec{

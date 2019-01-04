@@ -68,7 +68,7 @@ shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(
     return make_shared<runtime::cpu::CPUTensorView>(element_type, shape, memory_pointer, this);
 }
 
-runtime::Handle runtime::cpu::CPU_Backend::compile(shared_ptr<Function> function,
+unique_ptr<runtime::Executable> runtime::cpu::CPU_Backend::compile(shared_ptr<Function> function,
                                                    bool enable_performance_collection)
 {
     unique_ptr<CPUExecutable> exec{

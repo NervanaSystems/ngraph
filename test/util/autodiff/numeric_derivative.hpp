@@ -58,7 +58,7 @@ namespace ngraph
             // ref_y is the function evaluated at the args
             auto ref_y = backend->create_tensor<T>(y_shape);
 
-            runtime::Handle f_handle = backend->compile(f);
+            std::unique_ptr<runtime::Executable> f_handle = backend->compile(f);
 
             f_handle->call_with_validate(
                 std::vector<std::shared_ptr<ngraph::runtime::Tensor>>{ref_y}, args);

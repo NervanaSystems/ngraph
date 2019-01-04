@@ -53,7 +53,7 @@ shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
     return (*it)->create_tensor(element_type, shape, memory_pointer);
 }
 
-runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func,
+unique_ptr<runtime::Executable> runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func,
                                                         bool enable_performance_collection)
 {
     std::unique_ptr<HybridExecutable> exec{

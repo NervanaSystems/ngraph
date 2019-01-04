@@ -78,11 +78,11 @@ public:
     void validate(const std::vector<runtime::Tensor*>& outputs,
                   const std::vector<runtime::Tensor*>& inputs);
 
-    /// \brief Query the input Parameters for a given Handle
+    /// \brief Query the input Parameters
     /// \returns an ngraph::op::ParameterVector of all input parameters
     const ngraph::ParameterVector& get_parameters() const;
 
-    /// \brief Query the output Results for a given Handle
+    /// \brief Query the output Results
     /// \returns an ngraph::ResultVector of all input parameters
     const ngraph::ResultVector& get_results() const;
 
