@@ -1546,7 +1546,7 @@ TEST(onnx, model_softplus)
 
     // -1.0f, 0, 1.0f, 10.f,                    normal input values for activation
     // 100.0f, -100.0f, 1000.0f, -1000.0f,      input values that leads to exp() overflow
-    // FLT_MIN, FLT_MIN / 10, -FLT_MIN / 10,    min, denorm, -denorm
+    // FLT_MIN, FLT_MIN / 16, -FLT_MIN / 16,    min, denorm, -denorm
     // FLT_MAX, -FLT_MAX,                       max, -max;
     Inputs inputs{std::vector<float>{-1.0f,
                                      0,
