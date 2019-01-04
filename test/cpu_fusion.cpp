@@ -3010,6 +3010,44 @@ TEST(cpu_fusion, fuse_batch_dot)
     ASSERT_EQ(ccg, 1);
 }
 
+TEST(cpu_fusion, fuse_batch_dot_backward)
+{
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+
+    const std::string file_name("mxnet/batch_dot_3.json");
+    auto cpu_f = make_function(file_name);
+    auto int_f = make_function(file_name);
+    pass_manager.run_passes(cpu_f);
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    auto cpu_df = autodiff::backprop_function(cpu_f);
+    for (shared_ptr<op::Parameter> param : cpu_df->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("batch_dot_bprop.pdf");
+        pass_manager.run_passes(cpu_df);
+    }
+
+//    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_df, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+//        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+      for (auto& v : cpu_results.at(i)) {
+        std::cout << v << " "; 
+      }
+      std::cout << std::endl;
+    }
+}
+
 TEST(cpu_fusion, fuse_batch_dot_forward)
 {
     pass::Manager pass_manager;

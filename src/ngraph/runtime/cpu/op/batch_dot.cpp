@@ -17,6 +17,7 @@
 #include "batch_dot.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/op/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -68,4 +69,53 @@ op::BatchDot::BatchDot(shared_ptr<Node> a, shared_ptr<Node> b, bool transpose_a,
     NGRAPH_DEBUG << "dot_shape shape = " << vector_to_string(dot_shape);
 
     set_output_type(0, a->get_element_type(), dot_shape);
+}
+
+shared_ptr<op::Reshape> make_reshape_axes_to_front(const shared_ptr<Node>& n,
+                                                   const Shape& front_shape,
+                                                   const Shape& back_shape)
+{
+    AxisVector input_order;
+    Shape output_shape;
+
+    for (size_t i = 0; i < back_shape.size(); i++)
+    {
+        input_order.push_back(front_shape.size() + i);
+        output_shape.push_back(back_shape[i]);
+    }
+
+    for (size_t i = 0; i < front_shape.size(); i++)
+    {
+        input_order.push_back(i);
+        output_shape.push_back(front_shape[i]);
+    }
+
+    return make_shared<op::Reshape>(n, input_order, output_shape);
+}
+
+void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+{
+    auto delta = deltas.at(0);
+
+    auto x = get_inputs().at(0).get_output().get_node();
+    auto y = get_inputs().at(1).get_output().get_node();
+
+    auto x_shape = x->get_shape();         // shape IJ
+    auto y_shape = y->get_shape();         // shape JK
+    auto delta_shape = delta->get_shape(); // shape IK
+
+    Shape I_shape;
+    Shape J_shape;
+    Shape K_shape;
+    I_shape.insert(I_shape.begin(), x_shape.begin(), x_shape.end() - 1);
+    J_shape.insert(J_shape.begin(), y_shape.begin(), y_shape.begin() + 1);
+    K_shape.insert(K_shape.begin(), y_shape.begin() + J_shape.size(), y_shape.end());
+
+    auto y_reshaped = make_reshape_axes_to_front(y, J_shape, K_shape);               // KJ
+    auto delta_dot_y_reshaped = make_shared<op::BatchDot>(delta, y_reshaped, false, m_transpose_b); // IK.KJ->IJ
+    adjoints.add_delta(x, delta_dot_y_reshaped);
+
+    auto x_reshaped = make_reshape_axes_to_front(x, I_shape, J_shape);               // JI
+    auto x_reshaped_dot_delta = make_shared<BatchDot>(x_reshaped, delta, m_transpose_a, false); // JI.IK->JK
+    adjoints.add_delta(y, x_reshaped_dot_delta);
 }
