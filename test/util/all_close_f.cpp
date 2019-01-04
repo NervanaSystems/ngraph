@@ -78,8 +78,10 @@ uint64_t test::float_distance(double a, double b)
     return distance;
 }
 
-bool test::close_f(float a, float b, int mantissa_bits, int tolerance_bits)
+bool test::close_f(float a, float b, int tolerance_bits)
 {
+    constexpr int mantissa_bits = 24;
+
     // isfinite(a) => !isinf(a) && !isnan(a)
     if (!isfinite(a) || !isfinite(b))
     {
@@ -222,11 +224,19 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     return matching_matissa_bits;
 }
 
-::testing::AssertionResult test::all_close_f(const vector<float>& a,
-                                             const vector<float>& b,
-                                             int mantissa_bits,
-                                             int tolerance_bits)
+::testing::AssertionResult
+    test::all_close_f(const vector<float>& a, const vector<float>& b, int tolerance_bits)
 {
+    constexpr int mantissa_bits = 24;
+    if (tolerance_bits < MIN_FLOAT_TOLERANCE_BITS)
+    {
+        tolerance_bits = MIN_FLOAT_TOLERANCE_BITS;
+    }
+    if (tolerance_bits > mantissa_bits)
+    {
+        tolerance_bits = mantissa_bits;
+    }
+
     bool rc = true;
     stringstream msg;
     if (a.size() != b.size())
@@ -296,8 +306,8 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     }
 
     msg << "passing criteria - mismatch allowed  @ mantissa bit: "
-        << (mantissa_bits - tolerance_bits) << " or later (" << mantissa_bits
-        << " mantissa bits w/ " << tolerance_bits << " tolerance bits)\n";
+        << (mantissa_bits - tolerance_bits) << " or later (" << tolerance_bits
+        << " tolerance bits)\n";
     msg << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
         << "tightest match   - mismatch occurred @ mantissa bit: "
         << matching_mantissa_bits(min_distance) << " or next bit (" << a[min_distance_index]
@@ -319,6 +329,14 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     test::all_close_f(const vector<double>& a, const vector<double>& b, int tolerance_bits)
 {
     constexpr int mantissa_bits = 53;
+    if (tolerance_bits < 0)
+    {
+        tolerance_bits = 0;
+    }
+    if (tolerance_bits > mantissa_bits)
+    {
+        tolerance_bits = mantissa_bits;
+    }
 
     bool rc = true;
     stringstream msg;
@@ -386,8 +404,8 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     }
 
     msg << "passing criteria - mismatch allowed  @ mantissa bit: "
-        << (mantissa_bits - tolerance_bits) << " or later (" << mantissa_bits
-        << " mantissa bits w/ " << tolerance_bits << " tolerance bits)\n";
+        << (mantissa_bits - tolerance_bits) << " or later (" << tolerance_bits
+        << " tolerance bits)\n";
     msg << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
         << "tightest match   - mismatch occurred @ mantissa bit: "
         << matching_mantissa_bits(min_distance) << " or next bit (" << a[min_distance_index]
@@ -407,7 +425,6 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
 
 ::testing::AssertionResult test::all_close_f(const std::shared_ptr<runtime::Tensor>& a,
                                              const std::shared_ptr<runtime::Tensor>& b,
-                                             int mantissa_bits,
                                              int tolerance_bits)
 {
     // Check that the layouts are compatible
@@ -420,14 +437,12 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
         return ::testing::AssertionFailure() << "Cannot compare tensors with different shapes";
     }
 
-    return test::all_close_f(
-        read_float_vector(a), read_float_vector(b), mantissa_bits, tolerance_bits);
+    return test::all_close_f(read_float_vector(a), read_float_vector(b), tolerance_bits);
 }
 
 ::testing::AssertionResult
     test::all_close_f(const std::vector<std::shared_ptr<runtime::Tensor>>& as,
                       const std::vector<std::shared_ptr<runtime::Tensor>>& bs,
-                      int mantissa_bits,
                       int tolerance_bits)
 {
     if (as.size() != bs.size())
@@ -436,7 +451,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     }
     for (size_t i = 0; i < as.size(); ++i)
     {
-        auto ar = test::all_close_f(as[i], bs[i], mantissa_bits, tolerance_bits);
+        auto ar = test::all_close_f(as[i], bs[i], tolerance_bits);
         if (!ar)
         {
             return ar;

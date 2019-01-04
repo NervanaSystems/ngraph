@@ -104,13 +104,19 @@ public:
                 msg << "Test backed op run w/ original graph dependencies:"
                     << "\n";
                 msg << get_results_str(ref_data_vector, bk_data_vector);
-                bool all_close_graph = test::all_close_f(ref_data_vector, bk_data_vector);
+                ::testing::AssertionResult all_close_graph = test::all_close_f(
+                    ref_data_vector, bk_data_vector, DEFAULT_FLOAT_TOLERANCE_BITS + 14);
                 msg << "Test backed op run isolated w/ inputs from ref graph run:"
                     << "\n";
                 msg << get_results_str(ref_data_vector, bk_isolated_data_vector);
-                bool all_close_isolated =
-                    test::all_close_f(ref_data_vector, bk_isolated_data_vector);
-                EXPECT_TRUE(all_close_graph && all_close_isolated) << msg.str();
+                ::testing::AssertionResult all_close_isolated = test::all_close_f(
+                    ref_data_vector, bk_isolated_data_vector, DEFAULT_FLOAT_TOLERANCE_BITS + 6);
+                if (!all_close_graph || !all_close_isolated)
+                {
+                    cout << msg.str();
+                }
+                EXPECT_TRUE(all_close_graph);
+                EXPECT_TRUE(all_close_isolated);
             }
             else if (et == element::f64)
             {
@@ -123,16 +129,21 @@ public:
 
                 // When testing with original graph dependencies test w/ loose f64 tolerance
                 constexpr int tolerance_bits = 30;
-                bool all_close_graph =
+                ::testing::AssertionResult all_close_graph =
                     test::all_close_f(ref_data_vector, bk_data_vector, tolerance_bits);
                 msg << "Test backed op run isolated w/ inputs from ref graph run:"
                     << "\n";
                 msg << get_results_str(ref_data_vector, bk_isolated_data_vector);
 
                 // When testing with isolated graph dependencies test w/ default (tight) f64 tolerance
-                bool all_close_isolated =
+                ::testing::AssertionResult all_close_isolated =
                     test::all_close_f(ref_data_vector, bk_isolated_data_vector);
-                EXPECT_TRUE(all_close_graph && all_close_isolated) << msg.str();
+                if (!all_close_graph || !all_close_isolated)
+                {
+                    cout << msg.str();
+                }
+                EXPECT_TRUE(all_close_graph);
+                EXPECT_TRUE(all_close_isolated);
             }
             else if (et == element::i8)
             {
