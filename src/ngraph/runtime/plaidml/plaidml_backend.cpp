@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,10 +41,11 @@ std::shared_ptr<ngraph::runtime::Tensor> ngraph::runtime::plaidml::PlaidML_Backe
         &m_config, element_type, shape, "direct_data", memory_pointer);
 }
 
-bool ngraph::runtime::plaidml::PlaidML_Backend::compile(std::shared_ptr<Function> func)
+std::shared_ptr<ngraph::Function>
+    ngraph::runtime::plaidml::PlaidML_Backend::compile(std::shared_ptr<Function> func)
 {
     m_cache.compile(func, &m_compiler);
-    return true;
+    return func;
 }
 
 bool ngraph::runtime::plaidml::PlaidML_Backend::call(
