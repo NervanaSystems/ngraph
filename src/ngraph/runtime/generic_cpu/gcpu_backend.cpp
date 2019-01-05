@@ -64,14 +64,14 @@ runtime::gcpu::GCPUBackend::GCPUBackend(const vector<string>& unsupported_op_nam
 }
 
 shared_ptr<runtime::Tensor> runtime::gcpu::GCPUBackend::create_tensor(const element::Type& type,
-                                                                    const Shape& shape)
+                                                                      const Shape& shape)
 {
     return make_shared<runtime::HostTensor>(type, shape, this);
 }
 
 shared_ptr<runtime::Tensor> runtime::gcpu::GCPUBackend::create_tensor(const element::Type& type,
-                                                                    const Shape& shape,
-                                                                    void* memory_pointer)
+                                                                      const Shape& shape,
+                                                                      void* memory_pointer)
 {
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer, this);
 }
@@ -109,8 +109,8 @@ runtime::Handle runtime::gcpu::GCPUBackend::compile(shared_ptr<Function> functio
 }
 
 bool runtime::gcpu::GCPUBackend::call(shared_ptr<Function> function,
-                                    const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                    const vector<shared_ptr<runtime::Tensor>>& inputs)
+                                      const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                      const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     auto fit = m_function_map.find(function);
     if (fit == m_function_map.end())
@@ -254,10 +254,10 @@ bool runtime::gcpu::GCPUBackend::call(shared_ptr<Function> function,
 }
 
 void runtime::gcpu::GCPUBackend::generate_calls(const element::Type& type,
-                                              const NodeWrapper& op,
-                                              const vector<void*>& outputs,
-                                              const vector<const void*>& inputs,
-                                              FunctionInstance& instance)
+                                                const NodeWrapper& op,
+                                                const vector<void*>& outputs,
+                                                const vector<const void*>& inputs,
+                                                FunctionInstance& instance)
 {
     stringstream ss;
     switch (type.get_type_enum())

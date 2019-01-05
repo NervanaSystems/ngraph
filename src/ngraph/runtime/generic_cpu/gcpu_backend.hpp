@@ -61,6 +61,10 @@
 #include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/generic_cpu/kernel/broadcast.hpp"
+#include "ngraph/runtime/generic_cpu/kernel/dot.hpp"
+#include "ngraph/runtime/generic_cpu/kernel/reshape.hpp"
+#include "ngraph/runtime/generic_cpu/node_wrapper.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
@@ -132,10 +136,6 @@
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
-#include "ngraph/runtime/generic_cpu/kernel/broadcast.hpp"
-#include "ngraph/runtime/generic_cpu/kernel/dot.hpp"
-#include "ngraph/runtime/generic_cpu/kernel/reshape.hpp"
-#include "ngraph/runtime/generic_cpu/node_wrapper.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/rng_state.hpp"
 
@@ -452,10 +452,10 @@ private:
         {
             const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
             gcpu::kernel::broadcast(static_cast<const T*>(args[0]),
-                                   static_cast<T*>(out[0]),
-                                   node.get_input_shape(0),
-                                   node.get_output_shape(0),
-                                   broadcast->get_broadcast_axes());
+                                    static_cast<T*>(out[0]),
+                                    node.get_input_shape(0),
+                                    node.get_output_shape(0),
+                                    broadcast->get_broadcast_axes());
             break;
         }
         case OP_TYPEID::BroadcastLike: break;
@@ -682,12 +682,12 @@ private:
         {
             const op::Dot* dot = static_cast<const op::Dot*>(&node);
             gcpu::kernel::dot(static_cast<const T*>(args[0]),
-                             static_cast<const T*>(args[1]),
-                             static_cast<T*>(out[0]),
-                             node.get_input_shape(0),
-                             node.get_input_shape(1),
-                             node.get_output_shape(0),
-                             dot->get_reduction_axes_count());
+                              static_cast<const T*>(args[1]),
+                              static_cast<T*>(out[0]),
+                              node.get_input_shape(0),
+                              node.get_input_shape(1),
+                              node.get_output_shape(0),
+                              dot->get_reduction_axes_count());
             break;
         }
         case OP_TYPEID::EmbeddingLookup:
@@ -1128,10 +1128,10 @@ private:
         {
             const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
             gcpu::kernel::reshape<T>(static_cast<const T*>(args[0]),
-                                    static_cast<T*>(out[0]),
-                                    node.get_input_shape(0),
-                                    reshape->get_input_order(),
-                                    node.get_output_shape(0));
+                                     static_cast<T*>(out[0]),
+                                     node.get_input_shape(0),
+                                     reshape->get_input_order(),
+                                     node.get_output_shape(0));
             break;
         }
         case OP_TYPEID::Result:
