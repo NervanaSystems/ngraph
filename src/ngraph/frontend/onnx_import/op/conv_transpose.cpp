@@ -159,8 +159,8 @@ namespace ngraph
                            "count.";
 
                     Shape data_batch_shape(data_shape.size(), 1);
-                    data_batch_shape[0] = data_shape[0];
-                    data_batch_shape[1] = weights_shape[1];
+                    data_batch_shape.at(0) = data_shape.at(0);
+                    data_batch_shape.at(1) = weights_shape.at(1);
 
                     if (!output_shape.empty())
                     {
