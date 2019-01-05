@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,11 +35,11 @@ namespace ngraph
             public:
                 CPUTensorView(const ngraph::element::Type& element_type,
                               const Shape& shape,
-                              const std::string& name = "external");
+                              const runtime::Backend* parent);
                 CPUTensorView(const ngraph::element::Type& element_type,
                               const Shape& shape,
                               void* memory_pointer,
-                              const std::string& name = "external");
+                              const runtime::Backend* parent);
                 virtual ~CPUTensorView() override;
 
                 char* get_data_ptr();

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -99,7 +99,7 @@ public:
                             const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                             const std::vector<std::shared_ptr<runtime::Tensor>>& inputs)
     {
-        validate_call(func, outputs, inputs);
+        validate(func, outputs, inputs);
         return call(func, outputs, inputs);
     }
 
@@ -124,8 +124,7 @@ public:
     /// \returns true if the op is supported, false otherwise.
     virtual bool is_supported(const Node& node) const;
 
-protected:
-    void validate_call(std::shared_ptr<const Function> func,
-                       const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                       const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+    void validate(std::shared_ptr<const Function> func,
+                  const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                  const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 };

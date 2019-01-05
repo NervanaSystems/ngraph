@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,9 +43,10 @@ namespace ngraph
                 };
                 struct unsupported_element_type : ngraph_error
                 {
-                    explicit unsupported_element_type(onnx::TensorProto_DataType type)
+                    explicit unsupported_element_type(TensorProto_DataType type)
                         : ngraph_error{"unsupported value info element type: " +
-                                       onnx::TensorProto_DataType_Name(type)}
+                                       onnx::TensorProto_DataType_Name(
+                                           static_cast<onnx::TensorProto_DataType>(type))}
                     {
                     }
                 };

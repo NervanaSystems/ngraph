@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,8 +29,10 @@ using namespace std;
 
 runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type,
                                    const Shape& shape,
-                                   void* memory_pointer)
-    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, "external"))
+                                   void* memory_pointer,
+                                   const Backend* backend)
+    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, "external"),
+                      backend)
     , m_custom_memory(false)
 {
     m_descriptor->set_tensor_layout(
@@ -48,8 +50,10 @@ runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type,
     }
 }
 
-runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type, const Shape& shape)
-    : GPUTensor(element_type, shape, nullptr)
+runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type,
+                                   const Shape& shape,
+                                   const Backend* backend)
+    : GPUTensor(element_type, shape, nullptr, backend)
 {
 }
 

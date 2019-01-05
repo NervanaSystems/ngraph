@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,6 +55,7 @@ set(SRC
     serialize.cpp
     shape.cpp
     tensor.cpp
+    tools.cpp
     type_prop.cpp
     util.cpp
     uuid.cpp
@@ -200,6 +201,13 @@ if (NGRAPH_CPU_ENABLE)
     target_link_libraries(unit-test PRIVATE libmkldnn)
 endif()
 
+if (NGRAPH_TOOLS_ENABLE)
+    get_property(NBENCH_PATH TARGET nbench PROPERTY BINARY_DIR)
+    set(NBENCH "${NBENCH_PATH}/nbench")
+    target_compile_definitions(unit-test PRIVATE NBENCH_PATH="${NBENCH}")
+    add_dependencies(unit-test nbench)
+endif()
+
 if (NGRAPH_PLAIDML_ENABLE)
     target_link_libraries(unit-test PRIVATE plaidml_backend)
 endif()
@@ -215,10 +223,6 @@ endif()
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
-endif()
-
-if (NGRAPH_HYBRID_ENABLE)
-    target_link_libraries(unit-test PRIVATE hybrid_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)
