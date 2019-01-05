@@ -329,8 +329,8 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
             // we will sort the captured Add(Dot(X, W) + B) as per the the slice ordering of X
             // this will simplify the replace_node logic
-            auto lambda = [&](const std::shared_ptr<Node> node1,
-                              const std::shared_ptr<Node> node2) {
+            auto compare_slices = [&](const std::shared_ptr<Node> node1,
+                                      const std::shared_ptr<Node> node2) {
                 const auto node1_slice =
                     std::static_pointer_cast<op::Slice>(op_seg_map[node1].at(Type::DATA));
 
@@ -340,7 +340,26 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
                 return (node1_slice->get_lower_bounds() < node2_slice->get_lower_bounds() &&
                         node1_slice->get_upper_bounds() < node2_slice->get_upper_bounds());
             };
-            std::sort(op_nodes.begin(), op_nodes.end(), lambda);
+            std::sort(op_nodes.begin(), op_nodes.end(), compare_slices);
+
+            // check for slices overlap, if the slices are not sorted we will return safely
+            Coordinate prev_lower_bounds;
+            Coordinate prev_upper_bounds;
+            for (auto& op : op_nodes)
+            {
+                const auto slice =
+                    std::static_pointer_cast<op::Slice>(op_seg_map[op].at(Type::DATA));
+                auto op_lower_bounds = slice->get_lower_bounds();
+                auto op_upper_bounds = slice->get_upper_bounds();
+
+                if (op_lower_bounds < prev_lower_bounds || op_upper_bounds < prev_upper_bounds)
+                {
+                    modify_graph = false;
+                    return;
+                }
+                prev_lower_bounds.assign(op_lower_bounds.begin(), op_lower_bounds.end());
+                prev_upper_bounds.assign(op_upper_bounds.begin(), op_upper_bounds.end());
+            }
 
             size_t num_timesteps = op_nodes.size();
             size_t batch_size = add_shape[0] / num_timesteps;
