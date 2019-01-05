@@ -1557,3 +1557,22 @@ TEST(onnx, model_sum_opset8)
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
+
+TEST(onnx, model_conv_transpose_w_groups)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv_transpose_w_groups.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{
+        0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f});
+    inputs.emplace_back(std::vector<float>{0.f,  1.f,  2.f,  3.f,  4.f,  5.f,  6.f,  7.f,
+                                           8.f,  9.f,  10.f, 11.f, 12.f, 13.f, 14.f, 15.f,
+                                           16.f, 17.f, 18.f, 19.f, 20.f, 21.f, 22.f, 23.f,
+                                           24.f, 25.f, 26.f, 27.f, 28.f, 29.f, 30.f, 31.0f});
+
+    Outputs expected_output{
+        std::vector<float>{28.f, 34.f, 252.f, 274.f, 732.f, 770.f, 1468.f, 1522.f}};
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
