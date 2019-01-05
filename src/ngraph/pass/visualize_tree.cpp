@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -160,8 +160,8 @@ void pass::VisualizeTree::render() const
         out << "}\n";
         out.close();
 
+#ifndef _WIN32
         stringstream ss;
-
         ss << "dot -T" << get_file_ext() << " " << dot_file << " -o " << m_name;
         auto cmd = ss.str();
         auto stream = popen(cmd.c_str(), "r");
@@ -169,5 +169,6 @@ void pass::VisualizeTree::render() const
         {
             pclose(stream);
         }
+#endif
     }
 }

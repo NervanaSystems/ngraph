@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1591,3 +1591,25 @@ TEST_P(lin_quant_model_param_test, model_resnet50)
 INSTANTIATE_TEST_CASE_P(onnx,
                         lin_quant_model_param_test,
                         testing::Range(std::uint32_t{0}, std::uint32_t{9}));
+
+TEST(onnx, model_sum_opset8)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/sum_opset8.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{1.0f, 2.0f, 3.0f});
+    inputs.emplace_back(test::NDArray<float, 2>{{10.0f}, {20.0f}, {30.0f}}.get_vector());
+    inputs.emplace_back(test::NDArray<float, 3>{{{100.0f}}, {{200.0f}}, {{300.0f}}}.get_vector());
+
+    Outputs expected_output{test::NDArray<float, 3>{
+        {{111.0f, 112.0f, 113.0f}, {121.0f, 122.0f, 123.0f}, {131.0f, 132.0f, 133.0f}},
+
+        {{211.0f, 212.0f, 213.0f}, {221.0f, 222.0f, 223.0f}, {231.0f, 232.0f, 233.0f}},
+
+        {{311.0f, 312.0f, 313.0f}, {321.0f, 322.0f, 323.0f}, {331.0f, 332.0f, 333.0f}}}
+                                .get_vector()};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}

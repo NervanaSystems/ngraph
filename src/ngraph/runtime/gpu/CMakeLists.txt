@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -159,11 +159,6 @@ if (NGRAPH_GPU_ENABLE)
             ${CUDA_LIBRARIES}
             ${CUDA_CUBLAS_LIBRARIES}
             ${CUDNN_LIBRARIES})
-    if (NGRAPH_HYBRID_ENABLE)
-        target_link_libraries(gpu_backend
-            PRIVATE
-                hybrid_backend)
-    endif()
 
     set_target_properties(gpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 

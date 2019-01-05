@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -195,8 +195,11 @@ namespace ngraph
             REGISTER_OPERATOR("MatMul", 1, matmul);
             REGISTER_OPERATOR("MaxPool", 1, max_pool);
             REGISTER_OPERATOR("Max", 1, max);
+            REGISTER_OPERATOR("Max", 8, max);
             REGISTER_OPERATOR("Mean", 1, mean);
+            REGISTER_OPERATOR("Mean", 8, mean);
             REGISTER_OPERATOR("Min", 1, min);
+            REGISTER_OPERATOR("Min", 8, min);
             REGISTER_OPERATOR("Mul", 1, mul);
             REGISTER_OPERATOR("Mul", 7, mul);
             REGISTER_OPERATOR("Neg", 1, neg);
@@ -233,6 +236,7 @@ namespace ngraph
             REGISTER_OPERATOR("Sub", 1, sub);
             REGISTER_OPERATOR("Sub", 7, sub);
             REGISTER_OPERATOR("Sum", 1, sum);
+            REGISTER_OPERATOR("Sum", 8, sum);
             REGISTER_OPERATOR("Tan", 1, tan);
             REGISTER_OPERATOR("Tanh", 1, tanh);
             REGISTER_OPERATOR("ThresholdedRelu", 1, thresholded_relu);
