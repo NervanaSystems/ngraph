@@ -136,20 +136,19 @@ if (NGRAPH_HALIDE)
         )
 endif()
 
-if (NGRAPH_TBB_ENABLE)
-    if (NOT WIN32)
-        include(${TBB_ROOT}/cmake/TBBBuild.cmake)
-        tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
-                    tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
-        find_package(TBB REQUIRED tbb)
-        if (NOT TBB_FOUND)
-            message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
-        else()
-            message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
-        endif()
+if (NGRAPH_TBB_ENABLE AND NOT WIN32)
+    include(${TBB_ROOT}/cmake/TBBBuild.cmake)
+    tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
+                tbb_build_prefix=tbb CONFIG_DIR TBB_DIR)
+    find_package(TBB REQUIRED tbb)
+    if (NOT TBB_FOUND)
+        message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
+    else()
+        message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
+    endif()
 
-        set_source_files_properties(cpu_external_function.cpp
-            PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
+    set_source_files_properties(cpu_external_function.cpp
+        PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
 
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(TBB_LIB_NAME tbb_debug)
