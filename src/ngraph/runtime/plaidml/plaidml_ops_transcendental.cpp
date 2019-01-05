@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,192 +35,176 @@ namespace ngraph
     {
         namespace plaidml
         {
-            // acos performs a simple elementwise arccos function.
-            template <>
-            void Impl<op::Acos>::operator()()
-            {
-                check_inputs(1);
-                check_outputs(1);
-                set_output(start_tile_function()
-                               .add(builder::Input{op_input(0), "I"})
-                               .add(builder::Output{"O"})
-                               .add(builder::Elementwise{"O", "acos(I)"})
-                               .finalize());
-            }
-
-            // asin performs a simple elementwise arcsin function.
-            template <>
-            void Impl<op::Asin>::operator()()
-            {
-                check_inputs(1);
-                check_outputs(1);
-                set_output(start_tile_function()
-                               .add(builder::Input{op_input(0), "I"})
-                               .add(builder::Output{"O"})
-                               .add(builder::Elementwise{"O", "asin(I)"})
-                               .finalize());
-            }
-
-            // atan performs a simple elementwise arctan function.
-            template <>
-            void Impl<op::Atan>::operator()()
-            {
-                check_inputs(1);
-                check_outputs(1);
-                set_output(start_tile_function()
-                               .add(builder::Input{op_input(0), "I"})
-                               .add(builder::Output{"O"})
-                               .add(builder::Elementwise{"O", "atan(I)"})
-                               .finalize());
-            }
-
-            // cos performs a simple elementwise cos function.
-            template <>
-            void Impl<op::Cos>::operator()()
-            {
-                check_inputs(1);
-                check_outputs(1);
-                set_output(start_tile_function()
-                               .add(builder::Input{op_input(0), "I"})
-                               .add(builder::Output{"O"})
-                               .add(builder::Elementwise{"O", "cos(I)"})
-                               .finalize());
-            }
-
-            // cosh performs a simple elementwise hyperbolic cos function.
-            template <>
-            void Impl<op::Cosh>::operator()()
-            {
-                check_inputs(1);
-                check_outputs(1);
-                set_output(start_tile_function()
-                               .add(builder::Input{op_input(0), "I"})
-                               .add(builder::Output{"O"})
-                               .add(builder::Elementwise{"O", "cosh(I)"})
-                               .finalize());
-            }
-
-            // exp performs a simple elementwise natural exponential function.
-            template <>
-            void Impl<op::Exp>::operator()()
-            {
-                check_inputs(1);
-                check_outputs(1);
-                set_output(start_tile_function()
-                               .add(builder::Input{op_input(0), "I"})
-                               .add(builder::Output{"O"})
-                               .add(builder::Elementwise{"O", "exp(I)"})
-                               .finalize());
-            }
-
-            // log performs a simple elementwise natural logarithm function.
-            template <>
-            void Impl<op::Log>::operator()()
-            {
-                check_inputs(1);
-                check_outputs(1);
-                set_output(start_tile_function()
-                               .add(builder::Input{op_input(0), "I"})
-                               .add(builder::Output{"O"})
-                               .add(builder::Elementwise{"O", "log(I)"})
-                               .finalize());
-            }
-
-            // power performs a simple elementwise power function.
-            template <>
-            void Impl<op::Power>::operator()()
-            {
-                check_inputs(2);
-                check_outputs(1);
-                set_output(start_tile_function()
-                               .add(builder::Input{op_input(0), "I"})
-                               .add(builder::Input{op_input(1), "E"})
-                               .add(builder::Output{"O"})
-                               .add(builder::Elementwise{"O", "pow(I, E)"})
-                               .finalize());
-            }
-
-            // sin performs a simple elementwise sin function.
-            template <>
-            void Impl<op::Sin>::operator()()
-            {
-                check_inputs(1);
-                check_outputs(1);
-                set_output(start_tile_function()
-                               .add(builder::Input{op_input(0), "I"})
-                               .add(builder::Output{"O"})
-                               .add(builder::Elementwise{"O", "sin(I)"})
-                               .finalize());
-            }
-
-            // sinh performs a simple elementwise hyperbolic sin function.
-            template <>
-            void Impl<op::Sinh>::operator()()
-            {
-                check_inputs(1);
-                check_outputs(1);
-                set_output(start_tile_function()
-                               .add(builder::Input{op_input(0), "I"})
-                               .add(builder::Output{"O"})
-                               .add(builder::Elementwise{"O", "sinh(I)"})
-                               .finalize());
-            }
-
-            // sqrt performs a simple elementwise square root function.
-            template <>
-            void Impl<op::Sqrt>::operator()()
-            {
-                check_inputs(1);
-                check_outputs(1);
-                set_output(start_tile_function()
-                               .add(builder::Input{op_input(0), "I"})
-                               .add(builder::Output{"O"})
-                               .add(builder::Elementwise{"O", "sqrt(I)"})
-                               .finalize());
-            }
-
-            // tan performs a simple elementwise tangent function.
-            template <>
-            void Impl<op::Tan>::operator()()
-            {
-                check_inputs(1);
-                check_outputs(1);
-                set_output(start_tile_function()
-                               .add(builder::Input{op_input(0), "I"})
-                               .add(builder::Output{"O"})
-                               .add(builder::Elementwise{"O", "tan(I)"})
-                               .finalize());
-            }
-
-            // tanh performs a simple elementwise hyperbolic tangent function.
-            template <>
-            void Impl<op::Tanh>::operator()()
-            {
-                check_inputs(1);
-                check_outputs(1);
-                set_output(start_tile_function()
-                               .add(builder::Input{op_input(0), "I"})
-                               .add(builder::Output{"O"})
-                               .add(builder::Elementwise{"O", "tanh(I)"})
-                               .finalize());
-            }
-
-            namespace
-            {
-                Impl<op::Acos>::Registration register_acos;
-                Impl<op::Asin>::Registration register_asin;
-                Impl<op::Atan>::Registration register_atan;
-                Impl<op::Cos>::Registration register_cos;
-                Impl<op::Cosh>::Registration register_cosh;
-                Impl<op::Exp>::Registration register_exp;
-                Impl<op::Log>::Registration register_log;
-                Impl<op::Power>::Registration register_power;
-                Impl<op::Sin>::Registration register_sin;
-                Impl<op::Sinh>::Registration register_sinh;
-                Impl<op::Sqrt>::Registration register_sqrt;
-                Impl<op::Tan>::Registration register_tan;
-                Impl<op::Tanh>::Registration register_tanh;
-            }
+            NGRAPH_PLAIDML_OP_CLASS(ImplAcos, OpImpl<op::Acos>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplAsin, OpImpl<op::Asin>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplAtan, OpImpl<op::Atan>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplCos, OpImpl<op::Cos>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplCosh, OpImpl<op::Cosh>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplExp, OpImpl<op::Exp>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplLog, OpImpl<op::Log>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplPower, OpImpl<op::Power>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplSin, OpImpl<op::Sin>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplSinh, OpImpl<op::Sinh>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplSqrt, OpImpl<op::Sqrt>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplTan, OpImpl<op::Tan>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplTanh, OpImpl<op::Tanh>);
         }
     }
+}
+
+// acos performs a simple elementwise arccos function.
+void ngraph::runtime::plaidml::ImplAcos::Apply()
+{
+    check_inputs(1);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(0), "I"})
+                   .add(builder::Output{"O"})
+                   .add(builder::Elementwise{"O", "acos(I)"})
+                   .finalize());
+}
+
+// asin performs a simple elementwise arcsin function.
+void ngraph::runtime::plaidml::ImplAsin::Apply()
+{
+    check_inputs(1);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(0), "I"})
+                   .add(builder::Output{"O"})
+                   .add(builder::Elementwise{"O", "asin(I)"})
+                   .finalize());
+}
+
+// atan performs a simple elementwise arctan function.
+void ngraph::runtime::plaidml::ImplAtan::Apply()
+{
+    check_inputs(1);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(0), "I"})
+                   .add(builder::Output{"O"})
+                   .add(builder::Elementwise{"O", "atan(I)"})
+                   .finalize());
+}
+
+// cos performs a simple elementwise cos function.
+void ngraph::runtime::plaidml::ImplCos::Apply()
+{
+    check_inputs(1);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(0), "I"})
+                   .add(builder::Output{"O"})
+                   .add(builder::Elementwise{"O", "cos(I)"})
+                   .finalize());
+}
+
+// cosh performs a simple elementwise hyperbolic cos function.
+void ngraph::runtime::plaidml::ImplCosh::Apply()
+{
+    check_inputs(1);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(0), "I"})
+                   .add(builder::Output{"O"})
+                   .add(builder::Elementwise{"O", "cosh(I)"})
+                   .finalize());
+}
+
+// exp performs a simple elementwise natural exponential function.
+void ngraph::runtime::plaidml::ImplExp::Apply()
+{
+    check_inputs(1);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(0), "I"})
+                   .add(builder::Output{"O"})
+                   .add(builder::Elementwise{"O", "exp(I)"})
+                   .finalize());
+}
+
+// log performs a simple elementwise natural logarithm function.
+void ngraph::runtime::plaidml::ImplLog::Apply()
+{
+    check_inputs(1);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(0), "I"})
+                   .add(builder::Output{"O"})
+                   .add(builder::Elementwise{"O", "log(I)"})
+                   .finalize());
+}
+
+// power performs a simple elementwise power function.
+void ngraph::runtime::plaidml::ImplPower::Apply()
+{
+    check_inputs(2);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(0), "I"})
+                   .add(builder::Input{op_input(1), "E"})
+                   .add(builder::Output{"O"})
+                   .add(builder::Elementwise{"O", "pow(I, E)"})
+                   .finalize());
+}
+
+// sin performs a simple elementwise sin function.
+void ngraph::runtime::plaidml::ImplSin::Apply()
+{
+    check_inputs(1);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(0), "I"})
+                   .add(builder::Output{"O"})
+                   .add(builder::Elementwise{"O", "sin(I)"})
+                   .finalize());
+}
+
+// sinh performs a simple elementwise hyperbolic sin function.
+void ngraph::runtime::plaidml::ImplSinh::Apply()
+{
+    check_inputs(1);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(0), "I"})
+                   .add(builder::Output{"O"})
+                   .add(builder::Elementwise{"O", "sinh(I)"})
+                   .finalize());
+}
+
+// sqrt performs a simple elementwise square root function.
+void ngraph::runtime::plaidml::ImplSqrt::Apply()
+{
+    check_inputs(1);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(0), "I"})
+                   .add(builder::Output{"O"})
+                   .add(builder::Elementwise{"O", "sqrt(I)"})
+                   .finalize());
+}
+
+// tan performs a simple elementwise tangent function.
+void ngraph::runtime::plaidml::ImplTan::Apply()
+{
+    check_inputs(1);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(0), "I"})
+                   .add(builder::Output{"O"})
+                   .add(builder::Elementwise{"O", "tan(I)"})
+                   .finalize());
+}
+
+// tanh performs a simple elementwise hyperbolic tangent function.
+void ngraph::runtime::plaidml::ImplTanh::Apply()
+{
+    check_inputs(1);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(0), "I"})
+                   .add(builder::Output{"O"})
+                   .add(builder::Elementwise{"O", "tanh(I)"})
+                   .finalize());
 }
