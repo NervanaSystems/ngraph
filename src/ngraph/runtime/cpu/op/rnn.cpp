@@ -131,16 +131,17 @@ void op::Rnn::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
     auto fprop_dst_layer = goes.at(0);
     auto fprop_dst_iter = goes.at(1);
 
-    auto rnn_bprop = std::make_shared<op::RnnBackprop>(static_pointer_cast<op::Rnn>(shared_from_this()),
-                                                       src_layer,
-                                                       src_iter,
-                                                       weights_layer,
-                                                       weights_iter,
-                                                       bias,
-                                                       fprop_dst_layer,
-                                                       fprop_dst_iter,
-                                                       diff_dst_layer,
-                                                       diff_dst_iter);
+    auto rnn_bprop =
+        std::make_shared<op::RnnBackprop>(static_pointer_cast<op::Rnn>(shared_from_this()),
+                                          src_layer,
+                                          src_iter,
+                                          weights_layer,
+                                          weights_iter,
+                                          bias,
+                                          fprop_dst_layer,
+                                          fprop_dst_iter,
+                                          diff_dst_layer,
+                                          diff_dst_iter);
 
     auto diff_src_layer = std::make_shared<op::GetOutputElement>(rnn_bprop, 0);
     auto diff_src_iter = std::make_shared<op::GetOutputElement>(rnn_bprop, 1);
@@ -166,8 +167,7 @@ op::RnnBackprop::RnnBackprop(std::shared_ptr<Node> result_forward,
                              std::shared_ptr<Node> diff_dst_layer,
                              std::shared_ptr<Node> diff_dst_iter)
     : Op("RnnBackprop",
-         check_single_output_args({result_forward,
-                                   fprop_src_layer,
+         check_single_output_args({fprop_src_layer,
                                    fprop_src_iter,
                                    fprop_weights_layer,
                                    fprop_weights_iter,
@@ -176,6 +176,7 @@ op::RnnBackprop::RnnBackprop(std::shared_ptr<Node> result_forward,
                                    fprop_dst_iter,
                                    diff_dst_layer,
                                    diff_dst_iter}))
+    , m_fprop_node(result_forward)
 {
     set_output_size(5);
     set_output_type(0, fprop_src_layer->get_element_type(), fprop_src_layer->get_shape());

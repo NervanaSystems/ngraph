@@ -103,6 +103,10 @@ namespace ngraph
                         std::shared_ptr<Node> diff_dst_iter);
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            std::shared_ptr<Node> get_fprop_node() const { return m_fprop_node; }
+        private:
+            std::shared_ptr<Node> m_fprop_node;
         };
     }
 }

@@ -28,6 +28,7 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph::runtime::cpu;
@@ -1080,54 +1081,53 @@ size_t MKLDNNEmitter::build_rnn_backward(const ngraph::Node* node,
                                          const std::vector<TensorViewWrapper>& args,
                                          const std::vector<TensorViewWrapper>& out)
 {
+    auto rnn_bprop_node = static_cast<const ngraph::op::RnnBackprop*>(node);
+    auto rnn_node = static_cast<const ngraph::op::Rnn*>(rnn_bprop_node->get_fprop_node().get());
+    auto t = static_cast<unsigned long>(rnn_node->get_src_sequence_length());
+    auto n = static_cast<unsigned long>(rnn_node->get_batch_size());
+    auto c = static_cast<unsigned long>(rnn_node->get_src_layer_feature_size());
+    auto s = static_cast<unsigned long>(rnn_node->get_num_cell_states());
+    auto l = static_cast<unsigned long>(rnn_node->get_num_fused_layers());
+    auto d = static_cast<unsigned long>(rnn_node->get_direction());
+    auto g = static_cast<unsigned long>(rnn_node->get_gates_per_cell());
+    auto i = static_cast<unsigned long>(rnn_node->get_src_layer_feature_size());
+    auto o = static_cast<unsigned long>(rnn_node->get_src_iter_feature_size());
 
-    auto rnn_node = static_cast<const Rnn*>args[0];
-    auto t = rnn_node->get_src_sequence_length();
-    auto n = rnn_node->get_batch_size();
-    auto c = rnn_node->get_src_layer_feature_size();
-    auto s = rnn_node->get_num_cell_states();
-    auto l = rnn_node->get_num_fused_layers();
-    auto d = rnn_node->get_direction();
-    auto g = rnn_node->get_gates_per_cell();
-    auto i = rnn_node->get_src_layer_feature_size();
-    auto o = rnn_node->get_src_iter_feature_size();
-
-    auto src_layer_dims = Shape{t, n, c};
-    auto src_iter_dims = Shape{l, d, s, n, c};
-    auto wei_layer_dims = Shape{l, d, i, g, o};
-    auto wei_iter_dims = Shape{l, d, i, g, o};
-    auto bias_dims = Shape{l, d, g, o};
-    
+    Shape src_layer_dims{t, n, c};
+    Shape src_iter_dims{l, d, s, n, c};
+    Shape wei_layer_dims{l, d, i, g, o};
+    Shape wei_iter_dims{l, d, i, g, o};
+    Shape bias_dims{l, d, g, o};
 
     auto src_layer_md = build_memory_descriptor(
-        src_layer_dims, args[1].get_element_type(), mkldnn::memory::format::tnc);
+        src_layer_dims, args[0].get_element_type(), mkldnn::memory::format::tnc);
     auto src_iter_md = build_memory_descriptor(
-        src_iter_dims, args[2].get_element_type(), mkldnn::memory::format::ldsnc);
+        src_iter_dims, args[1].get_element_type(), mkldnn::memory::format::ldsnc);
     auto wei_layer_md = build_memory_descriptor(
-        wei_layer_dims, args[3].get_element_type(), mkldnn::memory::format::any);
+        wei_layer_dims, args[2].get_element_type(), mkldnn::memory::format::any);
     auto wei_iter_md = build_memory_descriptor(
-        wei_iter_dims, args[4].get_element_type(), mkldnn::memory::format::any);
-    auto bias_md = build_memory_descriptor(
-        bias_dims, args[5].get_element_type(), mkldnn::memory::format::any);
+        wei_iter_dims, args[3].get_element_type(), mkldnn::memory::format::any);
+    auto bias_md =
+        build_memory_descriptor(bias_dims, args[4].get_element_type(), mkldnn::memory::format::any);
     auto dst_layer_md = build_memory_descriptor(
-        src_layer_dims, args[6].get_element_type(), mkldnn::memory::format::tnc);
+        src_layer_dims, args[5].get_element_type(), mkldnn::memory::format::tnc);
     auto dst_iter_md = build_memory_descriptor(
-        bias_dims, args[7].get_element_type(), mkldnn::memory::format::any);
+        src_iter_dims, args[6].get_element_type(), mkldnn::memory::format::any);
 
     auto diff_src_layer_md = build_memory_descriptor(
         src_layer_dims, out[0].get_element_type(), mkldnn::memory::format::tnc);
     auto diff_src_iter_md = build_memory_descriptor(
         src_iter_dims, out[1].get_element_type(), mkldnn::memory::format::ldsnc);
     auto diff_wei_layer_md = build_memory_descriptor(
-        wei_layer_md, out[2].get_element_type(), mkldnn::memory::format::any);
+        wei_layer_dims, out[2].get_element_type(), mkldnn::memory::format::any);
     auto diff_wei_iter_md = build_memory_descriptor(
         wei_iter_dims, out[3].get_element_type(), mkldnn::memory::format::any);
-    auto diff_bias_md = build_memory_descriptor(
-        bias_dims, out[4].get_element_type(), mkldnn::memory::format::any);
+    auto diff_bias_md =
+        build_memory_descriptor(bias_dims, out[4].get_element_type(), mkldnn::memory::format::any);
     auto diff_dst_layer_md = build_memory_descriptor(
-        src_layer_dims, args[8].get_element_type(), mkldnn::memory::format::tnc);
+        src_layer_dims, args[7].get_element_type(), mkldnn::memory::format::tnc);
     auto diff_dst_iter_md = build_memory_descriptor(
-        src_iter_dims, args[9].get_element_type(), mkldnn::memory::format::any);
+        src_iter_dims, args[8].get_element_type(), mkldnn::memory::format::any);
 
     size_t src_layer_index = build_memory_primitive(src_layer_md);
     size_t src_iter_index = build_memory_primitive(src_iter_md);

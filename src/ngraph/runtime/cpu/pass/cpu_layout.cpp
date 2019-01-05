@@ -1930,7 +1930,8 @@ namespace ngraph
                     }
                     else
                     {
-                        throw ngraph_error("RNNBackprop fused op is only supported in MKLDNN for now.");
+                        throw ngraph_error(
+                            "RNNBackprop fused op is only supported in MKLDNN for now.");
                     }
                 }
 

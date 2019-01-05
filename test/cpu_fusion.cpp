@@ -3511,8 +3511,8 @@ TEST(cpu_fusion, auto_diff_rnn_1)
     auto dst_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
     auto dst_iter = make_shared<op::Parameter>(element::f32, Shape{20, 100});
     auto diff_dst_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
-    auto diff_dst_iter =  make_shared<op::Parameter>(element::f32, Shape{20, 100});
- 
+    auto diff_dst_iter = make_shared<op::Parameter>(element::f32, Shape{20, 100});
+
     const int number_of_timesteps = 1;
     const int number_of_gates_per_cell = 4;
     const int src_seq_length = 1;
@@ -3530,7 +3530,16 @@ TEST(cpu_fusion, auto_diff_rnn_1)
                                          num_rnn_cell_states,
                                          rnn_direction,
                                          num_of_rnn_fused_layer);
-    auto rnn_bprop = make_shared<op::RnnBackprop>(rnn_node, src_layer, src_iter, weights_layer, weights_iter, biases, dst_layer, dst_iter, diff_dst_layer, diff_dst_iter);
+    auto rnn_bprop = make_shared<op::RnnBackprop>(rnn_node,
+                                                  src_layer,
+                                                  src_iter,
+                                                  weights_layer,
+                                                  weights_iter,
+                                                  biases,
+                                                  dst_layer,
+                                                  dst_iter,
+                                                  diff_dst_layer,
+                                                  diff_dst_iter);
 
     auto diff_src_layer = std::make_shared<op::GetOutputElement>(rnn_bprop, 0);
     auto diff_src_iter = std::make_shared<op::GetOutputElement>(rnn_bprop, 1);
@@ -3540,14 +3549,22 @@ TEST(cpu_fusion, auto_diff_rnn_1)
 
     auto func = make_shared<Function>(
         NodeVector{diff_src_layer, diff_src_iter, diff_weights_layer, diff_weights_iter, diff_bias},
-        ParameterVector{src_layer, src_iter, weights_layer, weights_iter, biases, dst_layer, dst_iter, diff_dst_layer, diff_dst_iter});
+        ParameterVector{src_layer,
+                        src_iter,
+                        weights_layer,
+                        weights_iter,
+                        biases,
+                        dst_layer,
+                        dst_iter,
+                        diff_dst_layer,
+                        diff_dst_iter});
     auto backend = runtime::Backend::create("CPU");
 
     for (shared_ptr<op::Parameter> param : func->get_parameters())
     {
         args.push_back(rng.initialize(backend->create_tensor<float>(param->get_shape())));
     }
-    
+
     auto diff_src_layer_t = backend->create_tensor(element::f32, diff_src_layer->get_shape());
     auto diff_src_iter_t = backend->create_tensor(element::f32, diff_src_iter->get_shape());
     auto diff_wei_layer_t = backend->create_tensor(element::f32, diff_weights_layer->get_shape());
@@ -3558,5 +3575,4 @@ TEST(cpu_fusion, auto_diff_rnn_1)
         backend->compile(func),
         {diff_src_layer_t, diff_src_iter_t, diff_wei_layer_t, diff_wei_iter_t, diff_bias_t},
         args);
-    
 }
