@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "ngraph/coordinate_diff.hpp"
+#include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/op/conv_transpose.hpp"
 #include "ngraph/frontend/onnx_import/utils/broadcasting.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
@@ -138,6 +139,21 @@ namespace ngraph
                             "output_padding", std::vector<std::int64_t>(num_spatial_dims, 0))};
 
                     int64_t groups{node.get_attribute_value<int64_t>("group", 1)};
+
+                    ASSERT_VALID_ARGUMENT(node,
+                                          ((groups >= 0) && (groups <= data->get_shape().at(1)) &&
+                                           (groups <= filters->get_shape().at(0))))
+                        << "incorrect value of 'group' attribute: " << groups;
+
+                    std::size_t n_data_channels{data_shape.at(1)};
+                    std::size_t n_filters_channels{weights_shape.at(0)};
+
+                    ASSERT_VALID_ARGUMENT(node, n_data_channels % groups == 0)
+                        << "provided group attribute value must by multiply of data channels "
+                           "count.";
+                    ASSERT_VALID_ARGUMENT(node, n_filters_channels % groups == 0)
+                        << "provided group attribute value must by multiply of filter channels "
+                           "count.";
 
                     Shape data_batch_shape(data_shape.size(), 1);
                     data_batch_shape[0] = data_shape[0];
