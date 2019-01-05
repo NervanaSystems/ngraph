@@ -132,10 +132,10 @@
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
-#include "ngraph/runtime/rpi/kernel/broadcast.hpp"
-#include "ngraph/runtime/rpi/kernel/dot.hpp"
-#include "ngraph/runtime/rpi/kernel/reshape.hpp"
-#include "ngraph/runtime/rpi/node_wrapper.hpp"
+#include "ngraph/runtime/generic_cpu/kernel/broadcast.hpp"
+#include "ngraph/runtime/generic_cpu/kernel/dot.hpp"
+#include "ngraph/runtime/generic_cpu/kernel/reshape.hpp"
+#include "ngraph/runtime/generic_cpu/node_wrapper.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/rng_state.hpp"
 
@@ -147,21 +147,21 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace rpi
+        namespace gcpu
         {
-            class RPIBackend;
+            class GCPUBackend;
         }
     }
 }
 
-class ngraph::runtime::rpi::RPIBackend : public Backend
+class ngraph::runtime::gcpu::GCPUBackend : public Backend
 {
 public:
-    RPIBackend();
-    RPIBackend(const std::vector<std::string>& unsupported_op_name_list);
-    RPIBackend(const RPIBackend&) = delete;
-    RPIBackend(RPIBackend&&) = delete;
-    RPIBackend& operator=(const RPIBackend&) = delete;
+    GCPUBackend();
+    GCPUBackend(const std::vector<std::string>& unsupported_op_name_list);
+    GCPUBackend(const GCPUBackend&) = delete;
+    GCPUBackend(GCPUBackend&&) = delete;
+    GCPUBackend& operator=(const GCPUBackend&) = delete;
 
     std::shared_ptr<Tensor>
         create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
@@ -451,7 +451,7 @@ private:
         case OP_TYPEID::Broadcast:
         {
             const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
-            rpi::kernel::broadcast(static_cast<const T*>(args[0]),
+            gcpu::kernel::broadcast(static_cast<const T*>(args[0]),
                                    static_cast<T*>(out[0]),
                                    node.get_input_shape(0),
                                    node.get_output_shape(0),
@@ -681,7 +681,7 @@ private:
         case OP_TYPEID::Dot:
         {
             const op::Dot* dot = static_cast<const op::Dot*>(&node);
-            rpi::kernel::dot(static_cast<const T*>(args[0]),
+            gcpu::kernel::dot(static_cast<const T*>(args[0]),
                              static_cast<const T*>(args[1]),
                              static_cast<T*>(out[0]),
                              node.get_input_shape(0),
@@ -1127,7 +1127,7 @@ private:
         case OP_TYPEID::Reshape:
         {
             const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
-            rpi::kernel::reshape<T>(static_cast<const T*>(args[0]),
+            gcpu::kernel::reshape<T>(static_cast<const T*>(args[0]),
                                     static_cast<T*>(out[0]),
                                     node.get_input_shape(0),
                                     reshape->get_input_order(),

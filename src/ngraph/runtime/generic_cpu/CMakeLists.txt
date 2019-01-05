@@ -14,23 +14,23 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_RPI_ENABLE)
+if (NGRAPH_GENERIC_CPU_ENABLE)
     find_package(OpenMP)
     if (OPENMP_FOUND)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     endif()
-    add_library(rpi_backend SHARED rpi_backend.cpp node_wrapper.cpp)
+    add_library(gcpu_backend SHARED gcpu_backend.cpp node_wrapper.cpp)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
-        set_target_properties(rpi_backend PROPERTIES
+        set_target_properties(gcpu_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
-    target_link_libraries(rpi_backend PRIVATE ngraph libeigen hybrid_base interpreter_backend)
-    target_compile_options(rpi_backend PUBLIC -fopenmp)
-    set_target_properties(rpi_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    target_link_libraries(gcpu_backend PRIVATE ngraph libeigen hybrid_base interpreter_backend)
+    target_compile_options(gcpu_backend PUBLIC -fopenmp)
+    set_target_properties(gcpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
-    install(TARGETS rpi_backend
+    install(TARGETS gcpu_backend
         LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
         ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
     )

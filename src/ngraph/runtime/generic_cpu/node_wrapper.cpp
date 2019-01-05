@@ -14,20 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/rpi/node_wrapper.hpp"
+#include "ngraph/runtime/generic_cpu/node_wrapper.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-runtime::rpi::NodeWrapper::NodeWrapper(const shared_ptr<const Node>& node)
+runtime::gcpu::NodeWrapper::NodeWrapper(const shared_ptr<const Node>& node)
     : m_node{node}
 {
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-// {"Abs", runtime::rpi::OP_TYPEID::Abs},
-// {"Acos", runtime::rpi::OP_TYPEID::Acos},
+// {"Abs", runtime::gcpu::OP_TYPEID::Abs},
+// {"Acos", runtime::gcpu::OP_TYPEID::Acos},
 // ...
-#define NGRAPH_OP(a, b) {#a, runtime::rpi::OP_TYPEID::a},
-    static unordered_map<string, runtime::rpi::OP_TYPEID> typeid_map{
+#define NGRAPH_OP(a, b) {#a, runtime::gcpu::OP_TYPEID::a},
+    static unordered_map<string, runtime::gcpu::OP_TYPEID> typeid_map{
 #include "ngraph/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP

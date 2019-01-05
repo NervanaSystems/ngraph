@@ -27,7 +27,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace rpi
+        namespace gcpu
         {
             namespace kernel
             {

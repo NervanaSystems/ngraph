@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/rpi/rpi_backend.hpp"
+#include "ngraph/runtime/generic_cpu/gcpu_backend.hpp"
 #include <omp.h>
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
@@ -51,32 +51,32 @@ extern "C" const char* get_ngraph_version_string()
 
 extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
-    return new runtime::rpi::RPIBackend();
+    return new runtime::gcpu::GCPUBackend();
 }
 
-runtime::rpi::RPIBackend::RPIBackend()
+runtime::gcpu::GCPUBackend::GCPUBackend()
 {
 }
 
-runtime::rpi::RPIBackend::RPIBackend(const vector<string>& unsupported_op_name_list)
+runtime::gcpu::GCPUBackend::GCPUBackend(const vector<string>& unsupported_op_name_list)
     : m_unsupported_op_name_list{unsupported_op_name_list.begin(), unsupported_op_name_list.end()}
 {
 }
 
-shared_ptr<runtime::Tensor> runtime::rpi::RPIBackend::create_tensor(const element::Type& type,
+shared_ptr<runtime::Tensor> runtime::gcpu::GCPUBackend::create_tensor(const element::Type& type,
                                                                     const Shape& shape)
 {
     return make_shared<runtime::HostTensor>(type, shape, this);
 }
 
-shared_ptr<runtime::Tensor> runtime::rpi::RPIBackend::create_tensor(const element::Type& type,
+shared_ptr<runtime::Tensor> runtime::gcpu::GCPUBackend::create_tensor(const element::Type& type,
                                                                     const Shape& shape,
                                                                     void* memory_pointer)
 {
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer, this);
 }
 
-runtime::Handle runtime::rpi::RPIBackend::compile(shared_ptr<Function> function)
+runtime::Handle runtime::gcpu::GCPUBackend::compile(shared_ptr<Function> function)
 {
     FunctionInstance& instance = m_function_map[function];
     if (!instance.m_is_compiled)
@@ -108,7 +108,7 @@ runtime::Handle runtime::rpi::RPIBackend::compile(shared_ptr<Function> function)
     return function;
 }
 
-bool runtime::rpi::RPIBackend::call(shared_ptr<Function> function,
+bool runtime::gcpu::GCPUBackend::call(shared_ptr<Function> function,
                                     const vector<shared_ptr<runtime::Tensor>>& outputs,
                                     const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
@@ -253,7 +253,7 @@ bool runtime::rpi::RPIBackend::call(shared_ptr<Function> function,
     return true;
 }
 
-void runtime::rpi::RPIBackend::generate_calls(const element::Type& type,
+void runtime::gcpu::GCPUBackend::generate_calls(const element::Type& type,
                                               const NodeWrapper& op,
                                               const vector<void*>& outputs,
                                               const vector<const void*>& inputs,
@@ -281,14 +281,14 @@ void runtime::rpi::RPIBackend::generate_calls(const element::Type& type,
     }
 }
 
-void runtime::rpi::RPIBackend::enable_performance_data(shared_ptr<Function> func, bool enable)
+void runtime::gcpu::GCPUBackend::enable_performance_data(shared_ptr<Function> func, bool enable)
 {
     FunctionInstance& instance = m_function_map[func];
     instance.m_performance_counters_enabled = enable;
 }
 
 vector<runtime::PerformanceCounter>
-    runtime::rpi::RPIBackend::get_performance_data(shared_ptr<Function> func) const
+    runtime::gcpu::GCPUBackend::get_performance_data(shared_ptr<Function> func) const
 {
     vector<runtime::PerformanceCounter> rc;
     const FunctionInstance& instance = m_function_map.at(func);
@@ -301,7 +301,7 @@ vector<runtime::PerformanceCounter>
     return rc;
 }
 
-bool runtime::rpi::RPIBackend::is_supported(const Node& node) const
+bool runtime::gcpu::GCPUBackend::is_supported(const Node& node) const
 {
     return m_unsupported_op_name_list.find(node.description()) == m_unsupported_op_name_list.end();
 }

@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace rpi
+        namespace gcpu
         {
             enum class OP_TYPEID;
             class NodeWrapper;
@@ -37,7 +37,7 @@ namespace ngraph
 // Acos,
 // ...
 #define NGRAPH_OP(a, b) a,
-enum class ngraph::runtime::rpi::OP_TYPEID
+enum class ngraph::runtime::gcpu::OP_TYPEID
 {
 #include "ngraph/op/op_tbl.hpp"
 };
@@ -46,13 +46,13 @@ enum class ngraph::runtime::rpi::OP_TYPEID
 /// \brief This class allows adding an enum typeid to each Node. This makes dealing with
 /// collections of Nodes a little easier and faster as we can use switch() instead of
 /// if/else statements
-class ngraph::runtime::rpi::NodeWrapper
+class ngraph::runtime::gcpu::NodeWrapper
 {
 public:
     NodeWrapper(const std::shared_ptr<const ngraph::Node>& node);
 
     const Node& get_node() const { return *m_node; }
-    ngraph::runtime::rpi::OP_TYPEID get_typeid() const { return m_typeid; }
+    ngraph::runtime::gcpu::OP_TYPEID get_typeid() const { return m_typeid; }
 private:
     std::shared_ptr<const ngraph::Node> m_node;
     OP_TYPEID m_typeid;
