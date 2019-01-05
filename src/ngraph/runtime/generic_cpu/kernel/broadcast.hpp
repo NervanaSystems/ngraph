@@ -169,10 +169,6 @@ namespace ngraph
                     }
                     else
                     {
-                        NGRAPH_INFO << "reference Broadcast";
-                        NGRAPH_INFO << "in_shape=" << in_shape << ", out_shape=" << out_shape
-                                    << ",  broadcast_axes(" << broadcast_axes.size()
-                                    << ")=" << join(broadcast_axes);
                         runtime::reference::broadcast<T>(
                             in, out, in_shape, out_shape, broadcast_axes);
                     }
