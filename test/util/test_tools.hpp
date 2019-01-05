@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -169,18 +169,24 @@ std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& fu
 }
 
 template <typename T>
-void print_results(std::vector<T>& ref_data, std::vector<T>& actual_data, size_t max_results = 16)
+std::string
+    get_results_str(std::vector<T>& ref_data, std::vector<T>& actual_data, size_t max_results = 16)
 {
+    std::stringstream ss;
     size_t num_results = std::min(static_cast<size_t>(max_results), ref_data.size());
-    std::cout << "First " << num_results << " results";
+    ss << "First " << num_results << " results";
     for (size_t i = 0; i < num_results; ++i)
     {
-        std::cout << "\n"
-                  << std::setw(4) << i << " ref: " << std::setw(16) << std::left << ref_data[i]
-                  << "  actual: " << std::setw(16) << std::left << actual_data[i];
+        ss << "\n"
+           << std::setw(4) << i << " ref: " << std::setw(16) << std::left << ref_data[i]
+           << "  actual: " << std::setw(16) << std::left << actual_data[i];
     }
-    std::cout << std::endl;
+    ss << "\n";
+
+    return ss.str();
 }
 
 template <>
-void print_results(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results);
+std::string get_results_str(std::vector<char>& ref_data,
+                            std::vector<char>& actual_data,
+                            size_t max_results);

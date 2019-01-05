@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,34 +14,33 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "code_writer.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include <exception>
+#include <functional>
+#include <sstream>
 
-codegen::CodeWriter::CodeWriter()
-    : indent(0)
-    , m_pending_indent(true)
-    , m_temporary_name_count(0)
+#include "ngraph/pass/pass.hpp"
+
+namespace ngraph
 {
+    namespace runtime
+    {
+        namespace hybrid
+        {
+            namespace pass
+            {
+                class FixGetOutputElement;
+            }
+        }
+    }
 }
 
-string codegen::CodeWriter::get_code() const
+class ngraph::runtime::hybrid::pass::FixGetOutputElement : public ngraph::pass::NodePass
 {
-    return m_ss.str();
-}
+public:
+    FixGetOutputElement();
 
-void codegen::CodeWriter::operator+=(const std::string& s)
-{
-    *this << s;
-}
-
-std::string codegen::CodeWriter::generate_temporary_name(std::string prefix)
-{
-    std::stringstream ss;
-
-    ss << prefix << m_temporary_name_count;
-    m_temporary_name_count++;
-
-    return ss.str();
-}
+private:
+    bool run_on_node(std::shared_ptr<Node> node) override;
+};

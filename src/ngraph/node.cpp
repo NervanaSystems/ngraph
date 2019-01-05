@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -238,7 +238,14 @@ std::ostream& Node::write_long_description(std::ostream& out) const
     {
         out << sep << NodeDescription(*arg, true) << ": "
             << pretty_element_type(arg->get_output_element_type(0))
-            << arg->get_output_partial_shape(0) << "";
+            << arg->get_output_partial_shape(0);
+        sep = ", ";
+    }
+    out << ") -> (";
+    sep = "";
+    for (const auto& o : get_outputs())
+    {
+        out << sep << pretty_element_type(o.get_element_type()) << o.get_partial_shape();
         sep = ", ";
     }
     out << ")";
