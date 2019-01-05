@@ -145,5 +145,27 @@ namespace ngraph
                                                     std::shared_ptr<Node> min_freezed_output_conv_2,
                                                     std::shared_ptr<Node> max_freezed_output_conv_2,
                                                     const bool with_relu);
+        std::shared_ptr<Node>
+            ScaledQuantizedConvolutionFusion(std::shared_ptr<Node> input,
+                                             std::shared_ptr<Node> filters,
+                                             std::shared_ptr<Node> bias,
+                                             std::shared_ptr<ngraph::Node> gamma,
+                                             std::shared_ptr<ngraph::Node> beta,
+                                             std::shared_ptr<ngraph::Node> mean,
+                                             std::shared_ptr<ngraph::Node> variance,
+                                             std::shared_ptr<Node> sum_input,
+                                             std::shared_ptr<Node> min_input,
+                                             std::shared_ptr<Node> max_input,
+                                             std::shared_ptr<Node> sum_min_input,
+                                             std::shared_ptr<Node> sum_max_input,
+                                             std::shared_ptr<Node> min_freezed_output_conv,
+                                             std::shared_ptr<Node> max_freezed_output_conv,
+                                             const Strides& window_movement_strides,
+                                             const Strides& window_dilation_strides,
+                                             const CoordinateDiff& padding_below,
+                                             const CoordinateDiff& padding_above,
+                                             const Strides& data_dilation_strides,
+                                             const bool with_relu,
+                                             const bool with_bn);
     }
 }
