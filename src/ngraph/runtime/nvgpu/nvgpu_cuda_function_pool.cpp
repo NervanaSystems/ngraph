@@ -31,7 +31,8 @@ using namespace ngraph;
 std::shared_ptr<CUfunction> runtime::nvgpu::CudaFunctionPool::set(const std::string& name,
                                                                 const std::string& kernel)
 {
-    const char* opts[] = {"--nvgpu-architecture=compute_35", "--relocatable-device-code=true"};
+    // this needs to be updated to support the compute capability of the detected hardware
+    const char* opts[] = {"--gpu-architecture=compute_35", "--relocatable-device-code=true"};
     std::string filename =
         file_util::path_join(s_output_dir, "cuda_kernel_" + name + "_codegen.cu");
     std::ofstream out(filename);
