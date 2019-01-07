@@ -108,7 +108,7 @@ option(NGRAPH_GPUH_ENABLE "Control the building of the Hybrid GPU backend" FALSE
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
-option(NGRAPH_DEX_ONLY "Build CPU or GPU DEX without codegen" FALSE)
+option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 option(NGRAPH_PYTHON_BUILD_ENABLE   "Enable build nGraph python package wheel" FALSE)
@@ -139,13 +139,13 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
 endif()
 
-option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ON)
+find_package(PlaidML CONFIG)
+
+option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
 
 if (NGRAPH_PLAIDML_ENABLE)
-    find_package(PlaidML CONFIG)
     if (NOT PLAIDML_FOUND)
-        message(STATUS "PlaidML not installed; disabling PlaidML backend")
-        set(NGRAPH_PLAIDML_ENABLE OFF)
+        message(FATAL_ERROR "PlaidML not installed")
     endif()
 endif()
 
