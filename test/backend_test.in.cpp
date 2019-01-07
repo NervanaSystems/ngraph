@@ -6812,3 +6812,24 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
     vector<uint64_t> expected{2, 4, 8, 16, 32};
     EXPECT_EQ(expected, read_vector<uint64_t>(result));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, shape_of_shape_of_5d)
+{
+    Shape input_shape{2, 4, 8, 16, 32};
+    Shape output_shape{1};
+
+    auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
+    auto f = std::make_shared<Function>(
+        std::make_shared<op::ShapeOf>(std::make_shared<op::ShapeOf>(A)), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, input_shape);
+    copy_data(a, vector<float>(2 * 4 * 8 * 16 * 32, 0));
+    auto result = backend->create_tensor(element::u64, output_shape);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a});
+    vector<uint64_t> expected{5};
+    EXPECT_EQ(expected, read_vector<uint64_t>(result));
+}

@@ -24,6 +24,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -619,4 +620,29 @@ void ngraph::pass::ConstantFolding::construct_constant_quantize()
     auto quantize_matcher = make_shared<pattern::Matcher>(
         quant, constant_quantize_callback, "ConstantFolding.ConstantQuantize");
     this->add_matcher(quantize_matcher);
+}
+
+void ngraph::pass::ConstantFolding::construct_constant_shape_of()
+{
+    auto has_static_shape = [](std::shared_ptr<Node> n) {
+        return (n->get_output_partial_shape(0).is_static());
+    };
+    auto arg_label = make_shared<pattern::op::Label>(element::f32, Shape{}, has_static_shape);
+    auto shape_of = make_shared<op::ShapeOf>(arg_label);
+
+    auto shape_of_callback = [](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for shape_of_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto& arg_shape = m.get_match_root()->get_input_shape(0);
+        auto replacement =
+            make_shared<op::Constant>(element::u64, Shape{arg_shape.size()}, arg_shape);
+
+        replace_node(m.get_match_root(), replacement);
+        return true;
+    };
+
+    auto shape_of_matcher = make_shared<pattern::Matcher>(
+        shape_of, shape_of_callback, "ConstantFolding.ConstantShapeOf");
+    this->add_matcher(shape_of_matcher);
 }
