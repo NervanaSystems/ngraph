@@ -139,7 +139,17 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
 endif()
 
-option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" FALSE)
+option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ON)
+
+if (NGRAPH_PLAIDML_ENABLE)
+    find_package(PlaidML CONFIG)
+    if (NOT PLAIDML_FOUND)
+        message(STATUS "PlaidML not installed; disabling PlaidML backend")
+        set(NGRAPH_PLAIDML_ENABLE OFF)
+    endif()
+endif()
+
+message(STATUS "NGRAPH_PLAIDML_ENABLE:        ${NGRAPH_PLAIDML_ENABLE}")
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
