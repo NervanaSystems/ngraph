@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cassert>
 #include <numeric>
 
 #include "quantized_conv_bias.hpp"
@@ -192,6 +193,7 @@ op::QuantizedConvolutionBiasSignedAdd::QuantizedConvolutionBiasSignedAdd(
     // TODO: call ngraph util
     // util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
 
+    assert(with_relu == true);
     set_output_type(0,
                     element::i8,
                     util::infer_convolution_output_shape(this,
