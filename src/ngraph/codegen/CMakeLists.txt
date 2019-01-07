@@ -15,7 +15,7 @@
 # ******************************************************************************
 
 
-if ((NGRAPH_GPU_ENABLE OR NGRAPH_CPU_ENABLE) AND NOT NGRAPH_DEX_ONLY)
+if ((NGRAPH_NVGPU_ENABLE OR NGRAPH_CPU_ENABLE) AND NOT NGRAPH_DEX_ONLY)
     if (DEFINED NGRAPH_USE_CXX_ABI AND NGRAPH_USE_PREBUILT_LLVM)
         message(FATAL_ERROR "Unable to use NGRAPH_USE_PREBUILT_LLVM with NGRAPH_USE_CXX_ABI")
     endif()
@@ -52,7 +52,7 @@ if ((NGRAPH_GPU_ENABLE OR NGRAPH_CPU_ENABLE) AND NOT NGRAPH_DEX_ONLY)
         add_definitions(-DNGRAPH_DISTRIBUTED)
     endif()
 
-    if(NGRAPH_GPU_ENABLE)
+    if(NGRAPH_NVGPU_ENABLE)
         find_package(CUDA 8 REQUIRED)
         find_package(CUDNN 7 REQUIRED)
         list(APPEND HEADER_SEARCH_DEFINES CUDA_HEADER_PATHS="${CUDA_INCLUDE_DIRS}")

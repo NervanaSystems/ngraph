@@ -62,7 +62,7 @@ set(CUDA_SRC
     nvcc/example.cu.cpp
     )
 
-if (NGRAPH_GPU_ENABLE)
+if (NGRAPH_NVGPU_ENABLE)
     find_package(CUDA 9 QUIET)
     if (CUDA_FOUND)
         set(CUDA9_FOUND TRUE)
