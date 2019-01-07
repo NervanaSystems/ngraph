@@ -26,6 +26,7 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "quantization_util.hpp"
@@ -416,11 +417,15 @@ namespace ngraph
             auto bias_scale =
                 quantization_util::get_bias_scale(min_input, max_input, min_filter, max_filter);
             op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
-
             bias = make_shared<op::Quantize>(
                 bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
-            auto new_weights_i8 = make_shared<op::Quantize>(
-                new_weights, bias_scale, zero, element::i8, quantization_axes, round_mode);
+            auto new_weights_i8 =
+                make_shared<op::Quantize>(new_weights,
+                                          bias_scale,
+                                          make_constant(element::i8, min_input->get_shape(), 0),
+                                          element::i8,
+                                          quantization_axes,
+                                          round_mode);
 
             // invoke quantized conv builder api
             return make_shared<op::QuantizedConvolutionBias>(input,
