@@ -152,10 +152,10 @@ namespace ngraph
                     std::size_t n_filters_channels{weights_shape.at(0)};
 
                     ASSERT_VALID_ARGUMENT(node, n_data_channels % groups == 0)
-                        << "provided group attribute value must by multiply of data channels "
+                        << "provided group attribute value must be a multiple of data channels "
                            "count.";
                     ASSERT_VALID_ARGUMENT(node, n_filters_channels % groups == 0)
-                        << "provided group attribute value must by multiply of filter channels "
+                        << "provided group attribute value must be a multiple of filter channels "
                            "count.";
 
                     Shape data_batch_shape(data_shape.size(), 1);
