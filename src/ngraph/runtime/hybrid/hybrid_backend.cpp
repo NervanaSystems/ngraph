@@ -225,9 +225,9 @@ string runtime::hybrid::HybridBackend::get_placement_name(const runtime::Backend
     {
         rc = "INTBackend";
     }
-    else if (dynamic_cast<const runtime::nvgpu::NV_Backend*>(t) != nullptr)
+    else if (dynamic_cast<const runtime::nvgpu::NVBackend*>(t) != nullptr)
     {
-        rc = "NV_Backend";
+        rc = "NVBackend";
     }
     return rc;
 }
