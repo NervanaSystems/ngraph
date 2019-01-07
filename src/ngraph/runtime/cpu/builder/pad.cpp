@@ -33,6 +33,8 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Pad)
             {
+                using namespace std::placeholders;
+
                 auto& functors = external_function->get_functors();
 
                 auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
@@ -49,10 +51,10 @@ namespace ngraph
                 if (pad->get_padding_interior() == Shape(arg_shape.size()) &&
                     std::all_of(padding_below.begin(),
                                 padding_below.end(),
-                                [](ptrdiff_t x) { return (x >= 0); }) &&
-                    std::all_of(padding_above.begin(), padding_above.end(), [](ptrdiff_t x) {
-                        return (x >= 0);
-                    }))
+                                std::bind(std::greater_equal<ptrdiff_t>(), _1, 0)) &&
+                    std::all_of(padding_above.begin(),
+                                padding_above.end(),
+                                std::bind(std::greater_equal<ptrdiff_t>(), _1, 0)))
                 {
                     std::function<decltype(runtime::cpu::kernel::pad<float, 1>)> kernel;
 
