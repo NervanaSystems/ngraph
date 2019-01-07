@@ -16,13 +16,14 @@
 
 #pragma once
 
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Generic constant-padding operation.
+        /// \brief Generic padding operation.
         class Pad : public Op
         {
         public:
@@ -35,16 +36,16 @@ namespace ngraph
             /// \param padding_interior The interior-padding widths.
             Pad(const std::shared_ptr<Node>& arg,
                 const std::shared_ptr<Node>& arg_pad_value,
-                const Shape& padding_below,
-                const Shape& padding_above,
+                const CoordinateDiff& padding_below,
+                const CoordinateDiff& padding_above,
                 const Shape& padding_interior);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             /// \return The padding-below sizes.
-            const Shape& get_padding_below() const { return m_padding_below; }
+            const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             /// \return The padding-above sizes.
-            const Shape& get_padding_above() const { return m_padding_above; }
+            const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             /// \return The interior padding sizes.
             const Shape& get_padding_interior() const { return m_padding_interior; }
             /// \return The default value for Pad.
@@ -54,8 +55,8 @@ namespace ngraph
             void validate_and_infer_types() override;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            Shape m_padding_below;
-            Shape m_padding_above;
+            CoordinateDiff m_padding_below;
+            CoordinateDiff m_padding_above;
             Shape m_padding_interior;
         };
     }

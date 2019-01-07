@@ -931,8 +931,8 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Pad:
             {
-                auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
-                auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<ptrdiff_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<ptrdiff_t>>();
                 auto padding_interior = node_js.at("padding_interior").get<vector<size_t>>();
                 node = make_shared<op::Pad>(
                     args[0], args[1], padding_below, padding_above, padding_interior);

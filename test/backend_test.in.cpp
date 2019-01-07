@@ -3045,8 +3045,8 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_1d)
     Shape shape_b{};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{16};
-    Shape padding_below{0};
-    Shape padding_above{0};
+    CoordinateDiff padding_below{0};
+    CoordinateDiff padding_above{0};
     Shape padding_interior{2};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
@@ -3076,8 +3076,8 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_1d)
     Shape shape_b{};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{15};
-    Shape padding_below{4};
-    Shape padding_above{5};
+    CoordinateDiff padding_below{4};
+    CoordinateDiff padding_above{5};
     Shape padding_interior{0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
@@ -3100,6 +3100,34 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_1d)
               read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, pad_negative_exterior_1d)
+{
+    Shape shape_a{6};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{8};
+    CoordinateDiff padding_below{4};
+    CoordinateDiff padding_above{-2};
+    Shape padding_interior{0};
+    auto f = make_shared<Function>(
+        make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
+        ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, test::NDArray<float, 1>({1, 2, 3, 4, 5, 6}).get_vector());
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{2112});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
+    EXPECT_EQ((test::NDArray<float, 1>({2112, 2112, 2112, 2112, 1, 2, 3, 4}).get_vector()),
+              read_vector<float>(result));
+}
 NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
 {
     Shape shape_a{6};
@@ -3107,8 +3135,8 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
     Shape shape_b{};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{25};
-    Shape padding_below{4};
-    Shape padding_above{5};
+    CoordinateDiff padding_below{4};
+    CoordinateDiff padding_above{5};
     Shape padding_interior{2};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
@@ -3139,8 +3167,8 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_2d)
     Shape shape_b{};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{7, 6};
-    Shape padding_below{1, 0};
-    Shape padding_above{2, 1};
+    CoordinateDiff padding_below{1, 0};
+    CoordinateDiff padding_above{2, 1};
     Shape padding_interior{2, 1};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
@@ -3168,6 +3196,38 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_2d)
               read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, pad_interior_negative_exterior_2d)
+{
+    Shape shape_a{2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{7, 2};
+    CoordinateDiff padding_below{1, -2};
+    CoordinateDiff padding_above{2, -1};
+    Shape padding_interior{2, 1};
+    auto f = make_shared<Function>(
+        make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
+        ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, test::NDArray<float, 2>({{1, 2, 3}, {4, 5, 6}}).get_vector());
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{9});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
+    //clang-format off
+    EXPECT_EQ((test::NDArray<float, 2>({{9, 9}, {2, 9}, {9, 9}, {9, 9}, {5, 9}, {9, 9}, {9, 9}})
+                   .get_vector()),
+              //clang-format on
+              read_vector<float>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
 {
     Shape shape_a{0, 0};
@@ -3175,8 +3235,8 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x0)
     Shape shape_b{};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{5, 5};
-    Shape padding_below{2, 3};
-    Shape padding_above{3, 2};
+    CoordinateDiff padding_below{2, 3};
+    CoordinateDiff padding_above{3, 2};
     Shape padding_interior{0, 0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
@@ -3209,8 +3269,8 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_0x3)
     Shape shape_b{};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{5, 5};
-    Shape padding_below{2, 1};
-    Shape padding_above{3, 1};
+    CoordinateDiff padding_below{2, 1};
+    CoordinateDiff padding_above{3, 1};
     Shape padding_interior{0, 0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
@@ -3243,8 +3303,8 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_2d_3x0)
     Shape shape_b{};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{5, 5};
-    Shape padding_below{1, 3};
-    Shape padding_above{1, 2};
+    CoordinateDiff padding_below{1, 3};
+    CoordinateDiff padding_above{1, 2};
     Shape padding_interior{0, 0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
@@ -3277,8 +3337,8 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_exterior_4d_1x2x2x2)
     Shape shape_b{};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{1, 2, 4, 4};
-    Shape padding_below{0, 0, 1, 1};
-    Shape padding_above{0, 0, 1, 1};
+    CoordinateDiff padding_below{0, 0, 1, 1};
+    CoordinateDiff padding_above{0, 0, 1, 1};
     Shape padding_interior{0, 0, 0, 0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
@@ -3344,8 +3404,8 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    Shape padding_below{1, 0, 0, 0};
-    Shape padding_above{0, 2, 0, 0};
+    CoordinateDiff padding_below{1, 0, 0, 0};
+    CoordinateDiff padding_above{0, 2, 0, 0};
     Shape padding_interior{2, 1, 0, 0};
     Shape shape_r{5, 2, 3, 2};
     auto f = make_shared<Function>(
@@ -3374,8 +3434,8 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_2channel_2image_asym)
 {
     Shape shape_a{2, 2, 4, 4};
     auto window_movement_strides = Strides{2, 2};
-    Shape padding_below{0, 0, 0, 0};
-    Shape padding_above{0, 0, 2, 2};
+    CoordinateDiff padding_below{0, 0, 0, 0};
+    CoordinateDiff padding_above{0, 0, 2, 2};
     Shape padding_interior{0, 0, 0, 0};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_b{};

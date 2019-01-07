@@ -46,7 +46,13 @@ namespace ngraph
                 auto padding_below = pad->get_padding_below();
                 auto padding_above = pad->get_padding_above();
 
-                if (pad->get_padding_interior() == Shape(arg_shape.size()))
+                if (pad->get_padding_interior() == Shape(arg_shape.size()) &&
+                    std::all_of(padding_below.begin(),
+                                padding_below.end(),
+                                [](ptrdiff_t x) { return (x >= 0); }) &&
+                    std::all_of(padding_above.begin(), padding_above.end(), [](ptrdiff_t x) {
+                        return (x >= 0);
+                    }))
                 {
                     std::function<decltype(runtime::cpu::kernel::pad<float, 1>)> kernel;
 
@@ -62,8 +68,8 @@ namespace ngraph
                                padding_value,
                                arg_shape,
                                out_shape,
-                               padding_below,
-                               padding_above,
+                               Shape(padding_below.begin(), padding_below.end()),
+                               Shape(padding_above.begin(), padding_above.end()),
                                ectx->arena);
                     };
                     functors.emplace_back(functor);

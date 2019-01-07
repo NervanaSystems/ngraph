@@ -395,7 +395,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_reshaped_conv(
 {
     auto pad_input = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto pad_value = std::make_shared<pattern::op::Label>(element::f32, Shape{});
-    auto pad = std::make_shared<op::Pad>(pad_input, pad_value, Shape{}, Shape{}, Shape{});
+    auto pad = std::make_shared<op::Pad>(
+        pad_input, pad_value, CoordinateDiff{}, CoordinateDiff{}, Shape{});
     auto pad_label = std::make_shared<pattern::op::Label>(pad, nullptr, NodeVector{pad});
 
     auto reshape = std::make_shared<op::Reshape>(pad_label, AxisVector{}, Shape{1, 1, 1, 1});
@@ -482,8 +483,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv()
 {
     auto pad_input = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
     auto pad_value = std::make_shared<pattern::op::Label>(element::f32, Shape{});
-    auto pad = std::make_shared<op::Pad>(
-        pad_input, pad_value, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0});
+    auto pad = std::make_shared<op::Pad>(pad_input,
+                                         pad_value,
+                                         CoordinateDiff{0, 0, 0, 0},
+                                         CoordinateDiff{0, 0, 0, 0},
+                                         Shape{0, 0, 0, 0});
     auto pad_label = std::make_shared<pattern::op::Label>(pad, nullptr, NodeVector{pad});
 
     auto conv_filter = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
@@ -552,8 +556,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv_backprop_
 {
     auto pad_input = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
     auto pad_value = std::make_shared<pattern::op::Label>(element::f32, Shape{});
-    auto pad = std::make_shared<op::Pad>(
-        pad_input, pad_value, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0}, Shape{0, 0, 0, 0});
+    auto pad = std::make_shared<op::Pad>(pad_input,
+                                         pad_value,
+                                         CoordinateDiff{0, 0, 0, 0},
+                                         CoordinateDiff{0, 0, 0, 0},
+                                         Shape{0, 0, 0, 0});
     auto pad_label = std::make_shared<pattern::op::Label>(pad, nullptr, NodeVector{pad});
 
     auto output_delta = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});

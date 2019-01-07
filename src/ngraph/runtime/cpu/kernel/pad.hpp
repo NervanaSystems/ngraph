@@ -65,8 +65,8 @@ namespace ngraph
                          void* out,
                          const Shape& arg0_shape,
                          const Shape& out_shape,
-                         const Shape& padding_below,
-                         const Shape& padding_above,
+                         const CoordinateDiff& padding_below,
+                         const CoordinateDiff& padding_above,
                          const Shape& padding_interior,
                          int arena)
                 {

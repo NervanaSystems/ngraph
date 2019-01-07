@@ -108,8 +108,8 @@ TEST(constant_folding, constant_pad_exterior)
     auto constant = make_shared<op::Constant>(element::i32, shape_in, values_in);
     auto pad_value = make_shared<op::Constant>(element::i32, Shape{}, vector<int>{111});
 
-    Shape padding_below{1};
-    Shape padding_above{2};
+    CoordinateDiff padding_below{1};
+    CoordinateDiff padding_above{2};
     Shape padding_interior{0};
 
     auto broadcast =
@@ -140,8 +140,8 @@ TEST(constant_folding, constant_pad_interior)
     auto constant = make_shared<op::Constant>(element::i32, shape_in, values_in);
     auto pad_value = make_shared<op::Constant>(element::i32, Shape{}, vector<int>{111});
 
-    Shape padding_below{0};
-    Shape padding_above{0};
+    CoordinateDiff padding_below{0};
+    CoordinateDiff padding_above{0};
     Shape padding_interior{3};
 
     auto broadcast =

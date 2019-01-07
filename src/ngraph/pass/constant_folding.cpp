@@ -96,8 +96,8 @@ void ngraph::pass::ConstantFolding::construct_constant_pad()
 
     auto pad_value_label = make_shared<pattern::op::Label>(element::f32, Shape{}, is_constant);
 
-    Shape padding_below{0};
-    Shape padding_above{0};
+    CoordinateDiff padding_below{0};
+    CoordinateDiff padding_above{0};
     Shape padding_interior{0};
 
     auto pad = make_shared<op::Pad>(

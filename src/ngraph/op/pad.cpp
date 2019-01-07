@@ -23,8 +23,8 @@ using namespace ngraph;
 
 op::Pad::Pad(const shared_ptr<Node>& arg,
              const shared_ptr<Node>& arg_pad_value,
-             const Shape& padding_below,
-             const Shape& padding_above,
+             const CoordinateDiff& padding_below,
+             const CoordinateDiff& padding_above,
              const Shape& padding_interior)
     : Op("Pad", check_single_output_args({arg, arg_pad_value}))
     , m_padding_below(padding_below)
@@ -60,7 +60,7 @@ void op::Pad::validate_and_infer_types()
 
     NODE_VALIDATION_ASSERT(this, arg_shape.rank().compatible(implied_rank))
         << "Rank for padding below/padding above/interior padding does not match the rank of the "
-        << "data argument (padding below: " << m_padding_below << ", "
+        << "data argument (padding below: " << m_padding_below
         << ", padding above: " << m_padding_above << ", interior padding: " << m_padding_interior
         << ").";
 
@@ -72,11 +72,17 @@ void op::Pad::validate_and_infer_types()
         {
             if (arg_shape[i].is_static())
             {
-                result_dims[i] =
-                    m_padding_below[i] +
-                    subtract_or_zero(size_t(arg_shape[i]) * (m_padding_interior[i] + 1),
-                                     m_padding_interior[i]) +
-                    m_padding_above[i];
+                ptrdiff_t result_dim = m_padding_below[i] +
+                                       static_cast<ptrdiff_t>(subtract_or_zero(
+                                           size_t(arg_shape[i]) * (m_padding_interior[i] + 1),
+                                           m_padding_interior[i])) +
+                                       m_padding_above[i];
+                NODE_VALIDATION_ASSERT(this, result_dim >= 0)
+                    << "Inferred result dimension at axis " << i
+                    << " is negative after padding (padding below: " << m_padding_below << ", "
+                    << ", padding above: " << m_padding_above
+                    << ", interior padding: " << m_padding_interior << ").";
+                result_dims[i] = static_cast<size_t>(result_dim);
             }
         }
     }
