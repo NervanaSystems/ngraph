@@ -18,12 +18,12 @@
 
 #include "gtest/gtest.h"
 
-#include "hybrid_utils.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
@@ -33,27 +33,21 @@
 using namespace std;
 using namespace ngraph;
 
-static runtime::Backend* hybrid1_creator(const char* config)
+static runtime::Backend* hybrid_creator(const char* config)
 {
-    vector<shared_ptr<runtime::Backend>> backend_list;
-    set<string> s0 = {"Add"};
-    auto b0 = make_shared<BackendWrapper>("INTERPRETER", s0, "AddOnly");
-    backend_list.push_back(b0);
+    vector<string> unsupported_0 = {"Add"};
+    vector<string> unsupported_1 = {"Multiply"};
+    vector<shared_ptr<runtime::Backend>> backend_list = {
+        make_shared<runtime::interpreter::INTBackend>(unsupported_0),
+        make_shared<runtime::interpreter::INTBackend>(unsupported_1)};
 
-#define NGRAPH_OP(a, b) #a,
-    set<string> s1 = {
-#include "ngraph/op/op_tbl.hpp"
-    };
-    auto b1 = make_shared<BackendWrapper>("INTERPRETER", s1, "AllOps");
-    backend_list.push_back(b1);
-
-    return new TestBackend(backend_list);
+    return new runtime::hybrid::HybridBackend(backend_list);
 }
 
 TEST(HYBRID, abc)
 {
-    const string backend_name = "HYBRID1";
-    runtime::BackendManager::register_backend(backend_name, hybrid1_creator);
+    const string backend_name = "H1";
+    runtime::BackendManager::register_backend(backend_name, hybrid_creator);
 
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -61,7 +55,7 @@ TEST(HYBRID, abc)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
 
-    auto backend = runtime::Backend::create(backend_name);
+    auto backend = runtime::Backend::create("H1");
 
     // Create some tensors for input/output
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
@@ -78,12 +72,12 @@ TEST(HYBRID, abc)
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    auto handle = backend->compile(f);
+    handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {b, a, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 
-    auto handle = backend->compile(f);
+    handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a, c, b});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
