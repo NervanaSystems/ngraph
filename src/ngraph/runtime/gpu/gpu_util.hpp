@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cudnn.h>
+#include <memory>
 #include <vector>
 
 namespace ngraph
@@ -36,6 +37,12 @@ namespace ngraph
             std::pair<uint64_t, uint64_t> idiv_magic_u32(uint64_t max_numerator, uint64_t divisor);
             std::pair<uint64_t, uint64_t> idiv_magic_u64(uint64_t divisor);
             uint32_t idiv_ceil(int n, int d);
+
+            template <typename T, typename... Args>
+            std::unique_ptr<T> make_unique(Args&&... args)
+            {
+                return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+            }
 
             // This is commented out because it increases the compile time.
             // It should be moved to a debug header.
