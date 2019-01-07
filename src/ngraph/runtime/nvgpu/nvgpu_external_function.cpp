@@ -151,13 +151,13 @@ std::string runtime::nvgpu::NVExternalFunction::emit_op(NVCompiledFunction* exte
                                                        const std::vector<NVTensorWrapper>& args,
                                                        const std::vector<NVTensorWrapper>& out)
 {
-    auto emit_function = NV_Emitter::get_emit_function(*node);
+    auto emit_function = NVEmitter::get_emit_function(*node);
     return emit_function(external_function, function_name, node, args, out);
 };
 
 runtime::nvgpu::NVExternalFunction::NVExternalFunction(
     const shared_ptr<ngraph::Function>& function,
-    const std::shared_ptr<NV_Backend::BackendContext>& shared_context)
+    const std::shared_ptr<NVBackend::BackendContext>& shared_context)
     : NVCompiledFunction(function, shared_context)
 {
 }
@@ -203,7 +203,7 @@ std::string runtime::nvgpu::NVExternalFunction::add_call_to_runtime(
 std::string runtime::nvgpu::NVExternalFunction::node_names(
     const std::vector<runtime::nvgpu::NVTensorWrapper>& args, std::initializer_list<int> arg_indexes)
 {
-    return runtime::nvgpu::NV_Emitter::node_names(args, arg_indexes);
+    return runtime::nvgpu::NVEmitter::node_names(args, arg_indexes);
 }
 
 const string& runtime::nvgpu::NVExternalFunction::get_pch_header_source()

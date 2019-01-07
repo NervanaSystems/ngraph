@@ -44,7 +44,7 @@ namespace ngraph
     {
         namespace nvgpu
         {
-            class NV_Emitter;
+            class NVEmitter;
             struct NVRuntimeContext;
 
             class NVExternalFunction : public NVCompiledFunction
@@ -52,7 +52,7 @@ namespace ngraph
             public:
                 NVExternalFunction(
                     const std::shared_ptr<ngraph::Function>& function,
-                    const std::shared_ptr<NV_Backend::BackendContext>& shared_context);
+                    const std::shared_ptr<NVBackend::BackendContext>& shared_context);
                 virtual ~NVExternalFunction();
 
                 virtual std::string

@@ -39,7 +39,7 @@ extern "C" const char* get_ngraph_version_string()
 
 extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
-    return new runtime::nvgpu::NV_Backend();
+    return new runtime::nvgpu::NVBackend();
 }
 
 extern "C" void delete_backend(runtime::Backend* backend)
@@ -47,13 +47,13 @@ extern "C" void delete_backend(runtime::Backend* backend)
     delete backend;
 }
 
-runtime::nvgpu::NV_Backend::NV_Backend()
+runtime::nvgpu::NVBackend::NVBackend()
     : runtime::Backend()
     , m_context(new BackendContext())
 {
 }
 
-runtime::nvgpu::NV_Backend::BackendContext::BackendContext()
+runtime::nvgpu::NVBackend::BackendContext::BackendContext()
     : m_runtime_context(new NVRuntimeContext)
     , m_primitive_emitter(new NVPrimitiveEmitter(m_runtime_context))
     , m_cuda_manager(new CudaContextManager)
@@ -83,7 +83,7 @@ runtime::nvgpu::NV_Backend::BackendContext::BackendContext()
     m_runtime_context->compiled_kernel_pool = new CudaFunctionPool;
 }
 
-void runtime::nvgpu::NV_Backend::BackendContext::prepare_runtime_context()
+void runtime::nvgpu::NVBackend::BackendContext::prepare_runtime_context()
 {
     // set context current each time in case thread changed
     bind_cuda_context_to_thread();
@@ -92,12 +92,12 @@ void runtime::nvgpu::NV_Backend::BackendContext::prepare_runtime_context()
     m_runtime_context->nvgpu_memory_primitives = m_primitive_emitter->get_memory_primitives().data();
 }
 
-void runtime::nvgpu::NV_Backend::BackendContext::bind_cuda_context_to_thread()
+void runtime::nvgpu::NVBackend::BackendContext::bind_cuda_context_to_thread()
 {
     m_cuda_manager->SetContextCurrent();
 }
 
-runtime::nvgpu::NV_Backend::BackendContext::~BackendContext()
+runtime::nvgpu::NVBackend::BackendContext::~BackendContext()
 {
     cublasDestroy(*m_runtime_context->cublas_handle);
     delete m_runtime_context->cublas_handle;
@@ -107,18 +107,18 @@ runtime::nvgpu::NV_Backend::BackendContext::~BackendContext()
 }
 
 shared_ptr<runtime::Tensor>
-    runtime::nvgpu::NV_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
+    runtime::nvgpu::NVBackend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
     return make_shared<runtime::nvgpu::NVTensor>(element_type, shape, this);
 }
 
-shared_ptr<runtime::Tensor> runtime::nvgpu::NV_Backend::create_tensor(
+shared_ptr<runtime::Tensor> runtime::nvgpu::NVBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     return make_shared<runtime::nvgpu::NVTensor>(element_type, shape, memory_pointer, this);
 }
 
-runtime::Handle runtime::nvgpu::NV_Backend::compile(shared_ptr<Function> func)
+runtime::Handle runtime::nvgpu::NVBackend::compile(shared_ptr<Function> func)
 {
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_compiled_function == nullptr)
@@ -134,7 +134,7 @@ runtime::Handle runtime::nvgpu::NV_Backend::compile(shared_ptr<Function> func)
     return func;
 }
 
-void runtime::nvgpu::NV_Backend::initialize_io(void** target,
+void runtime::nvgpu::NVBackend::initialize_io(void** target,
                                               const vector<shared_ptr<runtime::Tensor>>& source)
 {
     for (size_t i = 0; i < source.size(); i++)
@@ -152,7 +152,7 @@ void runtime::nvgpu::NV_Backend::initialize_io(void** target,
     }
 }
 
-bool runtime::nvgpu::NV_Backend::call(shared_ptr<Function> func,
+bool runtime::nvgpu::NVBackend::call(shared_ptr<Function> func,
                                      const vector<shared_ptr<runtime::Tensor>>& outputs,
                                      const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
@@ -175,12 +175,12 @@ bool runtime::nvgpu::NV_Backend::call(shared_ptr<Function> func,
     return true;
 }
 
-void runtime::nvgpu::NV_Backend::remove_compiled_function(shared_ptr<Function> func)
+void runtime::nvgpu::NVBackend::remove_compiled_function(shared_ptr<Function> func)
 {
     m_function_map.erase(func);
 }
 
-void runtime::nvgpu::NV_Backend::enable_performance_data(shared_ptr<Function> func, bool enable)
+void runtime::nvgpu::NVBackend::enable_performance_data(shared_ptr<Function> func, bool enable)
 {
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_compiled_function != nullptr)
@@ -191,7 +191,7 @@ void runtime::nvgpu::NV_Backend::enable_performance_data(shared_ptr<Function> fu
 }
 
 vector<runtime::PerformanceCounter>
-    runtime::nvgpu::NV_Backend::get_performance_data(shared_ptr<Function> func) const
+    runtime::nvgpu::NVBackend::get_performance_data(shared_ptr<Function> func) const
 {
     std::vector<runtime::PerformanceCounter> rc;
     auto it = m_function_map.find(func);
@@ -206,7 +206,7 @@ vector<runtime::PerformanceCounter>
     return rc;
 }
 
-bool runtime::nvgpu::NV_Backend::is_supported(const Node& op) const
+bool runtime::nvgpu::NVBackend::is_supported(const Node& op) const
 {
     set<string> unsupported_ops = {"Quantize",
                                    "Dequantize",

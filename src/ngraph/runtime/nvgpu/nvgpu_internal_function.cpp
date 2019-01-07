@@ -126,13 +126,13 @@ std::string runtime::nvgpu::NVInternalFunction::emit_op(NVCompiledFunction* comp
                                                        const std::vector<NVTensorWrapper>& args,
                                                        const std::vector<NVTensorWrapper>& out)
 {
-    auto emit_function = NV_Emitter::get_emit_function(*node);
+    auto emit_function = NVEmitter::get_emit_function(*node);
     return emit_function(compiled_function, function_name, node, args, out);
 };
 
 runtime::nvgpu::NVInternalFunction::NVInternalFunction(
     const shared_ptr<ngraph::Function>& function,
-    const std::shared_ptr<NV_Backend::BackendContext>& shared_context)
+    const std::shared_ptr<NVBackend::BackendContext>& shared_context)
     : NVCompiledFunction(function, shared_context)
 {
 }
@@ -391,7 +391,7 @@ void runtime::nvgpu::NVInternalFunction::emit()
     m_runtime_constructor =
         runtime::nvgpu::make_unique<NVRuntimeConstructor>(m_function_ordered_ops);
 
-    if (std::getenv("NGRAPH_NV_TRACE"))
+    if (std::getenv("NGRAPH_NVGPU_TRACE"))
     {
         m_trace = std::make_shared<codegen::CodeWriter>();
     }
