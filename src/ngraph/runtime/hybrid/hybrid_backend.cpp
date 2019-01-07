@@ -18,8 +18,8 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_tensor.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
 #include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
@@ -63,7 +63,7 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         ngraph::pass::Manager pass_manager;
         pass_manager.register_pass<runtime::hybrid::pass::AssignPlacement>(m_backend_list);
         pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
-#ifdef GPUH_DEBUG
+#ifdef NVH_DEBUG
         pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png");
 #endif
         pass_manager.run_passes(instance.m_function);
@@ -212,9 +212,9 @@ string runtime::hybrid::HybridBackend::get_placement_name(const runtime::Tensor*
     {
         rc = "HostTensor";
     }
-    else if (dynamic_cast<const runtime::gpu::GPUTensor*>(t) != nullptr)
+    else if (dynamic_cast<const runtime::nvgpu::NVTensor*>(t) != nullptr)
     {
-        rc = "GPUTensor";
+        rc = "NVTensor";
     }
     return rc;
 }
@@ -225,9 +225,9 @@ string runtime::hybrid::HybridBackend::get_placement_name(const runtime::Backend
     {
         rc = "INTBackend";
     }
-    else if (dynamic_cast<const runtime::gpu::GPU_Backend*>(t) != nullptr)
+    else if (dynamic_cast<const runtime::nvgpu::NV_Backend*>(t) != nullptr)
     {
-        rc = "GPU_Backend";
+        rc = "NV_Backend";
     }
     return rc;
 }

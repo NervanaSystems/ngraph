@@ -34,7 +34,7 @@ if (NGRAPH_NOP_ENABLE)
 endif()
 
 if (NGRAPH_GPUH_ENABLE)
-    add_subdirectory(gpuh)
+    add_subdirectory(nvgpuh)
 endif()
 
 add_subdirectory(plaidml)
