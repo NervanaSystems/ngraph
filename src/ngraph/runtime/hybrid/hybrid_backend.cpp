@@ -48,6 +48,17 @@ shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
     return (*it)->create_tensor(element_type, shape, memory_pointer);
 }
 
+static void node_modifiers(const Node& node, vector<string>& attributes)
+{
+    vector<string> colors = {"beige", "gold"};
+    if (node.get_placement_index() > 0)
+    {
+        string color = colors[node.get_placement_index() - 1];
+        attributes.push_back("style=filled");
+        attributes.push_back("fillcolor=" + color);
+    }
+}
+
 runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> func)
 {
     if (m_function_map.find(func) == m_function_map.end())
@@ -62,7 +73,7 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
         if (m_debug_enabled)
         {
-            pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png");
+            pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png", node_modifiers);
         }
         pass_manager.run_passes(instance.m_function);
 
@@ -80,7 +91,7 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
             {
                 string subfunction_name = "subfunction_" + to_string(subfunction_number++) + ".png";
                 ngraph::pass::Manager pm;
-                pm.register_pass<ngraph::pass::VisualizeTree>(subfunction_name);
+                pm.register_pass<ngraph::pass::VisualizeTree>(subfunction_name, node_modifiers);
                 pm.run_passes(sub_function);
             }
             auto backend = m_backend_list[placement];

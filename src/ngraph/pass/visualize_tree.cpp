@@ -65,8 +65,9 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<ngraph::Function>>& fu
     return false;
 }
 
-pass::VisualizeTree::VisualizeTree(const string& file_name)
+pass::VisualizeTree::VisualizeTree(const string& file_name, node_modifiers_t nm)
     : m_name{file_name}
+    , m_node_modifiers{nm}
 {
 }
 
@@ -83,52 +84,67 @@ std::string pass::VisualizeTree::add_attributes(shared_ptr<Node> node)
 
 std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
 {
-    stringstream ss;
+    vector<string> attributes;
     if (node->is_parameter() || node->is_output())
     {
-        ss << "    " << node->get_name() << " [shape=box ";
+        attributes.push_back("shape=box");
         if (node->is_parameter())
         {
-            ss << "color=blue ";
+            attributes.push_back("color=blue");
         }
         if (node->is_output())
         {
-            ss << "style=filled fillcolor=pink ";
+            attributes.push_back("style=filled");
+            attributes.push_back("fillcolor=pink");
         }
     }
     else
     {
-        ss << "    " << node->get_name() << " [shape=ellipse color=black";
+        attributes.push_back("shape=ellipse");
+        attributes.push_back("color=black");
     }
 
-    ss << " label=\"" << node->get_name();
-
-    static const char* nvtos = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
-    if (nvtos != nullptr)
+    // Construct the label attribute
     {
-        // The shapes of the Outputs of a multi-output op
-        // will be printed for its corresponding `GetOutputElement`s
-        ss << " " << (node->get_outputs().size() != 1 ? std::string("[skipped]")
-                                                      : vector_to_string(node->get_shape()));
-    }
+        stringstream label;
+        label << "label=\"" << node->get_name();
 
-    static const char* nvtot = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
-    if (nvtot != nullptr)
-    {
-        // The types of the Outputs of a multi-output op
-        // will be printed for its corresponding `GetOutputElement`s
-        ss << " " << ((node->get_outputs().size() != 1) ? std::string("[skipped]")
+        static const char* nvtos = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
+        if (nvtos != nullptr)
+        {
+            // The shapes of the Outputs of a multi-output op
+            // will be printed for its corresponding `GetOutputElement`s
+            label << " " << (node->get_outputs().size() != 1 ? std::string("[skipped]")
+                                                             : vector_to_string(node->get_shape()));
+        }
+
+        static const char* nvtot = std::getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
+        if (nvtot != nullptr)
+        {
+            // The types of the Outputs of a multi-output op
+            // will be printed for its corresponding `GetOutputElement`s
+            label << " "
+                  << ((node->get_outputs().size() != 1) ? std::string("[skipped]")
                                                         : node->get_element_type().c_type_string());
+        }
+
+        const Node& n = *node;
+        auto eh = m_ops_to_details.find(TI(n));
+        if (eh != m_ops_to_details.end())
+        {
+            eh->second(n, label);
+        }
+        label << "\"";
+        attributes.push_back(label.str());
     }
 
-    const Node& n = *node;
-    auto eh = m_ops_to_details.find(TI(n));
-    if (eh != m_ops_to_details.end())
+    if (m_node_modifiers)
     {
-        eh->second(n, ss);
+        m_node_modifiers(*node, attributes);
     }
 
-    ss << " \"]\n";
+    stringstream ss;
+    ss << "    " << node->get_name() << " [" << join(attributes, " ") << "]\n";
 
     return ss.str();
 }
