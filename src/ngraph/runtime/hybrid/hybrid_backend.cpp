@@ -60,9 +60,10 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         ngraph::pass::Manager pass_manager;
         pass_manager.register_pass<runtime::hybrid::pass::AssignPlacement>(m_backend_list);
         pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
-#ifdef GPUH_DEBUG
-        pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png");
-#endif
+        if (m_debug_enabled)
+        {
+            pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png");
+        }
         pass_manager.run_passes(instance.m_function);
 
         // Split function to sub_functions
@@ -71,9 +72,17 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         m_function_map.insert({func, instance});
 
         // Compile subfunctions in corresponding backends
+        size_t subfunction_number = 0;
         for (shared_ptr<Function>& sub_function : instance.m_sub_functions)
         {
             size_t placement = runtime::hybrid::get_colocated_function_placement(sub_function);
+            if (m_debug_enabled)
+            {
+                string subfunction_name = "subfunction_" + to_string(subfunction_number++) + ".png";
+                ngraph::pass::Manager pm;
+                pm.register_pass<ngraph::pass::VisualizeTree>(subfunction_name);
+                pm.run_passes(sub_function);
+            }
             auto backend = m_backend_list[placement];
             backend->compile(sub_function);
 

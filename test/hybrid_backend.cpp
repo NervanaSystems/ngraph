@@ -55,7 +55,8 @@ TEST(HYBRID, abc)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
 
-    auto backend = runtime::Backend::create("H1");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("H1");
+    static_pointer_cast<runtime::hybrid::HybridBackend>(backend)->set_debug_enabled(true);
 
     // Create some tensors for input/output
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
@@ -71,14 +72,4 @@ TEST(HYBRID, abc)
     backend->call_with_validate(handle, {result}, {a, b, c});
     EXPECT_EQ(read_vector<float>(result),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
-
-    handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {b, a, c});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
-
-    handle = backend->compile(f);
-    backend->call_with_validate(handle, {result}, {a, c, b});
-    EXPECT_EQ(read_vector<float>(result),
-              (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector());
 }
