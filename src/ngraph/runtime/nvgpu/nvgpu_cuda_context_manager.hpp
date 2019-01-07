@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
             class CudaContextManager
             {

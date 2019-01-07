@@ -23,35 +23,35 @@
 #include <unordered_map>
 #include <vector>
 
-#include "ngraph/runtime/gpu/gpu_host_parameters.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_host_parameters.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
             template <typename T>
             struct has_const_iterator;
             template <typename T>
             struct is_container;
 
-            class GPUKernelArgs
+            class NVKernelArgs
             {
             public:
-                GPUKernelArgs(const std::shared_ptr<GPUHostParameters>& params);
-                GPUKernelArgs(const GPUKernelArgs& args);
+                NVKernelArgs(const std::shared_ptr<NVHostParameters>& params);
+                NVKernelArgs(const NVKernelArgs& args);
 
                 //
                 // Add a placeholder parameter for a tensor pointer which will be resolved at runtime.
                 //
-                GPUKernelArgs& add_placeholder(const std::string& type, const std::string& name);
+                NVKernelArgs& add_placeholder(const std::string& type, const std::string& name);
 
                 //
                 // Add a POD argument to the kernel signature and argument list.
                 //
                 template <typename T>
-                typename std::enable_if<!is_container<T>::value, GPUKernelArgs&>::type
+                typename std::enable_if<!is_container<T>::value, NVKernelArgs&>::type
                     add(const std::string& name, const T& arg)
                 {
                     return add_argument(name, arg);
@@ -62,7 +62,7 @@ namespace ngraph
                 // and adding each individual arg as kernel register arguments.
                 //
                 template <typename T>
-                typename std::enable_if<is_container<T>::value, GPUKernelArgs&>::type
+                typename std::enable_if<is_container<T>::value, NVKernelArgs&>::type
                     add(const std::string& name, const T& arg)
                 {
                     return add_arguments(name, arg);
@@ -75,7 +75,7 @@ namespace ngraph
                 //
                 // Replace placeholder argument with specifed address.
                 //
-                GPUKernelArgs& resolve_placeholder(size_t arg_num, void* address);
+                NVKernelArgs& resolve_placeholder(size_t arg_num, void* address);
 
                 //
                 // Retrieve the kernel parameter signature given the added kernel arguments.
@@ -88,7 +88,7 @@ namespace ngraph
                 // and add its signature to the kernel input signature.
                 //
                 template <typename T>
-                GPUKernelArgs& add_argument(const std::string& name, const T& arg)
+                NVKernelArgs& add_argument(const std::string& name, const T& arg)
                 {
                     validate();
                     void* host_arg = m_host_parameters->cache(arg);
@@ -102,7 +102,7 @@ namespace ngraph
                 // Same as above for a container type T.
                 //
                 template <typename T>
-                GPUKernelArgs& add_arguments(const std::string& name, const T& args)
+                NVKernelArgs& add_arguments(const std::string& name, const T& args)
                 {
                     validate();
 
@@ -126,7 +126,7 @@ namespace ngraph
                 std::vector<void*> m_argument_list;
                 std::vector<bool> m_placeholder_positions;
                 std::stringstream m_input_signature;
-                std::shared_ptr<GPUHostParameters> m_host_parameters;
+                std::shared_ptr<NVHostParameters> m_host_parameters;
                 static const std::unordered_map<std::type_index, std::string> type_names;
             };
 

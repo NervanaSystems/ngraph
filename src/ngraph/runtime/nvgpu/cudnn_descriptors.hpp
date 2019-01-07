@@ -20,14 +20,14 @@
 
 #include <cudnn.h>
 
-#include "ngraph/runtime/gpu/cuda_error_check.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/nvgpu/cuda_error_check.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_util.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
             template <typename T>
             struct cudnn_descriptor;

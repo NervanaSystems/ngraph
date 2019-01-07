@@ -30,7 +30,7 @@
 namespace ngraph
 {
     class Shape;
-    /// \brief Shape for a tensor resident on GPU.
+    /// \brief Shape for a tensor resident on NV.
     class NVShape : public std::vector<uint32_t>
     {
     public:

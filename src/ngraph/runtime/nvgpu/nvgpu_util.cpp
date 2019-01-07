@@ -23,14 +23,14 @@
 #include <stdio.h>
 #include <string>
 
-#include "ngraph/runtime/gpu/cuda_error_check.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/nvgpu/cuda_error_check.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_util.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-void runtime::gpu::print_gpu_f32_tensor(const void* p, size_t element_count, size_t element_size)
+void runtime::nvgpu::print_nvgpu_f32_tensor(const void* p, size_t element_count, size_t element_size)
 {
     std::vector<float> local(element_count);
     size_t size_in_bytes = element_size * element_count;
@@ -38,23 +38,23 @@ void runtime::gpu::print_gpu_f32_tensor(const void* p, size_t element_count, siz
     std::cout << "{" << join(local) << "}" << std::endl;
 }
 
-void runtime::gpu::check_cuda_errors(CUresult err)
+void runtime::nvgpu::check_cuda_errors(CUresult err)
 {
     assert(err == CUDA_SUCCESS);
 }
 
-void* runtime::gpu::create_gpu_buffer(size_t buffer_size, const void* data)
+void* runtime::nvgpu::create_nvgpu_buffer(size_t buffer_size, const void* data)
 {
     void* allocated_buffer_pool;
     CUDA_RT_SAFE_CALL(cudaMalloc(static_cast<void**>(&allocated_buffer_pool), buffer_size));
     if (data)
     {
-        runtime::gpu::cuda_memcpyHtD(allocated_buffer_pool, data, buffer_size);
+        runtime::nvgpu::cuda_memcpyHtD(allocated_buffer_pool, data, buffer_size);
     }
     return allocated_buffer_pool;
 }
 
-void runtime::gpu::free_gpu_buffer(void* buffer)
+void runtime::nvgpu::free_nvgpu_buffer(void* buffer)
 {
     if (buffer)
     {
@@ -62,22 +62,22 @@ void runtime::gpu::free_gpu_buffer(void* buffer)
     }
 }
 
-void runtime::gpu::cuda_memcpyDtD(void* dst, const void* src, size_t buffer_size)
+void runtime::nvgpu::cuda_memcpyDtD(void* dst, const void* src, size_t buffer_size)
 {
     CUDA_RT_SAFE_CALL(cudaMemcpy(dst, src, buffer_size, cudaMemcpyDeviceToDevice));
 }
 
-void runtime::gpu::cuda_memcpyHtD(void* dst, const void* src, size_t buffer_size)
+void runtime::nvgpu::cuda_memcpyHtD(void* dst, const void* src, size_t buffer_size)
 {
     CUDA_RT_SAFE_CALL(cudaMemcpy(dst, src, buffer_size, cudaMemcpyHostToDevice));
 }
 
-void runtime::gpu::cuda_memcpyDtH(void* dst, const void* src, size_t buffer_size)
+void runtime::nvgpu::cuda_memcpyDtH(void* dst, const void* src, size_t buffer_size)
 {
     CUDA_RT_SAFE_CALL(cudaMemcpy(dst, src, buffer_size, cudaMemcpyDeviceToHost));
 }
 
-void runtime::gpu::cuda_memset(void* dst, int value, size_t buffer_size)
+void runtime::nvgpu::cuda_memset(void* dst, int value, size_t buffer_size)
 {
     CUDA_RT_SAFE_CALL(cudaMemset(dst, value, buffer_size));
 }
@@ -177,23 +177,23 @@ namespace
     }
 }
 
-std::pair<uint64_t, uint64_t> runtime::gpu::idiv_magic_u32(uint64_t max_numerator, uint64_t divisor)
+std::pair<uint64_t, uint64_t> runtime::nvgpu::idiv_magic_u32(uint64_t max_numerator, uint64_t divisor)
 {
     return magicU32(max_numerator, divisor);
 }
 
-std::pair<uint64_t, uint64_t> runtime::gpu::idiv_magic_u64(uint64_t divisor)
+std::pair<uint64_t, uint64_t> runtime::nvgpu::idiv_magic_u64(uint64_t divisor)
 {
     return magicU64(divisor);
 }
 
-uint32_t runtime::gpu::idiv_ceil(int n, int d)
+uint32_t runtime::nvgpu::idiv_ceil(int n, int d)
 {
     // compiler fused modulo and division
     return n / d + (n % d > 0);
 }
 
-void runtime::gpu::StopWatch::start()
+void runtime::nvgpu::StopWatch::start()
 {
     if (m_active == false)
     {
@@ -206,7 +206,7 @@ void runtime::gpu::StopWatch::start()
     }
 }
 
-void runtime::gpu::StopWatch::stop()
+void runtime::nvgpu::StopWatch::stop()
 {
     if (m_active == true)
     {
@@ -217,27 +217,27 @@ void runtime::gpu::StopWatch::stop()
         m_active = false;
     }
 }
-size_t runtime::gpu::StopWatch::get_call_count()
+size_t runtime::nvgpu::StopWatch::get_call_count()
 {
     return m_total_count;
 }
 
-size_t runtime::gpu::StopWatch::get_total_seconds()
+size_t runtime::nvgpu::StopWatch::get_total_seconds()
 {
-    return runtime::gpu::StopWatch::get_total_nanoseconds() / 1e9;
+    return runtime::nvgpu::StopWatch::get_total_nanoseconds() / 1e9;
 }
 
-size_t runtime::gpu::StopWatch::get_total_milliseconds()
+size_t runtime::nvgpu::StopWatch::get_total_milliseconds()
 {
-    return runtime::gpu::StopWatch::get_total_nanoseconds() / 1e6;
+    return runtime::nvgpu::StopWatch::get_total_nanoseconds() / 1e6;
 }
 
-size_t runtime::gpu::StopWatch::get_total_microseconds()
+size_t runtime::nvgpu::StopWatch::get_total_microseconds()
 {
-    return runtime::gpu::StopWatch::get_total_nanoseconds() / 1e3;
+    return runtime::nvgpu::StopWatch::get_total_nanoseconds() / 1e3;
 }
 
-size_t runtime::gpu::StopWatch::get_total_nanoseconds()
+size_t runtime::nvgpu::StopWatch::get_total_nanoseconds()
 {
     // only need to sync the last stop.
     cudaEventSynchronize(stops.back());

@@ -29,39 +29,39 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
-#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_compiled_function.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_primitive_emitter.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            class GPU_Emitter;
-            class GPURuntimeConstructor;
-            struct GPURuntimeContext;
+            class NV_Emitter;
+            class NVRuntimeConstructor;
+            struct NVRuntimeContext;
 
-            class GPUInternalFunction : public GPUCompiledFunction
+            class NVInternalFunction : public NVCompiledFunction
             {
             public:
-                GPUInternalFunction(
+                NVInternalFunction(
                     const std::shared_ptr<ngraph::Function>& function,
-                    const std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
-                virtual ~GPUInternalFunction();
+                    const std::shared_ptr<NV_Backend::BackendContext>& shared_context);
+                virtual ~NVInternalFunction();
 
                 virtual std::string
                     add_to_runtime(size_t primitive_index,
                                    const std::string& function_name,
-                                   const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                   const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
+                                   const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
+                                   const std::vector<runtime::nvgpu::NVTensorWrapper>& out) override;
                 virtual std::string add_call_to_runtime(
                     const std::string& caller,
                     const std::string& callee,
-                    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                    const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
+                    const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
+                    const std::vector<runtime::nvgpu::NVTensorWrapper>& out) override;
                 virtual void get_performance_data(
                     std::vector<runtime::PerformanceCounter>& rc) const override;
 
@@ -75,8 +75,8 @@ namespace ngraph
                 std::string emit_op(EMIT_ARGS);
                 std::string
                     compose_manifest(size_t primitive_index,
-                                     const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                     const std::vector<runtime::gpu::GPUTensorWrapper>& out) const;
+                                     const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
+                                     const std::vector<runtime::nvgpu::NVTensorWrapper>& out) const;
                 void save_manifest_to_disk() const;
 
                 // For non-destructive passthrough kernels, propagate function
@@ -89,9 +89,9 @@ namespace ngraph
                                                        const std::string& output_name) override;
                 std::unordered_map<
                     std::string,
-                    std::tuple<runtime::gpu::GPUTensorWrapper::TensorType, size_t, std::string>>
+                    std::tuple<runtime::nvgpu::NVTensorWrapper::TensorType, size_t, std::string>>
                     m_variable_name_map;
-                std::unique_ptr<GPURuntimeConstructor> m_runtime_constructor;
+                std::unique_ptr<NVRuntimeConstructor> m_runtime_constructor;
                 std::shared_ptr<codegen::CodeWriter> m_trace;
                 codegen::CodeWriter m_manifest;
             };

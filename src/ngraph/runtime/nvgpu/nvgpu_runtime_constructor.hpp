@@ -23,32 +23,32 @@
 #include <vector>
 
 #include "ngraph/function.hpp"
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_call_frame.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_call_frame.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            class GPUCallFrame;
-            class GPURuntimeConstructor
+            class NVCallFrame;
+            class NVRuntimeConstructor
             {
             public:
                 using op_runtime_t =
-                    std::function<void(GPUCallFrame& call_frame, GPURuntimeContext* ctx)>;
+                    std::function<void(NVCallFrame& call_frame, NVRuntimeContext* ctx)>;
                 using op_order_t =
                     std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>;
 
-                GPURuntimeConstructor(const op_order_t& ordered_ops);
+                NVRuntimeConstructor(const op_order_t& ordered_ops);
                 void add(const std::string& name, const op_runtime_t& step);
                 void add_call(const std::string& caller,
                               const std::string& callee,
-                              const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                              const std::vector<runtime::gpu::GPUTensorWrapper>& out);
-                EntryPoint build(const std::string& function, GPUCallFrame& call_frame);
+                              const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
+                              const std::vector<runtime::nvgpu::NVTensorWrapper>& out);
+                EntryPoint build(const std::string& function, NVCallFrame& call_frame);
 
             private:
                 std::unordered_map<std::string, std::vector<op_runtime_t>> m_runtime;

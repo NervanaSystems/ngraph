@@ -29,9 +29,9 @@ namespace ngraph
     }
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            class GPUKernelArgs;
+            class NVKernelArgs;
             class CudaKernelBuilder
             {
             public:
@@ -43,16 +43,16 @@ namespace ngraph
                 static void get_memset_op(codegen::CodeWriter& writer,
                                           const std::string& name,
                                           const std::string& data_type,
-                                          runtime::gpu::GPUKernelArgs& args);
+                                          runtime::nvgpu::NVKernelArgs& args);
 
                 static void get_cudnn_bn_inv_var_op(codegen::CodeWriter& writer,
                                                     const std::string& name,
-                                                    runtime::gpu::GPUKernelArgs& args);
+                                                    runtime::nvgpu::NVKernelArgs& args);
 
                 static void get_broadcast_op(codegen::CodeWriter& writer,
                                              const std::string& name,
                                              const std::string& data_type,
-                                             GPUKernelArgs& args,
+                                             NVKernelArgs& args,
                                              const size_t rank);
 
                 static void get_concat_op(codegen::CodeWriter& writer,
@@ -66,20 +66,20 @@ namespace ngraph
 
                 static void get_reshape_op(codegen::CodeWriter& writer,
                                            const std::string& name,
-                                           runtime::gpu::GPUKernelArgs& args,
+                                           runtime::nvgpu::NVKernelArgs& args,
                                            const std::array<std::string, 2>& data_types,
                                            size_t rank);
 
                 static void get_reshape_op_3d(codegen::CodeWriter& writer,
                                               const std::string& name,
-                                              runtime::gpu::GPUKernelArgs& args,
+                                              runtime::nvgpu::NVKernelArgs& args,
                                               const std::string& data_type,
                                               const std::vector<uint32_t>& order,
                                               const std::vector<uint32_t>& block_size);
 
                 static void get_reshape_op_2d(codegen::CodeWriter& writer,
                                               const std::string& name,
-                                              runtime::gpu::GPUKernelArgs& args,
+                                              runtime::nvgpu::NVKernelArgs& args,
                                               const std::string& data_type,
                                               uint32_t block_size);
 
@@ -89,7 +89,7 @@ namespace ngraph
                 /// not support 0 sized input
                 static void get_reduce_to_nd_op(codegen::CodeWriter& writer,
                                                 const std::string& name,
-                                                runtime::gpu::GPUKernelArgs& args,
+                                                runtime::nvgpu::NVKernelArgs& args,
                                                 const std::vector<std::string>& data_types,
                                                 const std::string& reduce_op,
                                                 size_t non_reduce_rank,
@@ -103,7 +103,7 @@ namespace ngraph
                 /// not support 0 sized input
                 static void get_reduce_to_scalar_acc_op(codegen::CodeWriter& writer,
                                                         const std::string& name,
-                                                        runtime::gpu::GPUKernelArgs& args,
+                                                        runtime::nvgpu::NVKernelArgs& args,
                                                         const std::vector<std::string>& data_types,
                                                         const std::string& reduce_op);
 
@@ -113,7 +113,7 @@ namespace ngraph
                 /// not support 0 sized input
                 static void get_reduce_to_scalar_op(codegen::CodeWriter& writer,
                                                     const std::string& name,
-                                                    runtime::gpu::GPUKernelArgs& args,
+                                                    runtime::nvgpu::NVKernelArgs& args,
                                                     const std::vector<std::string>& data_types,
                                                     const std::string& reduce_op,
                                                     uint32_t block_size_x);
@@ -122,7 +122,7 @@ namespace ngraph
                                      const std::string& name,
                                      const std::vector<std::string>& dtypes,
                                      bool compute_max,
-                                     runtime::gpu::GPUKernelArgs& args,
+                                     runtime::nvgpu::NVKernelArgs& args,
                                      bool use_malloc);
 
                 static void get_slice_op(codegen::CodeWriter& writer,
@@ -136,7 +136,7 @@ namespace ngraph
 
                 static void get_replace_slice_op(codegen::CodeWriter& writer,
                                                  const std::string& name,
-                                                 GPUKernelArgs& args,
+                                                 NVKernelArgs& args,
                                                  const size_t rank);
 
                 static void get_reduce_window_op(codegen::CodeWriter& writer,
@@ -159,17 +159,17 @@ namespace ngraph
 
                 static void get_pad_op(codegen::CodeWriter& writer,
                                        const std::string& name,
-                                       GPUKernelArgs& args,
+                                       NVKernelArgs& args,
                                        size_t rank);
 
                 static void get_pad_fill_op(codegen::CodeWriter& writer,
                                             const std::string& name,
-                                            GPUKernelArgs& args,
+                                            NVKernelArgs& args,
                                             size_t rank);
 
                 static void get_ew_collective_op(codegen::CodeWriter& writer,
                                                  const std::string& name,
-                                                 GPUKernelArgs& args,
+                                                 NVKernelArgs& args,
                                                  const std::string& op,
                                                  const std::string& reduce_op,
                                                  const std::vector<std::string>& data_types,
@@ -193,7 +193,7 @@ namespace ngraph
                 static void get_convolution_forward(codegen::CodeWriter& writer,
                                                     const std::string& name,
                                                     const std::array<std::string, 3>& data_types,
-                                                    GPUKernelArgs& args,
+                                                    NVKernelArgs& args,
                                                     int N,
                                                     int K,
                                                     int rank,
@@ -203,14 +203,14 @@ namespace ngraph
 
                 static void get_softmax_op(codegen::CodeWriter& writer,
                                            const std::string& name,
-                                           runtime::gpu::GPUKernelArgs& args,
+                                           runtime::nvgpu::NVKernelArgs& args,
                                            const std::vector<std::string>& data_types,
                                            size_t out_rank,
                                            size_t reduce_rank);
 
                 static void get_softmax_block_reduce_op(codegen::CodeWriter& writer,
                                                         const std::string& name,
-                                                        runtime::gpu::GPUKernelArgs& args,
+                                                        runtime::nvgpu::NVKernelArgs& args,
                                                         const std::vector<std::string>& data_types,
                                                         size_t non_reduce_rank,
                                                         size_t reduce_rank,

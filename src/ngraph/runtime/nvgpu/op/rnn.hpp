@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace op
     {
-        namespace gpu
+        namespace nvgpu
         {
             // This is RNN op, which is formed by the fusion of multiple RNN cells ( LSTM/ GRU/ vanilla RNN)
             // across multiple time slices

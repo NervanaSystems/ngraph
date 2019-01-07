@@ -18,14 +18,14 @@
 #include <iostream>
 #include <string>
 
-#include "ngraph/runtime/gpu/cuda_error_check.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_function_builder.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/nvgpu/cuda_error_check.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_cuda_context_manager.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_cuda_function_builder.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_util.hpp"
 
 using namespace ngraph;
 
-std::shared_ptr<CUfunction> runtime::gpu::CudaFunctionBuilder::get(const std::string& name,
+std::shared_ptr<CUfunction> runtime::nvgpu::CudaFunctionBuilder::get(const std::string& name,
                                                                    const std::string& kernel,
                                                                    int number_of_options,
                                                                    const char** options)

@@ -22,13 +22,13 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            struct GPURuntimeContext;
+            struct NVRuntimeContext;
 
             namespace cudnn_utils
             {
-                extern "C" void cudnn_invoke_primitive(GPURuntimeContext* ctx,
+                extern "C" void cudnn_invoke_primitive(NVRuntimeContext* ctx,
                                                        size_t primitive_index,
                                                        void** args,
                                                        void** result);

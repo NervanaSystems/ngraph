@@ -14,11 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/gpu/gpu_runtime_constructor.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_runtime_constructor.hpp"
 
 using namespace ngraph;
 
-runtime::gpu::GPURuntimeConstructor::GPURuntimeConstructor(const op_order_t& ordered_ops)
+runtime::nvgpu::NVRuntimeConstructor::NVRuntimeConstructor(const op_order_t& ordered_ops)
 {
     for (auto const& ops : ordered_ops)
     {
@@ -26,24 +26,24 @@ runtime::gpu::GPURuntimeConstructor::GPURuntimeConstructor(const op_order_t& ord
     }
 }
 
-void runtime::gpu::GPURuntimeConstructor::add(const std::string& name, const op_runtime_t& step)
+void runtime::nvgpu::NVRuntimeConstructor::add(const std::string& name, const op_runtime_t& step)
 {
     m_runtime[name].push_back(step);
 }
 
-void runtime::gpu::GPURuntimeConstructor::add_call(
+void runtime::nvgpu::NVRuntimeConstructor::add_call(
     const std::string& caller,
     const std::string& callee,
-    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-    const std::vector<runtime::gpu::GPUTensorWrapper>& out)
+    const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
+    const std::vector<runtime::nvgpu::NVTensorWrapper>& out)
 {
     auto& runtime = m_runtime[callee];
-    auto call = [args, out, &runtime](GPUCallFrame& caller_frame, GPURuntimeContext* ctx) mutable {
+    auto call = [args, out, &runtime](NVCallFrame& caller_frame, NVRuntimeContext* ctx) mutable {
         // extract memory pointers from the callers stack
         auto inputs = caller_frame.get_tensor_io(args);
         auto outputs = caller_frame.get_tensor_io(out);
         // create a new call frame for the nested function
-        GPUCallFrame callee_frame = caller_frame;
+        NVCallFrame callee_frame = caller_frame;
         // resolve the inputs of the new call frame
         callee_frame.resolve_inputs(inputs.data(), inputs.size());
         callee_frame.resolve_outputs(outputs.data(), outputs.size());
@@ -55,11 +55,11 @@ void runtime::gpu::GPURuntimeConstructor::add_call(
     add(caller, call);
 }
 
-runtime::gpu::EntryPoint runtime::gpu::GPURuntimeConstructor::build(const std::string& function,
-                                                                    GPUCallFrame& call_frame)
+runtime::nvgpu::EntryPoint runtime::nvgpu::NVRuntimeConstructor::build(const std::string& function,
+                                                                    NVCallFrame& call_frame)
 {
     auto& runtime = m_runtime.at(function);
-    return [call_frame, &runtime](void** inputs, void** outputs, GPURuntimeContext* ctx) mutable {
+    return [call_frame, &runtime](void** inputs, void** outputs, NVRuntimeContext* ctx) mutable {
         call_frame.resolve_inputs(inputs);
         call_frame.resolve_outputs(outputs);
         for (auto const& step : runtime)

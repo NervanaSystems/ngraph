@@ -24,12 +24,12 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            void print_gpu_f32_tensor(const void* p, size_t element_count, size_t element_size);
+            void print_nvgpu_f32_tensor(const void* p, size_t element_count, size_t element_size);
             void check_cuda_errors(CUresult err);
-            void* create_gpu_buffer(size_t buffer_size, const void* data = nullptr);
-            void free_gpu_buffer(void* buffer);
+            void* create_nvgpu_buffer(size_t buffer_size, const void* data = nullptr);
+            void free_nvgpu_buffer(void* buffer);
             void cuda_memcpyDtD(void* dst, const void* src, size_t buffer_size);
             void cuda_memcpyHtD(void* dst, const void* src, size_t buffer_size);
             void cuda_memcpyDtH(void* dst, const void* src, size_t buffer_size);
@@ -47,7 +47,7 @@ namespace ngraph
             // This is commented out because it increases the compile time.
             // It should be moved to a debug header.
             // template <typename T>
-            // void print_gpu_tensor(const void* p, size_t element_count)
+            // void print_nvgpu_tensor(const void* p, size_t element_count)
             // {
             //     std::vector<T> local(element_count);
             //     size_t size_in_bytes = sizeof(T) * element_count;

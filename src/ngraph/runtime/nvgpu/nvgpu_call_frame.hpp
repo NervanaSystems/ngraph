@@ -20,27 +20,27 @@
 #include <memory>
 #include <unordered_map>
 
-#include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_compiled_function.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            class GPUCallFrame
+            class NVCallFrame
             {
             public:
-                using TensorType = GPUTensorWrapper::TensorType;
+                using TensorType = NVTensorWrapper::TensorType;
 
-                GPUCallFrame(const size_t& num_inputs, const size_t& num_outputs);
+                NVCallFrame(const size_t& num_inputs, const size_t& num_outputs);
                 void resolve_reservations(
-                    const GPUCompiledFunction* compiled_function,
+                    const NVCompiledFunction* compiled_function,
                     const std::unordered_map<std::string, size_t>& memory_reservations);
                 void resolve_inputs(void** inputs, size_t num_inputs = 0);
                 void resolve_outputs(void** outputs, size_t num_outputs = 0);
-                std::vector<void*> get_tensor_io(const std::vector<GPUTensorWrapper>& tensors);
+                std::vector<void*> get_tensor_io(const std::vector<NVTensorWrapper>& tensors);
 
             private:
                 void* get_pointer(const TensorType& type,

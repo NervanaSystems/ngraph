@@ -21,7 +21,7 @@
 #include <typeinfo>
 #include <unordered_set>
 
-#include "gpu_rnn_fusion.hpp"
+#include "nvgpu_rnn_fusion.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
@@ -45,7 +45,7 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
-#include "ngraph/runtime/gpu/op/rnn.hpp"
+#include "ngraph/runtime/nvgpu/op/rnn.hpp"
 
 #define RETURN_IF_FALSE(cond, message)                                                             \
     if (!(cond))                                                                                   \
@@ -55,7 +55,7 @@
     }
 
 using namespace ngraph;
-void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
+void ngraph::runtime::nvgpu::pass::LSTMFusion::construct_sigmoid()
 {
     //construct variance
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
@@ -126,7 +126,7 @@ static std::shared_ptr<Node> compute_lstm_params(const std::shared_ptr<Node>& w_
     return std::make_shared<op::Concat>(flat_params, 0);
 }
 
-void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
+void ngraph::runtime::nvgpu::pass::LSTMFusion::construct_lstm_fprop()
 {
     auto input_xt = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
     auto weights_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
@@ -213,7 +213,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
 
         // Determine which is ht_1 and xt. but if both xt and ht_1 have the same shape we need to capture this
         // reliably in the RNN fusion.
-        std::shared_ptr<op::gpu::Rnn> lstm = nullptr;
+        std::shared_ptr<op::nvgpu::Rnn> lstm = nullptr;
         bool intermediate_lstm = false;
         if (std::dynamic_pointer_cast<op::GetOutputElement>(pattern_map[ct_1]))
         {
@@ -230,7 +230,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                               pattern_map[weights_h2h],
                                               pattern_map[bias_i2h],
                                               pattern_map[bias_h2h]);
-            lstm = std::make_shared<op::gpu::Rnn>(pattern_map[input_xt],
+            lstm = std::make_shared<op::nvgpu::Rnn>(pattern_map[input_xt],
                                                   pattern_map[hidden_ht],
                                                   params,
                                                   pattern_map[ct_1],
@@ -251,7 +251,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                               pattern_map[weights_i2h],
                                               pattern_map[bias_h2h],
                                               pattern_map[bias_i2h]);
-            lstm = std::make_shared<op::gpu::Rnn>(pattern_map[hidden_ht],
+            lstm = std::make_shared<op::nvgpu::Rnn>(pattern_map[hidden_ht],
                                                   pattern_map[input_xt],
                                                   params,
                                                   pattern_map[ct_1],
@@ -276,7 +276,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                               pattern_map[weights_h2h],
                                               pattern_map[bias_i2h],
                                               pattern_map[bias_h2h]);
-            lstm = std::make_shared<op::gpu::Rnn>(pattern_map[input_xt],
+            lstm = std::make_shared<op::nvgpu::Rnn>(pattern_map[input_xt],
                                                   pattern_map[hidden_ht],
                                                   params,
                                                   pattern_map[ct_1],
@@ -297,7 +297,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                               pattern_map[weights_i2h],
                                               pattern_map[bias_h2h],
                                               pattern_map[bias_i2h]);
-            lstm = std::make_shared<op::gpu::Rnn>(pattern_map[hidden_ht],
+            lstm = std::make_shared<op::nvgpu::Rnn>(pattern_map[hidden_ht],
                                                   pattern_map[input_xt],
                                                   params,
                                                   pattern_map[ct_1],
@@ -371,7 +371,7 @@ static std::shared_ptr<ngraph::Node>
     }
 }
 
-void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
+void ngraph::runtime::nvgpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 {
     auto xt = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
     auto ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
@@ -379,7 +379,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         element::f32, Shape{400 * 100 + 400 * 100 + 400 + 400});
     auto rpattern_ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
 
-    auto lstm = std::make_shared<op::gpu::Rnn>(xt,
+    auto lstm = std::make_shared<op::nvgpu::Rnn>(xt,
                                                ht_1,
                                                params_label,
                                                rpattern_ct_1,
@@ -492,7 +492,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                         "input tensor type and input recurrent state tensor type for RNN op should "
                         "be float32");
 
-        auto rnn = std::make_shared<op::gpu::Rnn>(src_layer,
+        auto rnn = std::make_shared<op::nvgpu::Rnn>(src_layer,
                                                   src_iter,
                                                   params,
                                                   state_iter,
@@ -647,7 +647,7 @@ static std::shared_ptr<Node>
     return std::make_shared<op::Concat>(layer_params, 0);
 }
 
-void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_fusion_fprop()
+void ngraph::runtime::nvgpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_fusion_fprop()
 {
     auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
 
@@ -667,7 +667,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
     size_t ref_rnn_direction = 1;
     size_t ref_num_of_rnn_fused_layer = 1;
 
-    auto ref_rnn_node = std::make_shared<op::gpu::Rnn>(src_slice,
+    auto ref_rnn_node = std::make_shared<op::nvgpu::Rnn>(src_slice,
                                                        src_iter_label,
                                                        params_label,
                                                        state_iter_label,
@@ -720,11 +720,11 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             auto params = compute_multi_layer_rnn_params(params_label, m);
 
             // collect list of rnn ops (layers)
-            std::vector<std::shared_ptr<op::gpu::Rnn>> rnn_nodes;
+            std::vector<std::shared_ptr<op::nvgpu::Rnn>> rnn_nodes;
             for (auto& rnn_goe_input : m.get_bound_nodes_for_pattern(rnn_ht_label))
             {
                 auto rnn_op =
-                    std::dynamic_pointer_cast<op::gpu::Rnn>(rnn_goe_input->get_arguments()[0]);
+                    std::dynamic_pointer_cast<op::nvgpu::Rnn>(rnn_goe_input->get_arguments()[0]);
                 if (rnn_op)
                 {
                     rnn_nodes.push_back(rnn_op);
@@ -752,7 +752,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             NGRAPH_DEBUG << "batch_size: " << batch_size;
             NGRAPH_DEBUG << "feature_size: " << feature_size;
 
-            if (auto src_rnn = std::dynamic_pointer_cast<op::gpu::Rnn>(src_layer))
+            if (auto src_rnn = std::dynamic_pointer_cast<op::nvgpu::Rnn>(src_layer))
             {
                 RETURN_IF_FALSE(
                     src_rnn->get_num_timesteps() == num_time_steps,
@@ -778,7 +778,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                 "RNN param tensor does not consist of normal and recurrent weight and bias tensor "
                 "for each layer");
 
-            auto rnn = std::make_shared<op::gpu::Rnn>(src_layer,
+            auto rnn = std::make_shared<op::nvgpu::Rnn>(src_layer,
                                                       src_iter,
                                                       params,
                                                       state_iter,

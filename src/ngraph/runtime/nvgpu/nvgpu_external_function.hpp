@@ -33,38 +33,38 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
-#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_compiled_function.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_primitive_emitter.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            class GPU_Emitter;
-            struct GPURuntimeContext;
+            class NV_Emitter;
+            struct NVRuntimeContext;
 
-            class GPUExternalFunction : public GPUCompiledFunction
+            class NVExternalFunction : public NVCompiledFunction
             {
             public:
-                GPUExternalFunction(
+                NVExternalFunction(
                     const std::shared_ptr<ngraph::Function>& function,
-                    const std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
-                virtual ~GPUExternalFunction();
+                    const std::shared_ptr<NV_Backend::BackendContext>& shared_context);
+                virtual ~NVExternalFunction();
 
                 virtual std::string
                     add_to_runtime(size_t primitive_index,
                                    const std::string& function_name,
-                                   const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                   const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
+                                   const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
+                                   const std::vector<runtime::nvgpu::NVTensorWrapper>& out) override;
                 virtual std::string add_call_to_runtime(
                     const std::string& caller,
                     const std::string& callee,
-                    const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                    const std::vector<runtime::gpu::GPUTensorWrapper>& out) override;
+                    const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
+                    const std::vector<runtime::nvgpu::NVTensorWrapper>& out) override;
                 virtual void get_performance_data(
                     std::vector<runtime::PerformanceCounter>& rc) const override;
 
@@ -79,7 +79,7 @@ namespace ngraph
                 /// \param arg_indexes a list of indexes into args for which args to include in
                 ///    the output list, so {1, 2} will include args 1 and 2 and skip 0.
                 /// \ return returns a string containing "arg0_name, arg1_name, etc."
-                std::string node_names(const std::vector<runtime::gpu::GPUTensorWrapper>& args,
+                std::string node_names(const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
                                        std::initializer_list<int> arg_indexes = {});
 
                 void emit_header();

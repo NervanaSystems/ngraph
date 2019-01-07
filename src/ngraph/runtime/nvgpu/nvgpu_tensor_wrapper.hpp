@@ -26,16 +26,16 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            class GPUTensorWrapper;
+            class NVTensorWrapper;
             std::ostream& operator<<(std::ostream& out,
-                                     const ngraph::runtime::gpu::GPUTensorWrapper& obj);
+                                     const ngraph::runtime::nvgpu::NVTensorWrapper& obj);
         }
     }
 }
 
-class ngraph::runtime::gpu::GPUTensorWrapper
+class ngraph::runtime::nvgpu::NVTensorWrapper
 {
 public:
     enum TensorType : std::size_t
@@ -46,8 +46,8 @@ public:
         OUTPUT,
         UNKNOWN
     };
-    GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>&, const std::string& alias = "");
-    GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>&,
+    NVTensorWrapper(const std::shared_ptr<descriptor::Tensor>&, const std::string& alias = "");
+    NVTensorWrapper(const std::shared_ptr<descriptor::Tensor>&,
                      TensorType,
                      size_t,
                      const std::string& alias);
@@ -59,8 +59,8 @@ public:
     const std::string& get_name() const;
     const std::string& get_type() const;
     const std::pair<TensorType, size_t>& get_offset() const;
-    friend std::ostream& ngraph::runtime::gpu::
-        operator<<(std::ostream& out, const ngraph::runtime::gpu::GPUTensorWrapper& obj);
+    friend std::ostream& ngraph::runtime::nvgpu::
+        operator<<(std::ostream& out, const ngraph::runtime::nvgpu::NVTensorWrapper& obj);
 
 private:
     std::shared_ptr<descriptor::Tensor> m_tensor;

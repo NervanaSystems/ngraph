@@ -9,7 +9,7 @@ generate_mask
 select_and_scatter_3d_without_overlap
 select_and_scatter_with_overlap
 select_and_scatter_without_overlap
-# custom_mem is not implemented on GPU
+# custom_mem is not implemented on NVGPU
 tensorview_custom_mem
 # integer is not supported by cuDNN on backward pooling
 backwards_maxpool_n4_c1_hw4_2x2_max
@@ -58,7 +58,7 @@ shape_of_vector
 shape_of_matrix
 shape_of_5d
 # zero size axis needs to be implemented
-# differently in gpu_emitter.cpp
+# differently in nvgpu_emitter.cpp
 # these should be re-enabled before
 # merging to master
 product_matrix_rows_zero

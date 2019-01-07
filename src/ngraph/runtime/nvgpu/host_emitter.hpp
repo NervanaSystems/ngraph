@@ -26,13 +26,13 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            struct GPURuntimeContext;
-            class GPUPrimitiveEmitter;
+            struct NVRuntimeContext;
+            class NVPrimitiveEmitter;
             class HostEmitter
             {
-                friend class GPUPrimitiveEmitter;
+                friend class NVPrimitiveEmitter;
 
             public:
                 size_t build_memcpy(const cudaMemcpyKind& kind,
@@ -42,10 +42,10 @@ namespace ngraph
                 size_t build_zero_out(size_t dst, size_t size, bool is_local = false);
 
             private:
-                HostEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx);
+                HostEmitter(NVPrimitiveEmitter* emitter, NVRuntimeContext* ctx);
 
-                GPUPrimitiveEmitter* m_primitive_emitter;
-                GPURuntimeContext* m_ctx;
+                NVPrimitiveEmitter* m_primitive_emitter;
+                NVRuntimeContext* m_ctx;
             };
         }
     }

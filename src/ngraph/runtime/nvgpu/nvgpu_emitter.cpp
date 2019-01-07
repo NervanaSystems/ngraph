@@ -108,15 +108,15 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
-#include "ngraph/runtime/gpu/gpu_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
-#include "ngraph/runtime/gpu/gpu_op_annotations.hpp"
-#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
-#include "ngraph/runtime/gpu/op/batch_norm.hpp"
-#include "ngraph/runtime/gpu/op/rnn.hpp"
-#include "ngraph/runtime/gpu/type_info.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_cuda_kernel_ops.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_emitter.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_kernel_emitters.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_op_annotations.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_primitive_emitter.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_util.hpp"
+#include "ngraph/runtime/nvgpu/op/batch_norm.hpp"
+#include "ngraph/runtime/nvgpu/op/rnn.hpp"
+#include "ngraph/runtime/nvgpu/type_info.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -124,15 +124,15 @@ using namespace ngraph;
 
 #define TI(x) type_index(typeid(x))
 
-function<std::string(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(const Node& node)
+function<std::string(EMIT_ARGS)> runtime::nvgpu::NV_Emitter::get_emit_function(const Node& node)
 {
 // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
 // {<Abs typeid>, function<std::string(EMIT_ARGS)},
 // {<Acos typeid>, function<std::string(EMIT_ARGS)},
 // ...
-#define NGRAPH_OP(a, b) {type_index(typeid(b::a)), runtime::gpu::GPU_Emitter::emit_##a},
+#define NGRAPH_OP(a, b) {type_index(typeid(b::a)), runtime::nvgpu::NV_Emitter::emit_##a},
     static const map<type_index, function<std::string(EMIT_ARGS)>> typeid_map{
-#include "ngraph/runtime/gpu/op/op_tbl.hpp"
+#include "ngraph/runtime/nvgpu/op/op_tbl.hpp"
     };
 #undef NGRAPH_OP
     auto it = typeid_map.find(type_index(typeid(node)));
@@ -144,56 +144,56 @@ function<std::string(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(co
     return it->second;
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Abs(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Abs(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Abs>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Acos(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Acos(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Acos>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Add(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Add(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Add>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_All(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_All(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_AllReduce(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_AllReduce(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_And(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_And(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::And>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Any(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Any(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_ArgMax(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_ArgMax(EMIT_ARGS)
 {
     cudnnReduceTensorOp_t reduce_op = CUDNN_REDUCE_TENSOR_MAX;
-    return runtime::gpu::GPU_Emitter::emit_ArgReduce(
+    return runtime::nvgpu::NV_Emitter::emit_ArgReduce(
         compiled_function, function_name, node, args, out, reduce_op);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_ArgMin(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_ArgMin(EMIT_ARGS)
 {
     cudnnReduceTensorOp_t reduce_op = CUDNN_REDUCE_TENSOR_MIN;
-    return runtime::gpu::GPU_Emitter::emit_ArgReduce(
+    return runtime::nvgpu::NV_Emitter::emit_ArgReduce(
         compiled_function, function_name, node, args, out, reduce_op);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t reduce_op)
+std::string runtime::nvgpu::NV_Emitter::emit_ArgReduce(EMIT_ARGS, cudnnReduceTensorOp_t reduce_op)
 {
     if (out[0].get_size() == 0)
     {
@@ -228,17 +228,17 @@ std::string runtime::gpu::GPU_Emitter::emit_ArgReduce(EMIT_ARGS, cudnnReduceTens
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Asin(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Asin(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Asin>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Atan(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Atan(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Atan>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_AvgPool(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_AvgPool(EMIT_ARGS)
 {
     // assumes NC{d1,d2,...} format
     auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node);
@@ -289,7 +289,7 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPool(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
 {
     auto apb = static_cast<const ngraph::op::AvgPoolBackprop*>(node);
     auto output_shape = out[0].get_shape();
@@ -322,14 +322,14 @@ std::string runtime::gpu::GPU_Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
 }
 
 template <typename T>
-std::string emit_BatchNorm(EMIT_ARGS, runtime::gpu::CUDNNEmitter::Prop direction, bool save_stats)
+std::string emit_BatchNorm(EMIT_ARGS, runtime::nvgpu::CUDNNEmitter::Prop direction, bool save_stats)
 {
     const T* batchnorm = static_cast<const T*>(node);
 
     auto& cudnn_emitter = compiled_function->get_primitive_emitter()->get_cudnn_emitter();
 
     bool global_stats = false;
-    if (direction == runtime::gpu::CUDNNEmitter::Prop::Forward)
+    if (direction == runtime::nvgpu::CUDNNEmitter::Prop::Forward)
     {
         global_stats = (batchnorm->get_arguments().size() == 5);
     }
@@ -346,25 +346,25 @@ std::string emit_BatchNorm(EMIT_ARGS, runtime::gpu::CUDNNEmitter::Prop direction
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_BatchNormInference(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_BatchNormInference(EMIT_ARGS)
 {
     return ::emit_BatchNorm<ngraph::op::BatchNormInference>(
         compiled_function, function_name, node, args, out, CUDNNEmitter::Prop::Inference, false);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_BatchNormTraining(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_BatchNormTraining(EMIT_ARGS)
 {
     return ::emit_BatchNorm<ngraph::op::BatchNormTraining>(
         compiled_function, function_name, node, args, out, CUDNNEmitter::Prop::Forward, false);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_BatchNormTrainingWithStats(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_BatchNormTrainingWithStats(EMIT_ARGS)
 {
-    return ::emit_BatchNorm<ngraph::op::gpu::BatchNormTrainingWithStats>(
+    return ::emit_BatchNorm<ngraph::op::nvgpu::BatchNormTrainingWithStats>(
         compiled_function, function_name, node, args, out, CUDNNEmitter::Prop::Forward, true);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_BatchNormTrainingBackprop(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_BatchNormTrainingBackprop(EMIT_ARGS)
 {
     const ngraph::op::BatchNormTrainingBackprop* batchnorm =
         static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
@@ -376,7 +376,7 @@ std::string runtime::gpu::GPU_Emitter::emit_BatchNormTrainingBackprop(EMIT_ARGS)
     if (annotation)
     {
         auto bnbp_annotation =
-            std::dynamic_pointer_cast<runtime::gpu::BatchNormBackpropAnnotations>(annotation);
+            std::dynamic_pointer_cast<runtime::nvgpu::BatchNormBackpropAnnotations>(annotation);
         if (bnbp_annotation && bnbp_annotation->has_inverted_variance() == false)
         {
             needs_variance_inversion = true;
@@ -394,7 +394,7 @@ std::string runtime::gpu::GPU_Emitter::emit_BatchNormTrainingBackprop(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Broadcast(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Broadcast(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
@@ -422,17 +422,17 @@ std::string runtime::gpu::GPU_Emitter::emit_Broadcast(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_BroadcastLike(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_BroadcastLike(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Ceiling(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Ceiling(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Ceiling>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Concat(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Concat(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
@@ -454,17 +454,17 @@ std::string runtime::gpu::GPU_Emitter::emit_Concat(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Constant(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Constant(EMIT_ARGS)
 {
     return "";
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Convert(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Convert(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Convert>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Convolution(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Convolution(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
@@ -488,7 +488,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Convolution(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_ConvolutionBackpropData(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_ConvolutionBackpropData(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
@@ -509,7 +509,7 @@ std::string runtime::gpu::GPU_Emitter::emit_ConvolutionBackpropData(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_ConvolutionBackpropFilters(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_ConvolutionBackpropFilters(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
@@ -530,27 +530,27 @@ std::string runtime::gpu::GPU_Emitter::emit_ConvolutionBackpropFilters(EMIT_ARGS
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Cos(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Cos(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Cos>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Cosh(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Cosh(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Cosh>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Divide(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Divide(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Divide>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Dequantize(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Dequantize(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Dot(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
@@ -584,39 +584,39 @@ std::string runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_EmbeddingLookup(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_EmbeddingLookup(EMIT_ARGS)
 {
-    throw ngraph_error("EmbeddingLookup is not yet implemented for NVIDIA GPU");
+    throw ngraph_error("EmbeddingLookup is not yet implemented for NVIDIA NV");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Equal(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Equal>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Exp(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Exp(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Exp>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Floor(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Floor(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Floor>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_FunctionCall(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_FunctionCall(EMIT_ARGS)
 {
     auto function_call = static_cast<const ngraph::op::FunctionCall*>(node);
     shared_ptr<Function> function = function_call->get_functions()[0];
     return compiled_function->add_call_to_runtime(function_name, function->get_name(), args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_GenerateMask(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_GenerateMask(EMIT_ARGS)
 {
-    throw ngraph_error("GenerateMask is not supported yet on NVIDIA GPU");
+    throw ngraph_error("GenerateMask is not supported yet on NVIDIA NV");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_GetOutputElement(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_GetOutputElement(EMIT_ARGS)
 {
     auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
     auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
@@ -627,33 +627,33 @@ std::string runtime::gpu::GPU_Emitter::emit_GetOutputElement(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Greater(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Greater(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Greater>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_GreaterEq(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_GreaterEq(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::GreaterEq>(
         compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Less(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Less(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Less>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_LessEq(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_LessEq(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::LessEq>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Log(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Log(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Log>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_LRN(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_LRN(EMIT_ARGS)
 {
     auto lrn = static_cast<const ngraph::op::LRN*>(node);
     auto& input_shape = args[0].get_shape();
@@ -670,7 +670,7 @@ std::string runtime::gpu::GPU_Emitter::emit_LRN(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Max(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Max(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
@@ -687,12 +687,12 @@ std::string runtime::gpu::GPU_Emitter::emit_Max(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Maximum(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Maximum(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Maximum>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_MaxPool(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_MaxPool(EMIT_ARGS)
 {
     // assumes NC{d1,d2,...} format
     auto max_pool = static_cast<const ngraph::op::MaxPool*>(node);
@@ -735,7 +735,7 @@ std::string runtime::gpu::GPU_Emitter::emit_MaxPool(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_MaxPoolBackprop(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_MaxPoolBackprop(EMIT_ARGS)
 {
     auto mpb = static_cast<const ngraph::op::MaxPoolBackprop*>(node);
     auto fp_input_shape = out[0].get_shape();
@@ -765,7 +765,7 @@ std::string runtime::gpu::GPU_Emitter::emit_MaxPoolBackprop(EMIT_ARGS)
     }
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Min(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Min(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
@@ -783,35 +783,35 @@ std::string runtime::gpu::GPU_Emitter::emit_Min(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Minimum(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Minimum(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Minimum>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Multiply(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Multiply(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Multiply>(
         compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Negative(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Negative(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Negative>(
         compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Not(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Not(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Not>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_NotEqual(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_NotEqual(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::NotEqual>(
         compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_OneHot(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_OneHot(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
@@ -833,12 +833,12 @@ std::string runtime::gpu::GPU_Emitter::emit_OneHot(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Or(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Or(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Or>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Pad(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Pad(EMIT_ARGS)
 {
     auto pad = static_cast<const ngraph::op::Pad*>(node);
     auto input_shape = args[0].get_shape();
@@ -859,17 +859,17 @@ std::string runtime::gpu::GPU_Emitter::emit_Pad(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Parameter(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Parameter(EMIT_ARGS)
 {
     return "";
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Power(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Power(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Power>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Product(EMIT_ARGS)
 {
     const ngraph::op::Product* prod = static_cast<const ngraph::op::Product*>(node);
 
@@ -888,12 +888,12 @@ std::string runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Quantize(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Quantize(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Reduce(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
@@ -967,13 +967,13 @@ std::string runtime::gpu::GPU_Emitter::emit_Reduce(EMIT_ARGS)
     return compiled_function->add_to_runtime(emitter_index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_ReduceWindow(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_ReduceWindow(EMIT_ARGS)
 {
-    static const unordered_map<type_index, ngraph::runtime::gpu::OpName> reduce_window_map{
-        {TI(ngraph::op::Add), ngraph::runtime::gpu::OpName::add},
-        {TI(ngraph::op::Multiply), ngraph::runtime::gpu::OpName::multiply},
-        {TI(ngraph::op::Maximum), ngraph::runtime::gpu::OpName::maximum},
-        {TI(ngraph::op::Minimum), ngraph::runtime::gpu::OpName::minimum}};
+    static const unordered_map<type_index, ngraph::runtime::nvgpu::OpName> reduce_window_map{
+        {TI(ngraph::op::Add), ngraph::runtime::nvgpu::OpName::add},
+        {TI(ngraph::op::Multiply), ngraph::runtime::nvgpu::OpName::multiply},
+        {TI(ngraph::op::Maximum), ngraph::runtime::nvgpu::OpName::maximum},
+        {TI(ngraph::op::Minimum), ngraph::runtime::nvgpu::OpName::minimum}};
 
     const ngraph::op::ReduceWindow* reduce_window_op =
         static_cast<const ngraph::op::ReduceWindow*>(node);
@@ -1002,7 +1002,7 @@ std::string runtime::gpu::GPU_Emitter::emit_ReduceWindow(EMIT_ARGS)
         // 2. the op should be in the op_map
         // otherwise, throw an error message
         auto reduction_function_ops = reduce_window_op->get_functions()[0]->get_ops();
-        unordered_map<type_index, ngraph::runtime::gpu::OpName>::const_iterator it =
+        unordered_map<type_index, ngraph::runtime::nvgpu::OpName>::const_iterator it =
             reduce_window_map.end();
         int op_count = 0;
         for (auto op : reduction_function_ops)
@@ -1051,18 +1051,18 @@ std::string runtime::gpu::GPU_Emitter::emit_ReduceWindow(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Relu(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Relu(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Relu>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_ReluBackprop(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_ReluBackprop(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::ReluBackprop>(
         compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_ReplaceSlice(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_ReplaceSlice(EMIT_ARGS)
 {
     // assumes NC{d1,d2,...} format
     auto rep_slice = static_cast<const ngraph::op::ReplaceSlice*>(node);
@@ -1073,7 +1073,7 @@ std::string runtime::gpu::GPU_Emitter::emit_ReplaceSlice(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Reshape(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Reshape(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
@@ -1199,7 +1199,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Reshape(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Result(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Result(EMIT_ARGS)
 {
     if (args[0].get_name() == out[0].get_name())
     {
@@ -1212,7 +1212,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Result(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Reverse(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Reverse(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
@@ -1245,7 +1245,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Reverse(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_ReverseSequence(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_ReverseSequence(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
@@ -1272,62 +1272,62 @@ std::string runtime::gpu::GPU_Emitter::emit_ReverseSequence(EMIT_ARGS)
 }
 
 #if CUDNN_VERSION >= 7200
-std::string runtime::gpu::GPU_Emitter::emit_Rnn(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Rnn(EMIT_ARGS)
 {
-    auto rnn = static_cast<const ngraph::op::gpu::Rnn*>(node);
+    auto rnn = static_cast<const ngraph::op::nvgpu::Rnn*>(node);
     auto& cudnn_emitter = compiled_function->get_primitive_emitter()->get_cudnn_emitter();
     size_t index = cudnn_emitter->build_primitive(rnn);
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 #endif
 
-std::string runtime::gpu::GPU_Emitter::emit_ScalarConstantLike(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_ScalarConstantLike(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Select(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Select(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Select>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_SelectAndScatter(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_SelectAndScatter(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_ShapeOf(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_ShapeOf(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Sigmoid(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Sigmoid(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Sigmoid>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_SigmoidBackprop(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_SigmoidBackprop(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::SigmoidBackprop>(
         compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Sign(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Sign(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Sign>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Sin(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Sin(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Sin>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Sinh(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Sinh(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Sinh>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Slice(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Slice(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
@@ -1359,7 +1359,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Slice(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Softmax(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Softmax(EMIT_ARGS)
 {
     auto softmax = static_cast<const ngraph::op::Softmax*>(node);
 
@@ -1373,28 +1373,28 @@ std::string runtime::gpu::GPU_Emitter::emit_Softmax(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Sqrt(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Sqrt(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Sqrt>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_StopGradient(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_StopGradient(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Subtract(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Subtract(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Subtract>(
         compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Sum(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Sum(EMIT_ARGS)
 {
-    return runtime::gpu::GPU_Emitter::emit_Sum_0(compiled_function, function_name, node, args, out);
+    return runtime::nvgpu::NV_Emitter::emit_Sum_0(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Sum_0(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Sum_0(EMIT_ARGS)
 // emit_Sum_0 uses native cuda kernels to perform Sum reduction. This method
 // is faster than cudnn implementation but in its current state is less precise
 // than cudnn reduce. That is causing tensorflow tests aimed at testing stabilty
@@ -1417,7 +1417,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Sum_0(EMIT_ARGS)
     return compiled_function->add_to_runtime(sum_index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Sum_1(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Sum_1(EMIT_ARGS)
 // emit_Sum_1 uses cudnn to perform Sum reduction. This method, although
 // slower than the native cuda implementation is more precise and fixes the issue with
 // tensorflow test failures
@@ -1456,17 +1456,17 @@ std::string runtime::gpu::GPU_Emitter::emit_Sum_1(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Tan(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Tan(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Tan>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Tanh(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_Tanh(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Tanh>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
+std::string runtime::nvgpu::NV_Emitter::emit_TopK(EMIT_ARGS)
 {
     if (out[0].get_size() == 0)
     {
@@ -1491,7 +1491,7 @@ std::string runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-string runtime::gpu::GPU_Emitter::node_names(const vector<GPUTensorWrapper>& args,
+string runtime::nvgpu::NV_Emitter::node_names(const vector<NVTensorWrapper>& args,
                                              initializer_list<int> arg_indexes)
 {
     vector<string> names;
@@ -1509,7 +1509,7 @@ string runtime::gpu::GPU_Emitter::node_names(const vector<GPUTensorWrapper>& arg
 }
 
 // assumes NC{d1,d2,d3,...} format
-Shape runtime::gpu::get_padded_shape(const Shape& input_shape,
+Shape runtime::nvgpu::get_padded_shape(const Shape& input_shape,
                                      const Shape& padding_below,
                                      const Shape& padding_above,
                                      const Shape& padding_interior)

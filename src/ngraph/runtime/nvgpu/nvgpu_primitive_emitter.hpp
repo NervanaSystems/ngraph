@@ -16,51 +16,51 @@
 
 #pragma once
 
-#include "ngraph/runtime/gpu/cublas_emitter.hpp"
-#include "ngraph/runtime/gpu/cuda_emitter.hpp"
-#include "ngraph/runtime/gpu/cudnn_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_kernel_args.hpp"
-#include "ngraph/runtime/gpu/gpu_memory_manager.hpp"
-#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
-#include "ngraph/runtime/gpu/host_emitter.hpp"
+#include "ngraph/runtime/nvgpu/cublas_emitter.hpp"
+#include "ngraph/runtime/nvgpu/cuda_emitter.hpp"
+#include "ngraph/runtime/nvgpu/cudnn_emitter.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_kernel_args.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_memory_manager.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_runtime_context.hpp"
+#include "ngraph/runtime/nvgpu/host_emitter.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            class GPUPrimitiveEmitter
+            class NVPrimitiveEmitter
             {
             public:
-                GPUPrimitiveEmitter();
-                GPUPrimitiveEmitter(const std::unique_ptr<GPURuntimeContext>& ctx);
+                NVPrimitiveEmitter();
+                NVPrimitiveEmitter(const std::unique_ptr<NVRuntimeContext>& ctx);
                 std::unique_ptr<HostEmitter>& get_host_emitter();
                 std::unique_ptr<CUDAEmitter>& get_cuda_emitter();
                 std::unique_ptr<CUDNNEmitter>& get_cudnn_emitter();
                 std::unique_ptr<CUBLASEmitter>& get_cublas_emitter();
-                std::vector<gpu::primitive*>& get_primitives() { return m_gpu_primitives; }
-                std::vector<gpu::memory_primitive>& get_memory_primitives()
+                std::vector<nvgpu::primitive*>& get_primitives() { return m_nvgpu_primitives; }
+                std::vector<nvgpu::memory_primitive>& get_memory_primitives()
                 {
-                    return m_gpu_mem_primitives;
+                    return m_nvgpu_mem_primitives;
                 }
-                size_t insert(std::unique_ptr<gpu::primitive>&& f);
-                size_t insert(const gpu::memory_primitive& f);
+                size_t insert(std::unique_ptr<nvgpu::primitive>&& f);
+                size_t insert(const nvgpu::memory_primitive& f);
                 size_t lookup(const std::string& hash);
                 void cache(const std::string& hash, const size_t& index);
-                GPUAllocator get_memory_allocator() { return m_memory_manager.build_allocator(); }
+                NVAllocator get_memory_allocator() { return m_memory_manager.build_allocator(); }
                 void allocate_primitive_memory() { m_memory_manager.allocate(); }
                 size_t sizeof_device_allocation() { return m_memory_manager.get_allocation_size(); }
-                GPUKernelArgs add_kernel_args() { return GPUKernelArgs(m_host_parameters); }
-                size_t register_primitive(std::unique_ptr<gpu::primitive>&, std::string);
+                NVKernelArgs add_kernel_args() { return NVKernelArgs(m_host_parameters); }
+                size_t register_primitive(std::unique_ptr<nvgpu::primitive>&, std::string);
 
             private:
-                std::vector<gpu::primitive*> m_gpu_primitives;
-                std::vector<gpu::memory_primitive> m_gpu_mem_primitives;
+                std::vector<nvgpu::primitive*> m_nvgpu_primitives;
+                std::vector<nvgpu::memory_primitive> m_nvgpu_mem_primitives;
                 std::unordered_map<std::string, size_t> m_primitive_map;
-                std::vector<std::unique_ptr<gpu::primitive>> m_managed_primitives;
-                GPUMemoryManager m_memory_manager;
-                std::shared_ptr<GPUHostParameters> m_host_parameters;
+                std::vector<std::unique_ptr<nvgpu::primitive>> m_managed_primitives;
+                NVMemoryManager m_memory_manager;
+                std::shared_ptr<NVHostParameters> m_host_parameters;
                 std::unique_ptr<HostEmitter> m_host_emitter;
                 std::unique_ptr<CUDAEmitter> m_cuda_emitter;
                 std::unique_ptr<CUDNNEmitter> m_cudnn_emitter;

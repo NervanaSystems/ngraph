@@ -19,15 +19,15 @@
 #include <cuda_runtime.h>
 
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
-#include "ngraph/runtime/gpu/cuda_error_check.hpp"
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/nvgpu/cuda_error_check.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_tensor.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_util.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type,
+runtime::nvgpu::NVTensor::NVTensor(const ngraph::element::Type& element_type,
                                    const Shape& shape,
                                    void* memory_pointer,
                                    const Backend* backend)
@@ -46,31 +46,31 @@ runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type,
     }
     else if (m_buffer_size > 0)
     {
-        m_allocated_buffer_pool = runtime::gpu::create_gpu_buffer(m_buffer_size);
+        m_allocated_buffer_pool = runtime::nvgpu::create_nvgpu_buffer(m_buffer_size);
     }
 }
 
-runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type,
+runtime::nvgpu::NVTensor::NVTensor(const ngraph::element::Type& element_type,
                                    const Shape& shape,
                                    const Backend* backend)
-    : GPUTensor(element_type, shape, nullptr, backend)
+    : NVTensor(element_type, shape, nullptr, backend)
 {
 }
 
-runtime::gpu::GPUTensor::~GPUTensor()
+runtime::nvgpu::NVTensor::~NVTensor()
 {
     if (!m_custom_memory && (m_allocated_buffer_pool != nullptr))
     {
-        runtime::gpu::free_gpu_buffer(m_allocated_buffer_pool);
+        runtime::nvgpu::free_nvgpu_buffer(m_allocated_buffer_pool);
     }
 }
 
-void runtime::gpu::GPUTensor::write(const void* source, size_t tensor_offset, size_t n)
+void runtime::nvgpu::NVTensor::write(const void* source, size_t tensor_offset, size_t n)
 {
     CUDA_RT_SAFE_CALL(cudaMemcpy(m_allocated_buffer_pool, source, n, cudaMemcpyHostToDevice));
 }
 
-void runtime::gpu::GPUTensor::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::nvgpu::NVTensor::read(void* target, size_t tensor_offset, size_t n) const
 {
     CUDA_RT_SAFE_CALL(cudaMemcpy(target, m_allocated_buffer_pool, n, cudaMemcpyDeviceToHost));
 }

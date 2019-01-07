@@ -17,14 +17,14 @@
 #include <algorithm>
 #include <map>
 
-#include "gpu_kernel_emitters.hpp"
+#include "nvgpu_kernel_emitters.hpp"
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
 
-void runtime::gpu::kernel::emit_memset(codegen::CodeWriter& writer,
-                                       const GPUTensorWrapper& dst,
+void runtime::nvgpu::kernel::emit_memset(codegen::CodeWriter& writer,
+                                       const NVTensorWrapper& dst,
                                        int value,
                                        size_t buffer_size)
 {
@@ -32,27 +32,27 @@ void runtime::gpu::kernel::emit_memset(codegen::CodeWriter& writer,
     {
         buffer_size = dst.get_size() * dst.get_element_type().size();
     }
-    writer << "runtime::gpu::cuda_memset(" << dst.get_name() << ", " << value << ", " << buffer_size
+    writer << "runtime::nvgpu::cuda_memset(" << dst.get_name() << ", " << value << ", " << buffer_size
            << ");\n";
 }
 
-void runtime::gpu::kernel::emit_memcpyDtD(codegen::CodeWriter& writer,
-                                          const GPUTensorWrapper& dst,
-                                          const GPUTensorWrapper& src,
+void runtime::nvgpu::kernel::emit_memcpyDtD(codegen::CodeWriter& writer,
+                                          const NVTensorWrapper& dst,
+                                          const NVTensorWrapper& src,
                                           size_t buffer_size)
 {
     if (buffer_size == 0)
     {
-        writer << "runtime::gpu::cuda_memcpyDtD(" << dst.get_name() << ", " << src.get_name()
+        writer << "runtime::nvgpu::cuda_memcpyDtD(" << dst.get_name() << ", " << src.get_name()
                << ", " << dst.get_size() << " * " << dst.get_element_type().size() << ");\n";
         return;
     }
-    writer << "runtime::gpu::cuda_memcpyDtD(" << dst.get_name() << ", " << src.get_name() << ", "
+    writer << "runtime::nvgpu::cuda_memcpyDtD(" << dst.get_name() << ", " << src.get_name() << ", "
            << buffer_size << ");\n";
     return;
 }
 
-void runtime::gpu::kernel::emit_cudnnConvolutionDescriptor(codegen::CodeWriter& writer,
+void runtime::nvgpu::kernel::emit_cudnnConvolutionDescriptor(codegen::CodeWriter& writer,
                                                            const std::string& name,
                                                            const CoordinateDiff& padding,
                                                            const Strides& window_movement_strides,
@@ -84,7 +84,7 @@ void runtime::gpu::kernel::emit_cudnnConvolutionDescriptor(codegen::CodeWriter& 
     }
 }
 
-void runtime::gpu::kernel::emit_cudnnFilterDescriptor(codegen::CodeWriter& writer,
+void runtime::nvgpu::kernel::emit_cudnnFilterDescriptor(codegen::CodeWriter& writer,
                                                       const std::string& name,
                                                       const std::string& format,
                                                       const std::string& data_type,
@@ -120,7 +120,7 @@ void runtime::gpu::kernel::emit_cudnnFilterDescriptor(codegen::CodeWriter& write
     }
 }
 
-void runtime::gpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& writer,
+void runtime::nvgpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& writer,
                                                       const std::string& name,
                                                       const std::string& format,
                                                       const std::string& data_type,
@@ -157,7 +157,7 @@ void runtime::gpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& write
     }
 }
 
-void runtime::gpu::kernel::emit_cudnnTensor4dDescriptor(codegen::CodeWriter& writer,
+void runtime::nvgpu::kernel::emit_cudnnTensor4dDescriptor(codegen::CodeWriter& writer,
                                                         const std::string& name,
                                                         const std::string& format,
                                                         const std::string& data_type,
@@ -174,7 +174,7 @@ void runtime::gpu::kernel::emit_cudnnTensor4dDescriptor(codegen::CodeWriter& wri
     writer << "));\n";
 }
 
-void runtime::gpu::kernel::emit_cudnnTensorNdDescriptor(codegen::CodeWriter& writer,
+void runtime::nvgpu::kernel::emit_cudnnTensorNdDescriptor(codegen::CodeWriter& writer,
                                                         const std::string& name,
                                                         const std::string& data_type,
                                                         const size_t& num_axes,
@@ -191,9 +191,9 @@ void runtime::gpu::kernel::emit_cudnnTensorNdDescriptor(codegen::CodeWriter& wri
     writer << "                 /*strides*/" << name << "_strides));\n";
 }
 
-void runtime::gpu::kernel::emit_cudnnReduceTensor(codegen::CodeWriter& writer,
-                                                  const GPUTensorWrapper& in,
-                                                  const GPUTensorWrapper& out,
+void runtime::nvgpu::kernel::emit_cudnnReduceTensor(codegen::CodeWriter& writer,
+                                                  const NVTensorWrapper& in,
+                                                  const NVTensorWrapper& out,
                                                   const std::string& reduce_op,
                                                   const std::string& data_type,
                                                   const std::string& nan_prop,
@@ -216,7 +216,7 @@ void runtime::gpu::kernel::emit_cudnnReduceTensor(codegen::CodeWriter& writer,
     writer << "                               " << output_desc << ",\n";
     writer << "                                &workspace_size));\n";
     writer << "void* workspace_ptr = "
-              "ngraph::runtime::gpu::create_gpu_buffer(workspace_size);\n";
+              "ngraph::runtime::nvgpu::create_nvgpu_buffer(workspace_size);\n";
     writer << "float alpha = " << alpha << ", beta = " << beta << ";\n";
     writer << "CUDNN_SAFE_CALL(cudnnReduceTensor(*ctx->cudnn_handle,\n";
     writer << "                  reduceTensorDesc,\n";
@@ -230,10 +230,10 @@ void runtime::gpu::kernel::emit_cudnnReduceTensor(codegen::CodeWriter& writer,
     writer << "                  &beta,\n";
     writer << "                  " << output_desc << ",\n";
     writer << "                  " << out.get_name() << "));\n";
-    writer << "ngraph::runtime::gpu::free_gpu_buffer(workspace_ptr);\n";
+    writer << "ngraph::runtime::nvgpu::free_nvgpu_buffer(workspace_ptr);\n";
 }
 
-std::string runtime::gpu::kernel::emit_type_string(const Node* node)
+std::string runtime::nvgpu::kernel::emit_type_string(const Node* node)
 {
     std::stringstream ss;
     for (auto const& input : node->get_inputs())

@@ -20,7 +20,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
             void example_kernel();
         }

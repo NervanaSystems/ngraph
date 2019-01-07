@@ -20,16 +20,16 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
-#include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_compiled_function.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            class GPU_Emitter
+            class NV_Emitter
             {
             public:
                 static std::function<std::string(EMIT_ARGS)> get_emit_function(const Node& node);
@@ -38,7 +38,7 @@ namespace ngraph
 // static std::string emit_Abs(EMIT_ARGS);
 // static std::string emit_Acos(EMIT_ARGS);
 #define NGRAPH_OP(a, b) static std::string emit_##a(EMIT_ARGS);
-#include "ngraph/runtime/gpu/op/op_tbl.hpp"
+#include "ngraph/runtime/nvgpu/op/op_tbl.hpp"
 #undef NGRAPH_OP
 
                 template <typename T>
@@ -76,7 +76,7 @@ namespace ngraph
                 /// \param arg_indexes a list of indexes into args for which args to include in
                 ///    the output list, so {1, 2} will include args 1 and 2 and skip 0.
                 /// \ return returns a string containing "arg0_name, arg1_name, etc."
-                static std::string node_names(const std::vector<GPUTensorWrapper>& args,
+                static std::string node_names(const std::vector<NVTensorWrapper>& args,
                                               std::initializer_list<int> arg_indexes = {});
             };
 

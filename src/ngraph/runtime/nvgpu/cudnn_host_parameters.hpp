@@ -21,21 +21,21 @@
 #include <cudnn.h>
 
 #include "ngraph/log.hpp"
-#include "ngraph/runtime/gpu/gpu_host_parameters.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_host_parameters.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_util.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
             /// \brief A factory which builds cuDNN host parameters
             /// and manages their creation and destruction.
             class CUDNNHostParameters
             {
             public:
-                CUDNNHostParameters(const std::shared_ptr<GPUHostParameters> params)
+                CUDNNHostParameters(const std::shared_ptr<NVHostParameters> params)
                     : m_host_parameters(params)
                 {
                 }
@@ -66,7 +66,7 @@ namespace ngraph
                 }
 
             private:
-                std::shared_ptr<GPUHostParameters> m_host_parameters;
+                std::shared_ptr<NVHostParameters> m_host_parameters;
             };
         }
     }

@@ -18,14 +18,14 @@
 
 #include <string>
 
-#include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_cuda_context_manager.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_util.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
             class CudaFunctionBuilder
             {

@@ -28,52 +28,52 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_primitive_emitter.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_tensor_wrapper.hpp"
 
 #define EMIT_ARGS                                                                                  \
-    runtime::gpu::GPUCompiledFunction *compiled_function, const std::string &function_name,        \
-        const Node *node, const std::vector<runtime::gpu::GPUTensorWrapper> &args,                 \
-        const std::vector<runtime::gpu::GPUTensorWrapper> &out
+    runtime::nvgpu::NVCompiledFunction *compiled_function, const std::string &function_name,        \
+        const Node *node, const std::vector<runtime::nvgpu::NVTensorWrapper> &args,                 \
+        const std::vector<runtime::nvgpu::NVTensorWrapper> &out
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            class GPU_Emitter;
-            struct GPURuntimeContext;
+            class NV_Emitter;
+            struct NVRuntimeContext;
 
-            class GPUCompiledFunction
+            class NVCompiledFunction
             {
-                friend class GPU_Backend;
+                friend class NV_Backend;
 
             public:
-                GPUCompiledFunction(
+                NVCompiledFunction(
                     const std::shared_ptr<ngraph::Function>& function,
-                    const std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
-                virtual ~GPUCompiledFunction();
+                    const std::shared_ptr<NV_Backend::BackendContext>& shared_context);
+                virtual ~NVCompiledFunction();
 
-                static std::shared_ptr<GPUCompiledFunction>
+                static std::shared_ptr<NVCompiledFunction>
                     make(const std::shared_ptr<ngraph::Function>& function,
-                         const std::shared_ptr<GPU_Backend::BackendContext>& shared_context);
-                std::unique_ptr<runtime::gpu::GPURuntimeContext>& ctx();
-                const std::unique_ptr<GPUPrimitiveEmitter>& get_primitive_emitter() const
+                         const std::shared_ptr<NV_Backend::BackendContext>& shared_context);
+                std::unique_ptr<runtime::nvgpu::NVRuntimeContext>& ctx();
+                const std::unique_ptr<NVPrimitiveEmitter>& get_primitive_emitter() const
                 {
                     return m_shared_context->m_primitive_emitter;
                 }
                 virtual std::string
                     add_to_runtime(size_t primitive_index,
                                    const std::string& function_name,
-                                   const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                   const std::vector<runtime::gpu::GPUTensorWrapper>& out) = 0;
+                                   const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
+                                   const std::vector<runtime::nvgpu::NVTensorWrapper>& out) = 0;
                 virtual std::string
                     add_call_to_runtime(const std::string& caller,
                                         const std::string& callee,
-                                        const std::vector<runtime::gpu::GPUTensorWrapper>& args,
-                                        const std::vector<runtime::gpu::GPUTensorWrapper>& out) = 0;
+                                        const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
+                                        const std::vector<runtime::nvgpu::NVTensorWrapper>& out) = 0;
                 void compile();
 
                 virtual void
@@ -109,7 +109,7 @@ namespace ngraph
                 std::string m_function_name;
 
                 std::unordered_map<std::string, size_t> m_tensor_memory_buffers;
-                std::shared_ptr<GPU_Backend::BackendContext> m_shared_context;
+                std::shared_ptr<NV_Backend::BackendContext> m_shared_context;
             };
         }
     }

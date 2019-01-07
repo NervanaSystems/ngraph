@@ -14,19 +14,19 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/gpu/type_info.hpp"
+#include "ngraph/runtime/nvgpu/type_info.hpp"
 
 using namespace ngraph;
 
-const runtime::gpu::TypeInfo::TypeDispatch runtime::gpu::TypeInfo::dispatcher{
-    {"char", std::make_shared<runtime::gpu::TypeInfo_Impl<char>>()},
-    {"float", std::make_shared<runtime::gpu::TypeInfo_Impl<float>>()},
-    {"double", std::make_shared<runtime::gpu::TypeInfo_Impl<double>>()},
-    {"int8_t", std::make_shared<runtime::gpu::TypeInfo_Impl<int8_t>>()},
-    {"int16_t", std::make_shared<runtime::gpu::TypeInfo_Impl<int16_t>>()},
-    {"int32_t", std::make_shared<runtime::gpu::TypeInfo_Impl<int32_t>>()},
-    {"int64_t", std::make_shared<runtime::gpu::TypeInfo_Impl<int64_t>>()},
-    {"uint8_t", std::make_shared<runtime::gpu::TypeInfo_Impl<uint8_t>>()},
-    {"uint16_t", std::make_shared<runtime::gpu::TypeInfo_Impl<uint16_t>>()},
-    {"uint32_t", std::make_shared<runtime::gpu::TypeInfo_Impl<uint32_t>>()},
-    {"uint64_t", std::make_shared<runtime::gpu::TypeInfo_Impl<uint64_t>>()}};
+const runtime::nvgpu::TypeInfo::TypeDispatch runtime::nvgpu::TypeInfo::dispatcher{
+    {"char", std::make_shared<runtime::nvgpu::TypeInfo_Impl<char>>()},
+    {"float", std::make_shared<runtime::nvgpu::TypeInfo_Impl<float>>()},
+    {"double", std::make_shared<runtime::nvgpu::TypeInfo_Impl<double>>()},
+    {"int8_t", std::make_shared<runtime::nvgpu::TypeInfo_Impl<int8_t>>()},
+    {"int16_t", std::make_shared<runtime::nvgpu::TypeInfo_Impl<int16_t>>()},
+    {"int32_t", std::make_shared<runtime::nvgpu::TypeInfo_Impl<int32_t>>()},
+    {"int64_t", std::make_shared<runtime::nvgpu::TypeInfo_Impl<int64_t>>()},
+    {"uint8_t", std::make_shared<runtime::nvgpu::TypeInfo_Impl<uint8_t>>()},
+    {"uint16_t", std::make_shared<runtime::nvgpu::TypeInfo_Impl<uint16_t>>()},
+    {"uint32_t", std::make_shared<runtime::nvgpu::TypeInfo_Impl<uint32_t>>()},
+    {"uint64_t", std::make_shared<runtime::nvgpu::TypeInfo_Impl<uint64_t>>()}};

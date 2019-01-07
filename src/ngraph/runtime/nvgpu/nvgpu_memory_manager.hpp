@@ -27,19 +27,19 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            class GPUPrimitiveEmitter;
-            class GPUMemoryManager;
+            class NVPrimitiveEmitter;
+            class NVMemoryManager;
 
-            class GPUAllocator
+            class NVAllocator
             {
             public:
-                GPUAllocator() = delete;
-                GPUAllocator(GPUMemoryManager* mgr);
-                GPUAllocator(const GPUAllocator& g);
+                NVAllocator() = delete;
+                NVAllocator(NVMemoryManager* mgr);
+                NVAllocator(const NVAllocator& g);
 
-                ~GPUAllocator();
+                ~NVAllocator();
                 template <typename T>
                 size_t reserve_argspace(const T& container)
                 {
@@ -52,23 +52,23 @@ namespace ngraph
                 void close();
 
             private:
-                GPUMemoryManager* m_manager;
+                NVMemoryManager* m_manager;
                 std::stack<size_t> m_active;
             };
 
-            class GPUMemoryManager
+            class NVMemoryManager
             {
-                friend class GPUPrimitiveEmitter;
-                friend class GPUAllocator;
+                friend class NVPrimitiveEmitter;
+                friend class NVAllocator;
 
             public:
-                ~GPUMemoryManager();
+                ~NVMemoryManager();
 
                 void allocate();
                 size_t get_allocation_size() const;
-                GPUAllocator build_allocator() { return GPUAllocator(this); }
+                NVAllocator build_allocator() { return NVAllocator(this); }
             private:
-                GPUMemoryManager(GPUPrimitiveEmitter* emitter);
+                NVMemoryManager(NVPrimitiveEmitter* emitter);
                 size_t queue_for_transfer(const void* data, size_t size);
 
                 size_t m_buffer_offset;
@@ -84,7 +84,7 @@ namespace ngraph
 
                 std::list<allocation> m_argspace_mem;
                 std::list<allocation> m_workspace_mem;
-                GPUPrimitiveEmitter* m_primitive_emitter;
+                NVPrimitiveEmitter* m_primitive_emitter;
             };
         }
     }

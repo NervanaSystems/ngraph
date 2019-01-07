@@ -26,22 +26,22 @@
 #include <cudnn.h>
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/runtime/gpu/cudnn_descriptors.hpp"
-#include "ngraph/runtime/gpu/cudnn_host_parameters.hpp"
-#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/nvgpu/cudnn_descriptors.hpp"
+#include "ngraph/runtime/nvgpu/cudnn_host_parameters.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_runtime_context.hpp"
 #include "ngraph/shape.hpp"
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
-#include "ngraph/runtime/gpu/op/rnn.hpp"
+#include "ngraph/runtime/nvgpu/op/rnn.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
             namespace cudnn_util
             {
@@ -49,11 +49,11 @@ namespace ngraph
                 std::vector<int> compute_strides(const std::vector<int>&);
                 std::vector<int> get_vector_int_from_size_t(const std::vector<size_t>&);
             }
-            class GPUPrimitiveEmitter;
+            class NVPrimitiveEmitter;
 
             class CUDNNEmitter
             {
-                friend class GPUPrimitiveEmitter;
+                friend class NVPrimitiveEmitter;
 
             public:
                 size_t build_primitive(const op::Convolution* node);
@@ -62,7 +62,7 @@ namespace ngraph
                 size_t build_primitive(const op::MaxPool* node);
                 size_t build_primitive(const op::Max* node);
                 size_t build_primitive(const op::Min* node);
-                size_t build_primitive(const op::gpu::Rnn* node);
+                size_t build_primitive(const op::nvgpu::Rnn* node);
 
             public:
                 enum class Prop
@@ -160,9 +160,9 @@ namespace ngraph
                 void sync();
 
             private:
-                CUDNNEmitter(GPUPrimitiveEmitter* emitter,
-                             GPURuntimeContext* ctx,
-                             std::shared_ptr<GPUHostParameters> params);
+                CUDNNEmitter(NVPrimitiveEmitter* emitter,
+                             NVRuntimeContext* ctx,
+                             std::shared_ptr<NVHostParameters> params);
 
                 void* get_data_by_type(cudnnDataType_t data_type, double value);
 
@@ -213,8 +213,8 @@ namespace ngraph
                 CUDNNDescriptors m_descriptors;
                 CUDNNHostParameters m_host_parameters;
 
-                GPUPrimitiveEmitter* m_primitive_emitter;
-                GPURuntimeContext* m_ctx;
+                NVPrimitiveEmitter* m_primitive_emitter;
+                NVRuntimeContext* m_ctx;
             };
         }
     }

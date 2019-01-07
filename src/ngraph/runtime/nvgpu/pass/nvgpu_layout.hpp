@@ -17,29 +17,29 @@
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
-#include "ngraph/runtime/gpu/gpu_compiled_function.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_compiled_function.hpp"
 
 #define LAYOUT_DECL(op_type)                                                                       \
-    layout<op_type>(ngraph::runtime::gpu::GPUCompiledFunction * compiled_function,                 \
+    layout<op_type>(ngraph::runtime::nvgpu::NVCompiledFunction * compiled_function,                 \
                     std::shared_ptr<ngraph::Node> node)
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
             namespace pass
             {
                 using LayoutFunction =
-                    std::function<void(GPUCompiledFunction*, std::shared_ptr<ngraph::Node>)>;
+                    std::function<void(NVCompiledFunction*, std::shared_ptr<ngraph::Node>)>;
 
                 using LayoutOpMap = std::unordered_map<std::type_index, LayoutFunction>;
 
-                class GPULayout : public ngraph::pass::CallGraphPass
+                class NVLayout : public ngraph::pass::CallGraphPass
                 {
                 public:
-                    GPULayout(GPUCompiledFunction* compiled_function)
+                    NVLayout(NVCompiledFunction* compiled_function)
                         : m_compiled_function(compiled_function)
                     {
                     }
@@ -47,11 +47,11 @@ namespace ngraph
                         run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes) override;
 
                     template <typename OP>
-                    static void layout(ngraph::runtime::gpu::GPUCompiledFunction* compiled_function,
+                    static void layout(ngraph::runtime::nvgpu::NVCompiledFunction* compiled_function,
                                        std::shared_ptr<ngraph::Node> node);
 
                 private:
-                    GPUCompiledFunction* m_compiled_function;
+                    NVCompiledFunction* m_compiled_function;
                 };
 
                 NodeVector insert_new_reshape_after(NodeVector& parents,

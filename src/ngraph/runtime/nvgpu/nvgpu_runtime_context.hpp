@@ -22,14 +22,14 @@
 #include <string>
 #include <unordered_map>
 
-#include "ngraph/runtime/gpu/gpu_cuda_context_manager.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_function_pool.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_cuda_context_manager.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_cuda_function_pool.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
             class StopWatchPool;
 
@@ -37,26 +37,26 @@ namespace ngraph
             using memory_primitive = std::function<void*(void)>;
 
             extern "C" {
-            struct GPURuntimeContext
+            struct NVRuntimeContext
             {
                 cudnnHandle_t* cudnn_handle;
                 cublasHandle_t* cublas_handle;
-                gpu::primitive* const* gpu_primitives;
-                const gpu::memory_primitive* gpu_memory_primitives;
+                nvgpu::primitive* const* nvgpu_primitives;
+                const nvgpu::memory_primitive* nvgpu_memory_primitives;
                 CudaFunctionPool* compiled_kernel_pool;
                 StopWatchPool* stopwatch_pool = nullptr;
                 // Note that in it's current state, calling methods of CudaFunctionPool
                 // or other native compiled C++ functions in ngraph from the JIT code is
                 // unsafe and will fail if the GLIBCXX versions are diffent for the
                 // native compiler and clang. If all of the emitted CUDA ops are refactored
-                // to use the GPUPrimitiveEmitter, the above pointer can be removed. It is left now
+                // to use the NVPrimitiveEmitter, the above pointer can be removed. It is left now
                 // for backward compatability.
             };
 
-            void start_stopwatch(GPURuntimeContext* ctx, size_t idx);
-            void stop_stopwatch(GPURuntimeContext* ctx, size_t idx);
-            size_t count_stopwatch(GPURuntimeContext* ctx, size_t idx);
-            size_t us_stopwatch(GPURuntimeContext* ctx, size_t idx);
+            void start_stopwatch(NVRuntimeContext* ctx, size_t idx);
+            void stop_stopwatch(NVRuntimeContext* ctx, size_t idx);
+            size_t count_stopwatch(NVRuntimeContext* ctx, size_t idx);
+            size_t us_stopwatch(NVRuntimeContext* ctx, size_t idx);
             }
         }
     }

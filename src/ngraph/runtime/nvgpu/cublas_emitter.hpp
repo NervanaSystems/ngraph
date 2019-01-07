@@ -19,20 +19,20 @@
 #include <cublas_v2.h>
 
 #include "ngraph/op/dot.hpp"
-#include "ngraph/runtime/gpu/gpu_runtime_context.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_runtime_context.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            class GPUPrimitiveEmitter;
+            class NVPrimitiveEmitter;
 
             class CUBLASEmitter
             {
-                friend class GPUPrimitiveEmitter;
+                friend class NVPrimitiveEmitter;
 
             public:
                 size_t build_dot(const element::Type& dtype,
@@ -46,9 +46,9 @@ namespace ngraph
                 void sync();
 
             private:
-                CUBLASEmitter(GPUPrimitiveEmitter* emitter, GPURuntimeContext* ctx);
-                GPUPrimitiveEmitter* m_primitive_emitter;
-                GPURuntimeContext* m_ctx;
+                CUBLASEmitter(NVPrimitiveEmitter* emitter, NVRuntimeContext* ctx);
+                NVPrimitiveEmitter* m_primitive_emitter;
+                NVRuntimeContext* m_ctx;
                 std::string get_error_string(std::vector<std::string>& arg_names,
                                              std::vector<Shape>& shapes,
                                              const Node* node);

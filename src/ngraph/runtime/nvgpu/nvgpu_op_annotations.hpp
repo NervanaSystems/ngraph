@@ -22,16 +22,16 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            /// \brief Annotations added to graph ops by GPU backend passes
-            class GPUOpAnnotations : public ngraph::op::util::OpAnnotations
+            /// \brief Annotations added to graph ops by NV backend passes
+            class NVOpAnnotations : public ngraph::op::util::OpAnnotations
             {
             public:
-                virtual ~GPUOpAnnotations() = default;
+                virtual ~NVOpAnnotations() = default;
             };
 
-            class BatchNormBackpropAnnotations : public GPUOpAnnotations
+            class BatchNormBackpropAnnotations : public NVOpAnnotations
             {
             public:
                 ~BatchNormBackpropAnnotations() = default;

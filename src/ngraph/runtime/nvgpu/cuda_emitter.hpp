@@ -18,10 +18,10 @@
 
 #include <array>
 #include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
-#include "ngraph/runtime/gpu/gpu_host_parameters.hpp"
-#include "ngraph/runtime/gpu/nvdiff.hpp"
-#include "ngraph/runtime/gpu/nvshape.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_cuda_kernel_ops.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_host_parameters.hpp"
+#include "ngraph/runtime/nvgpu/nvdiff.hpp"
+#include "ngraph/runtime/nvgpu/nvshape.hpp"
 #include "ngraph/strides.hpp"
 
 #include "ngraph/op/convolution.hpp"
@@ -35,14 +35,14 @@ namespace ngraph
 
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            struct GPURuntimeContext;
-            class GPUPrimitiveEmitter;
+            struct NVRuntimeContext;
+            class NVPrimitiveEmitter;
 
             class CUDAEmitter
             {
-                friend class GPUPrimitiveEmitter;
+                friend class NVPrimitiveEmitter;
 
             public:
                 size_t build_primitive(const op::Convolution* node);
@@ -198,11 +198,11 @@ namespace ngraph
                 void sync();
 
             private:
-                CUDAEmitter(GPUPrimitiveEmitter* emitter,
-                            GPURuntimeContext* ctx,
-                            std::shared_ptr<GPUHostParameters> params);
+                CUDAEmitter(NVPrimitiveEmitter* emitter,
+                            NVRuntimeContext* ctx,
+                            std::shared_ptr<NVHostParameters> params);
                 uint32_t align_to_block_size(uint32_t threads, uint32_t block_size);
-                void print_tensor_from_gpu(codegen::CodeWriter& writer,
+                void print_tensor_from_nvgpu(codegen::CodeWriter& writer,
                                            const std::string& tensor_name,
                                            NVShape shape);
                 std::string include_helpers();
@@ -282,9 +282,9 @@ namespace ngraph
                 std::vector<std::string>
                     get_string_vector(const std::vector<element::Type>& dtypes);
 
-                std::shared_ptr<GPUHostParameters> m_host_parameters;
-                GPUPrimitiveEmitter* m_primitive_emitter;
-                GPURuntimeContext* m_ctx;
+                std::shared_ptr<NVHostParameters> m_host_parameters;
+                NVPrimitiveEmitter* m_primitive_emitter;
+                NVRuntimeContext* m_ctx;
             };
         }
     }

@@ -16,13 +16,13 @@
 
 #include <string>
 
-#include "ngraph/runtime/gpu/gpu_kernel_args.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_kernel_args.hpp"
 
 #define TI(x) std::type_index(typeid(x))
 
 using namespace ngraph;
 
-const std::unordered_map<std::type_index, std::string> runtime::gpu::GPUKernelArgs::type_names = {
+const std::unordered_map<std::type_index, std::string> runtime::nvgpu::NVKernelArgs::type_names = {
     {TI(size_t), "size_t"},
     {TI(char), "char"},
     {TI(float), "float"},
@@ -36,14 +36,14 @@ const std::unordered_map<std::type_index, std::string> runtime::gpu::GPUKernelAr
     {TI(uint32_t), "uint32_t"},
     {TI(uint64_t), "uint64_t"}};
 
-runtime::gpu::GPUKernelArgs::GPUKernelArgs(const std::shared_ptr<GPUHostParameters>& params)
+runtime::nvgpu::NVKernelArgs::NVKernelArgs(const std::shared_ptr<NVHostParameters>& params)
     : m_signature_generated(false)
     , m_host_parameters(params)
 {
     m_input_signature << "(";
 }
 
-runtime::gpu::GPUKernelArgs::GPUKernelArgs(const GPUKernelArgs& args)
+runtime::nvgpu::NVKernelArgs::NVKernelArgs(const NVKernelArgs& args)
 {
     m_signature_generated = args.m_signature_generated;
     m_argument_list = args.m_argument_list;
@@ -52,7 +52,7 @@ runtime::gpu::GPUKernelArgs::GPUKernelArgs(const GPUKernelArgs& args)
     m_host_parameters = args.m_host_parameters;
 }
 
-void runtime::gpu::GPUKernelArgs::validate()
+void runtime::nvgpu::NVKernelArgs::validate()
 {
     if (m_signature_generated)
     {
@@ -62,7 +62,7 @@ void runtime::gpu::GPUKernelArgs::validate()
     }
 }
 
-void runtime::gpu::GPUKernelArgs::add_to_signature(const std::string& type, const std::string& name)
+void runtime::nvgpu::NVKernelArgs::add_to_signature(const std::string& type, const std::string& name)
 {
     if (m_input_signature.str() == "(")
     {
@@ -74,7 +74,7 @@ void runtime::gpu::GPUKernelArgs::add_to_signature(const std::string& type, cons
     }
 }
 
-runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::add_placeholder(const std::string& type,
+runtime::nvgpu::NVKernelArgs& runtime::nvgpu::NVKernelArgs::add_placeholder(const std::string& type,
                                                                           const std::string& name)
 {
     validate();
@@ -84,7 +84,7 @@ runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::add_placeholder(const 
     return *this;
 }
 
-runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::resolve_placeholder(size_t arg_num,
+runtime::nvgpu::NVKernelArgs& runtime::nvgpu::NVKernelArgs::resolve_placeholder(size_t arg_num,
                                                                               void* address)
 {
     if (m_placeholder_positions.at(arg_num))
@@ -98,7 +98,7 @@ runtime::gpu::GPUKernelArgs& runtime::gpu::GPUKernelArgs::resolve_placeholder(si
     return *this;
 }
 
-std::string runtime::gpu::GPUKernelArgs::get_input_signature()
+std::string runtime::nvgpu::NVKernelArgs::get_input_signature()
 {
     if (m_signature_generated == false)
     {

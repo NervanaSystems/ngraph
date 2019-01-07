@@ -14,9 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/gpu/op/batch_norm.hpp"
+#include "ngraph/runtime/nvgpu/op/batch_norm.hpp"
 
-ngraph::op::gpu::BatchNormTrainingWithStats::BatchNormTrainingWithStats(
+ngraph::op::nvgpu::BatchNormTrainingWithStats::BatchNormTrainingWithStats(
     double eps,
     std::shared_ptr<ngraph::Node> gamma,
     std::shared_ptr<ngraph::Node> beta,
@@ -32,10 +32,10 @@ ngraph::op::gpu::BatchNormTrainingWithStats::BatchNormTrainingWithStats(
     set_output_type(output_index++, input->get_element_type(), channel_shape);
 }
 
-std::shared_ptr<ngraph::Node> ngraph::op::gpu::BatchNormTrainingWithStats::copy_with_new_args(
+std::shared_ptr<ngraph::Node> ngraph::op::nvgpu::BatchNormTrainingWithStats::copy_with_new_args(
     const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return std::make_shared<ngraph::op::gpu::BatchNormTrainingWithStats>(
+    return std::make_shared<ngraph::op::nvgpu::BatchNormTrainingWithStats>(
         get_eps_value(), new_args.at(0), new_args.at(1), new_args.at(2));
 }

@@ -25,22 +25,22 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
             static size_t alignment = 64;
 
-            class GPUCompiledFunction;
-            class GPUPrimitiveEmitter;
-            struct GPURuntimeContext;
+            class NVCompiledFunction;
+            class NVPrimitiveEmitter;
+            struct NVRuntimeContext;
             class CudaContextManager;
 
-            using EntryPoint_t = void(void** inputs, void** outputs, GPURuntimeContext* ctx);
+            using EntryPoint_t = void(void** inputs, void** outputs, NVRuntimeContext* ctx);
             using EntryPoint = std::function<EntryPoint_t>;
 
-            class GPU_Backend : public Backend
+            class NV_Backend : public Backend
             {
             public:
-                GPU_Backend();
+                NV_Backend();
 
                 std::shared_ptr<ngraph::runtime::Tensor>
                     create_tensor(const ngraph::element::Type& element_type,
@@ -72,8 +72,8 @@ namespace ngraph
                     void prepare_runtime_context();
                     void bind_cuda_context_to_thread();
 
-                    std::unique_ptr<GPURuntimeContext> m_runtime_context;
-                    std::unique_ptr<GPUPrimitiveEmitter> m_primitive_emitter;
+                    std::unique_ptr<NVRuntimeContext> m_runtime_context;
+                    std::unique_ptr<NVPrimitiveEmitter> m_primitive_emitter;
 
                 private:
                     std::unique_ptr<CudaContextManager> m_cuda_manager;
@@ -83,7 +83,7 @@ namespace ngraph
                 class FunctionInstance
                 {
                 public:
-                    std::shared_ptr<GPUCompiledFunction> m_compiled_function;
+                    std::shared_ptr<NVCompiledFunction> m_compiled_function;
                     bool m_performance_counters_enabled = false;
                     EntryPoint m_runtime;
                     std::vector<void*> m_inputs;

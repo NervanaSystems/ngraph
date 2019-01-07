@@ -66,7 +66,7 @@ namespace ngraph
     }
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
             enum class OpName
             {

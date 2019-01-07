@@ -25,12 +25,12 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
-            class GPUHostParameters
+            class NVHostParameters
             {
             public:
-                GPUHostParameters() = default;
+                NVHostParameters() = default;
 
                 void* cache(const char& value)
                 {

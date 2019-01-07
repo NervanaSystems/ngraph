@@ -19,24 +19,24 @@
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gpu
+        namespace nvgpu
         {
             namespace kernel
             {
                 void emit_memset(codegen::CodeWriter& writer,
-                                 const GPUTensorWrapper& dst,
+                                 const NVTensorWrapper& dst,
                                  int value,
                                  size_t buffer_size = 0);
 
                 void emit_memcpyDtD(codegen::CodeWriter& writer,
-                                    const GPUTensorWrapper& dst,
-                                    const GPUTensorWrapper& src,
+                                    const NVTensorWrapper& dst,
+                                    const NVTensorWrapper& src,
                                     size_t buffer_size = 0);
 
                 void emit_cudnnConvolutionDescriptor(codegen::CodeWriter& writer,
@@ -73,8 +73,8 @@ namespace ngraph
                                                   const std::vector<size_t>& strides);
 
                 void emit_cudnnReduceTensor(codegen::CodeWriter& writer,
-                                            const GPUTensorWrapper& in,
-                                            const GPUTensorWrapper& out,
+                                            const NVTensorWrapper& in,
+                                            const NVTensorWrapper& out,
                                             const std::string& reduce_op,
                                             const std::string& data_type,
                                             const std::string& nan_prop,
