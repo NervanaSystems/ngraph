@@ -21,6 +21,9 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
+    if(NOT LINUX)
+        message(FATAL_ERROR "Unsupported platform for prebuilt mkl-dnn!")
+    endif()
     if(NOT MKLML_LIB_DIR)
         set(MKLML_LIB_DIR ${MKLDNN_LIB_DIR})
     endif()
@@ -40,7 +43,7 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
         ${MKLML_LIB_DIR}/libiomp5.so
         )
 
-    install(DIRECTORY ${MKLDNN_LIB_DIR}/ DESTINATION ${NGRAPH_INSTALL_LIB})
+    install(FILES ${MKLDNN_LIB_DIR}/libmkldnn.so ${MKLML_LIB_DIR}/libmklml_intel.so ${MKLML_LIB_DIR}/libiomp5.so  DESTINATION ${NGRAPH_INSTALL_LIB})
     return()
 endif()
 
