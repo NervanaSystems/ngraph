@@ -17,7 +17,9 @@
 #include <fstream>
 #include <sstream>
 
+#ifdef NGRAPH_CPU_ENABLE
 #include <mlsl.hpp>
+#endif
 
 #include "gtest/gtest.h"
 
@@ -29,6 +31,7 @@
 using namespace std;
 using namespace ngraph;
 
+#ifdef NGRAPH_CPU_ENABLE
 TEST(distributed_${BACKEND_NAME}, allreduce)
 {
     auto shape = Shape{2, 2};
@@ -51,3 +54,4 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ(v, read_vector<float>(result));
 }
+#endif
