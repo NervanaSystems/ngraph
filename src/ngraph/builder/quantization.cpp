@@ -18,15 +18,16 @@
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/quantization.hpp"
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/op/divide.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/subtract.hpp"
-#include "ngraph/op/divide.hpp"
-#include "ngraph/op/add.hpp"
 #include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/subtract.hpp"
 #include "quantization_util.hpp"
 
 using namespace std;
@@ -399,7 +400,6 @@ namespace ngraph
                     weight_scaling, filters->get_shape(), AxisSet{1, 2, 3}));
 
             // quantize weights and bias
-            auto new_weights_i8 = std::make_shared<op::Convert>(new_weights, element::i8);
             auto min_filter = std::make_shared<op::Min>(filters, AxisSet{0, 1, 2, 3});
             auto max_filter = std::make_shared<op::Max>(filters, AxisSet{0, 1, 2, 3});
             auto output_et = with_relu ? element::u8 : element::i8;
@@ -411,18 +411,18 @@ namespace ngraph
                                                                      max_freezed_output,
                                                                      output_et);
 
-            if (bias->get_element_type() != element::i32)
-            {
-                auto zero = make_constant(element::i32, min_input->get_shape(), 0);
-                AxisSet quantization_axes;
-                auto bias_scale =
-                    quantization_util::get_bias_scale(min_input, max_input, min_filter, max_filter);
-                op::Quantize::RoundMode round_mode =
-                    op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+            auto zero = make_constant(element::i32, min_input->get_shape(), 0);
+            AxisSet quantization_axes;
+            auto bias_scale =
+                quantization_util::get_bias_scale(min_input, max_input, min_filter, max_filter);
+            op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
 
-                bias = make_shared<op::Quantize>(
-                    bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
-            }
+            bias = make_shared<op::Quantize>(
+                bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
+            auto new_weights_i8 = make_shared<op::Quantize>(
+                new_weights, bias_scale, zero, element::i8, quantization_axes, round_mode);
+
+            // invoke quantized conv builder api
             return make_shared<op::QuantizedConvolutionBias>(input,
                                                              new_weights_i8,
                                                              bias,
