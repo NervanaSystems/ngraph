@@ -19,9 +19,9 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
-#include "ngraph/runtime/gpu/nvshape.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_primitive_emitter.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_util.hpp"
+#include "ngraph/runtime/nvgpu/nvshape.hpp"
 #include "ngraph/util.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
@@ -30,24 +30,24 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(gpu_test, gpu_shape_from_64bit_shape)
+TEST(nvgpu_test, nvgpu_shape_from_64bit_shape)
 {
     Shape shape{1UL << 33};
     ASSERT_ANY_THROW([](NVShape s) {}(shape););
 }
 
-TEST(gpu_test, memory_manager_unallocated)
+TEST(nvgpu_test, memory_manager_unallocated)
 {
-    runtime::gpu::GPUPrimitiveEmitter emitter;
+    runtime::nvgpu::NVPrimitiveEmitter emitter;
     auto allocator = emitter.get_memory_allocator();
     size_t idx = allocator.reserve_workspace(10);
-    runtime::gpu::memory_primitive& mem_primitive = emitter.get_memory_primitives()[idx];
+    runtime::nvgpu::memory_primitive& mem_primitive = emitter.get_memory_primitives()[idx];
     ASSERT_ANY_THROW(mem_primitive());
 }
 
-TEST(gpu_test, memory_manager_zero_workspace)
+TEST(nvgpu_test, memory_manager_zero_workspace)
 {
-    runtime::gpu::GPUPrimitiveEmitter emitter;
+    runtime::nvgpu::NVPrimitiveEmitter emitter;
     size_t idx_null, idx_not_null;
     {
         auto allocator = emitter.get_memory_allocator();
@@ -59,32 +59,32 @@ TEST(gpu_test, memory_manager_zero_workspace)
     EXPECT_NE(emitter.get_memory_primitives()[idx_not_null](), nullptr);
 }
 
-TEST(gpu_test, memory_manager_allocated)
+TEST(nvgpu_test, memory_manager_allocated)
 {
-    runtime::gpu::GPUPrimitiveEmitter emitter;
+    runtime::nvgpu::NVPrimitiveEmitter emitter;
     size_t idx;
     {
         auto allocator = emitter.get_memory_allocator();
         idx = allocator.reserve_workspace(10);
     }
     emitter.allocate_primitive_memory();
-    runtime::gpu::memory_primitive& mem_primitive = emitter.get_memory_primitives()[idx];
+    runtime::nvgpu::memory_primitive& mem_primitive = emitter.get_memory_primitives()[idx];
     EXPECT_NO_THROW(mem_primitive());
 }
 
-TEST(gpu_test, memory_manager_extract_arguments)
+TEST(nvgpu_test, memory_manager_extract_arguments)
 {
     std::vector<float> fp32_args = {2112.0f, 2112.0f};
-    runtime::gpu::GPUPrimitiveEmitter emitter;
+    runtime::nvgpu::NVPrimitiveEmitter emitter;
     size_t idx;
     {
         auto allocator = emitter.get_memory_allocator();
         idx = allocator.reserve_argspace(fp32_args.data(), fp32_args.size() * sizeof(float));
     }
     emitter.allocate_primitive_memory();
-    runtime::gpu::memory_primitive& mem_primitive = emitter.get_memory_primitives()[idx];
+    runtime::nvgpu::memory_primitive& mem_primitive = emitter.get_memory_primitives()[idx];
     std::vector<float> host(2, 0);
-    runtime::gpu::cuda_memcpyDtH(host.data(), mem_primitive(), host.size() * sizeof(float));
+    runtime::nvgpu::cuda_memcpyDtH(host.data(), mem_primitive(), host.size() * sizeof(float));
     EXPECT_EQ(host, fp32_args);
 }
 
@@ -94,28 +94,28 @@ TEST(gpu_test, memory_manager_extract_arguments)
 // previously allocator will copy 8 bytes data from input_args, this will lead to two potential bug:
 // 1. copy extrea data intead of initial alignment data to 0.
 // 2. out of boundary access for input_args which lead to undefined behavior
-TEST(gpu_test, memory_manager_argspace_alignment)
+TEST(nvgpu_test, memory_manager_argspace_alignment)
 {
     size_t alignment = 8;
     std::vector<char> input_args = {0, 1, 2, 3, 4, 5, 6, 7};
     std::vector<char> ref_args = {0, 1, 2, 3, 0, 0, 0, 0};
     std::vector<char> result_args(alignment, 0);
     size_t idx;
-    runtime::gpu::GPUPrimitiveEmitter emitter;
+    runtime::nvgpu::NVPrimitiveEmitter emitter;
     {
         auto allocator = emitter.get_memory_allocator();
         idx = allocator.reserve_argspace(input_args.data(), 4 * sizeof(char));
     }
     emitter.allocate_primitive_memory();
-    runtime::gpu::memory_primitive& mem_primitive = emitter.get_memory_primitives()[idx];
-    runtime::gpu::cuda_memcpyDtH(result_args.data(), mem_primitive(), alignment * sizeof(char));
+    runtime::nvgpu::memory_primitive& mem_primitive = emitter.get_memory_primitives()[idx];
+    runtime::nvgpu::cuda_memcpyDtH(result_args.data(), mem_primitive(), alignment * sizeof(char));
     EXPECT_EQ(result_args, ref_args);
 }
 
-TEST(gpu_test, memory_manager_argspace_size)
+TEST(nvgpu_test, memory_manager_argspace_size)
 {
     std::vector<float> fp32_args = {2112.0f, 2112.0f};
-    runtime::gpu::GPUPrimitiveEmitter emitter;
+    runtime::nvgpu::NVPrimitiveEmitter emitter;
     {
         auto allocator = emitter.get_memory_allocator();
         allocator.reserve_argspace(fp32_args.data(), fp32_args.size() * sizeof(float));
@@ -124,9 +124,9 @@ TEST(gpu_test, memory_manager_argspace_size)
     EXPECT_EQ(emitter.sizeof_device_allocation(), fp32_args.size() * sizeof(float));
 }
 
-TEST(gpu_test, memory_manager_overlapping_workspace_allocsize)
+TEST(nvgpu_test, memory_manager_overlapping_workspace_allocsize)
 {
-    runtime::gpu::GPUPrimitiveEmitter emitter;
+    runtime::nvgpu::NVPrimitiveEmitter emitter;
     for (size_t i = 0; i < 8; i++)
     {
         auto allocator = emitter.get_memory_allocator();
@@ -149,10 +149,10 @@ TEST(gpu_test, memory_manager_overlapping_workspace_allocsize)
     }
 }
 
-TEST(gpu_test, memory_manager_seperate_workspaces_allocsize)
+TEST(nvgpu_test, memory_manager_seperate_workspaces_allocsize)
 {
     size_t total_size = 0;
-    runtime::gpu::GPUPrimitiveEmitter emitter;
+    runtime::nvgpu::NVPrimitiveEmitter emitter;
     {
         auto allocator = emitter.get_memory_allocator();
         for (size_t i = 0; i < 8; i++)
@@ -166,27 +166,27 @@ TEST(gpu_test, memory_manager_seperate_workspaces_allocsize)
     EXPECT_EQ(emitter.sizeof_device_allocation(), total_size);
 }
 
-TEST(gpu_test, topk_fanout_graph_transform)
+TEST(nvgpu_test, topk_fanout_graph_transform)
 {
     Shape shape{2, 3, 2};
     Shape out_shape{2, 2, 2};
-    auto A_gpu = make_shared<op::Parameter>(element::f32, shape);
-    auto A_int32_gpu_1 = make_shared<op::Parameter>(element::i32, out_shape);
-    auto A_int32_gpu_2 = make_shared<op::Parameter>(element::i32, out_shape);
-    auto A_f32_gpu_1 = make_shared<op::Parameter>(element::f32, out_shape);
-    auto A_f32_gpu_2 = make_shared<op::Parameter>(element::f32, out_shape);
-    auto B_gpu = make_shared<op::TopK>(A_gpu, 1, element::i32, 2, true);
-    auto C_gpu_0 = make_shared<op::GetOutputElement>(B_gpu, 0);
-    auto C_gpu_1 = make_shared<op::GetOutputElement>(B_gpu, 1);
+    auto A_nvgpu = make_shared<op::Parameter>(element::f32, shape);
+    auto A_int32_nvgpu_1 = make_shared<op::Parameter>(element::i32, out_shape);
+    auto A_int32_nvgpu_2 = make_shared<op::Parameter>(element::i32, out_shape);
+    auto A_f32_nvgpu_1 = make_shared<op::Parameter>(element::f32, out_shape);
+    auto A_f32_nvgpu_2 = make_shared<op::Parameter>(element::f32, out_shape);
+    auto B_nvgpu = make_shared<op::TopK>(A_nvgpu, 1, element::i32, 2, true);
+    auto C_nvgpu_0 = make_shared<op::GetOutputElement>(B_nvgpu, 0);
+    auto C_nvgpu_1 = make_shared<op::GetOutputElement>(B_nvgpu, 1);
 
-    auto gpu_R_0 = make_shared<op::Add>(A_int32_gpu_1, C_gpu_0);
-    auto gpu_R_1 = make_shared<op::Add>(A_int32_gpu_2, C_gpu_0);
-    auto gpu_R_2 = make_shared<op::Add>(A_f32_gpu_1, C_gpu_1);
-    auto gpu_R_3 = make_shared<op::Add>(A_f32_gpu_2, C_gpu_1);
+    auto nvgpu_R_0 = make_shared<op::Add>(A_int32_nvgpu_1, C_nvgpu_0);
+    auto nvgpu_R_1 = make_shared<op::Add>(A_int32_nvgpu_2, C_nvgpu_0);
+    auto nvgpu_R_2 = make_shared<op::Add>(A_f32_nvgpu_1, C_nvgpu_1);
+    auto nvgpu_R_3 = make_shared<op::Add>(A_f32_nvgpu_2, C_nvgpu_1);
 
-    auto gpu_f = make_shared<Function>(
-        NodeVector{gpu_R_0, gpu_R_1, gpu_R_2, gpu_R_3},
-        ParameterVector{A_gpu, A_int32_gpu_1, A_int32_gpu_2, A_f32_gpu_1, A_f32_gpu_2});
+    auto nvgpu_f = make_shared<Function>(
+        NodeVector{nvgpu_R_0, nvgpu_R_1, nvgpu_R_2, nvgpu_R_3},
+        ParameterVector{A_nvgpu, A_int32_nvgpu_1, A_int32_nvgpu_2, A_f32_nvgpu_1, A_f32_nvgpu_2});
 
     auto backend = runtime::Backend::create("GPU");
 
@@ -207,7 +207,7 @@ TEST(gpu_test, topk_fanout_graph_transform)
     auto r2 = backend->create_tensor(element::f32, out_shape);
     auto r3 = backend->create_tensor(element::f32, out_shape);
 
-    auto handle = backend->compile(gpu_f);
+    auto handle = backend->compile(nvgpu_f);
     backend->call_with_validate(handle, {r0, r1, r2, r3}, {a, b, c, d, e});
 
     EXPECT_EQ((vector<int32_t>{2, 1, 1, 2, 1, 2, 0, 1}), read_vector<int32_t>(r0));
@@ -216,7 +216,7 @@ TEST(gpu_test, topk_fanout_graph_transform)
         vector<float>{4, 4, 3, 3, 3, 4, 2, 3}, read_vector<float>(r2), MIN_FLOAT_TOLERANCE_BITS));
     EXPECT_TRUE(test::all_close_f(
         vector<float>{4, 4, 3, 3, 3, 4, 2, 3}, read_vector<float>(r3), MIN_FLOAT_TOLERANCE_BITS));
-    auto reshape_count = count_ops_of_type<ngraph::op::Reshape>(gpu_f);
+    auto reshape_count = count_ops_of_type<ngraph::op::Reshape>(nvgpu_f);
     EXPECT_EQ(reshape_count, 10);
 }
 
@@ -243,7 +243,7 @@ TEST(gpu_test, topk_fanout_graph_transform)
 // x  : [[0, 1, 0, 1, ... , 0, 1]]
 // dx : [[0, 2, 0, 3, ... , 0, 4]]
 //
-TEST(gpu_test, maxpool_bprop_larger_than_cache)
+TEST(nvgpu_test, maxpool_bprop_larger_than_cache)
 {
     Shape window_shape{1, 2};
     Strides move_strides{1, 2};

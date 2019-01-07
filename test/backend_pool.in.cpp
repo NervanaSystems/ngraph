@@ -179,7 +179,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
 }
 
 //this test cover the case with multiple image and with asymetric pad
-//one bug been found on GPU side is covered by this test
+//one bug been found on NVGPU side is covered by this test
 NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image_asym_pad)
 {
     Shape shape_a{2, 2, 4, 4};

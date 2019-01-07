@@ -46,8 +46,8 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
-#include "ngraph/runtime/gpu/op/rnn.hpp"
-#include "ngraph/runtime/gpu/pass/gpu_rnn_fusion.hpp"
+#include "ngraph/runtime/nvgpu/op/rnn.hpp"
+#include "ngraph/runtime/nvgpu/pass/nvgpu_rnn_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -63,7 +63,7 @@ using namespace ngraph;
 using namespace std;
 
 #if CUDNN_VERSION >= 7200
-TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
+TEST(nvgpu_fusion, rnn_fprop_1_lstm_cell)
 {
     auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
     auto src_iter = make_shared<op::Parameter>(element::f32, Shape{10, 100});
@@ -78,7 +78,7 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
     const int feature_size = 100;
     const int rnn_direction = 1;
     const int num_of_rnn_fused_layer = 1;
-    auto rnn_node = make_shared<op::gpu::Rnn>(src_layer,
+    auto rnn_node = make_shared<op::nvgpu::Rnn>(src_layer,
                                               src_iter,
                                               params,
                                               state_iter,
@@ -128,33 +128,33 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
 }
 #endif
 
-TEST(gpu_fusion, fuse_lstm_cells)
+TEST(nvgpu_fusion, fuse_lstm_cells)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::nvgpu::pass::LSTMFusion>();
     const string json_path =
         file_util::path_join(SERIALIZED_ZOO, "mxnet/2rnn_layer_3lstm_cell.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
-    auto lstm_ops = get_ops_of_type<op::gpu::Rnn>(func);
+    auto lstm_ops = get_ops_of_type<op::nvgpu::Rnn>(func);
     EXPECT_EQ(lstm_ops.size(), 6);
 }
 
-TEST(gpu_fusion, fuse_2_layer_rnn)
+TEST(nvgpu_fusion, fuse_2_layer_rnn)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
+    pass_manager.register_pass<runtime::nvgpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::nvgpu::pass::RNNFusion>();
     const string json_path =
         file_util::path_join(SERIALIZED_ZOO, "mxnet/2rnn_layer_3lstm_cell.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
-    size_t count = count_ops_of_type<op::gpu::Rnn>(func);
-    auto rnn_ops = get_ops_of_type<op::gpu::Rnn>(func);
+    size_t count = count_ops_of_type<op::nvgpu::Rnn>(func);
+    auto rnn_ops = get_ops_of_type<op::nvgpu::Rnn>(func);
     EXPECT_EQ(rnn_ops.size(), count);
     for (auto& node : rnn_ops)
     {
@@ -162,19 +162,19 @@ TEST(gpu_fusion, fuse_2_layer_rnn)
     }
 }
 
-TEST(DISABLED_gpu_fusion, fuse_1_layer_rnn)
+TEST(DISABLED_nvgpu_fusion, fuse_1_layer_rnn)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
+    pass_manager.register_pass<runtime::nvgpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::nvgpu::pass::RNNFusion>();
     const string json_path =
         file_util::path_join(SERIALIZED_ZOO, "mxnet/1rnn_layer_3lstm_cell.json");
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
-    size_t count = count_ops_of_type<op::gpu::Rnn>(func);
-    auto rnn_ops = get_ops_of_type<op::gpu::Rnn>(func);
+    size_t count = count_ops_of_type<op::nvgpu::Rnn>(func);
+    auto rnn_ops = get_ops_of_type<op::nvgpu::Rnn>(func);
     EXPECT_EQ(rnn_ops.size(), 1);
     EXPECT_EQ(rnn_ops.size(), count);
     for (auto& node : rnn_ops)
@@ -192,7 +192,7 @@ static std::shared_ptr<Function> make_function(const std::string& file_name)
     return func;
 }
 
-TEST(gpu_fusion, lstm_analytic)
+TEST(nvgpu_fusion, lstm_analytic)
 {
     auto input_xt = std::make_shared<op::Parameter>(element::f32, Shape{1, 1});
     auto weights_i2h = std::make_shared<op::Parameter>(element::f32, Shape{4, 1});
@@ -285,7 +285,7 @@ TEST(gpu_fusion, lstm_analytic)
     EXPECT_TRUE(test::all_close(std::vector<float>{ct_val}, read_vector<float>(result_ct)));
 }
 
-TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
+TEST(nvgpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
 {
     auto input_xt = std::make_shared<op::Parameter>(element::f32, Shape{1, 1});
     auto weights_i2h = std::make_shared<op::Parameter>(element::f32, Shape{4, 1});
@@ -414,7 +414,7 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
 
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result_ht, result_ct}, arg_tensors);
-    //EXPECT_EQ(1, count_ops_of_type<op::gpu::Rnn>(f));
+    //EXPECT_EQ(1, count_ops_of_type<op::nvgpu::Rnn>(f));
 
     auto sig = [](float x) { return 1.0f / (1.0f + std::exp(-x)); };
     float kernel = 4.0f;
@@ -429,10 +429,10 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     EXPECT_TRUE(test::all_close(std::vector<float>{ct_val_second}, read_vector<float>(result_ct)));
 }
 
-TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_1lstm_cell)
+TEST(nvgpu_fusion, rnn_fusion_inter_vs_nvgpu_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
-    auto gpu_f = make_function(file_name);
+    auto nvgpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
     test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;
@@ -444,17 +444,17 @@ TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_1lstm_cell)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto gpu_results = execute(gpu_f, args, "GPU");
-    for (size_t i = 0; i < gpu_results.size(); i++)
+    auto nvgpu_results = execute(nvgpu_f, args, "GPU");
+    for (size_t i = 0; i < nvgpu_results.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(gpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+        EXPECT_TRUE(test::all_close(nvgpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
 
-TEST(DISABLED_gpu_fusion, rnn_fusion_inter_vs_gpu_1rnn_layer_3lstm_cell)
+TEST(DISABLED_nvgpu_fusion, rnn_fusion_inter_vs_nvgpu_1rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
-    auto gpu_f = make_function(file_name);
+    auto nvgpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
     test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;
@@ -466,17 +466,17 @@ TEST(DISABLED_gpu_fusion, rnn_fusion_inter_vs_gpu_1rnn_layer_3lstm_cell)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto gpu_results = execute(gpu_f, args, "GPU");
-    for (size_t i = 0; i < gpu_results.size(); i++)
+    auto nvgpu_results = execute(nvgpu_f, args, "GPU");
+    for (size_t i = 0; i < nvgpu_results.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(gpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+        EXPECT_TRUE(test::all_close(nvgpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
 
-TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_2rnn_layer_3lstm_cell)
+TEST(nvgpu_fusion, rnn_fusion_inter_vs_nvgpu_2rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
-    auto gpu_f = make_function(file_name);
+    auto nvgpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
     test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;
@@ -488,20 +488,20 @@ TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_2rnn_layer_3lstm_cell)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto gpu_results = execute(gpu_f, args, "GPU");
-    for (size_t i = 0; i < gpu_results.size(); i++)
+    auto nvgpu_results = execute(nvgpu_f, args, "GPU");
+    for (size_t i = 0; i < nvgpu_results.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(gpu_results.at(i), int_results.at(i), 1.0e-3f, 1.0e-3f));
+        EXPECT_TRUE(test::all_close(nvgpu_results.at(i), int_results.at(i), 1.0e-3f, 1.0e-3f));
     }
 }
 
-TEST(gpu_fusion, fuse_rnn_across_layer)
+TEST(nvgpu_fusion, fuse_rnn_across_layer)
 {
     pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
+    pass_manager.register_pass<runtime::nvgpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::nvgpu::pass::RNNFusion>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<runtime::gpu::pass::MultiLayerRNNFusion>();
+    pass_manager.register_pass<runtime::nvgpu::pass::MultiLayerRNNFusion>();
     const string json_path =
         file_util::path_join(SERIALIZED_ZOO, "mxnet/2rnn_layer_1timestep.json");
     const string json_string = file_util::read_file_to_string(json_path);
@@ -509,14 +509,14 @@ TEST(gpu_fusion, fuse_rnn_across_layer)
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass_manager.run_passes(func);
     size_t ref_rnn_count = 1;
-    auto rnn_count = count_ops_of_type<op::gpu::Rnn>(func);
+    auto rnn_count = count_ops_of_type<op::nvgpu::Rnn>(func);
     EXPECT_EQ(ref_rnn_count, rnn_count);
 }
 
-TEST(gpu_fusion, fuse_rnn_across_2layer_1timestep)
+TEST(nvgpu_fusion, fuse_rnn_across_2layer_1timestep)
 {
     const std::string file_name("mxnet/2rnn_layer_1timestep.json");
-    auto gpu_f = make_function(file_name);
+    auto nvgpu_f = make_function(file_name);
     auto int_f = make_function(file_name);
     test::Uniform<float> rng(-10.0f, 10.0f);
     vector<vector<float>> args;
@@ -528,13 +528,13 @@ TEST(gpu_fusion, fuse_rnn_across_2layer_1timestep)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto gpu_results = execute(gpu_f, args, "GPU");
+    auto nvgpu_results = execute(nvgpu_f, args, "GPU");
 
     // TODO (pruthvi): Enable this after fixing failing
     // mxnet rnn unit tests
-    // EXPECT_EQ(1, count_ops_of_type<op::gpu::Rnn>(gpu_f));
-    for (size_t i = 0; i < gpu_results.size(); i++)
+    // EXPECT_EQ(1, count_ops_of_type<op::nvgpu::Rnn>(nvgpu_f));
+    for (size_t i = 0; i < nvgpu_results.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(gpu_results.at(1), int_results.at(1), 1.0e-4f, 1.0e-4f));
+        EXPECT_TRUE(test::all_close(nvgpu_results.at(1), int_results.at(1), 1.0e-4f, 1.0e-4f));
     }
 }

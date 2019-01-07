@@ -583,8 +583,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_max)
         make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
     auto interp_f_1 =
         make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
-    auto gpu_f_0 = ngraph::clone_function(*interp_f_0);
-    auto gpu_f_1 = ngraph::clone_function(*interp_f_1);
+    auto backend_f_0 = ngraph::clone_function(*interp_f_0);
+    auto backend_f_1 = ngraph::clone_function(*interp_f_1);
 
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : interp_f_0->get_parameters())
@@ -595,19 +595,19 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_max)
     }
 
     auto interp_results_0 = execute<float, int32_t>(interp_f_0, args, "INTERPRETER");
-    auto gpu_results_0 = execute<float, int32_t>(gpu_f_0, args, "${BACKEND_NAME}");
-    for (size_t i = 0; i < gpu_results_0.size(); i++)
+    auto backend_results_0 = execute<float, int32_t>(backend_f_0, args, "${BACKEND_NAME}");
+    for (size_t i = 0; i < backend_results_0.size(); i++)
     {
-        EXPECT_EQ(gpu_results_0.at(i), interp_results_0.at(i));
+        EXPECT_EQ(backend_results_0.at(i), interp_results_0.at(i));
     }
 
     auto interp_results_1 = execute(interp_f_1, args, "INTERPRETER");
-    auto gpu_results_1 = execute(gpu_f_1, args, "${BACKEND_NAME}");
+    auto backend_results_1 = execute(backend_f_1, args, "${BACKEND_NAME}");
 
-    for (size_t i = 0; i < gpu_results_1.size(); i++)
+    for (size_t i = 0; i < backend_results_1.size(); i++)
     {
         EXPECT_TRUE(test::all_close_f(
-            gpu_results_1.at(i), interp_results_1.at(i), MIN_FLOAT_TOLERANCE_BITS));
+            backend_results_1.at(i), interp_results_1.at(i), MIN_FLOAT_TOLERANCE_BITS));
     }
 }
 
@@ -622,8 +622,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_min)
         make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
     auto interp_f_1 =
         make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
-    auto gpu_f_0 = ngraph::clone_function(*interp_f_0);
-    auto gpu_f_1 = ngraph::clone_function(*interp_f_1);
+    auto backend_f_0 = ngraph::clone_function(*interp_f_0);
+    auto backend_f_1 = ngraph::clone_function(*interp_f_1);
 
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : interp_f_0->get_parameters())
@@ -634,19 +634,19 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_min)
     }
 
     auto interp_results_0 = execute<float, int32_t>(interp_f_0, args, "INTERPRETER");
-    auto gpu_results_0 = execute<float, int32_t>(gpu_f_0, args, "${BACKEND_NAME}");
-    for (size_t i = 0; i < gpu_results_0.size(); i++)
+    auto backend_results_0 = execute<float, int32_t>(backend_f_0, args, "${BACKEND_NAME}");
+    for (size_t i = 0; i < backend_results_0.size(); i++)
     {
-        EXPECT_EQ(gpu_results_0.at(i), interp_results_0.at(i));
+        EXPECT_EQ(backend_results_0.at(i), interp_results_0.at(i));
     }
 
     auto interp_results_1 = execute(interp_f_1, args, "INTERPRETER");
-    auto gpu_results_1 = execute(gpu_f_1, args, "${BACKEND_NAME}");
+    auto backend_results_1 = execute(backend_f_1, args, "${BACKEND_NAME}");
 
-    for (size_t i = 0; i < gpu_results_1.size(); i++)
+    for (size_t i = 0; i < backend_results_1.size(); i++)
     {
         EXPECT_TRUE(test::all_close_f(
-            gpu_results_1.at(i), interp_results_1.at(i), MIN_FLOAT_TOLERANCE_BITS));
+            backend_results_1.at(i), interp_results_1.at(i), MIN_FLOAT_TOLERANCE_BITS));
     }
 }
 
