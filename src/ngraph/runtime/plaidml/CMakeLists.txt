@@ -62,7 +62,6 @@ set(SRC
 
 add_library(libplaidml INTERFACE)
 target_link_libraries(libplaidml INTERFACE ${PLAIDML_LIBRARIES})
-install(FILES ${PLAIDML_LIBRARIES} DESTINATION ${NGRAPH_INSTALL_LIB})
 add_library(plaidml_backend SHARED ${SRC})
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(plaidml_backend PROPERTIES
