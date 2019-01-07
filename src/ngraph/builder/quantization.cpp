@@ -385,20 +385,23 @@ namespace ngraph
                                              const bool with_bn)
         {
             // BN folding
-            auto bn_eps = op::Constant::create(element::f32, Shape{}, {0.001});
-            auto var_eps = std::make_shared<op::Add>(
-                variance,
-                std::make_shared<op::Broadcast>(bn_eps, variance->get_shape(), AxisSet{0}));
-            auto sqrt_var_eps = std::make_shared<op::Sqrt>(var_eps);
+            if (with_bn)
+            {
+                auto bn_eps = op::Constant::create(element::f32, Shape{}, {0.001});
+                auto var_eps = std::make_shared<op::Add>(
+                    variance,
+                    std::make_shared<op::Broadcast>(bn_eps, variance->get_shape(), AxisSet{0}));
+                auto sqrt_var_eps = std::make_shared<op::Sqrt>(var_eps);
 
-            auto mean_gamma = std::make_shared<op::Multiply>(mean, gamma);
-            auto new_biases = std::make_shared<op::Subtract>(
-                beta, std::make_shared<op::Divide>(mean_gamma, sqrt_var_eps));
-            auto weight_scaling = std::make_shared<op::Divide>(gamma, sqrt_var_eps);
-            auto new_weights = std::make_shared<op::Multiply>(
-                filters,
-                std::make_shared<op::Broadcast>(
-                    weight_scaling, filters->get_shape(), AxisSet{1, 2, 3}));
+                auto mean_gamma = std::make_shared<op::Multiply>(mean, gamma);
+                auto new_biases = std::make_shared<op::Subtract>(
+                    beta, std::make_shared<op::Divide>(mean_gamma, sqrt_var_eps));
+                auto weight_scaling = std::make_shared<op::Divide>(gamma, sqrt_var_eps);
+                filters = std::make_shared<op::Multiply>(
+                    filters,
+                    std::make_shared<op::Broadcast>(
+                        weight_scaling, filters->get_shape(), AxisSet{1, 2, 3}));
+            }
 
             // quantize weights and bias
             auto min_filter = std::make_shared<op::Min>(filters, AxisSet{0, 1, 2, 3});
@@ -417,10 +420,13 @@ namespace ngraph
             auto bias_scale =
                 quantization_util::get_bias_scale(min_input, max_input, min_filter, max_filter);
             op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
-            bias = make_shared<op::Quantize>(
-                bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
+            if (bias != nullptr)
+            {
+                bias = make_shared<op::Quantize>(
+                    bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
+            }
             auto new_weights_i8 =
-                make_shared<op::Quantize>(new_weights,
+                make_shared<op::Quantize>(filters,
                                           bias_scale,
                                           make_constant(element::i8, min_input->get_shape(), 0),
                                           element::i8,
@@ -428,6 +434,50 @@ namespace ngraph
                                           round_mode);
 
             // invoke quantized conv builder api
+            if (bias == nullptr)
+            {
+                if (with_relu)
+                {
+                    return make_shared<op::QuantizedConvolutionRelu>(input,
+                                                                     new_weights_i8,
+                                                                     window_movement_strides,
+                                                                     window_dilation_strides,
+                                                                     padding_below,
+                                                                     padding_above,
+                                                                     data_dilation_strides,
+                                                                     requantization_scale);
+                }
+                return make_shared<op::QuantizedConvolution>(input,
+                                                             new_weights_i8,
+                                                             window_movement_strides,
+                                                             window_dilation_strides,
+                                                             padding_below,
+                                                             padding_above,
+                                                             data_dilation_strides,
+                                                             requantization_scale);
+            }
+            // i8.conv -> sum -> relu
+            if (sum_input != nullptr)
+            {
+                auto sum_scale = builder::quantization_util::get_sum_scale(
+                    min_freezed_output, max_freezed_output, sum_min_input, sum_max_input);
+
+                // TODO: check for signed or unsigned sum
+                return make_shared<op::QuantizedConvolutionBiasSignedAdd>(input,
+                                                                          new_weights_i8,
+                                                                          bias,
+                                                                          sum_input,
+                                                                          window_movement_strides,
+                                                                          window_dilation_strides,
+                                                                          padding_below,
+                                                                          padding_above,
+                                                                          data_dilation_strides,
+                                                                          requantization_scale,
+                                                                          sum_scale,
+                                                                          with_relu);
+            }
+
+            // i8.conv_bias -> relu
             return make_shared<op::QuantizedConvolutionBias>(input,
                                                              new_weights_i8,
                                                              bias,
