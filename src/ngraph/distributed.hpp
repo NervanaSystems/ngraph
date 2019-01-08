@@ -19,13 +19,26 @@
 #include <cstddef>
 
 namespace ngraph
-{
-    class Distributed
-    {
-    public:
-        Distributed();
-        ~Distributed();
-        size_t get_size() const;
-        size_t get_rank() const;
-    };
+{   
+    namespace distributed
+    {   
+        static  int distributed_get_rank(); 
+    //    static  int distributed_get_rank(){
+    //         int rank;
+    //         MPI_Comm_rank(MPI_COMM_WORLD, &rank);	
+    //         return rank;
+    //     }
+    }
+        class Distributed
+        {
+        public:
+            Distributed();
+            ~Distributed();
+            void initialize(); 
+            void finalize(); 
+            int get_size() const;
+            int get_rank() const;
+        };
+   
 }
+

@@ -16,35 +16,97 @@
 
 #ifdef NGRAPH_DISTRIBUTED
 
-#include <mlsl.hpp>
+// #ifdef NGRAPH_CPU_ENABLE
+// #include <mlsl.hpp>
+// #endif
+
+#include <mpi.h>
 
 #include "ngraph/distributed.hpp"
 
 using namespace ngraph;
 
+int ngraph::distributed::distributed_get_rank(){
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);	
+    return rank;
+}
+
 ngraph::Distributed::Distributed()
 {
-    if (!MLSL::Environment::GetEnv().IsInitialized())
-    {
-        MLSL::Environment::GetEnv().Init(nullptr, nullptr);
-    }
+// #ifdef NGRAPH_CPU_ENABLE
+//     if (!MLSL::Environment::GetEnv().IsInitialized())
+//     {
+//         MLSL::Environment::GetEnv().Init(nullptr, nullptr);
+//     }
+// #endif
+
+    // int flag = 0;
+    // MPI_Initialized(&flag);	
+    // if (!flag)
+    // {
+    //     MPI_Init(NULL, NULL);
+    // }
+
 }
 
 ngraph::Distributed::~Distributed()
 {
-    if (MLSL::Environment::GetEnv().IsInitialized())
+// #ifdef NGRAPH_CPU_ENABLE
+//     if (MLSL::Environment::GetEnv().IsInitialized())
+//     {
+//         MLSL::Environment::GetEnv().Finalize();
+//     }
+// #endif
+    // MPI_Finalize();
+}
+
+void ngraph::Distributed::initialize()
+{
+// #ifdef NGRAPH_CPU_ENABLE
+//     if (!MLSL::Environment::GetEnv().IsInitialized())
+//     {
+//         MLSL::Environment::GetEnv().Init(nullptr, nullptr);
+//     }
+// #endif
+
+    int flag = 0;
+    MPI_Initialized(&flag);	
+    if (!flag)
     {
-        MLSL::Environment::GetEnv().Finalize();
+        MPI_Init(NULL, NULL);
     }
+
 }
 
-size_t ngraph::Distributed::get_size() const
+void ngraph::Distributed::finalize()
 {
-    return MLSL::Environment::GetEnv().GetProcessCount();
+// #ifdef NGRAPH_CPU_ENABLE
+//     if (MLSL::Environment::GetEnv().IsInitialized())
+//     {
+//         MLSL::Environment::GetEnv().Finalize();
+//     }
+// #endif
+    MPI_Finalize();
 }
 
-size_t ngraph::Distributed::get_rank() const
+int ngraph::Distributed::get_size() const
 {
-    return MLSL::Environment::GetEnv().GetProcessIdx();
+// #ifdef NGRAPH_CPU_ENABLE
+//     return MLSL::Environment::GetEnv().GetProcessCount();
+// #endif
+    int size;
+    MPI_Comm_size(MPI_COMM_WORLD, &size);	
+    return size;
+}
+
+int ngraph::Distributed::get_rank() const
+{
+// #ifdef NGRAPH_CPU_ENABLE
+//     return MLSL::Environment::GetEnv().GetProcessIdx();
+// #endif
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);	
+    return rank;
 }
 #endif
