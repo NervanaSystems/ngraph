@@ -193,7 +193,8 @@ op::QuantizedConvolutionBiasSignedAdd::QuantizedConvolutionBiasSignedAdd(
     // TODO: call ngraph util
     // util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
 
-    assert(with_relu == true);
+    // TODO (nbpate): Remove with_relu arg from the API
+    NGRAPH_ASSERT(with_relu == true) << "with_relu must be true";
     set_output_type(0,
                     element::i8,
                     util::infer_convolution_output_shape(this,
