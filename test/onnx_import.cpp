@@ -14,8 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cmath>
 #include <cstdint>
 #include <fstream>
+#include <iterator>
+#include <limits>
 #include <sstream>
 #include <vector>
 
@@ -1536,6 +1539,74 @@ TEST(onnx, model_matmul_vec_ten3d)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
+TEST(onnx, model_softplus)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/softplus.onnx"));
+
+    // -1.0f, 0, 1.0f, 10.f,                    normal input values for activation
+    // 100.0f, -100.0f, 1000.0f, -1000.0f,      input values that leads to exp() overflow
+    // FLT_MIN, FLT_MIN / 16, -FLT_MIN / 16,    min, denorm, -denorm
+    // FLT_MAX, -FLT_MAX,                       max, -max;
+    Inputs inputs{std::vector<float>{-1.0f,
+                                     0,
+                                     1.0f,
+                                     10.f,
+                                     100.0f,
+                                     -100.0f,
+                                     1000.0f,
+                                     -1000.0f,
+                                     FLT_MIN,
+                                     FLT_MIN / 16,
+                                     -FLT_MIN / 16,
+                                     FLT_MAX,
+                                     -FLT_MAX}};
+
+    std::vector<float>& input = inputs.back();
+    std::vector<float> output;
+    auto softplus_impl = [](float x) -> float {
+        if (x > 0)
+        {
+            return x + std::log(std::exp(-x) + 1);
+        }
+        else
+        {
+            return std::log(std::exp(x) + 1);
+        }
+    };
+
+    std::transform(std::begin(input), std::end(input), std::back_inserter(output), softplus_impl);
+
+    Outputs expected_output{output};
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+
+    inputs.clear();
+    outputs.clear();
+    expected_output.clear();
+
+    inputs.emplace_back(std::vector<float>{std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity(),
+                                           std::numeric_limits<float>::infinity()});
+    input = inputs.back();
+    outputs = execute(function, inputs, "INTERPRETER");
+
+    for (float v : outputs.front())
+    {
+        EXPECT_TRUE(std::isinf(v));
+    }
+}
+
 TEST(onnx, model_sum_opset8)
 {
     auto function = onnx_import::import_onnx_model(
@@ -1556,4 +1627,54 @@ TEST(onnx, model_sum_opset8)
 
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_conv_transpose_w_groups)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv_transpose_w_groups.onnx"));
+
+    Inputs inputs;
+    inputs.emplace_back(std::vector<float>{
+        0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f});
+    inputs.emplace_back(std::vector<float>{0.f,  1.f,  2.f,  3.f,  4.f,  5.f,  6.f,  7.f,
+                                           8.f,  9.f,  10.f, 11.f, 12.f, 13.f, 14.f, 15.f,
+                                           16.f, 17.f, 18.f, 19.f, 20.f, 21.f, 22.f, 23.f,
+                                           24.f, 25.f, 26.f, 27.f, 28.f, 29.f, 30.f, 31.0f});
+
+    Outputs expected_output{
+        std::vector<float>{28.f, 34.f, 252.f, 274.f, 732.f, 770.f, 1468.f, 1522.f}};
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_argmax_int32)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/argmax_int32.onnx"));
+
+    std::vector<std::vector<std::int32_t>> inputs{
+        std::vector<std::int32_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}};
+
+    std::vector<std::vector<std::int64_t>> expected_output{
+        std::vector<std::int64_t>{1, 1, 1, 1, 1, 1}};
+
+    std::vector<std::vector<std::int64_t>> outputs{
+        execute<std::int32_t, std::int64_t>(function, inputs, "CPU")};
+    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_argmin_int32)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/argmin_int32.onnx"));
+
+    std::vector<std::vector<std::int32_t>> inputs{
+        std::vector<std::int32_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}};
+
+    std::vector<std::vector<std::int64_t>> expected_output{std::vector<std::int64_t>{0, 0, 0, 0}};
+
+    std::vector<std::vector<std::int64_t>> outputs{
+        execute<std::int32_t, std::int64_t>(function, inputs, "CPU")};
+    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }

@@ -139,7 +139,17 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
 endif()
 
-option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" FALSE)
+find_package(PlaidML CONFIG)
+
+option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
+
+if (NGRAPH_PLAIDML_ENABLE)
+    if (NOT PLAIDML_FOUND)
+        message(FATAL_ERROR "PlaidML not installed")
+    endif()
+endif()
+
+message(STATUS "NGRAPH_PLAIDML_ENABLE:        ${NGRAPH_PLAIDML_ENABLE}")
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
@@ -301,11 +311,9 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     else()
         find_package(Protobuf 2.6.1 REQUIRED)
     endif()
-    if (NGRAPH_ONNXIFI_ENABLE)
-        include(cmake/external_onnx.cmake)
-        if (TARGET ext_protobuf)
-            add_dependencies(ext_onnx ext_protobuf)
-        endif()
+    include(cmake/external_onnx.cmake)
+    if (TARGET ext_protobuf)
+        add_dependencies(ext_onnx ext_protobuf)
     endif()
 endif()
 
