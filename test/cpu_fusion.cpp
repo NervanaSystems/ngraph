@@ -3040,12 +3040,6 @@ TEST(cpu_fusion, fuse_batch_dot_backward)
     auto int_results = execute(int_df, args, "INTERPRETER");
     auto cpu_results = execute(cpu_df, args, "CPU");
 
-    {
-        pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("batch_dot_bprop_result.pdf");
-        pass_manager.run_passes(cpu_df);
-    }
-
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
