@@ -62,7 +62,8 @@ void runtime::nvgpu::NVKernelArgs::validate()
     }
 }
 
-void runtime::nvgpu::NVKernelArgs::add_to_signature(const std::string& type, const std::string& name)
+void runtime::nvgpu::NVKernelArgs::add_to_signature(const std::string& type,
+                                                    const std::string& name)
 {
     if (m_input_signature.str() == "(")
     {
@@ -75,7 +76,7 @@ void runtime::nvgpu::NVKernelArgs::add_to_signature(const std::string& type, con
 }
 
 runtime::nvgpu::NVKernelArgs& runtime::nvgpu::NVKernelArgs::add_placeholder(const std::string& type,
-                                                                          const std::string& name)
+                                                                            const std::string& name)
 {
     validate();
     m_argument_list.push_back(nullptr);
@@ -85,7 +86,7 @@ runtime::nvgpu::NVKernelArgs& runtime::nvgpu::NVKernelArgs::add_placeholder(cons
 }
 
 runtime::nvgpu::NVKernelArgs& runtime::nvgpu::NVKernelArgs::resolve_placeholder(size_t arg_num,
-                                                                              void* address)
+                                                                                void* address)
 {
     if (m_placeholder_positions.at(arg_num))
     {

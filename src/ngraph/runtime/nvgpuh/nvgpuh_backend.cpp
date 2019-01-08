@@ -18,8 +18,8 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/pass/assign_placement.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 using namespace ngraph;

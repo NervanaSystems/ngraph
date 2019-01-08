@@ -79,8 +79,8 @@ std::vector<void*>
 }
 
 void* runtime::nvgpu::NVCallFrame::get_pointer(const TensorType& type,
-                                              const size_t& offset,
-                                              const std::string& name)
+                                               const size_t& offset,
+                                               const std::string& name)
 {
     switch (type)
     {

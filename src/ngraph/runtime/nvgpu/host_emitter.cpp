@@ -19,10 +19,10 @@
 #include <sstream>
 #include <vector>
 
+#include "ngraph/runtime/nvgpu/host_emitter.hpp"
 #include "ngraph/runtime/nvgpu/nvgpu_invoke.hpp"
 #include "ngraph/runtime/nvgpu/nvgpu_primitive_emitter.hpp"
 #include "ngraph/runtime/nvgpu/nvgpu_runtime_context.hpp"
-#include "ngraph/runtime/nvgpu/host_emitter.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -34,9 +34,9 @@ runtime::nvgpu::HostEmitter::HostEmitter(NVPrimitiveEmitter* emitter, NVRuntimeC
 }
 
 size_t runtime::nvgpu::HostEmitter::build_memcpy(const cudaMemcpyKind& kind,
-                                               size_t size,
-                                               size_t dst,
-                                               size_t src)
+                                                 size_t size,
+                                                 size_t dst,
+                                                 size_t src)
 {
     std::stringstream ss;
     ss << "memcpy" << kind << "_dst" << dst << "_src" << src << "_sz" << size;

@@ -52,11 +52,11 @@ namespace ngraph
                     const std::shared_ptr<NVBackend::BackendContext>& shared_context);
                 virtual ~NVInternalFunction();
 
-                virtual std::string
-                    add_to_runtime(size_t primitive_index,
-                                   const std::string& function_name,
-                                   const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
-                                   const std::vector<runtime::nvgpu::NVTensorWrapper>& out) override;
+                virtual std::string add_to_runtime(
+                    size_t primitive_index,
+                    const std::string& function_name,
+                    const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
+                    const std::vector<runtime::nvgpu::NVTensorWrapper>& out) override;
                 virtual std::string add_call_to_runtime(
                     const std::string& caller,
                     const std::string& callee,

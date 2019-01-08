@@ -121,10 +121,10 @@ using namespace std;
 using namespace ngraph;
 
 std::string runtime::nvgpu::NVInternalFunction::emit_op(NVCompiledFunction* compiled_function,
-                                                       const std::string& function_name,
-                                                       const ngraph::Node* node,
-                                                       const std::vector<NVTensorWrapper>& args,
-                                                       const std::vector<NVTensorWrapper>& out)
+                                                        const std::string& function_name,
+                                                        const ngraph::Node* node,
+                                                        const std::vector<NVTensorWrapper>& args,
+                                                        const std::vector<NVTensorWrapper>& out)
 {
     auto emit_function = NVEmitter::get_emit_function(*node);
     return emit_function(compiled_function, function_name, node, args, out);
@@ -424,8 +424,8 @@ void runtime::nvgpu::NVInternalFunction::save_manifest_to_disk() const
     out.close();
 }
 
-void runtime::nvgpu::NVInternalFunction::propagate_in_place_input(ngraph::descriptor::Output* output,
-                                                                 const std::string& input_name)
+void runtime::nvgpu::NVInternalFunction::propagate_in_place_input(
+    ngraph::descriptor::Output* output, const std::string& input_name)
 {
     // std::deque<ngraph::descriptor::Output*> stack;
     // stack.push_front(output);

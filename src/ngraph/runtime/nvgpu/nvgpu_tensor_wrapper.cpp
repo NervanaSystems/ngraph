@@ -85,7 +85,7 @@ const std::string& runtime::nvgpu::NVTensorWrapper::get_type() const
 }
 
 std::ostream& ngraph::runtime::nvgpu::operator<<(std::ostream& out,
-                                               const ngraph::runtime::nvgpu::NVTensorWrapper& obj)
+                                                 const ngraph::runtime::nvgpu::NVTensorWrapper& obj)
 {
     static std::vector<std::string> types{"CONSTANT", "INTERMEDIATE", "INPUT", "OUTPUT", "UNKNOWN"};
     out << "nvgpu::tensor { name: " << obj.m_tensor->get_name()

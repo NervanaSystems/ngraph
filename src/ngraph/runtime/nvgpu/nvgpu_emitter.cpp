@@ -1510,9 +1510,9 @@ string runtime::nvgpu::NVEmitter::node_names(const vector<NVTensorWrapper>& args
 
 // assumes NC{d1,d2,d3,...} format
 Shape runtime::nvgpu::get_padded_shape(const Shape& input_shape,
-                                     const Shape& padding_below,
-                                     const Shape& padding_above,
-                                     const Shape& padding_interior)
+                                       const Shape& padding_below,
+                                       const Shape& padding_above,
+                                       const Shape& padding_interior)
 {
     Shape padded_shape = input_shape;
     int64_t i = input_shape.size() - 1;

@@ -38,9 +38,9 @@ class ngraph::runtime::nvgpu::NVTensor : public ngraph::runtime::Tensor
 public:
     NVTensor(const ngraph::element::Type& element_type, const Shape& shape, const Backend* parent);
     NVTensor(const ngraph::element::Type& element_type,
-              const Shape& shape,
-              void* memory_pointer,
-              const Backend* parent);
+             const Shape& shape,
+             void* memory_pointer,
+             const Backend* parent);
     virtual ~NVTensor() override;
 
     /// \brief Write bytes directly into the tensor

@@ -18,13 +18,13 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_tensor.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
 #include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
 #include "ngraph/runtime/hybrid/pass/fix_get_output_element.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
+#include "ngraph/runtime/nvgpu/nvgpu_tensor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 using namespace ngraph;

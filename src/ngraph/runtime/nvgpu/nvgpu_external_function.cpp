@@ -146,10 +146,10 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
 }
 
 std::string runtime::nvgpu::NVExternalFunction::emit_op(NVCompiledFunction* external_function,
-                                                       const std::string& function_name,
-                                                       const ngraph::Node* node,
-                                                       const std::vector<NVTensorWrapper>& args,
-                                                       const std::vector<NVTensorWrapper>& out)
+                                                        const std::string& function_name,
+                                                        const ngraph::Node* node,
+                                                        const std::vector<NVTensorWrapper>& args,
+                                                        const std::vector<NVTensorWrapper>& out)
 {
     auto emit_function = NVEmitter::get_emit_function(*node);
     return emit_function(external_function, function_name, node, args, out);
@@ -201,7 +201,8 @@ std::string runtime::nvgpu::NVExternalFunction::add_call_to_runtime(
 }
 
 std::string runtime::nvgpu::NVExternalFunction::node_names(
-    const std::vector<runtime::nvgpu::NVTensorWrapper>& args, std::initializer_list<int> arg_indexes)
+    const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
+    std::initializer_list<int> arg_indexes)
 {
     return runtime::nvgpu::NVEmitter::node_names(args, arg_indexes);
 }
@@ -620,7 +621,7 @@ void runtime::nvgpu::NVExternalFunction::emit_debug_function_exit(Node* node)
 }
 
 string runtime::nvgpu::NVExternalFunction::emit_op_as_function(const Node& node,
-                                                              const string& function_name)
+                                                               const string& function_name)
 {
     codegen::CodeWriter writer;
     writer << "static void " << function_name << "(";
@@ -682,8 +683,8 @@ string runtime::nvgpu::NVExternalFunction::emit_op_as_function(const Node& node,
     return rc;
 }
 
-void runtime::nvgpu::NVExternalFunction::propagate_in_place_input(ngraph::descriptor::Output* output,
-                                                                 const std::string& input_name)
+void runtime::nvgpu::NVExternalFunction::propagate_in_place_input(
+    ngraph::descriptor::Output* output, const std::string& input_name)
 {
     std::deque<ngraph::descriptor::Output*> stack;
     stack.push_front(output);

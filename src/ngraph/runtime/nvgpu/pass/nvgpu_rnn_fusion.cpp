@@ -21,7 +21,6 @@
 #include <typeinfo>
 #include <unordered_set>
 
-#include "nvgpu_rnn_fusion.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
@@ -46,6 +45,7 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/nvgpu/op/rnn.hpp"
+#include "nvgpu_rnn_fusion.hpp"
 
 #define RETURN_IF_FALSE(cond, message)                                                             \
     if (!(cond))                                                                                   \
@@ -231,16 +231,16 @@ void ngraph::runtime::nvgpu::pass::LSTMFusion::construct_lstm_fprop()
                                               pattern_map[bias_i2h],
                                               pattern_map[bias_h2h]);
             lstm = std::make_shared<op::nvgpu::Rnn>(pattern_map[input_xt],
-                                                  pattern_map[hidden_ht],
-                                                  params,
-                                                  pattern_map[ct_1],
-                                                  1,
-                                                  4,
-                                                  1,
-                                                  pattern_map[input_xt]->get_shape()[1],
-                                                  pattern_map[hidden_ht]->get_shape()[1],
-                                                  1,
-                                                  1);
+                                                    pattern_map[hidden_ht],
+                                                    params,
+                                                    pattern_map[ct_1],
+                                                    1,
+                                                    4,
+                                                    1,
+                                                    pattern_map[input_xt]->get_shape()[1],
+                                                    pattern_map[hidden_ht]->get_shape()[1],
+                                                    1,
+                                                    1);
         }
         else if (!intermediate_lstm &&
                  (std::dynamic_pointer_cast<op::Broadcast>(pattern_map[input_xt]) &&
@@ -252,16 +252,16 @@ void ngraph::runtime::nvgpu::pass::LSTMFusion::construct_lstm_fprop()
                                               pattern_map[bias_h2h],
                                               pattern_map[bias_i2h]);
             lstm = std::make_shared<op::nvgpu::Rnn>(pattern_map[hidden_ht],
-                                                  pattern_map[input_xt],
-                                                  params,
-                                                  pattern_map[ct_1],
-                                                  1,
-                                                  4,
-                                                  1,
-                                                  pattern_map[hidden_ht]->get_shape()[1],
-                                                  pattern_map[input_xt]->get_shape()[1],
-                                                  1,
-                                                  1);
+                                                    pattern_map[input_xt],
+                                                    params,
+                                                    pattern_map[ct_1],
+                                                    1,
+                                                    4,
+                                                    1,
+                                                    pattern_map[hidden_ht]->get_shape()[1],
+                                                    pattern_map[input_xt]->get_shape()[1],
+                                                    1,
+                                                    1);
         }
         else if (pattern_map[hidden_ht]->get_arguments().size() &&
                  pattern_map[ct_1]->get_arguments().at(0)->get_instance_id() ==
@@ -277,16 +277,16 @@ void ngraph::runtime::nvgpu::pass::LSTMFusion::construct_lstm_fprop()
                                               pattern_map[bias_i2h],
                                               pattern_map[bias_h2h]);
             lstm = std::make_shared<op::nvgpu::Rnn>(pattern_map[input_xt],
-                                                  pattern_map[hidden_ht],
-                                                  params,
-                                                  pattern_map[ct_1],
-                                                  1,
-                                                  4,
-                                                  1,
-                                                  pattern_map[input_xt]->get_shape()[1],
-                                                  pattern_map[hidden_ht]->get_shape()[1],
-                                                  1,
-                                                  1);
+                                                    pattern_map[hidden_ht],
+                                                    params,
+                                                    pattern_map[ct_1],
+                                                    1,
+                                                    4,
+                                                    1,
+                                                    pattern_map[input_xt]->get_shape()[1],
+                                                    pattern_map[hidden_ht]->get_shape()[1],
+                                                    1,
+                                                    1);
         }
         else
         {
@@ -298,16 +298,16 @@ void ngraph::runtime::nvgpu::pass::LSTMFusion::construct_lstm_fprop()
                                               pattern_map[bias_h2h],
                                               pattern_map[bias_i2h]);
             lstm = std::make_shared<op::nvgpu::Rnn>(pattern_map[hidden_ht],
-                                                  pattern_map[input_xt],
-                                                  params,
-                                                  pattern_map[ct_1],
-                                                  1,
-                                                  4,
-                                                  1,
-                                                  pattern_map[hidden_ht]->get_shape()[1],
-                                                  pattern_map[input_xt]->get_shape()[1],
-                                                  1,
-                                                  1);
+                                                    pattern_map[input_xt],
+                                                    params,
+                                                    pattern_map[ct_1],
+                                                    1,
+                                                    4,
+                                                    1,
+                                                    pattern_map[hidden_ht]->get_shape()[1],
+                                                    pattern_map[input_xt]->get_shape()[1],
+                                                    1,
+                                                    1);
         }
 
         auto ht_output = std::make_shared<op::GetOutputElement>(lstm, 0);
@@ -380,16 +380,16 @@ void ngraph::runtime::nvgpu::pass::RNNFusion::construct_rnn_lstm_fprop()
     auto rpattern_ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
 
     auto lstm = std::make_shared<op::nvgpu::Rnn>(xt,
-                                               ht_1,
-                                               params_label,
-                                               rpattern_ct_1,
-                                               1,
-                                               4,
-                                               1,
-                                               xt->get_shape()[1],
-                                               ht_1->get_shape()[1],
-                                               1,
-                                               1);
+                                                 ht_1,
+                                                 params_label,
+                                                 rpattern_ct_1,
+                                                 1,
+                                                 4,
+                                                 1,
+                                                 xt->get_shape()[1],
+                                                 ht_1->get_shape()[1],
+                                                 1,
+                                                 1);
     auto goe = std::make_shared<op::GetOutputElement>(lstm, 0); // hidden output
     auto lstm_node_label = std::make_shared<pattern::op::Label>(goe, nullptr, NodeVector{goe});
 
@@ -493,16 +493,16 @@ void ngraph::runtime::nvgpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                         "be float32");
 
         auto rnn = std::make_shared<op::nvgpu::Rnn>(src_layer,
-                                                  src_iter,
-                                                  params,
-                                                  state_iter,
-                                                  num_of_lstm_matched,
-                                                  num_gates_in_lstm,
-                                                  sequence_len,
-                                                  src_layer_feature_size,
-                                                  feature_size,
-                                                  direction,
-                                                  num_fused_rnn_layers);
+                                                    src_iter,
+                                                    params,
+                                                    state_iter,
+                                                    num_of_lstm_matched,
+                                                    num_gates_in_lstm,
+                                                    sequence_len,
+                                                    src_layer_feature_size,
+                                                    feature_size,
+                                                    direction,
+                                                    num_fused_rnn_layers);
 
         std::vector<std::shared_ptr<op::Slice>> ht_slice_per_timestep(num_of_lstm_matched, nullptr);
         auto rnn_ht_out = std::make_shared<op::GetOutputElement>(rnn, 0);
@@ -668,16 +668,16 @@ void ngraph::runtime::nvgpu::pass::MultiLayerRNNFusion::construct_multi_layer_rn
     size_t ref_num_of_rnn_fused_layer = 1;
 
     auto ref_rnn_node = std::make_shared<op::nvgpu::Rnn>(src_slice,
-                                                       src_iter_label,
-                                                       params_label,
-                                                       state_iter_label,
-                                                       ref_number_of_timesteps,
-                                                       ref_number_of_gates_per_cell,
-                                                       ref_src_seq_length,
-                                                       ref_src_layer_feature_size,
-                                                       ref_feature_size,
-                                                       ref_rnn_direction,
-                                                       ref_num_of_rnn_fused_layer);
+                                                         src_iter_label,
+                                                         params_label,
+                                                         state_iter_label,
+                                                         ref_number_of_timesteps,
+                                                         ref_number_of_gates_per_cell,
+                                                         ref_src_seq_length,
+                                                         ref_src_layer_feature_size,
+                                                         ref_feature_size,
+                                                         ref_rnn_direction,
+                                                         ref_num_of_rnn_fused_layer);
 
     auto rnn_ht_out = std::make_shared<op::GetOutputElement>(ref_rnn_node, 0);
     auto rnn_ht_label =
@@ -779,16 +779,16 @@ void ngraph::runtime::nvgpu::pass::MultiLayerRNNFusion::construct_multi_layer_rn
                 "for each layer");
 
             auto rnn = std::make_shared<op::nvgpu::Rnn>(src_layer,
-                                                      src_iter,
-                                                      params,
-                                                      state_iter,
-                                                      num_time_steps,
-                                                      num_gates_in_lstm,
-                                                      sequence_len,
-                                                      src_layer_feature_size,
-                                                      feature_size,
-                                                      rnn_direction,
-                                                      num_fused_rnn_layers);
+                                                        src_iter,
+                                                        params,
+                                                        state_iter,
+                                                        num_time_steps,
+                                                        num_gates_in_lstm,
+                                                        sequence_len,
+                                                        src_layer_feature_size,
+                                                        feature_size,
+                                                        rnn_direction,
+                                                        num_fused_rnn_layers);
 
             auto output_layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 0);
             auto layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 1);

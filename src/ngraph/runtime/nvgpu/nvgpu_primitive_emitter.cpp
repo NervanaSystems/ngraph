@@ -83,7 +83,8 @@ void NVPrimitiveEmitter::cache(const std::string& hash, const size_t& index)
     m_primitive_map.insert({hash, index});
 }
 
-size_t NVPrimitiveEmitter::register_primitive(std::unique_ptr<nvgpu::primitive>& f, std::string hash)
+size_t NVPrimitiveEmitter::register_primitive(std::unique_ptr<nvgpu::primitive>& f,
+                                              std::string hash)
 {
     size_t primitive_index = this->insert(std::move(f));
     this->cache(hash, primitive_index);

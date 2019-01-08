@@ -24,10 +24,11 @@
 using namespace ngraph;
 #define WARPSIZE 32
 
-void runtime::nvgpu::CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& writer,
-                                                         const std::string& name,
-                                                         const std::string& op,
-                                                         const std::vector<std::string>& data_types)
+void runtime::nvgpu::CudaKernelBuilder::get_elementwise_op(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    const std::string& op,
+    const std::vector<std::string>& data_types)
 {
     auto num_inputs = data_types.size() - 1;
     writer << "extern \"C\" __global__ void cuda_" << name << "(";
@@ -59,9 +60,9 @@ void runtime::nvgpu::CudaKernelBuilder::get_elementwise_op(codegen::CodeWriter& 
 }
 
 void runtime::nvgpu::CudaKernelBuilder::get_memset_op(codegen::CodeWriter& writer,
-                                                    const std::string& name,
-                                                    const std::string& data_type,
-                                                    runtime::nvgpu::NVKernelArgs& args)
+                                                      const std::string& name,
+                                                      const std::string& data_type,
+                                                      runtime::nvgpu::NVKernelArgs& args)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -81,8 +82,8 @@ void runtime::nvgpu::CudaKernelBuilder::get_memset_op(codegen::CodeWriter& write
 }
 
 void runtime::nvgpu::CudaKernelBuilder::get_cudnn_bn_inv_var_op(codegen::CodeWriter& writer,
-                                                              const std::string& name,
-                                                              runtime::nvgpu::NVKernelArgs& args)
+                                                                const std::string& name,
+                                                                runtime::nvgpu::NVKernelArgs& args)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -180,11 +181,11 @@ void runtime::nvgpu::CudaKernelBuilder::get_ew_collective_op(
 }
 
 void runtime::nvgpu::CudaKernelBuilder::get_topk(codegen::CodeWriter& writer,
-                                               const std::string& name,
-                                               const std::vector<std::string>& dtypes,
-                                               bool compute_max,
-                                               runtime::nvgpu::NVKernelArgs& args,
-                                               bool use_malloc)
+                                                 const std::string& name,
+                                                 const std::vector<std::string>& dtypes,
+                                                 bool compute_max,
+                                                 runtime::nvgpu::NVKernelArgs& args,
+                                                 bool use_malloc)
 {
     writer << "struct Entry\n";
     writer.block_begin();
@@ -304,11 +305,11 @@ void runtime::nvgpu::CudaKernelBuilder::get_topk(codegen::CodeWriter& writer,
 }
 
 void runtime::nvgpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer,
-                                                     const std::string& name,
-                                                     runtime::nvgpu::NVKernelArgs& args,
-                                                     const std::vector<std::string>& data_types,
-                                                     size_t out_rank,
-                                                     size_t reduce_rank)
+                                                       const std::string& name,
+                                                       runtime::nvgpu::NVKernelArgs& args,
+                                                       const std::vector<std::string>& data_types,
+                                                       size_t out_rank,
+                                                       size_t reduce_rank)
 {
     auto stable_sum_lambda = [&]() {
         writer << "input_i = __expf(input_i - r_max);\n";
@@ -1066,10 +1067,10 @@ void runtime::nvgpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
 }
 
 void runtime::nvgpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& writer,
-                                                       const std::string& name,
-                                                       const std::string& data_type,
-                                                       runtime::nvgpu::NVKernelArgs& args,
-                                                       const size_t rank)
+                                                         const std::string& name,
+                                                         const std::string& data_type,
+                                                         runtime::nvgpu::NVKernelArgs& args,
+                                                         const size_t rank)
 {
     writer << runtime::nvgpu::nvrtc::helpers();
     writer << runtime::nvgpu::nvrtc::define_non_coherent_load(data_type, "load");
@@ -1098,8 +1099,8 @@ void runtime::nvgpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& wr
 }
 
 void runtime::nvgpu::CudaKernelBuilder::get_onehot_op(codegen::CodeWriter& writer,
-                                                    const std::string& name,
-                                                    const std::array<std::string, 2>& data_types)
+                                                      const std::string& name,
+                                                      const std::array<std::string, 2>& data_types)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
            << data_types[1]
@@ -1127,10 +1128,10 @@ void runtime::nvgpu::CudaKernelBuilder::get_onehot_op(codegen::CodeWriter& write
 }
 
 void runtime::nvgpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer,
-                                                     const std::string& name,
-                                                     runtime::nvgpu::NVKernelArgs& args,
-                                                     const std::array<std::string, 2>& data_types,
-                                                     size_t rank)
+                                                       const std::string& name,
+                                                       runtime::nvgpu::NVKernelArgs& args,
+                                                       const std::array<std::string, 2>& data_types,
+                                                       size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -1158,10 +1159,10 @@ void runtime::nvgpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writ
 }
 
 void runtime::nvgpu::CudaKernelBuilder::get_reshape_op_2d(codegen::CodeWriter& writer,
-                                                        const std::string& name,
-                                                        runtime::nvgpu::NVKernelArgs& args,
-                                                        const std::string& data_type,
-                                                        uint32_t block_size)
+                                                          const std::string& name,
+                                                          runtime::nvgpu::NVKernelArgs& args,
+                                                          const std::string& data_type,
+                                                          uint32_t block_size)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -1207,11 +1208,11 @@ void runtime::nvgpu::CudaKernelBuilder::get_reshape_op_2d(codegen::CodeWriter& w
 }
 
 void runtime::nvgpu::CudaKernelBuilder::get_reshape_op_3d(codegen::CodeWriter& writer,
-                                                        const std::string& name,
-                                                        runtime::nvgpu::NVKernelArgs& args,
-                                                        const std::string& data_type,
-                                                        const std::vector<uint32_t>& order,
-                                                        const std::vector<uint32_t>& block_size)
+                                                          const std::string& name,
+                                                          runtime::nvgpu::NVKernelArgs& args,
+                                                          const std::string& data_type,
+                                                          const std::vector<uint32_t>& order,
+                                                          const std::vector<uint32_t>& block_size)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -1274,9 +1275,9 @@ void runtime::nvgpu::CudaKernelBuilder::get_reshape_op_3d(codegen::CodeWriter& w
 }
 
 void runtime::nvgpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& writer,
-                                                    const std::string& name,
-                                                    const std::string& data_type,
-                                                    size_t num_inputs)
+                                                      const std::string& name,
+                                                      const std::string& data_type,
+                                                      size_t num_inputs)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(";
     for (size_t i = 0; i < num_inputs; i++)
@@ -1316,9 +1317,9 @@ void runtime::nvgpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& write
 }
 
 void runtime::nvgpu::CudaKernelBuilder::get_pad_op(codegen::CodeWriter& writer,
-                                                 const std::string& name,
-                                                 NVKernelArgs& args,
-                                                 size_t rank)
+                                                   const std::string& name,
+                                                   NVKernelArgs& args,
+                                                   size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -1349,9 +1350,9 @@ void runtime::nvgpu::CudaKernelBuilder::get_pad_op(codegen::CodeWriter& writer,
 }
 
 void runtime::nvgpu::CudaKernelBuilder::get_pad_fill_op(codegen::CodeWriter& writer,
-                                                      const std::string& name,
-                                                      NVKernelArgs& args,
-                                                      size_t rank)
+                                                        const std::string& name,
+                                                        NVKernelArgs& args,
+                                                        size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -1434,9 +1435,9 @@ void runtime::nvgpu::CudaKernelBuilder::get_reverse_sequence_op(
     writer.block_end();
 }
 void runtime::nvgpu::CudaKernelBuilder::get_slice_op(codegen::CodeWriter& writer,
-                                                   const std::string& name,
-                                                   const std::array<std::string, 2>& data_types,
-                                                   size_t rank)
+                                                     const std::string& name,
+                                                     const std::array<std::string, 2>& data_types,
+                                                     size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
            << data_types[1] << "* out, uint32_t* input_strides, uint32_t* lower_bounds, uint32_t* "
@@ -1471,8 +1472,8 @@ void runtime::nvgpu::CudaKernelBuilder::get_slice_op(codegen::CodeWriter& writer
 }
 
 void runtime::nvgpu::CudaKernelBuilder::get_reverse_op(codegen::CodeWriter& writer,
-                                                     const std::string& name,
-                                                     const std::array<std::string, 2>& data_types)
+                                                       const std::string& name,
+                                                       const std::array<std::string, 2>& data_types)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
            << data_types[1]
@@ -1564,9 +1565,9 @@ void runtime::nvgpu::CudaKernelBuilder::get_reduce_window_op(
 }
 
 void runtime::nvgpu::CudaKernelBuilder::get_replace_slice_op(codegen::CodeWriter& writer,
-                                                           const std::string& name,
-                                                           runtime::nvgpu::NVKernelArgs& args,
-                                                           const size_t rank)
+                                                             const std::string& name,
+                                                             runtime::nvgpu::NVKernelArgs& args,
+                                                             const size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -1606,13 +1607,14 @@ void runtime::nvgpu::CudaKernelBuilder::get_replace_slice_op(codegen::CodeWriter
     writer.block_end();
 }
 
-void runtime::nvgpu::CudaKernelBuilder::get_max_pool_1d(codegen::CodeWriter& writer,
-                                                      const std::string& name,
-                                                      const std::array<std::string, 2>& data_types,
-                                                      size_t input_width,
-                                                      size_t output_width,
-                                                      size_t window_width,
-                                                      size_t window_stride)
+void runtime::nvgpu::CudaKernelBuilder::get_max_pool_1d(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    const std::array<std::string, 2>& data_types,
+    size_t input_width,
+    size_t output_width,
+    size_t window_width,
+    size_t window_stride)
 {
     // assumes data is in NCW format
     writer << "extern \"C\" __global__ void cuda_" << name << "(" << data_types[0] << "* in, "
@@ -1649,9 +1651,9 @@ void runtime::nvgpu::CudaKernelBuilder::get_max_pool_1d(codegen::CodeWriter& wri
 }
 
 void runtime::nvgpu::CudaKernelBuilder::get_avg_pool(codegen::CodeWriter& writer,
-                                                   const std::string& name,
-                                                   const std::array<std::string, 2>& data_types,
-                                                   bool include_pad)
+                                                     const std::string& name,
+                                                     const std::array<std::string, 2>& data_types,
+                                                     bool include_pad)
 {
     writer << runtime::nvgpu::nvrtc::helpers();
     writer << runtime::nvgpu::nvrtc::define_non_coherent_load(data_types[0], "load");
@@ -2196,13 +2198,13 @@ void runtime::nvgpu::CudaKernelBuilder::get_convolution_forward(
 }
 
 void runtime::nvgpu::CudaKernelBuilder::coordinate_transform_to_multi_d(codegen::CodeWriter& writer,
-                                                                      std::string i_strides,
-                                                                      std::string i_stride_magic,
-                                                                      std::string i_stride_shift,
-                                                                      std::string i_coord_product,
-                                                                      std::string o_coordinates,
-                                                                      size_t rank,
-                                                                      bool register_arguments)
+                                                                        std::string i_strides,
+                                                                        std::string i_stride_magic,
+                                                                        std::string i_stride_shift,
+                                                                        std::string i_coord_product,
+                                                                        std::string o_coordinates,
+                                                                        size_t rank,
+                                                                        bool register_arguments)
 {
     if (rank == 0)
     {
@@ -2268,10 +2270,11 @@ std::string runtime::nvgpu::CudaKernelBuilder::collective_coordinate_transform_h
     return reduced_idx;
 }
 
-void runtime::nvgpu::CudaKernelBuilder::get_device_helper(codegen::CodeWriter& writer,
-                                                        const std::string& name,
-                                                        const std::string& math_kernel,
-                                                        const std::vector<std::string>& data_types)
+void runtime::nvgpu::CudaKernelBuilder::get_device_helper(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    const std::string& math_kernel,
+    const std::vector<std::string>& data_types)
 {
     if (math_kernel.size())
     {
@@ -2308,7 +2311,7 @@ void runtime::nvgpu::CudaKernelBuilder::add_pod_typedefs(codegen::CodeWriter& wr
 }
 
 bool runtime::nvgpu::CudaKernelBuilder::stable_sum_check_helper(const std::string& op,
-                                                              const std::string& data_type)
+                                                                const std::string& data_type)
 {
     return ((op == "add") && (data_type == "float" || data_type == "double"));
 }

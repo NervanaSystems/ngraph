@@ -56,7 +56,7 @@ void runtime::nvgpu::NVRuntimeConstructor::add_call(
 }
 
 runtime::nvgpu::EntryPoint runtime::nvgpu::NVRuntimeConstructor::build(const std::string& function,
-                                                                    NVCallFrame& call_frame)
+                                                                       NVCallFrame& call_frame)
 {
     auto& runtime = m_runtime.at(function);
     return [call_frame, &runtime](void** inputs, void** outputs, NVRuntimeContext* ctx) mutable {

@@ -48,9 +48,9 @@ public:
     };
     NVTensorWrapper(const std::shared_ptr<descriptor::Tensor>&, const std::string& alias = "");
     NVTensorWrapper(const std::shared_ptr<descriptor::Tensor>&,
-                     TensorType,
-                     size_t,
-                     const std::string& alias);
+                    TensorType,
+                    size_t,
+                    const std::string& alias);
 
     size_t get_size() const;
     const Shape& get_shape() const;

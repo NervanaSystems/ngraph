@@ -21,12 +21,12 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/batch_norm.hpp"
+#include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
 #include "ngraph/runtime/nvgpu/nvgpu_external_function.hpp"
 #include "ngraph/runtime/nvgpu/nvgpu_internal_function.hpp"
 #include "ngraph/runtime/nvgpu/nvgpu_primitive_emitter.hpp"
 #include "ngraph/runtime/nvgpu/nvgpu_tensor.hpp"
-#include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -89,7 +89,8 @@ void runtime::nvgpu::NVBackend::BackendContext::prepare_runtime_context()
     bind_cuda_context_to_thread();
     // add pointers to nvgpu primitives into the nvgpu runtime context
     m_runtime_context->nvgpu_primitives = m_primitive_emitter->get_primitives().data();
-    m_runtime_context->nvgpu_memory_primitives = m_primitive_emitter->get_memory_primitives().data();
+    m_runtime_context->nvgpu_memory_primitives =
+        m_primitive_emitter->get_memory_primitives().data();
 }
 
 void runtime::nvgpu::NVBackend::BackendContext::bind_cuda_context_to_thread()

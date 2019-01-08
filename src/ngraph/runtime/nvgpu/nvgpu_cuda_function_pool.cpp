@@ -29,7 +29,7 @@ static const std::string s_output_dir = "nvgpu_codegen";
 using namespace ngraph;
 
 std::shared_ptr<CUfunction> runtime::nvgpu::CudaFunctionPool::set(const std::string& name,
-                                                                const std::string& kernel)
+                                                                  const std::string& kernel)
 {
     // this needs to be updated to support the compute capability of the detected hardware
     const char* opts[] = {"--gpu-architecture=compute_35", "--relocatable-device-code=true"};

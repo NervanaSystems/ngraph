@@ -19,10 +19,10 @@
 #include "ngraph/runtime/nvgpu/cublas_emitter.hpp"
 #include "ngraph/runtime/nvgpu/cuda_emitter.hpp"
 #include "ngraph/runtime/nvgpu/cudnn_emitter.hpp"
+#include "ngraph/runtime/nvgpu/host_emitter.hpp"
 #include "ngraph/runtime/nvgpu/nvgpu_kernel_args.hpp"
 #include "ngraph/runtime/nvgpu/nvgpu_memory_manager.hpp"
 #include "ngraph/runtime/nvgpu/nvgpu_runtime_context.hpp"
-#include "ngraph/runtime/nvgpu/host_emitter.hpp"
 
 namespace ngraph
 {

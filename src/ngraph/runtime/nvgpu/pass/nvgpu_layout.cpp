@@ -20,12 +20,12 @@
 #include <typeindex>
 #include <typeinfo>
 
-#include "nvgpu_layout.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/nvgpu/nvgpu_op_annotations.hpp"
+#include "nvgpu_layout.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -51,7 +51,8 @@ namespace ngraph
                     }
                     else
                     {
-                        op_annotations = std::make_shared<ngraph::runtime::nvgpu::NVOpAnnotations>();
+                        op_annotations =
+                            std::make_shared<ngraph::runtime::nvgpu::NVOpAnnotations>();
                         // pass-through
                         op_annotations->add_in_place_oi_pair({0, 0, true});
                         rep_slice->set_op_annotations(op_annotations);
@@ -75,7 +76,8 @@ namespace ngraph
                     }
                     else
                     {
-                        op_annotations = std::make_shared<ngraph::runtime::nvgpu::NVOpAnnotations>();
+                        op_annotations =
+                            std::make_shared<ngraph::runtime::nvgpu::NVOpAnnotations>();
                         // pass-through
                         op_annotations->add_in_place_oi_pair({0, 0, false});
                         reshape->set_op_annotations(op_annotations);
@@ -189,7 +191,8 @@ static const runtime::nvgpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::TopK), &runtime::nvgpu::pass::NVLayout::layout<ngraph::op::TopK>},
 };
 
-bool runtime::nvgpu::pass::NVLayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
+bool runtime::nvgpu::pass::NVLayout::run_on_call_graph(
+    const std::list<std::shared_ptr<Node>>& nodes)
 {
     for (const auto& node : nodes)
     {
