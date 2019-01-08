@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cassert>
 #include <numeric>
 
 #include "quantized_conv_bias.hpp"
