@@ -123,8 +123,7 @@ namespace ngraph
                       ngraph::default_logger_handler_func)                                         \
         .stream()
 
-//#ifdef NGRAPH_DEBUG_ENABLE
-#if 1
+#ifdef NGRAPH_DEBUG_ENABLE
 #define NGRAPH_DEBUG                                                                               \
     ngraph::LogHelper(ngraph::LOG_TYPE::_LOG_TYPE_DEBUG,                                           \
                       ngraph::trim_file_name(PROJECT_ROOT_DIR, __FILE__),                          \
