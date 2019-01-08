@@ -105,26 +105,53 @@ namespace ngraph
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto rnn_bprop_index = mkldnn_emitter->build_rnn_backward(node, args, out);
-                auto& deps = mkldnn_emitter->get_primitive_deps(rnn_bprop_index);
-                auto functor = [&, rnn_bprop_index](CPURuntimeContext* ctx,
-                                                    CPUExecutionContext* ectx) {
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], fprop_src_layer_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], fprop_src_iter_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[2], fprop_weights_layer_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], fprop_weights_iter_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[4], fprop_bias_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[5], fprop_dst_layer_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[6], fprop_dst_iter_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[7], diff_src_layer_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[8], diff_src_iter_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[9], diff_weights_layer_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[10], diff_weights_iter_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[11], diff_bias_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[12], diff_dst_layer_tensor);
-                    cpu::mkldnn_utils::set_memory_ptr(ctx, deps[13], diff_dst_iter_tensor);
+
+                auto& fprop_deps = mkldnn_emitter->get_primitive_deps(rnn_bprop_index - 1);
+                auto functor_fprop = [&, rnn_bprop_index](CPURuntimeContext* ctx,
+                                                          CPUExecutionContext* ectx) {
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, fprop_deps[0], fprop_src_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, fprop_deps[1], fprop_src_iter_tensor);
                     cpu::mkldnn_utils::set_memory_ptr(
-                        ctx, deps[14], ctx->mkldnn_workspaces[deps[15]]);
+                        ctx, fprop_deps[2], fprop_weights_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, fprop_deps[3], fprop_weights_iter_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, fprop_deps[4], fprop_bias_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, fprop_deps[5], fprop_dst_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, fprop_deps[6], fprop_dst_iter_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, fprop_deps[7], ctx->mkldnn_workspaces[fprop_deps[8]]);
+                    cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, rnn_bprop_index - 1);
+                };
+
+                auto& bprop_deps = mkldnn_emitter->get_primitive_deps(rnn_bprop_index);
+                auto functor_bprop = [&, rnn_bprop_index](CPURuntimeContext* ctx,
+                                                          CPUExecutionContext* ectx) {
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, bprop_deps[0], fprop_src_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, bprop_deps[1], fprop_src_iter_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, bprop_deps[2], fprop_weights_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, bprop_deps[3], fprop_weights_iter_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, bprop_deps[4], fprop_bias_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, bprop_deps[5], fprop_dst_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, bprop_deps[6], fprop_dst_iter_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, bprop_deps[7], diff_src_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, bprop_deps[8], diff_src_iter_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, bprop_deps[9], diff_weights_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, bprop_deps[10], diff_weights_iter_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, bprop_deps[11], diff_bias_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, bprop_deps[12], diff_dst_layer_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(ctx, bprop_deps[13], diff_dst_iter_tensor);
+                    cpu::mkldnn_utils::set_memory_ptr(
+                        ctx, bprop_deps[14], ctx->mkldnn_workspaces[bprop_deps[15]]);
                     cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, rnn_bprop_index);
+                };
+                auto functor = [&, functor_fprop, functor_bprop](CPURuntimeContext* ctx,
+                                                                 CPUExecutionContext* ectx) {
+                    functor_fprop(ctx, ectx);
+                    functor_bprop(ctx, ectx);
                 };
                 functors.emplace_back(functor);
             }
