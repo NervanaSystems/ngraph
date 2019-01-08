@@ -72,24 +72,27 @@ op::BatchDot::BatchDot(shared_ptr<Node> a, shared_ptr<Node> b, bool transpose_a,
 }
 
 shared_ptr<op::Reshape> make_reshape_axes_to_front(const shared_ptr<Node>& n,
+                                                   const size_t batch,
                                                    const Shape& front_shape,
                                                    const Shape& back_shape)
 {
-    AxisVector input_order;
-    Shape output_shape;
+    AxisVector input_order {0};
+    Shape output_shape{batch};
 
     for (size_t i = 0; i < back_shape.size(); i++)
     {
-        input_order.push_back(front_shape.size() + i);
+        input_order.push_back(front_shape.size() + i + 1);
         output_shape.push_back(back_shape[i]);
     }
 
     for (size_t i = 0; i < front_shape.size(); i++)
     {
-        input_order.push_back(i);
+        input_order.push_back(i+1);
         output_shape.push_back(front_shape[i]);
     }
 
+    NGRAPH_DEBUG << "order = " << vector_to_string(input_order);
+    NGRAPH_DEBUG << "reshape = " << vector_to_string(output_shape);
     return make_shared<op::Reshape>(n, input_order, output_shape);
 }
 
@@ -100,22 +103,37 @@ void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVec
     auto x = get_inputs().at(0).get_output().get_node();
     auto y = get_inputs().at(1).get_output().get_node();
 
-    auto x_shape = x->get_shape();         // shape IJ
-    auto y_shape = y->get_shape();         // shape JK
-    auto delta_shape = delta->get_shape(); // shape IK
+    auto x_shape = x->get_shape();         // shape NxIxJ
+    auto y_shape = y->get_shape();         // shape NxJxK
+    auto delta_shape = delta->get_shape(); // shape NxIxK
 
     Shape I_shape;
     Shape J_shape;
     Shape K_shape;
-    I_shape.insert(I_shape.begin(), x_shape.begin(), x_shape.end() - 1);
-    J_shape.insert(J_shape.begin(), y_shape.begin(), y_shape.begin() + 1);
-    K_shape.insert(K_shape.begin(), y_shape.begin() + J_shape.size(), y_shape.end());
+    I_shape.insert(I_shape.begin(), x_shape.begin()+1, x_shape.end() - 1);
+    J_shape.insert(J_shape.begin(), y_shape.begin()+1, y_shape.begin() + 2);
+    K_shape.insert(K_shape.begin(), y_shape.begin()+1+J_shape.size(), y_shape.end());
 
-    auto y_reshaped = make_reshape_axes_to_front(y, J_shape, K_shape);               // KJ
-    auto delta_dot_y_reshaped = make_shared<op::BatchDot>(delta, y_reshaped, false, m_transpose_b); // IK.KJ->IJ
-    adjoints.add_delta(x, delta_dot_y_reshaped);
+    NGRAPH_DEBUG << "x shape = " << vector_to_string(x_shape);
+    NGRAPH_DEBUG << "y shape = " << vector_to_string(y_shape);
+    NGRAPH_DEBUG << "d shape = " << vector_to_string(delta_shape);
+    NGRAPH_DEBUG << "I shape = " << vector_to_string(I_shape);
+    NGRAPH_DEBUG << "J shape = " << vector_to_string(J_shape);
+    NGRAPH_DEBUG << "K shape = " << vector_to_string(K_shape);
+    auto delta_dot_y = make_shared<op::BatchDot>(delta, y, false, !m_transpose_b); // IK.KJ->IJ
+    adjoints.add_delta(x, delta_dot_y);
 
-    auto x_reshaped = make_reshape_axes_to_front(x, I_shape, J_shape);               // JI
-    auto x_reshaped_dot_delta = make_shared<BatchDot>(x_reshaped, delta, m_transpose_a, false); // JI.IK->JK
+    auto batch_transpose = [] (shared_ptr<Node>& n) {
+      auto batch_shape = n->get_shape();         // shape NxIxJ
+      AxisVector input_order {0};
+      for (size_t i = batch_size.size()-1; i >= 0; --i) {
+        input_order.push_back(i);
+      } 
+      Shape output_shape{batch};
+    }
+    auto x_dot_delta = make_shared<BatchDot>(x, delta, !m_transpose_a, false); // JI.IK->JK
+    if (m_transpose_b) {
+      x_dot_delta = make_shared<Reshape>(x_dot_delta, )
+    }
     adjoints.add_delta(y, x_reshaped_dot_delta);
 }
