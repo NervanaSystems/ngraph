@@ -50,10 +50,10 @@ shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
 
 static void node_modifiers(const Node& node, vector<string>& attributes)
 {
-    vector<string> colors = {"beige", "gold"};
-    if (node.get_placement_index() > 0)
+    vector<string> colors = {"\"#A0FFA0\"", "\"#FFF790\""};
+    if (node.get_placement_index() < colors.size())
     {
-        string color = colors[node.get_placement_index() - 1];
+        string color = colors[node.get_placement_index()];
         attributes.push_back("style=filled");
         attributes.push_back("fillcolor=" + color);
     }

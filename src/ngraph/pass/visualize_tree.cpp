@@ -91,11 +91,12 @@ std::string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
         if (node->is_parameter())
         {
             attributes.push_back("color=blue");
+            attributes.push_back("penwidth=1.5");
         }
         if (node->is_output())
         {
-            attributes.push_back("style=filled");
-            attributes.push_back("fillcolor=pink");
+            attributes.push_back("color=crimson");
+            attributes.push_back("penwidth=1.5");
         }
     }
     else
