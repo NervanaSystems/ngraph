@@ -385,6 +385,7 @@ namespace ngraph
                                              const bool with_bn)
         {
             // BN folding
+            auto new_bias = bias;
             if (with_bn)
             {
                 auto bn_eps = op::Constant::create(element::f32, Shape{}, {0.001});
@@ -393,9 +394,19 @@ namespace ngraph
                     std::make_shared<op::Broadcast>(bn_eps, variance->get_shape(), AxisSet{0}));
                 auto sqrt_var_eps = std::make_shared<op::Sqrt>(var_eps);
 
-                auto mean_gamma = std::make_shared<op::Multiply>(mean, gamma);
-                auto new_biases = std::make_shared<op::Subtract>(
-                    beta, std::make_shared<op::Divide>(mean_gamma, sqrt_var_eps));
+                auto alpha = std::make_shared<op::Divide>(gamma, sqrt_var_eps);
+                if (bias == nullptr)
+                {
+                    new_bias = std::make_shared<op::Subtract>(
+                        beta, std::make_shared<op::Multiply>(alpha, mean));
+                }
+                else
+                {
+                    new_bias = std::make_shared<op::Add>(
+                        beta,
+                        std::make_shared<op::Multiply>(alpha,
+                                                       std::make_shared<op::Subtract>(bias, mean)));
+                }
                 auto weight_scaling = std::make_shared<op::Divide>(gamma, sqrt_var_eps);
                 filters = std::make_shared<op::Multiply>(
                     filters,
@@ -420,10 +431,10 @@ namespace ngraph
             auto bias_scale =
                 quantization_util::get_bias_scale(min_input, max_input, min_filter, max_filter);
             op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
-            if (bias != nullptr)
+            if (new_bias != nullptr)
             {
-                bias = make_shared<op::Quantize>(
-                    bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
+                new_bias = make_shared<op::Quantize>(
+                    new_bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
             }
             auto new_weights_i8 =
                 make_shared<op::Quantize>(filters,
@@ -434,7 +445,7 @@ namespace ngraph
                                           round_mode);
 
             // invoke quantized conv builder api
-            if (bias == nullptr)
+            if (new_bias == nullptr)
             {
                 if (with_relu)
                 {
@@ -465,7 +476,7 @@ namespace ngraph
                 // TODO: check for signed or unsigned sum
                 return make_shared<op::QuantizedConvolutionBiasSignedAdd>(input,
                                                                           new_weights_i8,
-                                                                          bias,
+                                                                          new_bias,
                                                                           sum_input,
                                                                           window_movement_strides,
                                                                           window_dilation_strides,
@@ -480,7 +491,7 @@ namespace ngraph
             // i8.conv_bias -> relu
             return make_shared<op::QuantizedConvolutionBias>(input,
                                                              new_weights_i8,
-                                                             bias,
+                                                             new_bias,
                                                              window_movement_strides,
                                                              window_dilation_strides,
                                                              padding_below,
