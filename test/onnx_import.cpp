@@ -1647,3 +1647,34 @@ TEST(onnx, model_conv_transpose_w_groups)
     Outputs outputs{execute(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
+
+TEST(onnx, model_argmax_int32)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/argmax_int32.onnx"));
+
+    std::vector<std::vector<std::int32_t>> inputs{
+        std::vector<std::int32_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}};
+
+    std::vector<std::vector<std::int64_t>> expected_output{
+        std::vector<std::int64_t>{1, 1, 1, 1, 1, 1}};
+
+    std::vector<std::vector<std::int64_t>> outputs{
+        execute<std::int32_t, std::int64_t>(function, inputs, "CPU")};
+    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
+}
+
+TEST(onnx, model_argmin_int32)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/argmin_int32.onnx"));
+
+    std::vector<std::vector<std::int32_t>> inputs{
+        std::vector<std::int32_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}};
+
+    std::vector<std::vector<std::int64_t>> expected_output{std::vector<std::int64_t>{0, 0, 0, 0}};
+
+    std::vector<std::vector<std::int64_t>> outputs{
+        execute<std::int32_t, std::int64_t>(function, inputs, "CPU")};
+    EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
+}
