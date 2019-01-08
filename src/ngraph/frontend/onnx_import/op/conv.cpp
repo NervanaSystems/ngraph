@@ -55,7 +55,6 @@ namespace ngraph
                             // reference: https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
                             std::size_t n_data_channels{data->get_shape().at(1)};
                             std::size_t n_filters_channels{filters->get_shape().at(0)};
-                            // TODO: ensure n_data_channels % groups = 0
                             std::size_t data_group_size{n_data_channels / groups};
                             std::size_t filters_group_size{n_filters_channels / groups};
                             NodeVector convolution_nodes;
@@ -113,6 +112,16 @@ namespace ngraph
                                           ((groups >= 0) && (groups <= data->get_shape().at(1)) &&
                                            (groups <= filters->get_shape().at(0))))
                         << "incorrect value of 'group' attribute: " << groups;
+
+                    std::size_t n_data_channels{data->get_shape().at(1)};
+                    std::size_t n_filters_channels{filters->get_shape().at(0)};
+
+                    ASSERT_VALID_ARGUMENT(node, n_data_channels % groups == 0)
+                        << "provided group attribute value must be a multiple of data channels "
+                           "count.";
+                    ASSERT_VALID_ARGUMENT(node, n_filters_channels % groups == 0)
+                        << "provided group attribute value must be a multiple of filter channels "
+                           "count.";
 
                     auto strides = convpool::get_strides(node);
                     auto dilations = convpool::get_dilations(node);
