@@ -29,13 +29,13 @@ namespace ngraph
     {
         namespace nvgpuh
         {
-            class NVGPUHBackend;
+            class NVIDIAGPUHBackend;
         }
     }
 }
 
-class ngraph::runtime::nvgpuh::NVGPUHBackend : public ngraph::runtime::hybrid::HybridBackend
+class ngraph::runtime::nvgpuh::NVIDIAGPUHBackend : public ngraph::runtime::hybrid::HybridBackend
 {
 public:
-    NVGPUHBackend();
+    NVIDIAGPUHBackend();
 };

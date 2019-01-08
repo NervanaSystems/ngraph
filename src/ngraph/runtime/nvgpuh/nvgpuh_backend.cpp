@@ -32,7 +32,7 @@ extern "C" const char* get_ngraph_version_string()
 
 extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
-    return new runtime::nvgpuh::NVGPUHBackend();
+    return new runtime::nvgpuh::NVIDIAGPUHBackend();
 }
 
 vector<string> get_excludes()
@@ -40,7 +40,7 @@ vector<string> get_excludes()
     return vector<string>{{"Not"}};
 }
 
-runtime::nvgpuh::NVGPUHBackend::NVGPUHBackend()
+runtime::nvgpuh::NVIDIAGPUHBackend::NVIDIAGPUHBackend()
     : HybridBackend({make_shared<ngraph::runtime::nvgpu::NV_Backend>(),
                      make_shared<ngraph::runtime::interpreter::INTBackend>()})
 {

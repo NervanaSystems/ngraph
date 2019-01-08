@@ -391,7 +391,7 @@ void runtime::nvgpu::NVInternalFunction::emit()
     m_runtime_constructor =
         runtime::nvgpu::make_unique<NVRuntimeConstructor>(m_function_ordered_ops);
 
-    if (std::getenv("NGRAPH_NVGPU_TRACE"))
+    if (std::getenv("NGRAPH_NVIDIAGPU_TRACE"))
     {
         m_trace = std::make_shared<codegen::CodeWriter>();
     }

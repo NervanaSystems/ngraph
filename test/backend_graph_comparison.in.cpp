@@ -37,7 +37,7 @@ static string s_manifest = "${MANIFEST}";
 #endif
 // clang-format on
 
-// Currently only used to test NVGPU backend, but is expected to be useful
+// Currently only used to test NVIDIAGPU backend, but is expected to be useful
 // testing other backends (except CPU which is used as the reference backend)
 #if defined(TESTING_GPU_BACKEND)
 class serialized_graph_files : public ::testing::TestWithParam<string>

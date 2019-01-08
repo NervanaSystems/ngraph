@@ -3369,7 +3369,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_4d_2x0x3x2)
 }
 
 // This test covers the case with multiple image and with asymetric pad
-// bug has been found on NVGPU side now covered by this test
+// bug has been found on NVIDIAGPU side now covered by this test
 NGRAPH_TEST(${BACKEND_NAME}, pad_2channel_2image_asym)
 {
     Shape shape_a{2, 2, 4, 4};
