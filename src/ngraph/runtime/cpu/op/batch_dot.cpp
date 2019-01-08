@@ -73,31 +73,34 @@ op::BatchDot::BatchDot(shared_ptr<Node> a, shared_ptr<Node> b, bool transpose_a,
 
 void op::BatchDot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-    auto delta = deltas.at(0);
+    auto delta = deltas.at(0); // NxIxK
 
-    auto x = get_inputs().at(0).get_output().get_node();
-    auto y = get_inputs().at(1).get_output().get_node();
+    auto a = get_inputs().at(0).get_output().get_node(); // NxIxJ
+    auto b = get_inputs().at(1).get_output().get_node(); // NxJxK
 
     auto batch_transpose = [] (const shared_ptr<Node>& node) {
-      const auto& batch_shape = node->get_shape();         // shape NxIxJ
+      const auto& batch_shape = node->get_shape();
+      // index 0 is the batch, only transposing the others.
       AxisVector input_order {0,2,1};
       Shape output_shape{batch_shape[0], batch_shape[2], batch_shape[1]};
       return make_shared<op::Reshape>(node, input_order, output_shape);
     };
 
-    auto delta_dot_y = make_shared<op::BatchDot>(delta, y, false, !m_transpose_b); // IK.KJ->IJ
+    // if b is already transposed, it does not need to be transposed again
+    auto delta_dot_b = make_shared<op::BatchDot>(delta, b, false, !m_transpose_b); // IK.KJ->IJ
+    // if a is transposed, the result need to be transposed to match original a shape.
     if (m_transpose_a) {
-      adjoints.add_delta(x, batch_transpose(delta_dot_y));
+      adjoints.add_delta(a, batch_transpose(delta_dot_b));
     }
     else {
-      adjoints.add_delta(x, delta_dot_y);
+      adjoints.add_delta(a, delta_dot_b);
     }
 
-    auto x_dot_delta = make_shared<BatchDot>(x, delta, !m_transpose_a, false); // JI.IK->JK
+    auto a_dot_delta = make_shared<BatchDot>(a, delta, !m_transpose_a, false); // JI.IK->JK
     if (m_transpose_b) {
-      adjoints.add_delta(y, batch_transpose(x_dot_delta));
+      adjoints.add_delta(b, batch_transpose(a_dot_delta));
     }
     else {
-      adjoints.add_delta(y, x_dot_delta);
+      adjoints.add_delta(b, a_dot_delta);
     }
 }

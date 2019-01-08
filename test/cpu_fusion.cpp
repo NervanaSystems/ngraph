@@ -3033,8 +3033,13 @@ TEST(cpu_fusion, fuse_batch_dot_backward)
 
     {
         pass::Manager pass_manager;
-        pass_manager.register_pass<pass::VisualizeTree>("batch_dot_bprop.pdf");
+        pass_manager.register_pass<pass::VisualizeTree>("batch_dot_bprop_cpu.pdf");
         pass_manager.run_passes(cpu_df);
+    }
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::VisualizeTree>("batch_dot_bprop_int.pdf");
+        pass_manager.run_passes(int_df);
     }
 
     auto int_results = execute(int_df, args, "INTERPRETER");
