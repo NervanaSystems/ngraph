@@ -29,12 +29,31 @@ namespace ngraph
                 class CPURnnMatFusion : public ngraph::pass::FunctionPass
                 {
                 public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                    virtual bool
+                        run_on_function(std::shared_ptr<ngraph::Function> function) override;
                 };
                 class CPUBatchFusion : public ngraph::pass::FunctionPass
                 {
                 public:
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+                    enum FusionType
+                    {
+                        //`DIFFERENTIABLE_FUSIONS` produce ops that support autodiff
+                        // i.e. implement `generate_adjoints`
+                        DIFFERENTIABLE_FUSIONS = 0x1,
+                        REGULAR_FUSIONS = 0x2,
+                        ALL = 0xFFFFFFFF
+                    };
+
+                    CPUBatchFusion(FusionType type = ALL)
+                        : m_fusion_type(type)
+                        , FunctionPass()
+                    {
+                    }
+                    virtual bool
+                        run_on_function(std::shared_ptr<ngraph::Function> function) override;
+
+                private:
+                    FusionType m_fusion_type;
                 };
             }
         }
