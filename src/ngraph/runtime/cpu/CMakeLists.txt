@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -150,17 +150,20 @@ if (NGRAPH_TBB_ENABLE)
     set_source_files_properties(cpu_external_function.cpp
         PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
 
-    file(GLOB _tbb_shared_libs ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/libtbb.*)
-    foreach(_tbb_shared_lib ${_tbb_shared_libs})
-        execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${_tbb_shared_lib} ${NGRAPH_BUILD_DIR})
-    endforeach()
-    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(TBB_LIB_NAME tbb_debug)
+        set(TBB_BUILDDIR_NAME tbb_debug)
+    else()
+        set(TBB_LIB_NAME tbb)
+        set(TBB_BUILDDIR_NAME tbb_release)
+    endif()
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/${TBB_BUILDDIR_NAME}/
         DESTINATION ${NGRAPH_INSTALL_LIB}
-        FILES_MATCHING REGEX "/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
+        FILES_MATCHING REGEX "/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}(\\.[0-9]+)*$"
     )
     add_library(libtbb INTERFACE)
     target_link_libraries(libtbb INTERFACE
-        ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/tbb_release/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
+        ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/${TBB_BUILDDIR_NAME}/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
     )
     target_include_directories(libtbb SYSTEM INTERFACE ${TBB_ROOT}/include)
 endif()

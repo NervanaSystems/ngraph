@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,11 +21,10 @@ set (SRC
     test_control.cpp
 )
 
-add_library(ngraph_test_util SHARED ${SRC})
+add_library(ngraph_test_util STATIC ${SRC})
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(ngraph_test_util PROPERTIES
-        VERSION ${NGRAPH_VERSION}
-        SOVERSION ${NGRAPH_API_VERSION})
+        VERSION ${NGRAPH_VERSION})
 endif()
 target_include_directories(ngraph_test_util PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_link_libraries(ngraph_test_util ngraph libgtest)

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1312,7 +1312,7 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
 
             arguments_check(op, 5, 1);
 
-            if (get_input_name(op, 2).size() != 4)
+            if (get_input_shape(op, 2).size() != 4)
             {
                 do_batch_norm_operation(topology,
                                         get_output_name(op),
@@ -1344,7 +1344,7 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
                 static_pointer_cast<op::BatchNormTraining>(op);
             const double eps = bnorm->get_eps_value();
 
-            if (get_input_name(op, 2).size() != 4)
+            if (get_input_shape(op, 2).size() != 4)
             {
                 string mean_name;
                 string variance_name;

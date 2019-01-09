@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2018 Intel Corporation
+// Copyright 2018-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -104,13 +104,30 @@ public:
                 msg << "Test backed op run w/ original graph dependencies:"
                     << "\n";
                 msg << get_results_str(ref_data_vector, bk_data_vector);
-                bool all_close_graph = test::all_close_f(ref_data_vector, bk_data_vector);
+                // Future work will better determine useful graph comparison thresholds.
+                // For a very small sample of tested graphs initial criteria is:
+                // * Comparison of ops using inputs from preceeding ops (original
+                //   graph dependencies) allows for a little better than 1/3 of
+                //   the possible bits to match
+                // * Isolated operation allows for 2/3 of the possible bits to match
+                constexpr int one_third_of_available_bits = (MAX_FLOAT_BITS + 1) / 3;
+                constexpr int in_graph_tolerance =
+                    FLOAT_MANTISSA_BITS - one_third_of_available_bits;
+                constexpr int isolated_tolerance =
+                    FLOAT_MANTISSA_BITS - (one_third_of_available_bits * 2);
+                ::testing::AssertionResult all_close_graph =
+                    test::all_close_f(ref_data_vector, bk_data_vector, in_graph_tolerance);
                 msg << "Test backed op run isolated w/ inputs from ref graph run:"
                     << "\n";
                 msg << get_results_str(ref_data_vector, bk_isolated_data_vector);
-                bool all_close_isolated =
-                    test::all_close_f(ref_data_vector, bk_isolated_data_vector);
-                EXPECT_TRUE(all_close_graph && all_close_isolated) << msg.str();
+                ::testing::AssertionResult all_close_isolated =
+                    test::all_close_f(ref_data_vector, bk_isolated_data_vector, isolated_tolerance);
+                if (!all_close_graph || !all_close_isolated)
+                {
+                    cout << msg.str();
+                }
+                EXPECT_TRUE(all_close_graph);
+                EXPECT_TRUE(all_close_isolated);
             }
             else if (et == element::f64)
             {
@@ -123,16 +140,21 @@ public:
 
                 // When testing with original graph dependencies test w/ loose f64 tolerance
                 constexpr int tolerance_bits = 30;
-                bool all_close_graph =
+                ::testing::AssertionResult all_close_graph =
                     test::all_close_f(ref_data_vector, bk_data_vector, tolerance_bits);
                 msg << "Test backed op run isolated w/ inputs from ref graph run:"
                     << "\n";
                 msg << get_results_str(ref_data_vector, bk_isolated_data_vector);
 
                 // When testing with isolated graph dependencies test w/ default (tight) f64 tolerance
-                bool all_close_isolated =
+                ::testing::AssertionResult all_close_isolated =
                     test::all_close_f(ref_data_vector, bk_isolated_data_vector);
-                EXPECT_TRUE(all_close_graph && all_close_isolated) << msg.str();
+                if (!all_close_graph || !all_close_isolated)
+                {
+                    cout << msg.str();
+                }
+                EXPECT_TRUE(all_close_graph);
+                EXPECT_TRUE(all_close_isolated);
             }
             else if (et == element::i8)
             {

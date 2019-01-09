@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #pragma once
 
 #include <memory>
+#include <tuple>
 
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -28,6 +29,8 @@ namespace ngraph
         namespace gpu
         {
             class GPUTensorWrapper;
+            std::ostream& operator<<(std::ostream& out,
+                                     const ngraph::runtime::gpu::GPUTensorWrapper& obj);
         }
     }
 }
@@ -35,7 +38,19 @@ namespace ngraph
 class ngraph::runtime::gpu::GPUTensorWrapper
 {
 public:
+    enum TensorType : std::size_t
+    {
+        CONSTANT,
+        INTERMEDIATE,
+        INPUT,
+        OUTPUT,
+        UNKNOWN
+    };
     GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>&, const std::string& alias = "");
+    GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>&,
+                     TensorType,
+                     size_t,
+                     const std::string& alias);
 
     size_t get_size() const;
     const Shape& get_shape() const;
@@ -43,8 +58,12 @@ public:
     const element::Type& get_element_type() const;
     const std::string& get_name() const;
     const std::string& get_type() const;
+    const std::pair<TensorType, size_t>& get_offset() const;
+    friend std::ostream& ngraph::runtime::gpu::
+        operator<<(std::ostream& out, const ngraph::runtime::gpu::GPUTensorWrapper& obj);
 
 private:
     std::shared_ptr<descriptor::Tensor> m_tensor;
     std::string m_alias;
+    std::pair<TensorType, size_t> m_offset;
 };

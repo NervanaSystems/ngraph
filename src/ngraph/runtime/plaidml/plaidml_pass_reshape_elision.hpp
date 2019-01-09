@@ -14,34 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "code_writer.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include "ngraph/pass/graph_rewrite.hpp"
 
-codegen::CodeWriter::CodeWriter()
-    : indent(0)
-    , m_pending_indent(true)
-    , m_temporary_name_count(0)
+namespace ngraph
 {
+    namespace runtime
+    {
+        namespace plaidml
+        {
+            namespace pass
+            {
+                class ReshapeElision;
+            }
+        }
+    }
 }
 
-string codegen::CodeWriter::get_code() const
+// A minor pass to elide unnecessary reshapes.  A reshape is
+// considered unnecessary if its output shape is the same as its input
+// shape, modulo leading size-1 axes.
+class ngraph::runtime::plaidml::pass::ReshapeElision final : public ngraph::pass::GraphRewrite
 {
-    return m_ss.str();
-}
-
-void codegen::CodeWriter::operator+=(const std::string& s)
-{
-    *this << s;
-}
-
-std::string codegen::CodeWriter::generate_temporary_name(std::string prefix)
-{
-    std::stringstream ss;
-
-    ss << prefix << m_temporary_name_count;
-    m_temporary_name_count++;
-
-    return ss.str();
-}
+public:
+    ReshapeElision();
+};

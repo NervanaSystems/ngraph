@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018 Intel Corporation
+# Copyright 2018-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -46,11 +46,12 @@ ExternalProject_Add(
     GIT_TAG ${HALIDE_GIT_TAG}
     UPDATE_COMMAND ""
     PATCH_COMMAND patch -p1 --forward --reject-file=- -i ${CMAKE_SOURCE_DIR}/cmake/halide.patch || exit 0
+    CMAKE_GENERATOR ${CMAKE_GENERATOR}
+    CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
+    CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
     CMAKE_ARGS
+    ${NGRAPH_FORWARD_CMAKE_ARGS}
     -DLLVM_DIR=${HALIDE_LLVM_DIR}
-    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/halide
     -DHALIDE_SHARED_LIBRARY=OFF
     -DWITH_APPS=OFF

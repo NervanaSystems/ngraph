@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1243,7 +1243,11 @@ NGRAPH_TEST(${BACKEND_NAME}, lrn)
 {
     Shape shape{2, 3, 2, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto lrn = make_shared<op::LRN>(A, 1., 2., 1., 3);
+    double alpha = 3;
+    double beta = 0.5;
+    double bias = 1;
+    size_t size = 3;
+    auto lrn = make_shared<op::LRN>(A, alpha, beta, bias, size);
     auto f = make_shared<Function>(lrn, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -1257,17 +1261,17 @@ NGRAPH_TEST(${BACKEND_NAME}, lrn)
     backend->call_with_validate(handle, {result}, {a});
 
     vector<float> expected{0.f,
-                           0.05325444f,
-                           0.03402646f,
-                           0.01869806f,
-                           0.06805293f,
-                           0.03287071f,
-                           0.00509002f,
-                           0.00356153f,
-                           0.00174719f,
-                           0.0012555f,
-                           0.00322708f,
-                           0.00235574f};
+                           0.3015113f,
+                           0.4364357f,
+                           0.5f,
+                           0.8728715f,
+                           0.8451542f,
+                           0.5970223f,
+                           0.6115928f,
+                           0.5642765f,
+                           0.5669467f,
+                           0.7784989f,
+                           0.7720487f};
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
