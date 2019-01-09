@@ -14,14 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/nvgpu/op/rnn.hpp"
+#include "ngraph/runtime/nvidiagpu/op/rnn.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-shared_ptr<Node> op::nvgpu::Rnn::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::nvidiagpu::Rnn::copy_with_new_args(const NodeVector& new_args) const
 {
     NGRAPH_ASSERT(new_args.size() == 4) << "Incorrect number of new arguments";
 
@@ -38,7 +38,7 @@ shared_ptr<Node> op::nvgpu::Rnn::copy_with_new_args(const NodeVector& new_args) 
                             m_num_fused_layers);
 }
 
-op::nvgpu::Rnn::Rnn(std::shared_ptr<Node> src_layer,
+op::nvidiagpu::Rnn::Rnn(std::shared_ptr<Node> src_layer,
                     std::shared_ptr<Node> src_iter,
                     std::shared_ptr<Node> params,
                     std::shared_ptr<Node> state_iter,

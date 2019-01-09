@@ -14,20 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/nvgpu/cublas_emitter.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_emitter.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_primitive_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/cublas_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_primitive_emitter.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
 
-runtime::nvgpu::CUBLASEmitter::CUBLASEmitter(NVPrimitiveEmitter* emitter, NVRuntimeContext* ctx)
+runtime::nvidiagpu::CUBLASEmitter::CUBLASEmitter(NVPrimitiveEmitter* emitter, NVRuntimeContext* ctx)
     : m_primitive_emitter(emitter)
 {
     m_ctx = ctx;
 }
 
-size_t runtime::nvgpu::CUBLASEmitter::build_dot(const element::Type& dtype,
+size_t runtime::nvidiagpu::CUBLASEmitter::build_dot(const element::Type& dtype,
                                                 const Shape& arg0_shape,
                                                 const Shape& arg1_shape,
                                                 const Shape& out_shape,
@@ -45,7 +45,7 @@ size_t runtime::nvgpu::CUBLASEmitter::build_dot(const element::Type& dtype,
         return primitive_index;
     }
 
-    std::unique_ptr<nvgpu::primitive> dot;
+    std::unique_ptr<nvidiagpu::primitive> dot;
     if (arg0_shape.empty() || arg1_shape.empty())
     {
         auto& second = (arg0_shape.empty() ? arg1_shape : arg0_shape);
@@ -54,7 +54,7 @@ size_t runtime::nvgpu::CUBLASEmitter::build_dot(const element::Type& dtype,
         size_t firstIndex = (arg0_shape.empty() ? 0 : 1);
         size_t secondIndex = (arg0_shape.empty() ? 1 : 0);
 
-        dot.reset(new nvgpu::primitive{[=](void** inputs, void** outputs) {
+        dot.reset(new nvidiagpu::primitive{[=](void** inputs, void** outputs) {
             CUBLAS_SAFE_CALL(cublasScopy(*m_ctx->cublas_handle,
                                          count,
                                          static_cast<const float*>(inputs[secondIndex]),
@@ -86,7 +86,7 @@ size_t runtime::nvgpu::CUBLASEmitter::build_dot(const element::Type& dtype,
         }
 
         size_t count = shape_size(arg0_shape);
-        dot.reset(new nvgpu::primitive{[=](void** inputs, void** outputs) {
+        dot.reset(new nvidiagpu::primitive{[=](void** inputs, void** outputs) {
             CUBLAS_SAFE_CALL(cublasSdot(*m_ctx->cublas_handle,
                                         count,
                                         static_cast<const float*>(inputs[0]),
@@ -104,7 +104,7 @@ size_t runtime::nvgpu::CUBLASEmitter::build_dot(const element::Type& dtype,
     // matrix vector
     else if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) && (reduction_axes == 1))
     {
-        dot.reset(new nvgpu::primitive{[=](void** inputs, void** outputs) {
+        dot.reset(new nvidiagpu::primitive{[=](void** inputs, void** outputs) {
             const float alpha = 1.0;
             const float beta = 0;
 
@@ -181,7 +181,7 @@ size_t runtime::nvgpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             }
         }
 
-        dot.reset(new nvgpu::primitive{[=](void** inputs, void** outputs) {
+        dot.reset(new nvidiagpu::primitive{[=](void** inputs, void** outputs) {
             const float alpha = 1.0;
             const float beta = 0;
 
@@ -211,13 +211,13 @@ size_t runtime::nvgpu::CUBLASEmitter::build_dot(const element::Type& dtype,
     return primitive_index;
 }
 
-void runtime::nvgpu::CUBLASEmitter::sync()
+void runtime::nvidiagpu::CUBLASEmitter::sync()
 {
     CUDA_RT_SAFE_CALL(cudaDeviceSynchronize());
     return;
 }
 
-void runtime::nvgpu::CUBLASEmitter::debug_sync()
+void runtime::nvidiagpu::CUBLASEmitter::debug_sync()
 {
 #ifdef NGRAPH_DEBUG_ENABLE
     CUDA_RT_SAFE_CALL(cudaDeviceSynchronize());
@@ -225,7 +225,7 @@ void runtime::nvgpu::CUBLASEmitter::debug_sync()
     return;
 }
 
-std::string runtime::nvgpu::CUBLASEmitter::get_error_string(std::vector<std::string>& arg_names,
+std::string runtime::nvidiagpu::CUBLASEmitter::get_error_string(std::vector<std::string>& arg_names,
                                                             std::vector<Shape>& shapes,
                                                             const Node* node)
 {

@@ -16,25 +16,25 @@
 
 #include <cstring>
 
-#include "ngraph/runtime/nvgpu/nvgpu_memory_manager.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_primitive_emitter.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_util.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_memory_manager.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_primitive_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_util.hpp"
 
 using namespace ngraph;
 
 constexpr const uint32_t initial_buffer_size = 10 * 1024 * 1024;
 
-runtime::nvgpu::NVMemoryManager::NVMemoryManager(NVPrimitiveEmitter* emitter)
+runtime::nvidiagpu::NVMemoryManager::NVMemoryManager(NVPrimitiveEmitter* emitter)
     : m_buffer_offset(0)
     , m_buffered_mem(initial_buffer_size, 0)
-    , m_workspace_manager(new pass::MemoryManager(runtime::nvgpu::NVMemoryManager::alignment))
+    , m_workspace_manager(new pass::MemoryManager(runtime::nvidiagpu::NVMemoryManager::alignment))
     , m_argspace_mem(1, {nullptr, 0})
     , m_workspace_mem(1, {nullptr, 0})
     , m_primitive_emitter(emitter)
 {
 }
 
-size_t runtime::nvgpu::NVMemoryManager::get_allocation_size() const
+size_t runtime::nvidiagpu::NVMemoryManager::get_allocation_size() const
 {
     size_t allocation_size = 0;
     for (auto const& alloc : m_argspace_mem)
@@ -48,19 +48,19 @@ size_t runtime::nvgpu::NVMemoryManager::get_allocation_size() const
     return allocation_size;
 }
 
-runtime::nvgpu::NVMemoryManager::~NVMemoryManager()
+runtime::nvidiagpu::NVMemoryManager::~NVMemoryManager()
 {
     for (auto& alloc : m_argspace_mem)
     {
-        runtime::nvgpu::free_nvgpu_buffer(alloc.ptr);
+        runtime::nvidiagpu::free_nvidiagpu_buffer(alloc.ptr);
     }
     for (auto& alloc : m_workspace_mem)
     {
-        runtime::nvgpu::free_nvgpu_buffer(alloc.ptr);
+        runtime::nvidiagpu::free_nvidiagpu_buffer(alloc.ptr);
     }
 }
 
-void runtime::nvgpu::NVMemoryManager::allocate()
+void runtime::nvidiagpu::NVMemoryManager::allocate()
 {
     if (m_workspace_manager->get_node_list().size() != 1)
     {
@@ -71,12 +71,12 @@ void runtime::nvgpu::NVMemoryManager::allocate()
     if (m_buffer_offset)
     {
         m_buffer_offset = ngraph::pass::MemoryManager::align(
-            m_buffer_offset, runtime::nvgpu::NVMemoryManager::alignment);
+            m_buffer_offset, runtime::nvidiagpu::NVMemoryManager::alignment);
         // the back most node is always empty, fill it here
-        m_argspace_mem.back().ptr = runtime::nvgpu::create_nvgpu_buffer(m_buffer_offset);
+        m_argspace_mem.back().ptr = runtime::nvidiagpu::create_nvidiagpu_buffer(m_buffer_offset);
         m_argspace_mem.back().size = m_buffer_offset;
         // copy buffered kernel arguments to device
-        runtime::nvgpu::cuda_memcpyHtD(
+        runtime::nvidiagpu::cuda_memcpyHtD(
             m_argspace_mem.back().ptr, m_buffered_mem.data(), m_buffer_offset);
         // add an empty node to the end of the list and zero offset
         m_argspace_mem.push_back({nullptr, 0});
@@ -88,19 +88,19 @@ void runtime::nvgpu::NVMemoryManager::allocate()
     auto workspace_size = m_workspace_manager->max_allocated();
     if (workspace_size)
     {
-        m_workspace_mem.back().ptr = runtime::nvgpu::create_nvgpu_buffer(workspace_size);
+        m_workspace_mem.back().ptr = runtime::nvidiagpu::create_nvidiagpu_buffer(workspace_size);
         m_workspace_mem.back().size = workspace_size;
         m_workspace_mem.push_back({nullptr, 0});
         m_workspace_manager.reset(
-            new pass::MemoryManager(runtime::nvgpu::NVMemoryManager::alignment));
+            new pass::MemoryManager(runtime::nvidiagpu::NVMemoryManager::alignment));
     }
 }
 
-size_t runtime::nvgpu::NVMemoryManager::queue_for_transfer(const void* data, size_t size)
+size_t runtime::nvidiagpu::NVMemoryManager::queue_for_transfer(const void* data, size_t size)
 {
     // if the current allocation will overflow the host buffer
     size_t aligned_size =
-        ngraph::pass::MemoryManager::align(size, runtime::nvgpu::NVMemoryManager::alignment);
+        ngraph::pass::MemoryManager::align(size, runtime::nvidiagpu::NVMemoryManager::alignment);
     size_t new_size = m_buffer_offset + aligned_size;
     size_t buffer_size = m_buffered_mem.size();
     bool need_resize = false;
@@ -123,37 +123,37 @@ size_t runtime::nvgpu::NVMemoryManager::queue_for_transfer(const void* data, siz
     return offset;
 }
 
-runtime::nvgpu::NVAllocator::NVAllocator(NVMemoryManager* mgr)
+runtime::nvidiagpu::NVAllocator::NVAllocator(NVMemoryManager* mgr)
     : m_manager(mgr)
 {
 }
 
-runtime::nvgpu::NVAllocator::NVAllocator(const NVAllocator& g)
+runtime::nvidiagpu::NVAllocator::NVAllocator(const NVAllocator& g)
 {
     m_manager = g.m_manager;
     m_active = g.m_active;
 }
 
-size_t runtime::nvgpu::NVAllocator::reserve_argspace(const void* data, size_t size)
+size_t runtime::nvidiagpu::NVAllocator::reserve_argspace(const void* data, size_t size)
 {
     // add parameter data to host buffer that will be transfered to device
     size_t offset = m_manager->queue_for_transfer(data, size);
     auto local = std::prev(m_manager->m_argspace_mem.end());
-    // return a lambda that will yield the nvgpu memory address. this
+    // return a lambda that will yield the nvidiagpu memory address. this
     // should only be evaluated by the runtime invoked primitive
-    nvgpu::memory_primitive mem_primitive = [=]() {
+    nvidiagpu::memory_primitive mem_primitive = [=]() {
         void* argspace = (*local).ptr;
         if (argspace == nullptr)
         {
             throw std::runtime_error("An attempt was made to use unallocated device memory.");
         }
-        auto nvgpu_mem = static_cast<uint8_t*>(argspace);
-        return static_cast<void*>(nvgpu_mem + offset);
+        auto nvidiagpu_mem = static_cast<uint8_t*>(argspace);
+        return static_cast<void*>(nvidiagpu_mem + offset);
     };
     return m_manager->m_primitive_emitter->insert(mem_primitive);
 }
 
-size_t runtime::nvgpu::NVAllocator::reserve_workspace(size_t size, bool zero_initialize)
+size_t runtime::nvidiagpu::NVAllocator::reserve_workspace(size_t size, bool zero_initialize)
 {
     if (size == 0)
     {
@@ -163,26 +163,26 @@ size_t runtime::nvgpu::NVAllocator::reserve_workspace(size_t size, bool zero_ini
     size_t offset = m_manager->m_workspace_manager->allocate(size);
     m_active.push(offset);
     auto local = std::prev(m_manager->m_workspace_mem.end());
-    // return a lambda that will yield the nvgpu memory address. this
+    // return a lambda that will yield the nvidiagpu memory address. this
     // should only be evaluated by the runtime invoked primitive
-    nvgpu::memory_primitive mem_primitive = [=]() {
+    nvidiagpu::memory_primitive mem_primitive = [=]() {
         void* workspace = (*local).ptr;
         if (workspace == nullptr)
         {
             throw std::runtime_error("An attempt was made to use unallocated device memory.");
         }
-        auto nvgpu_mem = static_cast<uint8_t*>(workspace);
-        auto workspace_ptr = static_cast<void*>(nvgpu_mem + offset);
+        auto nvidiagpu_mem = static_cast<uint8_t*>(workspace);
+        auto workspace_ptr = static_cast<void*>(nvidiagpu_mem + offset);
         if (zero_initialize)
         {
-            runtime::nvgpu::cuda_memset(workspace_ptr, 0, size);
+            runtime::nvidiagpu::cuda_memset(workspace_ptr, 0, size);
         }
         return workspace_ptr;
     };
     return m_manager->m_primitive_emitter->insert(std::move(mem_primitive));
 }
 
-void runtime::nvgpu::NVAllocator::close()
+void runtime::nvidiagpu::NVAllocator::close()
 {
     while (!m_active.empty())
     {
@@ -190,7 +190,7 @@ void runtime::nvgpu::NVAllocator::close()
         m_active.pop();
     }
 }
-runtime::nvgpu::NVAllocator::~NVAllocator()
+runtime::nvidiagpu::NVAllocator::~NVAllocator()
 {
     this->close();
 }

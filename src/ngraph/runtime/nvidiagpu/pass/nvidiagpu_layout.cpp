@@ -24,8 +24,8 @@
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/topk.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_op_annotations.hpp"
-#include "nvgpu_layout.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_op_annotations.hpp"
+#include "nvidiagpu_layout.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -34,7 +34,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             namespace pass
             {
@@ -52,7 +52,7 @@ namespace ngraph
                     else
                     {
                         op_annotations =
-                            std::make_shared<ngraph::runtime::nvgpu::NVOpAnnotations>();
+                            std::make_shared<ngraph::runtime::nvidiagpu::NVOpAnnotations>();
                         // pass-through
                         op_annotations->add_in_place_oi_pair({0, 0, true});
                         rep_slice->set_op_annotations(op_annotations);
@@ -77,7 +77,7 @@ namespace ngraph
                     else
                     {
                         op_annotations =
-                            std::make_shared<ngraph::runtime::nvgpu::NVOpAnnotations>();
+                            std::make_shared<ngraph::runtime::nvidiagpu::NVOpAnnotations>();
                         // pass-through
                         op_annotations->add_in_place_oi_pair({0, 0, false});
                         reshape->set_op_annotations(op_annotations);
@@ -184,14 +184,14 @@ namespace ngraph
 
 #define TI(x) type_index(typeid(x))
 
-static const runtime::nvgpu::pass::LayoutOpMap s_dispatcher{
+static const runtime::nvidiagpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::ReplaceSlice),
-     &runtime::nvgpu::pass::NVLayout::layout<ngraph::op::ReplaceSlice>},
-    {TI(ngraph::op::Reshape), &runtime::nvgpu::pass::NVLayout::layout<ngraph::op::Reshape>},
-    {TI(ngraph::op::TopK), &runtime::nvgpu::pass::NVLayout::layout<ngraph::op::TopK>},
+     &runtime::nvidiagpu::pass::NVLayout::layout<ngraph::op::ReplaceSlice>},
+    {TI(ngraph::op::Reshape), &runtime::nvidiagpu::pass::NVLayout::layout<ngraph::op::Reshape>},
+    {TI(ngraph::op::TopK), &runtime::nvidiagpu::pass::NVLayout::layout<ngraph::op::TopK>},
 };
 
-bool runtime::nvgpu::pass::NVLayout::run_on_call_graph(
+bool runtime::nvidiagpu::pass::NVLayout::run_on_call_graph(
     const std::list<std::shared_ptr<Node>>& nodes)
 {
     for (const auto& node : nodes)

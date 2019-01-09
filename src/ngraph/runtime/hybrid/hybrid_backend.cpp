@@ -23,8 +23,8 @@
 #include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
 #include "ngraph/runtime/hybrid/pass/fix_get_output_element.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_tensor.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_backend.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_tensor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 using namespace ngraph;
@@ -212,7 +212,7 @@ string runtime::hybrid::HybridBackend::get_placement_name(const runtime::Tensor*
     {
         rc = "HostTensor";
     }
-    else if (dynamic_cast<const runtime::nvgpu::NVTensor*>(t) != nullptr)
+    else if (dynamic_cast<const runtime::nvidiagpu::NVTensor*>(t) != nullptr)
     {
         rc = "NVTensor";
     }
@@ -225,7 +225,7 @@ string runtime::hybrid::HybridBackend::get_placement_name(const runtime::Backend
     {
         rc = "INTBackend";
     }
-    else if (dynamic_cast<const runtime::nvgpu::NVBackend*>(t) != nullptr)
+    else if (dynamic_cast<const runtime::nvidiagpu::NVBackend*>(t) != nullptr)
     {
         rc = "NVBackend";
     }

@@ -17,19 +17,19 @@
 #include <memory>
 #include <string>
 
-#include "ngraph/runtime/nvgpu/cuda_error_check.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_cuda_context_manager.hpp"
+#include "ngraph/runtime/nvidiagpu/cuda_error_check.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_cuda_context_manager.hpp"
 
 using namespace ngraph;
 
-runtime::nvgpu::CudaContextManager::CudaContextManager()
+runtime::nvidiagpu::CudaContextManager::CudaContextManager()
 {
     CUDA_SAFE_CALL(cuInit(0));
     CUDA_SAFE_CALL(cuDeviceGet(&m_device, 0));
     CUDA_SAFE_CALL(cuDevicePrimaryCtxRetain(&m_context, m_device));
 }
 
-runtime::nvgpu::CudaContextManager::~CudaContextManager()
+runtime::nvidiagpu::CudaContextManager::~CudaContextManager()
 {
     CUDA_SAFE_CALL_NO_THROW(cuDevicePrimaryCtxRelease(m_device));
 }

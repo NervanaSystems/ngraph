@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             class NVAllocator;
             namespace pass
@@ -34,7 +34,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::nvgpu::pass::TensorMemoryReservation : public ngraph::pass::FunctionPass
+class ngraph::runtime::nvidiagpu::pass::TensorMemoryReservation : public ngraph::pass::FunctionPass
 {
 public:
     TensorMemoryReservation(NVAllocator& allocator,

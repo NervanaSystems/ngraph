@@ -27,7 +27,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             class NVPrimitiveEmitter;
             class NVMemoryManager;

@@ -36,27 +36,27 @@
 #include "ngraph/pass/any_all_replacement.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 
-#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_compiled_function.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_external_function.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_internal_function.hpp"
-#include "ngraph/runtime/nvgpu/op/batch_norm.hpp"
-#include "ngraph/runtime/nvgpu/op/rnn.hpp"
-#include "ngraph/runtime/nvgpu/pass/nvgpu_batch_norm_cache.hpp"
-#include "ngraph/runtime/nvgpu/pass/nvgpu_layout.hpp"
-#include "ngraph/runtime/nvgpu/pass/nvgpu_rnn_fusion.hpp"
-#include "ngraph/runtime/nvgpu/pass/tensor_memory_reservation.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_backend.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_compiled_function.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_external_function.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_internal_function.hpp"
+#include "ngraph/runtime/nvidiagpu/op/batch_norm.hpp"
+#include "ngraph/runtime/nvidiagpu/op/rnn.hpp"
+#include "ngraph/runtime/nvidiagpu/pass/nvidiagpu_batch_norm_cache.hpp"
+#include "ngraph/runtime/nvidiagpu/pass/nvidiagpu_layout.hpp"
+#include "ngraph/runtime/nvidiagpu/pass/nvidiagpu_rnn_fusion.hpp"
+#include "ngraph/runtime/nvidiagpu/pass/tensor_memory_reservation.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-std::string runtime::nvgpu::NVCompiledFunction::get_output_dir()
+std::string runtime::nvidiagpu::NVCompiledFunction::get_output_dir()
 {
-    static std::string output_dir = "nvgpu_codegen";
+    static std::string output_dir = "nvidiagpu_codegen";
     return output_dir;
 }
 
-size_t runtime::nvgpu::NVCompiledFunction::get_memory_alignment()
+size_t runtime::nvidiagpu::NVCompiledFunction::get_memory_alignment()
 {
     static size_t memory_pool_alignment = 64;
     return memory_pool_alignment;
@@ -69,14 +69,14 @@ class NVStaticInitializers
 public:
     NVStaticInitializers()
     {
-        file_util::remove_directory(runtime::nvgpu::NVCompiledFunction::get_output_dir());
-        file_util::make_directory(runtime::nvgpu::NVCompiledFunction::get_output_dir());
+        file_util::remove_directory(runtime::nvidiagpu::NVCompiledFunction::get_output_dir());
+        file_util::make_directory(runtime::nvidiagpu::NVCompiledFunction::get_output_dir());
     }
 };
 
 static NVStaticInitializers s_static_initializers;
 
-runtime::nvgpu::NVCompiledFunction::NVCompiledFunction(
+runtime::nvidiagpu::NVCompiledFunction::NVCompiledFunction(
     const shared_ptr<ngraph::Function>& function,
     const std::shared_ptr<NVBackend::BackendContext>& shared_context)
     : m_runtime(nullptr)
@@ -87,7 +87,7 @@ runtime::nvgpu::NVCompiledFunction::NVCompiledFunction(
 {
 }
 
-runtime::nvgpu::NVCompiledFunction::~NVCompiledFunction()
+runtime::nvidiagpu::NVCompiledFunction::~NVCompiledFunction()
 {
 }
 
@@ -114,12 +114,12 @@ std::vector<std::string> get_case_variants(std::vector<std::string> cases)
     return results;
 }
 
-std::shared_ptr<runtime::nvgpu::NVCompiledFunction> runtime::nvgpu::NVCompiledFunction::make(
+std::shared_ptr<runtime::nvidiagpu::NVCompiledFunction> runtime::nvidiagpu::NVCompiledFunction::make(
     const std::shared_ptr<ngraph::Function>& function,
     const std::shared_ptr<NVBackend::BackendContext>& shared_context)
 {
 #if defined(NGRAPH_DEX_ONLY)
-    return std::make_shared<runtime::nvgpu::NVInternalFunction>(function, shared_context);
+    return std::make_shared<runtime::nvidiagpu::NVInternalFunction>(function, shared_context);
 #else
     // For now codegen is default unless explicitly disabled
     bool use_codegen = true;
@@ -136,16 +136,16 @@ std::shared_ptr<runtime::nvgpu::NVCompiledFunction> runtime::nvgpu::NVCompiledFu
     }
     if (use_codegen)
     {
-        return std::make_shared<runtime::nvgpu::NVExternalFunction>(function, shared_context);
+        return std::make_shared<runtime::nvidiagpu::NVExternalFunction>(function, shared_context);
     }
     else
     {
-        return std::make_shared<runtime::nvgpu::NVInternalFunction>(function, shared_context);
+        return std::make_shared<runtime::nvidiagpu::NVInternalFunction>(function, shared_context);
     }
 #endif
 }
 
-void runtime::nvgpu::NVCompiledFunction::compile()
+void runtime::nvidiagpu::NVCompiledFunction::compile()
 {
     if (m_is_compiled)
     {
@@ -155,27 +155,27 @@ void runtime::nvgpu::NVCompiledFunction::compile()
 
     m_function_name = m_function->get_name();
 
-    auto allocator = std::make_shared<runtime::nvgpu::NVAllocator>(
+    auto allocator = std::make_shared<runtime::nvidiagpu::NVAllocator>(
         m_shared_context->m_primitive_emitter->get_memory_allocator());
 
     ngraph::pass::Manager pass_manager;
 #if CUDNN_VERSION >= 7200
     // recurrent network fusion
-    pass_manager.register_pass<runtime::nvgpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::nvgpu::pass::RNNFusion>();
+    pass_manager.register_pass<runtime::nvidiagpu::pass::LSTMFusion>();
+    pass_manager.register_pass<runtime::nvidiagpu::pass::RNNFusion>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<runtime::nvgpu::pass::MultiLayerRNNFusion>();
+    pass_manager.register_pass<runtime::nvidiagpu::pass::MultiLayerRNNFusion>();
 #else
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
 #endif
-    pass_manager.register_pass<runtime::nvgpu::pass::BatchNormCache>();
+    pass_manager.register_pass<runtime::nvidiagpu::pass::BatchNormCache>();
     pass_manager.register_pass<ngraph::pass::AnyAllReplacement>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    pass_manager.register_pass<runtime::nvgpu::pass::NVLayout>(this);
+    pass_manager.register_pass<runtime::nvidiagpu::pass::NVLayout>(this);
     pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(get_memory_alignment());
-    pass_manager.register_pass<runtime::nvgpu::pass::TensorMemoryReservation>(
+    pass_manager.register_pass<runtime::nvidiagpu::pass::TensorMemoryReservation>(
         *allocator, m_tensor_memory_buffers);
     string dump_filename = file_util::path_join(get_output_dir(), m_function_name + "_ops.txt");
     pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);

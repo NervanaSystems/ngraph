@@ -14,12 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/nvgpuh/nvgpuh_backend.hpp"
+#include "ngraph/runtime/nvidiagpuh/nvidiagpuh_backend.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/pass/assign_placement.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 using namespace ngraph;
@@ -32,7 +32,7 @@ extern "C" const char* get_ngraph_version_string()
 
 extern "C" runtime::Backend* new_backend(const char* configuration_string)
 {
-    return new runtime::nvgpuh::NVIDIAGPUHBackend();
+    return new runtime::nvidiagpuh::NVIDIAGPUHBackend();
 }
 
 vector<string> get_excludes()
@@ -40,8 +40,8 @@ vector<string> get_excludes()
     return vector<string>{{"Not"}};
 }
 
-runtime::nvgpuh::NVIDIAGPUHBackend::NVIDIAGPUHBackend()
-    : HybridBackend({make_shared<ngraph::runtime::nvgpu::NV_Backend>(),
+runtime::nvidiagpuh::NVIDIAGPUHBackend::NVIDIAGPUHBackend()
+    : HybridBackend({make_shared<ngraph::runtime::nvidiagpu::NV_Backend>(),
                      make_shared<ngraph::runtime::interpreter::INTBackend>()})
 {
 }

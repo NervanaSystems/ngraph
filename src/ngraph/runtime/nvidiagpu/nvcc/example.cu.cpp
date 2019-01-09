@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include <iostream>
-#include "ngraph/runtime/nvgpu/nvcc/kernels.hpp"
+#include "ngraph/runtime/nvidiagpu/nvcc/kernels.hpp"
 using namespace ngraph;
 
 __global__ void example()
@@ -25,7 +25,7 @@ __global__ void example()
     __syncthreads();
 }
 
-void runtime::nvgpu::example_kernel()
+void runtime::nvidiagpu::example_kernel()
 {
     example<<<1, 32>>>();
     return;

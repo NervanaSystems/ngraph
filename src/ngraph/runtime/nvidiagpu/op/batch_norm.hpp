@@ -29,7 +29,7 @@ namespace ngraph
 {
     namespace op
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             class BatchNormTrainingWithStats : public ngraph::op::BatchNormTraining
             {

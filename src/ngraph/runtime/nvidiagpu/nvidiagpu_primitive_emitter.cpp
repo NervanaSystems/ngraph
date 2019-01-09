@@ -16,10 +16,10 @@
 
 #include <limits>
 
-#include "ngraph/runtime/nvgpu/nvgpu_primitive_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_primitive_emitter.hpp"
 
 using namespace ngraph;
-using namespace ngraph::runtime::nvgpu;
+using namespace ngraph::runtime::nvidiagpu;
 
 NVPrimitiveEmitter::NVPrimitiveEmitter()
     : m_memory_manager(this)
@@ -58,16 +58,16 @@ std::unique_ptr<CUBLASEmitter>& NVPrimitiveEmitter::get_cublas_emitter()
 {
     return m_cublas_emitter;
 }
-size_t NVPrimitiveEmitter::insert(std::unique_ptr<nvgpu::primitive>&& f)
+size_t NVPrimitiveEmitter::insert(std::unique_ptr<nvidiagpu::primitive>&& f)
 {
     m_managed_primitives.emplace_back(std::move(f));
-    m_nvgpu_primitives.push_back(m_managed_primitives.back().get());
-    return m_nvgpu_primitives.size() - 1;
+    m_nvidiagpu_primitives.push_back(m_managed_primitives.back().get());
+    return m_nvidiagpu_primitives.size() - 1;
 }
-size_t NVPrimitiveEmitter::insert(const nvgpu::memory_primitive& f)
+size_t NVPrimitiveEmitter::insert(const nvidiagpu::memory_primitive& f)
 {
-    m_nvgpu_mem_primitives.push_back(f);
-    return m_nvgpu_mem_primitives.size() - 1;
+    m_nvidiagpu_mem_primitives.push_back(f);
+    return m_nvidiagpu_mem_primitives.size() - 1;
 }
 size_t NVPrimitiveEmitter::lookup(const std::string& hash)
 {
@@ -83,7 +83,7 @@ void NVPrimitiveEmitter::cache(const std::string& hash, const size_t& index)
     m_primitive_map.insert({hash, index});
 }
 
-size_t NVPrimitiveEmitter::register_primitive(std::unique_ptr<nvgpu::primitive>& f,
+size_t NVPrimitiveEmitter::register_primitive(std::unique_ptr<nvidiagpu::primitive>& f,
                                               std::string hash)
 {
     size_t primitive_index = this->insert(std::move(f));

@@ -19,14 +19,14 @@
 #include <cublas_v2.h>
 
 #include "ngraph/op/dot.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_runtime_context.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_context.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             class NVPrimitiveEmitter;
 

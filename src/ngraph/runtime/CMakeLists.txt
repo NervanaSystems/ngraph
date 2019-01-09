@@ -26,7 +26,7 @@ if (NGRAPH_INTELGPU_ENABLE)
 endif()
 
 if (NGRAPH_NVIDIAGPU_ENABLE)
-    add_subdirectory(nvgpu)
+    add_subdirectory(nvidiagpu)
 endif()
 
 if (NGRAPH_NOP_ENABLE)
@@ -34,7 +34,7 @@ if (NGRAPH_NOP_ENABLE)
 endif()
 
 if (NGRAPH_GPUH_ENABLE)
-    add_subdirectory(nvgpuh)
+    add_subdirectory(nvidiagpuh)
 endif()
 
 add_subdirectory(plaidml)

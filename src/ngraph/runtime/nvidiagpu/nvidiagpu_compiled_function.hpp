@@ -28,20 +28,20 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_primitive_emitter.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_backend.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_primitive_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_tensor_wrapper.hpp"
 
 #define EMIT_ARGS                                                                                  \
-    runtime::nvgpu::NVCompiledFunction *compiled_function, const std::string &function_name,       \
-        const Node *node, const std::vector<runtime::nvgpu::NVTensorWrapper> &args,                \
-        const std::vector<runtime::nvgpu::NVTensorWrapper> &out
+    runtime::nvidiagpu::NVCompiledFunction *compiled_function, const std::string &function_name,       \
+        const Node *node, const std::vector<runtime::nvidiagpu::NVTensorWrapper> &args,                \
+        const std::vector<runtime::nvidiagpu::NVTensorWrapper> &out
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             class NVEmitter;
             struct NVRuntimeContext;
@@ -59,7 +59,7 @@ namespace ngraph
                 static std::shared_ptr<NVCompiledFunction>
                     make(const std::shared_ptr<ngraph::Function>& function,
                          const std::shared_ptr<NVBackend::BackendContext>& shared_context);
-                std::unique_ptr<runtime::nvgpu::NVRuntimeContext>& ctx();
+                std::unique_ptr<runtime::nvidiagpu::NVRuntimeContext>& ctx();
                 const std::unique_ptr<NVPrimitiveEmitter>& get_primitive_emitter() const
                 {
                     return m_shared_context->m_primitive_emitter;
@@ -67,13 +67,13 @@ namespace ngraph
                 virtual std::string
                     add_to_runtime(size_t primitive_index,
                                    const std::string& function_name,
-                                   const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
-                                   const std::vector<runtime::nvgpu::NVTensorWrapper>& out) = 0;
+                                   const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
+                                   const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out) = 0;
                 virtual std::string add_call_to_runtime(
                     const std::string& caller,
                     const std::string& callee,
-                    const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
-                    const std::vector<runtime::nvgpu::NVTensorWrapper>& out) = 0;
+                    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
+                    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out) = 0;
                 void compile();
 
                 virtual void

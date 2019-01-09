@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             /// \brief Annotations added to graph ops by NV backend passes
             class NVOpAnnotations : public ngraph::op::util::OpAnnotations

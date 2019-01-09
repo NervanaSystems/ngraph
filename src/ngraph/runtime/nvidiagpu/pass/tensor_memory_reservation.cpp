@@ -21,13 +21,13 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/pass/manager_state.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_memory_manager.hpp"
-#include "ngraph/runtime/nvgpu/pass/tensor_memory_reservation.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_memory_manager.hpp"
+#include "ngraph/runtime/nvidiagpu/pass/tensor_memory_reservation.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-bool runtime::nvgpu::pass::TensorMemoryReservation::run_on_function(shared_ptr<Function> f)
+bool runtime::nvidiagpu::pass::TensorMemoryReservation::run_on_function(shared_ptr<Function> f)
 {
     bool reservation = false;
     size_t mem_pool_size = f->get_temporary_pool_size();

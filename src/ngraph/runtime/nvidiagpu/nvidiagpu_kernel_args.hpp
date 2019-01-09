@@ -23,13 +23,13 @@
 #include <unordered_map>
 #include <vector>
 
-#include "ngraph/runtime/nvgpu/nvgpu_host_parameters.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_host_parameters.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             template <typename T>
             struct has_const_iterator;

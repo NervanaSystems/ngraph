@@ -16,19 +16,19 @@
 
 #pragma once
 
-#include "ngraph/runtime/nvgpu/cublas_emitter.hpp"
-#include "ngraph/runtime/nvgpu/cuda_emitter.hpp"
-#include "ngraph/runtime/nvgpu/cudnn_emitter.hpp"
-#include "ngraph/runtime/nvgpu/host_emitter.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_kernel_args.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_memory_manager.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_runtime_context.hpp"
+#include "ngraph/runtime/nvidiagpu/cublas_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/cuda_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/cudnn_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/host_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_kernel_args.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_memory_manager.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_context.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             class NVPrimitiveEmitter
             {
@@ -39,26 +39,26 @@ namespace ngraph
                 std::unique_ptr<CUDAEmitter>& get_cuda_emitter();
                 std::unique_ptr<CUDNNEmitter>& get_cudnn_emitter();
                 std::unique_ptr<CUBLASEmitter>& get_cublas_emitter();
-                std::vector<nvgpu::primitive*>& get_primitives() { return m_nvgpu_primitives; }
-                std::vector<nvgpu::memory_primitive>& get_memory_primitives()
+                std::vector<nvidiagpu::primitive*>& get_primitives() { return m_nvidiagpu_primitives; }
+                std::vector<nvidiagpu::memory_primitive>& get_memory_primitives()
                 {
-                    return m_nvgpu_mem_primitives;
+                    return m_nvidiagpu_mem_primitives;
                 }
-                size_t insert(std::unique_ptr<nvgpu::primitive>&& f);
-                size_t insert(const nvgpu::memory_primitive& f);
+                size_t insert(std::unique_ptr<nvidiagpu::primitive>&& f);
+                size_t insert(const nvidiagpu::memory_primitive& f);
                 size_t lookup(const std::string& hash);
                 void cache(const std::string& hash, const size_t& index);
                 NVAllocator get_memory_allocator() { return m_memory_manager.build_allocator(); }
                 void allocate_primitive_memory() { m_memory_manager.allocate(); }
                 size_t sizeof_device_allocation() { return m_memory_manager.get_allocation_size(); }
                 NVKernelArgs add_kernel_args() { return NVKernelArgs(m_host_parameters); }
-                size_t register_primitive(std::unique_ptr<nvgpu::primitive>&, std::string);
+                size_t register_primitive(std::unique_ptr<nvidiagpu::primitive>&, std::string);
 
             private:
-                std::vector<nvgpu::primitive*> m_nvgpu_primitives;
-                std::vector<nvgpu::memory_primitive> m_nvgpu_mem_primitives;
+                std::vector<nvidiagpu::primitive*> m_nvidiagpu_primitives;
+                std::vector<nvidiagpu::memory_primitive> m_nvidiagpu_mem_primitives;
                 std::unordered_map<std::string, size_t> m_primitive_map;
-                std::vector<std::unique_ptr<nvgpu::primitive>> m_managed_primitives;
+                std::vector<std::unique_ptr<nvidiagpu::primitive>> m_managed_primitives;
                 NVMemoryManager m_memory_manager;
                 std::shared_ptr<NVHostParameters> m_host_parameters;
                 std::unique_ptr<HostEmitter> m_host_emitter;

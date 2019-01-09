@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             struct NVRuntimeContext;
             extern "C" void invoke_primitive(const NVRuntimeContext* ctx,

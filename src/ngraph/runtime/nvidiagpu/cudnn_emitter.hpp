@@ -26,22 +26,22 @@
 #include <cudnn.h>
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/runtime/nvgpu/cudnn_descriptors.hpp"
-#include "ngraph/runtime/nvgpu/cudnn_host_parameters.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_runtime_context.hpp"
+#include "ngraph/runtime/nvidiagpu/cudnn_descriptors.hpp"
+#include "ngraph/runtime/nvidiagpu/cudnn_host_parameters.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_context.hpp"
 #include "ngraph/shape.hpp"
 
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
-#include "ngraph/runtime/nvgpu/op/rnn.hpp"
+#include "ngraph/runtime/nvidiagpu/op/rnn.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             namespace cudnn_util
             {
@@ -62,7 +62,7 @@ namespace ngraph
                 size_t build_primitive(const op::MaxPool* node);
                 size_t build_primitive(const op::Max* node);
                 size_t build_primitive(const op::Min* node);
-                size_t build_primitive(const op::nvgpu::Rnn* node);
+                size_t build_primitive(const op::nvidiagpu::Rnn* node);
 
             public:
                 enum class Prop

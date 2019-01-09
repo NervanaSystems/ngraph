@@ -16,19 +16,19 @@
 
 #include <string>
 
-#include "ngraph/runtime/nvgpu/nvgpu_invoke.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_runtime_context.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_invoke.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_context.hpp"
 
-extern "C" void ngraph::runtime::nvgpu::invoke_primitive(const NVRuntimeContext* ctx,
+extern "C" void ngraph::runtime::nvidiagpu::invoke_primitive(const NVRuntimeContext* ctx,
                                                          size_t primitive_index,
                                                          void** args,
                                                          void** result)
 {
-    (*ctx->nvgpu_primitives[primitive_index])(args, result);
+    (*ctx->nvidiagpu_primitives[primitive_index])(args, result);
 }
 
-extern "C" void* ngraph::runtime::nvgpu::invoke_memory_primitive(const NVRuntimeContext* ctx,
+extern "C" void* ngraph::runtime::nvidiagpu::invoke_memory_primitive(const NVRuntimeContext* ctx,
                                                                  size_t primitive_index)
 {
-    return ctx->nvgpu_memory_primitives[primitive_index]();
+    return ctx->nvidiagpu_memory_primitives[primitive_index]();
 }

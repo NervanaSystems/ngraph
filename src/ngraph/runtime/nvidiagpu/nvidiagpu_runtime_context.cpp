@@ -14,25 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/nvgpu/nvgpu_runtime_context.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_util.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_context.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_util.hpp"
 
 using namespace ngraph;
 
-extern "C" void runtime::nvgpu::start_stopwatch(NVRuntimeContext* ctx, size_t idx)
+extern "C" void runtime::nvidiagpu::start_stopwatch(NVRuntimeContext* ctx, size_t idx)
 {
     ctx->stopwatch_pool->get(idx).start();
 }
 
-extern "C" void runtime::nvgpu::stop_stopwatch(NVRuntimeContext* ctx, size_t idx)
+extern "C" void runtime::nvidiagpu::stop_stopwatch(NVRuntimeContext* ctx, size_t idx)
 {
     ctx->stopwatch_pool->get(idx).stop();
 }
-extern "C" size_t runtime::nvgpu::count_stopwatch(NVRuntimeContext* ctx, size_t idx)
+extern "C" size_t runtime::nvidiagpu::count_stopwatch(NVRuntimeContext* ctx, size_t idx)
 {
     return ctx->stopwatch_pool->get(idx).get_call_count();
 }
-extern "C" size_t runtime::nvgpu::us_stopwatch(NVRuntimeContext* ctx, size_t idx)
+extern "C" size_t runtime::nvidiagpu::us_stopwatch(NVRuntimeContext* ctx, size_t idx)
 {
     return ctx->stopwatch_pool->get(idx).get_total_microseconds();
 }

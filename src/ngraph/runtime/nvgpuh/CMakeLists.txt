@@ -15,16 +15,16 @@
 # ******************************************************************************
 
 if (NGRAPH_GPUH_ENABLE)
-    add_library(nvgpuh_backend SHARED nvgpuh_backend.cpp)
+    add_library(nvidiagpuh_backend SHARED nvidiagpuh_backend.cpp)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
-        set_target_properties(nvgpuh_backend PROPERTIES
+        set_target_properties(nvidiagpuh_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
-    target_link_libraries(nvgpuh_backend PUBLIC ngraph hybrid_base gpu_backend)
-    set_target_properties(nvgpuh_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    target_link_libraries(nvidiagpuh_backend PUBLIC ngraph hybrid_base gpu_backend)
+    set_target_properties(nvidiagpuh_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
-    install(TARGETS nvgpuh_backend
+    install(TARGETS nvidiagpuh_backend
         LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
         ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
     )

@@ -26,14 +26,14 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             class NVTensor;
         }
     }
 }
 
-class ngraph::runtime::nvgpu::NVTensor : public ngraph::runtime::Tensor
+class ngraph::runtime::nvidiagpu::NVTensor : public ngraph::runtime::Tensor
 {
 public:
     NVTensor(const ngraph::element::Type& element_type, const Shape& shape, const Backend* parent);

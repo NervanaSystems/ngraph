@@ -20,14 +20,14 @@
 #include <memory>
 #include <unordered_map>
 
-#include "ngraph/runtime/nvgpu/nvgpu_compiled_function.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_compiled_function.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             class NVCallFrame
             {

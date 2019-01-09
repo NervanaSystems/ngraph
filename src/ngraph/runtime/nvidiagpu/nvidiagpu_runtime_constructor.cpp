@@ -14,11 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/nvgpu/nvgpu_runtime_constructor.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_constructor.hpp"
 
 using namespace ngraph;
 
-runtime::nvgpu::NVRuntimeConstructor::NVRuntimeConstructor(const op_order_t& ordered_ops)
+runtime::nvidiagpu::NVRuntimeConstructor::NVRuntimeConstructor(const op_order_t& ordered_ops)
 {
     for (auto const& ops : ordered_ops)
     {
@@ -26,16 +26,16 @@ runtime::nvgpu::NVRuntimeConstructor::NVRuntimeConstructor(const op_order_t& ord
     }
 }
 
-void runtime::nvgpu::NVRuntimeConstructor::add(const std::string& name, const op_runtime_t& step)
+void runtime::nvidiagpu::NVRuntimeConstructor::add(const std::string& name, const op_runtime_t& step)
 {
     m_runtime[name].push_back(step);
 }
 
-void runtime::nvgpu::NVRuntimeConstructor::add_call(
+void runtime::nvidiagpu::NVRuntimeConstructor::add_call(
     const std::string& caller,
     const std::string& callee,
-    const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
-    const std::vector<runtime::nvgpu::NVTensorWrapper>& out)
+    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
+    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out)
 {
     auto& runtime = m_runtime[callee];
     auto call = [args, out, &runtime](NVCallFrame& caller_frame, NVRuntimeContext* ctx) mutable {
@@ -55,7 +55,7 @@ void runtime::nvgpu::NVRuntimeConstructor::add_call(
     add(caller, call);
 }
 
-runtime::nvgpu::EntryPoint runtime::nvgpu::NVRuntimeConstructor::build(const std::string& function,
+runtime::nvidiagpu::EntryPoint runtime::nvidiagpu::NVRuntimeConstructor::build(const std::string& function,
                                                                        NVCallFrame& call_frame)
 {
     auto& runtime = m_runtime.at(function);

@@ -21,14 +21,14 @@
 #include <cudnn.h>
 
 #include "ngraph/log.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_host_parameters.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_util.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_host_parameters.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_util.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             /// \brief A factory which builds cuDNN host parameters
             /// and manages their creation and destruction.

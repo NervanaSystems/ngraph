@@ -16,6 +16,6 @@
 
 #include "ngraph/op/op_tbl.hpp"
 #if CUDNN_VERSION >= 7200
-NGRAPH_OP(Rnn, ngraph::op::nvgpu)
+NGRAPH_OP(Rnn, ngraph::op::nvidiagpu)
 #endif
-NGRAPH_OP(BatchNormTrainingWithStats, ngraph::op::nvgpu)
+NGRAPH_OP(BatchNormTrainingWithStats, ngraph::op::nvidiagpu)

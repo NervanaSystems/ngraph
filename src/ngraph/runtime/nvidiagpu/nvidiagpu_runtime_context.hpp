@@ -22,14 +22,14 @@
 #include <string>
 #include <unordered_map>
 
-#include "ngraph/runtime/nvgpu/nvgpu_cuda_context_manager.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_cuda_function_pool.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_cuda_context_manager.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_cuda_function_pool.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             class StopWatchPool;
 
@@ -41,8 +41,8 @@ namespace ngraph
             {
                 cudnnHandle_t* cudnn_handle;
                 cublasHandle_t* cublas_handle;
-                nvgpu::primitive* const* nvgpu_primitives;
-                const nvgpu::memory_primitive* nvgpu_memory_primitives;
+                nvidiagpu::primitive* const* nvidiagpu_primitives;
+                const nvidiagpu::memory_primitive* nvidiagpu_memory_primitives;
                 CudaFunctionPool* compiled_kernel_pool;
                 StopWatchPool* stopwatch_pool = nullptr;
                 // Note that in it's current state, calling methods of CudaFunctionPool

@@ -20,13 +20,13 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_op_annotations.hpp"
-#include "ngraph/runtime/nvgpu/op/batch_norm.hpp"
-#include "ngraph/runtime/nvgpu/pass/nvgpu_batch_norm_cache.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_op_annotations.hpp"
+#include "ngraph/runtime/nvidiagpu/op/batch_norm.hpp"
+#include "ngraph/runtime/nvidiagpu/pass/nvidiagpu_batch_norm_cache.hpp"
 
 using namespace ngraph;
 
-bool ngraph::runtime::nvgpu::pass::BatchNormCache::run_on_function(
+bool ngraph::runtime::nvidiagpu::pass::BatchNormCache::run_on_function(
     std::shared_ptr<ngraph::Function> f)
 {
     bool replaced = false;
@@ -36,7 +36,7 @@ bool ngraph::runtime::nvgpu::pass::BatchNormCache::run_on_function(
         {
             // batch norm bprop annotations are used to indicate if variance is in inverse stddev format
             auto op_annotations =
-                std::make_shared<ngraph::runtime::nvgpu::BatchNormBackpropAnnotations>();
+                std::make_shared<ngraph::runtime::nvidiagpu::BatchNormBackpropAnnotations>();
 
             // pass must be run prior to GOE elimination
             // collect all batch norm inputs to batch norm backward op
@@ -59,7 +59,7 @@ bool ngraph::runtime::nvgpu::pass::BatchNormCache::run_on_function(
                 if (auto target = std::dynamic_pointer_cast<op::BatchNormTraining>(
                         goes.front()->get_arguments().at(0)))
                 {
-                    auto replacement = std::make_shared<op::nvgpu::BatchNormTrainingWithStats>(
+                    auto replacement = std::make_shared<op::nvidiagpu::BatchNormTrainingWithStats>(
                         target->get_eps_value(),
                         target->get_argument(0),
                         target->get_argument(1),

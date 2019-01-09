@@ -19,21 +19,21 @@
 #include <sstream>
 #include <vector>
 
-#include "ngraph/runtime/nvgpu/host_emitter.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_invoke.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_primitive_emitter.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_runtime_context.hpp"
+#include "ngraph/runtime/nvidiagpu/host_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_invoke.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_primitive_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_context.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
 
-runtime::nvgpu::HostEmitter::HostEmitter(NVPrimitiveEmitter* emitter, NVRuntimeContext* ctx)
+runtime::nvidiagpu::HostEmitter::HostEmitter(NVPrimitiveEmitter* emitter, NVRuntimeContext* ctx)
     : m_primitive_emitter(emitter)
     , m_ctx(ctx)
 {
 }
 
-size_t runtime::nvgpu::HostEmitter::build_memcpy(const cudaMemcpyKind& kind,
+size_t runtime::nvidiagpu::HostEmitter::build_memcpy(const cudaMemcpyKind& kind,
                                                  size_t size,
                                                  size_t dst,
                                                  size_t src)
@@ -49,15 +49,15 @@ size_t runtime::nvgpu::HostEmitter::build_memcpy(const cudaMemcpyKind& kind,
         return primitive_index;
     }
 
-    std::unique_ptr<nvgpu::primitive> launch_kernel(
-        new nvgpu::primitive{[=](void** inputs, void** outputs) mutable {
+    std::unique_ptr<nvidiagpu::primitive> launch_kernel(
+        new nvidiagpu::primitive{[=](void** inputs, void** outputs) mutable {
             CUDA_RT_SAFE_CALL(cudaMemcpy(outputs[dst], inputs[src], size, kind));
         }});
 
     return this->m_primitive_emitter->register_primitive(launch_kernel, hash);
 }
 
-size_t runtime::nvgpu::HostEmitter::build_zero_out(size_t dst, size_t size, bool is_local)
+size_t runtime::nvidiagpu::HostEmitter::build_zero_out(size_t dst, size_t size, bool is_local)
 {
     std::stringstream ss;
     ss << "zero"
@@ -71,17 +71,17 @@ size_t runtime::nvgpu::HostEmitter::build_zero_out(size_t dst, size_t size, bool
         return primitive_index;
     }
 
-    std::unique_ptr<nvgpu::primitive> launch_kernel;
+    std::unique_ptr<nvidiagpu::primitive> launch_kernel;
     if (is_local)
     {
-        launch_kernel.reset(new nvgpu::primitive{[=](void** inputs, void** outputs) mutable {
-            void* tensor = nvgpu::invoke_memory_primitive(m_ctx, dst);
+        launch_kernel.reset(new nvidiagpu::primitive{[=](void** inputs, void** outputs) mutable {
+            void* tensor = nvidiagpu::invoke_memory_primitive(m_ctx, dst);
             CUDA_RT_SAFE_CALL(cudaMemset(tensor, 0, size));
         }});
     }
     else
     {
-        launch_kernel.reset(new nvgpu::primitive{[=](void** inputs, void** outputs) mutable {
+        launch_kernel.reset(new nvidiagpu::primitive{[=](void** inputs, void** outputs) mutable {
             CUDA_RT_SAFE_CALL(cudaMemset(outputs[dst], 0, size));
         }});
     }

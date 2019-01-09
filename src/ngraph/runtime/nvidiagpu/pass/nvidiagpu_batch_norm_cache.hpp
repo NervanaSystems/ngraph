@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             namespace pass
             {
@@ -32,7 +32,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::nvgpu::pass::BatchNormCache : public ngraph::pass::FunctionPass
+class ngraph::runtime::nvidiagpu::pass::BatchNormCache : public ngraph::pass::FunctionPass
 {
 public:
     BatchNormCache()

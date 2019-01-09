@@ -25,7 +25,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             static size_t alignment = 64;
 

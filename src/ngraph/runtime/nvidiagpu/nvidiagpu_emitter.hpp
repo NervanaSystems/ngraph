@@ -20,14 +20,14 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_compiled_function.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_compiled_function.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             class NVEmitter
             {
@@ -38,7 +38,7 @@ namespace ngraph
 // static std::string emit_Abs(EMIT_ARGS);
 // static std::string emit_Acos(EMIT_ARGS);
 #define NGRAPH_OP(a, b) static std::string emit_##a(EMIT_ARGS);
-#include "ngraph/runtime/nvgpu/op/op_tbl.hpp"
+#include "ngraph/runtime/nvidiagpu/op/op_tbl.hpp"
 #undef NGRAPH_OP
 
                 template <typename T>

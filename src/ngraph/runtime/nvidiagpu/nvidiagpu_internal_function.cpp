@@ -106,21 +106,21 @@
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/pass/like_replacement.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_call_frame.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_emitter.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_internal_function.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_invoke.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_kernel_emitters.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_runtime_constructor.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_runtime_context.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_tensor_wrapper.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_util.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_backend.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_call_frame.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_internal_function.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_invoke.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_kernel_emitters.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_constructor.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_context.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-std::string runtime::nvgpu::NVInternalFunction::emit_op(NVCompiledFunction* compiled_function,
+std::string runtime::nvidiagpu::NVInternalFunction::emit_op(NVCompiledFunction* compiled_function,
                                                         const std::string& function_name,
                                                         const ngraph::Node* node,
                                                         const std::vector<NVTensorWrapper>& args,
@@ -130,14 +130,14 @@ std::string runtime::nvgpu::NVInternalFunction::emit_op(NVCompiledFunction* comp
     return emit_function(compiled_function, function_name, node, args, out);
 };
 
-runtime::nvgpu::NVInternalFunction::NVInternalFunction(
+runtime::nvidiagpu::NVInternalFunction::NVInternalFunction(
     const shared_ptr<ngraph::Function>& function,
     const std::shared_ptr<NVBackend::BackendContext>& shared_context)
     : NVCompiledFunction(function, shared_context)
 {
 }
 
-runtime::nvgpu::NVInternalFunction::~NVInternalFunction()
+runtime::nvidiagpu::NVInternalFunction::~NVInternalFunction()
 {
     if (m_trace)
     {
@@ -148,11 +148,11 @@ runtime::nvgpu::NVInternalFunction::~NVInternalFunction()
     }
 }
 
-std::string runtime::nvgpu::NVInternalFunction::add_to_runtime(
+std::string runtime::nvidiagpu::NVInternalFunction::add_to_runtime(
     size_t primitive_index,
     const std::string& function_name,
-    const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
-    const std::vector<runtime::nvgpu::NVTensorWrapper>& out)
+    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
+    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out)
 {
     std::function<void(NVCallFrame & call_frame, NVRuntimeContext * ctx)> primitive_invocation;
     if (!m_trace)
@@ -162,7 +162,7 @@ std::string runtime::nvgpu::NVInternalFunction::add_to_runtime(
             // here, these inputs and outputs could be any of [constant, input, output, intermediate]
             auto inputs = call_frame.get_tensor_io(args);
             auto outputs = call_frame.get_tensor_io(out);
-            runtime::nvgpu::invoke_primitive(ctx, primitive_index, inputs.data(), outputs.data());
+            runtime::nvidiagpu::invoke_primitive(ctx, primitive_index, inputs.data(), outputs.data());
         };
     }
     else
@@ -192,7 +192,7 @@ std::string runtime::nvgpu::NVInternalFunction::add_to_runtime(
             }
             *m_trace << ");\n";
             *m_trace << compose_manifest(primitive_index, args, out);
-            runtime::nvgpu::invoke_primitive(ctx, primitive_index, inputs.data(), outputs.data());
+            runtime::nvidiagpu::invoke_primitive(ctx, primitive_index, inputs.data(), outputs.data());
         };
     }
     m_runtime_constructor->add(function_name, primitive_invocation);
@@ -200,11 +200,11 @@ std::string runtime::nvgpu::NVInternalFunction::add_to_runtime(
     return compose_manifest(primitive_index, args, out);
 }
 
-std::string runtime::nvgpu::NVInternalFunction::add_call_to_runtime(
+std::string runtime::nvidiagpu::NVInternalFunction::add_call_to_runtime(
     const std::string& caller,
     const std::string& callee,
-    const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
-    const std::vector<runtime::nvgpu::NVTensorWrapper>& out)
+    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
+    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out)
 {
     m_runtime_constructor->add_call(caller, callee, args, out);
     codegen::CodeWriter writer;
@@ -224,10 +224,10 @@ std::string runtime::nvgpu::NVInternalFunction::add_call_to_runtime(
     return writer.get_code();
 }
 
-std::string runtime::nvgpu::NVInternalFunction::compose_manifest(
+std::string runtime::nvidiagpu::NVInternalFunction::compose_manifest(
     size_t primitive_index,
-    const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
-    const std::vector<runtime::nvgpu::NVTensorWrapper>& out) const
+    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
+    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out) const
 {
     codegen::CodeWriter writer;
     writer.block_begin();
@@ -246,7 +246,7 @@ std::string runtime::nvgpu::NVInternalFunction::compose_manifest(
     return writer.get_code();
 }
 
-void runtime::nvgpu::NVInternalFunction::build_functions()
+void runtime::nvidiagpu::NVInternalFunction::build_functions()
 {
     for (const auto& p : m_function_ordered_ops)
     {
@@ -264,7 +264,7 @@ void runtime::nvgpu::NVInternalFunction::build_functions()
                 stringstream ss;
                 ss << "((" << type << "*)(inputs[" << arg_index << "]))";
                 m_variable_name_map[tv->get_name()] = std::make_tuple(
-                    runtime::nvgpu::NVTensorWrapper::TensorType::INPUT, arg_index, ss.str());
+                    runtime::nvidiagpu::NVTensorWrapper::TensorType::INPUT, arg_index, ss.str());
                 // propagate_in_place_input(&param->get_outputs().at(i), ss.str());
                 arg_index++;
             }
@@ -279,7 +279,7 @@ void runtime::nvgpu::NVInternalFunction::build_functions()
             stringstream ss;
             ss << "((" << type << "*)(outputs[" << i << "]))";
             m_variable_name_map[tv->get_name()] =
-                std::make_tuple(runtime::nvgpu::NVTensorWrapper::TensorType::OUTPUT, i, ss.str());
+                std::make_tuple(runtime::nvidiagpu::NVTensorWrapper::TensorType::OUTPUT, i, ss.str());
 
             auto res = dynamic_pointer_cast<ngraph::op::Result>(op);
             //keep assigning different outputs to a result descriptor
@@ -292,7 +292,7 @@ void runtime::nvgpu::NVInternalFunction::build_functions()
                     res->get_inputs().at(0).get_output().get_tensor_ptr();
                 auto output_name = ss.str();
                 m_variable_name_map[itv->get_name()] = std::make_tuple(
-                    runtime::nvgpu::NVTensorWrapper::TensorType::OUTPUT, i, ss.str());
+                    runtime::nvidiagpu::NVTensorWrapper::TensorType::OUTPUT, i, ss.str());
                 //propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
             }
         }
@@ -314,7 +314,7 @@ void runtime::nvgpu::NVInternalFunction::build_functions()
                 for (descriptor::Tensor* tensor : node->liveness_new_list)
                 {
                     m_variable_name_map[tensor->get_name()] =
-                        std::make_tuple(runtime::nvgpu::NVTensorWrapper::TensorType::INTERMEDIATE,
+                        std::make_tuple(runtime::nvidiagpu::NVTensorWrapper::TensorType::INTERMEDIATE,
                                         tensor->get_pool_offset(),
                                         current_function->get_name());
                 }
@@ -328,7 +328,7 @@ void runtime::nvgpu::NVInternalFunction::build_functions()
             {
                 shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
                 m_variable_name_map[tv->get_name()] = std::make_tuple(
-                    runtime::nvgpu::NVTensorWrapper::TensorType::CONSTANT, 0, node->get_name());
+                    runtime::nvidiagpu::NVTensorWrapper::TensorType::CONSTANT, 0, node->get_name());
             }
         }
 
@@ -382,14 +382,14 @@ void runtime::nvgpu::NVInternalFunction::build_functions()
     }
 }
 
-void runtime::nvgpu::NVInternalFunction::add_passes(ngraph::pass::Manager& pass_manager)
+void runtime::nvidiagpu::NVInternalFunction::add_passes(ngraph::pass::Manager& pass_manager)
 {
 }
 
-void runtime::nvgpu::NVInternalFunction::emit()
+void runtime::nvidiagpu::NVInternalFunction::emit()
 {
     m_runtime_constructor =
-        runtime::nvgpu::make_unique<NVRuntimeConstructor>(m_function_ordered_ops);
+        runtime::nvidiagpu::make_unique<NVRuntimeConstructor>(m_function_ordered_ops);
 
     if (std::getenv("NGRAPH_NVIDIAGPU_TRACE"))
     {
@@ -400,7 +400,7 @@ void runtime::nvgpu::NVInternalFunction::emit()
     build_functions();
 }
 
-void runtime::nvgpu::NVInternalFunction::compile_function()
+void runtime::nvidiagpu::NVInternalFunction::compile_function()
 {
     NVCallFrame call_frame(m_function->get_parameters().size(), m_function->get_output_size());
 
@@ -416,7 +416,7 @@ void runtime::nvgpu::NVInternalFunction::compile_function()
     m_is_compiled = true;
 }
 
-void runtime::nvgpu::NVInternalFunction::save_manifest_to_disk() const
+void runtime::nvidiagpu::NVInternalFunction::save_manifest_to_disk() const
 {
     string filename = file_util::path_join(get_output_dir(), m_function_name + "_manifest.txt");
     ofstream out(filename);
@@ -424,7 +424,7 @@ void runtime::nvgpu::NVInternalFunction::save_manifest_to_disk() const
     out.close();
 }
 
-void runtime::nvgpu::NVInternalFunction::propagate_in_place_input(
+void runtime::nvidiagpu::NVInternalFunction::propagate_in_place_input(
     ngraph::descriptor::Output* output, const std::string& input_name)
 {
     // std::deque<ngraph::descriptor::Output*> stack;
@@ -463,7 +463,7 @@ void runtime::nvgpu::NVInternalFunction::propagate_in_place_input(
     // }
 }
 
-void runtime::nvgpu::NVInternalFunction::propagate_in_place_output(
+void runtime::nvidiagpu::NVInternalFunction::propagate_in_place_output(
     ngraph::descriptor::Output* res_src_output, const std::string& output_name)
 {
     // // we start with a particular output
@@ -506,7 +506,7 @@ void runtime::nvgpu::NVInternalFunction::propagate_in_place_output(
     // } while (propagate_further);
 }
 
-void runtime::nvgpu::NVInternalFunction::get_performance_data(
+void runtime::nvidiagpu::NVInternalFunction::get_performance_data(
     std::vector<runtime::PerformanceCounter>& rc) const
 {
     // auto* engine = this->m_execution_engine.get();

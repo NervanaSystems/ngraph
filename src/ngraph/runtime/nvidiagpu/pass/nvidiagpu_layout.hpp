@@ -17,17 +17,17 @@
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_compiled_function.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_compiled_function.hpp"
 
 #define LAYOUT_DECL(op_type)                                                                       \
-    layout<op_type>(ngraph::runtime::nvgpu::NVCompiledFunction * compiled_function,                \
+    layout<op_type>(ngraph::runtime::nvidiagpu::NVCompiledFunction * compiled_function,                \
                     std::shared_ptr<ngraph::Node> node)
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             namespace pass
             {
@@ -48,7 +48,7 @@ namespace ngraph
 
                     template <typename OP>
                     static void
-                        layout(ngraph::runtime::nvgpu::NVCompiledFunction* compiled_function,
+                        layout(ngraph::runtime::nvidiagpu::NVCompiledFunction* compiled_function,
                                std::shared_ptr<ngraph::Node> node);
 
                 private:

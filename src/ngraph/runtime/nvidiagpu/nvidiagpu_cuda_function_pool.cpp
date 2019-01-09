@@ -21,14 +21,14 @@
 #include <unordered_map>
 
 #include "ngraph/file_util.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_cuda_function_builder.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_cuda_function_pool.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_cuda_function_builder.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_cuda_function_pool.hpp"
 
-static const std::string s_output_dir = "nvgpu_codegen";
+static const std::string s_output_dir = "nvidiagpu_codegen";
 
 using namespace ngraph;
 
-std::shared_ptr<CUfunction> runtime::nvgpu::CudaFunctionPool::set(const std::string& name,
+std::shared_ptr<CUfunction> runtime::nvidiagpu::CudaFunctionPool::set(const std::string& name,
                                                                   const std::string& kernel)
 {
     // this needs to be updated to support the compute capability of the detected hardware
@@ -43,7 +43,7 @@ std::shared_ptr<CUfunction> runtime::nvgpu::CudaFunctionPool::set(const std::str
     return cu_compiled_function;
 }
 
-std::shared_ptr<CUfunction> runtime::nvgpu::CudaFunctionPool::get(const std::string& name)
+std::shared_ptr<CUfunction> runtime::nvidiagpu::CudaFunctionPool::get(const std::string& name)
 {
     auto it = m_function_map.find(name);
     if (it != m_function_map.end())

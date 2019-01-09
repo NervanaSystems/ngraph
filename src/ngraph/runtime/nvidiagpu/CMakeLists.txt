@@ -23,36 +23,36 @@ set(SRC
     cudnn_emitter.cpp
     cublas_emitter.cpp
     host_emitter.cpp
-    nvgpu_backend.cpp
-    nvgpu_call_frame.cpp
-    nvgpu_cuda_context_manager.cpp
-    nvgpu_cuda_function_builder.cpp
-    nvgpu_cuda_function_pool.cpp
-    nvgpu_cuda_kernel_builder.cpp
-    nvgpu_emitter.cpp
-    nvgpu_compiled_function.cpp
-    nvgpu_internal_function.cpp
-    nvgpu_invoke.cpp
-    nvgpu_kernel_args.cpp
-    nvgpu_kernel_emitters.cpp
-    nvgpu_memory_manager.cpp
-    nvgpu_primitive_emitter.cpp
-    nvgpu_runtime_constructor.cpp
-    nvgpu_runtime_context.cpp
-    nvgpu_tensor_wrapper.cpp
-    nvgpu_tensor.cpp
-    nvgpu_util.cpp
+    nvidiagpu_backend.cpp
+    nvidiagpu_call_frame.cpp
+    nvidiagpu_cuda_context_manager.cpp
+    nvidiagpu_cuda_function_builder.cpp
+    nvidiagpu_cuda_function_pool.cpp
+    nvidiagpu_cuda_kernel_builder.cpp
+    nvidiagpu_emitter.cpp
+    nvidiagpu_compiled_function.cpp
+    nvidiagpu_internal_function.cpp
+    nvidiagpu_invoke.cpp
+    nvidiagpu_kernel_args.cpp
+    nvidiagpu_kernel_emitters.cpp
+    nvidiagpu_memory_manager.cpp
+    nvidiagpu_primitive_emitter.cpp
+    nvidiagpu_runtime_constructor.cpp
+    nvidiagpu_runtime_context.cpp
+    nvidiagpu_tensor_wrapper.cpp
+    nvidiagpu_tensor.cpp
+    nvidiagpu_util.cpp
     type_info.cpp
-    pass/nvgpu_batch_norm_cache.cpp
-    pass/nvgpu_layout.cpp
-    pass/nvgpu_rnn_fusion.cpp
+    pass/nvidiagpu_batch_norm_cache.cpp
+    pass/nvidiagpu_layout.cpp
+    pass/nvidiagpu_rnn_fusion.cpp
     pass/tensor_memory_reservation.cpp
     op/batch_norm.cpp
     op/rnn.cpp
     )
 
 if (NOT NGRAPH_DEX_ONLY)
-    list(APPEND SRC nvgpu_external_function.cpp)
+    list(APPEND SRC nvidiagpu_external_function.cpp)
 endif()
 
 set(CUDA_INC
@@ -144,17 +144,17 @@ if (NGRAPH_NVIDIAGPU_ENABLE)
         message(STATUS "Not precompiling static CUDA kernels via NVCC; runtime compilation via NVRTC will be used.")
     endif()
 
-    add_library(nvgpu_backend SHARED ${SRC} ${CUDA_OBJ})
+    add_library(nvidiagpu_backend SHARED ${SRC} ${CUDA_OBJ})
     if(NGRAPH_LIB_VERSIONING_ENABLE)
-        set_target_properties(nvgpu_backend PROPERTIES
+        set_target_properties(nvidiagpu_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
-    target_link_libraries(nvgpu_backend PUBLIC ngraph)
+    target_link_libraries(nvidiagpu_backend PUBLIC ngraph)
     if (NGRAPH_DEX_ONLY)
-        target_compile_definitions(nvgpu_backend PRIVATE "NGRAPH_DEX_ONLY")
+        target_compile_definitions(nvidiagpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     else()
-        target_link_libraries(nvgpu_backend PUBLIC codegen)
+        target_link_libraries(nvidiagpu_backend PUBLIC codegen)
     endif()
     find_library(CUDA_nvrtc_LIBRARY nvrtc
         PATH_SUFFIXES lib lib64 cuda/lib cuda/lib64 lib/x64)
@@ -164,8 +164,8 @@ if (NGRAPH_NVIDIAGPU_ENABLE)
         PATH_SUFFIXES lib lib64 cuda/lib cuda/lib64 lib/x64)
 
     find_package(CUDNN 7 REQUIRED)
-    target_include_directories(nvgpu_backend SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
-    target_link_libraries(nvgpu_backend
+    target_include_directories(nvidiagpu_backend SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIR})
+    target_link_libraries(nvidiagpu_backend
         PUBLIC
             ${CUDA_cuda_LIBRARY}
             ${CUDA_nvrtc_LIBRARY}
@@ -174,9 +174,9 @@ if (NGRAPH_NVIDIAGPU_ENABLE)
             ${CUDA_CUBLAS_LIBRARIES}
             ${CUDNN_LIBRARIES})
 
-    set_target_properties(nvgpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    set_target_properties(nvidiagpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
-    install(TARGETS nvgpu_backend
+    install(TARGETS nvidiagpu_backend
         ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB}
         LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

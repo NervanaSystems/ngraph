@@ -90,7 +90,7 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 
 if(NGRAPH_NVIDIAGPU_ENABLE)
-    list(APPEND SRC nvgpu_test.cpp nvgpu_fusion.cpp)
+    list(APPEND SRC nvidiagpu_test.cpp nvidiagpu_fusion.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} NVGPU)
 endif()
 
@@ -226,7 +226,7 @@ if (NGRAPH_INTERPRETER_ENABLE)
 endif()
 
 if (NGRAPH_NVIDIAGPU_ENABLE)
-    target_link_libraries(unit-test PRIVATE nvgpu_backend)
+    target_link_libraries(unit-test PRIVATE nvidiagpu_backend)
 endif()
 
 if (NGRAPH_NOP_ENABLE)

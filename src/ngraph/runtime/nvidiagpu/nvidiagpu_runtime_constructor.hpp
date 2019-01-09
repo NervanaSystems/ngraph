@@ -23,15 +23,15 @@
 #include <vector>
 
 #include "ngraph/function.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_backend.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_call_frame.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_backend.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_call_frame.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_tensor_wrapper.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             class NVCallFrame;
             class NVRuntimeConstructor
@@ -46,8 +46,8 @@ namespace ngraph
                 void add(const std::string& name, const op_runtime_t& step);
                 void add_call(const std::string& caller,
                               const std::string& callee,
-                              const std::vector<runtime::nvgpu::NVTensorWrapper>& args,
-                              const std::vector<runtime::nvgpu::NVTensorWrapper>& out);
+                              const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
+                              const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out);
                 EntryPoint build(const std::string& function, NVCallFrame& call_frame);
 
             private:

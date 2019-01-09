@@ -18,10 +18,10 @@
 
 #include <array>
 #include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/runtime/nvgpu/nvdiff.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_cuda_kernel_ops.hpp"
-#include "ngraph/runtime/nvgpu/nvgpu_host_parameters.hpp"
-#include "ngraph/runtime/nvgpu/nvshape.hpp"
+#include "ngraph/runtime/nvidiagpu/nvdiff.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_cuda_kernel_ops.hpp"
+#include "ngraph/runtime/nvidiagpu/nvidiagpu_host_parameters.hpp"
+#include "ngraph/runtime/nvidiagpu/nvshape.hpp"
 #include "ngraph/strides.hpp"
 
 #include "ngraph/op/convolution.hpp"
@@ -35,7 +35,7 @@ namespace ngraph
 
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             struct NVRuntimeContext;
             class NVPrimitiveEmitter;
@@ -202,7 +202,7 @@ namespace ngraph
                             NVRuntimeContext* ctx,
                             std::shared_ptr<NVHostParameters> params);
                 uint32_t align_to_block_size(uint32_t threads, uint32_t block_size);
-                void print_tensor_from_nvgpu(codegen::CodeWriter& writer,
+                void print_tensor_from_nvidiagpu(codegen::CodeWriter& writer,
                                              const std::string& tensor_name,
                                              NVShape shape);
                 std::string include_helpers();

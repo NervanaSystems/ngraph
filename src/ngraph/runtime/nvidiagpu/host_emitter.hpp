@@ -26,7 +26,7 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace nvgpu
+        namespace nvidiagpu
         {
             struct NVRuntimeContext;
             class NVPrimitiveEmitter;
