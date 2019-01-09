@@ -25,9 +25,20 @@ if (NGRAPH_INTERPRETER_ENABLE)
     set_target_properties(interpreter_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
-        target_compile_definitions(interpreter_backend PRIVATE NGRAPH_DISTRIBUTED)
-        target_include_directories(interpreter_backend SYSTEM PRIVATE libmlsl)
-        target_link_libraries(interpreter_backend PRIVATE libmlsl)
+        # target_compile_definitions(interpreter_backend PRIVATE NGRAPH_DISTRIBUTED)
+        # target_include_directories(interpreter_backend SYSTEM PRIVATE libmlsl)
+        # target_link_libraries(interpreter_backend PRIVATE libmlsl)
+
+        	
+        find_package(MPI REQUIRED)	
+        target_compile_definitions(interpreter_backend	
+            PRIVATE NGRAPH_DISTRIBUTED)	
+        target_include_directories(interpreter_backend	
+            SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})	
+        target_link_libraries(interpreter_backend	
+            PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})	
+    
+
     endif()
 
     install(TARGETS interpreter_backend
