@@ -29,11 +29,11 @@ namespace ngraph
                                     float* pad_value,
                                     const Shape& input_shape,
                                     const Shape& output_shape,
-                                    const Shape& padding_below,
-                                    const Shape& padding_above,
+                                    const CoordinateDiff& padding_below,
+                                    const CoordinateDiff& padding_above,
                                     int arena)
                 {
-                    pad<float, 4>(input,
+                    pad_and_slice<float, 4>(input,
                                   output,
                                   pad_value,
                                   input_shape,
