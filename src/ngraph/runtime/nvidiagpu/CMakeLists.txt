@@ -16,7 +16,7 @@
 
 include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS})
 
-# Add sources for the NVGPU backend
+# Add sources for the NVIDIAGPU backend
 # and all its dependencies
 set(SRC
     cuda_emitter.cpp
