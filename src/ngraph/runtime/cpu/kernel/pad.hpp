@@ -79,13 +79,9 @@ namespace ngraph
                         out_dims[i] = output_shape[i];
                         in_dims[i] = input_shape[i];
 
-                        auto pb = 0;
-                        auto pa = 0;
-                        if (padding_below[i] >= 0)
-                            pb = padding_below[i];
-                        if (padding_above[i] >= 0)
-                            pa = padding_above[i];
-                        padding[i] = {pb, pa};
+                        padding[i] = {
+                            padding_below[i] >= 0 ? (unsigned long int)padding_below[i] : 0,
+                            padding_above[i] >= 0 ? (unsigned long int)padding_above[i] : 0};
 
                         if (padding_below[i] < 0)
                         {
