@@ -983,10 +983,10 @@ TEST(builder, dynamic_scaled_QC_fusion)
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     auto Bias = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto C = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto D = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto E = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto F = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{});
+    auto D = make_shared<op::Parameter>(element::f32, Shape{});
+    auto E = make_shared<op::Parameter>(element::f32, Shape{});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{});
     auto CV = ngraph::builder::ScaledQuantizedConvolutionFusion(A,
                                                                 B,
                                                                 Bias,
@@ -1017,13 +1017,13 @@ TEST(builder, dynamic_scaled_QC_fusion)
     copy_data(b, b_data);
     auto c = backend->create_tensor(element::f32, Shape{1});
     copy_data(c, c_data);
-    auto d = backend->create_tensor(element::f32, Shape{1});
+    auto d = backend->create_tensor(element::f32, Shape{});
     copy_data(d, vector<float>{0.0f});
-    auto e = backend->create_tensor(element::f32, Shape{1});
+    auto e = backend->create_tensor(element::f32, Shape{});
     copy_data(e, vector<float>{1.0f});
-    auto e_a = backend->create_tensor(element::f32, Shape{1});
+    auto e_a = backend->create_tensor(element::f32, Shape{});
     copy_data(e_a, vector<float>{17.618633f});
-    auto g = backend->create_tensor(element::f32, Shape{1});
+    auto g = backend->create_tensor(element::f32, Shape{});
     copy_data(g, vector<float>{0.0f});
     auto result = backend->create_tensor(element::i8, shape_r);
     backend->call_with_validate(backend->compile(f), {result}, {a, b, c, d, e, e_a, g});
