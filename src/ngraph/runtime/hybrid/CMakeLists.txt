@@ -18,6 +18,7 @@ add_library(hybrid_base STATIC
     hybrid_backend.cpp
     hybrid_util.cpp
     pass/assign_placement.cpp
+    pass/dump.cpp
     pass/fix_get_output_element.cpp
     pass/liveness.cpp
     pass/memory_layout.cpp

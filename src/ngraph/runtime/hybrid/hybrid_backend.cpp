@@ -21,6 +21,7 @@
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
 #include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
+#include "ngraph/runtime/hybrid/pass/dump.hpp"
 #include "ngraph/runtime/hybrid/pass/fix_get_output_element.hpp"
 #include "ngraph/runtime/hybrid/pass/liveness.hpp"
 #include "ngraph/runtime/hybrid/pass/memory_layout.hpp"
@@ -74,6 +75,7 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         pass_manager.register_pass<runtime::hybrid::pass::AssignPlacement>(m_backend_list);
         pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
         pass_manager.register_pass<runtime::hybrid::pass::Liveness>();
+        pass_manager.register_pass<runtime::hybrid::pass::Dump>("graph.dump");
         // pass_manager.register_pass<runtime::hybrid::pass::MemoryLayout>();
         if (m_debug_enabled)
         {
@@ -93,9 +95,10 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
             size_t placement = runtime::hybrid::get_colocated_function_placement(sub_function);
             if (m_debug_enabled)
             {
-                string subfunction_name = "subfunction_" + to_string(subfunction_number++) + ".png";
+                string name = "subfunction_" + to_string(subfunction_number++);
                 ngraph::pass::Manager pm;
-                pm.register_pass<ngraph::pass::VisualizeTree>(subfunction_name, node_modifiers);
+                pm.register_pass<ngraph::pass::VisualizeTree>(name + ".png", node_modifiers);
+                pm.register_pass<runtime::hybrid::pass::Dump>(name + ".dump");
                 pm.run_passes(sub_function);
             }
             auto backend = m_backend_list[placement];
