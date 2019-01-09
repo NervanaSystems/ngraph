@@ -20,6 +20,13 @@
 #include "ngraph/builder/quantization.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/min.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/subtract.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/sqrt.hpp"
 #include "quantization_util.hpp"
 
 using namespace std;
@@ -352,7 +359,6 @@ namespace ngraph
                                                                             with_relu);
             return make_shared<op::Convert>(qconv, element::u8);
         }
-#if 0
         std::shared_ptr<Node>
             ScaledQuantizedConvolutionFusion(std::shared_ptr<Node> input,
                                              std::shared_ptr<Node> filters,
@@ -366,29 +372,44 @@ namespace ngraph
                                              std::shared_ptr<Node> max_input,
                                              std::shared_ptr<Node> sum_min_input,
                                              std::shared_ptr<Node> sum_max_input,
-                                             std::shared_ptr<Node> min_freezed_output_conv,
-                                             std::shared_ptr<Node> max_freezed_output_conv,
+                                             std::shared_ptr<Node> min_freezed_output,
+                                             std::shared_ptr<Node> max_freezed_output,
                                              const Strides& window_movement_strides,
                                              const Strides& window_dilation_strides,
                                              const CoordinateDiff& padding_below,
                                              const CoordinateDiff& padding_above,
                                              const Strides& data_dilation_strides,
                                              const bool with_relu,
-                                             const bool with_bn);
+                                             const bool with_bn)
         {
+            // BN folding
+            auto bn_eps = op::Constant::create(element::f32, Shape{}, {0.001});
+            auto var_eps = std::make_shared<op::Add>(
+                variance,
+                std::make_shared<op::Broadcast>(bn_eps, variance->get_shape(), AxisSet{0}));
+            auto sqrt_var_eps = std::make_shared<op::Sqrt>(var_eps);
+
+            auto mean_gamma = std::make_shared<op::Multiply>(mean, gamma);
+            auto new_biases = std::make_shared<op::Subtract>(
+                beta, std::make_shared<op::Divide>(mean_gamma, sqrt_var_eps));
+            auto weight_scaling = std::make_shared<op::Divide>(gamma, sqrt_var_eps);
+            auto new_weights = std::make_shared<op::Multiply>(
+                filters,
+                std::make_shared<op::Broadcast>(
+                    weight_scaling, filters->get_shape(), AxisSet{1, 2, 3}));
+
+            // quantize weights and bias
+            auto new_weights_i8 = std::make_shared<op::Convert>(new_weights, element::i8);
+            auto min_filter = std::make_shared<op::Min>(filters, AxisSet{0, 1, 2, 3});
+            auto max_filter = std::make_shared<op::Max>(filters, AxisSet{0, 1, 2, 3});
             auto output_et = with_relu ? element::u8 : element::i8;
             auto requantization_scale = quantization_util::get_scale(min_input,
                                                                      max_input,
                                                                      min_filter,
                                                                      max_filter,
-                                                                     min_freezed_output_conv_1,
-                                                                     max_freezed_output_conv_1,
+                                                                     min_freezed_output,
+                                                                     max_freezed_output,
                                                                      output_et);
-
-            auto sum_scale = builder::quantization_util::get_sum_scale(min_freezed_output_conv_1,
-                                                                       max_freezed_output_conv_1,
-                                                                       min_freezed_output_conv_2,
-                                                                       max_freezed_output_conv_2);
 
             if (bias->get_element_type() != element::i32)
             {
@@ -402,19 +423,16 @@ namespace ngraph
                 bias = make_shared<op::Quantize>(
                     bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
             }
-            return make_shared<op::QuantizedConvolutionBiasSignedAdd>(input,
-                                                                      filters,
-                                                                      bias,
-                                                                      sum_input,
-                                                                      window_movement_strides,
-                                                                      window_dilation_strides,
-                                                                      padding_below,
-                                                                      padding_above,
-                                                                      data_dilation_strides,
-                                                                      requantization_scale,
-                                                                      sum_scale,
-                                                                      with_relu);
+            return make_shared<op::QuantizedConvolutionBias>(input,
+                                                             new_weights_i8,
+                                                             bias,
+                                                             window_movement_strides,
+                                                             window_dilation_strides,
+                                                             padding_below,
+                                                             padding_above,
+                                                             data_dilation_strides,
+                                                             requantization_scale,
+                                                             with_relu);
         }
-#endif
     }
 }
