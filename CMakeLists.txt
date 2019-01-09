@@ -133,6 +133,7 @@ endif()
 #
 if (NGRAPH_MANYLINUX_ENABLE)
     if(NGRAPH_CPU_ENABLE)
+        # Cannot build Clang in a manylinux conforming way yet.
         if(NOT NGRAPH_DEX_ONLY)
             message(FATAL_ERROR "manylinux Python API only supports Direct Execution(DEX) for CPU backend!")
         endif()
