@@ -72,7 +72,6 @@ namespace ngraph
                     Eigen::array<Eigen::Index, Rank> out_dims, in_dims;
                     Eigen::array<Eigen::IndexPair<size_t>, Rank> padding;
                     Eigen::array<Eigen::Index, Rank> indices;
-                    Eigen::array<Eigen::Index, Rank> extents;
 
                     for (int i = 0; i < Rank; i++)
                     {
@@ -85,6 +84,7 @@ namespace ngraph
 
                         if (padding_below[i] < 0)
                         {
+                            NGRAPH_ASSERT(padding_below[i] > INT_MIN);
                             indices[i] = -padding_below[i];
                         }
                         else

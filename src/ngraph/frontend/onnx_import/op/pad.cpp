@@ -46,8 +46,8 @@ namespace ngraph
                         data,
                         std::make_shared<ngraph::op::Constant>(
                             data->get_element_type(), ngraph::Shape{}, std::vector<double>{value}),
-                        Shape(padding_below.begin(), padding_below.end()),
-                        Shape(padding_above.begin(), padding_above.end()),
+                        padding_below,
+                        padding_above,
                         Shape(data_shape.size(), 0))};
                 }
 
