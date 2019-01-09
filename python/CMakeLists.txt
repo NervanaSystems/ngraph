@@ -23,11 +23,6 @@ if (WIN32)
     return()
 endif()
 
-if (NOT NGRAPH_CPU_ENABLE OR NOT NGRAPH_DEX_ONLY)
-    message(WARNING "Python API requires NGRAPH_CPU_ENABLE and NGRAPH_DEX_ONLY!")
-    return()
-endif()
-
 include(ExternalProject)
 
 set(PYBIND11_SOURCE_DIR "${CMAKE_BINARY_DIR}/pybind11")
@@ -48,15 +43,9 @@ set(NGRAPH_DEPS_LIB     ${NGRAPH_BUILD_DIR})
 set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.in.py")
 set(SETUP_PY    "${CMAKE_BINARY_DIR}/setup.py")
 configure_file(${SETUP_PY_IN} ${SETUP_PY})
-execute_process(COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_SOURCE_DIR}/setup.py)
-set(SETUP_PY    "${CMAKE_CURRENT_SOURCE_DIR}/setup.py")
-configure_file(${SETUP_PY_IN} ${SETUP_PY})
 
 set(TOX_INI_IN "${CMAKE_CURRENT_SOURCE_DIR}/tox.in.ini")
 set(TOX_INI    "${CMAKE_BINARY_DIR}/tox.ini")
-configure_file(${TOX_INI_IN} ${TOX_INI})
-execute_process(COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_CURRENT_SOURCE_DIR}/tox.ini)
-set(TOX_INI    "${CMAKE_CURRENT_SOURCE_DIR}/tox.ini")
 configure_file(${TOX_INI_IN} ${TOX_INI})
 
 list(APPEND WHEEL_DEP_LIBS pybind11)

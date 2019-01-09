@@ -115,3 +115,6 @@ python/pybind11/
 CMakeCache.txt
 CMakeFiles/
 CMakeSettings.json
+
+# YouCompleteMe
+.ycm_extra_conf.py
