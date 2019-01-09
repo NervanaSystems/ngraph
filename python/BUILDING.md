@@ -19,6 +19,7 @@ Basic build procedure on an Ubuntu system:
 After this procedure completes, the `ngraph/build/python/dist` directory should contain Python packages.
 
     $ ls dist/
+    ngraph-core-0.12.0.tar.gz
     ngraph_core-0.12.0-cp27-cp27mu-linux_x86_64.whl
     ngraph_core-0.12.0-cp35-cp35m-linux_x86_64.whl
 
