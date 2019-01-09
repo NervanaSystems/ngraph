@@ -143,5 +143,5 @@ void runtime::Executable::set_parameters_and_results(const Function& func)
 
 vector<runtime::PerformanceCounter> runtime::Executable::get_performance_data() const
 {
-    return vector<PerformanceCounter>();
+    return vector<PerformanceCounter>{};
 }
