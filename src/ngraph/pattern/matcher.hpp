@@ -36,7 +36,6 @@ namespace ngraph
 
     namespace pattern
     {
-        using graph_rewrite_callback = std::function<bool(class Matcher& m)>;
         using recurrent_graph_rewrite_callback = std::function<bool(class RecurrentMatcher& m)>;
         using RPatternMap = std::map<std::shared_ptr<op::Label>, NodeVector>;
 
@@ -67,11 +66,9 @@ namespace ngraph
             /// \param pattern_node is a pattern sub graph that will be matched against input graphs
             /// \param callback is a callback function that will be called on a successful match
             Matcher(const std::shared_ptr<Node> pattern_node = nullptr,
-                    graph_rewrite_callback callback = nullptr,
                     const std::string& name = "Unnamed",
                     bool strict_mode = false)
                 : m_pattern_node(pattern_node)
-                , m_callback(callback)
                 , m_depth(0)
                 , m_name(name)
                 , m_strict_mode(strict_mode)
@@ -112,8 +109,6 @@ namespace ngraph
             }
 
             bool is_contained_match(const NodeVector& exclusions = {}, bool ignore_unused = true);
-
-            bool process_match(graph_rewrite_callback callback = nullptr);
             NodeVector get_matched_nodes() { return m_matched_list; }
             void reset() {}
             std::string get_name() { return m_name; }
@@ -170,7 +165,6 @@ namespace ngraph
                               const std::shared_ptr<Node>& graph_node,
                               PatternMap& pattern_map);
 
-            graph_rewrite_callback m_callback;
             size_t m_depth;
             std::string m_name;
             bool m_strict_mode;

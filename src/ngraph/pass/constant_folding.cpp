@@ -138,8 +138,8 @@ void ngraph::pass::ConstantFolding::construct_constant_pad()
     };
 
     auto pad_matcher =
-        make_shared<pattern::Matcher>(pad, constant_pad_callback, "ConstantFolding.ConstantPad");
-    this->add_matcher(pad_matcher);
+        make_shared<pattern::Matcher>(pad, "ConstantFolding.ConstantPad");
+    this->add_matcher(pad_matcher, constant_pad_callback);
 }
 
 void ngraph::pass::ConstantFolding::construct_constant_reshape()
@@ -187,8 +187,8 @@ void ngraph::pass::ConstantFolding::construct_constant_reshape()
     };
 
     auto reshape_matcher = make_shared<pattern::Matcher>(
-        reshape, constant_reshape_callback, "ConstantFolding.ConstantReshape");
-    this->add_matcher(reshape_matcher);
+        reshape, "ConstantFolding.ConstantReshape");
+    this->add_matcher(reshape_matcher, constant_reshape_callback);
 }
 
 template <class T>
@@ -253,8 +253,8 @@ void ngraph::pass::ConstantFolding::construct_constant_broadcast()
     };
 
     auto broadcast_matcher = make_shared<pattern::Matcher>(
-        broadcast, constant_broadcast_callback, "ConstantFolding.ConstantBroadcast");
-    this->add_matcher(broadcast_matcher);
+        broadcast, "ConstantFolding.ConstantBroadcast");
+    this->add_matcher(broadcast_matcher, constant_broadcast_callback);
 }
 
 template <class T>
@@ -378,8 +378,8 @@ void ngraph::pass::ConstantFolding::construct_constant_binary()
     };
 
     auto reshape_matcher = make_shared<pattern::Matcher>(
-        bea, constant_binary_callback, "ConstantFolding.ConstantBinary");
-    this->add_matcher(reshape_matcher);
+        bea, "ConstantFolding.ConstantBinary");
+    this->add_matcher(reshape_matcher, constant_binary_callback);
 }
 
 bool is_supported_unary_op(std::shared_ptr<Node> n)
@@ -469,8 +469,8 @@ void ngraph::pass::ConstantFolding::construct_constant_unary()
     };
 
     auto reshape_matcher = make_shared<pattern::Matcher>(
-        uea, constant_unary_callback, "ConstantFolding.ConstantUnary");
-    this->add_matcher(reshape_matcher);
+        uea, "ConstantFolding.ConstantUnary");
+    this->add_matcher(reshape_matcher, constant_unary_callback);
 }
 
 template <class QUANT, class REAL>
@@ -542,8 +542,8 @@ void ngraph::pass::ConstantFolding::construct_constant_dequantize()
     };
 
     auto dequantize_matcher = make_shared<pattern::Matcher>(
-        dequant, constant_dequantize_callback, "ConstantFolding.ConstantDequantize");
-    this->add_matcher(dequantize_matcher);
+        dequant, "ConstantFolding.ConstantDequantize");
+    this->add_matcher(dequantize_matcher, constant_dequantize_callback);
 }
 
 template <class REAL, class QUANT>
@@ -617,6 +617,6 @@ void ngraph::pass::ConstantFolding::construct_constant_quantize()
     };
 
     auto quantize_matcher = make_shared<pattern::Matcher>(
-        quant, constant_quantize_callback, "ConstantFolding.ConstantQuantize");
-    this->add_matcher(quantize_matcher);
+        quant, "ConstantFolding.ConstantQuantize");
+    this->add_matcher(quantize_matcher, constant_quantize_callback);
 }

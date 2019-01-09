@@ -19,7 +19,6 @@
 #include <functional>
 
 #include "ngraph/node.hpp"
-#include "ngraph/pass/graph_rewrite.hpp"
 
 namespace ngraph
 {

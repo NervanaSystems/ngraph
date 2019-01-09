@@ -328,26 +328,6 @@ namespace ngraph
             return false;
         }
 
-        bool Matcher::process_match(::ngraph::pattern::graph_rewrite_callback callback)
-        {
-            graph_rewrite_callback cb = m_callback;
-            if (callback)
-            {
-                cb = callback;
-            }
-            if (!cb)
-            {
-                throw ngraph_error("process_match invoked w/o a callback function");
-            }
-
-            if (!this->m_match_root)
-            {
-                throw ngraph_error("process_match invoked w/o a match");
-            }
-
-            return cb(*this);
-        }
-
         bool Matcher::match(const std::shared_ptr<Node>& graph_node)
         {
             // clear our state

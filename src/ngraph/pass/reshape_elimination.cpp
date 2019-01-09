@@ -71,8 +71,8 @@ void ngraph::pass::ReshapeElimination::construct_identity_reshape_pattern()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(reshape1, callback);
-    this->add_matcher(m);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(reshape1);
+    this->add_matcher(m, callback);
 }
 
 void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
@@ -130,8 +130,8 @@ void ngraph::pass::ReshapeElimination::construct_reshapex2_pattern()
 
         return false;
     };
-    auto m = std::make_shared<ngraph::pattern::Matcher>(reshape2, callback);
-    this->add_matcher(m);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(reshape2);
+    this->add_matcher(m, callback);
 }
 
 void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
@@ -144,7 +144,7 @@ void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
     auto pdot = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 1}, dot_pred);
     auto preshape = std::make_shared<op::Reshape>(pdot, AxisVector{1, 0}, Shape{1, 2});
 
-    ngraph::pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_dot_transpose_pattern against node = "
                      << m.get_match_root()->get_name();
 
@@ -187,6 +187,6 @@ void ngraph::pass::ReshapeElimination::construct_dot_transpose_pattern()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(preshape, callback);
-    this->add_matcher(m);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(preshape);
+    this->add_matcher(m, callback);
 }

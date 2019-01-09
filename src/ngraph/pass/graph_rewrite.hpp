@@ -18,20 +18,22 @@
 
 #include <functional>
 #include <set>
+#include <tuple>
+#include <memory>
+
 #include "ngraph/pass/pass.hpp"
+#include "ngraph/pattern/matcher.hpp"
 
 namespace ngraph
 {
+    
     namespace pass
     {
         class GraphRewrite;
         class RecurrentGraphRewrite;
     }
-    namespace pattern
-    {
-        class Matcher;
-        class RecurrentMatcher;
-    }
+
+    using graph_rewrite_callback = std::function<bool(ngraph::pattern::Matcher& m)>;
 }
 
 /// \brief GraphRewrite (in tandem with \sa Matcher) performs transformations on specified patterns
@@ -53,12 +55,11 @@ public:
     }
 
     bool is_enabled(std::shared_ptr<pattern::Matcher> m);
-    void add_matcher(std::shared_ptr<pattern::Matcher> m);
+    void add_matcher(std::shared_ptr<pattern::Matcher> m, const ngraph::graph_rewrite_callback& callback);
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 
 private:
-    // enable cascading rewrites
-    std::vector<std::shared_ptr<pattern::Matcher>> m_matchers;
+    std::vector<std::tuple<std::shared_ptr<pattern::Matcher>, ngraph::graph_rewrite_callback>> m_matchers;
 };
 
 class ngraph::pass::RecurrentGraphRewrite : public FunctionPass

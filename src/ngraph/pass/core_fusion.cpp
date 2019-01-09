@@ -63,7 +63,7 @@ void pass::CoreFusion::construct_relu()
         std::make_shared<pattern::op::Skip>(zero, pattern::has_class<op::Broadcast>());
     auto max = make_shared<op::Maximum>(skip_broadcast, val);
 
-    pattern::graph_rewrite_callback callback = [val, zero](pattern::Matcher& m) {
+    auto callback = [val, zero](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_relu against "
                      << m.get_match_root()->get_name();
 
@@ -81,8 +81,8 @@ void pass::CoreFusion::construct_relu()
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(max, callback, "CoreFusion.Relu");
-    this->add_matcher(m);
+    auto m = make_shared<pattern::Matcher>(max, "CoreFusion.Relu");
+    this->add_matcher(m, callback);
 }
 
 void pass::CoreFusion::construct_sigmoid()
@@ -100,7 +100,7 @@ void pass::CoreFusion::construct_sigmoid()
     auto divide_1_over_exp = std::make_shared<op::Divide>(skip_broadcast, add_exp);
 
     // Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::graph_rewrite_callback callback = [input, constant](pattern::Matcher& m) {
+    auto callback = [input, constant](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -130,8 +130,8 @@ void pass::CoreFusion::construct_sigmoid()
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(
-        divide_1_over_exp, callback, "CoreFusion.Sigmoid");
-    this->add_matcher(m);
+        divide_1_over_exp, "CoreFusion.Sigmoid");
+    this->add_matcher(m, callback);
 }
 
 void pass::CoreFusion::construct_sigmoid_bprop()
@@ -159,7 +159,7 @@ void pass::CoreFusion::construct_sigmoid_bprop()
     auto negative_2 = std::make_shared<op::Negative>(multiply_2);
 
     // Define a call back that needs to called once the DFG matches the pattern
-    ngraph::pattern::graph_rewrite_callback callback = [input, delta](pattern::Matcher& m) {
+    auto callback = [input, delta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_bprop_sigmoid pattern against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -183,8 +183,8 @@ void pass::CoreFusion::construct_sigmoid_bprop()
     };
 
     auto m =
-        std::make_shared<ngraph::pattern::Matcher>(negative_2, callback, "CoreFusion.SigmoidBprop");
-    this->add_matcher(m);
+        std::make_shared<ngraph::pattern::Matcher>(negative_2, "CoreFusion.SigmoidBprop");
+    this->add_matcher(m, callback);
 }
 
 void pass::CoreFusion::construct_folded_batch_norm()
@@ -212,7 +212,7 @@ void pass::CoreFusion::construct_folded_batch_norm()
     auto shape_r = Shape{1, 2, 2, 2};
     auto bn = std::make_shared<op::BatchNormInference>(eps, gamma, beta, pconv, mean, var);
 
-    ngraph::pattern::graph_rewrite_callback callback = [input, filters, mean, var, gamma, beta](
+    auto callback = [input, filters, mean, var, gamma, beta](
         pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for folded batch norm against node = "
                      << m.get_match_root()->get_name();
@@ -264,8 +264,8 @@ void pass::CoreFusion::construct_folded_batch_norm()
 
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(bn, callback, "CoreFusion.FoldedBatchNorm");
-    this->add_matcher(m);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(bn, "CoreFusion.FoldedBatchNorm");
+    this->add_matcher(m, callback);
 }
 
 void pass::CoreFusion::construct_conv_affine_folding()
@@ -293,7 +293,7 @@ void pass::CoreFusion::construct_conv_affine_folding()
     auto multiply = std::make_shared<op::Multiply>(conv_label, A_label);
     auto add = std::make_shared<op::Add>(multiply, B_label);
 
-    ngraph::pattern::graph_rewrite_callback callback =
+    auto callback =
         [input, filters, conv_label, A_label, B_label](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In callback for conv affine folding against node = "
                          << m.get_match_root()->get_name();
@@ -376,8 +376,8 @@ void pass::CoreFusion::construct_conv_affine_folding()
         };
 
     auto m =
-        std::make_shared<ngraph::pattern::Matcher>(add, callback, "CoreFusion.ConvAffineFolding");
-    this->add_matcher(m);
+        std::make_shared<ngraph::pattern::Matcher>(add, "CoreFusion.ConvAffineFolding");
+    this->add_matcher(m, callback);
 }
 
 static bool is_trivial_convolution(std::shared_ptr<op::Convolution> conv,
@@ -447,7 +447,7 @@ void ngraph::pass::CoreFusion::construct_reshape_broadcast()
     auto reshape1 = make_shared<op::Reshape>(input, AxisVector{0}, Shape{10, 1});
     auto broadcast = make_shared<op::Broadcast>(reshape1, Shape{10, 1, 20}, AxisSet{2});
 
-    pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
+    auto callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_reshape_broadcast against "
                      << m.get_match_root()->get_name();
 
@@ -506,8 +506,8 @@ void ngraph::pass::CoreFusion::construct_reshape_broadcast()
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(broadcast, callback, "CoreFusion.ReshapeBroadcast");
-    this->add_matcher(m);
+    auto m = make_shared<pattern::Matcher>(broadcast, "CoreFusion.ReshapeBroadcast");
+    this->add_matcher(m, callback);
 }
 
 //   conv(56w3s1)                        conv(28w3s2)
@@ -552,7 +552,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
     auto weights_eltwise = std::make_shared<pattern::op::Label>(element::f32, win_size_1);
     auto eltwise_conv = std::make_shared<op::Convolution>(eltwise_label, weights_eltwise);
 
-    pattern::graph_rewrite_callback callback = [win_size_1,
+    auto callback = [win_size_1,
                                                 eltwise_label,
                                                 conv_stride1_label,
                                                 conv_stride3_label,
@@ -695,8 +695,8 @@ void pass::CoreFusion::construct_optimized_strided_conv()
     };
 
     auto m =
-        make_shared<pattern::Matcher>(eltwise_conv, callback, "CoreFusion.OptimizedStridedConv");
-    this->add_matcher(m);
+        make_shared<pattern::Matcher>(eltwise_conv, "CoreFusion.OptimizedStridedConv");
+    this->add_matcher(m, callback);
 }
 
 void ngraph::pass::CoreFusion::construct_reshape_softmax_reshape()
@@ -708,7 +708,7 @@ void ngraph::pass::CoreFusion::construct_reshape_softmax_reshape()
     auto softmax = make_shared<op::Softmax>(reshape1, AxisSet{1});
     auto reshape2 = make_shared<op::Reshape>(softmax, io, input_shape);
 
-    pattern::graph_rewrite_callback callback = [input](pattern::Matcher& m) {
+    auto callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_reshape_softmax_reshape against "
                      << m.get_match_root()->get_name();
 
@@ -742,6 +742,6 @@ void ngraph::pass::CoreFusion::construct_reshape_softmax_reshape()
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(reshape2, callback, "CoreFusion.ReshapeSoftmaxReshape");
-    this->add_matcher(m);
+    auto m = make_shared<pattern::Matcher>(reshape2, "CoreFusion.ReshapeSoftmaxReshape");
+    this->add_matcher(m, callback);
 }
