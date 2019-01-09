@@ -49,7 +49,7 @@ namespace ngraph
                 auto padding_below = pad->get_padding_below();
                 auto padding_above = pad->get_padding_above();
 
-                if (pad->get_padding_interior() == Shape(arg_shape.size()) )
+                if (pad->get_padding_interior() == Shape(arg_shape.size()))
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_and_slice<float, 1>)> kernel;
 

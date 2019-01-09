@@ -61,13 +61,13 @@ namespace ngraph
 
                 template <typename ElementType, unsigned int Rank>
                 void pad_and_slice(void* input,
-                                    void* output,
-                                    void* pad_value,
-                                    const Shape& input_shape,
-                                    const Shape& output_shape,
-                                    const CoordinateDiff& padding_below,
-                                    const CoordinateDiff& padding_above,
-                                    int arena)
+                                   void* output,
+                                   void* pad_value,
+                                   const Shape& input_shape,
+                                   const Shape& output_shape,
+                                   const CoordinateDiff& padding_below,
+                                   const CoordinateDiff& padding_above,
+                                   int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> out_dims, in_dims;
                     Eigen::array<Eigen::IndexPair<size_t>, Rank> padding;
@@ -79,8 +79,13 @@ namespace ngraph
                         out_dims[i] = output_shape[i];
                         in_dims[i] = input_shape[i];
 
-                        padding[i] = {padding_below[i] >= 0 ? padding_below[i] : 0,
-                                      padding_above[i] >= 0 ? padding_above[i] : 0};
+                        auto pb = 0;
+                        auto pa = 0;
+                        if (padding_below[i] >= 0)
+                            pb = padding_below[i];
+                        if (padding_above[i] >= 0)
+                            pa = padding_above[i];
+                        padding[i] = {pb, pa};
 
                         if (padding_below[i] < 0)
                         {
@@ -90,9 +95,6 @@ namespace ngraph
                         {
                             indices[i] = 0;
                         }
-                        extents[i] = (padding_below[i] < 0 ? padding_below[i] : 0) +
-                                     input_shape[i] +
-                                     (padding_above[i] < 0 ? padding_above[i] : 0);
                     }
 
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> out(
@@ -101,7 +103,8 @@ namespace ngraph
                         static_cast<ElementType*>(input), in_dims);
 
                     out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
-                        in.slice(indices, extents).pad(padding, *static_cast<ElementType*>(pad_value));
+                        in.pad(padding, *static_cast<ElementType*>(pad_value))
+                            .slice(indices, out_dims);
                 }
 
                 template <typename ElementType>

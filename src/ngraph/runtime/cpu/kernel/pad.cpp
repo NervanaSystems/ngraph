@@ -34,13 +34,13 @@ namespace ngraph
                                     int arena)
                 {
                     pad_and_slice<float, 4>(input,
-                                  output,
-                                  pad_value,
-                                  input_shape,
-                                  output_shape,
-                                  padding_below,
-                                  padding_above,
-                                  arena);
+                                            output,
+                                            pad_value,
+                                            input_shape,
+                                            output_shape,
+                                            padding_below,
+                                            padding_above,
+                                            arena);
                 }
             }
         }

@@ -3129,6 +3129,35 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_negative_exterior_1d)
               read_vector<float>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, pad_negative_exterior_1d_check_limits)
+{
+    Shape shape_a{6};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{3};
+    CoordinateDiff padding_below{4};
+    CoordinateDiff padding_above{-7};
+    Shape padding_interior{0};
+    auto f = make_shared<Function>(
+        make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
+        ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, test::NDArray<float, 1>({1, 2, 3, 4, 5, 6}).get_vector());
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{2112});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {result}, {a, b});
+    EXPECT_EQ((test::NDArray<float, 1>({2112, 2112, 2112}).get_vector()),
+              read_vector<float>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, pad_interior_exterior_1d)
 {
     Shape shape_a{6};
@@ -3255,8 +3284,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_negative_exterior_2d)
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a, b});
     //clang-format off
-    EXPECT_EQ((test::NDArray<float, 2>({{9, 9}, {2, 3}, {5, 6}, {9, 9}, {9, 9}})
-                   .get_vector()),
+    EXPECT_EQ((test::NDArray<float, 2>({{9, 9}, {2, 3}, {5, 6}, {9, 9}, {9, 9}}).get_vector()),
               //clang-format on
               read_vector<float>(result));
 }
@@ -3287,8 +3315,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_negative_exterior_2d_all_negative)
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a, b});
     //clang-format off
-    EXPECT_EQ((test::NDArray<float, 2>({{5}})
-                   .get_vector()),
+    EXPECT_EQ((test::NDArray<float, 2>({{5}}).get_vector()),
               //clang-format on
               read_vector<float>(result));
 }
@@ -3465,8 +3492,8 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_negative_exterior_4d)
     Shape shape_b{};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{1, 1, 4, 4};
-    CoordinateDiff padding_below{0,-1, 1, 1};
-    CoordinateDiff padding_above{0,-1, 1, 1};
+    CoordinateDiff padding_below{0, -1, 1, 1};
+    CoordinateDiff padding_above{0, -1, 1, 1};
     Shape padding_interior{0, 0, 0, 0};
     auto f = make_shared<Function>(
         make_shared<op::Pad>(A, B, padding_below, padding_above, padding_interior),
@@ -3518,7 +3545,6 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_negative_exterior_4d)
         read_vector<float>(result));
     // clang-format on
 }
-
 
 // This is a regression test for one of TF's unit tests, which was failing.
 // The problem was inappropriate handling of the shape computation for a
