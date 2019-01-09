@@ -16,12 +16,11 @@ Basic build procedure on an Ubuntu system:
     $ cmake ../ -DNGRAPH_PYTHON_BUILD_ENABLE=ON -DNGRAPH_ONNX_IMPORT_ENABLE=ON -DNGRAPH_USE_PREBUILT_LLVM=ON
     $ make python_wheel
 
-After this procedure completes, the `ngraph/build/python/dist` directory should contain Python packages.
+After this procedure completes, the `ngraph/build/dist` directory should contain Python packages.
 
-    $ ls python/dist/
-    ngraph-core-0.10.0.tar.gz
-    ngraph_core-0.10.0-cp27-cp27mu-linux_x86_64.whl
-    ngraph_core-0.10.0-cp35-cp35m-linux_x86_64.whl
+    $ ls dist/
+    ngraph_core-0.12.0-cp27-cp27mu-linux_x86_64.whl
+    ngraph_core-0.12.0-cp35-cp35m-linux_x86_64.whl
 
 ### Using a virtualenv (optional)
 
@@ -35,7 +34,7 @@ You may wish to use a virutualenv for your installation.
 
 You may wish to use a virutualenv for your installation.
 
-    (venv) $ pip install ngraph/build/python/dist/ngraph_core-0.10.0-cp35-cp35m-linux_x86_64.whl
+    (venv) $ pip install ngraph/build/dist/ngraph_core-0.12.0-cp35-cp35m-linux_x86_64.whl
 
 ## Running tests
 
