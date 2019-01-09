@@ -52,11 +52,11 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     EXPECT_EQ(v, read_vector<float>(result));
 }
 
-TEST(distributed_${BACKEND_NAME}, distbroadcast)
+TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::DistBroadcast>(A), ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::BroadcastDistributed>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("CPU");
 

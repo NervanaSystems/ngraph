@@ -921,7 +921,7 @@ private:
                                   element_count);
             break;
         }
-        case OP_TYPEID::DistBroadcast:
+        case OP_TYPEID::BroadcastDistributed:
         {
             // we do not support this op in interpreter for now
             break;

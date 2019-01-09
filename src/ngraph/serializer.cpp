@@ -34,6 +34,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcastdistributed.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -42,7 +43,6 @@
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/distbroadcast.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
@@ -898,9 +898,9 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Minimum>(args[0], args[1]);
                 break;
             }
-            case OP_TYPEID::DistBroadcast:
+            case OP_TYPEID::BroadcastDistributed:
             {
-                node = make_shared<op::DistBroadcast>(args[0]);
+                node = make_shared<op::BroadcastDistributed>(args[0]);
                 break;
             }
             case OP_TYPEID::Multiply:
@@ -1519,7 +1519,7 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Minimum: { break;
     }
-    case OP_TYPEID::DistBroadcast: { break;
+    case OP_TYPEID::BroadcastDistributed: { break;
     }
     case OP_TYPEID::Multiply: { break;
     }

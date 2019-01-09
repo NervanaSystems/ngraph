@@ -35,6 +35,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcastdistributed.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -43,7 +44,6 @@
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/distbroadcast.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
@@ -224,7 +224,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::DistBroadcast)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::BroadcastDistributed)
             {
                 const element::Type& element_type = args[0].get_element_type();
                 auto data_type = "MLSL::DT_FLOAT";

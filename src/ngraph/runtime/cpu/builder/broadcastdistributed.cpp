@@ -17,7 +17,7 @@
 
 #include <mlsl.hpp>
 
-#include "ngraph/op/distbroadcast.hpp"
+#include "ngraph/op/broadcastdistributed.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 
 using namespace std;
@@ -30,7 +30,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::DistBroadcast)
+            void Builder::BUILDER_DECL(ngraph::op::BroadcastDistributed)
             {
                 auto& functors = external_function->get_functors();
 
@@ -57,7 +57,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(DistBroadcast);
+            REGISTER_OP_BUILDER(BroadcastDistributed);
         }
     }
 }

@@ -16,23 +16,8 @@
 
 #pragma once
 
-#include <memory>
+#include <pybind11/pybind11.h>
 
-#include "ngraph/op/op.hpp"
+namespace py = pybind11;
 
-namespace ngraph
-{
-    namespace op
-    {
-        class DistBroadcast : public Op
-        {
-        public:
-            DistBroadcast(const std::shared_ptr<Node>& arg);
-
-            void validate_and_infer_types() override;
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
-    }
-}
+void regclass_pyngraph_op_BroadcastDistributed(py::module m);

@@ -14,10 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+#include "ngraph/op/broadcastdistributed.hpp"
+#include "pyngraph/ops/broadcastdistributed.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_DistBroadcast(py::module m);
+void regclass_pyngraph_op_BroadcastDistributed(py::module m)
+{
+    py::class_<ngraph::op::BroadcastDistributed,
+               std::shared_ptr<ngraph::op::BroadcastDistributed>,
+               ngraph::op::Op>
+        broadcastdistributed(m, "BroadcastDistributed");
+    broadcastdistributed.doc() = "ngraph.impl.op.BroadcastDistributed wraps ngraph::op::BroadcastDistributed";
+    broadcastdistributed.def(py::init<const std::shared_ptr<ngraph::Node>&>());
+}

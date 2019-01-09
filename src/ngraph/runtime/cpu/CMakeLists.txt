@@ -38,12 +38,12 @@ set(SRC
     builder/argmax.cpp
     builder/batch_norm.cpp
     builder/broadcast.cpp
+    builder/broadcastdistributed.cpp
     builder/bounded_relu.cpp
     builder/concat.cpp
     builder/convert.cpp
     builder/convert_layout.cpp
     builder/convolution.cpp
-    builder/distbroadcast.cpp
     builder/dot.cpp
     builder/embedding_lookup.cpp
     builder/function_call.cpp

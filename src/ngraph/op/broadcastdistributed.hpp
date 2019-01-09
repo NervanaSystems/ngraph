@@ -14,20 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/op/distbroadcast.hpp"
-#include "pyngraph/ops/distbroadcast.hpp"
+#include <memory>
 
-namespace py = pybind11;
+#include "ngraph/op/op.hpp"
 
-void regclass_pyngraph_op_DistBroadcast(py::module m)
+namespace ngraph
 {
-    py::class_<ngraph::op::DistBroadcast,
-               std::shared_ptr<ngraph::op::DistBroadcast>,
-               ngraph::op::Op>
-        distbroadcast(m, "DistBroadcast");
-    distbroadcast.doc() = "ngraph.impl.op.DistBroadcast wraps ngraph::op::DistBroadcast";
-    distbroadcast.def(py::init<const std::shared_ptr<ngraph::Node>&>());
+    namespace op
+    {
+        class BroadcastDistributed : public Op
+        {
+        public:
+            BroadcastDistributed(const std::shared_ptr<Node>& arg);
+
+            void validate_and_infer_types() override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+        };
+    }
 }

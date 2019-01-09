@@ -179,7 +179,7 @@
 
 #ifdef NGRAPH_DISTRIBUTED
 #include "ngraph/op/allreduce.hpp"
-#include "ngraph/op/distbroadcast.hpp"
+#include "ngraph/op/broadcastdistributed.hpp"
 #endif
 
 using namespace std;
@@ -289,7 +289,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::CPU_Emitter::emit<op::Add>},
 #ifdef NGRAPH_DISTRIBUTED
     {TI(ngraph::op::AllReduce), &runtime::cpu::CPU_Emitter::emit<op::AllReduce>},
-    {TI(ngraph::op::DistBroadcast), &runtime::cpu::CPU_Emitter::emit<op::DistBroadcast>},
+    {TI(ngraph::op::BroadcastDistributed), &runtime::cpu::CPU_Emitter::emit<op::BroadcastDistributed>},
 #endif
     {TI(ngraph::op::MatmulBias), &runtime::cpu::CPU_Emitter::emit<op::MatmulBias>},
     {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::emit<op::Dot>},

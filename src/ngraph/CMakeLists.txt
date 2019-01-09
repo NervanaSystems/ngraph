@@ -50,6 +50,7 @@ set (SRC
     op/avg_pool.cpp
     op/batch_norm.cpp
     op/broadcast.cpp
+    op/broadcastdistributed.cpp
     op/ceiling.cpp
     op/concat.cpp
     op/constant.cpp
@@ -58,7 +59,6 @@ set (SRC
     op/cos.cpp
     op/cosh.cpp
     op/dequantize.cpp
-    op/distbroadcast.cpp
     op/divide.cpp
     op/dot.cpp
     op/embedding_lookup.cpp
