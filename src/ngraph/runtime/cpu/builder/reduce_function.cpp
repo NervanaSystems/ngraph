@@ -15,14 +15,10 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/kernel/reduce_function.hpp"
-#include "ngraph/op/all.hpp"
-#include "ngraph/op/any.hpp"
 #include "ngraph/op/reduce.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
-#include "ngraph/runtime/reference/all.hpp"
-#include "ngraph/runtime/reference/any.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 using namespace std;
@@ -34,52 +30,6 @@ namespace ngraph
     {
         namespace cpu
         {
-            template <>
-            void Builder::BUILDER_DECL(ngraph::op::Any)
-            {
-                auto& functors = external_function->get_functors();
-                auto reduce = static_cast<const ngraph::op::Any*>(node);
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
-
-                auto arg0_shape = args[0].get_shape();
-                auto out_shape = out[0].get_shape();
-
-                auto reduction_axes = reduce->get_reduction_axes();
-                auto functor = [&, arg0_shape, out_shape, reduction_axes](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    runtime::reference::any(static_cast<char*>(arg0_tensor),
-                                            static_cast<char*>(out_tensor),
-                                            arg0_shape,
-                                            out_shape,
-                                            reduction_axes);
-                };
-                functors.emplace_back(functor);
-            }
-
-            template <>
-            void Builder::BUILDER_DECL(ngraph::op::All)
-            {
-                auto& functors = external_function->get_functors();
-                auto reduce = static_cast<const ngraph::op::All*>(node);
-                auto& arg0_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
-
-                auto arg0_shape = args[0].get_shape();
-                auto out_shape = out[0].get_shape();
-
-                auto reduction_axes = reduce->get_reduction_axes();
-                auto functor = [&, arg0_shape, out_shape, reduction_axes](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    runtime::reference::all(static_cast<char*>(arg0_tensor),
-                                            static_cast<char*>(out_tensor),
-                                            arg0_shape,
-                                            out_shape,
-                                            reduction_axes);
-                };
-                functors.emplace_back(functor);
-            }
-
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Reduce)
             {
@@ -186,8 +136,6 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(Reduce);
-            REGISTER_OP_BUILDER(Any);
-            REGISTER_OP_BUILDER(All);
         }
     }
 }
