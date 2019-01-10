@@ -33,7 +33,6 @@
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
-#include "ngraph/pass/any_all_replacement.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
