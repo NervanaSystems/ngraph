@@ -52,7 +52,8 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
     // backward in place ops: concat
     unordered_map<descriptor::Tensor*, descriptor::Tensor*> tensor_alias_backward_map;
 
-    auto propagate_in_place_concat = [&](shared_ptr<ngraph::op::Concat> concat, descriptor::Tensor* output_tensor) {
+    auto propagate_in_place_concat = [&](shared_ptr<ngraph::op::Concat> concat,
+                                         descriptor::Tensor* output_tensor) {
         std::deque<std::shared_ptr<ngraph::op::Concat>> stack;
         stack.push_front(concat);
 
