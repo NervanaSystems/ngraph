@@ -41,8 +41,8 @@ class ngraph::runtime::hybrid::HybridExecutable : public ngraph::runtime::Execut
 public:
     HybridExecutable();
 
-    bool execute(const std::vector<runtime::Tensor*>& outputs,
-                 const std::vector<runtime::Tensor*>& inputs) override;
+    bool execute(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                 const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 
 private:
     HybridExecutable(const std::vector<std::shared_ptr<runtime::Backend>>& backend_list,

@@ -154,12 +154,13 @@ public:
         set_parameters_and_results(*m_function);
     }
 
-    bool execute(const vector<runtime::Tensor*>& outputs, const vector<runtime::Tensor*>& inputs)
+    bool execute(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                 const vector<shared_ptr<runtime::Tensor>>& inputs)
     {
         bool rc = true;
 
         // Parameter and result node in sub_function maps to one Tensor
-        unordered_map<shared_ptr<Node>, runtime::Tensor*> map_node_to_tensor_view;
+        unordered_map<shared_ptr<Node>, shared_ptr<runtime::Tensor>> map_node_to_tensor_view;
         for (size_t i = 0; i < inputs.size(); ++i)
         {
             map_node_to_tensor_view[m_function->get_parameters()[i]] = inputs[i];
@@ -178,7 +179,7 @@ public:
             auto backend = m_hybrid_backend->get_cached_backend(placement);
 
             // Prepare parameter TensorViews
-            vector<runtime::Tensor*> parameter_tvs;
+            vector<shared_ptr<runtime::Tensor>> parameter_tvs;
             for (auto parameter_node : sub_function->get_parameters())
             {
                 if (map_node_to_tensor_view.find(parameter_node) != map_node_to_tensor_view.end())
@@ -193,13 +194,13 @@ public:
                                                                parameter_node->get_shape());
                     live_list.push_back(parameter_tv);
                     copy_data(parameter_tv, read_vector<float>(result_tv));
-                    map_node_to_tensor_view[parameter_node] = parameter_tv.get();
-                    parameter_tvs.push_back(parameter_tv.get());
+                    map_node_to_tensor_view[parameter_node] = parameter_tv;
+                    parameter_tvs.push_back(parameter_tv);
                 }
             }
 
             // Prepare result TensorViews
-            vector<runtime::Tensor*> result_tvs;
+            vector<shared_ptr<runtime::Tensor>> result_tvs;
             for (auto result_node : sub_function->get_results())
             {
                 if (map_node_to_tensor_view.find(result_node) != map_node_to_tensor_view.end())
@@ -211,8 +212,8 @@ public:
                     auto result_tv = backend->create_tensor(result_node->get_element_type(),
                                                             result_node->get_shape());
                     live_list.push_back(result_tv);
-                    map_node_to_tensor_view[result_node] = result_tv.get();
-                    result_tvs.push_back(result_tv.get());
+                    map_node_to_tensor_view[result_node] = result_tv;
+                    result_tvs.push_back(result_tv);
                 }
             }
 
@@ -330,7 +331,7 @@ TEST(graph_partition, hybrid_abc_manual)
 
     auto f0 = make_shared<Function>(ResultVector{R0, R1}, ParameterVector{A, B, C});
     auto int_handle = int_backend->compile(f0);
-    int_handle->call_with_validate({r0, r1}, {a, b, c});
+    int_handle->validate_and_execute({r0, r1}, {a, b, c});
 
     // f1 on CPU
     auto p0 = cpu_backend->create_tensor(element::f32, shape);
@@ -341,7 +342,7 @@ TEST(graph_partition, hybrid_abc_manual)
 
     auto f1 = make_shared<Function>(ResultVector{R2}, ParameterVector{P0, P1});
     auto cpu_handle = cpu_backend->compile(f1);
-    cpu_handle->call_with_validate({r2}, {p0, p1});
+    cpu_handle->validate_and_execute({r2}, {p0, p1});
 
     // f2 on INT
     auto p2 = int_backend->create_tensor(element::f32, shape);
@@ -350,7 +351,7 @@ TEST(graph_partition, hybrid_abc_manual)
 
     auto f2 = make_shared<Function>(ResultVector{R}, ParameterVector{P2});
     auto int_handle2 = int_backend->compile(f2);
-    int_handle2->call_with_validate({r}, {p2});
+    int_handle2->validate_and_execute({r}, {p2});
 
     // Check final result on INT
     EXPECT_EQ(read_vector<float>(r),
@@ -397,7 +398,7 @@ TEST(graph_partition, hybrid_abc)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
     auto handle = backend->compile(f);
-    handle->call_with_validate({r}, {a, b, c});
+    handle->validate_and_execute({r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector());
 }
@@ -436,7 +437,7 @@ TEST(graph_partition, hybrid_abcd)
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
     copy_data(d, test::NDArray<float, 2>({{13, 14}, {15, 16}}).get_vector());
 
-    handle->call_with_validate({r}, {a, b, c, d});
+    handle->validate_and_execute({r}, {a, b, c, d});
     EXPECT_EQ(read_vector<float>(r), (test::NDArray<float, 2>({{32, 48}, {68, 92}})).get_vector());
 }
 
@@ -470,7 +471,7 @@ TEST(graph_partition, hybrid_back_and_forth)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    handle->call_with_validate({r}, {a, b, c});
+    handle->validate_and_execute({r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{90, 180}, {308, 480}})).get_vector());
 }
@@ -507,7 +508,7 @@ TEST(graph_partition, hybrid_multi_middle_nodes)
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
     copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
 
-    handle->call_with_validate({r}, {a, b, c});
+    handle->validate_and_execute({r}, {a, b, c});
     EXPECT_EQ(read_vector<float>(r),
               (test::NDArray<float, 2>({{210, 288}, {378, 480}})).get_vector());
 }
@@ -533,7 +534,7 @@ TEST(graph_partition, hybrid_no_split)
     copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
     copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
 
-    handle->call_with_validate({c}, {a, b});
+    handle->validate_and_execute({c}, {a, b});
     EXPECT_EQ(read_vector<float>(c), (test::NDArray<float, 2>({{6, 8}, {10, 12}})).get_vector());
 }
 

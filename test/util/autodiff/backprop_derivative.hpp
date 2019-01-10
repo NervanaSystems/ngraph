@@ -114,7 +114,7 @@ namespace ngraph
                 write_vector(c_arg, c_vec);
 
                 // call modified df/dX* = f'(c, cached)
-                df_handle->call_with_validate(df_output_args, df_input_args);
+                df_handle->validate_and_execute(df_output_args, df_input_args);
 
                 // reset the adjoint element
                 c_vec[i] = 0;
@@ -228,7 +228,7 @@ namespace ngraph
                 clone_fwd_handle = it->second;
             }
 
-            clone_fwd_handle->call_with_validate(mod_f_output_args, f_input_args);
+            clone_fwd_handle->validate_and_execute(mod_f_output_args, f_input_args);
 
             // call modfied f'(c, cached) to get df/dX*
             if (!s_clone_bwd_map[f])

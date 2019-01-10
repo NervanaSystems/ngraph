@@ -60,7 +60,7 @@ namespace ngraph
 
             std::unique_ptr<runtime::Executable> f_handle = backend->compile(f);
 
-            f_handle->call_with_validate(
+            f_handle->validate_and_execute(
                 std::vector<std::shared_ptr<ngraph::runtime::Tensor>>{ref_y}, args);
             auto ref_vec = read_vector<T>(ref_y);
 
@@ -86,7 +86,7 @@ namespace ngraph
                         auto old_val = vec[j];
                         vec[j] += delta;
                         write_vector(arg, vec);
-                        f_handle->call_with_validate({inc_y}, args);
+                        f_handle->validate_and_execute({inc_y}, args);
                         auto inc_vec = read_vector<T>(inc_y);
                         vec[j] = old_val;
                         write_vector(arg, vec);

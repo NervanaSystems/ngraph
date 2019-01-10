@@ -70,7 +70,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n4_c1_hw4_2x2_max)
     auto C = make_shared<op::Parameter>(element::i32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
     auto handle = backend->compile(df);
-    handle->call_with_validate({output}, {input, ep});
+    handle->validate_and_execute({output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -109,7 +109,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max)
     auto C = make_shared<op::Parameter>(element::i32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
     auto handle = backend->compile(df);
-    handle->call_with_validate({output}, {input, ep});
+    handle->validate_and_execute({output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -151,7 +151,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2_c1_hw5_3x3_str2_max_pad1x2_2x3
     auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
     auto handle = backend->compile(df);
-    handle->call_with_validate({output}, {input, ep});
+    handle->validate_and_execute({output}, {input, ep});
     EXPECT_EQ(expected, read_vector<float>(output));
 }
 
@@ -188,7 +188,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw2x2)
     auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
     auto df = autodiff::backprop_function(f);
     auto handle = backend->compile(df);
-    handle->call_with_validate({output}, {input, ep});
+    handle->validate_and_execute({output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == dataEp);
 }
 
@@ -222,7 +222,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n1_c1_hw4x4)
     auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
     auto df = autodiff::backprop_function(f);
     auto handle = backend->compile(df);
-    handle->call_with_validate({output}, {input, ep});
+    handle->validate_and_execute({output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -322,7 +322,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4)
     auto C = make_shared<op::Parameter>(element::i32, avgpool_shape);
     auto df = autodiff::backprop_function(f);
     auto handle = backend->compile(df);
-    handle->call_with_validate({output}, {input, ep});
+    handle->validate_and_execute({output}, {input, ep});
     ASSERT_TRUE(read_vector<int>(output) == expected);
 }
 
@@ -1590,7 +1590,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n4c1h4w4_kh2kw2_sh1sw1)
     auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
     auto handle = backend->compile(df);
-    handle->call_with_validate({output}, {input, ep});
+    handle->validate_and_execute({output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
@@ -1628,7 +1628,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maxpool_n2c1h5w5_kh3kw3_sh2sw2)
     auto C = make_shared<op::Parameter>(element::f32, maxpool_shape);
     auto df = autodiff::backprop_function(f);
     auto handle = backend->compile(df);
-    handle->call_with_validate({output}, {input, ep});
+    handle->validate_and_execute({output}, {input, ep});
     ASSERT_TRUE(read_vector<float>(output) == expected);
 }
 
@@ -1706,7 +1706,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n3_c2_h3)
     auto C = make_shared<op::Parameter>(element::i32, shape);
     auto df = autodiff::backprop_function(f);
     auto handle = backend->compile(df);
-    handle->call_with_validate({da, db}, {a, b, c});
+    handle->validate_and_execute({da, db}, {a, b, c});
     ASSERT_EQ(read_vector<int>(da), expected);
 }
 
@@ -1757,6 +1757,6 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n4d2c3h2w2)
     auto C = make_shared<op::Parameter>(element::i32, shape);
     auto df = autodiff::backprop_function(f);
     auto handle = backend->compile(df);
-    handle->call_with_validate({da, db}, {a, b, c});
+    handle->validate_and_execute({da, db}, {a, b, c});
     ASSERT_EQ(read_vector<int>(da), expected);
 }

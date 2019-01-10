@@ -73,8 +73,8 @@ runtime::nop::NOPExecutable::NOPExecutable(shared_ptr<Function> function,
     set_parameters_and_results(*function);
 }
 
-bool runtime::nop::NOPExecutable::execute(const vector<runtime::Tensor*>& outputs,
-                                          const vector<runtime::Tensor*>& inputs)
+bool runtime::nop::NOPExecutable::execute(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                          const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     return true;
 }

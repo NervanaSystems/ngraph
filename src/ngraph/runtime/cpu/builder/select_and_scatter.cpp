@@ -84,17 +84,7 @@ namespace ngraph
                     inputs.emplace_back(backend->create_tensor(element::f32, Shape{}, &y));
                     outputs.emplace_back(
                         backend->create_tensor(element::boolean, Shape{}, &output));
-                    vector<runtime::Tensor*> t_out;
-                    vector<runtime::Tensor*> t_in;
-                    for (auto o : outputs)
-                    {
-                        t_out.push_back(o.get());
-                    }
-                    for (auto input : inputs)
-                    {
-                        t_in.push_back(input.get());
-                    }
-                    select_external_function->make_call_frame()->call(t_out, t_in);
+                    select_external_function->make_call_frame()->call(outputs, inputs);
                     return output;
                 };
 
@@ -104,17 +94,7 @@ namespace ngraph
                     inputs.emplace_back(backend->create_tensor(element::f32, Shape{}, &x));
                     inputs.emplace_back(backend->create_tensor(element::f32, Shape{}, &y));
                     outputs.emplace_back(backend->create_tensor(element::f32, Shape{}, &output));
-                    vector<runtime::Tensor*> t_out;
-                    vector<runtime::Tensor*> t_in;
-                    for (auto o : outputs)
-                    {
-                        t_out.push_back(o.get());
-                    }
-                    for (auto input : inputs)
-                    {
-                        t_in.push_back(input.get());
-                    }
-                    scatter_external_function->make_call_frame()->call(t_out, t_in);
+                    scatter_external_function->make_call_frame()->call(outputs, inputs);
                     return output;
                 };
 

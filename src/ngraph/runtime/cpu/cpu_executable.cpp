@@ -53,8 +53,8 @@ std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame> runtime::cpu::CPUExecutable
     return m_call_frame;
 }
 
-bool runtime::cpu::CPUExecutable::execute(const std::vector<runtime::Tensor*>& outputs,
-                                          const std::vector<runtime::Tensor*>& inputs)
+bool runtime::cpu::CPUExecutable::execute(const std::vector<shared_ptr<runtime::Tensor>>& outputs,
+                                          const std::vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     bool rc = true;
 

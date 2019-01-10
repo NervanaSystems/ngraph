@@ -40,33 +40,19 @@ public:
     Executable();
     virtual ~Executable();
 
-    /// \deprecated use execute method
-    /// \param outputs vector of runtime::Tensor used as outputs
-    /// \param inputs vector of runtime::Tensor used as inputs
-    /// \returns true if iteration is successful, false otherwise
-    DEPRECATED virtual bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                                 const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
-
     /// \brief Executes a single iteration of a Function.
     /// \param outputs vector of runtime::Tensor used as outputs
     /// \param inputs vector of runtime::Tensor used as inputs
     /// \returns true if iteration is successful, false otherwise
-    virtual bool execute(const std::vector<runtime::Tensor*>& outputs,
-                         const std::vector<runtime::Tensor*>& inputs) = 0;
-
-    /// \brief Executes a single iteration of a Function.
-    /// \param outputs vector of runtime::Tensor used as outputs
-    /// \param inputs vector of runtime::Tensor used as inputs
-    /// \returns true if iteration is successful, false otherwise
-    DEPRECATED bool call_with_validate(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                                       const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+    virtual bool execute(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                         const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) = 0;
 
     /// \brief Validates and then Executes a single iteration of a Function.
     /// \param outputs vector of runtime::Tensor used as outputs
     /// \param inputs vector of runtime::Tensor used as inputs
     /// \returns true if iteration is successful, false otherwise
-    bool validate_and_execute(const std::vector<runtime::Tensor*>& outputs,
-                              const std::vector<runtime::Tensor*>& inputs);
+    bool validate_and_execute(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                              const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
     /// \brief Collect performance information gathered on a Function.
     /// \returns Vector of PerformanceCounter information.
@@ -75,8 +61,8 @@ public:
     /// \brief Validates a Function.
     /// \param outputs vector of runtime::Tensor used as outputs
     /// \param inputs vector of runtime::Tensor used as inputs
-    void validate(const std::vector<runtime::Tensor*>& outputs,
-                  const std::vector<runtime::Tensor*>& inputs);
+    void validate(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                  const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
     /// \brief Query the input Parameters
     /// \returns an ngraph::op::ParameterVector of all input parameters

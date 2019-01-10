@@ -58,17 +58,7 @@ bool runtime::cpu::CPU_Debugger::step()
 
     bool is_set = ctx->breakpoints.count(ctx->pc + 1) != 0;
     ctx->breakpoints.insert(ctx->pc + 1);
-    vector<runtime::Tensor*> out;
-    vector<runtime::Tensor*> in;
-    for (auto output : m_outputs)
-    {
-        out.push_back(output.get());
-    }
-    for (auto input : m_inputs)
-    {
-        in.push_back(input.get());
-    }
-    m_callframe.inner_call(out, in);
+    m_callframe.inner_call(m_outputs, m_inputs);
     if (!is_set)
     {
         ctx->breakpoints.erase(ctx->pc);
@@ -84,17 +74,7 @@ void runtime::cpu::CPU_Debugger::resume()
         return;
     }
 
-    vector<runtime::Tensor*> out;
-    vector<runtime::Tensor*> in;
-    for (auto output : m_outputs)
-    {
-        out.push_back(output.get());
-    }
-    for (auto input : m_inputs)
-    {
-        in.push_back(input.get());
-    }
-    m_callframe.inner_call(out, in);
+    m_callframe.inner_call(m_outputs, m_inputs);
     return;
 }
 
@@ -104,17 +84,8 @@ void runtime::cpu::CPU_Debugger::call(const std::vector<std::shared_ptr<runtime:
     m_outputs.assign(outputs.begin(), outputs.end());
     m_inputs.assign(inputs.begin(), inputs.end());
     m_callframe.ctx->pc = 0;
-    vector<runtime::Tensor*> out;
-    vector<runtime::Tensor*> in;
-    for (auto output : m_outputs)
-    {
-        out.push_back(output.get());
-    }
-    for (auto input : m_inputs)
-    {
-        in.push_back(input.get());
-    }
-    m_callframe.inner_call(out, in);
+
+    m_callframe.inner_call(m_outputs, m_inputs);
 }
 
 std::tuple<bool, size_t> runtime::cpu::CPU_Debugger::find_pc_for_node(std::shared_ptr<Node> op)

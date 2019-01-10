@@ -158,8 +158,8 @@ class ngraph::runtime::interpreter::INTExecutable : public Executable
     friend class runtime::interpreter::INTBackend;
 
 public:
-    bool execute(const std::vector<runtime::Tensor*>& outputs,
-                 const std::vector<runtime::Tensor*>& inputs) override;
+    bool execute(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                 const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 
     std::vector<PerformanceCounter> get_performance_data() const override;
 
@@ -755,7 +755,7 @@ private:
             }
 
             std::unique_ptr<INTExecutable> exec(new INTExecutable(function));
-            exec->call(outputs, inputs);
+            exec->execute(outputs, inputs);
             break;
         }
         case OP_TYPEID::Greater:
@@ -1026,7 +1026,7 @@ private:
                 auto tr = std::make_shared<HostTensor>(
                     node.get_output_element_type(0), Shape{}, "reduce_temp_r");
                 std::unique_ptr<INTExecutable> exec(new INTExecutable(reduction_function));
-                exec->call({tr}, {tx, ty});
+                exec->execute({tr}, {tx, ty});
                 return *(tr->get_data_ptr<T>());
             };
 
@@ -1056,7 +1056,7 @@ private:
                 auto tr = std::make_shared<HostTensor>(
                     node.get_output_element_type(0), Shape{}, "reduce_window_temp_r");
                 std::unique_ptr<INTExecutable> exec(new INTExecutable(reduction_function));
-                exec->call({tr}, {tx, ty});
+                exec->execute({tr}, {tx, ty});
                 return *(tr->get_data_ptr<T>());
             };
 
@@ -1172,7 +1172,7 @@ private:
                 auto tr = std::make_shared<runtime::HostTensor>(
                     element::boolean, Shape{}, "selection_temp_r");
                 std::unique_ptr<INTExecutable> exec(new INTExecutable(selection_function));
-                exec->call({tr}, {tx, ty});
+                exec->execute({tr}, {tx, ty});
                 return *(tr->get_data_ptr<char>());
             };
 
@@ -1186,7 +1186,7 @@ private:
                 auto tr = std::make_shared<runtime::HostTensor>(
                     node.get_output_element_type(0), Shape{}, "scatter_temp_r");
                 std::unique_ptr<INTExecutable> exec(new INTExecutable(scatter_function));
-                exec->call({tr}, {tx, ty});
+                exec->execute({tr}, {tx, ty});
                 return *(tr->get_data_ptr<T>());
             };
 

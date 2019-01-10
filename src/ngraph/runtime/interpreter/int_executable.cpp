@@ -46,14 +46,15 @@ runtime::interpreter::INTExecutable::INTExecutable(shared_ptr<Function> function
     set_parameters_and_results(*function);
 }
 
-bool runtime::interpreter::INTExecutable::execute(const vector<runtime::Tensor*>& outputs,
-                                                  const vector<runtime::Tensor*>& inputs)
+bool runtime::interpreter::INTExecutable::execute(
+    const vector<shared_ptr<runtime::Tensor>>& outputs,
+    const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     // convert inputs to HostTensor
     vector<void*> func_inputs;
     for (auto tensor : inputs)
     {
-        auto host_tensor = static_cast<runtime::HostTensor*>(tensor);
+        auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
         func_inputs.push_back(static_cast<void*>(host_tensor->get_data_ptr()));
     }
 
@@ -61,7 +62,7 @@ bool runtime::interpreter::INTExecutable::execute(const vector<runtime::Tensor*>
     vector<void*> func_outputs;
     for (auto tensor : outputs)
     {
-        auto host_tensor = static_cast<runtime::HostTensor*>(tensor);
+        auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
         func_outputs.push_back(static_cast<void*>(host_tensor->get_data_ptr()));
     }
 

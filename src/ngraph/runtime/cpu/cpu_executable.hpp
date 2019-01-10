@@ -35,8 +35,8 @@ namespace ngraph
                 friend class CPU_Backend;
 
             public:
-                bool execute(const std::vector<runtime::Tensor*>& outputs,
-                             const std::vector<runtime::Tensor*>& inputs) override;
+                bool execute(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                             const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 
                 std::shared_ptr<CPU_CallFrame> get_call_frame();
 

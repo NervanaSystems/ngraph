@@ -100,7 +100,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
 
         std::function<void()> cb = [&]() {
             auto handle = backend->compile(f);
-            handle->call_with_validate({result_tv}, input_vals);
+            handle->validate_and_execute({result_tv}, input_vals);
         };
 
         test_callbacks.push_back(cb);

@@ -114,7 +114,7 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
     copy_data(params_t, vector<float>(shape_size(params->get_shape()), 1));
 
     auto handle = backend->compile(func);
-    handle->call_with_validate({result_ht, result_ct},
+    handle->validate_and_execute({result_ht, result_ct},
                                {src_layer_t, src_iter_t, params_t, state_iter_t});
     vector<float> expected_ht(10 * 100, 0.964028f);
     vector<float> expected_ct;
@@ -273,7 +273,7 @@ TEST(gpu_fusion, lstm_analytic)
         backend->create_tensor(element::f32, ct->get_shape());
 
     auto handle = backend->compile(f);
-    handle->call_with_validate({result_ht, result_ct},
+    handle->validate_and_execute({result_ht, result_ct},
                                {input_xt_t, weights_i2h_t, weights_h2h_t, bias_i2h_t, bias_h2h_t});
 
     auto sig = [](float x) { return 1.0f / (1.0f + std::exp(-x)); };
@@ -412,7 +412,7 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
         backend->create_tensor(element::f32, ct->get_shape());
 
     auto handle = backend->compile(f);
-    handle->call_with_validate({result_ht, result_ct}, arg_tensors);
+    handle->validate_and_execute({result_ht, result_ct}, arg_tensors);
     //EXPECT_EQ(1, count_ops_of_type<op::gpu::Rnn>(f));
 
     auto sig = [](float x) { return 1.0f / (1.0f + std::exp(-x)); };

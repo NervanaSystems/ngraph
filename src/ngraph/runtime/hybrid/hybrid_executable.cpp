@@ -73,8 +73,9 @@ runtime::hybrid::HybridExecutable::HybridExecutable(
     set_parameters_and_results(*func);
 }
 
-bool runtime::hybrid::HybridExecutable::execute(const std::vector<runtime::Tensor*>& outputs,
-                                                const std::vector<runtime::Tensor*>& inputs)
+bool runtime::hybrid::HybridExecutable::execute(
+    const std::vector<shared_ptr<runtime::Tensor>>& outputs,
+    const std::vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     bool rc = true;
 

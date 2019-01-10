@@ -164,7 +164,7 @@ std::vector<std::vector<T1>> execute(const std::shared_ptr<ngraph::Function>& fu
     }
 
     auto handle = backend->compile(function);
-    handle->call_with_validate(result_tensors, arg_tensors);
+    handle->validate_and_execute(result_tensors, arg_tensors);
 
     std::vector<std::vector<T1>> result_vectors;
     for (auto rt : result_tensors)

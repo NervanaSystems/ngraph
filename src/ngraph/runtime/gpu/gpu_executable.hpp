@@ -43,8 +43,8 @@ namespace ngraph
                 friend class GPU_Backend;
 
             public:
-                bool execute(const std::vector<runtime::Tensor*>& outputs,
-                             const std::vector<runtime::Tensor*>& inputs) override;
+                bool execute(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                             const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 
                 std::vector<PerformanceCounter> get_performance_data() const override;
 
@@ -65,8 +65,9 @@ namespace ngraph
                 /// \param target Pointer to a pre-allocated array of void* with
                 /// size >= source.size()
                 /// \param source Source vector of Tensors
-                static void initialize_io(void** target,
-                                          const std::vector<runtime::Tensor*>& source);
+                static void
+                    initialize_io(void** target,
+                                  const std::vector<std::shared_ptr<runtime::Tensor>>& source);
             };
         }
     }

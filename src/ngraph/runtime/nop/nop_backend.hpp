@@ -56,8 +56,8 @@ class ngraph::runtime::nop::NOPExecutable : public Executable
     friend class NOPBackend;
 
 public:
-    bool execute(const std::vector<runtime::Tensor*>& outputs,
-                 const std::vector<runtime::Tensor*>& inputs) override;
+    bool execute(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                 const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 
 private:
     NOPExecutable(std::shared_ptr<Function> function, bool enable_performance_collection);

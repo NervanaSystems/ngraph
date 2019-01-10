@@ -48,11 +48,12 @@ runtime::gpu::GPUExecutable::GPUExecutable(shared_ptr<BackendContext> context,
 }
 
 void runtime::gpu::GPUExecutable::initialize_io(void** target,
-                                                const vector<runtime::Tensor*>& source)
+                                                const vector<shared_ptr<runtime::Tensor>>& source)
 {
     for (size_t i = 0; i < source.size(); i++)
     {
-        runtime::gpu::GPUTensor* tensor = dynamic_cast<runtime::gpu::GPUTensor*>(source[i]);
+        shared_ptr<runtime::gpu::GPUTensor> tensor =
+            dynamic_pointer_cast<runtime::gpu::GPUTensor>(source[i]);
         if (tensor)
         {
             target[i] = tensor->m_allocated_buffer_pool;
@@ -64,8 +65,8 @@ void runtime::gpu::GPUExecutable::initialize_io(void** target,
     }
 }
 
-bool runtime::gpu::GPUExecutable::execute(const vector<runtime::Tensor*>& outputs,
-                                          const vector<runtime::Tensor*>& inputs)
+bool runtime::gpu::GPUExecutable::execute(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                          const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     // ensure the GPURuntimeContext primitive pointers are valid
     m_context->prepare_runtime_context();

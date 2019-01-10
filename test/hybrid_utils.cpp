@@ -150,7 +150,7 @@ bool TestBackend::call(shared_ptr<Function> func,
         }
 
         // Call
-        backend->call_with_validate(sub_function, result_tvs, parameter_tvs);
+        backend->validate_and_execute(sub_function, result_tvs, parameter_tvs);
     }
     return rc;
 }

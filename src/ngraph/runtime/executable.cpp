@@ -28,48 +28,16 @@ runtime::Executable::~Executable()
 {
 }
 
-bool runtime::Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                               const vector<shared_ptr<runtime::Tensor>>& inputs)
-{
-    vector<runtime::Tensor*> out;
-    vector<runtime::Tensor*> in;
-    for (auto output : outputs)
-    {
-        out.push_back(output.get());
-    }
-    for (auto input : inputs)
-    {
-        in.push_back(input.get());
-    }
-    return execute(out, in);
-}
-
-bool runtime::Executable::call_with_validate(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                             const vector<shared_ptr<runtime::Tensor>>& inputs)
-{
-    vector<runtime::Tensor*> out;
-    vector<runtime::Tensor*> in;
-    for (auto output : outputs)
-    {
-        out.push_back(output.get());
-    }
-    for (auto input : inputs)
-    {
-        in.push_back(input.get());
-    }
-    validate(out, in);
-    return execute(out, in);
-}
-
-bool runtime::Executable::validate_and_execute(const std::vector<runtime::Tensor*>& outputs,
-                                               const std::vector<runtime::Tensor*>& inputs)
+bool runtime::Executable::validate_and_execute(
+    const std::vector<shared_ptr<runtime::Tensor>>& outputs,
+    const std::vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     validate(outputs, inputs);
     return execute(outputs, inputs);
 }
 
-void runtime::Executable::validate(const vector<runtime::Tensor*>& outputs,
-                                   const vector<runtime::Tensor*>& inputs)
+void runtime::Executable::validate(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                   const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     const ParameterVector& parameters = get_parameters();
     const ResultVector& results = get_results();

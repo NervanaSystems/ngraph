@@ -73,25 +73,19 @@ namespace ngraph
                                 out_types,
                                 out_tensors](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     TensorViewPtrs inputs, outputs;
-                    vector<runtime::Tensor*> t_in;
-                    vector<runtime::Tensor*> t_out;
                     for (int i = 0; i < arg_shapes.size(); i++)
                     {
-                        auto t =
-                            backend->create_tensor(arg_types[i], arg_shapes[i], arg_tensors[i]);
-                        inputs.push_back(t);
-                        t_in.push_back(t.get());
+                        inputs.emplace_back(
+                            backend->create_tensor(arg_types[i], arg_shapes[i], arg_tensors[i]));
                     }
                     for (int i = 0; i < out_shapes.size(); i++)
                     {
-                        auto t =
-                            backend->create_tensor(out_types[i], out_shapes[i], out_tensors[i]);
-                        outputs.push_back(t);
-                        t_out.push_back(t.get());
+                        outputs.emplace_back(
+                            backend->create_tensor(out_types[i], out_shapes[i], out_tensors[i]));
                     }
 
                     auto call_frame = callee_external_function->make_call_frame();
-                    call_frame->call(t_out, t_in);
+                    call_frame->call(outputs, inputs);
                 };
                 functors.emplace_back(functor);
             }
