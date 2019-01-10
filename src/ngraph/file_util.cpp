@@ -336,13 +336,13 @@ void file_util::iterate_files(const string& path,
     }
 }
 
-#if !defined(NGRAPH_MANYLINUX_ENABLE)
 string file_util::tmp_filename(const string& extension)
 {
     string rc;
 #ifdef _WIN32
     rc = _tempnam(file_util::get_temp_directory_path().c_str(), "ngraph_");
 #else
+#if !defined(NGRAPH_MANYLINUX_ENABLE)
     string tmp_template =
         file_util::path_join(file_util::get_temp_directory_path(), "ngraph_XXXXXX" + extension);
     char* tmpname = strdup(tmp_template.c_str());
@@ -354,10 +354,22 @@ string file_util::tmp_filename(const string& extension)
         rc = tmpname;
         free(tmpname);
     }
+#else
+    string tmp_template =
+        file_util::path_join(file_util::get_temp_directory_path(), "ngraph_XXXXXX");
+    char* tmpname = strdup(tmp_template.c_str());
+    if (tmpname != nullptr)
+    {
+        // mkstemp opens the file with open() so we need to close it
+        close(mkstemp(tmpname));
+
+        rc = tmpname + extension;
+        free(tmpname);
+    }
+#endif
 #endif
     return rc;
 }
-#endif
 
 bool file_util::exists(const string& filename)
 {

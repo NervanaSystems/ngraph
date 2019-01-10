@@ -73,6 +73,8 @@ ExternalProject_Add(
                 -DLLVM_INCLUDE_EXAMPLES=OFF
                 -DLLVM_BUILD_TOOLS=ON
                 -DLLVM_TARGETS_TO_BUILD=X86
+                -DLLVM_ENABLE_TERMINFO=OFF
+                -DLLVM_ENABLE_ZLIB=OFF
                 -DLLVM_EXTERNAL_CLANG_SOURCE_DIR=${CLANG_SOURCE_DIR}
                 -DLLVM_EXTERNAL_OPENMP_SOURCE_DIR=${OPENMP_SOURCE_DIR}
     UPDATE_COMMAND ""
@@ -155,15 +157,10 @@ set(LLVM_LINK_LIBS
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMBinaryFormat${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMSupport${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${EXTERNAL_PROJECTS_ROOT}/llvm/lib/${CMAKE_STATIC_LIBRARY_PREFIX}LLVMDemangle${CMAKE_STATIC_LIBRARY_SUFFIX}
+    m
 )
 
 ExternalProject_Get_Property(ext_llvm INSTALL_DIR)
-
-if(APPLE)
-    set(LLVM_LINK_LIBS ${LLVM_LINK_LIBS} curses z m)
-else()
-    set(LLVM_LINK_LIBS ${LLVM_LINK_LIBS} tinfo z m)
-endif()
 
 add_library(libllvm INTERFACE)
 add_dependencies(libllvm ext_llvm)

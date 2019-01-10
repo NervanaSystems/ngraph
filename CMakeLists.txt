@@ -117,7 +117,7 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
     option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
 endif()
-if (LINUX AND NGRAPH_PYTHON_BUILD_ENABLE)
+if (LINUX)
     option(NGRAPH_MANYLINUX_ENABLE   "Enable manylinux support for nGraph" FALSE)
 endif()
 
@@ -127,16 +127,17 @@ if (NGRAPH_PYTHON_BUILD_ENABLE)
     endif()
 endif()
 
+if (NGRAPH_GPUH_ENABLE)
+    set(NGRAPH_GPU_ENABLE TRUE)
+endif()
+
 #
 # manylinux has limited support for now
 # disable all unsupported options and use DEX only for CPU backend
 #
 if (NGRAPH_MANYLINUX_ENABLE)
-    if(NGRAPH_CPU_ENABLE)
-        # Cannot build Clang in a manylinux conforming way yet.
-        if(NOT NGRAPH_DEX_ONLY)
-            message(FATAL_ERROR "manylinux Python API only supports Direct Execution(DEX) for CPU backend!")
-        endif()
+    if(NGRAPH_USE_PREBUILT_LLVM)
+        message(FATAL_ERROR "manylinux Python API only supports LLVM build from source!")
     endif()
     if(NGRAPH_GPU_ENABLE)
         message(FATAL_ERROR "manylinux Python API does not support GPU backend!")
@@ -153,10 +154,6 @@ if (NGRAPH_MANYLINUX_ENABLE)
     if(NGRAPH_PLAIDML_ENABLE)
         message(FATAL_ERROR "manylinux Python API does not support PlaidML backend!")
     endif()
-endif()
-
-if (NGRAPH_GPUH_ENABLE)
-    set(NGRAPH_GPU_ENABLE TRUE)
 endif()
 
 message(STATUS "NGRAPH_UNIT_TEST_ENABLE:      ${NGRAPH_UNIT_TEST_ENABLE}")
