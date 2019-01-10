@@ -205,8 +205,8 @@ private:
 
     void generate_calls(const element::Type& type,
                         const NodeWrapper& op,
-                        const std::vector<void*>& outputs,
-                        const std::vector<const void*>& inputs,
+                        const std::vector<std::shared_ptr<HostTensor>>& outputs,
+                        const std::vector<std::shared_ptr<HostTensor>>& inputs,
                         FunctionInstance& instance);
 
     template <typename T>
