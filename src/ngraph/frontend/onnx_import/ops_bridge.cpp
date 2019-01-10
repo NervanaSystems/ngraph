@@ -143,6 +143,31 @@ namespace ngraph
             return result;
         }
 
+        bool OperatorsBridge::_is_operator_registered(const std::string& name,
+                                                     std::int64_t version,
+                                                     const std::string& domain)
+        {
+            // search for domain
+            auto dm_map = m_map.find(domain);
+            if (dm_map == std::end(m_map))
+            {
+                return false;
+            }
+            // search for name
+            auto op_map = dm_map->second.find(name);
+            if (op_map == std::end(dm_map->second))
+            {
+                return false;
+            }
+            // search for version
+            auto op_ver = op_map->second.find(version);
+            if (op_ver == std::end(op_map->second))
+            {
+                return false;
+            }
+            return true;
+        }
+
 #define REGISTER_OPERATOR(name_, ver_, fn_)                                                        \
     m_map[""][name_].emplace(ver_, std::bind(op::set_##ver_::fn_, std::placeholders::_1))
 
