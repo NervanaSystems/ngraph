@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -606,7 +606,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_max)
 
     for (size_t i = 0; i < gpu_results_1.size(); i++)
     {
-        EXPECT_TRUE(test::all_close_f(gpu_results_1.at(i), interp_results_1.at(i), 24, 0));
+        EXPECT_TRUE(test::all_close_f(
+            gpu_results_1.at(i), interp_results_1.at(i), MIN_FLOAT_TOLERANCE_BITS));
     }
 }
 
@@ -644,7 +645,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_min)
 
     for (size_t i = 0; i < gpu_results_1.size(); i++)
     {
-        EXPECT_TRUE(test::all_close_f(gpu_results_1.at(i), interp_results_1.at(i), 24, 0));
+        EXPECT_TRUE(test::all_close_f(
+            gpu_results_1.at(i), interp_results_1.at(i), MIN_FLOAT_TOLERANCE_BITS));
     }
 }
 

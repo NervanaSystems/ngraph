@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -340,6 +340,16 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: input format is different from "
                                 "output format, no in place slice";
+                continue;
+            }
+
+            const auto& dtype = slice->get_input_element_type(0);
+            if (runtime::cpu::mkldnn_utils::get_mkldnn_data_type(dtype) ==
+                mkldnn::memory::data_type::data_undef)
+            {
+                NGRAPH_DEBUG << "cpu_memory_optimization: "
+                             << slice->get_input_element_type(0).c_type_string()
+                             << " isn't supported, no in place slice";
                 continue;
             }
 

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ namespace ngraph
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
             std::shared_ptr<Node> get_filters() { return get_argument(1); }
             std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
+            bool with_relu() const { return true; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

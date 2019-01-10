@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,10 +34,10 @@ namespace ngraph
             std::pair<
                 std::vector<std::shared_ptr<Function>>,
                 std::unordered_map<std::shared_ptr<op::Parameter>, std::shared_ptr<op::Result>>>
-                split_function_by_placement_size(const std::shared_ptr<Function>& f);
+                split_function_by_placement(const std::shared_ptr<Function>& f);
 
             // Assert that nodes in the function is colocated and return that placement
-            size_t get_colocated_function_placement_size(std::shared_ptr<Function> func);
+            size_t get_colocated_function_placement(std::shared_ptr<Function> func);
         }
     }
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,16 +43,25 @@ extern "C" runtime::Backend* new_backend(const char* configuration_string)
     return new runtime::interpreter::INTBackend();
 }
 
+runtime::interpreter::INTBackend::INTBackend()
+{
+}
+
+runtime::interpreter::INTBackend::INTBackend(const vector<string>& unsupported_op_name_list)
+    : m_unsupported_op_name_list{unsupported_op_name_list.begin(), unsupported_op_name_list.end()}
+{
+}
+
 shared_ptr<runtime::Tensor>
     runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)
 {
-    return make_shared<runtime::HostTensor>(type, shape, "external");
+    return make_shared<runtime::HostTensor>(type, shape, this);
 }
 
 shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
     const element::Type& type, const Shape& shape, void* memory_pointer)
 {
-    return make_shared<runtime::HostTensor>(type, shape, memory_pointer, "external");
+    return make_shared<runtime::HostTensor>(type, shape, memory_pointer, this);
 }
 
 runtime::Handle runtime::interpreter::INTBackend::compile(shared_ptr<Function> function)
@@ -90,6 +99,10 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         throw runtime_error("compile() must be called before call().");
     }
     FunctionInstance& instance = fit->second;
+    if (!instance.m_is_compiled)
+    {
+        throw runtime_error("compile() must be called before call().");
+    }
 
     // convert inputs to HostTensor
     vector<void*> func_inputs;
@@ -331,4 +344,9 @@ void runtime::interpreter::INTBackend::perform_nan_check(
         }
         arg_number++;
     }
+}
+
+bool runtime::interpreter::INTBackend::is_supported(const Node& node) const
+{
+    return m_unsupported_op_name_list.find(node.description()) == m_unsupported_op_name_list.end();
 }

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ ngraph::pass::PassConfig::PassConfig()
     * Parses the semi-colon separated environment string passed through NGRAPH_PASS_ENABLES
     * and returns the pass names and whether they should be enabled or disabled in the
     * provided unordered_map. Implementation of pass selection is up to the backend
-    * E.g., NGRAPH_PASS_ENABLES="CoreFusion:0;LikeReplacement:1;CPUCollapseDims" would 
+    * E.g., NGRAPH_PASS_ENABLES="CoreFusion:0;LikeReplacement:1;CPUCollapseDims" would
     *       set disables on CoreFusion and enables on LikeReplacement and CPUCollapseDims
     **/
     const char* env_str = std::getenv("NGRAPH_PASS_ENABLES");

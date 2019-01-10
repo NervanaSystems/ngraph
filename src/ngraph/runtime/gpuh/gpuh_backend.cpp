@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/pass/assign_placement.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
@@ -34,7 +35,13 @@ extern "C" runtime::Backend* new_backend(const char* configuration_string)
     return new runtime::gpuh::GPUHBackend();
 }
 
+vector<string> get_excludes()
+{
+    return vector<string>{{"Not"}};
+}
+
 runtime::gpuh::GPUHBackend::GPUHBackend()
-    : HybridBackend({{"INTERPRETER", make_shared<ngraph::runtime::interpreter::INTBackend>()}})
+    : HybridBackend({make_shared<ngraph::runtime::gpu::GPU_Backend>(),
+                     make_shared<ngraph::runtime::interpreter::INTBackend>()})
 {
 }
