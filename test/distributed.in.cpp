@@ -17,9 +17,11 @@
 #include <fstream>
 #include <sstream>
 
-#ifdef NGRAPH_CPU_ENABLE
-#include <mlsl.hpp>
-#endif
+// #ifdef NGRAPH_CPU_ENABLE
+// #include <mlsl.hpp>
+// #endif
+
+#include "ngraph/distributed.hpp"
 
 #include "gtest/gtest.h"
 
@@ -31,16 +33,20 @@
 using namespace std;
 using namespace ngraph;
 
-#ifdef NGRAPH_CPU_ENABLE
+// #ifdef NGRAPH_CPU_ENABLE
 TEST(distributed_${BACKEND_NAME}, allreduce)
 {
+
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});
-
+    Distributed dist_instance; 
+    dist_instance.initialize(); 
+    
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
-    auto comm_size = MLSL::Environment::GetEnv().GetProcessCount();
 
+    // auto comm_size = MLSL::Environment::GetEnv().GetProcessCount();
+    auto comm_size = dist_instance.get_size();
     auto v = vector<float>{1, 2, 3, 4};
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{1, 2, 3, 4});
@@ -54,4 +60,4 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     backend->call_with_validate(handle, {result}, {a});
     EXPECT_EQ(v, read_vector<float>(result));
 }
-#endif
+// #endif

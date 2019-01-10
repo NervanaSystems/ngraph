@@ -41,12 +41,12 @@ ngraph::Distributed::Distributed()
 //     }
 // #endif
 
-    // int flag = 0;
-    // MPI_Initialized(&flag);	
-    // if (!flag)
-    // {
-    //     MPI_Init(NULL, NULL);
-    // }
+    int flag = 0;
+    MPI_Initialized(&flag);	
+    if (!flag)
+    {
+        MPI_Init(NULL, NULL);
+    }
 
 }
 
