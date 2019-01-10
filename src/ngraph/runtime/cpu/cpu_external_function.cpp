@@ -454,10 +454,11 @@ void runtime::cpu::CPU_ExternalFunction::compile()
                          placeholders::_2);
     pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, node_function_map, common_function_string);
-    pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::PropagateCacheability>(
         runtime::cpu::get_annotations_factory());
-    pass_manager.register_pass<ngraph::pass::MemoryLayout>(size_t(s_memory_pool_alignment), true);
+    pass_manager.register_pass<runtime::cpu::pass::CPUMemoryAssignment>(
+        size_t(s_memory_pool_alignment), !m_pass_config.get_reuse_memory());
+    pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.run_passes(m_function);
 
     unordered_map<shared_ptr<Function>, list<shared_ptr<Node>>> function_ordered_ops;
@@ -1545,11 +1546,11 @@ void runtime::cpu::CPU_ExternalFunction::build()
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
     register_common_passes(pass_manager);
-    pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::PropagateCacheability>(
         runtime::cpu::get_annotations_factory());
     pass_manager.register_pass<runtime::cpu::pass::CPUMemoryAssignment>(
         size_t(s_memory_pool_alignment), !m_pass_config.get_reuse_memory());
+    pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.run_passes(m_function, false);
 
     // Store layouts assigned for arguments

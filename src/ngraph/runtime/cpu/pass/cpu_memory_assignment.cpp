@@ -20,8 +20,8 @@
 #include "ngraph/log.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/slice.hpp"
-#include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
@@ -44,36 +44,260 @@ runtime::cpu::pass::CPUMemoryAssignment::CPUMemoryAssignment(size_t alignment,
 
 bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph::Function> function)
 {
+    list<shared_ptr<Node>> ops = function->get_ordered_ops();
+
+    // build tensor ailas maps for in place ops
+    // forward in place ops such as in place slice or reshape
+    unordered_map<descriptor::Tensor*, descriptor::Tensor*> tensor_alias_map;
+    // backward in place ops: concat
+    unordered_map<descriptor::Tensor*, descriptor::Tensor*> tensor_alias_backward_map;
+
+    for (auto it = ops.begin(); it != ops.end(); it++)
+    {
+        const shared_ptr<Node>& node = *it;
+        if (node->is_parameter() || node->is_constant())
+        {
+            continue;
+        }
+        if (node->is_op())
+        {
+            auto op = std::static_pointer_cast<op::Op>(node);
+            if (auto op_annotations = op->get_op_annotations())
+            {
+                auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                if (in_place_oi_pairs.size() > 0)
+                {
+                    if (node->description() == "Concat")
+                    {
+                        auto concat = std::static_pointer_cast<ngraph::op::Concat>(node);
+                        auto cpu_op_annotations =
+                            std::static_pointer_cast<runtime::cpu::CPUOpAnnotations>(
+                                op_annotations);
+                        // last concat, propagate
+                        if (!cpu_op_annotations->can_free_memory())
+                        {
+                            //propagate tensor alias
+                            auto output_tensor = &concat->get_output_tensor();
+                            for (auto arg : concat->get_arguments())
+                            {
+                                auto input_tensor = &arg->get_output_tensor();
+                                if (tensor_alias_map.find(input_tensor) == tensor_alias_map.end())
+                                {
+                                    tensor_alias_backward_map[input_tensor] = output_tensor;
+                                    if (arg->description() == "Concat")
+                                    {
+                                        auto arg_concat =
+                                            static_pointer_cast<ngraph::op::Concat>(arg);
+                                        std::deque<std::shared_ptr<ngraph::op::Concat>> stack;
+                                        stack.push_front(arg_concat);
+
+                                        while (stack.size() > 0)
+                                        {
+                                            auto it = stack.front();
+                                            stack.pop_front();
+                                            if (auto op_annotations = it->get_op_annotations())
+                                            {
+                                                auto in_place_oi_pairs =
+                                                    op_annotations->get_in_place_oi_pairs();
+                                                if (in_place_oi_pairs.size() > 0)
+                                                {
+                                                    for (auto arg : it->get_arguments())
+                                                    {
+                                                        auto input_tensor =
+                                                            &arg->get_output_tensor();
+                                                        if (tensor_alias_map.find(input_tensor) ==
+                                                            tensor_alias_map.end())
+                                                        {
+                                                            tensor_alias_backward_map
+                                                                [input_tensor] = output_tensor;
+                                                            if (arg->description() == "Concat")
+                                                            {
+                                                                auto arg_concat =
+                                                                    std::static_pointer_cast<
+                                                                        ngraph::op::Concat>(arg);
+                                                                stack.push_front(arg_concat);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
+                        {
+                            auto output_tensor =
+                                &node->get_outputs().at(oi_pair.output).get_tensor();
+                            auto input_tensor = &node->get_inputs().at(oi_pair.input).get_tensor();
+                            if (tensor_alias_map.find(input_tensor) == tensor_alias_map.end())
+                            {
+                                tensor_alias_map[output_tensor] = input_tensor;
+                            }
+                            else
+                            {
+                                tensor_alias_map[output_tensor] = tensor_alias_map[input_tensor];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // liveness analysis using tensor alias map
+    unordered_set<descriptor::Tensor*> persistent_tensors;
+    unordered_set<descriptor::Tensor*> output_tensors;
+    for (const shared_ptr<op::Parameter>& node : function->get_parameters())
+    {
+        for (size_t i = 0; i < node->get_output_size(); ++i)
+        {
+            descriptor::Tensor& tensor = node->get_output_tensor(i);
+            persistent_tensors.insert(&tensor);
+        }
+    }
+    for (const shared_ptr<op::Result>& node : function->get_results())
+    {
+        for (size_t i = 0; i < node->get_output_size(); ++i)
+        {
+            descriptor::Tensor& tensor = node->get_output_tensor(i);
+            persistent_tensors.insert(&tensor);
+            output_tensors.insert(&tensor);
+        }
+    }
+    for (const shared_ptr<Node>& node : ops)
+    {
+        if (auto constant_node = dynamic_pointer_cast<op::Constant>(node))
+        {
+            for (size_t i = 0; i < constant_node->get_output_size(); ++i)
+            {
+                descriptor::Tensor& tensor = constant_node->get_output_tensor(i);
+                persistent_tensors.insert(&tensor);
+            }
+        }
+    }
+
+    unordered_set<descriptor::Tensor*> currently_live;
+    for (auto it = ops.rbegin(); it != ops.rend(); it++)
+    {
+        const shared_ptr<Node>& node = *it;
+        node->liveness_new_list.clear();
+        node->liveness_free_list.clear();
+        unordered_set<descriptor::Tensor*> input_tensor_decls;
+        for (descriptor::Input& input_decl : node->get_inputs())
+        {
+            descriptor::Tensor& tensor = input_decl.get_tensor();
+            if (persistent_tensors.find(&tensor) == persistent_tensors.end())
+            {
+                input_tensor_decls.insert(&tensor);
+            }
+        }
+
+        unordered_set<descriptor::Tensor*> output_tensor_decls;
+        for (size_t i = 0; i < node->get_output_size(); ++i)
+        {
+            descriptor::Tensor& tensor = node->get_output_tensor(i);
+            if (persistent_tensors.find(&tensor) == persistent_tensors.end())
+            {
+                output_tensor_decls.insert(&tensor);
+            }
+        }
+
+        unordered_set<descriptor::Tensor*> free_tensor_decls;
+        unordered_set<descriptor::Tensor*> new_tensor_decls;
+        unordered_set<descriptor::Tensor*> all_tensor_decls = input_tensor_decls;
+        all_tensor_decls.insert(output_tensor_decls.begin(), output_tensor_decls.end());
+
+        for (descriptor::Tensor* tensor_decl : all_tensor_decls)
+        {
+            if (tensor_alias_map.find(tensor_decl) != tensor_alias_map.end())
+            {
+                if (currently_live.find(tensor_alias_map[tensor_decl]) == currently_live.end())
+                {
+                    // this is the last node that value is seen in
+                    // delete it at the end of the op
+                    currently_live.insert(tensor_alias_map[tensor_decl]);
+                    if (output_tensors.find(tensor_alias_map[tensor_decl]) ==
+                            output_tensors.end() &&
+                        persistent_tensors.find(tensor_alias_map[tensor_decl]) ==
+                            persistent_tensors.end())
+                    {
+                        // Don't free output tensors
+                        free_tensor_decls.insert(tensor_alias_map[tensor_decl]);
+                    }
+                }
+            }
+            else if (tensor_alias_backward_map.find(tensor_decl) == tensor_alias_backward_map.end())
+            {
+                if (currently_live.find(tensor_decl) == currently_live.end())
+                {
+                    // this is the last node that value is seen in
+                    // delete it at the end of the op
+                    currently_live.insert(tensor_decl);
+                    if (output_tensors.find(tensor_decl) == output_tensors.end())
+                    {
+                        // Don't free output tensors
+                        free_tensor_decls.insert(tensor_decl);
+                    }
+                }
+            }
+        }
+
+        for (descriptor::Tensor* output_decl : output_tensor_decls)
+        {
+            if (tensor_alias_backward_map.find(output_decl) != tensor_alias_backward_map.end())
+            {
+                auto currently_live_it =
+                    currently_live.find(tensor_alias_backward_map[output_decl]);
+                if (currently_live_it != currently_live.end())
+                {
+                    new_tensor_decls.insert(tensor_alias_backward_map[output_decl]);
+                    currently_live.erase(currently_live_it);
+                }
+            }
+            else
+            {
+                auto currently_live_it = currently_live.find(output_decl);
+                if (currently_live_it != currently_live.end())
+                {
+                    new_tensor_decls.insert(output_decl);
+                    currently_live.erase(currently_live_it);
+                }
+            }
+        }
+        node->liveness_free_list = free_tensor_decls;
+        node->liveness_new_list = new_tensor_decls;
+    }
+
+    // memory assignment using liveness analysis result
     // memory manager for non-cacheable ops, memory allocation will be freed when not longer in use
     ngraph::pass::MemoryManager mm(m_alignment, m_disable_memory_sharing);
     // memory manager for cacheable ops, memory allocation will never be freed
     ngraph::pass::MemoryManager mm_caching(m_alignment, true);
 
-    // Tensors should not be freed due to the following reasons:
-    // Several tensors may have the same offset because of in place propagation, only one of them should be freed.
-    // Tensors get offset 0 from parameter or constant due to in place propagation and should never be freed.
-    std::set<const descriptor::Tensor*> io_no_free;
-
     if (!m_disable_memory_sharing)
     {
-        // Set of tensors in the chain of in place propagation ops where the beginning of the chain is parameter, constant,
-        // or a node whose output has multiple users.
-        std::set<const descriptor::Tensor*> io_from_param_or_const_or_multi;
         // build caching map from cacheability
         for (shared_ptr<Node> node : function->get_ordered_ops())
         {
             if (node->is_op())
             {
                 auto op = std::static_pointer_cast<op::Op>(node);
-                auto op_annotations = op->get_op_annotations();
-                auto cacheable = op_annotations->is_cacheable();
-
-                if (cacheable)
+                if (auto op_annotations = op->get_op_annotations())
                 {
-                    for (size_t i = 0; i < node->get_output_size(); ++i)
+                    auto cacheable = op_annotations->is_cacheable();
+
+                    if (cacheable)
                     {
-                        shared_ptr<descriptor::Tensor> tv = node->get_output_tensor_ptr(i);
-                        m_tensor_caching.insert(tv.get());
+                        for (size_t i = 0; i < node->get_output_size(); ++i)
+                        {
+                            shared_ptr<descriptor::Tensor> tv = node->get_output_tensor_ptr(i);
+                            m_tensor_caching.insert(tv.get());
+                        }
                     }
                 }
             }
@@ -85,52 +309,22 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
             if (node->is_op())
             {
                 auto op = std::static_pointer_cast<op::Op>(node);
-                auto op_annotations = op->get_op_annotations();
-
-                //if it is last concat node of in-place-concat-chain, put it in caching map
-                auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
-                if (in_place_oi_pairs.size() > 0)
+                if (auto op_annotations = op->get_op_annotations())
                 {
-                    if (node->description() == "Concat")
+                    //if it is last concat node of in-place-concat-chain, put it in caching map
+                    auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                    if (in_place_oi_pairs.size() > 0)
                     {
-                        auto concat = std::static_pointer_cast<ngraph::op::Concat>(node);
-                        auto cpu_op_annotations =
-                            std::static_pointer_cast<runtime::cpu::CPUOpAnnotations>(
-                                op_annotations);
-                        if (!cpu_op_annotations->can_free_memory())
+                        if (node->description() == "Concat")
                         {
-                            shared_ptr<descriptor::Tensor> tv = node->get_output_tensor_ptr(0);
-                            m_tensor_caching.insert(tv.get());
-                        }
-                    }
-                    else
-                    {
-                        for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
-                        {
-                            auto output = &node->get_outputs().at(oi_pair.output).get_tensor();
-                            auto input = &node->get_inputs().at(oi_pair.input).get_tensor();
-                            auto input_node =
-                                node->get_inputs().at(oi_pair.input).get_output().get_node();
-
-                            if ((node->liveness_free_list.count(input) != 0 ||
-                                 !oi_pair.destructive) &&
-                                node->liveness_new_list.count(output) != 0)
-
+                            auto concat = std::static_pointer_cast<ngraph::op::Concat>(node);
+                            auto cpu_op_annotations =
+                                std::static_pointer_cast<runtime::cpu::CPUOpAnnotations>(
+                                    op_annotations);
+                            if (!cpu_op_annotations->can_free_memory())
                             {
-                                // input tensor and output tensor have the same offset, should not free input tensor, only free output tensor.
-                                io_no_free.insert(input);
-
-                                auto input_output_inputs =
-                                    node->get_inputs().at(oi_pair.input).get_output().get_inputs();
-                                // tensors in the chain of in place propagation ops where the beginning of the chain is parameter, constant,
-                                // or a node whose output has multiple users. Those tensors should not be freed.
-                                if (input_node->is_parameter() || input_node->is_constant() ||
-                                    input_output_inputs.size() > 1 ||
-                                    io_from_param_or_const_or_multi.count(input))
-                                {
-                                    io_no_free.insert(output);
-                                    io_from_param_or_const_or_multi.insert(output);
-                                }
+                                shared_ptr<descriptor::Tensor> tv = node->get_output_tensor_ptr(0);
+                                m_tensor_caching.insert(tv.get());
                             }
                         }
                     }
@@ -141,59 +335,10 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
 
     for (shared_ptr<Node> node : function->get_ordered_ops())
     {
-        std::map<descriptor::Tensor*, descriptor::Tensor*> in_place_outputs;
-        std::set<const descriptor::Tensor*> reused_inputs;
-
-        if (node->is_op())
-        {
-            auto op = std::static_pointer_cast<op::Op>(node);
-            // concat in_place_oi should be treated differently
-            if (node->description() != "Concat")
-            {
-                if (auto op_annotations = op->get_op_annotations())
-                {
-                    for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
-                    {
-                        auto output = &node->get_outputs().at(oi_pair.output).get_tensor();
-                        auto input = &node->get_inputs().at(oi_pair.input).get_tensor();
-                        auto input_node =
-                            node->get_inputs().at(oi_pair.input).get_output().get_node();
-
-                        // For destructive kernel, this should be the last use
-                        // Non-destructive kernels can pass through
-
-                        if ((node->liveness_free_list.count(input) != 0 || !oi_pair.destructive) &&
-                            node->liveness_new_list.count(output) != 0)
-
-                        {
-                            in_place_outputs.insert({output, input});
-                            reused_inputs.insert(input);
-                        }
-                    }
-                }
-            }
-        }
-
         for (descriptor::Tensor* tensor : node->liveness_new_list)
         {
             size_t offset = 0;
-            if (in_place_outputs.count(tensor))
-            {
-                offset = in_place_outputs.at(tensor)->get_pool_offset();
-                // For input tensor and output tensor pair,
-                // if the input tensor is not cacheable, the output tensor is not cacheable;
-                // if the input tensor is cacheable, the output tensor could be cacaheable or not. If the output tensor is not cacheable,
-                // need to put output tensor into the caching map for in place op. Otherwise, mm will try to free memory allocated by mm_caching.
-                // For example, suppose we have op1 \
-                //                              op2 - op3, op1 is cacheable, op2 and op3 are not. Due to in place propagation, op3 gets the offset
-                // from op1, which is 1000 allocated by mm_caching. There is another 1000 allocated to op4 by mm. If op3 is not put into caching
-                // map, mm will be called to free 1000, which is allocated to op4.
-                if (m_tensor_caching.count(in_place_outputs.at(tensor)))
-                {
-                    m_tensor_caching.insert(tensor);
-                }
-            }
-            else if (m_tensor_caching.count(tensor) != 0)
+            if (m_tensor_caching.count(tensor) != 0)
             {
                 offset = mm_caching.allocate(tensor->size());
             }
@@ -208,9 +353,8 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
         {
             for (descriptor::Tensor* tensor : node->liveness_free_list)
             {
-                if (reused_inputs.count(tensor) == 0 && io_no_free.count(tensor) == 0 &&
-                    (m_tensor_caching.empty() ||
-                     (!m_tensor_caching.empty() && m_tensor_caching.count(tensor) == 0)))
+                if (m_tensor_caching.empty() ||
+                    (!m_tensor_caching.empty() && m_tensor_caching.count(tensor) == 0))
                 {
                     mm.free(tensor->get_pool_offset());
                 }
@@ -224,6 +368,16 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
     {
         auto new_offset = item->get_pool_offset() + start;
         item->set_pool_offset(new_offset);
+    }
+
+    //set pool offset for original tensors in the tensor alias maps.
+    for (auto it = tensor_alias_map.begin(); it != tensor_alias_map.end(); it++)
+    {
+        it->first->set_pool_offset(it->second->get_pool_offset());
+    }
+    for (auto it = tensor_alias_backward_map.begin(); it != tensor_alias_backward_map.end(); it++)
+    {
+        it->first->set_pool_offset(it->second->get_pool_offset());
     }
 
     NGRAPH_DEBUG << "cpu_memory_assignemnt: max allocated for mm is " << mm.max_allocated();
