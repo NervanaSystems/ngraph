@@ -126,7 +126,8 @@
 #include "ngraph/util.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED
-#include <mlsl.hpp>
+// #include <mlsl.hpp>
+#include <mpi.h>
 
 #include "ngraph/op/allreduce.hpp"
 #endif
@@ -203,22 +204,28 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::AllReduce)
             {
                 const element::Type& element_type = args[0].get_element_type();
-                auto data_type = "MLSL::DT_FLOAT";
+                // auto data_type = "MLSL::DT_FLOAT";
+                auto data_type = "MPI_FLOAT";
 
                 if (element_type == element::f32)
                 {
-                    data_type = "MLSL::DT_FLOAT";
+                    data_type = "MPI_FLOAT";
+                    // data_type = "MLSL::DT_FLOAT";
                 }
                 else if (element_type == element::f64)
                 {
-                    data_type = "MLSL::DT_DOUBLE";
+                    data_type = "MPI_DOUBLE";
+                    // data_type = "MLSL::DT_DOUBLE";
                 }
 
                 writer.block_begin();
-                writer << "MLSL::CommReq* req = ctx->mlsl_dist->AllReduce(" << args[0].get_name()
-                       << ", " << out[0].get_name() << ", " << out[0].get_size() << ", "
-                       << data_type << ", MLSL::RT_SUM, MLSL::GT_DATA);\n";
-                writer << "ctx->mlsl_env->Wait(req);\n";
+                writer << "MPI_Allreduce(" << args[0].get_name() << ", " << out[0].get_name()
+                       << ", " << out[0].get_size() << ", " << data_type
+                       << ", MPI_SUM, MPI_COMM_WORLD);\n";
+                // writer << "MLSL::CommReq* req = ctx->mlsl_dist->AllReduce(" << args[0].get_name()
+                //        << ", " << out[0].get_name() << ", " << out[0].get_size() << ", "
+                //        << data_type << ", MLSL::RT_SUM, MLSL::GT_DATA);\n";
+                // writer << "ctx->mlsl_env->Wait(req);\n";
                 writer.block_end();
             }
 #endif
