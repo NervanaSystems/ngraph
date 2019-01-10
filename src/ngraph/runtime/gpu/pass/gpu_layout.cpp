@@ -197,7 +197,7 @@ bool runtime::gpu::pass::GPULayout::run_on_call_graph(const std::list<std::share
         auto handler = s_dispatcher.find(TI(n));
         if (handler != s_dispatcher.end())
         {
-            handler->second(m_external_function, node);
+            handler->second(m_compiled_function, node);
         }
     }
 

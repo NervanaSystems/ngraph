@@ -160,12 +160,8 @@ add_library(onnx_import STATIC
 
 set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
+add_dependencies(onnx_import_interface onnx::libonnx onnx::libonnx_proto)
 add_dependencies(onnx_import onnx_import_interface)
-
-if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
-    add_dependencies(onnx_import_interface protobuf::libprotobuf)
-    add_dependencies(onnx_import_interface onnx::libonnx_proto)
-endif()
 
 set_property(TARGET onnx_import PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(onnx_import PRIVATE ${ONNX_IMPORT_INCLUDE_DIR} ${NGRAPH_INCLUDE_PATH}
