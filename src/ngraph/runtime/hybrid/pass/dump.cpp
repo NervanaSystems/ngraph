@@ -57,6 +57,7 @@ bool runtime::hybrid::pass::Dump::run_on_module(vector<shared_ptr<Function>>& fu
                 }
                 out << join(outputs);
                 out << "\n";
+                out << "    " << node->get_placement_index() << " Placement\n";
 
                 for (const descriptor::Tensor* tensor : node->liveness_new_list)
                 {
