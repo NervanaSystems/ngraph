@@ -18,7 +18,8 @@
 #include <sstream>
 
 // #include <mlsl.hpp>
-#include <mpi.h>
+// #include <mpi.h>
+#include "ngraph/distributed.hpp"
 
 #include "gtest/gtest.h"
 
@@ -31,7 +32,8 @@ using namespace std;
 using namespace ngraph;
 
 TEST(distributed_${BACKEND_NAME}, allreduce)
-{
+{   
+    Distributed dist_instance; 
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});
@@ -39,8 +41,8 @@ TEST(distributed_${BACKEND_NAME}, allreduce)
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // auto comm_size = MLSL::Environment::GetEnv().GetProcessCount();
     int comm_size;
-
-    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    comm_size = dist_instance.get_size();
+    // MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 
     auto v = vector<float>{1, 2, 3, 4};
     auto a = backend->create_tensor(element::f32, shape);
