@@ -325,9 +325,9 @@ endif()
 
 include(cmake/external_tbb.cmake)
 if (NGRAPH_DISTRIBUTED_ENABLE)
-    if (NGRAPH_CPU_ENABLE)
-        include(cmake/external_mlsl.cmake)
-    endif()
+    # if (NGRAPH_CPU_ENABLE)
+    #     include(cmake/external_mlsl.cmake)
+    # endif()
 endif()
 
 

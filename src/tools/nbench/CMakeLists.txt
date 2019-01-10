@@ -47,8 +47,15 @@ if (NGRAPH_PLAIDML_ENABLE)
 endif()
 
 if (NGRAPH_DISTRIBUTED_ENABLE)
-    target_compile_definitions(nbench PRIVATE NGRAPH_DISTRIBUTED)
-    target_link_libraries(nbench libmlsl)
+    # target_compile_definitions(nbench PRIVATE NGRAPH_DISTRIBUTED)
+    # target_link_libraries(nbench libmlsl)
+    find_package(MPI REQUIRED)
+        target_compile_definitions(nbench
+            PRIVATE NGRAPH_DISTRIBUTED)
+        # target_include_directories(nbench
+        #     SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+        target_link_libraries(nbench
+             ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
 endif()
 
 install(TARGETS nbench RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})

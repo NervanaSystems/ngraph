@@ -196,9 +196,16 @@ if (NGRAPH_CPU_ENABLE)
     endif()
 
     if(NGRAPH_DISTRIBUTED_ENABLE)
-        target_compile_definitions(cpu_backend PRIVATE NGRAPH_DISTRIBUTED)
-        target_include_directories(cpu_backend SYSTEM PRIVATE libmlsl)
-        target_link_libraries(cpu_backend PRIVATE libmlsl)
+        # target_compile_definitions(cpu_backend PRIVATE NGRAPH_DISTRIBUTED)
+        # target_include_directories(cpu_backend SYSTEM PRIVATE libmlsl)
+        # target_link_libraries(cpu_backend PRIVATE libmlsl)
+        find_package(MPI REQUIRED)
+        target_compile_definitions(cpu_backend
+            PRIVATE NGRAPH_DISTRIBUTED)
+        target_include_directories(cpu_backend
+            SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+        target_link_libraries(cpu_backend
+            PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
     endif()
 
     add_dependencies(cpu_backend ext_mkldnn ext_eigen)

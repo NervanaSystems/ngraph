@@ -476,10 +476,10 @@ void runtime::cpu::CPU_ExternalFunction::compile()
         writer << "#include <tbb/flow_graph.h>";
     }
 
-#ifdef NGRAPH_DISTRIBUTED
-    writer << "#include <mlsl.hpp>\n";
-    writer << "#define NGRAPH_DISTRIBUTED\n";
-#endif
+// #ifdef NGRAPH_DISTRIBUTED
+//     writer << "#include <mlsl.hpp>\n";
+//     writer << "#define NGRAPH_DISTRIBUTED\n";
+// #endif
 
     writer +=
         R"(
@@ -533,6 +533,10 @@ using namespace ngraph::runtime::cpu::eigen;
 using namespace ngraph::runtime;
 
 )";
+
+#ifdef NGRAPH_DISTRIBUTED
+    writer << "#include <mpi.h>\n\n";
+#endif
 
     string pch_header_source = writer.get_code();
 

@@ -15,7 +15,8 @@
 //*****************************************************************************
 #ifdef NGRAPH_DISTRIBUTED
 
-#include <mlsl.hpp>
+// #include <mlsl.hpp>
+#include <mpi.h>
 
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
@@ -37,22 +38,27 @@ namespace ngraph
                 auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
                 auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
                 auto count = static_cast<int>(out[0].get_size());
-                auto data_type = MLSL::DT_FLOAT;
+                auto data_type = MPI_FLOAT;
+                // auto data_type = MLSL::DT_FLOAT;
 
                 if (args[0].get_element_type() == element::f32)
-                {
-                    data_type = MLSL::DT_FLOAT;
+                {   
+                    data_type = MPI_FLOAT;
+                    // data_type = MLSL::DT_FLOAT;
                 }
                 else if (args[0].get_element_type() == element::f64)
-                {
-                    data_type = MLSL::DT_DOUBLE;
+                {   
+                    data_type = MPI_DOUBLE;
+                    // data_type = MLSL::DT_DOUBLE;
                 }
 
                 auto functor = [&, count, data_type](CPURuntimeContext* ctx,
                                                      CPUExecutionContext* ectx) {
-                    MLSL::CommReq* req = ctx->mlsl_dist->AllReduce(
-                        arg_tensor, out_tensor, count, data_type, MLSL::RT_SUM, MLSL::GT_DATA);
-                    ctx->mlsl_env->Wait(req);
+                    MPI_Allreduce(
+                        arg_tensor, out_tensor, count, data_type, MPI_SUM, MPI_COMM_WORLD);
+                    // MLSL::CommReq* req = ctx->mlsl_dist->AllReduce(
+                    //     arg_tensor, out_tensor, count, data_type, MLSL::RT_SUM, MLSL::GT_DATA);
+                    // ctx->mlsl_env->Wait(req);
                 };
 
                 functors.emplace_back(functor);
