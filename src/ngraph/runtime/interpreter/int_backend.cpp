@@ -153,13 +153,7 @@ bool runtime::interpreter::INTBackend::call(shared_ptr<Function> function,
         {
             continue;
         }
-        // if (type_id == OP_TYPEID::Constant)
-        // {
-        //     const op::Constant* c = static_cast<const op::Constant*>(op);
-        //     descriptor::Tensor* tensor = op->get_output_tensor_ptr(0).get();
-        //     tensor_map.insert({tensor, const_cast<void*>(c->get_data_ptr())});
-        //     continue;
-        // }
+
         // get op inputs from map
         vector<shared_ptr<HostTensor>> op_inputs;
         for (const descriptor::Input& input : op->get_inputs())
