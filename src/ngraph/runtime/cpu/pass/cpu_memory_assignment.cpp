@@ -52,6 +52,37 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
     // backward in place ops: concat
     unordered_map<descriptor::Tensor*, descriptor::Tensor*> tensor_alias_backward_map;
 
+    auto propagate_in_place_concat = [&](shared_ptr<ngraph::op::Concat> concat, descriptor::Tensor* output_tensor) {
+        std::deque<std::shared_ptr<ngraph::op::Concat>> stack;
+        stack.push_front(concat);
+
+        while (stack.size() > 0)
+        {
+            auto it = stack.front();
+            stack.pop_front();
+            if (auto op_annotations = it->get_op_annotations())
+            {
+                auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
+                if (in_place_oi_pairs.size() > 0)
+                {
+                    for (auto arg : it->get_arguments())
+                    {
+                        auto input_tensor = &arg->get_output_tensor();
+                        if (tensor_alias_map.find(input_tensor) == tensor_alias_map.end())
+                        {
+                            tensor_alias_backward_map[input_tensor] = output_tensor;
+                            if (arg->description() == "Concat")
+                            {
+                                auto arg_concat = std::static_pointer_cast<ngraph::op::Concat>(arg);
+                                stack.push_front(arg_concat);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
     for (auto it = ops.begin(); it != ops.end(); it++)
     {
         const shared_ptr<Node>& node = *it;
@@ -88,40 +119,7 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                                     {
                                         auto arg_concat =
                                             static_pointer_cast<ngraph::op::Concat>(arg);
-                                        std::deque<std::shared_ptr<ngraph::op::Concat>> stack;
-                                        stack.push_front(arg_concat);
-
-                                        while (stack.size() > 0)
-                                        {
-                                            auto it = stack.front();
-                                            stack.pop_front();
-                                            if (auto op_annotations = it->get_op_annotations())
-                                            {
-                                                auto in_place_oi_pairs =
-                                                    op_annotations->get_in_place_oi_pairs();
-                                                if (in_place_oi_pairs.size() > 0)
-                                                {
-                                                    for (auto arg : it->get_arguments())
-                                                    {
-                                                        auto input_tensor =
-                                                            &arg->get_output_tensor();
-                                                        if (tensor_alias_map.find(input_tensor) ==
-                                                            tensor_alias_map.end())
-                                                        {
-                                                            tensor_alias_backward_map
-                                                                [input_tensor] = output_tensor;
-                                                            if (arg->description() == "Concat")
-                                                            {
-                                                                auto arg_concat =
-                                                                    std::static_pointer_cast<
-                                                                        ngraph::op::Concat>(arg);
-                                                                stack.push_front(arg_concat);
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
+                                        propagate_in_place_concat(arg_concat, output_tensor);
                                     }
                                 }
                             }
