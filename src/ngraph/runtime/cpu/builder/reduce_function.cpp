@@ -16,7 +16,6 @@
 
 #include "ngraph/op/all.hpp"
 #include "ngraph/op/any.hpp"
-#include "ngraph/op/reduce.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
