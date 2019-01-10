@@ -87,8 +87,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         set(MKLDNN_FLAG "${MKLDNN_FLAG} -Wno-unused-result -Wno-unused-value")
     endif()
 endif()
-set(MKLDNN_CFLAG "${CMAKE_C_FLAGS} ${MKLDNN_FLAG}")
-set(MKLDNN_CXXFLAG "${CMAKE_CXX_FLAGS} ${MKLDNN_FLAG}")
 set(MKLDNN_DEPENDS ext_mkl)
 
 ExternalProject_Add(
@@ -146,9 +144,7 @@ ExternalProject_Add(
         -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
         -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
         -DMKLROOT=${MKL_ROOT}
-        "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH}"
-        -DCMAKE_C_FLAGS=${MKLDNN_CFLAG}
-        -DCMAKE_CXX_FLAGS=${MKLDNN_CXXFLAG}
+        "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH} ${MKLDNN_FLAG}"
     TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
     STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
     DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
