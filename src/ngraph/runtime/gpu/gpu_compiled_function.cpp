@@ -168,7 +168,6 @@ void runtime::gpu::GPUCompiledFunction::compile()
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
 #endif
     pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
-    pass_manager.register_pass<ngraph::pass::AnyAllReplacement>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
