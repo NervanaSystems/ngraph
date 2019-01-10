@@ -56,6 +56,7 @@ set(SRC
     builder/relu.cpp
     builder/pad.cpp
     builder/product.cpp
+    builder/reduce_function.cpp
     builder/replace_slice.cpp
     builder/quantization.cpp
     builder/quantized_avg_pool.cpp
