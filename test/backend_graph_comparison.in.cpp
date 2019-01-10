@@ -39,7 +39,7 @@ static string s_manifest = "${MANIFEST}";
 
 // Currently only used to test NVIDIAGPU backend, but is expected to be useful
 // testing other backends (except CPU which is used as the reference backend)
-#if defined(TESTING_GPU_BACKEND)
+#if defined(TESTING_NVIDIAGPU_BACKEND)
 class serialized_graph_files : public ::testing::TestWithParam<string>
 {
 public:
