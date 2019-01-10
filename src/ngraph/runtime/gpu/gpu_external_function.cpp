@@ -98,10 +98,6 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
-<<<<<<< HEAD
-#include "ngraph/pass/algebraic_simplification.hpp"
-=======
->>>>>>> origin/master
 #include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
@@ -558,41 +554,7 @@ void runtime::gpu::GPUExternalFunction::store_emitted_functions(const string& co
 
 void runtime::gpu::GPUExternalFunction::add_passes(ngraph::pass::Manager& pass_manager)
 {
-<<<<<<< HEAD
-    if (m_is_compiled)
-    {
-        return;
-    }
-    std::unique_lock<std::mutex> lock(s_compilation);
-
-    m_function_name = m_function->get_name();
-
-    auto allocator = std::make_shared<runtime::gpu::GPUAllocator>(
-        m_shared_context->m_primitive_emitter->get_memory_allocator());
-
-    ngraph::pass::Manager pass_manager;
-#if CUDNN_VERSION >= 7200
-    // recurrent network fusion
-    pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
-    pass_manager.register_pass<runtime::gpu::pass::RNNFusion>();
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-    pass_manager.register_pass<runtime::gpu::pass::MultiLayerRNNFusion>();
-#else
-    pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
-#endif
-    pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
-    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
-    pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
-    pass_manager.register_pass<ngraph::pass::Liveness>();
-    pass_manager.register_pass<ngraph::pass::MemoryLayout>(s_memory_pool_alignment);
-    pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(
-        *allocator, m_tensor_memory_buffers);
-    std::string common_function_string;
-    auto femitter = bind(&ngraph::runtime::gpu::GPU_ExternalFunction::emit_op_as_function,
-=======
     auto femitter = bind(&ngraph::runtime::gpu::GPUExternalFunction::emit_op_as_function,
->>>>>>> origin/master
                          this,
                          placeholders::_1,
                          placeholders::_2);
