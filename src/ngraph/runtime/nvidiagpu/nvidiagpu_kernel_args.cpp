@@ -22,7 +22,7 @@
 
 using namespace ngraph;
 
-const std::unordered_map<std::type_index, std::string> runtime::nvidiagpu::NVKernelArgs::type_names = {
+const std::unordered_map<std::type_index, std::string> runtime::nvidiagpu::KernelArgs::type_names = {
     {TI(size_t), "size_t"},
     {TI(char), "char"},
     {TI(float), "float"},
@@ -36,14 +36,14 @@ const std::unordered_map<std::type_index, std::string> runtime::nvidiagpu::NVKer
     {TI(uint32_t), "uint32_t"},
     {TI(uint64_t), "uint64_t"}};
 
-runtime::nvidiagpu::NVKernelArgs::NVKernelArgs(const std::shared_ptr<HostParameters>& params)
+runtime::nvidiagpu::KernelArgs::KernelArgs(const std::shared_ptr<HostParameters>& params)
     : m_signature_generated(false)
     , m_host_parameters(params)
 {
     m_input_signature << "(";
 }
 
-runtime::nvidiagpu::NVKernelArgs::NVKernelArgs(const NVKernelArgs& args)
+runtime::nvidiagpu::KernelArgs::KernelArgs(const KernelArgs& args)
 {
     m_signature_generated = args.m_signature_generated;
     m_argument_list = args.m_argument_list;
@@ -52,7 +52,7 @@ runtime::nvidiagpu::NVKernelArgs::NVKernelArgs(const NVKernelArgs& args)
     m_host_parameters = args.m_host_parameters;
 }
 
-void runtime::nvidiagpu::NVKernelArgs::validate()
+void runtime::nvidiagpu::KernelArgs::validate()
 {
     if (m_signature_generated)
     {
@@ -62,7 +62,7 @@ void runtime::nvidiagpu::NVKernelArgs::validate()
     }
 }
 
-void runtime::nvidiagpu::NVKernelArgs::add_to_signature(const std::string& type,
+void runtime::nvidiagpu::KernelArgs::add_to_signature(const std::string& type,
                                                     const std::string& name)
 {
     if (m_input_signature.str() == "(")
@@ -75,7 +75,7 @@ void runtime::nvidiagpu::NVKernelArgs::add_to_signature(const std::string& type,
     }
 }
 
-runtime::nvidiagpu::NVKernelArgs& runtime::nvidiagpu::NVKernelArgs::add_placeholder(const std::string& type,
+runtime::nvidiagpu::KernelArgs& runtime::nvidiagpu::KernelArgs::add_placeholder(const std::string& type,
                                                                             const std::string& name)
 {
     validate();
@@ -85,7 +85,7 @@ runtime::nvidiagpu::NVKernelArgs& runtime::nvidiagpu::NVKernelArgs::add_placehol
     return *this;
 }
 
-runtime::nvidiagpu::NVKernelArgs& runtime::nvidiagpu::NVKernelArgs::resolve_placeholder(size_t arg_num,
+runtime::nvidiagpu::KernelArgs& runtime::nvidiagpu::KernelArgs::resolve_placeholder(size_t arg_num,
                                                                                 void* address)
 {
     if (m_placeholder_positions.at(arg_num))
@@ -99,7 +99,7 @@ runtime::nvidiagpu::NVKernelArgs& runtime::nvidiagpu::NVKernelArgs::resolve_plac
     return *this;
 }
 
-std::string runtime::nvidiagpu::NVKernelArgs::get_input_signature()
+std::string runtime::nvidiagpu::KernelArgs::get_input_signature()
 {
     if (m_signature_generated == false)
     {

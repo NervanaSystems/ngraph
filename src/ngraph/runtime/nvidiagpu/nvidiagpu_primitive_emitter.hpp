@@ -51,7 +51,7 @@ namespace ngraph
                 NVAllocator get_memory_allocator() { return m_memory_manager.build_allocator(); }
                 void allocate_primitive_memory() { m_memory_manager.allocate(); }
                 size_t sizeof_device_allocation() { return m_memory_manager.get_allocation_size(); }
-                NVKernelArgs add_kernel_args() { return NVKernelArgs(m_host_parameters); }
+                KernelArgs add_kernel_args() { return KernelArgs(m_host_parameters); }
                 size_t register_primitive(std::unique_ptr<nvidiagpu::primitive>&, std::string);
 
             private:

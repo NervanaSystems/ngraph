@@ -36,22 +36,22 @@ namespace ngraph
             template <typename T>
             struct is_container;
 
-            class NVKernelArgs
+            class KernelArgs
             {
             public:
-                NVKernelArgs(const std::shared_ptr<HostParameters>& params);
-                NVKernelArgs(const NVKernelArgs& args);
+                KernelArgs(const std::shared_ptr<HostParameters>& params);
+                KernelArgs(const KernelArgs& args);
 
                 //
                 // Add a placeholder parameter for a tensor pointer which will be resolved at runtime.
                 //
-                NVKernelArgs& add_placeholder(const std::string& type, const std::string& name);
+                KernelArgs& add_placeholder(const std::string& type, const std::string& name);
 
                 //
                 // Add a POD argument to the kernel signature and argument list.
                 //
                 template <typename T>
-                typename std::enable_if<!is_container<T>::value, NVKernelArgs&>::type
+                typename std::enable_if<!is_container<T>::value, KernelArgs&>::type
                     add(const std::string& name, const T& arg)
                 {
                     return add_argument(name, arg);
@@ -62,7 +62,7 @@ namespace ngraph
                 // and adding each individual arg as kernel register arguments.
                 //
                 template <typename T>
-                typename std::enable_if<is_container<T>::value, NVKernelArgs&>::type
+                typename std::enable_if<is_container<T>::value, KernelArgs&>::type
                     add(const std::string& name, const T& arg)
                 {
                     return add_arguments(name, arg);
@@ -75,7 +75,7 @@ namespace ngraph
                 //
                 // Replace placeholder argument with specifed address.
                 //
-                NVKernelArgs& resolve_placeholder(size_t arg_num, void* address);
+                KernelArgs& resolve_placeholder(size_t arg_num, void* address);
 
                 //
                 // Retrieve the kernel parameter signature given the added kernel arguments.
@@ -88,7 +88,7 @@ namespace ngraph
                 // and add its signature to the kernel input signature.
                 //
                 template <typename T>
-                NVKernelArgs& add_argument(const std::string& name, const T& arg)
+                KernelArgs& add_argument(const std::string& name, const T& arg)
                 {
                     validate();
                     void* host_arg = m_host_parameters->cache(arg);
@@ -102,7 +102,7 @@ namespace ngraph
                 // Same as above for a container type T.
                 //
                 template <typename T>
-                NVKernelArgs& add_arguments(const std::string& name, const T& args)
+                KernelArgs& add_arguments(const std::string& name, const T& args)
                 {
                     validate();
 

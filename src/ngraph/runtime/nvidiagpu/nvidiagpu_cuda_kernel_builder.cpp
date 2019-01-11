@@ -62,7 +62,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_elementwise_op(
 void runtime::nvidiagpu::CudaKernelBuilder::get_memset_op(codegen::CodeWriter& writer,
                                                       const std::string& name,
                                                       const std::string& data_type,
-                                                      runtime::nvidiagpu::NVKernelArgs& args)
+                                                      runtime::nvidiagpu::KernelArgs& args)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -83,7 +83,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_memset_op(codegen::CodeWriter& w
 
 void runtime::nvidiagpu::CudaKernelBuilder::get_cudnn_bn_inv_var_op(codegen::CodeWriter& writer,
                                                                 const std::string& name,
-                                                                runtime::nvidiagpu::NVKernelArgs& args)
+                                                                runtime::nvidiagpu::KernelArgs& args)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
     writer.block_begin();
@@ -105,7 +105,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_cudnn_bn_inv_var_op(codegen::Cod
 void runtime::nvidiagpu::CudaKernelBuilder::get_ew_collective_op(
     codegen::CodeWriter& writer,
     const std::string& name,
-    runtime::nvidiagpu::NVKernelArgs& args,
+    runtime::nvidiagpu::KernelArgs& args,
     const std::string& op,
     const std::string& reduce_op,
     const std::vector<std::string>& data_types,
@@ -184,7 +184,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_topk(codegen::CodeWriter& writer
                                                  const std::string& name,
                                                  const std::vector<std::string>& dtypes,
                                                  bool compute_max,
-                                                 runtime::nvidiagpu::NVKernelArgs& args,
+                                                 runtime::nvidiagpu::KernelArgs& args,
                                                  bool use_malloc)
 {
     writer << "struct Entry\n";
@@ -306,7 +306,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_topk(codegen::CodeWriter& writer
 
 void runtime::nvidiagpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& writer,
                                                        const std::string& name,
-                                                       runtime::nvidiagpu::NVKernelArgs& args,
+                                                       runtime::nvidiagpu::KernelArgs& args,
                                                        const std::vector<std::string>& data_types,
                                                        size_t out_rank,
                                                        size_t reduce_rank)
@@ -514,7 +514,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_softmax_op(codegen::CodeWriter& 
 void runtime::nvidiagpu::CudaKernelBuilder::get_softmax_block_reduce_op(
     codegen::CodeWriter& writer,
     const std::string& name,
-    runtime::nvidiagpu::NVKernelArgs& args,
+    runtime::nvidiagpu::KernelArgs& args,
     const std::vector<std::string>& data_types,
     size_t non_reduce_rank,
     size_t reduce_rank,
@@ -776,7 +776,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_softmax_block_reduce_op(
 void runtime::nvidiagpu::CudaKernelBuilder::get_reduce_to_nd_op(
     codegen::CodeWriter& writer,
     const std::string& name,
-    runtime::nvidiagpu::NVKernelArgs& args,
+    runtime::nvidiagpu::KernelArgs& args,
     const std::vector<std::string>& data_types,
     const std::string& reduce_op,
     size_t non_reduce_rank,
@@ -885,7 +885,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_reduce_to_nd_op(
 void runtime::nvidiagpu::CudaKernelBuilder::get_reduce_to_scalar_op(
     codegen::CodeWriter& writer,
     const std::string& name,
-    runtime::nvidiagpu::NVKernelArgs& args,
+    runtime::nvidiagpu::KernelArgs& args,
     const std::vector<std::string>& data_types,
     const std::string& reduce_op,
     uint32_t block_size_x)
@@ -1002,7 +1002,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_reduce_to_scalar_op(
 void runtime::nvidiagpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
     codegen::CodeWriter& writer,
     const std::string& name,
-    runtime::nvidiagpu::NVKernelArgs& args,
+    runtime::nvidiagpu::KernelArgs& args,
     const std::vector<std::string>& data_types,
     const std::string& reduce_op)
 {
@@ -1069,7 +1069,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
 void runtime::nvidiagpu::CudaKernelBuilder::get_broadcast_op(codegen::CodeWriter& writer,
                                                          const std::string& name,
                                                          const std::string& data_type,
-                                                         runtime::nvidiagpu::NVKernelArgs& args,
+                                                         runtime::nvidiagpu::KernelArgs& args,
                                                          const size_t rank)
 {
     writer << runtime::nvidiagpu::nvrtc::helpers();
@@ -1129,7 +1129,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_onehot_op(codegen::CodeWriter& w
 
 void runtime::nvidiagpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& writer,
                                                        const std::string& name,
-                                                       runtime::nvidiagpu::NVKernelArgs& args,
+                                                       runtime::nvidiagpu::KernelArgs& args,
                                                        const std::array<std::string, 2>& data_types,
                                                        size_t rank)
 {
@@ -1160,7 +1160,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_reshape_op(codegen::CodeWriter& 
 
 void runtime::nvidiagpu::CudaKernelBuilder::get_reshape_op_2d(codegen::CodeWriter& writer,
                                                           const std::string& name,
-                                                          runtime::nvidiagpu::NVKernelArgs& args,
+                                                          runtime::nvidiagpu::KernelArgs& args,
                                                           const std::string& data_type,
                                                           uint32_t block_size)
 {
@@ -1209,7 +1209,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_reshape_op_2d(codegen::CodeWrite
 
 void runtime::nvidiagpu::CudaKernelBuilder::get_reshape_op_3d(codegen::CodeWriter& writer,
                                                           const std::string& name,
-                                                          runtime::nvidiagpu::NVKernelArgs& args,
+                                                          runtime::nvidiagpu::KernelArgs& args,
                                                           const std::string& data_type,
                                                           const std::vector<uint32_t>& order,
                                                           const std::vector<uint32_t>& block_size)
@@ -1318,7 +1318,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_concat_op(codegen::CodeWriter& w
 
 void runtime::nvidiagpu::CudaKernelBuilder::get_pad_op(codegen::CodeWriter& writer,
                                                    const std::string& name,
-                                                   NVKernelArgs& args,
+                                                   KernelArgs& args,
                                                    size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
@@ -1351,7 +1351,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_pad_op(codegen::CodeWriter& writ
 
 void runtime::nvidiagpu::CudaKernelBuilder::get_pad_fill_op(codegen::CodeWriter& writer,
                                                         const std::string& name,
-                                                        NVKernelArgs& args,
+                                                        KernelArgs& args,
                                                         size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
@@ -1566,7 +1566,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_reduce_window_op(
 
 void runtime::nvidiagpu::CudaKernelBuilder::get_replace_slice_op(codegen::CodeWriter& writer,
                                                              const std::string& name,
-                                                             runtime::nvidiagpu::NVKernelArgs& args,
+                                                             runtime::nvidiagpu::KernelArgs& args,
                                                              const size_t rank)
 {
     writer << "extern \"C\" __global__ void cuda_" << name << args.get_input_signature();
@@ -1767,7 +1767,7 @@ void runtime::nvidiagpu::CudaKernelBuilder::get_convolution_forward(
     codegen::CodeWriter& writer,
     const std::string& name,
     const std::array<std::string, 3>& data_types,
-    runtime::nvidiagpu::NVKernelArgs& args,
+    runtime::nvidiagpu::KernelArgs& args,
     int N,
     int K,
     int rank,
