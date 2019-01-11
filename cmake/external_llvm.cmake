@@ -24,8 +24,9 @@ endif()
 
 ExternalProject_Add(
     ext_clang
-    GIT_REPOSITORY https://github.com/llvm-mirror/clang.git
-    GIT_TAG 26cac19a0d622afc91cd52a002921074bccc6a27
+    URL http://releases.llvm.org/5.0.2/cfe-5.0.2.src.tar.xz
+    URL_HASH SHA1=6581765ec52f8a6354ab56a8e55a8cac1aa5e388
+    DOWNLOAD_NO_PROGRESS TRUE
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
@@ -38,8 +39,9 @@ set(CLANG_SOURCE_DIR ${SOURCE_DIR})
 
 ExternalProject_Add(
     ext_openmp
-    GIT_REPOSITORY https://github.com/llvm-mirror/openmp.git
-    GIT_TAG 29b515e1e6d26b5b0d32d47d28dcdb4b8a11470d
+    URL http://releases.llvm.org/5.0.2/openmp-5.0.2.src.tar.xz
+    URL_HASH SHA1=0e78a7646b63e074e31b6a65e15446af0bdf3c07
+    DOWNLOAD_NO_PROGRESS TRUE
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
@@ -59,8 +61,9 @@ endif()
 ExternalProject_Add(
     ext_llvm
     DEPENDS ext_clang ext_openmp
-    GIT_REPOSITORY https://github.com/llvm-mirror/llvm.git
-    GIT_TAG da4a2839d80ac52958be0129b871beedfe90136e
+    URL http://releases.llvm.org/5.0.2/llvm-5.0.2.src.tar.xz
+    URL_HASH SHA1=576d005305335049b89608d897d7ec184d99c6e1
+    DOWNLOAD_NO_PROGRESS TRUE
     CMAKE_GENERATOR ${CMAKE_GENERATOR}
     CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
     CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}

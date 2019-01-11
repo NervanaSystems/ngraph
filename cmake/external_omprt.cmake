@@ -31,6 +31,8 @@ ExternalProject_Add(
     ext_omprt
     DEPENDS ext_mkldnn
     URL http://releases.llvm.org/7.0.1/openmp-7.0.1.src.tar.xz
+    URL_HASH SHA1=3b931dcafbe6e621c9d99617235fd63f222c2ba2
+    DOWNLOAD_NO_PROGRESS TRUE
     CMAKE_ARGS
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
