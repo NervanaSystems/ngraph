@@ -586,7 +586,7 @@ std::string runtime::nvidiagpu::Emitter::emit_Dot(EMIT_ARGS)
 
 std::string runtime::nvidiagpu::Emitter::emit_EmbeddingLookup(EMIT_ARGS)
 {
-    throw ngraph_error("EmbeddingLookup is not yet implemented for NVIDIA NV");
+    throw ngraph_error("EmbeddingLookup is not yet implemented for NVIDIAGPU");
 }
 
 std::string runtime::nvidiagpu::Emitter::emit_Equal(EMIT_ARGS)
@@ -613,7 +613,7 @@ std::string runtime::nvidiagpu::Emitter::emit_FunctionCall(EMIT_ARGS)
 
 std::string runtime::nvidiagpu::Emitter::emit_GenerateMask(EMIT_ARGS)
 {
-    throw ngraph_error("GenerateMask is not supported yet on NVIDIA NV");
+    throw ngraph_error("GenerateMask is not supported yet on NVIDIAGPU");
 }
 
 std::string runtime::nvidiagpu::Emitter::emit_GetOutputElement(EMIT_ARGS)

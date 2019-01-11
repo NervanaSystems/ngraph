@@ -29,7 +29,7 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            /// \brief ngraph::CoordinateDiff for a tensor resident on NVIDIA GPU.
+            /// \brief ngraph::CoordinateDiff for a tensor resident on NVIDIAGPU.
             class CoordinateDiff : public std::vector<int32_t>
             {
             public:

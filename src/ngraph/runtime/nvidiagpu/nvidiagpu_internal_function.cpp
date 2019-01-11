@@ -453,7 +453,7 @@ void runtime::nvidiagpu::InternalFunction::propagate_in_place_input(
 
     //                     m_variable_name_map[output_tensor.get_name()] = input_name;
 
-    //                     NGRAPH_DEBUG << "NV codegen: Forwarding " << input_name << " through "
+    //                     NGRAPH_DEBUG << "NVIDIAGPU codegen: Forwarding " << input_name << " through "
     //                                  << output_tensor.get_name();
     //                     stack.push_back(&c_op->get_outputs().at(output_index));
     //                 }

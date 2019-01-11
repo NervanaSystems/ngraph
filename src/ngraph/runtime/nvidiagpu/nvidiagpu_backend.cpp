@@ -148,7 +148,7 @@ void runtime::nvidiagpu::Backend::initialize_io(void** target,
         }
         else
         {
-            throw invalid_argument("Tensors passed to NV backend must be NV Tensors");
+            throw invalid_argument("Tensors passed to NVIDIAGPU backend must be NVIDIAGPU Tensors");
         }
     }
 }

@@ -9,7 +9,7 @@ generate_mask
 select_and_scatter_3d_without_overlap
 select_and_scatter_with_overlap
 select_and_scatter_without_overlap
-# custom_mem is not implemented on NVGPU
+# custom_mem is not implemented on NVIDIAGPU
 tensorview_custom_mem
 # integer is not supported by cuDNN on backward pooling
 backwards_maxpool_n4_c1_hw4_2x2_max
