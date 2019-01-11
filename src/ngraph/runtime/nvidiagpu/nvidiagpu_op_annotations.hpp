@@ -25,13 +25,13 @@ namespace ngraph
         namespace nvidiagpu
         {
             /// \brief Annotations added to graph ops by NV backend passes
-            class NVOpAnnotations : public ngraph::op::util::OpAnnotations
+            class NVGPUOpAnnotations : public ngraph::op::util::OpAnnotations
             {
             public:
-                virtual ~NVOpAnnotations() = default;
+                virtual ~NVGPUOpAnnotations() = default;
             };
 
-            class BatchNormBackpropAnnotations : public NVOpAnnotations
+            class BatchNormBackpropAnnotations : public NVGPUOpAnnotations
             {
             public:
                 ~BatchNormBackpropAnnotations() = default;
