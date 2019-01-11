@@ -28,7 +28,7 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            class nvidiagpu::TensorWrapper;
+            class TensorWrapper;
             std::ostream& operator<<(std::ostream& out,
                                      const ngraph::runtime::nvidiagpu::TensorWrapper& obj);
         }
@@ -46,8 +46,8 @@ public:
         OUTPUT,
         UNKNOWN
     };
-    nvidiagpu::TensorWrapper(const std::shared_ptr<descriptor::Tensor>&, const std::string& alias = "");
-    nvidiagpu::TensorWrapper(const std::shared_ptr<descriptor::Tensor>&,
+    TensorWrapper(const std::shared_ptr<descriptor::Tensor>&, const std::string& alias = "");
+    TensorWrapper(const std::shared_ptr<descriptor::Tensor>&,
                     TensorType,
                     size_t,
                     const std::string& alias);
