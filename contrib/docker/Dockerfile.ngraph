@@ -35,7 +35,10 @@ RUN pip install --upgrade pip
 RUN pip install sphinx
 RUN pip install breathe
 
-# need numpy to successfully build docs for python_api
+# needed to successfully build docs for ng python-related API doc
+
+RUN pip install ngraph-core
+RUN pip install sphinxcontrib-autodoc
 RUN pip install numpy
 
 # release notes need this markdown extension
