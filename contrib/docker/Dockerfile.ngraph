@@ -31,7 +31,7 @@ RUN apt-get clean autoclean && \
     apt-get autoremove -y
 RUN pip install --upgrade pip
 
-# allows for make html build under the doc/source directory as an interim build process
+# allows the make html build as per conf.py
 RUN pip install sphinx
 RUN pip install breathe
 
