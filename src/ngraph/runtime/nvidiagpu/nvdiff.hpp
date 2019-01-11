@@ -25,61 +25,67 @@
 
 namespace ngraph
 {
-    /// \brief CoordinateDiff for a tensor resident on NVIDIA GPU.
-    class NVDiff : public std::vector<int32_t>
+    namespace runtime
     {
-    public:
-        NVDiff(const std::initializer_list<int32_t>& axis_lengths)
-            : std::vector<int32_t>(axis_lengths)
+        namespace nvidiagpu
         {
-        }
-
-        NVDiff(const std::vector<int32_t>& axis_lengths)
-            : std::vector<int32_t>(axis_lengths)
-        {
-        }
-
-        NVDiff(const NVDiff& axis_lengths)
-            : std::vector<int32_t>(axis_lengths)
-        {
-        }
-
-        explicit NVDiff(size_t n, int32_t initial_value = 0)
-            : std::vector<int32_t>(n, initial_value)
-        {
-        }
-
-        template <class InputIterator>
-        NVDiff(InputIterator first, InputIterator last)
-            : std::vector<int32_t>(first, last)
-        {
-        }
-
-        NVDiff() {}
-        NVDiff& operator=(const NVDiff& v)
-        {
-            static_cast<std::vector<int32_t>*>(this)->operator=(v);
-            return *this;
-        }
-
-        NVDiff& operator=(NVDiff&& v)
-        {
-            static_cast<std::vector<int32_t>*>(this)->operator=(v);
-            return *this;
-        }
-
-        NVDiff(const CoordinateDiff& coord)
-        {
-            for (auto const& dim : coord)
+            /// \brief ngraph::CoordinateDiff for a tensor resident on NVIDIA GPU.
+            class CoordinateDiff : public std::vector<int32_t>
             {
-                if (std::abs(dim) >> 32 != 0)
-                {
-                    throw std::runtime_error(
-                        "Request for CoordinateDiff which exceed the bitwidth available for "
-                        "NVDiffs (32)");
-                }
-                this->push_back(static_cast<int32_t>(dim));
-            }
+            public:
+                CoordinateDiff(const std::initializer_list<int32_t>& axis_lengths)
+                    : std::vector<int32_t>(axis_lengths)
+                    {
+                    }
+
+                CoordinateDiff(const std::vector<int32_t>& axis_lengths)
+                    : std::vector<int32_t>(axis_lengths)
+                    {
+                    }
+
+                CoordinateDiff(const CoordinateDiff& axis_lengths)
+                    : std::vector<int32_t>(axis_lengths)
+                    {
+                    }
+
+                explicit CoordinateDiff(size_t n, int32_t initial_value = 0)
+                    : std::vector<int32_t>(n, initial_value)
+                    {
+                    }
+
+                template <class InputIterator>
+                CoordinateDiff(InputIterator first, InputIterator last)
+                    : std::vector<int32_t>(first, last)
+                    {
+                    }
+
+                CoordinateDiff() {}
+                CoordinateDiff& operator=(const CoordinateDiff& v)
+                    {
+                        static_cast<std::vector<int32_t>*>(this)->operator=(v);
+                        return *this;
+                    }
+
+                CoordinateDiff& operator=(CoordinateDiff&& v)
+                    {
+                        static_cast<std::vector<int32_t>*>(this)->operator=(v);
+                        return *this;
+                    }
+
+                CoordinateDiff(const ngraph::CoordinateDiff& coord)
+                    {
+                        for (auto const& dim : coord)
+                        {
+                            if (std::abs(dim) >> 32 != 0)
+                            {
+                                throw std::runtime_error(
+                                    "Request for ngraph::CoordinateDiff which exceed the bitwidth available for "
+                                    "CoordinateDiffs (32)");
+                            }
+                            this->push_back(static_cast<int32_t>(dim));
+                        }
+                    }
+            };
         }
-    };
+    }
 }

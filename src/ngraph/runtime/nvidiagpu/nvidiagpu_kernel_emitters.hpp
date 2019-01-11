@@ -41,7 +41,7 @@ namespace ngraph
 
                 void emit_cudnnConvolutionDescriptor(codegen::CodeWriter& writer,
                                                      const std::string& name,
-                                                     const CoordinateDiff& padding,
+                                                     const ngraph::CoordinateDiff& padding,
                                                      const Strides& window_movement_strides,
                                                      const Strides& window_dilation_strides,
                                                      const std::string& mode,

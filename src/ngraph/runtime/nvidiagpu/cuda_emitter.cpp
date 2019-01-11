@@ -2761,7 +2761,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_convolution(const std::array<std::
                                                       runtime::nvidiagpu::Shape filter_stride,
                                                       runtime::nvidiagpu::Shape filter_dilation,
                                                       runtime::nvidiagpu::Shape input_dilation,
-                                                      NVDiff input_pad_below)
+                                                      runtime::nvidiagpu::CoordinateDiff input_pad_below)
 {
     // convolution is performed on tensors in the following format
     // input_shape:  C{di_1,...,du_n}N

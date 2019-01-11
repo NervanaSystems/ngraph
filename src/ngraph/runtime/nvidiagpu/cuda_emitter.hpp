@@ -182,7 +182,7 @@ namespace ngraph
                                          runtime::nvidiagpu::Shape filter_stride,
                                          runtime::nvidiagpu::Shape filter_dilation,
                                          runtime::nvidiagpu::Shape input_dilation,
-                                         NVDiff input_pad_below);
+                                         runtime::nvidiagpu::CoordinateDiff input_pad_below);
 
                 size_t build_concat(const std::string& dtype,
                                     std::vector<runtime::nvidiagpu::Shape> input_shapes,

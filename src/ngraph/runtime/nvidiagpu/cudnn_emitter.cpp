@@ -497,8 +497,8 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::Convolution* 
     Strides window_dilation_strides = node->get_window_dilation_strides();
     Strides window_movement_strides = node->get_window_movement_strides();
     Strides data_dilation_strides = node->get_data_dilation_strides();
-    CoordinateDiff padding_below_diff = node->get_padding_below();
-    CoordinateDiff padding_above_diff = node->get_padding_above();
+    ngraph::CoordinateDiff padding_below_diff = node->get_padding_below();
+    ngraph::CoordinateDiff padding_above_diff = node->get_padding_above();
     auto dtype = out[0].get_element_type().c_type_string();
 
     // construct hash to determine if kernel needs to be emitted
@@ -606,8 +606,8 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::ConvolutionBa
     Strides window_dilation_strides = node->get_window_dilation_strides_forward();
     Strides window_movement_strides = node->get_window_movement_strides_forward();
     Strides data_dilation_strides = node->get_data_dilation_strides_forward();
-    CoordinateDiff padding_below_diff = node->get_padding_below_forward();
-    CoordinateDiff padding_above_diff = node->get_padding_above_forward();
+    ngraph::CoordinateDiff padding_below_diff = node->get_padding_below_forward();
+    ngraph::CoordinateDiff padding_above_diff = node->get_padding_above_forward();
     auto input_type = args[0].get_element_type().c_type_string();
     auto output_type = out[0].get_element_type().c_type_string();
 
@@ -736,8 +736,8 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::ConvolutionBa
     Strides window_dilation_strides = node->get_window_dilation_strides_forward();
     Strides window_movement_strides = node->get_window_movement_strides_forward();
     Strides data_dilation_strides = node->get_data_dilation_strides_forward();
-    CoordinateDiff padding_below_diff = node->get_padding_below_forward();
-    CoordinateDiff padding_above_diff = node->get_padding_above_forward();
+    ngraph::CoordinateDiff padding_below_diff = node->get_padding_below_forward();
+    ngraph::CoordinateDiff padding_above_diff = node->get_padding_above_forward();
     auto input_type = args[0].get_element_type().c_type_string();
     auto output_type = out[0].get_element_type().c_type_string();
 
