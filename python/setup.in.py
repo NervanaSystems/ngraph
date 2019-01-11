@@ -25,7 +25,7 @@ from setuptools.command.build_ext import build_ext
 from setuptools.command.develop import develop
 from wheel.bdist_wheel import bdist_wheel
 from shutil import copyfile
-from distutils.errors import *
+from distutils.errors import CompileError
 import sys
 import setuptools
 import os
@@ -33,7 +33,9 @@ import distutils.ccompiler
 
 __version__ = '${NGRAPH_VERSION_SHORT}'
 
-# Parallel build from http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
+
+# Parallel build from
+# http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
 # monkey-patch for parallel compilation
 def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=None,
                      debug=0, extra_preargs=None, extra_postargs=None, depends=None):
@@ -53,39 +55,13 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
         return obj
     # convert to list, imap is evaluated on-demand
     if sys.version_info < (3, 6):
-        retval = [result for result in multiprocessing.pool.ThreadPool().imap(_single_compile, objects)]
+        retval = [res for res in multiprocessing.pool.ThreadPool().imap(_single_compile, objects)]
     else:
-        retval = [result for result in multiprocessing.pool.ThreadPool().map(_single_compile, objects)]
+        retval = [res for res in multiprocessing.pool.ThreadPool().map(_single_compile, objects)]
     return retval
 
 
-distutils.ccompiler.CCompiler.compile=parallelCCompile
-
-
-def has_flag(compiler, flagname):
-    """
-    Return a boolean indicating whether a flag name is supported on
-    the specified compiler.
-    """
-    import tempfile
-    retval = True
-    with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
-        f.write('int main (int argc, char **argv) { return 0; }')
-        try:
-            compiler.compile(sources=[f.name], extra_postargs=[flagname])
-        except CompileError:
-            retval = False
-    return retval
-
-
-def cpp_flag(compiler):
-    """Check and return the -std=c++11 compiler flag.
-
-    """
-    if has_flag(compiler, '-std=c++11'):
-        return '-std=c++11'
-    else:
-        raise RuntimeError('Unsupported compiler -- C++11 support is needed!')
+distutils.ccompiler.CCompiler.compile = parallelCCompile
 
 
 PYNGRAPH_SOURCE_DIR = '${CMAKE_CURRENT_SOURCE_DIR}'
@@ -95,13 +71,13 @@ if os.environ.get('PYBIND_HEADER_PATH'):
 NGRAPH_CPP_INCLUDE_DIR = '${NGRAPH_DEPS_INCLUDE}'
 NGRAPH_CPP_LIBRARY_DIR = '${NGRAPH_DEPS_LIB}'
 if os.environ.get('NGRAPH_CPP_BUILD_PATH'):
-    BUILD_PATH =  os.environ.get('NGRAPH_CPP_BUILD_PATH')
+    BUILD_PATH = os.environ.get('NGRAPH_CPP_BUILD_PATH')
     if BUILD_PATH not in ['INBUILD']:
         NGRAPH_CPP_INCLUDE_DIR = BUILD_PATH + '/' + '${CMAKE_INSTALL_INCLUDEDIR}'
         NGRAPH_CPP_LIBRARY_DIR = BUILD_PATH + '/' + '${CMAKE_INSTALL_LIBDIR}'
 NGRAPH_ONNX_IMPORT_ENABLE = '${NGRAPH_ONNX_IMPORT_ENABLE}'
 if os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE'):
-    NGRAPH_ONNX_IMPORT_ENABLE =  os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE')
+    NGRAPH_ONNX_IMPORT_ENABLE = os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE')
 
 
 pyngraph_prefix = PYNGRAPH_SOURCE_DIR + '/'
@@ -120,22 +96,24 @@ for root, dirs, files in os.walk(pyngraph_prefix):
             packages += [package_name]
             package_dir[package_name] = root
 
-include_dirs = [PYNGRAPH_SOURCE_DIR,
-                NGRAPH_CPP_INCLUDE_DIR,
-                PYBIND11_INCLUDE_DIR,
-               ]
+include_dirs = [PYNGRAPH_SOURCE_DIR, NGRAPH_CPP_INCLUDE_DIR, PYBIND11_INCLUDE_DIR]
 
-library_dirs = [NGRAPH_CPP_LIBRARY_DIR,
-               ]
+library_dirs = [NGRAPH_CPP_LIBRARY_DIR]
 
-libraries    = ['ngraph',
-               ]
+libraries = ['ngraph']
 
 extra_compile_args = []
 if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
     extra_compile_args.append('-DNGRAPH_ONNX_IMPORT_ENABLE')
 
 extra_link_args = []
+if sys.platform.startswith('linux'):
+    extra_link_args += ['-Wl,-rpath,$ORIGIN']
+    extra_link_args += ['-z', 'noexecstack']
+    extra_link_args += ['-z', 'relro']
+    extra_link_args += ['-z', 'now']
+elif sys.platform == 'darwin':
+    extra_link_args += ["-Wl,-rpath,@loader_path"]
 
 data_files = [
     (
@@ -160,20 +138,24 @@ elif sys.platform == 'darwin':
 else:
     raise RuntimeError('Unsupported platform!')
 
-sharedlib_files = [NGRAPH_CPP_LIBRARY_DIR + '/' + library for library in os.listdir(NGRAPH_CPP_LIBRARY_DIR) if lib_suffix in library]
+sharedlib_files = [
+    NGRAPH_CPP_LIBRARY_DIR + '/' + library
+    for library in os.listdir(NGRAPH_CPP_LIBRARY_DIR) if lib_suffix in library
+]
 
-ext_modules = [Extension(
-                   '_pyngraph',
-                   sources = sources,
-                   include_dirs = include_dirs,
-                   define_macros = [('VERSION_INFO', __version__)],
-                   library_dirs = library_dirs,
-                   libraries = libraries,
-                   extra_compile_args = extra_compile_args,
-                   extra_link_args = extra_link_args,
-                   language = 'c++',
-                   )
-              ]
+ext_modules = [
+    Extension(
+        '_pyngraph',
+        sources=sources,
+        include_dirs=include_dirs,
+        define_macros=[('VERSION_INFO', __version__)],
+        library_dirs=library_dirs,
+        libraries=libraries,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
+        language='c++',
+    ),
+]
 
 
 build_shared_lib = None
@@ -181,6 +163,7 @@ build_shared_lib = None
 
 class Develop(develop):
     def run(self):
+        global build_shared_lib
         develop.run(self)
         if self.uninstall:
             return
@@ -191,18 +174,50 @@ class Develop(develop):
             copyfile(src, lib)
 
 
-
 class BuildExt(build_ext):
     """
     A custom build extension for adding compiler-specific options.
     """
-    def build_extensions(self):
-        global build_shared_lib
-        if sys.platform == 'win32':
-            raise RuntimeError('Unsupported platform: win32!')
-        if not os.path.exists(self.build_lib + '/'):
-            os.makedirs(self.build_lib)
-        build_shared_lib = self.build_lib
+    def has_flag(self, flagname):
+        """
+        Return a boolean indicating whether a flag name is supported on
+        the specified compiler.
+        """
+        import tempfile
+        retval = True
+        with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
+            f.write('int main (int argc, char **argv) { return 0; }')
+            try:
+                self.compiler.compile(sources=[f.name], extra_postargs=[flagname])
+            except CompileError:
+                retval = False
+        return retval
+
+    def cpp_flag(self):
+        """
+        Check and return compiler flag.
+        """
+        flags = []
+        if self.has_flag('-std=c++11'):
+            flags += ['-std=c++11']
+        else:
+            raise RuntimeError('Unsupported compiler -- C++11 support is needed!')
+        if self.has_flag('-fstack-protector-strong'):
+            flags += ['-fstack-protector-strong']
+        elif self.has_flag('-fstack-protector'):
+            flags += ['-fstack-protector']
+        if self.has_flag('-fvisibility=hidden'):
+            flags += ['-fvisibility=hidden']
+        if self.has_flag('-flto'):
+            flags += ['-flto']
+        if self.has_flag('-fPIC'):
+            flags += ['-fPIC']
+        flags += ['-Wformat', '-Wformat-security']
+        flags += ['-O2', '-D_FORTIFY_SOURCE=2']
+        return flags
+
+    def copy_prebuilt_libraries(self):
+        global sharedlib_files
         for source in sharedlib_files:
             destination = self.build_lib + '/' + os.path.basename(source)
             if 'libomp' in source or 'libgomp' in source:
@@ -216,32 +231,22 @@ class BuildExt(build_ext):
                 rpath_patch_cmd = "install_name_tool -id \"@rpath\" " + destination
             if os.system(rpath_patch_cmd) != 0:
                 raise Exception("Failed to patch rpath of %s" % destination)
+
+    def build_extensions(self):
+        global build_shared_lib
+        if sys.platform == 'win32':
+            raise RuntimeError('Unsupported platform: win32!')
+        if not os.path.exists(self.build_lib + '/'):
+            os.makedirs(self.build_lib)
+        build_shared_lib = self.build_lib
+        self.copy_prebuilt_libraries()
         """-Wstrict-prototypes is not a valid option for c++"""
         try:
             self.compiler.compiler_so.remove("-Wstrict-prototypes")
         except (AttributeError, ValueError):
             pass
         for ext in self.extensions:
-            ext.extra_compile_args += [cpp_flag(self.compiler)]
-            if has_flag(self.compiler, '-fstack-protector-strong'):
-                ext.extra_compile_args += ['-fstack-protector-strong']
-            elif has_flag(self.compiler, '-fstack-protector'):
-                ext.extra_compile_args += ['-fstack-protector']
-            if has_flag(self.compiler, '-fvisibility=hidden'):
-                ext.extra_compile_args += ['-fvisibility=hidden']
-            if has_flag(self.compiler, '-flto'):
-                ext.extra_compile_args += ['-flto']
-            if has_flag(self.compiler, '-fPIC'):
-                ext.extra_compile_args += ['-fPIC']
-            if sys.platform.startswith('linux'):
-                ext.extra_link_args += ['-Wl,-rpath,$ORIGIN']
-                ext.extra_link_args += ['-z', 'noexecstack']
-                ext.extra_link_args += ['-z', 'relro']
-                ext.extra_link_args += ['-z', 'now']
-            elif sys.platform == 'darwin':
-                ext.extra_link_args += ["-Wl,-rpath,@loader_path"]
-            ext.extra_compile_args += ['-Wformat', '-Wformat-security']
-            ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
+            ext.extra_compile_args += self.cpp_flag()
         build_ext.build_extensions(self)
 
 
@@ -257,12 +262,12 @@ class BdistWheel(bdist_wheel):
         return tag
 
 
-setup_requires=['numpy']
+setup_requires = ['numpy']
 try:
     import pip
     try:
         from pip import main as pipmain
-    except:
+    except ImportError:
         from pip._internal import main as pipmain
     pipmain(['install', '--no-cache-dir'] + setup_requires)
     setup_requires = []

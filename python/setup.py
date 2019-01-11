@@ -311,7 +311,7 @@ ext_modules = [
         define_macros=[('VERSION_INFO', __version__)],
         library_dirs=library_dirs,
         libraries=libraries,
-        extra_compile_args = extra_compile_args,
+        extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
         language='c++',
     ),
