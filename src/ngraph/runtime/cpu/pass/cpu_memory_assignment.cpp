@@ -145,8 +145,8 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                                             user_op_annotations->get_in_place_oi_pairs();
                                         for (auto& user_oi_pair : user_in_place_oi_pairs)
                                         {
-                                            if (user_oi_pair.input =
-                                                    input_index && user_oi_pair.destructive)
+                                            if (user_oi_pair.input == input_index &&
+                                                user_oi_pair.destructive)
                                             {
                                                 no_tensor_alias = true;
                                                 break;
