@@ -132,7 +132,7 @@ std::string runtime::nvidiagpu::NVInternalFunction::emit_op(CompiledFunction* co
 
 runtime::nvidiagpu::NVInternalFunction::NVInternalFunction(
     const shared_ptr<ngraph::Function>& function,
-    const std::shared_ptr<NVBackend::BackendContext>& shared_context)
+    const std::shared_ptr<nvidiagpu::Backend::BackendContext>& shared_context)
     : CompiledFunction(function, shared_context)
 {
 }

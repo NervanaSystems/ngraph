@@ -48,17 +48,17 @@ namespace ngraph
 
             class CompiledFunction
             {
-                friend class NVBackend;
+                friend class nvidiagpu::Backend;
 
             public:
                 CompiledFunction(
                     const std::shared_ptr<ngraph::Function>& function,
-                    const std::shared_ptr<NVBackend::BackendContext>& shared_context);
+                    const std::shared_ptr<nvidiagpu::Backend::BackendContext>& shared_context);
                 virtual ~CompiledFunction();
 
                 static std::shared_ptr<CompiledFunction>
                     make(const std::shared_ptr<ngraph::Function>& function,
-                         const std::shared_ptr<NVBackend::BackendContext>& shared_context);
+                         const std::shared_ptr<nvidiagpu::Backend::BackendContext>& shared_context);
                 std::unique_ptr<runtime::nvidiagpu::NVRuntimeContext>& ctx();
                 const std::unique_ptr<NVPrimitiveEmitter>& get_primitive_emitter() const
                 {
@@ -109,7 +109,7 @@ namespace ngraph
                 std::string m_function_name;
 
                 std::unordered_map<std::string, size_t> m_tensor_memory_buffers;
-                std::shared_ptr<NVBackend::BackendContext> m_shared_context;
+                std::shared_ptr<nvidiagpu::Backend::BackendContext> m_shared_context;
             };
         }
     }

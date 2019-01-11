@@ -52,7 +52,7 @@ namespace ngraph
             public:
                 ExternalFunction(
                     const std::shared_ptr<ngraph::Function>& function,
-                    const std::shared_ptr<NVBackend::BackendContext>& shared_context);
+                    const std::shared_ptr<nvidiagpu::Backend::BackendContext>& shared_context);
                 virtual ~ExternalFunction();
 
                 virtual std::string add_to_runtime(

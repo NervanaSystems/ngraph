@@ -37,10 +37,10 @@ namespace ngraph
             using EntryPoint_t = void(void** inputs, void** outputs, NVRuntimeContext* ctx);
             using EntryPoint = std::function<EntryPoint_t>;
 
-            class NVBackend : public Backend
+            class nvidiagpu::Backend : public Backend
             {
             public:
-                NVBackend();
+                nvidiagpu::Backend();
 
                 std::shared_ptr<ngraph::runtime::Tensor>
                     create_tensor(const ngraph::element::Type& element_type,

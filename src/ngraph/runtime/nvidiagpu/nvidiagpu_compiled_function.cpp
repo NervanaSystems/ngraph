@@ -78,7 +78,7 @@ static NVStaticInitializers s_static_initializers;
 
 runtime::nvidiagpu::CompiledFunction::CompiledFunction(
     const shared_ptr<ngraph::Function>& function,
-    const std::shared_ptr<NVBackend::BackendContext>& shared_context)
+    const std::shared_ptr<nvidiagpu::Backend::BackendContext>& shared_context)
     : m_runtime(nullptr)
     , m_function(function)
     , m_emit_timing(false)
@@ -116,7 +116,7 @@ std::vector<std::string> get_case_variants(std::vector<std::string> cases)
 
 std::shared_ptr<runtime::nvidiagpu::CompiledFunction> runtime::nvidiagpu::CompiledFunction::make(
     const std::shared_ptr<ngraph::Function>& function,
-    const std::shared_ptr<NVBackend::BackendContext>& shared_context)
+    const std::shared_ptr<nvidiagpu::Backend::BackendContext>& shared_context)
 {
 #if defined(NGRAPH_DEX_ONLY)
     return std::make_shared<runtime::nvidiagpu::NVInternalFunction>(function, shared_context);

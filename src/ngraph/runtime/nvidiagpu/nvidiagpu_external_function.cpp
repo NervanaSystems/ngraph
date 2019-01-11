@@ -157,7 +157,7 @@ std::string runtime::nvidiagpu::ExternalFunction::emit_op(CompiledFunction* exte
 
 runtime::nvidiagpu::ExternalFunction::ExternalFunction(
     const shared_ptr<ngraph::Function>& function,
-    const std::shared_ptr<NVBackend::BackendContext>& shared_context)
+    const std::shared_ptr<nvidiagpu::Backend::BackendContext>& shared_context)
     : CompiledFunction(function, shared_context)
 {
 }
