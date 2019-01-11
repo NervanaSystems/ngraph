@@ -1580,12 +1580,37 @@ protected:
 TEST_P(lin_quant_model_param_test, model_resnet50)
 {
     auto function = onnx_import::import_onnx_model(
-        file_util::path_join(SERIALIZED_ZOO, "onnx/final_int8_resnet50_static_shapes.onnx"));
+        file_util::path_join(SERIALIZED_ZOO, "onnx/final_int8_resnet50_static_input.onnx"));
 
     Inputs inputs{read_binary_file<float>(input_filename)};
     Outputs expected_output{read_binary_file<float>(output_filename)};
     Outputs outputs{execute(function, inputs, "CPU")};
-    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+
+    // TODO: For debug only - Remove this code before merging to master
+    const auto& expected = expected_output.front();
+    const auto& got = outputs.front();
+
+    int class_shift = got.size() - expected.size();
+
+    std::cout << "expected size = " << expected.size() << std::endl;
+    std::cout << "got size = " << got.size() << std::endl << std::endl;
+
+    auto exp_idx =
+        std::distance(expected.begin(), std::max_element(expected.begin(), expected.end()));
+    auto got_idx = std::distance(got.begin(), std::max_element(got.begin(), got.end()));
+
+    std::cout << "expected_index    = " << exp_idx << std::endl;
+    std::cout << "got_index    = " << got_idx << std::endl;
+    std::cout << "expected_value = " << expected[exp_idx] << std::endl;
+    std::cout << "got_value[" << exp_idx - class_shift << "] = " << got[exp_idx - class_shift]
+              << std::endl;
+    std::cout << "got_value[" << exp_idx << "] = " << got[exp_idx] << std::endl;
+    std::cout << "got_value[" << exp_idx + class_shift << "] = " << got[exp_idx + class_shift]
+              << " *<--" << std::endl;
+    std::cout << "got_value[" << got_idx << "] = " << got[got_idx] << std::endl << std::endl;
+    // END CODE BLOCK
+
+    EXPECT_EQ(exp_idx, got_idx - class_shift);
 }
 
 INSTANTIATE_TEST_CASE_P(onnx,
