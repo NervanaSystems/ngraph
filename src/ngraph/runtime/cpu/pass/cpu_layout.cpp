@@ -1886,6 +1886,115 @@ namespace ngraph
                     }
                 }
 
+                template <typename T>
+                void RnnBackpropLayout(std::shared_ptr<ngraph::Node> node,
+                                       vector<memory::desc>& i_mds,
+                                       vector<memory::desc>& o_mds)
+                {
+                    auto rnn_bprop_node = static_cast<const T*>(node.get());
+                    auto rnn_node =
+                        static_cast<const ngraph::op::Rnn*>(rnn_bprop_node->get_fprop_node().get());
+                    auto t = static_cast<unsigned long>(rnn_node->get_src_sequence_length());
+                    auto n = static_cast<unsigned long>(rnn_node->get_batch_size());
+                    auto c = static_cast<unsigned long>(rnn_node->get_src_layer_feature_size());
+                    auto s = static_cast<unsigned long>(rnn_node->get_num_cell_states());
+                    auto l = static_cast<unsigned long>(rnn_node->get_num_fused_layers());
+                    auto d = static_cast<unsigned long>(rnn_node->get_direction());
+                    auto g = static_cast<unsigned long>(rnn_node->get_gates_per_cell());
+                    auto i = static_cast<unsigned long>(rnn_node->get_src_layer_feature_size());
+                    auto o = static_cast<unsigned long>(rnn_node->get_src_iter_feature_size());
+
+                    Shape src_layer_dims{t, n, c};
+                    Shape src_iter_dims{l, d, s, n, c};
+                    Shape wei_layer_dims{l, d, g, o, i};
+                    Shape wei_iter_dims{l, d, g, o, i};
+                    Shape bias_dims{l, d, g, o};
+                    Shape dst_layer_dims{src_layer_dims.begin(), src_layer_dims.end()};
+                    Shape dst_iter_dims{src_iter_dims.begin(), src_iter_dims.end()};
+
+                    memory::data_type et =
+                        mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
+
+                    engine cpu_engine(engine::cpu, 0);
+
+                    auto formatted_md = [&](Shape& dimensions, mkldnn::memory::format layout) {
+                        return mkldnn::memory::desc(
+                            mkldnn::memory::dims(dimensions.begin(), dimensions.end()),
+                            mkldnn::memory::data_type::f32,
+                            layout);
+                    };
+                    auto generic_md = [&](Shape& dimensions) {
+                        return formatted_md(dimensions, mkldnn::memory::format::any);
+                    };
+
+                    std::unique_ptr<mkldnn::rnn_backward::desc> rnn_layer_bwd_desc{nullptr};
+                    std::unique_ptr<mkldnn::rnn_forward::desc> rnn_layer_fwd_desc{nullptr};
+
+                    try
+                    {
+                        mkldnn::rnn_cell::desc rnn_cell(mkldnn::algorithm::vanilla_lstm);
+                        rnn_layer_bwd_desc.reset(new mkldnn::rnn_backward::desc(
+                            mkldnn::prop_kind::backward,
+                            rnn_cell,
+                            mkldnn::rnn_direction::unidirectional_left2right,
+                            formatted_md(src_layer_dims, mkldnn::memory::format::tnc),
+                            formatted_md(src_iter_dims, mkldnn::memory::format::ldsnc),
+                            generic_md(wei_layer_dims),
+                            generic_md(wei_iter_dims),
+                            generic_md(bias_dims),
+                            formatted_md(dst_layer_dims, mkldnn::memory::format::tnc),
+                            formatted_md(dst_iter_dims, mkldnn::memory::format::ldsnc),
+                            formatted_md(dst_layer_dims, mkldnn::memory::format::tnc),
+                            formatted_md(dst_iter_dims, mkldnn::memory::format::ldsnc),
+                            generic_md(wei_layer_dims),
+                            generic_md(wei_iter_dims),
+                            generic_md(bias_dims),
+                            formatted_md(src_layer_dims, mkldnn::memory::format::tnc),
+                            formatted_md(src_iter_dims, mkldnn::memory::format::ldsnc)));
+
+                        rnn_layer_fwd_desc.reset(new mkldnn::rnn_forward::desc(
+                            mkldnn::prop_kind::forward_training,
+                            rnn_cell,
+                            mkldnn::rnn_direction::unidirectional_left2right,
+                            formatted_md(src_layer_dims, mkldnn::memory::format::tnc),
+                            formatted_md(src_iter_dims, mkldnn::memory::format::ldsnc),
+                            generic_md(wei_layer_dims),
+                            generic_md(wei_iter_dims),
+                            generic_md(bias_dims),
+                            formatted_md(dst_layer_dims, mkldnn::memory::format::tnc),
+                            formatted_md(dst_iter_dims, mkldnn::memory::format::ldsnc)));
+                    }
+                    catch (const mkldnn::error& e)
+                    {
+                        throw ngraph_error(
+                            "setting layouts on RnnBackprop failed with MKLDNN error: " +
+                            e.message);
+                    }
+                    auto rnn_layer_fwd_prim_desc =
+                        mkldnn::rnn_forward::primitive_desc(*rnn_layer_fwd_desc, cpu_engine);
+
+                    auto rnn_layer_bwd_prim_desc = mkldnn::rnn_backward::primitive_desc(
+                        *rnn_layer_bwd_desc, executor::global_cpu_engine, rnn_layer_fwd_prim_desc);
+
+                    i_mds.push_back(rnn_layer_bwd_prim_desc.src_layer_primitive_desc().desc());
+                    i_mds.push_back(rnn_layer_bwd_prim_desc.src_iter_primitive_desc().desc());
+                    i_mds.push_back(rnn_layer_bwd_prim_desc.weights_layer_primitive_desc().desc());
+                    i_mds.push_back(rnn_layer_bwd_prim_desc.weights_iter_primitive_desc().desc());
+                    i_mds.push_back(rnn_layer_bwd_prim_desc.bias_primitive_desc().desc());
+                    i_mds.push_back(rnn_layer_bwd_prim_desc.dst_layer_primitive_desc().desc());
+                    i_mds.push_back(rnn_layer_bwd_prim_desc.dst_iter_primitive_desc().desc());
+                    i_mds.push_back(rnn_layer_bwd_prim_desc.diff_dst_layer_primitive_desc().desc());
+                    i_mds.push_back(rnn_layer_bwd_prim_desc.diff_dst_iter_primitive_desc().desc());
+
+                    o_mds.push_back(rnn_layer_bwd_prim_desc.diff_src_layer_primitive_desc().desc());
+                    o_mds.push_back(rnn_layer_bwd_prim_desc.diff_src_iter_primitive_desc().desc());
+                    o_mds.push_back(
+                        rnn_layer_bwd_prim_desc.diff_weights_layer_primitive_desc().desc());
+                    o_mds.push_back(
+                        rnn_layer_bwd_prim_desc.diff_weights_iter_primitive_desc().desc());
+                    o_mds.push_back(rnn_layer_bwd_prim_desc.diff_bias_primitive_desc().desc());
+                }
+
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Lstm)
                 {
@@ -1923,6 +2032,21 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
+                        vector<memory::desc> i_mds;
+                        vector<memory::desc> o_mds;
+                        RnnBackpropLayout<ngraph::op::RnnBackprop>(node, i_mds, o_mds);
+
+                        node = insert_input_conversions(external_function, node, i_mds);
+                        set_output_layouts(node, o_mds);
+                    }
+                    else
+                    {
+                        //set_native_layouts(external_function, node);
+                        throw ngraph_error(
+                            "RNNBackprop fused op is only supported in MKLDNN for now.");
+                    }
+                    /*if (mkldnn_utils::use_mkldnn_kernel(node.get()))
+                    {
                         // TODO: for now, framework formats for src_layer, src_iter, weights_layer and weights_iter
                         // matches to the expected mkldnn format. we need to handle a case to insert convert Op's
                         // if the format doesn't matches.
@@ -1932,7 +2056,7 @@ namespace ngraph
                     {
                         throw ngraph_error(
                             "RNNBackprop fused op is only supported in MKLDNN for now.");
-                    }
+                    }*/
                 }
 
                 template <>

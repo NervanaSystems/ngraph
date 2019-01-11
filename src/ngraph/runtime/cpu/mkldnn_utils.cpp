@@ -398,7 +398,7 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
     }
     md.layout_desc.blocking.offset_padding = 0;
 
-    return memory::desc(md);
+    return try_get_named_md(md);
 }
 
 // MKLDNN kernel selection sometimes relies on named layouts like "mkldnn_nchw"
@@ -441,13 +441,18 @@ memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(const mkldnn_memory_de
     {
     case 1: CANONICALIZE_MD(mkldnn_x); break;
     case 2: CANONICALIZE_MD(mkldnn_nc); break;
+    case 3: CANONICALIZE_MD(mkldnn_tnc); break;
     case 4:
         CANONICALIZE_MD(mkldnn_nchw);
         CANONICALIZE_MD(mkldnn_nhwc);
+        CANONICALIZE_MD(mkldnn_ldgo);
         CANONICALIZE_MD(mkldnn_nChw8c);
         CANONICALIZE_MD(mkldnn_nChw16c);
         break;
     case 5:
+        CANONICALIZE_MD(mkldnn_ldgoi);
+        CANONICALIZE_MD(mkldnn_ldigo);
+        CANONICALIZE_MD(mkldnn_ldsnc);
         CANONICALIZE_MD(mkldnn_ncdhw);
         CANONICALIZE_MD(mkldnn_ndhwc);
         CANONICALIZE_MD(mkldnn_nCdhw16c);

@@ -178,12 +178,52 @@ op::RnnBackprop::RnnBackprop(std::shared_ptr<Node> result_forward,
                                    diff_dst_iter}))
     , m_fprop_node(result_forward)
 {
+    auto rnn_node = static_cast<const ngraph::op::Rnn*>(result_forward.get());
+    m_rnn_attributes.timestep = static_cast<unsigned long>(rnn_node->get_src_sequence_length());
+    m_rnn_attributes.batch = static_cast<unsigned long>(rnn_node->get_batch_size());
+    m_rnn_attributes.feature_size =
+        static_cast<unsigned long>(rnn_node->get_src_layer_feature_size());
+    m_rnn_attributes.states = static_cast<unsigned long>(rnn_node->get_num_cell_states());
+    m_rnn_attributes.layer = static_cast<unsigned long>(rnn_node->get_num_fused_layers());
+    m_rnn_attributes.direction = static_cast<unsigned long>(rnn_node->get_direction());
+    m_rnn_attributes.gates = static_cast<unsigned long>(rnn_node->get_gates_per_cell());
+    m_rnn_attributes.slc = static_cast<unsigned long>(rnn_node->get_src_layer_feature_size());
+    m_rnn_attributes.sic = static_cast<unsigned long>(rnn_node->get_src_iter_feature_size());
+    m_rnn_attributes.dlc = static_cast<unsigned long>(rnn_node->get_dst_layer_feature_size());
+    m_rnn_attributes.dic = static_cast<unsigned long>(rnn_node->get_dst_iter_feature_size());
+
     set_output_size(5);
-    set_output_type(0, fprop_src_layer->get_element_type(), fprop_src_layer->get_shape());
-    set_output_type(1, fprop_src_layer->get_element_type(), fprop_src_iter->get_shape());
-    set_output_type(2, fprop_src_layer->get_element_type(), fprop_weights_layer->get_shape());
-    set_output_type(3, fprop_src_layer->get_element_type(), fprop_weights_iter->get_shape());
-    set_output_type(4, fprop_src_layer->get_element_type(), fprop_bias->get_shape());
+    set_output_type(
+        0,
+        fprop_src_layer->get_element_type(),
+        Shape{m_rnn_attributes.timestep, m_rnn_attributes.batch, m_rnn_attributes.feature_size});
+    set_output_type(1,
+                    fprop_src_layer->get_element_type(),
+                    Shape{m_rnn_attributes.layer,
+                          m_rnn_attributes.direction,
+                          m_rnn_attributes.states,
+                          m_rnn_attributes.batch,
+                          m_rnn_attributes.feature_size});
+    set_output_type(2,
+                    fprop_src_layer->get_element_type(),
+                    Shape{m_rnn_attributes.layer,
+                          m_rnn_attributes.direction,
+                          m_rnn_attributes.gates,
+                          m_rnn_attributes.dlc,
+                          m_rnn_attributes.slc});
+    set_output_type(3,
+                    fprop_src_layer->get_element_type(),
+                    Shape{m_rnn_attributes.layer,
+                          m_rnn_attributes.direction,
+                          m_rnn_attributes.gates,
+                          m_rnn_attributes.dlc,
+                          m_rnn_attributes.slc});
+    set_output_type(4,
+                    fprop_src_layer->get_element_type(),
+                    Shape{m_rnn_attributes.layer,
+                          m_rnn_attributes.direction,
+                          m_rnn_attributes.gates,
+                          m_rnn_attributes.sic});
     constructor_validate_and_infer_types();
 }
 
@@ -193,7 +233,9 @@ shared_ptr<Node> op::RnnBackprop::copy_with_new_args(const NodeVector& new_args)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<RnnBackprop>(new_args[0],
+    auto rnn_fprop_node = this->get_fprop_node();
+    return make_shared<RnnBackprop>(rnn_fprop_node,
+                                    new_args[0],
                                     new_args[1],
                                     new_args[2],
                                     new_args[3],
@@ -201,6 +243,5 @@ shared_ptr<Node> op::RnnBackprop::copy_with_new_args(const NodeVector& new_args)
                                     new_args[5],
                                     new_args[6],
                                     new_args[7],
-                                    new_args[8],
-                                    new_args[9]);
+                                    new_args[8]);
 }

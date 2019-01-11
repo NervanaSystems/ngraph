@@ -20,6 +20,7 @@
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/rnn.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -74,6 +75,70 @@ namespace ngraph
                         mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
                         mkldnn::memory::format::goihw);
                 }
+                // handle special case for rnn formats
+                if (auto rnn_back_prop =
+                        std::dynamic_pointer_cast<ngraph::op::RnnBackprop>(node->get_users()[0]))
+                {
+                    auto rnn_attributes = rnn_back_prop->get_rnn_attributes();
+                    auto create_mkldnn_data_desc = [&](Shape& input_shape,
+                                                       mkldnn::memory::format layout) {
+                        input_desc = mkldnn::memory::desc(
+                            mkldnn::memory::dims(input_shape.begin(), input_shape.end()),
+                            mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                            layout);
+                    };
+
+                    if (result_desc.data.format == mkldnn_tnc && input_desc.data.ndims == 2)
+                    {
+                        Shape input_shape{rnn_attributes.timestep,
+                                          rnn_attributes.batch,
+                                          rnn_attributes.feature_size};
+                        create_mkldnn_data_desc(input_shape, mkldnn::memory::format::tnc);
+                    }
+
+                    if (result_desc.data.format == mkldnn_ldsnc && input_desc.data.ndims == 2)
+                    {
+                        Shape input_shape{rnn_attributes.layer,
+                                          rnn_attributes.direction,
+                                          rnn_attributes.states,
+                                          rnn_attributes.batch,
+                                          rnn_attributes.feature_size};
+                        create_mkldnn_data_desc(input_shape, mkldnn::memory::format::ldsnc);
+                    }
+
+                    if (result_desc.data.format == mkldnn_ldigo && input_desc.data.ndims == 2)
+                    {
+                        Shape input_shape{rnn_attributes.layer,
+                                          rnn_attributes.direction,
+                                          rnn_attributes.gates,
+                                          rnn_attributes.dlc,
+                                          rnn_attributes.slc};
+                        create_mkldnn_data_desc(input_shape, mkldnn::memory::format::ldgoi);
+                    }
+
+                    if (result_desc.data.format == mkldnn_ldgoi && input_desc.data.ndims == 2)
+                    {
+                        Shape input_shape{rnn_attributes.layer,
+                                          rnn_attributes.direction,
+                                          rnn_attributes.gates,
+                                          rnn_attributes.dlc,
+                                          rnn_attributes.slc};
+                        create_mkldnn_data_desc(input_shape, mkldnn::memory::format::ldigo);
+                    }
+
+                    if (result_desc.data.format == mkldnn_ldgo && input_desc.data.ndims == 1)
+                    {
+                        Shape input_shape{rnn_attributes.layer,
+                                          rnn_attributes.direction,
+                                          rnn_attributes.gates,
+                                          rnn_attributes.sic};
+                        create_mkldnn_data_desc(input_shape, mkldnn::memory::format::ldgo);
+                    }
+                }
+                std::cout << "input_desc: " << input_desc.data.format
+                          << " ndims: " << input_desc.data.ndims
+                          << "   result_desc: " << result_desc.data.format
+                          << " ndims: " << result_desc.data.ndims << std::endl;
 
                 size_t reorder_index = mkldnn_emitter->build_reorder(input_desc, result_desc);
 
