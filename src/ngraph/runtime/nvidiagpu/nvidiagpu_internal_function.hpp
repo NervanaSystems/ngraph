@@ -40,7 +40,7 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            class NVEmitter;
+            class Emitter;
             class NVRuntimeConstructor;
             struct RuntimeContext;
 

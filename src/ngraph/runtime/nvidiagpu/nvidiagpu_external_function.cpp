@@ -151,7 +151,7 @@ std::string runtime::nvidiagpu::ExternalFunction::emit_op(CompiledFunction* exte
                                                         const std::vector<nvidiagpu::TensorWrapper>& args,
                                                         const std::vector<nvidiagpu::TensorWrapper>& out)
 {
-    auto emit_function = NVEmitter::get_emit_function(*node);
+    auto emit_function = Emitter::get_emit_function(*node);
     return emit_function(external_function, function_name, node, args, out);
 };
 
@@ -204,7 +204,7 @@ std::string runtime::nvidiagpu::ExternalFunction::node_names(
     const std::vector<runtime::nvidiagpu::TensorWrapper>& args,
     std::initializer_list<int> arg_indexes)
 {
-    return runtime::nvidiagpu::NVEmitter::node_names(args, arg_indexes);
+    return runtime::nvidiagpu::Emitter::node_names(args, arg_indexes);
 }
 
 const string& runtime::nvidiagpu::ExternalFunction::get_pch_header_source()

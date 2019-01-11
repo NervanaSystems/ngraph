@@ -126,7 +126,7 @@ std::string runtime::nvidiagpu::NVInternalFunction::emit_op(CompiledFunction* co
                                                         const std::vector<nvidiagpu::TensorWrapper>& args,
                                                         const std::vector<nvidiagpu::TensorWrapper>& out)
 {
-    auto emit_function = NVEmitter::get_emit_function(*node);
+    auto emit_function = Emitter::get_emit_function(*node);
     return emit_function(compiled_function, function_name, node, args, out);
 };
 

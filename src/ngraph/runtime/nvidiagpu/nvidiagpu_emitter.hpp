@@ -29,7 +29,7 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            class NVEmitter
+            class Emitter
             {
             public:
                 static std::function<std::string(EMIT_ARGS)> get_emit_function(const Node& node);
