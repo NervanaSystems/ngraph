@@ -28,20 +28,20 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            class NVTensor;
+            class nvidiagpu::Tensor;
         }
     }
 }
 
-class ngraph::runtime::nvidiagpu::NVTensor : public ngraph::runtime::Tensor
+class ngraph::runtime::nvidiagpu::Tensor : public ngraph::runtime::Tensor
 {
 public:
-    NVTensor(const ngraph::element::Type& element_type, const Shape& shape, const Backend* parent);
-    NVTensor(const ngraph::element::Type& element_type,
+    nvidiagpu::Tensor(const ngraph::element::Type& element_type, const Shape& shape, const Backend* parent);
+    nvidiagpu::Tensor(const ngraph::element::Type& element_type,
              const Shape& shape,
              void* memory_pointer,
              const Backend* parent);
-    virtual ~NVTensor() override;
+    virtual ~nvidiagpu::Tensor() override;
 
     /// \brief Write bytes directly into the tensor
     /// \param p Pointer to source of data
@@ -60,7 +60,7 @@ public:
     bool m_custom_memory;
 
 private:
-    NVTensor(const NVTensor&) = delete;
-    NVTensor(NVTensor&&) = delete;
-    NVTensor& operator=(const NVTensor&) = delete;
+    nvidiagpu::Tensor(const nvidiagpu::Tensor&) = delete;
+    nvidiagpu::Tensor(nvidiagpu::Tensor&&) = delete;
+    nvidiagpu::Tensor& operator=(const nvidiagpu::Tensor&) = delete;
 };

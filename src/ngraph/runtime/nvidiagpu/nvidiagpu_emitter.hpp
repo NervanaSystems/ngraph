@@ -76,7 +76,7 @@ namespace ngraph
                 /// \param arg_indexes a list of indexes into args for which args to include in
                 ///    the output list, so {1, 2} will include args 1 and 2 and skip 0.
                 /// \ return returns a string containing "arg0_name, arg1_name, etc."
-                static std::string node_names(const std::vector<NVTensorWrapper>& args,
+                static std::string node_names(const std::vector<nvidiagpu::TensorWrapper>& args,
                                               std::initializer_list<int> arg_indexes = {});
             };
 

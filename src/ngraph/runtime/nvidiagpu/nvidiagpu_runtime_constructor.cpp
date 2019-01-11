@@ -34,8 +34,8 @@ void runtime::nvidiagpu::NVRuntimeConstructor::add(const std::string& name, cons
 void runtime::nvidiagpu::NVRuntimeConstructor::add_call(
     const std::string& caller,
     const std::string& callee,
-    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
-    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out)
+    const std::vector<runtime::nvidiagpu::TensorWrapper>& args,
+    const std::vector<runtime::nvidiagpu::TensorWrapper>& out)
 {
     auto& runtime = m_runtime[callee];
     auto call = [args, out, &runtime](CallFrame& caller_frame, RuntimeContext* ctx) mutable {

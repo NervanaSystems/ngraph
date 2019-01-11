@@ -46,8 +46,8 @@ namespace ngraph
                 void add(const std::string& name, const op_runtime_t& step);
                 void add_call(const std::string& caller,
                               const std::string& callee,
-                              const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
-                              const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out);
+                              const std::vector<runtime::nvidiagpu::TensorWrapper>& args,
+                              const std::vector<runtime::nvidiagpu::TensorWrapper>& out);
                 EntryPoint build(const std::string& function, CallFrame& call_frame);
 
             private:

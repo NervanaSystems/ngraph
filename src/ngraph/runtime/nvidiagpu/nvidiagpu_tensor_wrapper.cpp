@@ -22,17 +22,17 @@
 using namespace std;
 using namespace ngraph;
 
-runtime::nvidiagpu::NVTensorWrapper::NVTensorWrapper(const shared_ptr<descriptor::Tensor>& tv,
+runtime::nvidiagpu::TensorWrapper::TensorWrapper(const shared_ptr<descriptor::Tensor>& tv,
                                                  const string& alias)
     : m_tensor(tv)
     , m_alias(alias)
-    , m_offset(std::make_pair(runtime::nvidiagpu::NVTensorWrapper::TensorType::UNKNOWN,
+    , m_offset(std::make_pair(runtime::nvidiagpu::TensorWrapper::TensorType::UNKNOWN,
                               std::numeric_limits<size_t>::max()))
 {
 }
 
-runtime::nvidiagpu::NVTensorWrapper::NVTensorWrapper(const std::shared_ptr<descriptor::Tensor>& tv,
-                                                 runtime::nvidiagpu::NVTensorWrapper::TensorType type,
+runtime::nvidiagpu::TensorWrapper::TensorWrapper(const std::shared_ptr<descriptor::Tensor>& tv,
+                                                 runtime::nvidiagpu::TensorWrapper::TensorType type,
                                                  size_t offset,
                                                  const std::string& alias)
     : m_tensor(tv)
@@ -41,27 +41,27 @@ runtime::nvidiagpu::NVTensorWrapper::NVTensorWrapper(const std::shared_ptr<descr
 {
 }
 
-size_t runtime::nvidiagpu::NVTensorWrapper::get_size() const
+size_t runtime::nvidiagpu::TensorWrapper::get_size() const
 {
     return m_tensor->get_tensor_layout()->get_size();
 }
 
-const Shape& runtime::nvidiagpu::NVTensorWrapper::get_shape() const
+const Shape& runtime::nvidiagpu::TensorWrapper::get_shape() const
 {
     return m_tensor->get_tensor_layout()->get_shape();
 }
 
-Strides runtime::nvidiagpu::NVTensorWrapper::get_strides() const
+Strides runtime::nvidiagpu::TensorWrapper::get_strides() const
 {
     return m_tensor->get_tensor_layout()->get_strides();
 }
 
-const element::Type& runtime::nvidiagpu::NVTensorWrapper::get_element_type() const
+const element::Type& runtime::nvidiagpu::TensorWrapper::get_element_type() const
 {
     return m_tensor->get_tensor_layout()->get_element_type();
 }
 
-const std::string& runtime::nvidiagpu::NVTensorWrapper::get_name() const
+const std::string& runtime::nvidiagpu::TensorWrapper::get_name() const
 {
     if (m_alias.empty())
     {
@@ -73,19 +73,19 @@ const std::string& runtime::nvidiagpu::NVTensorWrapper::get_name() const
     }
 }
 
-const std::pair<runtime::nvidiagpu::NVTensorWrapper::TensorType, size_t>&
-    runtime::nvidiagpu::NVTensorWrapper::get_offset() const
+const std::pair<runtime::nvidiagpu::TensorWrapper::TensorType, size_t>&
+    runtime::nvidiagpu::TensorWrapper::get_offset() const
 {
     return m_offset;
 }
 
-const std::string& runtime::nvidiagpu::NVTensorWrapper::get_type() const
+const std::string& runtime::nvidiagpu::TensorWrapper::get_type() const
 {
     return get_element_type().c_type_string();
 }
 
 std::ostream& ngraph::runtime::nvidiagpu::operator<<(std::ostream& out,
-                                                 const ngraph::runtime::nvidiagpu::NVTensorWrapper& obj)
+                                                 const ngraph::runtime::nvidiagpu::TensorWrapper& obj)
 {
     static std::vector<std::string> types{"CONSTANT", "INTERMEDIATE", "INPUT", "OUTPUT", "UNKNOWN"};
     out << "nvidiagpu::tensor { name: " << obj.m_tensor->get_name()

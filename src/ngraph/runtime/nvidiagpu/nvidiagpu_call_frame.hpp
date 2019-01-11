@@ -32,7 +32,7 @@ namespace ngraph
             class CallFrame
             {
             public:
-                using TensorType = NVTensorWrapper::TensorType;
+                using TensorType = nvidiagpu::TensorWrapper::TensorType;
 
                 CallFrame(const size_t& num_inputs, const size_t& num_outputs);
                 void resolve_reservations(
@@ -40,7 +40,7 @@ namespace ngraph
                     const std::unordered_map<std::string, size_t>& memory_reservations);
                 void resolve_inputs(void** inputs, size_t num_inputs = 0);
                 void resolve_outputs(void** outputs, size_t num_outputs = 0);
-                std::vector<void*> get_tensor_io(const std::vector<NVTensorWrapper>& tensors);
+                std::vector<void*> get_tensor_io(const std::vector<nvidiagpu::TensorWrapper>& tensors);
 
             private:
                 void* get_pointer(const TensorType& type,

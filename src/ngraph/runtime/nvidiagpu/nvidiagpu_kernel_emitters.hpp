@@ -30,13 +30,13 @@ namespace ngraph
             namespace kernel
             {
                 void emit_memset(codegen::CodeWriter& writer,
-                                 const NVTensorWrapper& dst,
+                                 const nvidiagpu::TensorWrapper& dst,
                                  int value,
                                  size_t buffer_size = 0);
 
                 void emit_memcpyDtD(codegen::CodeWriter& writer,
-                                    const NVTensorWrapper& dst,
-                                    const NVTensorWrapper& src,
+                                    const nvidiagpu::TensorWrapper& dst,
+                                    const nvidiagpu::TensorWrapper& src,
                                     size_t buffer_size = 0);
 
                 void emit_cudnnConvolutionDescriptor(codegen::CodeWriter& writer,
@@ -73,8 +73,8 @@ namespace ngraph
                                                   const std::vector<size_t>& strides);
 
                 void emit_cudnnReduceTensor(codegen::CodeWriter& writer,
-                                            const NVTensorWrapper& in,
-                                            const NVTensorWrapper& out,
+                                            const nvidiagpu::TensorWrapper& in,
+                                            const nvidiagpu::TensorWrapper& out,
                                             const std::string& reduce_op,
                                             const std::string& data_type,
                                             const std::string& nan_prop,

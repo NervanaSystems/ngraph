@@ -34,8 +34,8 @@
 
 #define EMIT_ARGS                                                                                  \
     runtime::nvidiagpu::CompiledFunction *compiled_function, const std::string &function_name,       \
-        const Node *node, const std::vector<runtime::nvidiagpu::NVTensorWrapper> &args,                \
-        const std::vector<runtime::nvidiagpu::NVTensorWrapper> &out
+        const Node *node, const std::vector<runtime::nvidiagpu::TensorWrapper> &args,                \
+        const std::vector<runtime::nvidiagpu::TensorWrapper> &out
 
 namespace ngraph
 {
@@ -67,13 +67,13 @@ namespace ngraph
                 virtual std::string
                     add_to_runtime(size_t primitive_index,
                                    const std::string& function_name,
-                                   const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
-                                   const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out) = 0;
+                                   const std::vector<runtime::nvidiagpu::TensorWrapper>& args,
+                                   const std::vector<runtime::nvidiagpu::TensorWrapper>& out) = 0;
                 virtual std::string add_call_to_runtime(
                     const std::string& caller,
                     const std::string& callee,
-                    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
-                    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out) = 0;
+                    const std::vector<runtime::nvidiagpu::TensorWrapper>& args,
+                    const std::vector<runtime::nvidiagpu::TensorWrapper>& out) = 0;
                 void compile();
 
                 virtual void

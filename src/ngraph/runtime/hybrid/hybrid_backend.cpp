@@ -212,9 +212,9 @@ string runtime::hybrid::HybridBackend::get_placement_name(const runtime::Tensor*
     {
         rc = "HostTensor";
     }
-    else if (dynamic_cast<const runtime::nvidiagpu::NVTensor*>(t) != nullptr)
+    else if (dynamic_cast<const runtime::nvidiagpu::Tensor*>(t) != nullptr)
     {
-        rc = "NVTensor";
+        rc = "nvidiagpu::Tensor";
     }
     return rc;
 }

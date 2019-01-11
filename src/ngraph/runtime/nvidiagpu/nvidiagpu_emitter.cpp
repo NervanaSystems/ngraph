@@ -1491,7 +1491,7 @@ std::string runtime::nvidiagpu::NVEmitter::emit_TopK(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-string runtime::nvidiagpu::NVEmitter::node_names(const vector<NVTensorWrapper>& args,
+string runtime::nvidiagpu::NVEmitter::node_names(const vector<nvidiagpu::TensorWrapper>& args,
                                              initializer_list<int> arg_indexes)
 {
     vector<string> names;

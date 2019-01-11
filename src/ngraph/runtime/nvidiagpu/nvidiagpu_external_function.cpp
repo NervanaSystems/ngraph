@@ -148,8 +148,8 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
 std::string runtime::nvidiagpu::ExternalFunction::emit_op(CompiledFunction* external_function,
                                                         const std::string& function_name,
                                                         const ngraph::Node* node,
-                                                        const std::vector<NVTensorWrapper>& args,
-                                                        const std::vector<NVTensorWrapper>& out)
+                                                        const std::vector<nvidiagpu::TensorWrapper>& args,
+                                                        const std::vector<nvidiagpu::TensorWrapper>& out)
 {
     auto emit_function = NVEmitter::get_emit_function(*node);
     return emit_function(external_function, function_name, node, args, out);
@@ -169,8 +169,8 @@ runtime::nvidiagpu::ExternalFunction::~ExternalFunction()
 std::string runtime::nvidiagpu::ExternalFunction::add_to_runtime(
     size_t primitive_index,
     const std::string& function_name,
-    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
-    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out)
+    const std::vector<runtime::nvidiagpu::TensorWrapper>& args,
+    const std::vector<runtime::nvidiagpu::TensorWrapper>& out)
 {
     codegen::CodeWriter writer;
     writer.block_begin();
@@ -186,8 +186,8 @@ std::string runtime::nvidiagpu::ExternalFunction::add_to_runtime(
 std::string runtime::nvidiagpu::ExternalFunction::add_call_to_runtime(
     const std::string& caller,
     const std::string& callee,
-    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
-    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out)
+    const std::vector<runtime::nvidiagpu::TensorWrapper>& args,
+    const std::vector<runtime::nvidiagpu::TensorWrapper>& out)
 {
     codegen::CodeWriter writer;
     writer.block_begin();
@@ -201,7 +201,7 @@ std::string runtime::nvidiagpu::ExternalFunction::add_call_to_runtime(
 }
 
 std::string runtime::nvidiagpu::ExternalFunction::node_names(
-    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
+    const std::vector<runtime::nvidiagpu::TensorWrapper>& args,
     std::initializer_list<int> arg_indexes)
 {
     return runtime::nvidiagpu::NVEmitter::node_names(args, arg_indexes);
@@ -484,21 +484,21 @@ void runtime::nvidiagpu::ExternalFunction::emit_functions()
 
             for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
             {
-                vector<NVTensorWrapper> in;
+                vector<nvidiagpu::TensorWrapper> in;
                 vector<string> node_input_names;
                 vector<string> node_output_names;
                 for (const descriptor::Input& input : node->get_inputs())
                 {
                     const descriptor::Output& output = input.get_output();
                     shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-                    in.push_back(NVTensorWrapper(tv, m_variable_name_map[tv->get_name()]));
+                    in.push_back(nvidiagpu::TensorWrapper(tv, m_variable_name_map[tv->get_name()]));
                     node_input_names.emplace_back(tv->get_name());
                 }
-                vector<NVTensorWrapper> out;
+                vector<nvidiagpu::TensorWrapper> out;
                 for (const descriptor::Output& output : node->get_outputs())
                 {
                     shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-                    out.push_back(NVTensorWrapper(tv, m_variable_name_map[tv->get_name()]));
+                    out.push_back(nvidiagpu::TensorWrapper(tv, m_variable_name_map[tv->get_name()]));
                     node_output_names.emplace_back(tv->get_name());
                 }
 
@@ -525,11 +525,11 @@ void runtime::nvidiagpu::ExternalFunction::emit_functions()
                     string func_name =
                         ngraph::pass::CommonFunctionCollection::create_function_name(*it->second);
                     vector<string> names;
-                    for (const NVTensorWrapper& tv : in)
+                    for (const nvidiagpu::TensorWrapper& tv : in)
                     {
                         names.push_back(tv.get_name());
                     }
-                    for (const NVTensorWrapper& tv : out)
+                    for (const nvidiagpu::TensorWrapper& tv : out)
                     {
                         names.push_back(tv.get_name());
                     }
@@ -626,14 +626,14 @@ string runtime::nvidiagpu::ExternalFunction::emit_op_as_function(const Node& nod
     codegen::CodeWriter writer;
     writer << "static void " << function_name << "(";
     writer.indent++;
-    vector<NVTensorWrapper> in;
+    vector<nvidiagpu::TensorWrapper> in;
     size_t arg_index = 0;
     set<string> arg_names;
     for (const descriptor::Input& input : node.get_inputs())
     {
         const descriptor::Output& output = input.get_output();
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-        NVTensorWrapper tvw{tv, "_arg" + to_string(arg_index)};
+        nvidiagpu::TensorWrapper tvw{tv, "_arg" + to_string(arg_index)};
         if (arg_names.find(tvw.get_name()) == arg_names.end())
         {
             arg_names.insert(tvw.get_name());
@@ -646,11 +646,11 @@ string runtime::nvidiagpu::ExternalFunction::emit_op_as_function(const Node& nod
         }
         in.push_back(tvw);
     }
-    vector<NVTensorWrapper> out;
+    vector<nvidiagpu::TensorWrapper> out;
     for (const descriptor::Output& output : node.get_outputs())
     {
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-        NVTensorWrapper tvw{tv, "_out" + to_string(arg_index)};
+        nvidiagpu::TensorWrapper tvw{tv, "_out" + to_string(arg_index)};
         if (arg_index++ > 0)
         {
             writer << ",";

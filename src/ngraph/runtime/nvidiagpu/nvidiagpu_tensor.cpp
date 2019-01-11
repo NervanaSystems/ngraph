@@ -27,7 +27,7 @@
 using namespace ngraph;
 using namespace std;
 
-runtime::nvidiagpu::NVTensor::NVTensor(const ngraph::element::Type& element_type,
+runtime::nvidiagpu::Tensor::Tensor(const ngraph::element::Type& element_type,
                                    const Shape& shape,
                                    void* memory_pointer,
                                    const Backend* backend)
@@ -50,14 +50,14 @@ runtime::nvidiagpu::NVTensor::NVTensor(const ngraph::element::Type& element_type
     }
 }
 
-runtime::nvidiagpu::NVTensor::NVTensor(const ngraph::element::Type& element_type,
+runtime::nvidiagpu::Tensor::Tensor(const ngraph::element::Type& element_type,
                                    const Shape& shape,
                                    const Backend* backend)
-    : NVTensor(element_type, shape, nullptr, backend)
+    : nvidiagpu::Tensor(element_type, shape, nullptr, backend)
 {
 }
 
-runtime::nvidiagpu::NVTensor::~NVTensor()
+runtime::nvidiagpu::Tensor::~nvidiagpu::Tensor()
 {
     if (!m_custom_memory && (m_allocated_buffer_pool != nullptr))
     {
@@ -65,12 +65,12 @@ runtime::nvidiagpu::NVTensor::~NVTensor()
     }
 }
 
-void runtime::nvidiagpu::NVTensor::write(const void* source, size_t tensor_offset, size_t n)
+void runtime::nvidiagpu::Tensor::write(const void* source, size_t tensor_offset, size_t n)
 {
     CUDA_RT_SAFE_CALL(cudaMemcpy(m_allocated_buffer_pool, source, n, cudaMemcpyHostToDevice));
 }
 
-void runtime::nvidiagpu::NVTensor::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::nvidiagpu::Tensor::read(void* target, size_t tensor_offset, size_t n) const
 {
     CUDA_RT_SAFE_CALL(cudaMemcpy(target, m_allocated_buffer_pool, n, cudaMemcpyDeviceToHost));
 }

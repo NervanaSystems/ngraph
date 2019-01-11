@@ -110,13 +110,13 @@ runtime::nvidiagpu::Backend::BackendContext::~BackendContext()
 shared_ptr<runtime::Tensor>
     runtime::nvidiagpu::Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
-    return make_shared<runtime::nvidiagpu::NVTensor>(element_type, shape, this);
+    return make_shared<runtime::nvidiagpu::Tensor>(element_type, shape, this);
 }
 
 shared_ptr<runtime::Tensor> runtime::nvidiagpu::Backend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
-    return make_shared<runtime::nvidiagpu::NVTensor>(element_type, shape, memory_pointer, this);
+    return make_shared<runtime::nvidiagpu::Tensor>(element_type, shape, memory_pointer, this);
 }
 
 runtime::Handle runtime::nvidiagpu::Backend::compile(shared_ptr<Function> func)
@@ -140,8 +140,8 @@ void runtime::nvidiagpu::Backend::initialize_io(void** target,
 {
     for (size_t i = 0; i < source.size(); i++)
     {
-        shared_ptr<runtime::nvidiagpu::NVTensor> tv =
-            dynamic_pointer_cast<runtime::nvidiagpu::NVTensor>(source[i]);
+        shared_ptr<runtime::nvidiagpu::Tensor> tv =
+            dynamic_pointer_cast<runtime::nvidiagpu::Tensor>(source[i]);
         if (tv)
         {
             target[i] = tv->m_allocated_buffer_pool;

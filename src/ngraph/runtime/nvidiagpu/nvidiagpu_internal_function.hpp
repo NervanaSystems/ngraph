@@ -55,13 +55,13 @@ namespace ngraph
                 virtual std::string add_to_runtime(
                     size_t primitive_index,
                     const std::string& function_name,
-                    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
-                    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out) override;
+                    const std::vector<runtime::nvidiagpu::TensorWrapper>& args,
+                    const std::vector<runtime::nvidiagpu::TensorWrapper>& out) override;
                 virtual std::string add_call_to_runtime(
                     const std::string& caller,
                     const std::string& callee,
-                    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
-                    const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out) override;
+                    const std::vector<runtime::nvidiagpu::TensorWrapper>& args,
+                    const std::vector<runtime::nvidiagpu::TensorWrapper>& out) override;
                 virtual void get_performance_data(
                     std::vector<runtime::PerformanceCounter>& rc) const override;
 
@@ -75,8 +75,8 @@ namespace ngraph
                 std::string emit_op(EMIT_ARGS);
                 std::string
                     compose_manifest(size_t primitive_index,
-                                     const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
-                                     const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out) const;
+                                     const std::vector<runtime::nvidiagpu::TensorWrapper>& args,
+                                     const std::vector<runtime::nvidiagpu::TensorWrapper>& out) const;
                 void save_manifest_to_disk() const;
 
                 // For non-destructive passthrough kernels, propagate function
@@ -89,7 +89,7 @@ namespace ngraph
                                                        const std::string& output_name) override;
                 std::unordered_map<
                     std::string,
-                    std::tuple<runtime::nvidiagpu::NVTensorWrapper::TensorType, size_t, std::string>>
+                    std::tuple<runtime::nvidiagpu::TensorWrapper::TensorType, size_t, std::string>>
                     m_variable_name_map;
                 std::unique_ptr<NVRuntimeConstructor> m_runtime_constructor;
                 std::shared_ptr<codegen::CodeWriter> m_trace;
