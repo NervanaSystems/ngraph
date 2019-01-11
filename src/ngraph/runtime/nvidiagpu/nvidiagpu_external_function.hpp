@@ -47,7 +47,7 @@ namespace ngraph
             class NVEmitter;
             struct NVRuntimeContext;
 
-            class ExternalFunction : public NVCompiledFunction
+            class ExternalFunction : public CompiledFunction
             {
             public:
                 ExternalFunction(

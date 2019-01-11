@@ -44,7 +44,7 @@ namespace ngraph
             class NVRuntimeConstructor;
             struct NVRuntimeContext;
 
-            class NVInternalFunction : public NVCompiledFunction
+            class NVInternalFunction : public CompiledFunction
             {
             public:
                 NVInternalFunction(

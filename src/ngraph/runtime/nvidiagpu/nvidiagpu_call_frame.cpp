@@ -25,7 +25,7 @@ runtime::nvidiagpu::CallFrame::CallFrame(const size_t& num_inputs, const size_t&
 }
 
 void runtime::nvidiagpu::CallFrame::resolve_reservations(
-    const NVCompiledFunction* compiled_function,
+    const CompiledFunction* compiled_function,
     const std::unordered_map<std::string, size_t>& memory_reservations)
 {
     auto& mem_primitives = compiled_function->get_primitive_emitter()->get_memory_primitives();

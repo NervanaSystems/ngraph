@@ -29,7 +29,7 @@ namespace ngraph
         {
             static size_t alignment = 64;
 
-            class NVCompiledFunction;
+            class CompiledFunction;
             class NVPrimitiveEmitter;
             struct NVRuntimeContext;
             class CudaContextManager;
@@ -83,7 +83,7 @@ namespace ngraph
                 class FunctionInstance
                 {
                 public:
-                    std::shared_ptr<NVCompiledFunction> m_compiled_function;
+                    std::shared_ptr<CompiledFunction> m_compiled_function;
                     bool m_performance_counters_enabled = false;
                     EntryPoint m_runtime;
                     std::vector<void*> m_inputs;

@@ -125,7 +125,7 @@ runtime::Handle runtime::nvidiagpu::NVBackend::compile(shared_ptr<Function> func
     if (instance.m_compiled_function == nullptr)
     {
         m_context->bind_cuda_context_to_thread();
-        instance.m_compiled_function = runtime::nvidiagpu::NVCompiledFunction::make(func, m_context);
+        instance.m_compiled_function = runtime::nvidiagpu::CompiledFunction::make(func, m_context);
         instance.m_compiled_function->m_emit_timing = instance.m_performance_counters_enabled;
         instance.m_compiled_function->compile();
         instance.m_runtime = instance.m_compiled_function->m_runtime;

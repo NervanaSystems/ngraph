@@ -145,7 +145,7 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
     return ss.str();
 }
 
-std::string runtime::nvidiagpu::ExternalFunction::emit_op(NVCompiledFunction* external_function,
+std::string runtime::nvidiagpu::ExternalFunction::emit_op(CompiledFunction* external_function,
                                                         const std::string& function_name,
                                                         const ngraph::Node* node,
                                                         const std::vector<NVTensorWrapper>& args,
@@ -158,7 +158,7 @@ std::string runtime::nvidiagpu::ExternalFunction::emit_op(NVCompiledFunction* ex
 runtime::nvidiagpu::ExternalFunction::ExternalFunction(
     const shared_ptr<ngraph::Function>& function,
     const std::shared_ptr<NVBackend::BackendContext>& shared_context)
-    : NVCompiledFunction(function, shared_context)
+    : CompiledFunction(function, shared_context)
 {
 }
 

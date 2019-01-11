@@ -33,7 +33,7 @@
 #include "ngraph/runtime/nvidiagpu/nvidiagpu_tensor_wrapper.hpp"
 
 #define EMIT_ARGS                                                                                  \
-    runtime::nvidiagpu::NVCompiledFunction *compiled_function, const std::string &function_name,       \
+    runtime::nvidiagpu::CompiledFunction *compiled_function, const std::string &function_name,       \
         const Node *node, const std::vector<runtime::nvidiagpu::NVTensorWrapper> &args,                \
         const std::vector<runtime::nvidiagpu::NVTensorWrapper> &out
 
@@ -46,17 +46,17 @@ namespace ngraph
             class NVEmitter;
             struct NVRuntimeContext;
 
-            class NVCompiledFunction
+            class CompiledFunction
             {
                 friend class NVBackend;
 
             public:
-                NVCompiledFunction(
+                CompiledFunction(
                     const std::shared_ptr<ngraph::Function>& function,
                     const std::shared_ptr<NVBackend::BackendContext>& shared_context);
-                virtual ~NVCompiledFunction();
+                virtual ~CompiledFunction();
 
-                static std::shared_ptr<NVCompiledFunction>
+                static std::shared_ptr<CompiledFunction>
                     make(const std::shared_ptr<ngraph::Function>& function,
                          const std::shared_ptr<NVBackend::BackendContext>& shared_context);
                 std::unique_ptr<runtime::nvidiagpu::NVRuntimeContext>& ctx();

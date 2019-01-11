@@ -120,7 +120,7 @@
 using namespace std;
 using namespace ngraph;
 
-std::string runtime::nvidiagpu::NVInternalFunction::emit_op(NVCompiledFunction* compiled_function,
+std::string runtime::nvidiagpu::NVInternalFunction::emit_op(CompiledFunction* compiled_function,
                                                         const std::string& function_name,
                                                         const ngraph::Node* node,
                                                         const std::vector<NVTensorWrapper>& args,
@@ -133,7 +133,7 @@ std::string runtime::nvidiagpu::NVInternalFunction::emit_op(NVCompiledFunction* 
 runtime::nvidiagpu::NVInternalFunction::NVInternalFunction(
     const shared_ptr<ngraph::Function>& function,
     const std::shared_ptr<NVBackend::BackendContext>& shared_context)
-    : NVCompiledFunction(function, shared_context)
+    : CompiledFunction(function, shared_context)
 {
 }
 

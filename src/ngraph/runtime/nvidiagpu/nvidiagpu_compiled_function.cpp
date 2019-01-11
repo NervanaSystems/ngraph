@@ -50,13 +50,13 @@
 using namespace std;
 using namespace ngraph;
 
-std::string runtime::nvidiagpu::NVCompiledFunction::get_output_dir()
+std::string runtime::nvidiagpu::CompiledFunction::get_output_dir()
 {
     static std::string output_dir = "nvidiagpu_codegen";
     return output_dir;
 }
 
-size_t runtime::nvidiagpu::NVCompiledFunction::get_memory_alignment()
+size_t runtime::nvidiagpu::CompiledFunction::get_memory_alignment()
 {
     static size_t memory_pool_alignment = 64;
     return memory_pool_alignment;
@@ -69,14 +69,14 @@ class NVStaticInitializers
 public:
     NVStaticInitializers()
     {
-        file_util::remove_directory(runtime::nvidiagpu::NVCompiledFunction::get_output_dir());
-        file_util::make_directory(runtime::nvidiagpu::NVCompiledFunction::get_output_dir());
+        file_util::remove_directory(runtime::nvidiagpu::CompiledFunction::get_output_dir());
+        file_util::make_directory(runtime::nvidiagpu::CompiledFunction::get_output_dir());
     }
 };
 
 static NVStaticInitializers s_static_initializers;
 
-runtime::nvidiagpu::NVCompiledFunction::NVCompiledFunction(
+runtime::nvidiagpu::CompiledFunction::CompiledFunction(
     const shared_ptr<ngraph::Function>& function,
     const std::shared_ptr<NVBackend::BackendContext>& shared_context)
     : m_runtime(nullptr)
@@ -87,7 +87,7 @@ runtime::nvidiagpu::NVCompiledFunction::NVCompiledFunction(
 {
 }
 
-runtime::nvidiagpu::NVCompiledFunction::~NVCompiledFunction()
+runtime::nvidiagpu::CompiledFunction::~CompiledFunction()
 {
 }
 
@@ -114,7 +114,7 @@ std::vector<std::string> get_case_variants(std::vector<std::string> cases)
     return results;
 }
 
-std::shared_ptr<runtime::nvidiagpu::NVCompiledFunction> runtime::nvidiagpu::NVCompiledFunction::make(
+std::shared_ptr<runtime::nvidiagpu::CompiledFunction> runtime::nvidiagpu::CompiledFunction::make(
     const std::shared_ptr<ngraph::Function>& function,
     const std::shared_ptr<NVBackend::BackendContext>& shared_context)
 {
@@ -145,7 +145,7 @@ std::shared_ptr<runtime::nvidiagpu::NVCompiledFunction> runtime::nvidiagpu::NVCo
 #endif
 }
 
-void runtime::nvidiagpu::NVCompiledFunction::compile()
+void runtime::nvidiagpu::CompiledFunction::compile()
 {
     if (m_is_compiled)
     {
