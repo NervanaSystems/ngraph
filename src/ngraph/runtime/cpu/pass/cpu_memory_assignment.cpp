@@ -46,7 +46,7 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
 {
     list<shared_ptr<Node>> ops = function->get_ordered_ops();
 
-    // build tensor ailas maps for in place ops
+    // build tensor alias maps for in place ops
     // forward in place ops such as in place slice or reshape
     unordered_map<descriptor::Tensor*, descriptor::Tensor*> tensor_alias_map;
     // backward in place ops: concat
@@ -110,7 +110,7 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                         {
                             //propagate tensor alias
                             auto output_tensor = &concat->get_output_tensor();
-                            for (auto arg : concat->get_arguments())
+                            for (auto& arg : concat->get_arguments())
                             {
                                 auto input_tensor = &arg->get_output_tensor();
                                 if (tensor_alias_map.find(input_tensor) == tensor_alias_map.end())
@@ -130,6 +130,39 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                     {
                         for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                         {
+                            // check if any user has destructive io
+                            bool no_tensor_alias = false;
+                            for (auto& user : node->get_outputs().at(oi_pair.output).get_inputs())
+                            {
+                                auto user_node = user->get_node();
+                                auto input_index = user->get_index();
+                                if (user_node->is_op())
+                                {
+                                    auto user_op = std::static_pointer_cast<op::Op>(user_node);
+                                    if (auto user_op_annotations = op->get_op_annotations())
+                                    {
+                                        auto user_in_place_oi_pairs =
+                                            user_op_annotations->get_in_place_oi_pairs();
+                                        for (auto& user_oi_pair : user_in_place_oi_pairs)
+                                        {
+                                            if (user_oi_pair.input =
+                                                    input_index && user_oi_pair.destructive)
+                                            {
+                                                no_tensor_alias = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                if (no_tensor_alias)
+                                {
+                                    break;
+                                }
+                            }
+                            if (no_tensor_alias)
+                            {
+                                continue;
+                            }
                             auto output_tensor =
                                 &node->get_outputs().at(oi_pair.output).get_tensor();
                             auto input_tensor = &node->get_inputs().at(oi_pair.input).get_tensor();
@@ -148,7 +181,7 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
         }
     }
 
-    // liveness analysis using tensor alias map
+    // liveness analysis using tensor alias maps
     unordered_set<descriptor::Tensor*> persistent_tensors;
     unordered_set<descriptor::Tensor*> output_tensors;
     for (const shared_ptr<op::Parameter>& node : function->get_parameters())
