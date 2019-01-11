@@ -32,5 +32,5 @@ else:
     flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
 sys.setdlopenflags(flags)
 
-from _pyngraph import load_onnx_model
-from _pyngraph import load_onnx_model_file
+from _pyngraph import import_onnx_model
+from _pyngraph import import_onnx_model_file
