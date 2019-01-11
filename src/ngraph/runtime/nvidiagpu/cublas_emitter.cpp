@@ -28,9 +28,9 @@ runtime::nvidiagpu::CUBLASEmitter::CUBLASEmitter(PrimitiveEmitter* emitter, Runt
 }
 
 size_t runtime::nvidiagpu::CUBLASEmitter::build_dot(const element::Type& dtype,
-                                                const Shape& arg0_shape,
-                                                const Shape& arg1_shape,
-                                                const Shape& out_shape,
+                                                const ngraph::::Shape& arg0_shape,
+                                                const ngraph::::Shape& arg1_shape,
+                                                const ngraph::::Shape& out_shape,
                                                 size_t reduction_axes,
                                                 const Node* node)
 {
@@ -80,7 +80,7 @@ size_t runtime::nvidiagpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             if (arg0_shape[i] != arg1_shape[i])
             {
                 std::vector<std::string> arg_vec{"arg0", "arg1"};
-                std::vector<Shape> shape_vec{arg0_shape, arg1_shape};
+                std::vector<ngraph::Shape> shape_vec{arg0_shape, arg1_shape};
                 throw std::invalid_argument(get_error_string(arg_vec, shape_vec, node));
             }
         }
@@ -150,7 +150,7 @@ size_t runtime::nvidiagpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             if (arg0_shape[arg0_k_idx++] != arg1_shape[arg1_k_idx++])
             {
                 std::vector<std::string> arg_vec{"arg0", "arg1"};
-                std::vector<Shape> shape_vec{arg0_shape, arg1_shape};
+                std::vector<ngraph::Shape> shape_vec{arg0_shape, arg1_shape};
                 throw std::invalid_argument(get_error_string(arg_vec, shape_vec, node));
             }
         }
@@ -163,7 +163,7 @@ size_t runtime::nvidiagpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             if (arg0_shape[arg0_m_idx++] != out_shape[out_m_idx++])
             {
                 std::vector<std::string> arg_vec{"arg0", "output"};
-                std::vector<Shape> shape_vec{arg0_shape, out_shape};
+                std::vector<ngraph::Shape> shape_vec{arg0_shape, out_shape};
                 throw std::invalid_argument(get_error_string(arg_vec, shape_vec, node));
             }
         }
@@ -176,7 +176,7 @@ size_t runtime::nvidiagpu::CUBLASEmitter::build_dot(const element::Type& dtype,
             if (arg1_shape[arg1_n_idx++] != out_shape[out_n_idx++])
             {
                 std::vector<std::string> arg_vec{"arg1", "output"};
-                std::vector<Shape> shape_vec{arg1_shape, out_shape};
+                std::vector<ngraph::Shape> shape_vec{arg1_shape, out_shape};
                 throw std::invalid_argument(get_error_string(arg_vec, shape_vec, node));
             }
         }
@@ -226,7 +226,7 @@ void runtime::nvidiagpu::CUBLASEmitter::debug_sync()
 }
 
 std::string runtime::nvidiagpu::CUBLASEmitter::get_error_string(std::vector<std::string>& arg_names,
-                                                            std::vector<Shape>& shapes,
+                                                            std::vector<ngraph::Shape>& shapes,
                                                             const Node* node)
 {
     std::stringstream ss_err;

@@ -80,10 +80,10 @@ namespace ngraph
                                               std::initializer_list<int> arg_indexes = {});
             };
 
-            Shape get_padded_shape(const Shape& input_shape,
-                                   const Shape& padding_below,
-                                   const Shape& padding_above,
-                                   const Shape& padding_interior);
+            ngraph::Shape get_padded_shape(const ngraph::::Shape& input_shape,
+                                   const ngraph::::Shape& padding_below,
+                                   const ngraph::::Shape& padding_above,
+                                   const ngraph::::Shape& padding_interior);
         }
     }
 }

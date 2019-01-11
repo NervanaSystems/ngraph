@@ -24,8 +24,8 @@
 
 namespace ngraph
 {
-    class Shape;
-    /// \brief Shape for a tensor resident on NV.
+    class ngraph::Shape;
+    /// \brief CoordinateDiff for a tensor resident on NVIDIA GPU.
     class NVDiff : public std::vector<int32_t>
     {
     public:

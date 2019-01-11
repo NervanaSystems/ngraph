@@ -66,7 +66,7 @@ namespace ngraph
                     {
                         return;
                     }
-                    // Shape change only, tensor in native layout can be
+                    // ngraph::Shape change only, tensor in native layout can be
                     // forwarded to output
                     auto op_annotations = reshape->get_op_annotations();
                     if (op_annotations)
@@ -103,12 +103,12 @@ namespace ngraph
                         AxisVector reshape_axis_order = ngraph::get_default_order(ndim);
                         reshape_axis_order.erase(reshape_axis_order.begin() + topk_axis);
                         reshape_axis_order.push_back(topk_axis);
-                        Shape pre_reshape_out;
+                        ngraph::Shape pre_reshape_out;
                         for (size_t j = 0; j < ndim; j++)
                         {
                             pre_reshape_out.push_back(in_shape[reshape_axis_order[j]]);
                         }
-                        Shape pre_2d_reshape_out(2);
+                        ngraph::Shape pre_2d_reshape_out(2);
                         pre_2d_reshape_out[1] = pre_reshape_out[ndim - 1];
                         pre_2d_reshape_out[0] =
                             ngraph::shape_size(pre_reshape_out) / pre_2d_reshape_out[1];
@@ -141,7 +141,7 @@ namespace ngraph
                                 new_goes.push_back(new_goe);
                             }
                         }
-                        Shape reordered_out_shape;
+                        ngraph::Shape reordered_out_shape;
                         for (size_t j = 0; j < ndim; j++)
                         {
                             reordered_out_shape.push_back(out_shape[reshape_axis_order[j]]);
@@ -155,7 +155,7 @@ namespace ngraph
                 }
                 NodeVector insert_new_reshape_after(NodeVector& parents,
                                                     const AxisVector& axis_vector,
-                                                    const Shape& out_shape)
+                                                    const ngraph::::Shape& out_shape)
                 {
                     NodeVector reshapes;
                     for (auto& parent : parents)

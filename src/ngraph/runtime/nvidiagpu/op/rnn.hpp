@@ -29,8 +29,8 @@ namespace ngraph
             // across multiple time slices
 
             // INPUTS:
-            // [0] - {X0, X1...., Xt} input tensor of layout TNC, Shape{num_fused_layers*batch_size, feature_size}
-            // [1] - recurrent input tensor ht_1 of Shape{sequence length*batch_size, feature_size}
+            // [0] - {X0, X1...., Xt} input tensor of layout TNC, ngraph::Shape{num_fused_layers*batch_size, feature_size}
+            // [1] - recurrent input tensor ht_1 of ngraph::Shape{sequence length*batch_size, feature_size}
             // [2] - flat parameter tensor consisting of weights and biases for each layer
             //       {W_x^0 | W_h^0 | W_x^1 | W_h^1 | ... | B_x^0 | B_h^0 | B_x^1 | B_h^1 }
             // [3] - recurrent cell state tensor ct_1 with same shape as ht_1

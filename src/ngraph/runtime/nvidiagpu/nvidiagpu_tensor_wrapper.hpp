@@ -53,7 +53,7 @@ public:
                     const std::string& alias);
 
     size_t get_size() const;
-    const Shape& get_shape() const;
+    const ngraph::::Shape& get_shape() const;
     Strides get_strides() const;
     const element::Type& get_element_type() const;
     const std::string& get_name() const;

@@ -36,9 +36,9 @@ namespace ngraph
 
             public:
                 size_t build_dot(const element::Type& dtype,
-                                 const Shape& arg0_shape,
-                                 const Shape& arg1_shape,
-                                 const Shape& out_shape,
+                                 const ngraph::::Shape& arg0_shape,
+                                 const ngraph::::Shape& arg1_shape,
+                                 const ngraph::::Shape& out_shape,
                                  size_t reduction_axes,
                                  const Node* node);
 
@@ -50,7 +50,7 @@ namespace ngraph
                 PrimitiveEmitter* m_primitive_emitter;
                 RuntimeContext* m_ctx;
                 std::string get_error_string(std::vector<std::string>& arg_names,
-                                             std::vector<Shape>& shapes,
+                                             std::vector<ngraph::Shape>& shapes,
                                              const Node* node);
             };
         }

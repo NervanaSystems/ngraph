@@ -32,7 +32,7 @@
 using namespace ngraph;
 
 cudnnTensorDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::tensor_descriptor_from_shape(
-    const Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
+    const ngraph::::Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
 {
     cudnnTensorDescriptor_t& desc = m_descriptors.build<cudnnTensorDescriptor_t>();
     if (shape.size() < 4)
@@ -84,7 +84,7 @@ cudnnTensorDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::tensor_descriptor_fro
 }
 
 cudnnTensorDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::get_nd_tensor_descriptor(
-    const Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
+    const ngraph::::Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
 {
     cudnnTensorDescriptor_t& desc = m_descriptors.build<cudnnTensorDescriptor_t>();
     std::vector<int> dimensions(shape.size());
@@ -101,7 +101,7 @@ cudnnTensorDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::get_nd_tensor_descrip
     return desc;
 }
 
-std::vector<int> runtime::nvidiagpu::cudnn_util::compute_strides(const Shape& shape)
+std::vector<int> runtime::nvidiagpu::cudnn_util::compute_strides(const ngraph::::Shape& shape)
 {
     return runtime::nvidiagpu::cudnn_util::get_vector_int_from_size_t(row_major_strides(shape));
 }
@@ -160,7 +160,7 @@ cudnnDataType_t runtime::nvidiagpu::CUDNNEmitter::get_cudnn_datatype(const eleme
 
 size_t runtime::nvidiagpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorOp_t& reduce_op,
                                                           const std::vector<element::Type>& dtypes,
-                                                          const Shape& input_shape,
+                                                          const ngraph::::Shape& input_shape,
                                                           const AxisSet& reduction_axes,
                                                           const ReductionMode& reduction_mode)
 {
@@ -193,7 +193,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceT
     cudnnDataType_t data_type = get_cudnn_datatype(modified_input_type);
     cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
     auto& input_desc = tensor_descriptor_from_shape(input_shape, data_type, tensor_format);
-    Shape output_shape = input_shape;
+    ngraph::Shape output_shape = input_shape;
     // mark reduced axes of input tensor for output tensor descriptor
     for (auto const& idx_dim : reduction_axes)
     {
@@ -344,7 +344,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceT
 
 size_t runtime::nvidiagpu::CUDNNEmitter::build_tensor_op(const cudnnOpTensorOp_t& tensor_op,
                                                      const std::string& dtype,
-                                                     const Shape& input_shape,
+                                                     const ngraph::::Shape& input_shape,
                                                      const double alpha0,
                                                      const double alpha1,
                                                      const double beta)
@@ -393,7 +393,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_tensor_op(const cudnnOpTensorOp_t
 }
 
 cudnnFilterDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::get_cudnn_filter_descriptor(
-    const Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
+    const ngraph::::Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
 {
     std::vector<int> dimensions(fmax(4, shape.size()), 1);
     int idx = 0;
@@ -427,7 +427,7 @@ cudnnFilterDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::get_cudnn_filter_desc
 }
 
 cudnnFilterDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::get_nd_filter_descriptor(
-    const Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
+    const ngraph::::Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
 {
     auto& filter_descriptor = m_descriptors.build<cudnnFilterDescriptor_t>();
     std::vector<int> dimensions(shape.size());
@@ -445,7 +445,7 @@ cudnnFilterDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::get_nd_filter_descrip
 }
 
 cudnnConvolutionDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::get_cudnn_convolution_descriptor(
-    const Shape& padding,
+    const ngraph::::Shape& padding,
     const Strides& window_movement_strides,
     const Strides& window_dilation_strides,
     cudnnConvolutionMode_t mode,
@@ -529,15 +529,15 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::Convolution* 
 
     bool pad_required = (padding_below_diff != padding_above_diff);
 
-    Shape padding_below(padding_below_diff.size(), 0);
-    Shape padding_above(padding_above_diff.size(), 0);
+    ngraph::Shape padding_below(padding_below_diff.size(), 0);
+    ngraph::Shape padding_above(padding_above_diff.size(), 0);
     for (int i = 0; i < padding_below.size(); i++)
     {
         padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
         padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
     }
-    Shape input_shape_padded = input_shape;
-    Shape padding_interior(data_dilation_strides);
+    ngraph::Shape input_shape_padded = input_shape;
+    ngraph::Shape padding_interior(data_dilation_strides);
 
     size_t idx_workspace = std::numeric_limits<size_t>::max();
     size_t pad_index = std::numeric_limits<size_t>::max();
@@ -638,8 +638,8 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::ConvolutionBa
 
     bool pad_required = (padding_below_diff != padding_above_diff);
 
-    Shape padding_below(padding_below_diff.size(), 0);
-    Shape padding_above(padding_above_diff.size(), 0);
+    ngraph::Shape padding_below(padding_below_diff.size(), 0);
+    ngraph::Shape padding_above(padding_above_diff.size(), 0);
     for (int i = 0; i < padding_below.size(); i++)
     {
         padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
@@ -647,8 +647,8 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::ConvolutionBa
     }
 
     auto output_shape_padded = output_shape;
-    Shape padding_below_back(output_shape.size(), 0);
-    Shape padding_interior_back(output_shape.size(), 1);
+    ngraph::Shape padding_below_back(output_shape.size(), 0);
+    ngraph::Shape padding_interior_back(output_shape.size(), 1);
     size_t i = padding_below_back.size() - padding_below.size();
     size_t j = 0;
     for (; i < padding_below_back.size(); i++)
@@ -658,7 +658,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::ConvolutionBa
         j++;
     }
 
-    Shape padding_interior(data_dilation_strides);
+    ngraph::Shape padding_interior(data_dilation_strides);
 
     size_t idx_workspace = std::numeric_limits<size_t>::max();
     size_t pad_index = std::numeric_limits<size_t>::max();
@@ -769,15 +769,15 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::ConvolutionBa
 
     bool pad_required = (padding_below_diff != padding_above_diff);
 
-    Shape padding_below(padding_below_diff.size(), 0);
-    Shape padding_above(padding_above_diff.size(), 0);
+    ngraph::Shape padding_below(padding_below_diff.size(), 0);
+    ngraph::Shape padding_above(padding_above_diff.size(), 0);
     for (int i = 0; i < padding_below.size(); i++)
     {
         padding_below[i] = static_cast<size_t>(padding_below_diff[i]);
         padding_above[i] = static_cast<size_t>(padding_above_diff[i]);
     }
     auto input_shape_padded = input_shape_0;
-    Shape padding_interior(data_dilation_strides);
+    ngraph::Shape padding_interior(data_dilation_strides);
 
     size_t idx_workspace = std::numeric_limits<size_t>::max();
     size_t pad_index = std::numeric_limits<size_t>::max();
@@ -872,7 +872,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::MaxPool* node
     size_t pad_index = std::numeric_limits<size_t>::max();
     if (padding_below != padding_above)
     {
-        Shape padding_interior(padding_below.size(), 1);
+        ngraph::Shape padding_interior(padding_below.size(), 1);
         input_shape_padded =
             runtime::nvidiagpu::get_padded_shape(input_shape, padding_below, padding_above, {});
         padded_size = shape_size(input_shape_padded);
@@ -1124,11 +1124,11 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::nvidiagpu::Rn
     // TO DO: with rnn projection layers the third dimension of the hidden_shape should be recProjSize
     cudnnTensorFormat_t format = CUDNN_TENSOR_NCHW;
     uint32_t num_layers = node->get_num_fused_layers() * direction;
-    Shape hidden_shape{num_layers, batch_size, hidden_size};
+    ngraph::Shape hidden_shape{num_layers, batch_size, hidden_size};
     auto& hx_desc = get_nd_tensor_descriptor(hidden_shape, data_type, format);
     auto& hy_desc = get_nd_tensor_descriptor(hidden_shape, data_type, format);
 
-    Shape cell_state_shape{num_layers, batch_size, hidden_size};
+    ngraph::Shape cell_state_shape{num_layers, batch_size, hidden_size};
     auto& cx_desc = get_nd_tensor_descriptor(cell_state_shape, data_type, format);
     auto& cy_desc = get_nd_tensor_descriptor(cell_state_shape, data_type, format);
 
@@ -1183,12 +1183,12 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::nvidiagpu::Rn
 
     // construct descriptor for RNN  parameters
     auto& temp_input_desc =
-        get_nd_tensor_descriptor(Shape{batch_size, input_size, 1}, data_type, format);
+        get_nd_tensor_descriptor(ngraph::Shape{batch_size, input_size, 1}, data_type, format);
 
     size_t params_size = 0;
     CUDNN_SAFE_CALL(cudnnGetRNNParamsSize(
         *m_ctx->cudnn_handle, rnn_desc, temp_input_desc, &params_size, data_type));
-    auto& w_desc = get_nd_filter_descriptor(Shape{params_size, 1, 1}, data_type, format);
+    auto& w_desc = get_nd_filter_descriptor(ngraph::Shape{params_size, 1, 1}, data_type, format);
 
     int num_tensors_per_layer = [&mode] {
         switch (mode)
@@ -1285,12 +1285,12 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::nvidiagpu::Rn
 #endif
 
 size_t runtime::nvidiagpu::CUDNNEmitter::build_convolution(const std::string& dtype,
-                                                       const Shape& input_tensor_shape,
-                                                       const Shape& input_filter_shape,
-                                                       const Shape& output_tensor_shape,
+                                                       const ngraph::::Shape& input_tensor_shape,
+                                                       const ngraph::::Shape& input_filter_shape,
+                                                       const ngraph::::Shape& output_tensor_shape,
                                                        const Strides& window_movement_strides,
                                                        const Strides& window_dilation_strides,
-                                                       const Shape& padding_below,
+                                                       const ngraph::::Shape& padding_below,
                                                        const algo_search find_algo)
 {
     cudnnDataType_t data_type = get_cudnn_datatype(dtype);
@@ -1371,12 +1371,12 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_convolution(const std::string& dt
 
 size_t runtime::nvidiagpu::CUDNNEmitter::build_convolution_backward_data(
     const std::string& dtype,
-    const Shape& input_filter_shape,
-    const Shape& input_tensor_shape,
-    const Shape& output_tensor_shape,
+    const ngraph::::Shape& input_filter_shape,
+    const ngraph::::Shape& input_tensor_shape,
+    const ngraph::::Shape& output_tensor_shape,
     const Strides& window_movement_strides,
     const Strides& window_dilation_strides,
-    const Shape& padding_below,
+    const ngraph::::Shape& padding_below,
     const algo_search find_algo)
 {
     const cudnnDataType_t data_type = get_cudnn_datatype(dtype);
@@ -1458,12 +1458,12 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_convolution_backward_data(
 
 size_t runtime::nvidiagpu::CUDNNEmitter::build_convolution_backward_filter(
     const std::string& dtype,
-    const Shape& input_tensor_shape_0,
-    const Shape& input_tensor_shape_1,
-    const Shape& output_filter_shape,
+    const ngraph::::Shape& input_tensor_shape_0,
+    const ngraph::::Shape& input_tensor_shape_1,
+    const ngraph::::Shape& output_filter_shape,
     const Strides& window_movement_strides,
     const Strides& window_dilation_strides,
-    const Shape& padding_below,
+    const ngraph::::Shape& padding_below,
     const algo_search find_algo)
 {
     const cudnnDataType_t data_type = get_cudnn_datatype(dtype);
@@ -1545,12 +1545,12 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_convolution_backward_filter(
 size_t runtime::nvidiagpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_op,
                                                    const element::Type& dtype,
                                                    const Prop& direction,
-                                                   const Shape& input_shape,
-                                                   const Shape& output_shape,
+                                                   const ngraph::::Shape& input_shape,
+                                                   const ngraph::::Shape& output_shape,
                                                    const Strides& window_strides,
-                                                   const Shape& window_shape,
-                                                   const Shape& padding_below,
-                                                   const Shape& padding_above,
+                                                   const ngraph::::Shape& window_shape,
+                                                   const ngraph::::Shape& padding_below,
+                                                   const ngraph::::Shape& padding_above,
                                                    bool bprop_needs_pooling)
 {
     // construct hash to determine if kernel needs to be emitted
@@ -1728,8 +1728,8 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t&
 size_t runtime::nvidiagpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& bn_op,
                                                      const std::string& dtype,
                                                      const Prop& direction,
-                                                     const Shape& tensor_shape,
-                                                     const Shape& param_shape,
+                                                     const ngraph::::Shape& tensor_shape,
+                                                     const ngraph::::Shape& param_shape,
                                                      double epsilon,
                                                      bool global_stats,
                                                      bool save_stats,
@@ -1876,7 +1876,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMod
             size_t inv_var_idx = allocator.reserve_workspace(tensor_shape[1] * dtype.size());
             auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
             auto reciprocal_idx = cuda_emitter->build_cudnn_bn_inv_var(
-                {dtype, dtype}, Shape{tensor_shape[1]}, epsilon);
+                {dtype, dtype}, ngraph::Shape{tensor_shape[1]}, epsilon);
             batchnorm.reset(new nvidiagpu::primitive{[=](void** inputs, void** outputs) {
                 void* inv_var = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, inv_var_idx);
                 nvidiagpu::invoke_primitive(m_ctx, reciprocal_idx, &inputs[4], &inv_var);
@@ -1899,7 +1899,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMod
 
 size_t runtime::nvidiagpu::CUDNNEmitter::build_lrn(const std::string& dtype,
                                                const Prop& direction,
-                                               const Shape& io_shape,
+                                               const ngraph::::Shape& io_shape,
                                                const double lrn_alpha,
                                                const double lrn_beta,
                                                const double lrn_bias,

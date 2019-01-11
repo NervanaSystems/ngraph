@@ -78,16 +78,16 @@ op::nvidiagpu::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     set_output_size(3);
     set_output_type(0,
                     src_layer->get_element_type(),
-                    Shape{static_cast<unsigned long>(m_direction * m_num_timesteps * m_batch_size),
+                    ngraph::Shape{static_cast<unsigned long>(m_direction * m_num_timesteps * m_batch_size),
                           static_cast<unsigned long>(m_src_iter_feature_size)});
     set_output_type(
         1,
         src_layer->get_element_type(),
-        Shape{static_cast<unsigned long>(m_direction * m_num_fused_layers * m_batch_size),
+        ngraph::Shape{static_cast<unsigned long>(m_direction * m_num_fused_layers * m_batch_size),
               static_cast<unsigned long>(m_src_iter_feature_size)});
     set_output_type(
         2,
         src_layer->get_element_type(),
-        Shape{static_cast<unsigned long>(m_direction * m_num_fused_layers * m_batch_size),
+        ngraph::Shape{static_cast<unsigned long>(m_direction * m_num_fused_layers * m_batch_size),
               static_cast<unsigned long>(m_src_iter_feature_size)});
 }

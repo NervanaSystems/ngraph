@@ -441,7 +441,7 @@ std::string runtime::nvidiagpu::Emitter::emit_Concat(EMIT_ARGS)
     auto concat = static_cast<const ngraph::op::Concat*>(node);
     auto axis = concat->get_concatenation_axis();
 
-    vector<NVShape> input_shapes;
+    vector<NVDims> input_shapes;
     for (auto arg : args)
     {
         input_shapes.push_back(arg.get_shape());
@@ -558,9 +558,9 @@ std::string runtime::nvidiagpu::Emitter::emit_Dot(EMIT_ARGS)
     }
     auto dot = static_cast<const ngraph::op::Dot*>(node);
     size_t reduction_axes_count = dot->get_reduction_axes_count();
-    const Shape& arg0_shape = args[0].get_shape();
-    const Shape& arg1_shape = args[1].get_shape();
-    const Shape& out_shape = out[0].get_shape();
+    const ngraph::::Shape& arg0_shape = args[0].get_shape();
+    const ngraph::::Shape& arg1_shape = args[1].get_shape();
+    const ngraph::::Shape& out_shape = out[0].get_shape();
 
     size_t index;
     // set output to 0 if input size is 0
@@ -1102,7 +1102,7 @@ std::string runtime::nvidiagpu::Emitter::emit_Reshape(EMIT_ARGS)
     }
 
     //combine inordered dimensons after reorder in shape, update output shape and input order
-    Shape in_order_map(arg_rank, 0);
+    ngraph::Shape in_order_map(arg_rank, 0);
     for (int i = 0; i < arg_rank - 1; i++)
     {
         if (static_cast<int64_t>(input_order[i + 1]) - static_cast<int64_t>(input_order[i]) == 1)
@@ -1111,9 +1111,9 @@ std::string runtime::nvidiagpu::Emitter::emit_Reshape(EMIT_ARGS)
         }
     }
 
-    Shape combine_arg_shape;
-    Shape combine_idx_map(arg_rank, 0);
-    Shape combine_input_order;
+    ngraph::Shape combine_arg_shape;
+    ngraph::Shape combine_idx_map(arg_rank, 0);
+    ngraph::Shape combine_input_order;
     size_t shape_i = 1;
     size_t combine_rank = 0;
     for (int i = 0; i < arg_rank; i++)
@@ -1139,10 +1139,10 @@ std::string runtime::nvidiagpu::Emitter::emit_Reshape(EMIT_ARGS)
     }
 
     //eleminate dimenson size = 1, update input order and output shape
-    Shape new_arg_shape;
-    Shape new_result_shape;
-    Shape new_idx_map(combine_rank, 0);
-    Shape new_input_order;
+    ngraph::Shape new_arg_shape;
+    ngraph::Shape new_result_shape;
+    ngraph::Shape new_idx_map(combine_rank, 0);
+    ngraph::Shape new_input_order;
     size_t new_rank = 0;
     for (int i = 0; i < combine_rank; i++)
     {
@@ -1296,7 +1296,7 @@ std::string runtime::nvidiagpu::Emitter::emit_SelectAndScatter(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::nvidiagpu::Emitter::emit_ShapeOf(EMIT_ARGS)
+std::string runtime::nvidiagpu::Emitter::emit_ngraph::ShapeOf(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
@@ -1509,12 +1509,12 @@ string runtime::nvidiagpu::Emitter::node_names(const vector<nvidiagpu::TensorWra
 }
 
 // assumes NC{d1,d2,d3,...} format
-Shape runtime::nvidiagpu::get_padded_shape(const Shape& input_shape,
-                                       const Shape& padding_below,
-                                       const Shape& padding_above,
-                                       const Shape& padding_interior)
+ngraph::Shape runtime::nvidiagpu::get_padded_shape(const ngraph::::Shape& input_shape,
+                                       const ngraph::::Shape& padding_below,
+                                       const ngraph::::Shape& padding_above,
+                                       const ngraph::::Shape& padding_interior)
 {
-    Shape padded_shape = input_shape;
+    ngraph::Shape padded_shape = input_shape;
     int64_t i = input_shape.size() - 1;
     int64_t j = padding_below.size() - 1;
     if (padding_interior.empty())

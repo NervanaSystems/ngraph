@@ -58,13 +58,13 @@ using namespace ngraph;
 void ngraph::runtime::nvidiagpu::pass::LSTMFusion::construct_sigmoid()
 {
     //construct variance
-    auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
+    auto input = std::make_shared<pattern::op::Label>(element::f32, ngraph::Shape{3, 4});
     auto neg_input = std::make_shared<op::Negative>(input);
     auto exp_neg_input = std::make_shared<op::Exp>(neg_input);
 
     // broadcast input
-    auto constant = std::make_shared<pattern::op::Label>(element::f32, Shape{});
-    auto broadcast_constant = std::make_shared<op::Broadcast>(constant, Shape{3, 4}, AxisSet{0, 1});
+    auto constant = std::make_shared<pattern::op::Label>(element::f32, ngraph::Shape{});
+    auto broadcast_constant = std::make_shared<op::Broadcast>(constant, ngraph::Shape{3, 4}, AxisSet{0, 1});
 
     auto add_exp = std::make_shared<op::Add>(exp_neg_input, broadcast_constant);
     auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
@@ -121,31 +121,31 @@ static std::shared_ptr<Node> compute_lstm_params(const std::shared_ptr<Node>& w_
     {
         auto shape = param->get_shape();
         flat_params.push_back(std::make_shared<op::Reshape>(
-            param, get_default_order(shape), Shape{shape_size(shape)}));
+            param, get_default_order(shape), ngraph::Shape{shape_size(shape)}));
     }
     return std::make_shared<op::Concat>(flat_params, 0);
 }
 
 void ngraph::runtime::nvidiagpu::pass::LSTMFusion::construct_lstm_fprop()
 {
-    auto input_xt = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
-    auto weights_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 100});
+    auto input_xt = std::make_shared<pattern::op::Label>(element::f32, ngraph::Shape{10, 100});
+    auto weights_i2h = std::make_shared<pattern::op::Label>(element::f32, ngraph::Shape{400, 100});
     auto weights_i2h_reshape =
-        std::make_shared<op::Reshape>(weights_i2h, AxisVector{1, 0}, Shape{100, 400});
+        std::make_shared<op::Reshape>(weights_i2h, AxisVector{1, 0}, ngraph::Shape{100, 400});
     auto dot_1 = std::make_shared<op::Dot>(input_xt, weights_i2h_reshape);
 
-    auto bias_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
-    auto broadcast_bias_i2h = std::make_shared<op::Broadcast>(bias_i2h, Shape{10, 400}, AxisSet{0});
+    auto bias_i2h = std::make_shared<pattern::op::Label>(element::f32, ngraph::Shape{400});
+    auto broadcast_bias_i2h = std::make_shared<op::Broadcast>(bias_i2h, ngraph::Shape{10, 400}, AxisSet{0});
     auto add_1 = std::make_shared<op::Add>(dot_1, broadcast_bias_i2h);
 
-    auto hidden_ht = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50});
-    auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 50});
+    auto hidden_ht = std::make_shared<pattern::op::Label>(element::f32, ngraph::Shape{10, 50});
+    auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, ngraph::Shape{400, 50});
     auto param2_2_reshape =
-        std::make_shared<op::Reshape>(weights_h2h, AxisVector{1, 0}, Shape{50, 400});
+        std::make_shared<op::Reshape>(weights_h2h, AxisVector{1, 0}, ngraph::Shape{50, 400});
     auto dot_2 = std::make_shared<op::Dot>(hidden_ht, param2_2_reshape);
 
-    auto bias_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
-    auto broadcast_bias_h2h = std::make_shared<op::Broadcast>(bias_h2h, Shape{10, 400}, AxisSet{0});
+    auto bias_h2h = std::make_shared<pattern::op::Label>(element::f32, ngraph::Shape{400});
+    auto broadcast_bias_h2h = std::make_shared<op::Broadcast>(bias_h2h, ngraph::Shape{10, 400}, AxisSet{0});
     auto add_2 = std::make_shared<op::Add>(dot_2, broadcast_bias_h2h);
 
     auto X = std::make_shared<op::Add>(add_2, add_1);
@@ -154,7 +154,7 @@ void ngraph::runtime::nvidiagpu::pass::LSTMFusion::construct_lstm_fprop()
     auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
 
     //ct-1 -> cell state
-    auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
+    auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, ngraph::Shape{10, 100});
     auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, ct_1);
 
     // construct input gate
@@ -373,11 +373,11 @@ static std::shared_ptr<ngraph::Node>
 
 void ngraph::runtime::nvidiagpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 {
-    auto xt = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
-    auto ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
+    auto xt = std::make_shared<pattern::op::Label>(element::f32, ngraph::Shape{32, 100});
+    auto ht_1 = std::make_shared<pattern::op::Label>(element::f32, ngraph::Shape{32, 100});
     auto params_label = std::make_shared<pattern::op::Label>(
-        element::f32, Shape{400 * 100 + 400 * 100 + 400 + 400});
-    auto rpattern_ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 100});
+        element::f32, ngraph::Shape{400 * 100 + 400 * 100 + 400 + 400});
+    auto rpattern_ct_1 = std::make_shared<pattern::op::Label>(element::f32, ngraph::Shape{32, 100});
 
     auto lstm = std::make_shared<op::nvidiagpu::Rnn>(xt,
                                                  ht_1,
@@ -649,15 +649,15 @@ static std::shared_ptr<Node>
 
 void ngraph::runtime::nvidiagpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_fusion_fprop()
 {
-    auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
+    auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, ngraph::Shape{30, 100});
 
     auto src_slice =
         std::make_shared<pattern::op::Skip>(src_layer_label, pattern::has_class<op::Slice>());
 
-    auto src_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});
+    auto src_iter_label = std::make_shared<pattern::op::Label>(element::f32, ngraph::Shape{20, 100});
     auto params_label = std::make_shared<pattern::op::Label>(
-        element::f32, Shape{400 * 100 + 400 * 100 + 400 + 400});
-    auto state_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});
+        element::f32, ngraph::Shape{400 * 100 + 400 * 100 + 400 + 400});
+    auto state_iter_label = std::make_shared<pattern::op::Label>(element::f32, ngraph::Shape{20, 100});
 
     size_t ref_number_of_timesteps = 3;
     size_t ref_number_of_gates_per_cell = 4;

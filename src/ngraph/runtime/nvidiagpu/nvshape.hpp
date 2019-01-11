@@ -29,127 +29,127 @@
 
 namespace ngraph
 {
-    class Shape;
-    /// \brief Shape for a tensor resident on NV.
-    class NVShape : public std::vector<uint32_t>
+    class ngraph::Shape;
+    /// \brief ngraph::Shape for a tensor resident on NV.
+    class NVDims : public std::vector<uint32_t>
     {
     public:
-        NVShape(const std::initializer_list<uint32_t>& axis_lengths)
+        NVDims(const std::initializer_list<uint32_t>& axis_lengths)
             : std::vector<uint32_t>(axis_lengths)
         {
         }
 
-        NVShape(const std::vector<uint32_t>& axis_lengths)
+        NVDims(const std::vector<uint32_t>& axis_lengths)
             : std::vector<uint32_t>(axis_lengths)
         {
         }
 
-        NVShape(const NVShape& axis_lengths)
+        NVDims(const NVDims& axis_lengths)
             : std::vector<uint32_t>(axis_lengths)
         {
         }
 
-        explicit NVShape(size_t n, uint32_t initial_value = 0)
+        explicit NVDims(size_t n, uint32_t initial_value = 0)
             : std::vector<uint32_t>(n, initial_value)
         {
         }
 
         template <class InputIterator>
-        NVShape(InputIterator first, InputIterator last)
+        NVDims(InputIterator first, InputIterator last)
             : std::vector<uint32_t>(first, last)
         {
         }
 
-        NVShape() {}
-        NVShape& operator=(const NVShape& v)
+        NVDims() {}
+        NVDims& operator=(const NVDims& v)
         {
             static_cast<std::vector<uint32_t>*>(this)->operator=(v);
             return *this;
         }
 
-        NVShape& operator=(NVShape&& v)
+        NVDims& operator=(NVDims&& v)
         {
             static_cast<std::vector<uint32_t>*>(this)->operator=(v);
             return *this;
         }
 
-        NVShape(const std::vector<size_t>& vec)
+        NVDims(const std::vector<size_t>& vec)
         {
             for (size_t const& size : vec)
             {
                 if (size >> 32 != 0)
                 {
                     throw std::runtime_error(
-                        "Request exceeds the bitwidth available for NVShapes (32)");
+                        "Request exceeds the bitwidth available for NVDimss (32)");
                 }
                 this->push_back(static_cast<uint32_t>(size));
             }
         }
 
-        NVShape(const Shape& shape)
+        NVDims(const ngraph::::Shape& shape)
         {
             for (size_t const& size : shape)
             {
                 if (size >> 32 != 0)
                 {
                     throw std::runtime_error(
-                        "Request for Shape which exceeds the bitwidth available for NVShapes "
+                        "Request for ngraph::Shape which exceeds the bitwidth available for NVDimss "
                         "(32)");
                 }
                 this->push_back(static_cast<uint32_t>(size));
             }
         }
 
-        NVShape(const Strides& strides)
+        NVDims(const Strides& strides)
         {
             for (size_t const& size : strides)
             {
                 if (size >> 32 != 0)
                 {
                     throw std::runtime_error(
-                        "Request for Strides which exceed the bitwidth available for NVShapes "
+                        "Request for Strides which exceed the bitwidth available for NVDimss "
                         "(32)");
                 }
                 this->push_back(static_cast<uint32_t>(size));
             }
         }
 
-        NVShape(const Coordinate& coord)
+        NVDims(const Coordinate& coord)
         {
             for (size_t const& size : coord)
             {
                 if (size >> 32 != 0)
                 {
                     throw std::runtime_error(
-                        "Request for Coordinate which exceed the bitwidth available for NVShapes "
+                        "Request for Coordinate which exceed the bitwidth available for NVDimss "
                         "(32)");
                 }
                 this->push_back(static_cast<uint32_t>(size));
             }
         }
 
-        NVShape(const AxisVector& vec)
+        NVDims(const AxisVector& vec)
         {
             for (auto const& size : vec)
             {
                 if (size >> 32 != 0)
                 {
                     throw std::runtime_error(
-                        "Request for axis vector which exceed the bitwidth available for NVShapes "
+                        "Request for axis vector which exceed the bitwidth available for NVDimss "
                         "(32)");
                 }
                 this->push_back(static_cast<uint32_t>(size));
             }
         }
 
-        NVShape(const AxisSet& axes_set)
+        NVDims(const AxisSet& axes_set)
         {
             for (auto const& size : axes_set)
             {
                 if (size >> 32 != 0)
                 {
                     throw std::runtime_error(
-                        "Request for axis set which exceed the bitwidth available for NVShapes "
+                        "Request for axis set which exceed the bitwidth available for NVDimss "
                         "(32)");
                 }
                 this->push_back(static_cast<uint32_t>(size));

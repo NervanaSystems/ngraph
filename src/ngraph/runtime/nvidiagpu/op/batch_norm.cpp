@@ -25,7 +25,7 @@ ngraph::op::nvidiagpu::BatchNormTrainingWithStats::BatchNormTrainingWithStats(
 {
     auto output_index = get_output_size();
     set_output_size(output_index + 2);
-    Shape channel_shape{input->get_shape()[1]};
+    ngraph::Shape channel_shape{input->get_shape()[1]};
     // saved batch mean
     set_output_type(output_index++, input->get_element_type(), channel_shape);
     // saved batch inverse variance

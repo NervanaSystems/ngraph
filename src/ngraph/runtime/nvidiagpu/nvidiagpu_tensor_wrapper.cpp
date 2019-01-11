@@ -46,7 +46,7 @@ size_t runtime::nvidiagpu::TensorWrapper::get_size() const
     return m_tensor->get_tensor_layout()->get_size();
 }
 
-const Shape& runtime::nvidiagpu::TensorWrapper::get_shape() const
+const ngraph::::Shape& runtime::nvidiagpu::TensorWrapper::get_shape() const
 {
     return m_tensor->get_tensor_layout()->get_shape();
 }
