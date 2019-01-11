@@ -20,7 +20,7 @@
 #include "ngraph/runtime/nvidiagpu/nvidiagpu_compiled_function.hpp"
 
 #define LAYOUT_DECL(op_type)                                                                       \
-    layout<op_type>(ngraph::runtime::nvidiagpu::CompiledFunction * compiled_function,                \
+    layout<op_type>(ngraph::runtime::nvidiagpu::CompiledFunction * compiled_function,              \
                     std::shared_ptr<ngraph::Node> node)
 
 namespace ngraph

@@ -26,7 +26,9 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            void print_nvidiagpu_f32_tensor(const void* p, size_t element_count, size_t element_size);
+            void print_nvidiagpu_f32_tensor(const void* p,
+                                            size_t element_count,
+                                            size_t element_size);
             void check_cuda_errors(CUresult err);
             void* create_nvidiagpu_buffer(size_t buffer_size, const void* data = nullptr);
             void free_nvidiagpu_buffer(void* buffer);

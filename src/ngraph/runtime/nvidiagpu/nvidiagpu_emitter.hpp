@@ -81,9 +81,9 @@ namespace ngraph
             };
 
             ngraph::Shape get_padded_shape(const ngraph::Shape& input_shape,
-                                   const ngraph::Shape& padding_below,
-                                   const ngraph::Shape& padding_above,
-                                   const ngraph::Shape& padding_interior);
+                                           const ngraph::Shape& padding_below,
+                                           const ngraph::Shape& padding_above,
+                                           const ngraph::Shape& padding_interior);
         }
     }
 }

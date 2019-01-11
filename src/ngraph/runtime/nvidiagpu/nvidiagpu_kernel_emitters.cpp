@@ -24,9 +24,9 @@
 using namespace ngraph;
 
 void runtime::nvidiagpu::kernel::emit_memset(codegen::CodeWriter& writer,
-                                         const nvidiagpu::TensorWrapper& dst,
-                                         int value,
-                                         size_t buffer_size)
+                                             const nvidiagpu::TensorWrapper& dst,
+                                             int value,
+                                             size_t buffer_size)
 {
     if (buffer_size == 0)
     {
@@ -37,9 +37,9 @@ void runtime::nvidiagpu::kernel::emit_memset(codegen::CodeWriter& writer,
 }
 
 void runtime::nvidiagpu::kernel::emit_memcpyDtD(codegen::CodeWriter& writer,
-                                            const nvidiagpu::TensorWrapper& dst,
-                                            const nvidiagpu::TensorWrapper& src,
-                                            size_t buffer_size)
+                                                const nvidiagpu::TensorWrapper& dst,
+                                                const nvidiagpu::TensorWrapper& src,
+                                                size_t buffer_size)
 {
     if (buffer_size == 0)
     {
@@ -47,18 +47,19 @@ void runtime::nvidiagpu::kernel::emit_memcpyDtD(codegen::CodeWriter& writer,
                << ", " << dst.get_size() << " * " << dst.get_element_type().size() << ");\n";
         return;
     }
-    writer << "runtime::nvidiagpu::cuda_memcpyDtD(" << dst.get_name() << ", " << src.get_name() << ", "
-           << buffer_size << ");\n";
+    writer << "runtime::nvidiagpu::cuda_memcpyDtD(" << dst.get_name() << ", " << src.get_name()
+           << ", " << buffer_size << ");\n";
     return;
 }
 
-void runtime::nvidiagpu::kernel::emit_cudnnConvolutionDescriptor(codegen::CodeWriter& writer,
-                                                             const std::string& name,
-                                                             const ngraph::CoordinateDiff& padding,
-                                                             const Strides& window_movement_strides,
-                                                             const Strides& window_dilation_strides,
-                                                             const std::string& mode,
-                                                             const std::string& data_type)
+void runtime::nvidiagpu::kernel::emit_cudnnConvolutionDescriptor(
+    codegen::CodeWriter& writer,
+    const std::string& name,
+    const ngraph::CoordinateDiff& padding,
+    const Strides& window_movement_strides,
+    const Strides& window_dilation_strides,
+    const std::string& mode,
+    const std::string& data_type)
 {
     writer << "auto& " << name << " = descriptors.build<cudnnConvolutionDescriptor_t>();\n";
 
@@ -85,10 +86,10 @@ void runtime::nvidiagpu::kernel::emit_cudnnConvolutionDescriptor(codegen::CodeWr
 }
 
 void runtime::nvidiagpu::kernel::emit_cudnnFilterDescriptor(codegen::CodeWriter& writer,
-                                                        const std::string& name,
-                                                        const std::string& format,
-                                                        const std::string& data_type,
-                                                        const ngraph::Shape& shape)
+                                                            const std::string& name,
+                                                            const std::string& format,
+                                                            const std::string& data_type,
+                                                            const ngraph::Shape& shape)
 {
     ngraph::Shape dimensions(fmax(4, shape.size()), 1);
     int idx = 0;
@@ -121,10 +122,10 @@ void runtime::nvidiagpu::kernel::emit_cudnnFilterDescriptor(codegen::CodeWriter&
 }
 
 void runtime::nvidiagpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter& writer,
-                                                        const std::string& name,
-                                                        const std::string& format,
-                                                        const std::string& data_type,
-                                                        const ngraph::Shape& shape)
+                                                            const std::string& name,
+                                                            const std::string& format,
+                                                            const std::string& data_type,
+                                                            const ngraph::Shape& shape)
 {
     ngraph::Shape dimensions(fmax(4, shape.size()), 1);
     int idx = 0;
@@ -158,10 +159,10 @@ void runtime::nvidiagpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter&
 }
 
 void runtime::nvidiagpu::kernel::emit_cudnnTensor4dDescriptor(codegen::CodeWriter& writer,
-                                                          const std::string& name,
-                                                          const std::string& format,
-                                                          const std::string& data_type,
-                                                          const std::array<size_t, 4>& axes)
+                                                              const std::string& name,
+                                                              const std::string& format,
+                                                              const std::string& data_type,
+                                                              const std::array<size_t, 4>& axes)
 {
     writer << "auto& " << name << " = descriptors.build<cudnnTensorDescriptor_t>();\n";
     writer << "CUDNN_SAFE_CALL(cudnnSetTensor4dDescriptor(" << name << ",\n";
@@ -175,11 +176,11 @@ void runtime::nvidiagpu::kernel::emit_cudnnTensor4dDescriptor(codegen::CodeWrite
 }
 
 void runtime::nvidiagpu::kernel::emit_cudnnTensorNdDescriptor(codegen::CodeWriter& writer,
-                                                          const std::string& name,
-                                                          const std::string& data_type,
-                                                          const size_t& num_axes,
-                                                          const std::vector<size_t>& axes,
-                                                          const std::vector<size_t>& strides)
+                                                              const std::string& name,
+                                                              const std::string& data_type,
+                                                              const size_t& num_axes,
+                                                              const std::vector<size_t>& axes,
+                                                              const std::vector<size_t>& strides)
 {
     writer << "const int " << name << "_axes[] = {" << join(axes) << "};\n";
     writer << "const int " << name << "_strides[] = {" << join(strides) << "};\n";
@@ -192,15 +193,15 @@ void runtime::nvidiagpu::kernel::emit_cudnnTensorNdDescriptor(codegen::CodeWrite
 }
 
 void runtime::nvidiagpu::kernel::emit_cudnnReduceTensor(codegen::CodeWriter& writer,
-                                                    const nvidiagpu::TensorWrapper& in,
-                                                    const nvidiagpu::TensorWrapper& out,
-                                                    const std::string& reduce_op,
-                                                    const std::string& data_type,
-                                                    const std::string& nan_prop,
-                                                    const std::string& input_desc,
-                                                    const std::string& output_desc,
-                                                    const float& alpha,
-                                                    const float& beta)
+                                                        const nvidiagpu::TensorWrapper& in,
+                                                        const nvidiagpu::TensorWrapper& out,
+                                                        const std::string& reduce_op,
+                                                        const std::string& data_type,
+                                                        const std::string& nan_prop,
+                                                        const std::string& input_desc,
+                                                        const std::string& output_desc,
+                                                        const float& alpha,
+                                                        const float& beta)
 {
     writer << "auto& reduceTensorDesc = descriptors.build<cudnnReduceTensorDescriptor_t>();\n";
     writer << "CUDNN_SAFE_CALL(cudnnSetReduceTensorDescriptor(reduceTensorDesc,\n";

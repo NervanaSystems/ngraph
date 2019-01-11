@@ -28,11 +28,11 @@ runtime::nvidiagpu::CUBLASEmitter::CUBLASEmitter(PrimitiveEmitter* emitter, Runt
 }
 
 size_t runtime::nvidiagpu::CUBLASEmitter::build_dot(const element::Type& dtype,
-                                                const ngraph::Shape& arg0_shape,
-                                                const ngraph::Shape& arg1_shape,
-                                                const ngraph::Shape& out_shape,
-                                                size_t reduction_axes,
-                                                const Node* node)
+                                                    const ngraph::Shape& arg0_shape,
+                                                    const ngraph::Shape& arg1_shape,
+                                                    const ngraph::Shape& out_shape,
+                                                    size_t reduction_axes,
+                                                    const Node* node)
 {
     std::stringstream ss;
     ss << "dot_op"
@@ -226,8 +226,8 @@ void runtime::nvidiagpu::CUBLASEmitter::debug_sync()
 }
 
 std::string runtime::nvidiagpu::CUBLASEmitter::get_error_string(std::vector<std::string>& arg_names,
-                                                            std::vector<ngraph::Shape>& shapes,
-                                                            const Node* node)
+                                                                std::vector<ngraph::Shape>& shapes,
+                                                                const Node* node)
 {
     std::stringstream ss_err;
     ss_err << ngraph::join(arg_names) << " with " << ngraph::join(shapes)

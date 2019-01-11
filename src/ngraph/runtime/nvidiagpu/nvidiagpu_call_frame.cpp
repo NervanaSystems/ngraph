@@ -65,8 +65,8 @@ void runtime::nvidiagpu::CallFrame::resolve_outputs(void** outputs, size_t num_o
 }
 
 // returns pointers of any nvidiagpu::TensorWrapper::TensorType
-std::vector<void*>
-    runtime::nvidiagpu::CallFrame::get_tensor_io(const std::vector<nvidiagpu::TensorWrapper>& tensors)
+std::vector<void*> runtime::nvidiagpu::CallFrame::get_tensor_io(
+    const std::vector<nvidiagpu::TensorWrapper>& tensors)
 {
     std::vector<void*> ptrs;
     for (auto const& tensor : tensors)
@@ -79,8 +79,8 @@ std::vector<void*>
 }
 
 void* runtime::nvidiagpu::CallFrame::get_pointer(const TensorType& type,
-                                               const size_t& offset,
-                                               const std::string& name)
+                                                 const size_t& offset,
+                                                 const std::string& name)
 {
     switch (type)
     {

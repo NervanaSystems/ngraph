@@ -62,7 +62,8 @@ private:
     void construct_rnn_lstm_fprop();
 };
 
-class ngraph::runtime::nvidiagpu::pass::MultiLayerRNNFusion : public ngraph::pass::RecurrentGraphRewrite
+class ngraph::runtime::nvidiagpu::pass::MultiLayerRNNFusion
+    : public ngraph::pass::RecurrentGraphRewrite
 {
 public:
     MultiLayerRNNFusion()

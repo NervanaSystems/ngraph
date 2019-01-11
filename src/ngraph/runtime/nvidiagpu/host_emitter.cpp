@@ -34,9 +34,9 @@ runtime::nvidiagpu::HostEmitter::HostEmitter(PrimitiveEmitter* emitter, RuntimeC
 }
 
 size_t runtime::nvidiagpu::HostEmitter::build_memcpy(const cudaMemcpyKind& kind,
-                                                 size_t size,
-                                                 size_t dst,
-                                                 size_t src)
+                                                     size_t size,
+                                                     size_t dst,
+                                                     size_t src)
 {
     std::stringstream ss;
     ss << "memcpy" << kind << "_dst" << dst << "_src" << src << "_sz" << size;

@@ -26,9 +26,9 @@
 using namespace ngraph;
 
 std::shared_ptr<CUfunction> runtime::nvidiagpu::CudaFunctionBuilder::get(const std::string& name,
-                                                                     const std::string& kernel,
-                                                                     int number_of_options,
-                                                                     const char** options)
+                                                                         const std::string& kernel,
+                                                                         int number_of_options,
+                                                                         const char** options)
 {
     nvrtcProgram prog;
     NVRTC_SAFE_CALL(nvrtcCreateProgram(&prog,

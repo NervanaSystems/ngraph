@@ -322,7 +322,8 @@ std::string runtime::nvidiagpu::Emitter::emit_AvgPoolBackprop(EMIT_ARGS)
 }
 
 template <typename T>
-std::string emit_BatchNorm(EMIT_ARGS, runtime::nvidiagpu::CUDNNEmitter::Prop direction, bool save_stats)
+std::string
+    emit_BatchNorm(EMIT_ARGS, runtime::nvidiagpu::CUDNNEmitter::Prop direction, bool save_stats)
 {
     const T* batchnorm = static_cast<const T*>(node);
 
@@ -1391,7 +1392,8 @@ std::string runtime::nvidiagpu::Emitter::emit_Subtract(EMIT_ARGS)
 
 std::string runtime::nvidiagpu::Emitter::emit_Sum(EMIT_ARGS)
 {
-    return runtime::nvidiagpu::Emitter::emit_Sum_0(compiled_function, function_name, node, args, out);
+    return runtime::nvidiagpu::Emitter::emit_Sum_0(
+        compiled_function, function_name, node, args, out);
 }
 
 std::string runtime::nvidiagpu::Emitter::emit_Sum_0(EMIT_ARGS)
@@ -1492,7 +1494,7 @@ std::string runtime::nvidiagpu::Emitter::emit_TopK(EMIT_ARGS)
 }
 
 string runtime::nvidiagpu::Emitter::node_names(const vector<nvidiagpu::TensorWrapper>& args,
-                                             initializer_list<int> arg_indexes)
+                                               initializer_list<int> arg_indexes)
 {
     vector<string> names;
     vector<int> indexes = arg_indexes;
@@ -1510,9 +1512,9 @@ string runtime::nvidiagpu::Emitter::node_names(const vector<nvidiagpu::TensorWra
 
 // assumes NC{d1,d2,d3,...} format
 ngraph::Shape runtime::nvidiagpu::get_padded_shape(const ngraph::Shape& input_shape,
-                                       const ngraph::Shape& padding_below,
-                                       const ngraph::Shape& padding_above,
-                                       const ngraph::Shape& padding_interior)
+                                                   const ngraph::Shape& padding_below,
+                                                   const ngraph::Shape& padding_above,
+                                                   const ngraph::Shape& padding_interior)
 {
     ngraph::Shape padded_shape = input_shape;
     int64_t i = input_shape.size() - 1;

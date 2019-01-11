@@ -108,7 +108,8 @@ runtime::nvidiagpu::Backend::BackendContext::~BackendContext()
 }
 
 shared_ptr<runtime::Tensor>
-    runtime::nvidiagpu::Backend::create_tensor(const element::Type& element_type, const ngraph::Shape& shape)
+    runtime::nvidiagpu::Backend::create_tensor(const element::Type& element_type,
+                                               const ngraph::Shape& shape)
 {
     return make_shared<runtime::nvidiagpu::Tensor>(element_type, shape, this);
 }
@@ -136,7 +137,7 @@ runtime::Handle runtime::nvidiagpu::Backend::compile(shared_ptr<Function> func)
 }
 
 void runtime::nvidiagpu::Backend::initialize_io(void** target,
-                                              const vector<shared_ptr<runtime::Tensor>>& source)
+                                                const vector<shared_ptr<runtime::Tensor>>& source)
 {
     for (size_t i = 0; i < source.size(); i++)
     {
@@ -154,8 +155,8 @@ void runtime::nvidiagpu::Backend::initialize_io(void** target,
 }
 
 bool runtime::nvidiagpu::Backend::call(shared_ptr<Function> func,
-                                     const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                     const vector<shared_ptr<runtime::Tensor>>& inputs)
+                                       const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                       const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     FunctionInstance& instance = m_function_map[func];
     if (instance.m_compiled_function == nullptr)

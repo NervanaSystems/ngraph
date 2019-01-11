@@ -73,10 +73,10 @@ namespace ngraph
             private:
                 void build_functions();
                 std::string emit_op(EMIT_ARGS);
-                std::string
-                    compose_manifest(size_t primitive_index,
-                                     const std::vector<runtime::nvidiagpu::TensorWrapper>& args,
-                                     const std::vector<runtime::nvidiagpu::TensorWrapper>& out) const;
+                std::string compose_manifest(
+                    size_t primitive_index,
+                    const std::vector<runtime::nvidiagpu::TensorWrapper>& args,
+                    const std::vector<runtime::nvidiagpu::TensorWrapper>& out) const;
                 void save_manifest_to_disk() const;
 
                 // For non-destructive passthrough kernels, propagate function

@@ -32,7 +32,9 @@
 using namespace ngraph;
 
 cudnnTensorDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::tensor_descriptor_from_shape(
-    const ngraph::Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
+    const ngraph::Shape& shape,
+    const cudnnDataType_t data_type,
+    const cudnnTensorFormat_t tensor_format)
 {
     cudnnTensorDescriptor_t& desc = m_descriptors.build<cudnnTensorDescriptor_t>();
     if (shape.size() < 4)
@@ -84,7 +86,9 @@ cudnnTensorDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::tensor_descriptor_fro
 }
 
 cudnnTensorDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::get_nd_tensor_descriptor(
-    const ngraph::Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
+    const ngraph::Shape& shape,
+    const cudnnDataType_t data_type,
+    const cudnnTensorFormat_t tensor_format)
 {
     cudnnTensorDescriptor_t& desc = m_descriptors.build<cudnnTensorDescriptor_t>();
     std::vector<int> dimensions(shape.size());
@@ -92,12 +96,12 @@ cudnnTensorDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::get_nd_tensor_descrip
     {
         dimensions[i] = static_cast<int>(shape[i]);
     }
-    CUDNN_SAFE_CALL(
-        cudnnSetTensorNdDescriptor(desc,
-                                   data_type,
-                                   static_cast<int>(dimensions.size()),
-                                   dimensions.data(),
-                                   runtime::nvidiagpu::cudnn_util::compute_strides(dimensions).data()));
+    CUDNN_SAFE_CALL(cudnnSetTensorNdDescriptor(
+        desc,
+        data_type,
+        static_cast<int>(dimensions.size()),
+        dimensions.data(),
+        runtime::nvidiagpu::cudnn_util::compute_strides(dimensions).data()));
     return desc;
 }
 
@@ -129,8 +133,8 @@ std::vector<int>
 }
 
 runtime::nvidiagpu::CUDNNEmitter::CUDNNEmitter(PrimitiveEmitter* emitter,
-                                           RuntimeContext* ctx,
-                                           std::shared_ptr<HostParameters> params)
+                                               RuntimeContext* ctx,
+                                               std::shared_ptr<HostParameters> params)
     : m_host_parameters(params)
     , m_primitive_emitter(emitter)
 {
@@ -158,11 +162,12 @@ cudnnDataType_t runtime::nvidiagpu::CUDNNEmitter::get_cudnn_datatype(const eleme
     return get_cudnn_datatype(dtype.c_type_string());
 }
 
-size_t runtime::nvidiagpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorOp_t& reduce_op,
-                                                          const std::vector<element::Type>& dtypes,
-                                                          const ngraph::Shape& input_shape,
-                                                          const AxisSet& reduction_axes,
-                                                          const ReductionMode& reduction_mode)
+size_t
+    runtime::nvidiagpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorOp_t& reduce_op,
+                                                           const std::vector<element::Type>& dtypes,
+                                                           const ngraph::Shape& input_shape,
+                                                           const AxisSet& reduction_axes,
+                                                           const ReductionMode& reduction_mode)
 {
     auto input_type = dtypes[0];
     bool use_cudnn_reduce = !((reduction_mode == ReductionMode::Reduce) &&
@@ -225,23 +230,23 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceT
 
         size_t workspace_idx = allocator.reserve_workspace(workspace_size);
         // emit reduce operation
-        reduce.reset(new nvidiagpu::primitive{
-            [=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
-                void* workspace_ptr = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, workspace_idx);
-                CUDNN_SAFE_CALL(cudnnReduceTensor(*m_ctx->cudnn_handle,
-                                                  desc,
-                                                  nullptr,
-                                                  0,
-                                                  workspace_ptr,
-                                                  workspace_size,
-                                                  alpha,
-                                                  input_desc,
-                                                  inputs[0],
-                                                  beta,
-                                                  output_desc,
-                                                  outputs[0]));
-                debug_sync();
-            }});
+        reduce.reset(new nvidiagpu::primitive{[=, &desc, &input_desc, &output_desc](
+            void** inputs, void** outputs) {
+            void* workspace_ptr = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, workspace_idx);
+            CUDNN_SAFE_CALL(cudnnReduceTensor(*m_ctx->cudnn_handle,
+                                              desc,
+                                              nullptr,
+                                              0,
+                                              workspace_ptr,
+                                              workspace_size,
+                                              alpha,
+                                              input_desc,
+                                              inputs[0],
+                                              beta,
+                                              output_desc,
+                                              outputs[0]));
+            debug_sync();
+        }});
 
         break;
     }
@@ -280,7 +285,8 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceT
                     nvidiagpu::invoke_primitive(m_ctx, convert_idx, inputs, outputs);
                 };
                 convert_output_space = [=](void* ptr) {
-                    return runtime::nvidiagpu::invoke_memory_primitive(m_ctx, workspace_indices_idx);
+                    return runtime::nvidiagpu::invoke_memory_primitive(m_ctx,
+                                                                       workspace_indices_idx);
                 };
             }
 
@@ -302,30 +308,31 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceT
                 };
             }
 
-            reduce.reset(new nvidiagpu::primitive{[=, &desc, &input_desc, &output_desc](
-                void** inputs, void** outputs) {
-                void* input_ptr = convert_input_space(inputs[0]);
-                void* workspace_indices_ptr = convert_output_space(outputs[0]);
-                void* workspace_ptr = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, workspace_idx);
-                void* reduce_buffer =
-                    runtime::nvidiagpu::invoke_memory_primitive(m_ctx, reduce_buffer_idx);
+            reduce.reset(new nvidiagpu::primitive{
+                [=, &desc, &input_desc, &output_desc](void** inputs, void** outputs) {
+                    void* input_ptr = convert_input_space(inputs[0]);
+                    void* workspace_indices_ptr = convert_output_space(outputs[0]);
+                    void* workspace_ptr =
+                        runtime::nvidiagpu::invoke_memory_primitive(m_ctx, workspace_idx);
+                    void* reduce_buffer =
+                        runtime::nvidiagpu::invoke_memory_primitive(m_ctx, reduce_buffer_idx);
 
-                convert_input(inputs, &input_ptr);
-                CUDNN_SAFE_CALL(cudnnReduceTensor(*m_ctx->cudnn_handle,
-                                                  desc,
-                                                  workspace_indices_ptr,
-                                                  indices_size,
-                                                  workspace_ptr,
-                                                  workspace_size,
-                                                  alpha,
-                                                  input_desc,
-                                                  input_ptr,
-                                                  beta,
-                                                  output_desc,
-                                                  reduce_buffer));
-                convert_output(&workspace_indices_ptr, outputs);
-                debug_sync();
-            }});
+                    convert_input(inputs, &input_ptr);
+                    CUDNN_SAFE_CALL(cudnnReduceTensor(*m_ctx->cudnn_handle,
+                                                      desc,
+                                                      workspace_indices_ptr,
+                                                      indices_size,
+                                                      workspace_ptr,
+                                                      workspace_size,
+                                                      alpha,
+                                                      input_desc,
+                                                      input_ptr,
+                                                      beta,
+                                                      output_desc,
+                                                      reduce_buffer));
+                    convert_output(&workspace_indices_ptr, outputs);
+                    debug_sync();
+                }});
         }
         else
         {
@@ -343,11 +350,11 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceT
 }
 
 size_t runtime::nvidiagpu::CUDNNEmitter::build_tensor_op(const cudnnOpTensorOp_t& tensor_op,
-                                                     const std::string& dtype,
-                                                     const ngraph::Shape& input_shape,
-                                                     const double alpha0,
-                                                     const double alpha1,
-                                                     const double beta)
+                                                         const std::string& dtype,
+                                                         const ngraph::Shape& input_shape,
+                                                         const double alpha0,
+                                                         const double alpha1,
+                                                         const double beta)
 {
     std::stringstream ss;
     ss << "tensor_op" << tensor_op << "_dtype_" << dtype << "_i" << join(input_shape, "_");
@@ -393,7 +400,9 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_tensor_op(const cudnnOpTensorOp_t
 }
 
 cudnnFilterDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::get_cudnn_filter_descriptor(
-    const ngraph::Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
+    const ngraph::Shape& shape,
+    const cudnnDataType_t data_type,
+    const cudnnTensorFormat_t tensor_format)
 {
     std::vector<int> dimensions(fmax(4, shape.size()), 1);
     int idx = 0;
@@ -427,7 +436,9 @@ cudnnFilterDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::get_cudnn_filter_desc
 }
 
 cudnnFilterDescriptor_t& runtime::nvidiagpu::CUDNNEmitter::get_nd_filter_descriptor(
-    const ngraph::Shape& shape, const cudnnDataType_t data_type, const cudnnTensorFormat_t tensor_format)
+    const ngraph::Shape& shape,
+    const cudnnDataType_t data_type,
+    const cudnnTensorFormat_t tensor_format)
 {
     auto& filter_descriptor = m_descriptors.build<cudnnFilterDescriptor_t>();
     std::vector<int> dimensions(shape.size());
@@ -579,11 +590,12 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::Convolution* 
             if (idx_workspace != std::numeric_limits<size_t>::max() &&
                 pad_index != std::numeric_limits<size_t>::max())
             {
-                void* pad_buffer = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, idx_workspace);
+                void* pad_buffer =
+                    runtime::nvidiagpu::invoke_memory_primitive(m_ctx, idx_workspace);
                 nvidiagpu::invoke_primitive(m_ctx,
-                                        pad_index,
-                                        std::vector<void*>{inputs[0]}.data(),
-                                        std::vector<void*>{pad_buffer}.data());
+                                            pad_index,
+                                            std::vector<void*>{inputs[0]}.data(),
+                                            std::vector<void*>{pad_buffer}.data());
                 nvidiagpu::invoke_primitive(
                     m_ctx, conv_index, std::vector<void*>{pad_buffer, inputs[1]}.data(), outputs);
             }
@@ -707,11 +719,12 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::ConvolutionBa
                 pad_index != std::numeric_limits<size_t>::max() &&
                 slice_index != std::numeric_limits<size_t>::max())
             {
-                void* pad_buffer = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, idx_workspace);
+                void* pad_buffer =
+                    runtime::nvidiagpu::invoke_memory_primitive(m_ctx, idx_workspace);
                 nvidiagpu::invoke_primitive(m_ctx,
-                                        pad_index,
-                                        std::vector<void*>{inputs[0]}.data(),
-                                        std::vector<void*>{pad_buffer}.data());
+                                            pad_index,
+                                            std::vector<void*>{inputs[0]}.data(),
+                                            std::vector<void*>{pad_buffer}.data());
                 nvidiagpu::invoke_primitive(
                     m_ctx, conv_index, inputs, std::vector<void*>{pad_buffer}.data());
                 nvidiagpu::invoke_primitive(
@@ -818,11 +831,12 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::ConvolutionBa
             if (idx_workspace != std::numeric_limits<size_t>::max() &&
                 pad_index != std::numeric_limits<size_t>::max())
             {
-                void* pad_buffer = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, idx_workspace);
+                void* pad_buffer =
+                    runtime::nvidiagpu::invoke_memory_primitive(m_ctx, idx_workspace);
                 nvidiagpu::invoke_primitive(m_ctx,
-                                        pad_index,
-                                        std::vector<void*>{inputs[0]}.data(),
-                                        std::vector<void*>{pad_buffer}.data());
+                                            pad_index,
+                                            std::vector<void*>{inputs[0]}.data(),
+                                            std::vector<void*>{pad_buffer}.data());
                 nvidiagpu::invoke_primitive(
                     m_ctx, conv_index, std::vector<void*>{pad_buffer, inputs[1]}.data(), outputs);
             }
@@ -911,11 +925,12 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::MaxPool* node
         new nvidiagpu::primitive{[=](void** inputs, void** outputs) mutable {
             if (pad_required)
             {
-                void* pad_buffer = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, idx_workspace);
+                void* pad_buffer =
+                    runtime::nvidiagpu::invoke_memory_primitive(m_ctx, idx_workspace);
                 nvidiagpu::invoke_primitive(m_ctx,
-                                        pad_index,
-                                        std::vector<void*>{inputs[0]}.data(),
-                                        std::vector<void*>{pad_buffer}.data());
+                                            pad_index,
+                                            std::vector<void*>{inputs[0]}.data(),
+                                            std::vector<void*>{pad_buffer}.data());
                 nvidiagpu::invoke_primitive(
                     m_ctx, max_pool_index, std::vector<void*>{pad_buffer}.data(), outputs);
             }
@@ -964,7 +979,8 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::Max* node)
 
         kernel_launch.reset(new nvidiagpu::primitive{[=](void** inputs, void** outputs) mutable {
             void* temp_d = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, idx_float_inf);
-            runtime::nvidiagpu::cuda_memcpyDtD(outputs[0], temp_d, output_size * output_element_size);
+            runtime::nvidiagpu::cuda_memcpyDtD(
+                outputs[0], temp_d, output_size * output_element_size);
         }});
     }
     else if (input_size == output_size)
@@ -1028,7 +1044,8 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::Min* node)
 
         kernel_launch.reset(new nvidiagpu::primitive{[=](void** inputs, void** outputs) mutable {
             void* temp_d = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, idx_float_inf);
-            runtime::nvidiagpu::cuda_memcpyDtD(outputs[0], temp_d, output_size * output_element_size);
+            runtime::nvidiagpu::cuda_memcpyDtD(
+                outputs[0], temp_d, output_size * output_element_size);
         }});
     }
     else if (input_size == output_size)
@@ -1285,13 +1302,13 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::nvidiagpu::Rn
 #endif
 
 size_t runtime::nvidiagpu::CUDNNEmitter::build_convolution(const std::string& dtype,
-                                                       const ngraph::Shape& input_tensor_shape,
-                                                       const ngraph::Shape& input_filter_shape,
-                                                       const ngraph::Shape& output_tensor_shape,
-                                                       const Strides& window_movement_strides,
-                                                       const Strides& window_dilation_strides,
-                                                       const ngraph::Shape& padding_below,
-                                                       const algo_search find_algo)
+                                                           const ngraph::Shape& input_tensor_shape,
+                                                           const ngraph::Shape& input_filter_shape,
+                                                           const ngraph::Shape& output_tensor_shape,
+                                                           const Strides& window_movement_strides,
+                                                           const Strides& window_dilation_strides,
+                                                           const ngraph::Shape& padding_below,
+                                                           const algo_search find_algo)
 {
     cudnnDataType_t data_type = get_cudnn_datatype(dtype);
     const cudnnTensorFormat_t tensor_format = CUDNN_TENSOR_NCHW;
@@ -1347,24 +1364,25 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_convolution(const std::string& dt
     size_t workspace_idx = allocator.reserve_workspace(workspace_size_in_bytes);
 
     std::unique_ptr<nvidiagpu::primitive> conv;
-    conv.reset(new nvidiagpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
-        void** inputs, void** outputs) {
-        void* workspace_ptr = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, workspace_idx);
-        CUDNN_SAFE_CALL(cudnnConvolutionForward(*m_ctx->cudnn_handle,
-                                                alpha,
-                                                tensor_desc_0,
-                                                inputs[0],
-                                                filter_desc,
-                                                inputs[1],
-                                                conv_desc,
-                                                conv_fwd_algo,
-                                                workspace_ptr,
-                                                workspace_size_in_bytes,
-                                                beta,
-                                                tensor_desc_1,
-                                                outputs[0]));
-        debug_sync();
-    }});
+    conv.reset(
+        new nvidiagpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
+            void** inputs, void** outputs) {
+            void* workspace_ptr = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, workspace_idx);
+            CUDNN_SAFE_CALL(cudnnConvolutionForward(*m_ctx->cudnn_handle,
+                                                    alpha,
+                                                    tensor_desc_0,
+                                                    inputs[0],
+                                                    filter_desc,
+                                                    inputs[1],
+                                                    conv_desc,
+                                                    conv_fwd_algo,
+                                                    workspace_ptr,
+                                                    workspace_size_in_bytes,
+                                                    beta,
+                                                    tensor_desc_1,
+                                                    outputs[0]));
+            debug_sync();
+        }});
 
     return this->m_primitive_emitter->insert(std::move(conv));
 }
@@ -1434,24 +1452,25 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_convolution_backward_data(
     size_t workspace_idx = allocator.reserve_workspace(workspace_size_in_bytes);
 
     std::unique_ptr<nvidiagpu::primitive> conv;
-    conv.reset(new nvidiagpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
-        void** inputs, void** outputs) {
-        void* workspace_ptr = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, workspace_idx);
-        CUDNN_SAFE_CALL(cudnnConvolutionBackwardData(*m_ctx->cudnn_handle,
-                                                     alpha,
-                                                     filter_desc,
-                                                     inputs[0],
-                                                     tensor_desc_0,
-                                                     inputs[1],
-                                                     conv_desc,
-                                                     conv_bwd_data_algo,
-                                                     workspace_ptr,
-                                                     workspace_size_in_bytes,
-                                                     beta,
-                                                     tensor_desc_1,
-                                                     outputs[0]));
-        debug_sync();
-    }});
+    conv.reset(
+        new nvidiagpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
+            void** inputs, void** outputs) {
+            void* workspace_ptr = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, workspace_idx);
+            CUDNN_SAFE_CALL(cudnnConvolutionBackwardData(*m_ctx->cudnn_handle,
+                                                         alpha,
+                                                         filter_desc,
+                                                         inputs[0],
+                                                         tensor_desc_0,
+                                                         inputs[1],
+                                                         conv_desc,
+                                                         conv_bwd_data_algo,
+                                                         workspace_ptr,
+                                                         workspace_size_in_bytes,
+                                                         beta,
+                                                         tensor_desc_1,
+                                                         outputs[0]));
+            debug_sync();
+        }});
 
     return this->m_primitive_emitter->insert(std::move(conv));
 }
@@ -1520,38 +1539,39 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_convolution_backward_filter(
     void* beta = m_host_parameters.allocate_by_datatype(data_type, 0);
 
     std::unique_ptr<nvidiagpu::primitive> conv;
-    conv.reset(new nvidiagpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
-        void** inputs, void** outputs) {
-        void* workspace_ptr = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, workspace_idx);
-        CUDNN_SAFE_CALL(cudnnConvolutionBackwardFilter(*m_ctx->cudnn_handle,
-                                                       alpha,
-                                                       tensor_desc_0,
-                                                       inputs[0],
-                                                       tensor_desc_1,
-                                                       inputs[1],
-                                                       conv_desc,
-                                                       conv_bwd_filter_algo,
-                                                       workspace_ptr,
-                                                       workspace_size_in_bytes,
-                                                       beta,
-                                                       filter_desc,
-                                                       outputs[0]));
-        debug_sync();
-    }});
+    conv.reset(
+        new nvidiagpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
+            void** inputs, void** outputs) {
+            void* workspace_ptr = runtime::nvidiagpu::invoke_memory_primitive(m_ctx, workspace_idx);
+            CUDNN_SAFE_CALL(cudnnConvolutionBackwardFilter(*m_ctx->cudnn_handle,
+                                                           alpha,
+                                                           tensor_desc_0,
+                                                           inputs[0],
+                                                           tensor_desc_1,
+                                                           inputs[1],
+                                                           conv_desc,
+                                                           conv_bwd_filter_algo,
+                                                           workspace_ptr,
+                                                           workspace_size_in_bytes,
+                                                           beta,
+                                                           filter_desc,
+                                                           outputs[0]));
+            debug_sync();
+        }});
 
     return this->m_primitive_emitter->insert(std::move(conv));
 }
 
 size_t runtime::nvidiagpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_op,
-                                                   const element::Type& dtype,
-                                                   const Prop& direction,
-                                                   const ngraph::Shape& input_shape,
-                                                   const ngraph::Shape& output_shape,
-                                                   const Strides& window_strides,
-                                                   const ngraph::Shape& window_shape,
-                                                   const ngraph::Shape& padding_below,
-                                                   const ngraph::Shape& padding_above,
-                                                   bool bprop_needs_pooling)
+                                                       const element::Type& dtype,
+                                                       const Prop& direction,
+                                                       const ngraph::Shape& input_shape,
+                                                       const ngraph::Shape& output_shape,
+                                                       const Strides& window_strides,
+                                                       const ngraph::Shape& window_shape,
+                                                       const ngraph::Shape& padding_below,
+                                                       const ngraph::Shape& padding_above,
+                                                       bool bprop_needs_pooling)
 {
     // construct hash to determine if kernel needs to be emitted
     // or if it already exists in the primitive list
@@ -1726,14 +1746,14 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t&
 }
 
 size_t runtime::nvidiagpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMode_t& bn_op,
-                                                     const std::string& dtype,
-                                                     const Prop& direction,
-                                                     const ngraph::Shape& tensor_shape,
-                                                     const ngraph::Shape& param_shape,
-                                                     double epsilon,
-                                                     bool global_stats,
-                                                     bool save_stats,
-                                                     bool invert_variance)
+                                                         const std::string& dtype,
+                                                         const Prop& direction,
+                                                         const ngraph::Shape& tensor_shape,
+                                                         const ngraph::Shape& param_shape,
+                                                         double epsilon,
+                                                         bool global_stats,
+                                                         bool save_stats,
+                                                         bool invert_variance)
 {
     // Assumes NC{d1...dN} format
     std::stringstream ss;
@@ -1847,7 +1867,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMod
     case Prop::Backward:
     {
         nvidiagpu::primitive bnbp = [=, &tensor_desc, &derived_param_desc](void** inputs,
-                                                                       void** outputs) {
+                                                                           void** outputs) {
             CUDNN_SAFE_CALL(cudnnBatchNormalizationBackward(*m_ctx->cudnn_handle,
                                                             bn_op,
                                                             alpha,
@@ -1898,12 +1918,12 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMod
 }
 
 size_t runtime::nvidiagpu::CUDNNEmitter::build_lrn(const std::string& dtype,
-                                               const Prop& direction,
-                                               const ngraph::Shape& io_shape,
-                                               const double lrn_alpha,
-                                               const double lrn_beta,
-                                               const double lrn_bias,
-                                               const size_t lrn_size)
+                                                   const Prop& direction,
+                                                   const ngraph::Shape& io_shape,
+                                                   const double lrn_alpha,
+                                                   const double lrn_beta,
+                                                   const double lrn_bias,
+                                                   const size_t lrn_size)
 {
     // construct hash to determine if kernel needs to be emitted
     // or if it already exists in the primitive list

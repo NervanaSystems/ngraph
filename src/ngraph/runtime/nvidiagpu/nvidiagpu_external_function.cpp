@@ -145,11 +145,12 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
     return ss.str();
 }
 
-std::string runtime::nvidiagpu::ExternalFunction::emit_op(CompiledFunction* external_function,
-                                                        const std::string& function_name,
-                                                        const ngraph::Node* node,
-                                                        const std::vector<nvidiagpu::TensorWrapper>& args,
-                                                        const std::vector<nvidiagpu::TensorWrapper>& out)
+std::string
+    runtime::nvidiagpu::ExternalFunction::emit_op(CompiledFunction* external_function,
+                                                  const std::string& function_name,
+                                                  const ngraph::Node* node,
+                                                  const std::vector<nvidiagpu::TensorWrapper>& args,
+                                                  const std::vector<nvidiagpu::TensorWrapper>& out)
 {
     auto emit_function = Emitter::get_emit_function(*node);
     return emit_function(external_function, function_name, node, args, out);
@@ -344,10 +345,11 @@ void runtime::nvidiagpu::ExternalFunction::emit_constant_declarations()
                     if (c)
                     {
                         shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
-                        m_writer << tv->get_name() << " = reinterpret_cast<"
-                                 << tv->get_element_type().c_type_string()
-                                 << "*>(runtime::nvidiagpu::invoke_memory_primitive(m_runtime_context, "
-                                 << tv->get_name() << "_idx));\n";
+                        m_writer
+                            << tv->get_name() << " = reinterpret_cast<"
+                            << tv->get_element_type().c_type_string()
+                            << "*>(runtime::nvidiagpu::invoke_memory_primitive(m_runtime_context, "
+                            << tv->get_name() << "_idx));\n";
                     }
                 }
             }
@@ -389,9 +391,9 @@ void runtime::nvidiagpu::ExternalFunction::emit_temp_mem_pool_allocation(
     {
         m_writer << "// Allocate the memory pool\n";
         // TODO memory pool malloc.
-        m_writer
-            << "char* pool_base_ptr = (char*)ngraph::runtime::nvidiagpu::invoke_memory_primitive(ctx, "
-            << m_tensor_memory_buffers.at(current_function->get_name()) << ");\n";
+        m_writer << "char* pool_base_ptr = "
+                    "(char*)ngraph::runtime::nvidiagpu::invoke_memory_primitive(ctx, "
+                 << m_tensor_memory_buffers.at(current_function->get_name()) << ");\n";
 
         // Add temporaries to the variable name map
         for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
@@ -498,7 +500,8 @@ void runtime::nvidiagpu::ExternalFunction::emit_functions()
                 for (const descriptor::Output& output : node->get_outputs())
                 {
                     shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-                    out.push_back(nvidiagpu::TensorWrapper(tv, m_variable_name_map[tv->get_name()]));
+                    out.push_back(
+                        nvidiagpu::TensorWrapper(tv, m_variable_name_map[tv->get_name()]));
                     node_output_names.emplace_back(tv->get_name());
                 }
 
@@ -621,7 +624,7 @@ void runtime::nvidiagpu::ExternalFunction::emit_debug_function_exit(Node* node)
 }
 
 string runtime::nvidiagpu::ExternalFunction::emit_op_as_function(const Node& node,
-                                                               const string& function_name)
+                                                                 const string& function_name)
 {
     codegen::CodeWriter writer;
     writer << "static void " << function_name << "(";
@@ -713,8 +716,8 @@ void runtime::nvidiagpu::ExternalFunction::propagate_in_place_input(
 
                         m_variable_name_map[output_tensor.get_name()] = input_name;
 
-                        NGRAPH_DEBUG << "NVIDIAGPU codegen: Forwarding " << input_name << " through "
-                                     << output_tensor.get_name();
+                        NGRAPH_DEBUG << "NVIDIAGPU codegen: Forwarding " << input_name
+                                     << " through " << output_tensor.get_name();
                         stack.push_back(&c_op->get_outputs().at(output_index));
                     }
                 }

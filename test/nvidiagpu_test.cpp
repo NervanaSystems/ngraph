@@ -108,7 +108,8 @@ TEST(nvidiagpu_test, memory_manager_argspace_alignment)
     }
     emitter.allocate_primitive_memory();
     runtime::nvidiagpu::memory_primitive& mem_primitive = emitter.get_memory_primitives()[idx];
-    runtime::nvidiagpu::cuda_memcpyDtH(result_args.data(), mem_primitive(), alignment * sizeof(char));
+    runtime::nvidiagpu::cuda_memcpyDtH(
+        result_args.data(), mem_primitive(), alignment * sizeof(char));
     EXPECT_EQ(result_args, ref_args);
 }
 
@@ -186,7 +187,11 @@ TEST(nvidiagpu_test, topk_fanout_graph_transform)
 
     auto nvidiagpu_f = make_shared<Function>(
         NodeVector{nvidiagpu_R_0, nvidiagpu_R_1, nvidiagpu_R_2, nvidiagpu_R_3},
-        ParameterVector{A_nvidiagpu, A_int32_nvidiagpu_1, A_int32_nvidiagpu_2, A_f32_nvidiagpu_1, A_f32_nvidiagpu_2});
+        ParameterVector{A_nvidiagpu,
+                        A_int32_nvidiagpu_1,
+                        A_int32_nvidiagpu_2,
+                        A_f32_nvidiagpu_1,
+                        A_f32_nvidiagpu_2});
 
     auto backend = runtime::Backend::create("GPU");
 

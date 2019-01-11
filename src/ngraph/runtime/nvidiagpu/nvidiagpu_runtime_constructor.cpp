@@ -55,8 +55,9 @@ void runtime::nvidiagpu::RuntimeConstructor::add_call(
     add(caller, call);
 }
 
-runtime::nvidiagpu::EntryPoint runtime::nvidiagpu::RuntimeConstructor::build(const std::string& function,
-                                                                       CallFrame& call_frame)
+runtime::nvidiagpu::EntryPoint
+    runtime::nvidiagpu::RuntimeConstructor::build(const std::string& function,
+                                                  CallFrame& call_frame)
 {
     auto& runtime = m_runtime.at(function);
     return [call_frame, &runtime](void** inputs, void** outputs, RuntimeContext* ctx) mutable {

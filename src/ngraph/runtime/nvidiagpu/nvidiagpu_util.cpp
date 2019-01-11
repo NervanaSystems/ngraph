@@ -31,8 +31,8 @@ using namespace ngraph;
 using namespace std;
 
 void runtime::nvidiagpu::print_nvidiagpu_f32_tensor(const void* p,
-                                            size_t element_count,
-                                            size_t element_size)
+                                                    size_t element_count,
+                                                    size_t element_size)
 {
     std::vector<float> local(element_count);
     size_t size_in_bytes = element_size * element_count;
@@ -180,7 +180,7 @@ namespace
 }
 
 std::pair<uint64_t, uint64_t> runtime::nvidiagpu::idiv_magic_u32(uint64_t max_numerator,
-                                                             uint64_t divisor)
+                                                                 uint64_t divisor)
 {
     return magicU32(max_numerator, divisor);
 }

@@ -84,7 +84,7 @@ void PrimitiveEmitter::cache(const std::string& hash, const size_t& index)
 }
 
 size_t PrimitiveEmitter::register_primitive(std::unique_ptr<nvidiagpu::primitive>& f,
-                                              std::string hash)
+                                            std::string hash)
 {
     size_t primitive_index = this->insert(std::move(f));
     this->cache(hash, primitive_index);

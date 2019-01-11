@@ -22,19 +22,19 @@
 
 using namespace ngraph;
 
-const std::unordered_map<std::type_index, std::string> runtime::nvidiagpu::KernelArgs::type_names = {
-    {TI(size_t), "size_t"},
-    {TI(char), "char"},
-    {TI(float), "float"},
-    {TI(double), "double"},
-    {TI(int8_t), "int8_t"},
-    {TI(int16_t), "int16_t"},
-    {TI(int32_t), "int32_t"},
-    {TI(int64_t), "int64_t"},
-    {TI(uint8_t), "uint8_t"},
-    {TI(uint16_t), "uint16_t"},
-    {TI(uint32_t), "uint32_t"},
-    {TI(uint64_t), "uint64_t"}};
+const std::unordered_map<std::type_index, std::string> runtime::nvidiagpu::KernelArgs::type_names =
+    {{TI(size_t), "size_t"},
+     {TI(char), "char"},
+     {TI(float), "float"},
+     {TI(double), "double"},
+     {TI(int8_t), "int8_t"},
+     {TI(int16_t), "int16_t"},
+     {TI(int32_t), "int32_t"},
+     {TI(int64_t), "int64_t"},
+     {TI(uint8_t), "uint8_t"},
+     {TI(uint16_t), "uint16_t"},
+     {TI(uint32_t), "uint32_t"},
+     {TI(uint64_t), "uint64_t"}};
 
 runtime::nvidiagpu::KernelArgs::KernelArgs(const std::shared_ptr<HostParameters>& params)
     : m_signature_generated(false)
@@ -63,7 +63,7 @@ void runtime::nvidiagpu::KernelArgs::validate()
 }
 
 void runtime::nvidiagpu::KernelArgs::add_to_signature(const std::string& type,
-                                                    const std::string& name)
+                                                      const std::string& name)
 {
     if (m_input_signature.str() == "(")
     {
@@ -75,8 +75,9 @@ void runtime::nvidiagpu::KernelArgs::add_to_signature(const std::string& type,
     }
 }
 
-runtime::nvidiagpu::KernelArgs& runtime::nvidiagpu::KernelArgs::add_placeholder(const std::string& type,
-                                                                            const std::string& name)
+runtime::nvidiagpu::KernelArgs&
+    runtime::nvidiagpu::KernelArgs::add_placeholder(const std::string& type,
+                                                    const std::string& name)
 {
     validate();
     m_argument_list.push_back(nullptr);
@@ -86,7 +87,7 @@ runtime::nvidiagpu::KernelArgs& runtime::nvidiagpu::KernelArgs::add_placeholder(
 }
 
 runtime::nvidiagpu::KernelArgs& runtime::nvidiagpu::KernelArgs::resolve_placeholder(size_t arg_num,
-                                                                                void* address)
+                                                                                    void* address)
 {
     if (m_placeholder_positions.at(arg_num))
     {

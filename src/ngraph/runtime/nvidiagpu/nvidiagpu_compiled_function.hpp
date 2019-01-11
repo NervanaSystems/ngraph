@@ -33,8 +33,8 @@
 #include "ngraph/runtime/nvidiagpu/nvidiagpu_tensor_wrapper.hpp"
 
 #define EMIT_ARGS                                                                                  \
-    runtime::nvidiagpu::CompiledFunction *compiled_function, const std::string &function_name,       \
-        const Node *node, const std::vector<runtime::nvidiagpu::TensorWrapper> &args,                \
+    runtime::nvidiagpu::CompiledFunction *compiled_function, const std::string &function_name,     \
+        const Node *node, const std::vector<runtime::nvidiagpu::TensorWrapper> &args,              \
         const std::vector<runtime::nvidiagpu::TensorWrapper> &out
 
 namespace ngraph

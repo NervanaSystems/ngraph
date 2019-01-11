@@ -35,56 +35,57 @@ namespace ngraph
             public:
                 CoordinateDiff(const std::initializer_list<int32_t>& axis_lengths)
                     : std::vector<int32_t>(axis_lengths)
-                    {
-                    }
+                {
+                }
 
                 CoordinateDiff(const std::vector<int32_t>& axis_lengths)
                     : std::vector<int32_t>(axis_lengths)
-                    {
-                    }
+                {
+                }
 
                 CoordinateDiff(const CoordinateDiff& axis_lengths)
                     : std::vector<int32_t>(axis_lengths)
-                    {
-                    }
+                {
+                }
 
                 explicit CoordinateDiff(size_t n, int32_t initial_value = 0)
                     : std::vector<int32_t>(n, initial_value)
-                    {
-                    }
+                {
+                }
 
                 template <class InputIterator>
                 CoordinateDiff(InputIterator first, InputIterator last)
                     : std::vector<int32_t>(first, last)
-                    {
-                    }
+                {
+                }
 
                 CoordinateDiff() {}
                 CoordinateDiff& operator=(const CoordinateDiff& v)
-                    {
-                        static_cast<std::vector<int32_t>*>(this)->operator=(v);
-                        return *this;
-                    }
+                {
+                    static_cast<std::vector<int32_t>*>(this)->operator=(v);
+                    return *this;
+                }
 
                 CoordinateDiff& operator=(CoordinateDiff&& v)
-                    {
-                        static_cast<std::vector<int32_t>*>(this)->operator=(v);
-                        return *this;
-                    }
+                {
+                    static_cast<std::vector<int32_t>*>(this)->operator=(v);
+                    return *this;
+                }
 
                 CoordinateDiff(const ngraph::CoordinateDiff& coord)
+                {
+                    for (auto const& dim : coord)
                     {
-                        for (auto const& dim : coord)
+                        if (std::abs(dim) >> 32 != 0)
                         {
-                            if (std::abs(dim) >> 32 != 0)
-                            {
-                                throw std::runtime_error(
-                                    "Request for ngraph::CoordinateDiff which exceed the bitwidth available for "
-                                    "CoordinateDiffs (32)");
-                            }
-                            this->push_back(static_cast<int32_t>(dim));
+                            throw std::runtime_error(
+                                "Request for ngraph::CoordinateDiff which exceed the bitwidth "
+                                "available for "
+                                "CoordinateDiffs (32)");
                         }
+                        this->push_back(static_cast<int32_t>(dim));
                     }
+                }
             };
         }
     }

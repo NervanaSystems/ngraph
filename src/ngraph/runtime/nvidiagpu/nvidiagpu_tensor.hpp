@@ -36,10 +36,12 @@ namespace ngraph
 class ngraph::runtime::nvidiagpu::Tensor : public ngraph::runtime::Tensor
 {
 public:
-    Tensor(const ngraph::element::Type& element_type, const ngraph::Shape& shape, const ngraph::runtime::Backend* parent);
     Tensor(const ngraph::element::Type& element_type,
            const ngraph::Shape& shape,
-             void* memory_pointer,
+           const ngraph::runtime::Backend* parent);
+    Tensor(const ngraph::element::Type& element_type,
+           const ngraph::Shape& shape,
+           void* memory_pointer,
            const ngraph::runtime::Backend* parent);
     virtual ~Tensor() override;
 

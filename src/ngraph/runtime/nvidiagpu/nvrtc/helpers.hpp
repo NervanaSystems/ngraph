@@ -127,7 +127,7 @@ __device__ __forceinline__ int msub16(int a, int b, int c)
 }
 
 std::string ngraph::runtime::nvidiagpu::nvrtc::define_zero(const std::string& dtype,
-                                                       const std::string& name)
+                                                           const std::string& name)
 {
     std::stringstream ss;
     ss << "__device__ __forceinline__ void " << name << "(" << dtype << "& a) { a = 0; }\n";
@@ -135,8 +135,8 @@ std::string ngraph::runtime::nvidiagpu::nvrtc::define_zero(const std::string& dt
 }
 
 std::string ngraph::runtime::nvidiagpu::nvrtc::define_vzero(std::string dtype,
-                                                        const uint32_t& n,
-                                                        const std::string& name)
+                                                            const uint32_t& n,
+                                                            const std::string& name)
 {
     std::stringstream ss;
     if (n == 1 || n == 2 || n == 4)
@@ -162,7 +162,7 @@ std::string ngraph::runtime::nvidiagpu::nvrtc::define_vzero(std::string dtype,
                                   << "  v; zero_(v); if (b) v = in[i]; return v; }\n"
 
 std::string ngraph::runtime::nvidiagpu::nvrtc::define_coherent_load(const std::string& dtype,
-                                                                const std::string& name)
+                                                                    const std::string& name)
 {
     std::stringstream ss;
     ss << define_zero(dtype);
@@ -171,8 +171,8 @@ std::string ngraph::runtime::nvidiagpu::nvrtc::define_coherent_load(const std::s
 }
 
 std::string ngraph::runtime::nvidiagpu::nvrtc::define_coherent_vload(const std::string& dtype,
-                                                                 const uint32_t& n,
-                                                                 const std::string& name)
+                                                                     const uint32_t& n,
+                                                                     const std::string& name)
 {
     std::stringstream ss;
     ss << define_vzero(dtype, n);
@@ -186,7 +186,7 @@ std::string ngraph::runtime::nvidiagpu::nvrtc::define_coherent_vload(const std::
                                   << "  v; zero_(v); if (b) v = __ldg(in + i); return v; }\n"
 
 std::string ngraph::runtime::nvidiagpu::nvrtc::define_non_coherent_load(const std::string& dtype,
-                                                                    const std::string& name)
+                                                                        const std::string& name)
 {
     std::stringstream ss;
     ss << define_zero(dtype);
@@ -195,8 +195,8 @@ std::string ngraph::runtime::nvidiagpu::nvrtc::define_non_coherent_load(const st
 }
 
 std::string ngraph::runtime::nvidiagpu::nvrtc::define_non_coherent_vload(const std::string& dtype,
-                                                                     const uint32_t& n,
-                                                                     const std::string& name)
+                                                                         const uint32_t& n,
+                                                                         const std::string& name)
 {
     std::stringstream ss;
     ss << define_vzero(dtype, n);

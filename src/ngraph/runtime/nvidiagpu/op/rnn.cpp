@@ -39,16 +39,16 @@ shared_ptr<Node> op::nvidiagpu::Rnn::copy_with_new_args(const NodeVector& new_ar
 }
 
 op::nvidiagpu::Rnn::Rnn(std::shared_ptr<Node> src_layer,
-                    std::shared_ptr<Node> src_iter,
-                    std::shared_ptr<Node> params,
-                    std::shared_ptr<Node> state_iter,
-                    const int num_timesteps,
-                    const int num_gates_per_cell,
-                    const int src_sequence_length,
-                    const int src_layer_feature_size,
-                    const int src_iter_feature_size,
-                    const int direction,
-                    const int num_fused_layers)
+                        std::shared_ptr<Node> src_iter,
+                        std::shared_ptr<Node> params,
+                        std::shared_ptr<Node> state_iter,
+                        const int num_timesteps,
+                        const int num_gates_per_cell,
+                        const int src_sequence_length,
+                        const int src_layer_feature_size,
+                        const int src_iter_feature_size,
+                        const int direction,
+                        const int num_fused_layers)
     : Op("Rnn", {src_layer, src_iter, params, state_iter})
     , m_num_timesteps(num_timesteps)
     , m_num_gates_per_cell(num_gates_per_cell)
@@ -76,18 +76,19 @@ op::nvidiagpu::Rnn::Rnn(std::shared_ptr<Node> src_layer,
     }
 
     set_output_size(3);
-    set_output_type(0,
-                    src_layer->get_element_type(),
-                    ngraph::Shape{static_cast<unsigned long>(m_direction * m_num_timesteps * m_batch_size),
-                          static_cast<unsigned long>(m_src_iter_feature_size)});
+    set_output_type(
+        0,
+        src_layer->get_element_type(),
+        ngraph::Shape{static_cast<unsigned long>(m_direction * m_num_timesteps * m_batch_size),
+                      static_cast<unsigned long>(m_src_iter_feature_size)});
     set_output_type(
         1,
         src_layer->get_element_type(),
         ngraph::Shape{static_cast<unsigned long>(m_direction * m_num_fused_layers * m_batch_size),
-              static_cast<unsigned long>(m_src_iter_feature_size)});
+                      static_cast<unsigned long>(m_src_iter_feature_size)});
     set_output_type(
         2,
         src_layer->get_element_type(),
         ngraph::Shape{static_cast<unsigned long>(m_direction * m_num_fused_layers * m_batch_size),
-              static_cast<unsigned long>(m_src_iter_feature_size)});
+                      static_cast<unsigned long>(m_src_iter_feature_size)});
 }

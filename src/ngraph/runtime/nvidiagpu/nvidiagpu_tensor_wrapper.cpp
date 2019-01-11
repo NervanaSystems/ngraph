@@ -84,8 +84,8 @@ const std::string& runtime::nvidiagpu::TensorWrapper::get_type() const
     return get_element_type().c_type_string();
 }
 
-std::ostream& ngraph::runtime::nvidiagpu::operator<<(std::ostream& out,
-                                                 const ngraph::runtime::nvidiagpu::TensorWrapper& obj)
+std::ostream& ngraph::runtime::nvidiagpu::
+    operator<<(std::ostream& out, const ngraph::runtime::nvidiagpu::TensorWrapper& obj)
 {
     static std::vector<std::string> types{"CONSTANT", "INTERMEDIATE", "INPUT", "OUTPUT", "UNKNOWN"};
     out << "nvidiagpu::tensor { name: " << obj.m_tensor->get_name()

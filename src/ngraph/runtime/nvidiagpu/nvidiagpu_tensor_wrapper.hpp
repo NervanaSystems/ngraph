@@ -48,9 +48,9 @@ public:
     };
     TensorWrapper(const std::shared_ptr<descriptor::Tensor>&, const std::string& alias = "");
     TensorWrapper(const std::shared_ptr<descriptor::Tensor>&,
-                    TensorType,
-                    size_t,
-                    const std::string& alias);
+                  TensorType,
+                  size_t,
+                  const std::string& alias);
 
     size_t get_size() const;
     const ngraph::Shape& get_shape() const;

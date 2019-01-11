@@ -202,8 +202,8 @@ namespace ngraph
                             std::shared_ptr<HostParameters> params);
                 uint32_t align_to_block_size(uint32_t threads, uint32_t block_size);
                 void print_tensor_from_nvidiagpu(codegen::CodeWriter& writer,
-                                             const std::string& tensor_name,
-                                             runtime::nvidiagpu::Shape shape);
+                                                 const std::string& tensor_name,
+                                                 runtime::nvidiagpu::Shape shape);
                 std::string include_helpers();
                 size_t build_elementwise_n_to_1(const std::vector<std::string>& dtypes,
                                                 runtime::nvidiagpu::Shape tensor_shape,

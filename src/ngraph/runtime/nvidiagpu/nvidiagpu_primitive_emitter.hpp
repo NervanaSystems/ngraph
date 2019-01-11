@@ -39,7 +39,10 @@ namespace ngraph
                 std::unique_ptr<CUDAEmitter>& get_cuda_emitter();
                 std::unique_ptr<CUDNNEmitter>& get_cudnn_emitter();
                 std::unique_ptr<CUBLASEmitter>& get_cublas_emitter();
-                std::vector<nvidiagpu::primitive*>& get_primitives() { return m_nvidiagpu_primitives; }
+                std::vector<nvidiagpu::primitive*>& get_primitives()
+                {
+                    return m_nvidiagpu_primitives;
+                }
                 std::vector<nvidiagpu::memory_primitive>& get_memory_primitives()
                 {
                     return m_nvidiagpu_mem_primitives;
