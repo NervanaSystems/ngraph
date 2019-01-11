@@ -39,7 +39,7 @@ namespace ngraph
             class NVKernelArgs
             {
             public:
-                NVKernelArgs(const std::shared_ptr<NVHostParameters>& params);
+                NVKernelArgs(const std::shared_ptr<HostParameters>& params);
                 NVKernelArgs(const NVKernelArgs& args);
 
                 //
@@ -126,7 +126,7 @@ namespace ngraph
                 std::vector<void*> m_argument_list;
                 std::vector<bool> m_placeholder_positions;
                 std::stringstream m_input_signature;
-                std::shared_ptr<NVHostParameters> m_host_parameters;
+                std::shared_ptr<HostParameters> m_host_parameters;
                 static const std::unordered_map<std::type_index, std::string> type_names;
             };
 

@@ -130,7 +130,7 @@ std::vector<int>
 
 runtime::nvidiagpu::CUDNNEmitter::CUDNNEmitter(NVPrimitiveEmitter* emitter,
                                            NVRuntimeContext* ctx,
-                                           std::shared_ptr<NVHostParameters> params)
+                                           std::shared_ptr<HostParameters> params)
     : m_host_parameters(params)
     , m_primitive_emitter(emitter)
 {

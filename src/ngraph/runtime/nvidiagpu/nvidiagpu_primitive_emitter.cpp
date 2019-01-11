@@ -23,7 +23,7 @@ using namespace ngraph::runtime::nvidiagpu;
 
 NVPrimitiveEmitter::NVPrimitiveEmitter()
     : m_memory_manager(this)
-    , m_host_parameters(new NVHostParameters)
+    , m_host_parameters(new HostParameters)
     , m_host_emitter(new HostEmitter(this, nullptr))
     , m_cuda_emitter(new CUDAEmitter(this, nullptr, nullptr))
     , m_cudnn_emitter(new CUDNNEmitter(this, nullptr, nullptr))
@@ -33,7 +33,7 @@ NVPrimitiveEmitter::NVPrimitiveEmitter()
 
 NVPrimitiveEmitter::NVPrimitiveEmitter(const std::unique_ptr<NVRuntimeContext>& ctx)
     : m_memory_manager(this)
-    , m_host_parameters(new NVHostParameters)
+    , m_host_parameters(new HostParameters)
     , m_host_emitter(new HostEmitter(this, ctx.get()))
     , m_cuda_emitter(new CUDAEmitter(this, ctx.get(), this->m_host_parameters))
     , m_cudnn_emitter(new CUDNNEmitter(this, ctx.get(), this->m_host_parameters))

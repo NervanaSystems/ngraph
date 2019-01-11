@@ -60,7 +60,7 @@ namespace ngraph
                 std::unordered_map<std::string, size_t> m_primitive_map;
                 std::vector<std::unique_ptr<nvidiagpu::primitive>> m_managed_primitives;
                 NVMemoryManager m_memory_manager;
-                std::shared_ptr<NVHostParameters> m_host_parameters;
+                std::shared_ptr<HostParameters> m_host_parameters;
                 std::unique_ptr<HostEmitter> m_host_emitter;
                 std::unique_ptr<CUDAEmitter> m_cuda_emitter;
                 std::unique_ptr<CUDNNEmitter> m_cudnn_emitter;

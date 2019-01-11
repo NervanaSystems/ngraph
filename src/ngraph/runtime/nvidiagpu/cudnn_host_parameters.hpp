@@ -35,7 +35,7 @@ namespace ngraph
             class CUDNNHostParameters
             {
             public:
-                CUDNNHostParameters(const std::shared_ptr<NVHostParameters> params)
+                CUDNNHostParameters(const std::shared_ptr<HostParameters> params)
                     : m_host_parameters(params)
                 {
                 }
@@ -66,7 +66,7 @@ namespace ngraph
                 }
 
             private:
-                std::shared_ptr<NVHostParameters> m_host_parameters;
+                std::shared_ptr<HostParameters> m_host_parameters;
             };
         }
     }

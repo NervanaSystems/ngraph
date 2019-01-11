@@ -36,7 +36,7 @@ const std::unordered_map<std::type_index, std::string> runtime::nvidiagpu::NVKer
     {TI(uint32_t), "uint32_t"},
     {TI(uint64_t), "uint64_t"}};
 
-runtime::nvidiagpu::NVKernelArgs::NVKernelArgs(const std::shared_ptr<NVHostParameters>& params)
+runtime::nvidiagpu::NVKernelArgs::NVKernelArgs(const std::shared_ptr<HostParameters>& params)
     : m_signature_generated(false)
     , m_host_parameters(params)
 {

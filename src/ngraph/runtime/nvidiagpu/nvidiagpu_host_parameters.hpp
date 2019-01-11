@@ -27,10 +27,10 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            class NVHostParameters
+            class HostParameters
             {
             public:
-                NVHostParameters() = default;
+                HostParameters() = default;
 
                 void* cache(const char& value)
                 {

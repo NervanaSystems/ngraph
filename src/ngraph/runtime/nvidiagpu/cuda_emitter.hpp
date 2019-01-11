@@ -200,7 +200,7 @@ namespace ngraph
             private:
                 CUDAEmitter(NVPrimitiveEmitter* emitter,
                             NVRuntimeContext* ctx,
-                            std::shared_ptr<NVHostParameters> params);
+                            std::shared_ptr<HostParameters> params);
                 uint32_t align_to_block_size(uint32_t threads, uint32_t block_size);
                 void print_tensor_from_nvidiagpu(codegen::CodeWriter& writer,
                                              const std::string& tensor_name,
@@ -282,7 +282,7 @@ namespace ngraph
                 std::vector<std::string>
                     get_string_vector(const std::vector<element::Type>& dtypes);
 
-                std::shared_ptr<NVHostParameters> m_host_parameters;
+                std::shared_ptr<HostParameters> m_host_parameters;
                 NVPrimitiveEmitter* m_primitive_emitter;
                 NVRuntimeContext* m_ctx;
             };
