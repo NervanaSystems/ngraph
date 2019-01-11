@@ -64,17 +64,17 @@ size_t runtime::nvidiagpu::CompiledFunction::get_memory_alignment()
 
 static std::mutex s_compilation;
 
-class NVStaticInitializers
+class StaticInitializers
 {
 public:
-    NVStaticInitializers()
+    StaticInitializers()
     {
         file_util::remove_directory(runtime::nvidiagpu::CompiledFunction::get_output_dir());
         file_util::make_directory(runtime::nvidiagpu::CompiledFunction::get_output_dir());
     }
 };
 
-static NVStaticInitializers s_static_initializers;
+static StaticInitializers s_static_initializers;
 
 runtime::nvidiagpu::CompiledFunction::CompiledFunction(
     const shared_ptr<ngraph::Function>& function,
