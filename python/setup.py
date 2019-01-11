@@ -265,6 +265,8 @@ library_dirs = [NGRAPH_CPP_LIBRARY_DIR]
 libraries = ['ngraph']
 
 extra_compile_args = []
+if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
+    extra_compile_args.append('-DNGRAPH_ONNX_IMPORT_ENABLE')
 
 extra_link_args = []
 
@@ -289,6 +291,18 @@ data_files = [
     ),
 ]
 
+if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
+    onnx_sources = [
+        'pyngraph/onnx_import/onnx_import.cpp',
+    ]
+    onnx_sources = [PYNGRAPH_ROOT_DIR + '/' + source for source in onnx_sources]
+    sources = sources + onnx_sources
+
+    package_dir['ngraph.impl.onnx_import'] = (
+        PYNGRAPH_ROOT_DIR + '/ngraph/impl/onnx_import'
+    )
+    packages.append('ngraph.impl.onnx_import')
+
 ext_modules = [
     Extension(
         '_pyngraph',
@@ -297,35 +311,11 @@ ext_modules = [
         define_macros=[('VERSION_INFO', __version__)],
         library_dirs=library_dirs,
         libraries=libraries,
+        extra_compile_args = extra_compile_args
         extra_link_args=extra_link_args,
         language='c++',
     ),
 ]
-
-if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
-    onnx_sources = [
-        'pyngraph/pyngraph_onnx_import.cpp',
-        'pyngraph/onnx_import/onnx_import.cpp',
-    ]
-    onnx_sources = [PYNGRAPH_ROOT_DIR + '/' + source for source in onnx_sources]
-
-    package_dir['ngraph.impl.onnx_import'] = (
-        PYNGRAPH_ROOT_DIR + '/ngraph/impl/onnx_import'
-    )
-    packages.append('ngraph.impl.onnx_import')
-
-    ext_modules.append(
-        Extension(
-            '_pyngraph_onnx_import',
-            sources=onnx_sources,
-            include_dirs=include_dirs,
-            define_macros=[('VERSION_INFO', __version__)],
-            library_dirs=library_dirs,
-            libraries=libraries,
-            extra_link_args=extra_link_args,
-            language='c++',
-        ),
-    )
 
 
 def add_platform_specific_link_args(link_args):
