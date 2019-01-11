@@ -18,7 +18,7 @@
 
 using namespace ngraph;
 
-runtime::nvidiagpu::NVRuntimeConstructor::NVRuntimeConstructor(const op_order_t& ordered_ops)
+runtime::nvidiagpu::RuntimeConstructor::RuntimeConstructor(const op_order_t& ordered_ops)
 {
     for (auto const& ops : ordered_ops)
     {
@@ -26,12 +26,12 @@ runtime::nvidiagpu::NVRuntimeConstructor::NVRuntimeConstructor(const op_order_t&
     }
 }
 
-void runtime::nvidiagpu::NVRuntimeConstructor::add(const std::string& name, const op_runtime_t& step)
+void runtime::nvidiagpu::RuntimeConstructor::add(const std::string& name, const op_runtime_t& step)
 {
     m_runtime[name].push_back(step);
 }
 
-void runtime::nvidiagpu::NVRuntimeConstructor::add_call(
+void runtime::nvidiagpu::RuntimeConstructor::add_call(
     const std::string& caller,
     const std::string& callee,
     const std::vector<runtime::nvidiagpu::TensorWrapper>& args,
@@ -55,7 +55,7 @@ void runtime::nvidiagpu::NVRuntimeConstructor::add_call(
     add(caller, call);
 }
 
-runtime::nvidiagpu::EntryPoint runtime::nvidiagpu::NVRuntimeConstructor::build(const std::string& function,
+runtime::nvidiagpu::EntryPoint runtime::nvidiagpu::RuntimeConstructor::build(const std::string& function,
                                                                        CallFrame& call_frame)
 {
     auto& runtime = m_runtime.at(function);

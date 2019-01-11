@@ -41,7 +41,7 @@ namespace ngraph
         namespace nvidiagpu
         {
             class Emitter;
-            class NVRuntimeConstructor;
+            class RuntimeConstructor;
             struct RuntimeContext;
 
             class InternalFunction : public CompiledFunction
@@ -91,7 +91,7 @@ namespace ngraph
                     std::string,
                     std::tuple<runtime::nvidiagpu::TensorWrapper::TensorType, size_t, std::string>>
                     m_variable_name_map;
-                std::unique_ptr<NVRuntimeConstructor> m_runtime_constructor;
+                std::unique_ptr<RuntimeConstructor> m_runtime_constructor;
                 std::shared_ptr<codegen::CodeWriter> m_trace;
                 codegen::CodeWriter m_manifest;
             };

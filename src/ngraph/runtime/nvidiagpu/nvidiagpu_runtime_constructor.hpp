@@ -34,7 +34,7 @@ namespace ngraph
         namespace nvidiagpu
         {
             class CallFrame;
-            class NVRuntimeConstructor
+            class RuntimeConstructor
             {
             public:
                 using op_runtime_t =
@@ -42,7 +42,7 @@ namespace ngraph
                 using op_order_t =
                     std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>;
 
-                NVRuntimeConstructor(const op_order_t& ordered_ops);
+                RuntimeConstructor(const op_order_t& ordered_ops);
                 void add(const std::string& name, const op_runtime_t& step);
                 void add_call(const std::string& caller,
                               const std::string& callee,

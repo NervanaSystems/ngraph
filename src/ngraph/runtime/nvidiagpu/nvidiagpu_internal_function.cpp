@@ -389,7 +389,7 @@ void runtime::nvidiagpu::InternalFunction::add_passes(ngraph::pass::Manager& pas
 void runtime::nvidiagpu::InternalFunction::emit()
 {
     m_runtime_constructor =
-        runtime::nvidiagpu::make_unique<NVRuntimeConstructor>(m_function_ordered_ops);
+        runtime::nvidiagpu::make_unique<RuntimeConstructor>(m_function_ordered_ops);
 
     if (std::getenv("NGRAPH_NVIDIAGPU_TRACE"))
     {
