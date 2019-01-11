@@ -31,7 +31,7 @@ NVPrimitiveEmitter::NVPrimitiveEmitter()
 {
 }
 
-NVPrimitiveEmitter::NVPrimitiveEmitter(const std::unique_ptr<NVRuntimeContext>& ctx)
+NVPrimitiveEmitter::NVPrimitiveEmitter(const std::unique_ptr<RuntimeContext>& ctx)
     : m_memory_manager(this)
     , m_host_parameters(new HostParameters)
     , m_host_emitter(new HostEmitter(this, ctx.get()))

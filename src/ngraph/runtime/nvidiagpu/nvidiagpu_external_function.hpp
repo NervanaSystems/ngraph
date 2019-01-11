@@ -45,7 +45,7 @@ namespace ngraph
         namespace nvidiagpu
         {
             class NVEmitter;
-            struct NVRuntimeContext;
+            struct RuntimeContext;
 
             class ExternalFunction : public CompiledFunction
             {

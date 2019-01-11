@@ -46,9 +46,9 @@ namespace ngraph
                 void sync();
 
             private:
-                CUBLASEmitter(NVPrimitiveEmitter* emitter, NVRuntimeContext* ctx);
+                CUBLASEmitter(NVPrimitiveEmitter* emitter, RuntimeContext* ctx);
                 NVPrimitiveEmitter* m_primitive_emitter;
-                NVRuntimeContext* m_ctx;
+                RuntimeContext* m_ctx;
                 std::string get_error_string(std::vector<std::string>& arg_names,
                                              std::vector<Shape>& shapes,
                                              const Node* node);

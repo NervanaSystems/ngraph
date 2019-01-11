@@ -38,7 +38,7 @@ namespace ngraph
             {
             public:
                 using op_runtime_t =
-                    std::function<void(CallFrame& call_frame, NVRuntimeContext* ctx)>;
+                    std::function<void(CallFrame& call_frame, RuntimeContext* ctx)>;
                 using op_order_t =
                     std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>;
 

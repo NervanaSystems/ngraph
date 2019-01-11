@@ -31,10 +31,10 @@ namespace ngraph
 
             class CompiledFunction;
             class NVPrimitiveEmitter;
-            struct NVRuntimeContext;
+            struct RuntimeContext;
             class CudaContextManager;
 
-            using EntryPoint_t = void(void** inputs, void** outputs, NVRuntimeContext* ctx);
+            using EntryPoint_t = void(void** inputs, void** outputs, RuntimeContext* ctx);
             using EntryPoint = std::function<EntryPoint_t>;
 
             class nvidiagpu::Backend : public Backend
@@ -72,7 +72,7 @@ namespace ngraph
                     void prepare_runtime_context();
                     void bind_cuda_context_to_thread();
 
-                    std::unique_ptr<NVRuntimeContext> m_runtime_context;
+                    std::unique_ptr<RuntimeContext> m_runtime_context;
                     std::unique_ptr<NVPrimitiveEmitter> m_primitive_emitter;
 
                 private:

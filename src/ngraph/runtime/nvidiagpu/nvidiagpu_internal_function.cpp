@@ -154,11 +154,11 @@ std::string runtime::nvidiagpu::NVInternalFunction::add_to_runtime(
     const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
     const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out)
 {
-    std::function<void(CallFrame & call_frame, NVRuntimeContext * ctx)> primitive_invocation;
+    std::function<void(CallFrame & call_frame, RuntimeContext * ctx)> primitive_invocation;
     if (!m_trace)
     {
         primitive_invocation = [args, out, primitive_index](CallFrame& call_frame,
-                                                            NVRuntimeContext* ctx) mutable {
+                                                            RuntimeContext* ctx) mutable {
             // here, these inputs and outputs could be any of [constant, input, output, intermediate]
             auto inputs = call_frame.get_tensor_io(args);
             auto outputs = call_frame.get_tensor_io(out);
@@ -168,7 +168,7 @@ std::string runtime::nvidiagpu::NVInternalFunction::add_to_runtime(
     else
     {
         primitive_invocation = [this, args, out, primitive_index](CallFrame& call_frame,
-                                                                  NVRuntimeContext* ctx) mutable {
+                                                                  RuntimeContext* ctx) mutable {
             // here, these inputs and outputs could be any of [constant, input, output, intermediate]
             auto inputs = call_frame.get_tensor_io(args);
             auto outputs = call_frame.get_tensor_io(out);

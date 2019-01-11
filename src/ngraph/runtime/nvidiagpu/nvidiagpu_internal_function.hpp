@@ -42,7 +42,7 @@ namespace ngraph
         {
             class NVEmitter;
             class NVRuntimeConstructor;
-            struct NVRuntimeContext;
+            struct RuntimeContext;
 
             class NVInternalFunction : public CompiledFunction
             {

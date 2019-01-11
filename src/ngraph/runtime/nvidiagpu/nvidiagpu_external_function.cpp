@@ -237,7 +237,7 @@ using namespace std;
         // to register cleanup handlers. We use it, and not atexit(), because
         // atexit() happens too late, when the JIT is no longer alive
         + "void *__dso_handle = 0;\n\n" +
-        "static nvidiagpu::NVRuntimeContext* m_runtime_context = nullptr;\n";
+        "static nvidiagpu::RuntimeContext* m_runtime_context = nullptr;\n";
 
     return s_header_source;
 }
@@ -364,7 +364,7 @@ void runtime::nvidiagpu::ExternalFunction::emit_function_declarations()
     for (const auto& p : m_function_ordered_ops)
     {
         m_writer << "extern \"C\" void " << p.first->get_name() << "(void** inputs, "
-                 << "void** outputs, nvidiagpu::NVRuntimeContext* ctx);\n";
+                 << "void** outputs, nvidiagpu::RuntimeContext* ctx);\n";
     }
     m_writer << "\n";
 }
@@ -430,7 +430,7 @@ void runtime::nvidiagpu::ExternalFunction::emit_functions()
 
         m_writer << "extern \"C\" void " << current_function->get_name();
         m_writer << "(void** inputs, void** outputs, "
-                 << "nvidiagpu::NVRuntimeContext* ctx) __attribute__ ((optnone))\n";
+                 << "nvidiagpu::RuntimeContext* ctx) __attribute__ ((optnone))\n";
         m_writer.block_begin();
         {
             m_writer << "m_runtime_context = ctx;\n";
@@ -659,7 +659,7 @@ string runtime::nvidiagpu::ExternalFunction::emit_op_as_function(const Node& nod
         writer << tvw.get_type() << "* " << tvw.get_name();
         out.push_back(tvw);
     }
-    writer << ",\nnvidiagpu::NVRuntimeContext* ctx";
+    writer << ",\nnvidiagpu::RuntimeContext* ctx";
     writer.indent--;
     writer << "\n)\n";
     string body = emit_op(this, function_name, &node, in, out);

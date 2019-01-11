@@ -37,7 +37,7 @@ namespace ngraph
             using memory_primitive = std::function<void*(void)>;
 
             extern "C" {
-            struct NVRuntimeContext
+            struct RuntimeContext
             {
                 cudnnHandle_t* cudnn_handle;
                 cublasHandle_t* cublas_handle;
@@ -53,10 +53,10 @@ namespace ngraph
                 // for backward compatability.
             };
 
-            void start_stopwatch(NVRuntimeContext* ctx, size_t idx);
-            void stop_stopwatch(NVRuntimeContext* ctx, size_t idx);
-            size_t count_stopwatch(NVRuntimeContext* ctx, size_t idx);
-            size_t us_stopwatch(NVRuntimeContext* ctx, size_t idx);
+            void start_stopwatch(RuntimeContext* ctx, size_t idx);
+            void stop_stopwatch(RuntimeContext* ctx, size_t idx);
+            size_t count_stopwatch(RuntimeContext* ctx, size_t idx);
+            size_t us_stopwatch(RuntimeContext* ctx, size_t idx);
             }
         }
     }

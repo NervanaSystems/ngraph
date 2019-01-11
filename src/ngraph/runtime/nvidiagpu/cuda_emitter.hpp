@@ -37,7 +37,7 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            struct NVRuntimeContext;
+            struct RuntimeContext;
             class NVPrimitiveEmitter;
 
             class CUDAEmitter
@@ -199,7 +199,7 @@ namespace ngraph
 
             private:
                 CUDAEmitter(NVPrimitiveEmitter* emitter,
-                            NVRuntimeContext* ctx,
+                            RuntimeContext* ctx,
                             std::shared_ptr<HostParameters> params);
                 uint32_t align_to_block_size(uint32_t threads, uint32_t block_size);
                 void print_tensor_from_nvidiagpu(codegen::CodeWriter& writer,
@@ -284,7 +284,7 @@ namespace ngraph
 
                 std::shared_ptr<HostParameters> m_host_parameters;
                 NVPrimitiveEmitter* m_primitive_emitter;
-                NVRuntimeContext* m_ctx;
+                RuntimeContext* m_ctx;
             };
         }
     }

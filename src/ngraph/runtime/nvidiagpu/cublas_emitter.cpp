@@ -21,7 +21,7 @@
 
 using namespace ngraph;
 
-runtime::nvidiagpu::CUBLASEmitter::CUBLASEmitter(NVPrimitiveEmitter* emitter, NVRuntimeContext* ctx)
+runtime::nvidiagpu::CUBLASEmitter::CUBLASEmitter(NVPrimitiveEmitter* emitter, RuntimeContext* ctx)
     : m_primitive_emitter(emitter)
 {
     m_ctx = ctx;

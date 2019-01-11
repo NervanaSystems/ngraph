@@ -27,7 +27,7 @@
 
 using namespace ngraph;
 
-runtime::nvidiagpu::HostEmitter::HostEmitter(NVPrimitiveEmitter* emitter, NVRuntimeContext* ctx)
+runtime::nvidiagpu::HostEmitter::HostEmitter(NVPrimitiveEmitter* emitter, RuntimeContext* ctx)
     : m_primitive_emitter(emitter)
     , m_ctx(ctx)
 {

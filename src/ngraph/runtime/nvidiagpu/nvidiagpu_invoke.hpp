@@ -24,12 +24,12 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            struct NVRuntimeContext;
-            extern "C" void invoke_primitive(const NVRuntimeContext* ctx,
+            struct RuntimeContext;
+            extern "C" void invoke_primitive(const RuntimeContext* ctx,
                                              size_t primitive_index,
                                              void** args,
                                              void** result);
-            extern "C" void* invoke_memory_primitive(const NVRuntimeContext* ctx,
+            extern "C" void* invoke_memory_primitive(const RuntimeContext* ctx,
                                                      size_t primitive_index);
         }
     }

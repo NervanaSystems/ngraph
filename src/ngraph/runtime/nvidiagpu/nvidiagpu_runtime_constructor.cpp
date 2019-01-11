@@ -38,7 +38,7 @@ void runtime::nvidiagpu::NVRuntimeConstructor::add_call(
     const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out)
 {
     auto& runtime = m_runtime[callee];
-    auto call = [args, out, &runtime](CallFrame& caller_frame, NVRuntimeContext* ctx) mutable {
+    auto call = [args, out, &runtime](CallFrame& caller_frame, RuntimeContext* ctx) mutable {
         // extract memory pointers from the callers stack
         auto inputs = caller_frame.get_tensor_io(args);
         auto outputs = caller_frame.get_tensor_io(out);
@@ -59,7 +59,7 @@ runtime::nvidiagpu::EntryPoint runtime::nvidiagpu::NVRuntimeConstructor::build(c
                                                                        CallFrame& call_frame)
 {
     auto& runtime = m_runtime.at(function);
-    return [call_frame, &runtime](void** inputs, void** outputs, NVRuntimeContext* ctx) mutable {
+    return [call_frame, &runtime](void** inputs, void** outputs, RuntimeContext* ctx) mutable {
         call_frame.resolve_inputs(inputs);
         call_frame.resolve_outputs(outputs);
         for (auto const& step : runtime)

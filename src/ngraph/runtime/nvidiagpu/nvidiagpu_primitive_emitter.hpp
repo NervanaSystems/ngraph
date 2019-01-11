@@ -34,7 +34,7 @@ namespace ngraph
             {
             public:
                 NVPrimitiveEmitter();
-                NVPrimitiveEmitter(const std::unique_ptr<NVRuntimeContext>& ctx);
+                NVPrimitiveEmitter(const std::unique_ptr<RuntimeContext>& ctx);
                 std::unique_ptr<HostEmitter>& get_host_emitter();
                 std::unique_ptr<CUDAEmitter>& get_cuda_emitter();
                 std::unique_ptr<CUDNNEmitter>& get_cudnn_emitter();

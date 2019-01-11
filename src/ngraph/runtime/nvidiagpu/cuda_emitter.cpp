@@ -69,7 +69,7 @@ std::ostream& operator<<(std::ostream& os, pooling_op_shape& shape)
 }
 
 runtime::nvidiagpu::CUDAEmitter::CUDAEmitter(runtime::nvidiagpu::NVPrimitiveEmitter* emitter,
-                                         runtime::nvidiagpu::NVRuntimeContext* ctx,
+                                         runtime::nvidiagpu::RuntimeContext* ctx,
                                          std::shared_ptr<HostParameters> params)
     : m_host_parameters(params)
     , m_primitive_emitter(emitter)

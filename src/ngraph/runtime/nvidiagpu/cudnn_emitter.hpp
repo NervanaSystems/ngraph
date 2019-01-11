@@ -161,7 +161,7 @@ namespace ngraph
 
             private:
                 CUDNNEmitter(NVPrimitiveEmitter* emitter,
-                             NVRuntimeContext* ctx,
+                             RuntimeContext* ctx,
                              std::shared_ptr<HostParameters> params);
 
                 void* get_data_by_type(cudnnDataType_t data_type, double value);
@@ -214,7 +214,7 @@ namespace ngraph
                 CUDNNHostParameters m_host_parameters;
 
                 NVPrimitiveEmitter* m_primitive_emitter;
-                NVRuntimeContext* m_ctx;
+                RuntimeContext* m_ctx;
             };
         }
     }

@@ -28,7 +28,7 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            struct NVRuntimeContext;
+            struct RuntimeContext;
             class NVPrimitiveEmitter;
             class HostEmitter
             {
@@ -42,10 +42,10 @@ namespace ngraph
                 size_t build_zero_out(size_t dst, size_t size, bool is_local = false);
 
             private:
-                HostEmitter(NVPrimitiveEmitter* emitter, NVRuntimeContext* ctx);
+                HostEmitter(NVPrimitiveEmitter* emitter, RuntimeContext* ctx);
 
                 NVPrimitiveEmitter* m_primitive_emitter;
-                NVRuntimeContext* m_ctx;
+                RuntimeContext* m_ctx;
             };
         }
     }
