@@ -89,7 +89,6 @@ if (NOT NGRAPH_MANYLINUX_ENABLE)
             COMMAND ${VIRTUALENV} -p ${PYTHON2_EXECUTABLE} .venv2
             COMMAND ./.venv2/bin/python -m pip install --no-cache-dir -U pip setuptools wheel
             COMMAND ./.venv2/bin/python setup.py bdist_wheel
-            COMMAND ./.venv2/bin/python setup.py sdist
             COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/build
             COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/ngraph_core.egg-info
             COMMAND ${CMAKE_COMMAND} -E touch wheel2.timestamp
@@ -123,7 +122,6 @@ else()
         COMMAND /opt/python/cp27-cp27mu/bin/virtualenv -p /opt/python/cp27-cp27mu/bin/python2.7 .venv27mu
         COMMAND ./.venv27mu/bin/python -m pip install --no-cache-dir -U pip setuptools wheel
         COMMAND ./.venv27mu/bin/python setup.py bdist_wheel
-        COMMAND ./.venv27mu/bin/python setup.py sdist
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/build
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/ngraph_core.egg-info
         COMMAND ${CMAKE_COMMAND} -E touch wheel27mu.timestamp
