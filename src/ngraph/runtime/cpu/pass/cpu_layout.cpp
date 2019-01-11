@@ -1892,23 +1892,33 @@ namespace ngraph
                                        vector<memory::desc>& o_mds)
                 {
                     auto rnn_bprop_node = static_cast<const T*>(node.get());
-                    auto rnn_node =
-                        static_cast<const ngraph::op::Rnn*>(rnn_bprop_node->get_fprop_node().get());
-                    auto t = static_cast<unsigned long>(rnn_node->get_src_sequence_length());
-                    auto n = static_cast<unsigned long>(rnn_node->get_batch_size());
-                    auto c = static_cast<unsigned long>(rnn_node->get_src_layer_feature_size());
-                    auto s = static_cast<unsigned long>(rnn_node->get_num_cell_states());
-                    auto l = static_cast<unsigned long>(rnn_node->get_num_fused_layers());
-                    auto d = static_cast<unsigned long>(rnn_node->get_direction());
-                    auto g = static_cast<unsigned long>(rnn_node->get_gates_per_cell());
-                    auto i = static_cast<unsigned long>(rnn_node->get_src_layer_feature_size());
-                    auto o = static_cast<unsigned long>(rnn_node->get_src_iter_feature_size());
+                    auto rnn_attributes = rnn_bprop_node->get_rnn_attributes();
 
-                    Shape src_layer_dims{t, n, c};
-                    Shape src_iter_dims{l, d, s, n, c};
-                    Shape wei_layer_dims{l, d, g, o, i};
-                    Shape wei_iter_dims{l, d, g, o, i};
-                    Shape bias_dims{l, d, g, o};
+                    Shape src_layer_dims{
+                        rnn_attributes.timestep, rnn_attributes.batch, rnn_attributes.slc};
+                    Shape src_iter_dims{rnn_attributes.layer,
+                                        rnn_attributes.direction,
+                                        rnn_attributes.states,
+                                        rnn_attributes.batch,
+                                        rnn_attributes.sic};
+
+                    Shape wei_layer_dims{rnn_attributes.layer,
+                                         rnn_attributes.direction,
+                                         rnn_attributes.gates,
+                                         rnn_attributes.sic,
+                                         rnn_attributes.slc};
+
+                    Shape wei_iter_dims{rnn_attributes.layer,
+                                        rnn_attributes.direction,
+                                        rnn_attributes.gates,
+                                        rnn_attributes.sic,
+                                        rnn_attributes.sic};
+
+                    Shape bias_dims{rnn_attributes.layer,
+                                    rnn_attributes.direction,
+                                    rnn_attributes.gates,
+                                    rnn_attributes.sic};
+
                     Shape dst_layer_dims{src_layer_dims.begin(), src_layer_dims.end()};
                     Shape dst_iter_dims{src_iter_dims.begin(), src_iter_dims.end()};
 
@@ -2041,22 +2051,9 @@ namespace ngraph
                     }
                     else
                     {
-                        //set_native_layouts(external_function, node);
                         throw ngraph_error(
                             "RNNBackprop fused op is only supported in MKLDNN for now.");
                     }
-                    /*if (mkldnn_utils::use_mkldnn_kernel(node.get()))
-                    {
-                        // TODO: for now, framework formats for src_layer, src_iter, weights_layer and weights_iter
-                        // matches to the expected mkldnn format. we need to handle a case to insert convert Op's
-                        // if the format doesn't matches.
-                        set_native_layouts(external_function, node, false);
-                    }
-                    else
-                    {
-                        throw ngraph_error(
-                            "RNNBackprop fused op is only supported in MKLDNN for now.");
-                    }*/
                 }
 
                 template <>

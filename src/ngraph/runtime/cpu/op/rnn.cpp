@@ -179,45 +179,40 @@ op::RnnBackprop::RnnBackprop(std::shared_ptr<Node> result_forward,
     , m_fprop_node(result_forward)
 {
     auto rnn_node = static_cast<const ngraph::op::Rnn*>(result_forward.get());
-    m_rnn_attributes.timestep = static_cast<unsigned long>(rnn_node->get_src_sequence_length());
-    m_rnn_attributes.batch = static_cast<unsigned long>(rnn_node->get_batch_size());
-    m_rnn_attributes.feature_size =
-        static_cast<unsigned long>(rnn_node->get_src_layer_feature_size());
-    m_rnn_attributes.states = static_cast<unsigned long>(rnn_node->get_num_cell_states());
-    m_rnn_attributes.layer = static_cast<unsigned long>(rnn_node->get_num_fused_layers());
-    m_rnn_attributes.direction = static_cast<unsigned long>(rnn_node->get_direction());
-    m_rnn_attributes.gates = static_cast<unsigned long>(rnn_node->get_gates_per_cell());
-    m_rnn_attributes.slc = static_cast<unsigned long>(rnn_node->get_src_layer_feature_size());
-    m_rnn_attributes.sic = static_cast<unsigned long>(rnn_node->get_src_iter_feature_size());
-    m_rnn_attributes.dlc = static_cast<unsigned long>(rnn_node->get_dst_layer_feature_size());
-    m_rnn_attributes.dic = static_cast<unsigned long>(rnn_node->get_dst_iter_feature_size());
+    m_rnn_attributes.timestep = rnn_node->get_src_sequence_length();
+    m_rnn_attributes.batch = rnn_node->get_batch_size();
+    m_rnn_attributes.states = rnn_node->get_num_cell_states();
+    m_rnn_attributes.layer = rnn_node->get_num_fused_layers();
+    m_rnn_attributes.direction = rnn_node->get_direction();
+    m_rnn_attributes.gates = rnn_node->get_gates_per_cell();
+    m_rnn_attributes.slc = rnn_node->get_src_layer_feature_size();
+    m_rnn_attributes.sic = rnn_node->get_src_iter_feature_size();
 
     set_output_size(5);
-    set_output_type(
-        0,
-        fprop_src_layer->get_element_type(),
-        Shape{m_rnn_attributes.timestep, m_rnn_attributes.batch, m_rnn_attributes.feature_size});
+    set_output_type(0,
+                    fprop_src_layer->get_element_type(),
+                    Shape{m_rnn_attributes.timestep, m_rnn_attributes.batch, m_rnn_attributes.slc});
     set_output_type(1,
                     fprop_src_layer->get_element_type(),
                     Shape{m_rnn_attributes.layer,
                           m_rnn_attributes.direction,
                           m_rnn_attributes.states,
                           m_rnn_attributes.batch,
-                          m_rnn_attributes.feature_size});
+                          m_rnn_attributes.sic});
     set_output_type(2,
                     fprop_src_layer->get_element_type(),
                     Shape{m_rnn_attributes.layer,
                           m_rnn_attributes.direction,
                           m_rnn_attributes.gates,
-                          m_rnn_attributes.dlc,
+                          m_rnn_attributes.sic,
                           m_rnn_attributes.slc});
     set_output_type(3,
                     fprop_src_layer->get_element_type(),
                     Shape{m_rnn_attributes.layer,
                           m_rnn_attributes.direction,
                           m_rnn_attributes.gates,
-                          m_rnn_attributes.dlc,
-                          m_rnn_attributes.slc});
+                          m_rnn_attributes.sic,
+                          m_rnn_attributes.sic});
     set_output_type(4,
                     fprop_src_layer->get_element_type(),
                     Shape{m_rnn_attributes.layer,

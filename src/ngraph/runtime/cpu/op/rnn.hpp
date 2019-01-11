@@ -106,17 +106,14 @@ namespace ngraph
 
             struct RnnAttributes
             {
-                int timestep;
-                int batch;
-                int feature_size;
-                int states;
-                int layer;
-                int direction;
-                int gates;
-                int slc;
-                int sic;
-                int dlc;
-                int dic;
+                size_t timestep;  /* sequence_len or number of timesteps */
+                size_t batch;     /* batch size */
+                size_t states;    /* number of recurrent states */
+                size_t layer;     /* number of rnn layers */
+                size_t direction; /* rnn direction */
+                size_t gates;     /* number of gates */
+                size_t slc;       /* input feature size */
+                size_t sic;       /* hidden state feature size */
             };
             RnnAttributes get_rnn_attributes() const { return m_rnn_attributes; }
             std::shared_ptr<Node> get_fprop_node() const { return m_fprop_node; }

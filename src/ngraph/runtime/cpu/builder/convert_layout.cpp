@@ -75,6 +75,7 @@ namespace ngraph
                         mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
                         mkldnn::memory::format::goihw);
                 }
+
                 // handle special case for rnn formats
                 if (auto rnn_back_prop =
                         std::dynamic_pointer_cast<ngraph::op::RnnBackprop>(node->get_users()[0]))
@@ -90,9 +91,8 @@ namespace ngraph
 
                     if (result_desc.data.format == mkldnn_tnc && input_desc.data.ndims == 2)
                     {
-                        Shape input_shape{rnn_attributes.timestep,
-                                          rnn_attributes.batch,
-                                          rnn_attributes.feature_size};
+                        Shape input_shape{
+                            rnn_attributes.timestep, rnn_attributes.batch, rnn_attributes.slc};
                         create_mkldnn_data_desc(input_shape, mkldnn::memory::format::tnc);
                     }
 
@@ -102,7 +102,7 @@ namespace ngraph
                                           rnn_attributes.direction,
                                           rnn_attributes.states,
                                           rnn_attributes.batch,
-                                          rnn_attributes.feature_size};
+                                          rnn_attributes.sic};
                         create_mkldnn_data_desc(input_shape, mkldnn::memory::format::ldsnc);
                     }
 
@@ -111,7 +111,7 @@ namespace ngraph
                         Shape input_shape{rnn_attributes.layer,
                                           rnn_attributes.direction,
                                           rnn_attributes.gates,
-                                          rnn_attributes.dlc,
+                                          rnn_attributes.sic,
                                           rnn_attributes.slc};
                         create_mkldnn_data_desc(input_shape, mkldnn::memory::format::ldgoi);
                     }
@@ -121,8 +121,8 @@ namespace ngraph
                         Shape input_shape{rnn_attributes.layer,
                                           rnn_attributes.direction,
                                           rnn_attributes.gates,
-                                          rnn_attributes.dlc,
-                                          rnn_attributes.slc};
+                                          rnn_attributes.slc,
+                                          rnn_attributes.sic};
                         create_mkldnn_data_desc(input_shape, mkldnn::memory::format::ldigo);
                     }
 
