@@ -30,13 +30,13 @@ namespace ngraph
         namespace nvidiagpu
         {
             class NVPrimitiveEmitter;
-            class NVMemoryManager;
+            class MemoryManager;
 
             class NVAllocator
             {
             public:
                 NVAllocator() = delete;
-                NVAllocator(NVMemoryManager* mgr);
+                NVAllocator(MemoryManager* mgr);
                 NVAllocator(const NVAllocator& g);
 
                 ~NVAllocator();
@@ -52,23 +52,23 @@ namespace ngraph
                 void close();
 
             private:
-                NVMemoryManager* m_manager;
+                MemoryManager* m_manager;
                 std::stack<size_t> m_active;
             };
 
-            class NVMemoryManager
+            class MemoryManager
             {
                 friend class NVPrimitiveEmitter;
                 friend class NVAllocator;
 
             public:
-                ~NVMemoryManager();
+                ~MemoryManager();
 
                 void allocate();
                 size_t get_allocation_size() const;
                 NVAllocator build_allocator() { return NVAllocator(this); }
             private:
-                NVMemoryManager(NVPrimitiveEmitter* emitter);
+                MemoryManager(NVPrimitiveEmitter* emitter);
                 size_t queue_for_transfer(const void* data, size_t size);
 
                 size_t m_buffer_offset;

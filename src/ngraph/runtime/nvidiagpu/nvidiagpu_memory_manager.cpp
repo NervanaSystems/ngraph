@@ -24,17 +24,17 @@ using namespace ngraph;
 
 constexpr const uint32_t initial_buffer_size = 10 * 1024 * 1024;
 
-runtime::nvidiagpu::NVMemoryManager::NVMemoryManager(NVPrimitiveEmitter* emitter)
+runtime::nvidiagpu::MemoryManager::MemoryManager(NVPrimitiveEmitter* emitter)
     : m_buffer_offset(0)
     , m_buffered_mem(initial_buffer_size, 0)
-    , m_workspace_manager(new pass::MemoryManager(runtime::nvidiagpu::NVMemoryManager::alignment))
+    , m_workspace_manager(new pass::MemoryManager(runtime::nvidiagpu::MemoryManager::alignment))
     , m_argspace_mem(1, {nullptr, 0})
     , m_workspace_mem(1, {nullptr, 0})
     , m_primitive_emitter(emitter)
 {
 }
 
-size_t runtime::nvidiagpu::NVMemoryManager::get_allocation_size() const
+size_t runtime::nvidiagpu::MemoryManager::get_allocation_size() const
 {
     size_t allocation_size = 0;
     for (auto const& alloc : m_argspace_mem)
@@ -48,7 +48,7 @@ size_t runtime::nvidiagpu::NVMemoryManager::get_allocation_size() const
     return allocation_size;
 }
 
-runtime::nvidiagpu::NVMemoryManager::~NVMemoryManager()
+runtime::nvidiagpu::MemoryManager::~MemoryManager()
 {
     for (auto& alloc : m_argspace_mem)
     {
@@ -60,7 +60,7 @@ runtime::nvidiagpu::NVMemoryManager::~NVMemoryManager()
     }
 }
 
-void runtime::nvidiagpu::NVMemoryManager::allocate()
+void runtime::nvidiagpu::MemoryManager::allocate()
 {
     if (m_workspace_manager->get_node_list().size() != 1)
     {
@@ -71,7 +71,7 @@ void runtime::nvidiagpu::NVMemoryManager::allocate()
     if (m_buffer_offset)
     {
         m_buffer_offset = ngraph::pass::MemoryManager::align(
-            m_buffer_offset, runtime::nvidiagpu::NVMemoryManager::alignment);
+            m_buffer_offset, runtime::nvidiagpu::MemoryManager::alignment);
         // the back most node is always empty, fill it here
         m_argspace_mem.back().ptr = runtime::nvidiagpu::create_nvidiagpu_buffer(m_buffer_offset);
         m_argspace_mem.back().size = m_buffer_offset;
@@ -92,15 +92,15 @@ void runtime::nvidiagpu::NVMemoryManager::allocate()
         m_workspace_mem.back().size = workspace_size;
         m_workspace_mem.push_back({nullptr, 0});
         m_workspace_manager.reset(
-            new pass::MemoryManager(runtime::nvidiagpu::NVMemoryManager::alignment));
+            new pass::MemoryManager(runtime::nvidiagpu::MemoryManager::alignment));
     }
 }
 
-size_t runtime::nvidiagpu::NVMemoryManager::queue_for_transfer(const void* data, size_t size)
+size_t runtime::nvidiagpu::MemoryManager::queue_for_transfer(const void* data, size_t size)
 {
     // if the current allocation will overflow the host buffer
     size_t aligned_size =
-        ngraph::pass::MemoryManager::align(size, runtime::nvidiagpu::NVMemoryManager::alignment);
+        ngraph::pass::MemoryManager::align(size, runtime::nvidiagpu::MemoryManager::alignment);
     size_t new_size = m_buffer_offset + aligned_size;
     size_t buffer_size = m_buffered_mem.size();
     bool need_resize = false;
@@ -123,7 +123,7 @@ size_t runtime::nvidiagpu::NVMemoryManager::queue_for_transfer(const void* data,
     return offset;
 }
 
-runtime::nvidiagpu::NVAllocator::NVAllocator(NVMemoryManager* mgr)
+runtime::nvidiagpu::NVAllocator::NVAllocator(MemoryManager* mgr)
     : m_manager(mgr)
 {
 }
