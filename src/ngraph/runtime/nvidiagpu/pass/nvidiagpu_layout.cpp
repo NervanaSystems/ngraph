@@ -39,7 +39,7 @@ namespace ngraph
             namespace pass
             {
                 template <>
-                void NVLayout::LAYOUT_DECL(ngraph::op::ReplaceSlice)
+                void Layout::LAYOUT_DECL(ngraph::op::ReplaceSlice)
                 {
                     auto rep_slice = static_cast<ngraph::op::ReplaceSlice*>(node.get());
 
@@ -59,7 +59,7 @@ namespace ngraph
                     }
                 }
                 template <>
-                void NVLayout::LAYOUT_DECL(ngraph::op::Reshape)
+                void Layout::LAYOUT_DECL(ngraph::op::Reshape)
                 {
                     auto reshape = static_cast<ngraph::op::Reshape*>(node.get());
                     if (reshape->get_is_transpose())
@@ -84,7 +84,7 @@ namespace ngraph
                     }
                 }
                 template <>
-                void NVLayout::LAYOUT_DECL(ngraph::op::TopK)
+                void Layout::LAYOUT_DECL(ngraph::op::TopK)
                 {
                     auto topk = std::dynamic_pointer_cast<ngraph::op::TopK>(node);
                     auto topk_axis = topk->get_top_k_axis();
@@ -186,12 +186,12 @@ namespace ngraph
 
 static const runtime::nvidiagpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::ReplaceSlice),
-     &runtime::nvidiagpu::pass::NVLayout::layout<ngraph::op::ReplaceSlice>},
-    {TI(ngraph::op::Reshape), &runtime::nvidiagpu::pass::NVLayout::layout<ngraph::op::Reshape>},
-    {TI(ngraph::op::TopK), &runtime::nvidiagpu::pass::NVLayout::layout<ngraph::op::TopK>},
+     &runtime::nvidiagpu::pass::Layout::layout<ngraph::op::ReplaceSlice>},
+    {TI(ngraph::op::Reshape), &runtime::nvidiagpu::pass::Layout::layout<ngraph::op::Reshape>},
+    {TI(ngraph::op::TopK), &runtime::nvidiagpu::pass::Layout::layout<ngraph::op::TopK>},
 };
 
-bool runtime::nvidiagpu::pass::NVLayout::run_on_call_graph(
+bool runtime::nvidiagpu::pass::Layout::run_on_call_graph(
     const std::list<std::shared_ptr<Node>>& nodes)
 {
     for (const auto& node : nodes)

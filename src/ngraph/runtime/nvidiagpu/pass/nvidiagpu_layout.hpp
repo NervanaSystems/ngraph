@@ -36,10 +36,10 @@ namespace ngraph
 
                 using LayoutOpMap = std::unordered_map<std::type_index, LayoutFunction>;
 
-                class NVLayout : public ngraph::pass::CallGraphPass
+                class Layout : public ngraph::pass::CallGraphPass
                 {
                 public:
-                    NVLayout(CompiledFunction* compiled_function)
+                    Layout(CompiledFunction* compiled_function)
                         : m_compiled_function(compiled_function)
                     {
                     }

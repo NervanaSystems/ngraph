@@ -171,7 +171,7 @@ void runtime::nvidiagpu::CompiledFunction::compile()
     pass_manager.register_pass<runtime::nvidiagpu::pass::BatchNormCache>();
     pass_manager.register_pass<ngraph::pass::AnyAllReplacement>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
-    pass_manager.register_pass<runtime::nvidiagpu::pass::NVLayout>(this);
+    pass_manager.register_pass<runtime::nvidiagpu::pass::Layout>(this);
     pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(get_memory_alignment());
