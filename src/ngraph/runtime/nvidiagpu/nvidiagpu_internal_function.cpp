@@ -154,10 +154,10 @@ std::string runtime::nvidiagpu::NVInternalFunction::add_to_runtime(
     const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
     const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out)
 {
-    std::function<void(NVCallFrame & call_frame, NVRuntimeContext * ctx)> primitive_invocation;
+    std::function<void(CallFrame & call_frame, NVRuntimeContext * ctx)> primitive_invocation;
     if (!m_trace)
     {
-        primitive_invocation = [args, out, primitive_index](NVCallFrame& call_frame,
+        primitive_invocation = [args, out, primitive_index](CallFrame& call_frame,
                                                             NVRuntimeContext* ctx) mutable {
             // here, these inputs and outputs could be any of [constant, input, output, intermediate]
             auto inputs = call_frame.get_tensor_io(args);
@@ -167,7 +167,7 @@ std::string runtime::nvidiagpu::NVInternalFunction::add_to_runtime(
     }
     else
     {
-        primitive_invocation = [this, args, out, primitive_index](NVCallFrame& call_frame,
+        primitive_invocation = [this, args, out, primitive_index](CallFrame& call_frame,
                                                                   NVRuntimeContext* ctx) mutable {
             // here, these inputs and outputs could be any of [constant, input, output, intermediate]
             auto inputs = call_frame.get_tensor_io(args);
@@ -402,7 +402,7 @@ void runtime::nvidiagpu::NVInternalFunction::emit()
 
 void runtime::nvidiagpu::NVInternalFunction::compile_function()
 {
-    NVCallFrame call_frame(m_function->get_parameters().size(), m_function->get_output_size());
+    CallFrame call_frame(m_function->get_parameters().size(), m_function->get_output_size());
 
     // resolve memory reservations (constants and intermediate buffers)
     call_frame.resolve_reservations(this, m_tensor_memory_buffers);

@@ -18,13 +18,13 @@
 
 using namespace ngraph;
 
-runtime::nvidiagpu::NVCallFrame::NVCallFrame(const size_t& num_inputs, const size_t& num_outputs)
+runtime::nvidiagpu::CallFrame::CallFrame(const size_t& num_inputs, const size_t& num_outputs)
     : m_inputs(num_inputs, nullptr)
     , m_outputs(num_outputs, nullptr)
 {
 }
 
-void runtime::nvidiagpu::NVCallFrame::resolve_reservations(
+void runtime::nvidiagpu::CallFrame::resolve_reservations(
     const NVCompiledFunction* compiled_function,
     const std::unordered_map<std::string, size_t>& memory_reservations)
 {
@@ -36,7 +36,7 @@ void runtime::nvidiagpu::NVCallFrame::resolve_reservations(
     }
 }
 
-void runtime::nvidiagpu::NVCallFrame::resolve_inputs(void** inputs, size_t num_inputs)
+void runtime::nvidiagpu::CallFrame::resolve_inputs(void** inputs, size_t num_inputs)
 {
     // num_inputs is > 0 iff we are resolving inputs from a nested function call
     if (num_inputs == 0)
@@ -50,7 +50,7 @@ void runtime::nvidiagpu::NVCallFrame::resolve_inputs(void** inputs, size_t num_i
     }
 }
 
-void runtime::nvidiagpu::NVCallFrame::resolve_outputs(void** outputs, size_t num_outputs)
+void runtime::nvidiagpu::CallFrame::resolve_outputs(void** outputs, size_t num_outputs)
 {
     // num_outputs is > 0 iff we are resolving outputs from a nested function call
     if (num_outputs == 0)
@@ -66,7 +66,7 @@ void runtime::nvidiagpu::NVCallFrame::resolve_outputs(void** outputs, size_t num
 
 // returns pointers of any NVTensorWrapper::TensorType
 std::vector<void*>
-    runtime::nvidiagpu::NVCallFrame::get_tensor_io(const std::vector<NVTensorWrapper>& tensors)
+    runtime::nvidiagpu::CallFrame::get_tensor_io(const std::vector<NVTensorWrapper>& tensors)
 {
     std::vector<void*> ptrs;
     for (auto const& tensor : tensors)
@@ -78,7 +78,7 @@ std::vector<void*>
     return ptrs;
 }
 
-void* runtime::nvidiagpu::NVCallFrame::get_pointer(const TensorType& type,
+void* runtime::nvidiagpu::CallFrame::get_pointer(const TensorType& type,
                                                const size_t& offset,
                                                const std::string& name)
 {
@@ -90,6 +90,6 @@ void* runtime::nvidiagpu::NVCallFrame::get_pointer(const TensorType& type,
     case TensorType::INPUT: return static_cast<void*>(m_inputs.at(offset));
     case TensorType::OUTPUT: return static_cast<void*>(m_outputs.at(offset));
     case TensorType::UNKNOWN:
-    default: throw ngraph_error("NVCallFrame encountered unknown or uninitialized tensor type");
+    default: throw ngraph_error("CallFrame encountered unknown or uninitialized tensor type");
     };
 }

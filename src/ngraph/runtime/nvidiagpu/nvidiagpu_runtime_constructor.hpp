@@ -33,12 +33,12 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            class NVCallFrame;
+            class CallFrame;
             class NVRuntimeConstructor
             {
             public:
                 using op_runtime_t =
-                    std::function<void(NVCallFrame& call_frame, NVRuntimeContext* ctx)>;
+                    std::function<void(CallFrame& call_frame, NVRuntimeContext* ctx)>;
                 using op_order_t =
                     std::unordered_map<std::shared_ptr<Function>, std::list<std::shared_ptr<Node>>>;
 
@@ -48,7 +48,7 @@ namespace ngraph
                               const std::string& callee,
                               const std::vector<runtime::nvidiagpu::NVTensorWrapper>& args,
                               const std::vector<runtime::nvidiagpu::NVTensorWrapper>& out);
-                EntryPoint build(const std::string& function, NVCallFrame& call_frame);
+                EntryPoint build(const std::string& function, CallFrame& call_frame);
 
             private:
                 std::unordered_map<std::string, std::vector<op_runtime_t>> m_runtime;

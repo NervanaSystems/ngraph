@@ -29,12 +29,12 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            class NVCallFrame
+            class CallFrame
             {
             public:
                 using TensorType = NVTensorWrapper::TensorType;
 
-                NVCallFrame(const size_t& num_inputs, const size_t& num_outputs);
+                CallFrame(const size_t& num_inputs, const size_t& num_outputs);
                 void resolve_reservations(
                     const NVCompiledFunction* compiled_function,
                     const std::unordered_map<std::string, size_t>& memory_reservations);
