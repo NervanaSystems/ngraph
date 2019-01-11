@@ -52,7 +52,7 @@ namespace ngraph
                     else
                     {
                         op_annotations =
-                            std::make_shared<ngraph::runtime::nvidiagpu::NVGPUOpAnnotations>();
+                            std::make_shared<ngraph::runtime::nvidiagpu::OpAnnotations>();
                         // pass-through
                         op_annotations->add_in_place_oi_pair({0, 0, true});
                         rep_slice->set_op_annotations(op_annotations);
@@ -77,7 +77,7 @@ namespace ngraph
                     else
                     {
                         op_annotations =
-                            std::make_shared<ngraph::runtime::nvidiagpu::NVGPUOpAnnotations>();
+                            std::make_shared<ngraph::runtime::nvidiagpu::OpAnnotations>();
                         // pass-through
                         op_annotations->add_in_place_oi_pair({0, 0, false});
                         reshape->set_op_annotations(op_annotations);
