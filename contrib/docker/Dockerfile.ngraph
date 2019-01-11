@@ -38,7 +38,7 @@ RUN pip install breathe
 # needed to successfully build docs for ng python-related API doc
 
 RUN pip install ngraph-core
-RUN pip install sphinxcontrib-autodoc
+RUN pip install autodoc
 RUN pip install numpy
 
 # release notes need this markdown extension
