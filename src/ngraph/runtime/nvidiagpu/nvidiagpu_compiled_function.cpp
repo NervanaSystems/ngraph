@@ -136,7 +136,7 @@ std::shared_ptr<runtime::nvidiagpu::NVCompiledFunction> runtime::nvidiagpu::NVCo
     }
     if (use_codegen)
     {
-        return std::make_shared<runtime::nvidiagpu::NVExternalFunction>(function, shared_context);
+        return std::make_shared<runtime::nvidiagpu::ExternalFunction>(function, shared_context);
     }
     else
     {

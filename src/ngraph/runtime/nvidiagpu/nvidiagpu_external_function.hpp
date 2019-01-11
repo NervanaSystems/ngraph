@@ -47,13 +47,13 @@ namespace ngraph
             class NVEmitter;
             struct NVRuntimeContext;
 
-            class NVExternalFunction : public NVCompiledFunction
+            class ExternalFunction : public NVCompiledFunction
             {
             public:
-                NVExternalFunction(
+                ExternalFunction(
                     const std::shared_ptr<ngraph::Function>& function,
                     const std::shared_ptr<NVBackend::BackendContext>& shared_context);
-                virtual ~NVExternalFunction();
+                virtual ~ExternalFunction();
 
                 virtual std::string add_to_runtime(
                     size_t primitive_index,
