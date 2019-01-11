@@ -166,7 +166,7 @@ TEST(reshape_sinking, nasnet_pooladd)
 
 TEST(reshape_sinking, slice_pad)
 {
-    Shape shape_a{1, 8, 8, 1};
+    Shape shape_a{100, 8, 8, 1};
 
     AxisVector to_nhwc{0, 2, 3, 1};
     AxisVector to_nchw{0, 3, 1, 2};
@@ -178,18 +178,18 @@ TEST(reshape_sinking, slice_pad)
     Shape padding_above{0, 1, 1, 0};
     Shape padding_interior{0, 0, 0, 0};
 
-    auto reshape1 = make_shared<op::Reshape>(A, to_nchw, Shape{1, 1, 8, 8});
+    auto reshape1 = make_shared<op::Reshape>(A, to_nchw, Shape{100, 1, 8, 8});
     auto maxpool =
         make_shared<op::MaxPool>(reshape1, Shape{1, 1}, Strides{2, 2}, Shape{0, 0}, Shape{0, 0});
-    auto reshape2 = make_shared<op::Reshape>(maxpool, to_nhwc, Shape{1, 4, 4, 1});
+    auto reshape2 = make_shared<op::Reshape>(maxpool, to_nhwc, Shape{100, 4, 4, 1});
     auto pad =
         make_shared<op::Pad>(reshape2, pad_value, padding_below, padding_above, padding_interior);
     auto slice = make_shared<op::Slice>(
-        pad, Coordinate{0, 1, 1, 0}, Coordinate{1, 5, 5, 1}, Strides{1, 1, 1, 1});
+        pad, Coordinate{0, 1, 1, 0}, Coordinate{100, 5, 5, 1}, Strides{1, 1, 1, 1});
 
-    auto reshape3 = make_shared<op::Reshape>(slice, to_nchw, Shape{1, 1, 4, 4});
+    auto reshape3 = make_shared<op::Reshape>(slice, to_nchw, Shape{100, 1, 4, 4});
     auto avgpool = make_shared<op::AvgPool>(reshape3, Shape{1, 1}, Strides{2, 2});
-    auto reshape4 = make_shared<op::Reshape>(avgpool, to_nhwc, Shape{1, 1, 2, 2});
+    auto reshape4 = make_shared<op::Reshape>(avgpool, to_nhwc, Shape{100, 1, 2, 2});
     auto f = make_shared<Function>(reshape4, ParameterVector{A});
 
     pass::Manager pass_manager;
