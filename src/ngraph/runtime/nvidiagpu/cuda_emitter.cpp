@@ -68,7 +68,7 @@ std::ostream& operator<<(std::ostream& os, pooling_op_shape& shape)
               << shape.PAD_D << "_" << shape.PAD_H << "_" << shape.PAD_W;
 }
 
-runtime::nvidiagpu::CUDAEmitter::CUDAEmitter(runtime::nvidiagpu::NVPrimitiveEmitter* emitter,
+runtime::nvidiagpu::CUDAEmitter::CUDAEmitter(runtime::nvidiagpu::PrimitiveEmitter* emitter,
                                          runtime::nvidiagpu::RuntimeContext* ctx,
                                          std::shared_ptr<HostParameters> params)
     : m_host_parameters(params)

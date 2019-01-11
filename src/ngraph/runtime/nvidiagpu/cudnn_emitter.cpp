@@ -128,7 +128,7 @@ std::vector<int>
     return low_vec;
 }
 
-runtime::nvidiagpu::CUDNNEmitter::CUDNNEmitter(NVPrimitiveEmitter* emitter,
+runtime::nvidiagpu::CUDNNEmitter::CUDNNEmitter(PrimitiveEmitter* emitter,
                                            RuntimeContext* ctx,
                                            std::shared_ptr<HostParameters> params)
     : m_host_parameters(params)

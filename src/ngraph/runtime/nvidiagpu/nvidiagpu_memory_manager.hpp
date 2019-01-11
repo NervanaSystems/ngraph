@@ -29,7 +29,7 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            class NVPrimitiveEmitter;
+            class PrimitiveEmitter;
             class MemoryManager;
 
             class Allocator
@@ -58,7 +58,7 @@ namespace ngraph
 
             class MemoryManager
             {
-                friend class NVPrimitiveEmitter;
+                friend class PrimitiveEmitter;
                 friend class Allocator;
 
             public:
@@ -68,7 +68,7 @@ namespace ngraph
                 size_t get_allocation_size() const;
                 Allocator build_allocator() { return Allocator(this); }
             private:
-                MemoryManager(NVPrimitiveEmitter* emitter);
+                MemoryManager(PrimitiveEmitter* emitter);
                 size_t queue_for_transfer(const void* data, size_t size);
 
                 size_t m_buffer_offset;
@@ -84,7 +84,7 @@ namespace ngraph
 
                 std::list<allocation> m_argspace_mem;
                 std::list<allocation> m_workspace_mem;
-                NVPrimitiveEmitter* m_primitive_emitter;
+                PrimitiveEmitter* m_primitive_emitter;
             };
         }
     }

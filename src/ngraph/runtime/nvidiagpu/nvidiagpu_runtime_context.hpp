@@ -49,7 +49,7 @@ namespace ngraph
                 // or other native compiled C++ functions in ngraph from the JIT code is
                 // unsafe and will fail if the GLIBCXX versions are diffent for the
                 // native compiler and clang. If all of the emitted CUDA ops are refactored
-                // to use the NVPrimitiveEmitter, the above pointer can be removed. It is left now
+                // to use the PrimitiveEmitter, the above pointer can be removed. It is left now
                 // for backward compatability.
             };
 

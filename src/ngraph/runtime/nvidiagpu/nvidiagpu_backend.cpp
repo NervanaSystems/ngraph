@@ -55,7 +55,7 @@ runtime::nvidiagpu::Backend::Backend()
 
 runtime::nvidiagpu::Backend::BackendContext::BackendContext()
     : m_runtime_context(new RuntimeContext)
-    , m_primitive_emitter(new NVPrimitiveEmitter(m_runtime_context))
+    , m_primitive_emitter(new PrimitiveEmitter(m_runtime_context))
     , m_cuda_manager(new CudaContextManager)
 {
     // Create context use driver API and make it current, the runtime call will pickup the context

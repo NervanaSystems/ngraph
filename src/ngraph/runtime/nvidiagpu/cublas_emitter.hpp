@@ -28,11 +28,11 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            class NVPrimitiveEmitter;
+            class PrimitiveEmitter;
 
             class CUBLASEmitter
             {
-                friend class NVPrimitiveEmitter;
+                friend class PrimitiveEmitter;
 
             public:
                 size_t build_dot(const element::Type& dtype,
@@ -46,8 +46,8 @@ namespace ngraph
                 void sync();
 
             private:
-                CUBLASEmitter(NVPrimitiveEmitter* emitter, RuntimeContext* ctx);
-                NVPrimitiveEmitter* m_primitive_emitter;
+                CUBLASEmitter(PrimitiveEmitter* emitter, RuntimeContext* ctx);
+                PrimitiveEmitter* m_primitive_emitter;
                 RuntimeContext* m_ctx;
                 std::string get_error_string(std::vector<std::string>& arg_names,
                                              std::vector<Shape>& shapes,

@@ -60,7 +60,7 @@ namespace ngraph
                     make(const std::shared_ptr<ngraph::Function>& function,
                          const std::shared_ptr<nvidiagpu::Backend::BackendContext>& shared_context);
                 std::unique_ptr<runtime::nvidiagpu::RuntimeContext>& ctx();
-                const std::unique_ptr<NVPrimitiveEmitter>& get_primitive_emitter() const
+                const std::unique_ptr<PrimitiveEmitter>& get_primitive_emitter() const
                 {
                     return m_shared_context->m_primitive_emitter;
                 }

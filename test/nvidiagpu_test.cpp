@@ -38,7 +38,7 @@ TEST(nvidiagpu_test, nvidiagpu_shape_from_64bit_shape)
 
 TEST(nvidiagpu_test, memory_manager_unallocated)
 {
-    runtime::nvidiagpu::NVPrimitiveEmitter emitter;
+    runtime::nvidiagpu::PrimitiveEmitter emitter;
     auto allocator = emitter.get_memory_allocator();
     size_t idx = allocator.reserve_workspace(10);
     runtime::nvidiagpu::memory_primitive& mem_primitive = emitter.get_memory_primitives()[idx];
@@ -47,7 +47,7 @@ TEST(nvidiagpu_test, memory_manager_unallocated)
 
 TEST(nvidiagpu_test, memory_manager_zero_workspace)
 {
-    runtime::nvidiagpu::NVPrimitiveEmitter emitter;
+    runtime::nvidiagpu::PrimitiveEmitter emitter;
     size_t idx_null, idx_not_null;
     {
         auto allocator = emitter.get_memory_allocator();
@@ -61,7 +61,7 @@ TEST(nvidiagpu_test, memory_manager_zero_workspace)
 
 TEST(nvidiagpu_test, memory_manager_allocated)
 {
-    runtime::nvidiagpu::NVPrimitiveEmitter emitter;
+    runtime::nvidiagpu::PrimitiveEmitter emitter;
     size_t idx;
     {
         auto allocator = emitter.get_memory_allocator();
@@ -75,7 +75,7 @@ TEST(nvidiagpu_test, memory_manager_allocated)
 TEST(nvidiagpu_test, memory_manager_extract_arguments)
 {
     std::vector<float> fp32_args = {2112.0f, 2112.0f};
-    runtime::nvidiagpu::NVPrimitiveEmitter emitter;
+    runtime::nvidiagpu::PrimitiveEmitter emitter;
     size_t idx;
     {
         auto allocator = emitter.get_memory_allocator();
@@ -101,7 +101,7 @@ TEST(nvidiagpu_test, memory_manager_argspace_alignment)
     std::vector<char> ref_args = {0, 1, 2, 3, 0, 0, 0, 0};
     std::vector<char> result_args(alignment, 0);
     size_t idx;
-    runtime::nvidiagpu::NVPrimitiveEmitter emitter;
+    runtime::nvidiagpu::PrimitiveEmitter emitter;
     {
         auto allocator = emitter.get_memory_allocator();
         idx = allocator.reserve_argspace(input_args.data(), 4 * sizeof(char));
@@ -115,7 +115,7 @@ TEST(nvidiagpu_test, memory_manager_argspace_alignment)
 TEST(nvidiagpu_test, memory_manager_argspace_size)
 {
     std::vector<float> fp32_args = {2112.0f, 2112.0f};
-    runtime::nvidiagpu::NVPrimitiveEmitter emitter;
+    runtime::nvidiagpu::PrimitiveEmitter emitter;
     {
         auto allocator = emitter.get_memory_allocator();
         allocator.reserve_argspace(fp32_args.data(), fp32_args.size() * sizeof(float));
@@ -126,7 +126,7 @@ TEST(nvidiagpu_test, memory_manager_argspace_size)
 
 TEST(nvidiagpu_test, memory_manager_overlapping_workspace_allocsize)
 {
-    runtime::nvidiagpu::NVPrimitiveEmitter emitter;
+    runtime::nvidiagpu::PrimitiveEmitter emitter;
     for (size_t i = 0; i < 8; i++)
     {
         auto allocator = emitter.get_memory_allocator();
@@ -152,7 +152,7 @@ TEST(nvidiagpu_test, memory_manager_overlapping_workspace_allocsize)
 TEST(nvidiagpu_test, memory_manager_seperate_workspaces_allocsize)
 {
     size_t total_size = 0;
-    runtime::nvidiagpu::NVPrimitiveEmitter emitter;
+    runtime::nvidiagpu::PrimitiveEmitter emitter;
     {
         auto allocator = emitter.get_memory_allocator();
         for (size_t i = 0; i < 8; i++)

@@ -30,7 +30,7 @@ namespace ngraph
             static size_t alignment = 64;
 
             class CompiledFunction;
-            class NVPrimitiveEmitter;
+            class PrimitiveEmitter;
             struct RuntimeContext;
             class CudaContextManager;
 
@@ -73,7 +73,7 @@ namespace ngraph
                     void bind_cuda_context_to_thread();
 
                     std::unique_ptr<RuntimeContext> m_runtime_context;
-                    std::unique_ptr<NVPrimitiveEmitter> m_primitive_emitter;
+                    std::unique_ptr<PrimitiveEmitter> m_primitive_emitter;
 
                 private:
                     std::unique_ptr<CudaContextManager> m_cuda_manager;

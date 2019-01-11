@@ -38,11 +38,11 @@ namespace ngraph
         namespace nvidiagpu
         {
             struct RuntimeContext;
-            class NVPrimitiveEmitter;
+            class PrimitiveEmitter;
 
             class CUDAEmitter
             {
-                friend class NVPrimitiveEmitter;
+                friend class PrimitiveEmitter;
 
             public:
                 size_t build_primitive(const op::Convolution* node);
@@ -198,7 +198,7 @@ namespace ngraph
                 void sync();
 
             private:
-                CUDAEmitter(NVPrimitiveEmitter* emitter,
+                CUDAEmitter(PrimitiveEmitter* emitter,
                             RuntimeContext* ctx,
                             std::shared_ptr<HostParameters> params);
                 uint32_t align_to_block_size(uint32_t threads, uint32_t block_size);
@@ -283,7 +283,7 @@ namespace ngraph
                     get_string_vector(const std::vector<element::Type>& dtypes);
 
                 std::shared_ptr<HostParameters> m_host_parameters;
-                NVPrimitiveEmitter* m_primitive_emitter;
+                PrimitiveEmitter* m_primitive_emitter;
                 RuntimeContext* m_ctx;
             };
         }

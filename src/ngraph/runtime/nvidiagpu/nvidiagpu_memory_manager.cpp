@@ -24,7 +24,7 @@ using namespace ngraph;
 
 constexpr const uint32_t initial_buffer_size = 10 * 1024 * 1024;
 
-runtime::nvidiagpu::MemoryManager::MemoryManager(NVPrimitiveEmitter* emitter)
+runtime::nvidiagpu::MemoryManager::MemoryManager(PrimitiveEmitter* emitter)
     : m_buffer_offset(0)
     , m_buffered_mem(initial_buffer_size, 0)
     , m_workspace_manager(new pass::MemoryManager(runtime::nvidiagpu::MemoryManager::alignment))

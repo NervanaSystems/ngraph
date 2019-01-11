@@ -49,11 +49,11 @@ namespace ngraph
                 std::vector<int> compute_strides(const std::vector<int>&);
                 std::vector<int> get_vector_int_from_size_t(const std::vector<size_t>&);
             }
-            class NVPrimitiveEmitter;
+            class PrimitiveEmitter;
 
             class CUDNNEmitter
             {
-                friend class NVPrimitiveEmitter;
+                friend class PrimitiveEmitter;
 
             public:
                 size_t build_primitive(const op::Convolution* node);
@@ -160,7 +160,7 @@ namespace ngraph
                 void sync();
 
             private:
-                CUDNNEmitter(NVPrimitiveEmitter* emitter,
+                CUDNNEmitter(PrimitiveEmitter* emitter,
                              RuntimeContext* ctx,
                              std::shared_ptr<HostParameters> params);
 
@@ -213,7 +213,7 @@ namespace ngraph
                 CUDNNDescriptors m_descriptors;
                 CUDNNHostParameters m_host_parameters;
 
-                NVPrimitiveEmitter* m_primitive_emitter;
+                PrimitiveEmitter* m_primitive_emitter;
                 RuntimeContext* m_ctx;
             };
         }

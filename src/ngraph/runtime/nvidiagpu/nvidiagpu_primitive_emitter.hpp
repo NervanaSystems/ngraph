@@ -30,11 +30,11 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            class NVPrimitiveEmitter
+            class PrimitiveEmitter
             {
             public:
-                NVPrimitiveEmitter();
-                NVPrimitiveEmitter(const std::unique_ptr<RuntimeContext>& ctx);
+                PrimitiveEmitter();
+                PrimitiveEmitter(const std::unique_ptr<RuntimeContext>& ctx);
                 std::unique_ptr<HostEmitter>& get_host_emitter();
                 std::unique_ptr<CUDAEmitter>& get_cuda_emitter();
                 std::unique_ptr<CUDNNEmitter>& get_cudnn_emitter();
