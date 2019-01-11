@@ -63,7 +63,7 @@ runtime::Handle runtime::hybrid::HybridBackend::compile(shared_ptr<Function> fun
         ngraph::pass::Manager pass_manager;
         pass_manager.register_pass<runtime::hybrid::pass::AssignPlacement>(m_backend_list);
         pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
-#ifdef NVH_DEBUG
+#ifdef NVIDIAGPUH_DEBUG
         pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png");
 #endif
         pass_manager.run_passes(instance.m_function);

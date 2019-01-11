@@ -98,7 +98,7 @@ if (NGRAPH_INTELGPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
 endif()
 
-if (NGRAPH_GPUH_ENABLE)
+if (NGRAPH_NVIDIAGPUH_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} NVIDIAGPUH)
 endif()
 
@@ -233,7 +233,7 @@ if (NGRAPH_NOP_ENABLE)
     target_link_libraries(unit-test PRIVATE nop_backend)
 endif()
 
-if (NGRAPH_GPUH_ENABLE)
+if (NGRAPH_NVIDIAGPUH_ENABLE)
     target_link_libraries(unit-test PRIVATE gpuh_backend)
 endif()
 

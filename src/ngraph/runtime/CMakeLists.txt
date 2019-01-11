@@ -33,7 +33,7 @@ if (NGRAPH_NOP_ENABLE)
     add_subdirectory(nop)
 endif()
 
-if (NGRAPH_GPUH_ENABLE)
+if (NGRAPH_NVIDIAGPUH_ENABLE)
     add_subdirectory(nvidiagpuh)
 endif()
 

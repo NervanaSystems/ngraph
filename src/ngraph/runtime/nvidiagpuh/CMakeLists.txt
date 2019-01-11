@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_GPUH_ENABLE)
+if (NGRAPH_NVIDIAGPUH_ENABLE)
     add_library(nvidiagpuh_backend SHARED nvidiagpuh_backend.cpp)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(nvidiagpuh_backend PROPERTIES
