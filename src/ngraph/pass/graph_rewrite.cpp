@@ -60,18 +60,20 @@ bool ngraph::pass::GraphRewrite::run_on_function(std::shared_ptr<ngraph::Functio
     bool rewritten = false;
     const size_t NUM_TRIES = 10;
     size_t tries = NUM_TRIES;
-    std::vector<std::tuple<std::shared_ptr<pattern::Matcher>, ngraph::graph_rewrite_callback>> original_matchers{m_matchers};
+    std::vector<std::tuple<std::shared_ptr<pattern::Matcher>, ngraph::graph_rewrite_callback>>
+        original_matchers{m_matchers};
     do
     {
         rewritten = false;
-        std::vector<std::tuple<std::shared_ptr<pattern::Matcher>, ngraph::graph_rewrite_callback>> matchers{m_matchers};
+        std::vector<std::tuple<std::shared_ptr<pattern::Matcher>, ngraph::graph_rewrite_callback>>
+            matchers{m_matchers};
         m_matchers.clear();
         for (auto node : f->get_ordered_ops())
         {
-            for (auto tuple : m_matchers)
+            for (auto tuple : matchers)
             {
-				auto matcher = std::get<0>(tuple);
-				auto callback = std::get<1>(tuple);
+                auto matcher = std::get<0>(tuple);
+                auto callback = std::get<1>(tuple);
                 NGRAPH_DEBUG << "Running matcher " << matcher->get_name() << "("
                              << matcher->get_pattern()->get_name() << ") on " << node->get_name();
                 if (matcher->match(node))
@@ -127,12 +129,13 @@ bool ngraph::pass::GraphRewrite::is_enabled(std::shared_ptr<pattern::Matcher> m)
     return true;
 }
 
-void ngraph::pass::GraphRewrite::add_matcher(std::shared_ptr<pattern::Matcher> m, const ngraph::graph_rewrite_callback& callback)
+void ngraph::pass::GraphRewrite::add_matcher(std::shared_ptr<pattern::Matcher> m,
+                                             const ngraph::graph_rewrite_callback& callback)
 {
     if (is_enabled(m))
     {
-		auto tuple = std::make_tuple(m, callback);
-		m_matchers.push_back(tuple);
+        auto tuple = std::make_tuple(m, callback);
+        m_matchers.push_back(tuple);
     }
 }
 

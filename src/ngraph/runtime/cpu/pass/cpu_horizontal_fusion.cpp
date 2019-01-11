@@ -101,7 +101,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
                                                                    Strides{1, 1},
                                                                    true);
 
-    pattern::graph_rewrite_callback callback = [data_conv](pattern::Matcher& m) {
+    auto callback = [data_conv](pattern::Matcher& m) {
         NGRAPH_DEBUG << "conv_horizontal_fusion: In a callback for conv horizontal fusion for "
                      << m.get_match_root()->get_name();
 
@@ -188,7 +188,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(
-        conv_bias, callback, "CPUHorizontalFusion.CpuConvHorizontalFusion");
-    this->add_matcher(m);
+    auto m =
+        make_shared<pattern::Matcher>(conv_bias, "CPUHorizontalFusion.CpuConvHorizontalFusion");
+    this->add_matcher(m, callback);
 }

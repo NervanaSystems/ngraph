@@ -53,8 +53,7 @@ static std::shared_ptr<pattern::Matcher>
     auto bcst =
         std::make_shared<pattern::op::Skip>(const_label, pattern::has_class<op::Broadcast>());
     auto bcst_label = std::make_shared<pattern::op::Label>(bcst, nullptr, NodeVector{bcst});
-    auto matcher =
-        std::make_shared<pattern::Matcher>(std::make_shared<T>(label, bcst_label), nullptr);
+    auto matcher = std::make_shared<pattern::Matcher>(std::make_shared<T>(label, bcst_label));
     return matcher;
 }
 
@@ -91,7 +90,7 @@ static bool simplify_concat(std::shared_ptr<Node> n)
     auto skip_reshape =
         std::make_shared<pattern::op::Skip>(lslice, pattern::has_class<op::Reshape>());
 
-    auto matcher = std::make_shared<pattern::Matcher>(skip_reshape, nullptr);
+    auto matcher = std::make_shared<pattern::Matcher>(skip_reshape);
 
     Coordinate prev_lower_bounds;
     Shape prev_slice_shape;
