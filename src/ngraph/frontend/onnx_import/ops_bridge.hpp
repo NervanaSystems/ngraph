@@ -106,8 +106,8 @@ namespace ngraph
                                     Operator fn);
             OperatorSet _get_operator_set(std::int64_t version, const std::string& domain);
             bool _is_operator_registered(const std::string& name,
-                                        std::int64_t version,
-                                        const std::string& domain);
+                                         std::int64_t version,
+                                         const std::string& domain);
         };
 
     } // namespace onnx_import

@@ -144,8 +144,8 @@ namespace ngraph
         }
 
         bool OperatorsBridge::_is_operator_registered(const std::string& name,
-                                                     std::int64_t version,
-                                                     const std::string& domain)
+                                                      std::int64_t version,
+                                                      const std::string& domain)
         {
             // search for domain
             auto dm_map = m_map.find(domain);
