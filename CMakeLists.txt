@@ -317,7 +317,7 @@ include(cmake/external_cldnn.cmake)
 
 if (NGRAPH_USE_PREBUILT_LLVM OR DEFINED LLVM_TARBALL_URL)
     include(cmake/external_llvm_prebuilt.cmake)
-else()
+elseif (NOT NGRAPH_DEX_ONLY OR NOT MSVS)
     include(cmake/external_llvm.cmake)
 endif()
 

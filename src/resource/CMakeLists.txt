@@ -39,7 +39,11 @@ if(NGRAPH_TBB_ENABLE)
 endif()
 
 add_executable(resource_generator EXCLUDE_FROM_ALL ${SRC})
-add_dependencies(resource_generator ext_llvm)
+
+if (NOT NGRAPH_DEX_ONLY)
+    add_dependencies(resource_generator ext_llvm)
+endif()
+
 if(NGRAPH_CPU_ENABLE)
     add_dependencies(resource_generator ext_eigen ext_mkldnn)
 endif()
