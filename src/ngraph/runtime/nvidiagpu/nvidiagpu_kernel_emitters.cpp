@@ -88,7 +88,7 @@ void runtime::nvidiagpu::kernel::emit_cudnnFilterDescriptor(codegen::CodeWriter&
                                                         const std::string& name,
                                                         const std::string& format,
                                                         const std::string& data_type,
-                                                        const ngraph::::Shape& shape)
+                                                        const ngraph::Shape& shape)
 {
     ngraph::Shape dimensions(fmax(4, shape.size()), 1);
     int idx = 0;
@@ -124,7 +124,7 @@ void runtime::nvidiagpu::kernel::emit_cudnnTensorDescriptor(codegen::CodeWriter&
                                                         const std::string& name,
                                                         const std::string& format,
                                                         const std::string& data_type,
-                                                        const ngraph::::Shape& shape)
+                                                        const ngraph::Shape& shape)
 {
     ngraph::Shape dimensions(fmax(4, shape.size()), 1);
     int idx = 0;

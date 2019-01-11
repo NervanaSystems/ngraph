@@ -51,13 +51,13 @@ namespace ngraph
                                                 const std::string& name,
                                                 const std::string& format,
                                                 const std::string& data_type,
-                                                const ngraph::::Shape& shape);
+                                                const ngraph::Shape& shape);
 
                 void emit_cudnnTensorDescriptor(codegen::CodeWriter& writer,
                                                 const std::string& name,
                                                 const std::string& format,
                                                 const std::string& data_type,
-                                                const ngraph::::Shape& shape);
+                                                const ngraph::Shape& shape);
 
                 void emit_cudnnTensor4dDescriptor(codegen::CodeWriter& writer,
                                                   const std::string& name,

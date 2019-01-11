@@ -155,7 +155,7 @@ namespace ngraph
                 }
                 NodeVector insert_new_reshape_after(NodeVector& parents,
                                                     const AxisVector& axis_vector,
-                                                    const ngraph::::Shape& out_shape)
+                                                    const ngraph::Shape& out_shape)
                 {
                     NodeVector reshapes;
                     for (auto& parent : parents)

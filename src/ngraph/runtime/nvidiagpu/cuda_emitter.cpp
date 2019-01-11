@@ -78,9 +78,9 @@ runtime::nvidiagpu::CUDAEmitter::CUDAEmitter(runtime::nvidiagpu::PrimitiveEmitte
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_concat(const std::string& dtype,
-                                                 std::vector<NVDims> input_shapes,
+                                                 std::vector<runtime::nvidiagpu::Shape> input_shapes,
                                                  size_t concat_axis,
-                                                 NVDims output_shape)
+                                                 runtime::nvidiagpu::Shape output_shape)
 {
     std::stringstream kernel_name;
     size_t input_num = input_shapes.size();
@@ -216,7 +216,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_concat(const std::string& dtype,
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_topk(const std::vector<element::Type>& dtypes,
-                                               const NVDims& input_shape,
+                                               const runtime::nvidiagpu::Shape& input_shape,
                                                const size_t topk_axis,
                                                size_t topk_k,
                                                const element::Type index_elem_type,
@@ -344,8 +344,8 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_topk(const std::vector<element::Ty
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_onehot(const std::array<std::string, 2>& dtypes,
-                                                 NVDims input_shape,
-                                                 NVDims output_shape,
+                                                 runtime::nvidiagpu::Shape input_shape,
+                                                 runtime::nvidiagpu::Shape output_shape,
                                                  size_t one_hot_axis,
                                                  size_t output_datatype_size)
 {
@@ -415,7 +415,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_onehot(const std::array<std::strin
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_reverse(const std::array<std::string, 2>& dtypes,
-                                                  NVDims input_shape,
+                                                  runtime::nvidiagpu::Shape input_shape,
                                                   std::vector<uint32_t> reverse_axes)
 {
     uint32_t rank = static_cast<uint32_t>(input_shape.size());
@@ -486,10 +486,10 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reverse(const std::array<std::stri
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_pad(const std::vector<std::string>& dtypes,
-                                              NVDims input_shape,
-                                              NVDims output_shape,
-                                              NVDims padding_below,
-                                              NVDims padding_interior)
+                                              runtime::nvidiagpu::Shape input_shape,
+                                              runtime::nvidiagpu::Shape output_shape,
+                                              runtime::nvidiagpu::Shape padding_below,
+                                              runtime::nvidiagpu::Shape padding_interior)
 {
     uint32_t rank = static_cast<uint32_t>(input_shape.size());
     std::stringstream kernel_name;
@@ -509,8 +509,8 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_pad(const std::vector<std::string>
         return primitive_index;
     }
 
-    NVDims pad_below(input_shape.size(), 0);
-    NVDims pad_interior(input_shape.size(), 1);
+    runtime::nvidiagpu::Shape pad_below(input_shape.size(), 0);
+    runtime::nvidiagpu::Shape pad_interior(input_shape.size(), 1);
 
     int64_t i = padding_below.size() - 1;
     int64_t j = input_shape.size() - 1;
@@ -520,8 +520,8 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_pad(const std::vector<std::string>
         pad_interior[j] = padding_interior[i];
     }
 
-    NVDims input_strides = row_major_strides(input_shape);
-    NVDims output_strides = row_major_strides(output_shape);
+    runtime::nvidiagpu::Shape input_strides = row_major_strides(input_shape);
+    runtime::nvidiagpu::Shape output_strides = row_major_strides(output_shape);
 
     uint32_t nthreads = static_cast<uint32_t>(shape_size(input_shape));
     // TODO: currently we set it to 64, will add tuning method later
@@ -571,10 +571,10 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_pad(const std::vector<std::string>
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_pad_fill(const std::vector<std::string>& dtypes,
-                                                   NVDims input_shape,
-                                                   NVDims output_shape,
-                                                   NVDims padding_below,
-                                                   NVDims padding_interior)
+                                                   runtime::nvidiagpu::Shape input_shape,
+                                                   runtime::nvidiagpu::Shape output_shape,
+                                                   runtime::nvidiagpu::Shape padding_below,
+                                                   runtime::nvidiagpu::Shape padding_interior)
 {
     uint32_t rank = static_cast<uint32_t>(input_shape.size());
     std::stringstream kernel_name;
@@ -594,8 +594,8 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_pad_fill(const std::vector<std::st
         return primitive_index;
     }
 
-    NVDims pad_below(input_shape.size(), 0);
-    NVDims pad_interior(input_shape.size(), 1);
+    runtime::nvidiagpu::Shape pad_below(input_shape.size(), 0);
+    runtime::nvidiagpu::Shape pad_interior(input_shape.size(), 1);
 
     int64_t i = padding_below.size() - 1;
     int64_t j = input_shape.size() - 1;
@@ -605,8 +605,8 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_pad_fill(const std::vector<std::st
         pad_interior[j] = padding_interior[i];
     }
 
-    NVDims input_strides = row_major_strides(input_shape);
-    NVDims output_strides = row_major_strides(output_shape);
+    runtime::nvidiagpu::Shape input_strides = row_major_strides(input_shape);
+    runtime::nvidiagpu::Shape output_strides = row_major_strides(output_shape);
 
     uint32_t nthreads = static_cast<uint32_t>(shape_size(output_shape));
     // TODO: currently we set it to 64, will add tuning method later
@@ -659,8 +659,8 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_pad_fill(const std::vector<std::st
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_reshape(const std::array<std::string, 2>& dtypes,
-                                                  NVDims input_shape,
-                                                  NVDims input_order)
+                                                  runtime::nvidiagpu::Shape input_shape,
+                                                  runtime::nvidiagpu::Shape input_order)
 {
     auto rank = input_shape.size();
     std::stringstream kernel_name;
@@ -683,9 +683,9 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reshape(const std::array<std::stri
     // TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
     uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
-    NVDims input_strides = row_major_strides(input_shape);
-    NVDims output_strides(rank);
-    NVDims trans_strides(rank);
+    runtime::nvidiagpu::Shape input_strides = row_major_strides(input_shape);
+    runtime::nvidiagpu::Shape output_strides(rank);
+    runtime::nvidiagpu::Shape trans_strides(rank);
     int stride = 1;
     for (int64_t i = rank - 1; i >= 0; i--)
     {
@@ -743,8 +743,8 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reshape(const std::array<std::stri
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_reshape_2d(const std::array<std::string, 2>& dtypes,
-                                                     NVDims input_shape,
-                                                     NVDims input_order)
+                                                     runtime::nvidiagpu::Shape input_shape,
+                                                     runtime::nvidiagpu::Shape input_order)
 {
     auto rank = input_shape.size();
     std::stringstream kernel_name;
@@ -767,9 +767,9 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reshape_2d(const std::array<std::s
     uint32_t block_size = 16;
     uint32_t aligned_grid_size_x = align_to_block_size(input_shape[1], block_size);
     uint32_t aligned_grid_size_y = align_to_block_size(input_shape[0], block_size);
-    NVDims input_strides = row_major_strides(input_shape);
-    NVDims output_strides(rank);
-    NVDims trans_strides(rank);
+    runtime::nvidiagpu::Shape input_strides = row_major_strides(input_shape);
+    runtime::nvidiagpu::Shape output_strides(rank);
+    runtime::nvidiagpu::Shape trans_strides(rank);
     int stride = 1;
     for (int64_t i = rank - 1; i >= 0; i--)
     {
@@ -828,8 +828,8 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reshape_2d(const std::array<std::s
     return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 size_t runtime::nvidiagpu::CUDAEmitter::build_reshape_3d(const std::array<std::string, 2>& dtypes,
-                                                     NVDims input_shape,
-                                                     NVDims input_order)
+                                                     runtime::nvidiagpu::Shape input_shape,
+                                                     runtime::nvidiagpu::Shape input_order)
 {
     auto rank = input_shape.size();
     std::stringstream kernel_name;
@@ -856,9 +856,9 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reshape_3d(const std::array<std::s
     uint32_t aligned_grid_size_x = align_to_block_size(input_shape[2], block_size[0]);
     uint32_t aligned_grid_size_y = align_to_block_size(input_shape[1], block_size[1]);
     uint32_t aligned_grid_size_z = align_to_block_size(input_shape[0], block_size[2]);
-    NVDims input_strides = row_major_strides(input_shape);
-    NVDims output_strides(rank);
-    NVDims trans_strides(rank);
+    runtime::nvidiagpu::Shape input_strides = row_major_strides(input_shape);
+    runtime::nvidiagpu::Shape output_strides(rank);
+    runtime::nvidiagpu::Shape trans_strides(rank);
     int stride = 1;
     for (int64_t i = rank - 1; i >= 0; i--)
     {
@@ -919,10 +919,10 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reshape_3d(const std::array<std::s
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_slice(const std::array<std::string, 2>& dtypes,
-                                                NVDims input_shape,
-                                                NVDims lower_bounds,
-                                                NVDims slice_strides,
-                                                NVDims output_shape)
+                                                runtime::nvidiagpu::Shape input_shape,
+                                                runtime::nvidiagpu::Shape lower_bounds,
+                                                runtime::nvidiagpu::Shape slice_strides,
+                                                runtime::nvidiagpu::Shape output_shape)
 {
     std::stringstream kernel_name;
     kernel_name << "slice_" << join(dtypes, "_") << "_r_" << output_shape.size();
@@ -958,8 +958,8 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_slice(const std::array<std::string
     // TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
     uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
-    NVDims output_strides = row_major_strides(output_shape);
-    NVDims input_strides = row_major_strides(input_shape);
+    runtime::nvidiagpu::Shape output_strides = row_major_strides(output_shape);
+    runtime::nvidiagpu::Shape input_strides = row_major_strides(input_shape);
 
     // get an allocator for transient per kernel nvidiagpu memory
     Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
@@ -1009,9 +1009,9 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_slice(const std::array<std::string
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_reverse_sequence(const std::array<std::string, 3>& dtypes,
-                                                           NVDims input_shape0,
-                                                           NVDims input_shape1,
-                                                           NVDims output_shape,
+                                                           runtime::nvidiagpu::Shape input_shape0,
+                                                           runtime::nvidiagpu::Shape input_shape1,
+                                                           runtime::nvidiagpu::Shape output_shape,
                                                            size_t batch_axis,
                                                            size_t sequence_axis)
 {
@@ -1050,7 +1050,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reverse_sequence(const std::array<
     // TODO: currently we set it to 64, will add tuning method later
     uint32_t block_size_x = 64;
     uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
-    NVDims output_strides = row_major_strides(output_shape);
+    runtime::nvidiagpu::Shape output_strides = row_major_strides(output_shape);
 
     // get an allocator for transient per kernel nvidiagpu memory
     Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
@@ -1091,8 +1091,8 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reverse_sequence(const std::array<
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_1d_max_pool(const std::array<std::string, 2>& dtypes,
-                                                      NVDims input_shape,
-                                                      NVDims output_shape,
+                                                      runtime::nvidiagpu::Shape input_shape,
+                                                      runtime::nvidiagpu::Shape output_shape,
                                                       size_t window_width,
                                                       size_t window_stride)
 {
@@ -1149,7 +1149,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_1d_max_pool(const std::array<std::
 }
 
 pooling_op_shape
-    avgpool_shape(NVDims in, NVDims out, NVDims window, NVDims strides, NVDims pad)
+    avgpool_shape(runtime::nvidiagpu::Shape in, runtime::nvidiagpu::Shape out, runtime::nvidiagpu::Shape window, runtime::nvidiagpu::Shape strides, runtime::nvidiagpu::Shape pad)
 {
     pooling_op_shape shape;
     shape.N = in[0];
@@ -1218,11 +1218,11 @@ pooling_op_shape
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_avg_pool(const std::array<std::string, 2>& dtypes,
-                                                   NVDims input_shape,
-                                                   NVDims output_shape,
-                                                   NVDims window_shape,
-                                                   NVDims window_stride,
-                                                   NVDims padding_below,
+                                                   runtime::nvidiagpu::Shape input_shape,
+                                                   runtime::nvidiagpu::Shape output_shape,
+                                                   runtime::nvidiagpu::Shape window_shape,
+                                                   runtime::nvidiagpu::Shape window_stride,
+                                                   runtime::nvidiagpu::Shape padding_below,
                                                    bool include_pad)
 {
     // assumes NCDHW format
@@ -1334,7 +1334,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_avg_pool(const std::array<std::str
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_elementwise_n_to_1(const std::vector<std::string>& dtypes,
-                                                             NVDims tensor_shape,
+                                                             runtime::nvidiagpu::Shape tensor_shape,
                                                              const char* op,
                                                              const char* kernel)
 {
@@ -1470,7 +1470,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_memset(const std::string& dtype, u
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_cudnn_bn_inv_var(const std::vector<std::string>& dtypes,
-                                                           NVDims tensor_shape,
+                                                           runtime::nvidiagpu::Shape tensor_shape,
                                                            const double& eps)
 {
     uint32_t nthreads = static_cast<uint32_t>(shape_size(tensor_shape));
@@ -1634,12 +1634,12 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_softmax(const std::vector<element::Type>& dtypes,
-                                                  NVDims input_shape,
-                                                  NVDims reduce_axis)
+                                                  runtime::nvidiagpu::Shape input_shape,
+                                                  runtime::nvidiagpu::Shape reduce_axis)
 {
     std::vector<std::string> dtypes_str = get_string_vector(dtypes);
-    NVDims simplified_reduce_axis;
-    NVDims simplified_input_shape;
+    runtime::nvidiagpu::Shape simplified_reduce_axis;
+    runtime::nvidiagpu::Shape simplified_input_shape;
     simplify_reduce_shape(input_shape, reduce_axis, simplified_input_shape, simplified_reduce_axis);
 
     size_t rank = simplified_input_shape.size();
@@ -1662,12 +1662,12 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_softmax(const std::vector<element:
         return primitive_index;
     }
 
-    NVDims non_reduce_shape;
-    NVDims non_reduce_strides;
-    NVDims non_reduce_strides_in_input;
-    NVDims reduce_shape;
-    NVDims reduce_strides;
-    NVDims reduce_strides_in_input;
+    runtime::nvidiagpu::Shape non_reduce_shape;
+    runtime::nvidiagpu::Shape non_reduce_strides;
+    runtime::nvidiagpu::Shape non_reduce_strides_in_input;
+    runtime::nvidiagpu::Shape reduce_shape;
+    runtime::nvidiagpu::Shape reduce_strides;
+    runtime::nvidiagpu::Shape reduce_strides_in_input;
     get_reduce_strides(simplified_input_shape,
                        simplified_reduce_axis,
                        non_reduce_shape,
@@ -1816,15 +1816,15 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_softmax(const std::vector<element:
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_reduce_to_nd(const std::vector<element::Type>& dtypes,
-                                                       NVDims input_shape,
-                                                       NVDims reduce_axis,
+                                                       runtime::nvidiagpu::Shape input_shape,
+                                                       runtime::nvidiagpu::Shape reduce_axis,
                                                        const char* op,
                                                        const char* kernel)
 {
     std::vector<std::string> dtypes_str = get_string_vector(dtypes);
     //if call from reduce, this is duplicated
-    NVDims simplified_reduce_axis;
-    NVDims simplified_input_shape;
+    runtime::nvidiagpu::Shape simplified_reduce_axis;
+    runtime::nvidiagpu::Shape simplified_input_shape;
     // simplified_reduce_axis will not be empty, since we checked if input size is same as output size in nvidiagpu_emitter
     simplify_reduce_shape(input_shape, reduce_axis, simplified_input_shape, simplified_reduce_axis);
     size_t rank = simplified_input_shape.size();
@@ -1847,12 +1847,12 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reduce_to_nd(const std::vector<ele
         return primitive_index;
     }
 
-    NVDims non_reduce_shape;
-    NVDims non_reduce_strides;
-    NVDims non_reduce_strides_in_input;
-    NVDims reduce_shape;
-    NVDims reduce_strides;
-    NVDims reduce_strides_in_input;
+    runtime::nvidiagpu::Shape non_reduce_shape;
+    runtime::nvidiagpu::Shape non_reduce_strides;
+    runtime::nvidiagpu::Shape non_reduce_strides_in_input;
+    runtime::nvidiagpu::Shape reduce_shape;
+    runtime::nvidiagpu::Shape reduce_strides;
+    runtime::nvidiagpu::Shape reduce_strides_in_input;
     get_reduce_strides(simplified_input_shape,
                        simplified_reduce_axis,
                        non_reduce_shape,
@@ -1924,7 +1924,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reduce_to_nd(const std::vector<ele
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_reduce_to_scalar(const std::vector<element::Type>& dtypes,
-                                                           NVDims input_shape,
+                                                           runtime::nvidiagpu::Shape input_shape,
                                                            const char* op,
                                                            const char* kernel)
 {
@@ -1999,8 +1999,8 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reduce_to_scalar(const std::vector
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_reduce_to_scalar_acc(
     const std::vector<element::Type>& dtypes,
-    NVDims input_shape,
-    NVDims output_shape,
+    runtime::nvidiagpu::Shape input_shape,
+    runtime::nvidiagpu::Shape output_shape,
     uint32_t block_size_x,
     const char* op,
     const char* kernel)
@@ -2066,15 +2066,15 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reduce_to_scalar_acc(
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_reduce(const std::vector<element::Type>& dtypes,
-                                                 const NVDims& input_shape,
-                                                 const NVDims& output_shape,
-                                                 const NVDims& reduce_axis,
+                                                 const runtime::nvidiagpu::Shape& input_shape,
+                                                 const runtime::nvidiagpu::Shape& output_shape,
+                                                 const runtime::nvidiagpu::Shape& reduce_axis,
                                                  const char* op,
                                                  const char* kernel,
                                                  const bool with_init_value)
 {
-    NVDims simplified_reduce_axis;
-    NVDims simplified_input_shape;
+    runtime::nvidiagpu::Shape simplified_reduce_axis;
+    runtime::nvidiagpu::Shape simplified_input_shape;
     // simplified_reduce_axis will not be empty, since we checked if input size is same as output size in nvidiagpu_emitter
     simplify_reduce_shape(input_shape, reduce_axis, simplified_input_shape, simplified_reduce_axis);
 
@@ -2176,7 +2176,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reduce(const std::vector<element::
         const uint32_t unroll_size = 8;
         if (nthreads > nthreads_acc * (unroll_size + 1))
         {
-            NVDims acc_output_shape{nthreads_acc};
+            runtime::nvidiagpu::Shape acc_output_shape{nthreads_acc};
             size_t reduce_scalar_acc_idx = build_reduce_to_scalar_acc(
                 dtypes, simplified_input_shape, acc_output_shape, block_size_x_acc, op, kernel);
             size_t reduce_scalar_idx = build_reduce_to_scalar(dtypes, acc_output_shape, op, kernel);
@@ -2217,7 +2217,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reduce(const std::vector<element::
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_fused_ew_to_collective(
     const std::vector<std::string>& dtypes,
-    NVDims tensor_shape,
+    runtime::nvidiagpu::Shape tensor_shape,
     const std::set<size_t>& reduced_tensors,
     const std::set<size_t>& axes,
     const char* op,
@@ -2246,7 +2246,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_fused_ew_to_collective(
     }
 
     // calculate strides
-    NVDims strides = row_major_strides(tensor_shape);
+    runtime::nvidiagpu::Shape strides = row_major_strides(tensor_shape);
     // precacluate invariants for integer division via multiplication
     std::vector<int> stride_magic;
     std::vector<int> stride_shift;
@@ -2259,12 +2259,12 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_fused_ew_to_collective(
         stride_shift.push_back(shift);
     }
     // calculate reduced tensor strides with 0s inserted for reduced axes
-    NVDims reduced_shape = tensor_shape;
+    runtime::nvidiagpu::Shape reduced_shape = tensor_shape;
     for (auto const& axis : axes)
     {
         reduced_shape[axis] = 1;
     }
-    NVDims reduced_strides = row_major_strides(reduced_shape);
+    runtime::nvidiagpu::Shape reduced_strides = row_major_strides(reduced_shape);
     for (auto const& axis : axes)
     {
         reduced_strides[axis] = 0;
@@ -2345,10 +2345,10 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_fused_ew_to_collective(
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_reduce_window(const OpName op_name,
                                                         const std::vector<std::string>& dtypes,
-                                                        NVDims input_shape,
-                                                        NVDims output_shape,
-                                                        NVDims reduce_window_shape,
-                                                        NVDims reduce_window_strides)
+                                                        runtime::nvidiagpu::Shape input_shape,
+                                                        runtime::nvidiagpu::Shape output_shape,
+                                                        runtime::nvidiagpu::Shape reduce_window_shape,
+                                                        runtime::nvidiagpu::Shape reduce_window_strides)
 {
     const char* op = nullptr;
     const char* kernel = nullptr;
@@ -2406,7 +2406,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reduce_window(const OpName op_name
     }
 
     size_t nthreads = shape_size(output_shape);
-    NVDims input_strides = row_major_strides(input_shape);
+    runtime::nvidiagpu::Shape input_strides = row_major_strides(input_shape);
 
     // get an allocator for transient per kernel nvidiagpu memory
     Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
@@ -2457,7 +2457,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reduce_window(const OpName op_name
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_broadcast(const std::array<std::string, 2>& dtypes,
-                                                    NVDims result_shape,
+                                                    runtime::nvidiagpu::Shape result_shape,
                                                     const std::set<size_t>& reduce_axes)
 {
     // assumes NC{d1,...,dn} format
@@ -2477,7 +2477,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_broadcast(const std::array<std::st
     }
 
     // calculate strides
-    NVDims strides = row_major_strides(result_shape);
+    runtime::nvidiagpu::Shape strides = row_major_strides(result_shape);
     // precacluate invariants for integer division via multiplication
     std::vector<int> stride_magic;
     std::vector<int> stride_shift;
@@ -2490,12 +2490,12 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_broadcast(const std::array<std::st
         stride_shift.push_back(shift);
     }
     // calculate reduced tensor strides with 0s inserted for reduced axes
-    NVDims reduced_shape = result_shape;
+    runtime::nvidiagpu::Shape reduced_shape = result_shape;
     for (auto const& axis : reduce_axes)
     {
         reduced_shape[axis] = 1;
     }
-    NVDims reduced_strides = row_major_strides(reduced_shape);
+    runtime::nvidiagpu::Shape reduced_strides = row_major_strides(reduced_shape);
     for (auto const& axis : reduce_axes)
     {
         reduced_strides[axis] = 0;
@@ -2597,7 +2597,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_primitive(const op::Convolution* n
     size_t transposed_output_idx =
         allocator.reserve_workspace(shape_size(output_shape) * out[0].get_element_type().size());
 
-    NVDims input_order;
+    runtime::nvidiagpu::Shape input_order;
     for (int i = 1; i <= tensor_size; i++)
     {
         input_order.push_back(i % tensor_size);
@@ -2614,7 +2614,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_primitive(const op::Convolution* n
         input_order);
 
     // local helper to reshape tensor shape objects
-    auto reshape = [](const ngraph::::Shape& shape, const NVDims& order) {
+    auto reshape = [](const ngraph::Shape& shape, const runtime::nvidiagpu::Shape& order) {
         ngraph::Shape output(shape.size(), 0);
         for (size_t i = 0; i < shape.size(); i++)
         {
@@ -2755,12 +2755,12 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* 
 }
 
 size_t runtime::nvidiagpu::CUDAEmitter::build_convolution(const std::array<std::string, 3>& dtypes,
-                                                      NVDims input_shape,
-                                                      NVDims filter_shape,
-                                                      NVDims output_shape,
-                                                      NVDims filter_stride,
-                                                      NVDims filter_dilation,
-                                                      NVDims input_dilation,
+                                                      runtime::nvidiagpu::Shape input_shape,
+                                                      runtime::nvidiagpu::Shape filter_shape,
+                                                      runtime::nvidiagpu::Shape output_shape,
+                                                      runtime::nvidiagpu::Shape filter_stride,
+                                                      runtime::nvidiagpu::Shape filter_dilation,
+                                                      runtime::nvidiagpu::Shape input_dilation,
                                                       NVDiff input_pad_below)
 {
     // convolution is performed on tensors in the following format
@@ -2864,7 +2864,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_convolution(const std::array<std::
         data_dilation_magic[i] = magic;
         data_dilation_shift[i] = shift;
     }
-    NVDims input_shape_str = row_major_strides(input_shape);
+    runtime::nvidiagpu::Shape input_shape_str = row_major_strides(input_shape);
     float alpha = 1.0f;
     float beta = 0.0f;
 
@@ -2962,7 +2962,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_convolution(const std::array<std::
 
 void runtime::nvidiagpu::CUDAEmitter::print_tensor_from_nvidiagpu(codegen::CodeWriter& writer,
                                                           const std::string& tensor_name,
-                                                          NVDims shape)
+                                                          runtime::nvidiagpu::Shape shape)
 {
     auto strides = row_major_strides(shape);
     writer << "__syncthreads();\n";
@@ -3019,10 +3019,10 @@ void runtime::nvidiagpu::CUDAEmitter::debug_sync()
     return;
 }
 
-void runtime::nvidiagpu::CUDAEmitter::simplify_reduce_shape(NVDims in,
-                                                        NVDims reduce_axis,
-                                                        NVDims& simplified_shape,
-                                                        NVDims& simplified_reduce_axis)
+void runtime::nvidiagpu::CUDAEmitter::simplify_reduce_shape(runtime::nvidiagpu::Shape in,
+                                                        runtime::nvidiagpu::Shape reduce_axis,
+                                                        runtime::nvidiagpu::Shape& simplified_shape,
+                                                        runtime::nvidiagpu::Shape& simplified_reduce_axis)
 {
     int32_t rank = in.size();
     // Sort the axis incase it's not sorted.
@@ -3033,8 +3033,8 @@ void runtime::nvidiagpu::CUDAEmitter::simplify_reduce_shape(NVDims in,
     // Combine axis if there is two or more adjeciant reuce_axis
     // combine axis if there is two or more adjeciant non_reuce_axis
     // update combined shape and axis
-    NVDims combined_reduce_axis;
-    NVDims adj_map(rank, 0);
+    runtime::nvidiagpu::Shape combined_reduce_axis;
+    runtime::nvidiagpu::Shape adj_map(rank, 0);
     size_t combined_axis_count = 0;
     if (reduce_axis.empty())
     {
@@ -3072,7 +3072,7 @@ void runtime::nvidiagpu::CUDAEmitter::simplify_reduce_shape(NVDims in,
         adj_map[i] = 1;
     }
 
-    NVDims combined_shape;
+    runtime::nvidiagpu::Shape combined_shape;
     size_t shape_i = 1;
     for (int i = 0; i < rank; i++)
     {
@@ -3111,22 +3111,22 @@ void runtime::nvidiagpu::CUDAEmitter::simplify_reduce_shape(NVDims in,
     }
 }
 
-void runtime::nvidiagpu::CUDAEmitter::get_reduce_strides(NVDims input_shape,
-                                                     NVDims reduce_axis,
-                                                     NVDims& non_reduce_shape,
-                                                     NVDims& non_reduce_strides,
-                                                     NVDims& non_reduce_strides_in_input,
-                                                     NVDims& reduce_shape,
-                                                     NVDims& reduce_strides,
-                                                     NVDims& reduce_strides_in_input)
+void runtime::nvidiagpu::CUDAEmitter::get_reduce_strides(runtime::nvidiagpu::Shape input_shape,
+                                                     runtime::nvidiagpu::Shape reduce_axis,
+                                                     runtime::nvidiagpu::Shape& non_reduce_shape,
+                                                     runtime::nvidiagpu::Shape& non_reduce_strides,
+                                                     runtime::nvidiagpu::Shape& non_reduce_strides_in_input,
+                                                     runtime::nvidiagpu::Shape& reduce_shape,
+                                                     runtime::nvidiagpu::Shape& reduce_strides,
+                                                     runtime::nvidiagpu::Shape& reduce_strides_in_input)
 {
     size_t rank = input_shape.size();
-    NVDims reduce_flag(rank, 0);
+    runtime::nvidiagpu::Shape reduce_flag(rank, 0);
     for (auto a : reduce_axis)
     {
         reduce_flag[a] = 1;
     }
-    NVDims input_strides = row_major_strides(input_shape);
+    runtime::nvidiagpu::Shape input_strides = row_major_strides(input_shape);
     for (int i = 0; i < rank; i++)
     {
         if (reduce_flag[i] != 0)
@@ -3144,7 +3144,7 @@ void runtime::nvidiagpu::CUDAEmitter::get_reduce_strides(NVDims input_shape,
     non_reduce_strides = row_major_strides(non_reduce_shape);
 }
 
-void runtime::nvidiagpu::CUDAEmitter::div_to_mul(const NVDims& shape,
+void runtime::nvidiagpu::CUDAEmitter::div_to_mul(const runtime::nvidiagpu::Shape& shape,
                                              std::vector<int>& magic,
                                              std::vector<int>& shift)
 {

@@ -28,9 +28,9 @@ runtime::nvidiagpu::CUBLASEmitter::CUBLASEmitter(PrimitiveEmitter* emitter, Runt
 }
 
 size_t runtime::nvidiagpu::CUBLASEmitter::build_dot(const element::Type& dtype,
-                                                const ngraph::::Shape& arg0_shape,
-                                                const ngraph::::Shape& arg1_shape,
-                                                const ngraph::::Shape& out_shape,
+                                                const ngraph::Shape& arg0_shape,
+                                                const ngraph::Shape& arg1_shape,
+                                                const ngraph::Shape& out_shape,
                                                 size_t reduction_axes,
                                                 const Node* node)
 {

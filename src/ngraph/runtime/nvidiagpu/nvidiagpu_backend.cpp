@@ -108,13 +108,13 @@ runtime::nvidiagpu::Backend::BackendContext::~BackendContext()
 }
 
 shared_ptr<runtime::Tensor>
-    runtime::nvidiagpu::Backend::create_tensor(const element::Type& element_type, const ngraph::::Shape& shape)
+    runtime::nvidiagpu::Backend::create_tensor(const element::Type& element_type, const ngraph::Shape& shape)
 {
     return make_shared<runtime::nvidiagpu::Tensor>(element_type, shape, this);
 }
 
 shared_ptr<runtime::Tensor> runtime::nvidiagpu::Backend::create_tensor(
-    const element::Type& element_type, const ngraph::::Shape& shape, void* memory_pointer)
+    const element::Type& element_type, const ngraph::Shape& shape, void* memory_pointer)
 {
     return make_shared<runtime::nvidiagpu::Tensor>(element_type, shape, memory_pointer, this);
 }

@@ -28,7 +28,7 @@ using namespace ngraph;
 using namespace std;
 
 runtime::nvidiagpu::Tensor::Tensor(const ngraph::element::Type& element_type,
-                                   const ngraph::::Shape& shape,
+                                   const ngraph::Shape& shape,
                                    void* memory_pointer,
                                    const ngraph::runtime::Backend* backend)
     : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, "external"),
@@ -51,7 +51,7 @@ runtime::nvidiagpu::Tensor::Tensor(const ngraph::element::Type& element_type,
 }
 
 runtime::nvidiagpu::Tensor::Tensor(const ngraph::element::Type& element_type,
-                                   const ngraph::::Shape& shape,
+                                   const ngraph::Shape& shape,
                                    const ngraph::runtime::Backend* backend)
     : nvidiagpu::Tensor(element_type, shape, nullptr, backend)
 {

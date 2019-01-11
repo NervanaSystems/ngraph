@@ -45,7 +45,7 @@ namespace ngraph
         {
             namespace cudnn_util
             {
-                std::vector<int> compute_strides(const ngraph::::Shape&);
+                std::vector<int> compute_strides(const ngraph::Shape&);
                 std::vector<int> compute_strides(const std::vector<int>&);
                 std::vector<int> get_vector_int_from_size_t(const std::vector<size_t>&);
             }
@@ -86,43 +86,43 @@ namespace ngraph
                 };
 
                 size_t build_convolution(const std::string& dtype,
-                                         const ngraph::::Shape& input_tensor_shape,
-                                         const ngraph::::Shape& input_filter_shape,
-                                         const ngraph::::Shape& output_tensor_shape,
+                                         const ngraph::Shape& input_tensor_shape,
+                                         const ngraph::Shape& input_filter_shape,
+                                         const ngraph::Shape& output_tensor_shape,
                                          const Strides& window_movement_strides,
                                          const Strides& window_dilation_strides,
-                                         const ngraph::::Shape& padding_below,
+                                         const ngraph::Shape& padding_below,
                                          const algo_search find_algo = algo_search::NONE);
 
                 size_t build_convolution_backward_data(
                     const std::string& dtype,
-                    const ngraph::::Shape& input_filter_shape,
-                    const ngraph::::Shape& input_tensor_shape,
-                    const ngraph::::Shape& output_tensor_shape,
+                    const ngraph::Shape& input_filter_shape,
+                    const ngraph::Shape& input_tensor_shape,
+                    const ngraph::Shape& output_tensor_shape,
                     const Strides& window_movement_strides,
                     const Strides& window_dilation_strides,
-                    const ngraph::::Shape& padding_below,
+                    const ngraph::Shape& padding_below,
                     const algo_search find_algo = algo_search::NONE);
 
                 size_t build_convolution_backward_filter(
                     const std::string& dtype,
-                    const ngraph::::Shape& input_tensor_shape_0,
-                    const ngraph::::Shape& input_tensor_shape_1,
-                    const ngraph::::Shape& output_filter_shape,
+                    const ngraph::Shape& input_tensor_shape_0,
+                    const ngraph::Shape& input_tensor_shape_1,
+                    const ngraph::Shape& output_filter_shape,
                     const Strides& window_movement_strides,
                     const Strides& window_dilation_strides,
-                    const ngraph::::Shape& padding_below,
+                    const ngraph::Shape& padding_below,
                     const algo_search find_algo = algo_search::NONE);
 
                 size_t build_reduce_forward(const cudnnReduceTensorOp_t& reduce_op,
                                             const std::vector<element::Type>& dtypes,
-                                            const ngraph::::Shape& input_shape,
+                                            const ngraph::Shape& input_shape,
                                             const AxisSet& reduction_axes,
                                             const ReductionMode& reduction_mode);
 
                 size_t build_tensor_op(const cudnnOpTensorOp_t& tensor_op,
                                        const std::string& dtype,
-                                       const ngraph::::Shape& input_shape,
+                                       const ngraph::Shape& input_shape,
                                        const double alpha0,
                                        const double alpha1,
                                        const double beta);
@@ -130,19 +130,19 @@ namespace ngraph
                 size_t build_pooling(const cudnnPoolingMode_t& pool_op,
                                      const element::Type& dtype,
                                      const Prop& direction,
-                                     const ngraph::::Shape& input_shape,
-                                     const ngraph::::Shape& output_shape,
+                                     const ngraph::Shape& input_shape,
+                                     const ngraph::Shape& output_shape,
                                      const ngraph::Strides& window_strides,
-                                     const ngraph::::Shape& window_shape,
-                                     const ngraph::::Shape& padding_below,
-                                     const ngraph::::Shape& padding_above,
+                                     const ngraph::Shape& window_shape,
+                                     const ngraph::Shape& padding_below,
+                                     const ngraph::Shape& padding_above,
                                      bool bprop_needs_pooling = false);
 
                 size_t build_batchnorm(const cudnnBatchNormMode_t& bn_op,
                                        const std::string& dtype,
                                        const Prop& direction,
-                                       const ngraph::::Shape& tensor_shape,
-                                       const ngraph::::Shape& param_shape,
+                                       const ngraph::Shape& tensor_shape,
+                                       const ngraph::Shape& param_shape,
                                        double epsilon,
                                        bool global_stats = false,
                                        bool save_stats = false,
@@ -150,7 +150,7 @@ namespace ngraph
 
                 size_t build_lrn(const std::string& dtype,
                                  const Prop& direction,
-                                 const ngraph::::Shape& io_shape,
+                                 const ngraph::Shape& io_shape,
                                  const double lrn_alpha,
                                  const double lrn_beta,
                                  const double lrn_bias,
@@ -170,23 +170,23 @@ namespace ngraph
                 cudnnDataType_t get_cudnn_datatype(const element::Type& dtype);
 
                 cudnnTensorDescriptor_t&
-                    tensor_descriptor_from_shape(const ngraph::::Shape& shape,
+                    tensor_descriptor_from_shape(const ngraph::Shape& shape,
                                                  const cudnnDataType_t data_type,
                                                  const cudnnTensorFormat_t tensor_format);
                 cudnnTensorDescriptor_t&
-                    get_nd_tensor_descriptor(const ngraph::::Shape& shape,
+                    get_nd_tensor_descriptor(const ngraph::Shape& shape,
                                              const cudnnDataType_t data_type,
                                              const cudnnTensorFormat_t tensor_format);
                 cudnnFilterDescriptor_t&
-                    get_cudnn_filter_descriptor(const ngraph::::Shape& shape,
+                    get_cudnn_filter_descriptor(const ngraph::Shape& shape,
                                                 const cudnnDataType_t data_type,
                                                 const cudnnTensorFormat_t tensor_format);
                 cudnnFilterDescriptor_t&
-                    get_nd_filter_descriptor(const ngraph::::Shape& shape,
+                    get_nd_filter_descriptor(const ngraph::Shape& shape,
                                              const cudnnDataType_t data_type,
                                              const cudnnTensorFormat_t tensor_format);
                 cudnnConvolutionDescriptor_t&
-                    get_cudnn_convolution_descriptor(const ngraph::::Shape& padding,
+                    get_cudnn_convolution_descriptor(const ngraph::Shape& padding,
                                                      const Strides& window_movement_strides,
                                                      const Strides& window_dilation_strides,
                                                      cudnnConvolutionMode_t mode,

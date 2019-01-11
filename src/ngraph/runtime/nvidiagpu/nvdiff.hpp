@@ -21,10 +21,10 @@
 #include <vector>
 
 #include "ngraph/coordinate_diff.hpp"
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
-    class ngraph::Shape;
     /// \brief CoordinateDiff for a tensor resident on NVIDIA GPU.
     class NVDiff : public std::vector<int32_t>
     {

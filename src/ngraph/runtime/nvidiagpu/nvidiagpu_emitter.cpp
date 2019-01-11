@@ -441,7 +441,7 @@ std::string runtime::nvidiagpu::Emitter::emit_Concat(EMIT_ARGS)
     auto concat = static_cast<const ngraph::op::Concat*>(node);
     auto axis = concat->get_concatenation_axis();
 
-    vector<NVDims> input_shapes;
+    vector<runtime::nvidiagpu::Shape> input_shapes;
     for (auto arg : args)
     {
         input_shapes.push_back(arg.get_shape());
@@ -558,9 +558,9 @@ std::string runtime::nvidiagpu::Emitter::emit_Dot(EMIT_ARGS)
     }
     auto dot = static_cast<const ngraph::op::Dot*>(node);
     size_t reduction_axes_count = dot->get_reduction_axes_count();
-    const ngraph::::Shape& arg0_shape = args[0].get_shape();
-    const ngraph::::Shape& arg1_shape = args[1].get_shape();
-    const ngraph::::Shape& out_shape = out[0].get_shape();
+    const ngraph::Shape& arg0_shape = args[0].get_shape();
+    const ngraph::Shape& arg1_shape = args[1].get_shape();
+    const ngraph::Shape& out_shape = out[0].get_shape();
 
     size_t index;
     // set output to 0 if input size is 0
@@ -1296,7 +1296,7 @@ std::string runtime::nvidiagpu::Emitter::emit_SelectAndScatter(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::nvidiagpu::Emitter::emit_ngraph::ShapeOf(EMIT_ARGS)
+std::string runtime::nvidiagpu::Emitter::emit_ShapeOf(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
@@ -1509,10 +1509,10 @@ string runtime::nvidiagpu::Emitter::node_names(const vector<nvidiagpu::TensorWra
 }
 
 // assumes NC{d1,d2,d3,...} format
-ngraph::Shape runtime::nvidiagpu::get_padded_shape(const ngraph::::Shape& input_shape,
-                                       const ngraph::::Shape& padding_below,
-                                       const ngraph::::Shape& padding_above,
-                                       const ngraph::::Shape& padding_interior)
+ngraph::Shape runtime::nvidiagpu::get_padded_shape(const ngraph::Shape& input_shape,
+                                       const ngraph::Shape& padding_below,
+                                       const ngraph::Shape& padding_above,
+                                       const ngraph::Shape& padding_interior)
 {
     ngraph::Shape padded_shape = input_shape;
     int64_t i = input_shape.size() - 1;
