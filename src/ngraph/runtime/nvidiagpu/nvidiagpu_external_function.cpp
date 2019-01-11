@@ -318,7 +318,7 @@ void runtime::nvidiagpu::ExternalFunction::emit_constant_declarations()
             {
                 shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
                 // get an allocator for transient per kernel nvidiagpu memory
-                runtime::nvidiagpu::NVAllocator allocator =
+                runtime::nvidiagpu::Allocator allocator =
                     m_shared_context->m_primitive_emitter->get_memory_allocator();
                 size_t idx = allocator.reserve_argspace(c->get_data_ptr(), tv->size());
                 m_writer << "static size_t " << tv->get_name() << "_idx = " << idx << ";\n";

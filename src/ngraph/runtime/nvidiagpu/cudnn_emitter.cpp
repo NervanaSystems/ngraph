@@ -202,7 +202,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceT
     auto& output_desc = tensor_descriptor_from_shape(output_shape, data_type, tensor_format);
 
     // get an allocator for transient per kernel nvidiagpu memory
-    NVAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
 
     void* alpha = m_host_parameters.allocate_by_datatype(data_type, 1.0);
     void* beta = m_host_parameters.allocate_by_datatype(data_type, 0);
@@ -547,7 +547,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::Convolution* 
         input_shape_padded = runtime::nvidiagpu::get_padded_shape(
             input_shape, padding_below, padding_above, padding_interior);
         auto temp_size = shape_size(input_shape_padded) * args[0].get_element_type().size();
-        NVAllocator allocator = m_primitive_emitter->get_memory_allocator();
+        Allocator allocator = m_primitive_emitter->get_memory_allocator();
 
         // reserve zero initialized workspace
         idx_workspace = allocator.reserve_workspace(temp_size, true);
@@ -669,7 +669,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::ConvolutionBa
         output_shape_padded =
             get_padded_shape(output_shape, padding_below, padding_above, padding_interior);
         auto temp_size = shape_size(output_shape_padded) * args[0].get_element_type().size();
-        NVAllocator allocator = m_primitive_emitter->get_memory_allocator();
+        Allocator allocator = m_primitive_emitter->get_memory_allocator();
 
         // reserve zero initialized workspace
         idx_workspace = allocator.reserve_workspace(temp_size, true);
@@ -787,7 +787,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::ConvolutionBa
         input_shape_padded = runtime::nvidiagpu::get_padded_shape(
             input_shape_0, padding_below, padding_above, padding_interior);
         auto temp_size = shape_size(input_shape_padded) * args[0].get_element_type().size();
-        NVAllocator allocator = m_primitive_emitter->get_memory_allocator();
+        Allocator allocator = m_primitive_emitter->get_memory_allocator();
 
         // reserve zero initialized workspace
         idx_workspace = allocator.reserve_workspace(temp_size, true);
@@ -879,7 +879,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::MaxPool* node
         //currntly we set this to float point only, need to add other datatype support later
         float pad_value = std::numeric_limits<float>::lowest();
         std::vector<float> temp(padded_size, pad_value);
-        NVAllocator allocator = m_primitive_emitter->get_memory_allocator();
+        Allocator allocator = m_primitive_emitter->get_memory_allocator();
         idx_workspace = allocator.reserve_argspace(temp.data(),
                                                    padded_size * args[0].get_element_type().size());
 
@@ -957,7 +957,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::Max* node)
     // one of args[] axes has zero size, zero output
     if (input_size == 0)
     {
-        NVAllocator allocator = m_primitive_emitter->get_memory_allocator();
+        Allocator allocator = m_primitive_emitter->get_memory_allocator();
         std::vector<float> negative_inf(output_size, -std::numeric_limits<float>::infinity());
         size_t idx_float_inf =
             allocator.reserve_argspace(negative_inf.data(), negative_inf.size() * sizeof(float));
@@ -1021,7 +1021,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::Min* node)
     // one of args[] axes has zero size, zero output
     if (input_size == 0)
     {
-        NVAllocator allocator = m_primitive_emitter->get_memory_allocator();
+        Allocator allocator = m_primitive_emitter->get_memory_allocator();
         std::vector<float> negative_inf(output_size, std::numeric_limits<float>::infinity());
         size_t idx_float_inf =
             allocator.reserve_argspace(negative_inf.data(), negative_inf.size() * sizeof(float));
@@ -1132,7 +1132,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_primitive(const op::nvidiagpu::Rn
     auto& cx_desc = get_nd_tensor_descriptor(cell_state_shape, data_type, format);
     auto& cy_desc = get_nd_tensor_descriptor(cell_state_shape, data_type, format);
 
-    NVAllocator allocator = m_primitive_emitter->get_memory_allocator();
+    Allocator allocator = m_primitive_emitter->get_memory_allocator();
 
     // TO DO: enable fused dropout layers
     // this will require eager allocation of scratch space which we don't currently support
@@ -1342,7 +1342,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_convolution(const std::string& dt
                                                             &workspace_size_in_bytes));
 
     // get an allocator for transient per kernel nvidiagpu memory
-    NVAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
     // (lazy) allocation for kernel arguments
     size_t workspace_idx = allocator.reserve_workspace(workspace_size_in_bytes);
 
@@ -1429,7 +1429,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_convolution_backward_data(
                                                                  &workspace_size_in_bytes));
 
     // get an allocator for transient per kernel nvidiagpu memory
-    NVAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
     // (lazy) allocation for kernel arguments
     size_t workspace_idx = allocator.reserve_workspace(workspace_size_in_bytes);
 
@@ -1513,7 +1513,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_convolution_backward_filter(
                                                                    &workspace_size_in_bytes));
 
     // get an allocator for transient per kernel nvidiagpu memory
-    NVAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
     // (lazy) allocation for kernel arguments
     size_t workspace_idx = allocator.reserve_workspace(workspace_size_in_bytes);
     void* alpha = m_host_parameters.allocate_by_datatype(data_type, 1.0);
@@ -1651,7 +1651,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t&
 
         if (bprop_needs_pooling)
         {
-            NVAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+            Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
             auto workspace_size_in_bytes = shape_size(output_shape) * dtype.size();
             size_t workspace_idx = allocator.reserve_workspace(workspace_size_in_bytes);
 
@@ -1872,7 +1872,7 @@ size_t runtime::nvidiagpu::CUDNNEmitter::build_batchnorm(const cudnnBatchNormMod
 
         if (invert_variance)
         {
-            NVAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+            Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
             size_t inv_var_idx = allocator.reserve_workspace(tensor_shape[1] * dtype.size());
             auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
             auto reciprocal_idx = cuda_emitter->build_cudnn_bn_inv_var(

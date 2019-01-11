@@ -32,14 +32,14 @@ namespace ngraph
             class NVPrimitiveEmitter;
             class MemoryManager;
 
-            class NVAllocator
+            class Allocator
             {
             public:
-                NVAllocator() = delete;
-                NVAllocator(MemoryManager* mgr);
-                NVAllocator(const NVAllocator& g);
+                Allocator() = delete;
+                Allocator(MemoryManager* mgr);
+                Allocator(const Allocator& g);
 
-                ~NVAllocator();
+                ~Allocator();
                 template <typename T>
                 size_t reserve_argspace(const T& container)
                 {
@@ -59,14 +59,14 @@ namespace ngraph
             class MemoryManager
             {
                 friend class NVPrimitiveEmitter;
-                friend class NVAllocator;
+                friend class Allocator;
 
             public:
                 ~MemoryManager();
 
                 void allocate();
                 size_t get_allocation_size() const;
-                NVAllocator build_allocator() { return NVAllocator(this); }
+                Allocator build_allocator() { return Allocator(this); }
             private:
                 MemoryManager(NVPrimitiveEmitter* emitter);
                 size_t queue_for_transfer(const void* data, size_t size);

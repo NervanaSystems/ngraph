@@ -48,7 +48,7 @@ namespace ngraph
                 size_t insert(const nvidiagpu::memory_primitive& f);
                 size_t lookup(const std::string& hash);
                 void cache(const std::string& hash, const size_t& index);
-                NVAllocator get_memory_allocator() { return m_memory_manager.build_allocator(); }
+                Allocator get_memory_allocator() { return m_memory_manager.build_allocator(); }
                 void allocate_primitive_memory() { m_memory_manager.allocate(); }
                 size_t sizeof_device_allocation() { return m_memory_manager.get_allocation_size(); }
                 KernelArgs add_kernel_args() { return KernelArgs(m_host_parameters); }

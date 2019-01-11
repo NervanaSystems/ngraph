@@ -171,7 +171,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_concat(const std::string& dtype,
     }
 
     // get an allocator for transient per kernel nvidiagpu memory
-    NVAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
     size_t idx_inputs_strides =
         allocator.reserve_argspace(inputs_strides.data(), inputs_strides.size() * sizeof(uint32_t));
 
@@ -290,7 +290,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_topk(const std::vector<element::Ty
     }
     if (use_malloc)
     {
-        NVAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+        Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
         size_t heap_workspace_id = allocator.reserve_workspace(num_rows * shared_data_bytes);
         std::unique_ptr<nvidiagpu::primitive> kernel_launch(
             new nvidiagpu::primitive{[=](void** inputs, void** outputs) mutable {
@@ -454,7 +454,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reverse(const std::array<std::stri
     uint32_t aligned_grid_size_x = align_to_block_size(nthreads, block_size_x);
 
     // get an allocator for transient per kernel nvidiagpu memory
-    NVAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
     size_t idx_input_shape =
         allocator.reserve_argspace(input_shape.data(), input_shape.size() * sizeof(uint32_t));
     size_t idx_reverse_axes =
@@ -962,7 +962,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_slice(const std::array<std::string
     NVShape input_strides = row_major_strides(input_shape);
 
     // get an allocator for transient per kernel nvidiagpu memory
-    NVAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
     size_t idx_input_strides =
         allocator.reserve_argspace(input_strides.data(), input_strides.size() * sizeof(uint32_t));
     size_t idx_output_strides =
@@ -1053,7 +1053,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reverse_sequence(const std::array<
     NVShape output_strides = row_major_strides(output_shape);
 
     // get an allocator for transient per kernel nvidiagpu memory
-    NVAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
     size_t idx_output_shape =
         allocator.reserve_argspace(output_shape.data(), output_shape.size() * sizeof(uint32_t));
     size_t idx_output_strides =
@@ -1579,7 +1579,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
         //currntly we set this to float point only, need to add other datatype support later
         float pad_value = std::numeric_limits<float>::lowest();
         std::vector<float> temp(padded_size, pad_value);
-        NVAllocator allocator = m_primitive_emitter->get_memory_allocator();
+        Allocator allocator = m_primitive_emitter->get_memory_allocator();
         idx_workspace = allocator.reserve_argspace(temp.data(),
                                                    padded_size * args[0].get_element_type().size());
 
@@ -1693,7 +1693,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_softmax(const std::vector<element:
         void* init_value =
             m_host_parameters->val_by_datatype(dtypes_str[0], static_cast<int64_t>(1));
         // get an allocator for transient per kernel nvidiagpu memory
-        NVAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+        Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
         // (lazy) allocation for kernel arguments
         size_t idx_init_value = allocator.reserve_argspace(init_value, dtypes[0].size());
         std::unique_ptr<nvidiagpu::primitive> memset(new nvidiagpu::primitive{[=](void** inputs,
@@ -2129,7 +2129,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reduce(const std::vector<element::
         {
             void* init_value = get_init_reduce_val(op, dtypes_str[0]);
             // get an allocator for transient per kernel nvidiagpu memory
-            NVAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+            Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
             // (lazy) allocation for kernel arguments
             size_t idx_init_value = allocator.reserve_argspace(init_value, data_bytes);
             std::unique_ptr<nvidiagpu::primitive> memset(
@@ -2181,7 +2181,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reduce(const std::vector<element::
                 dtypes, simplified_input_shape, acc_output_shape, block_size_x_acc, op, kernel);
             size_t reduce_scalar_idx = build_reduce_to_scalar(dtypes, acc_output_shape, op, kernel);
             // get an allocator for transient per kernel nvidiagpu memory
-            NVAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+            Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
             size_t idx_workspace = allocator.reserve_workspace(nthreads_acc * data_bytes);
             std::unique_ptr<nvidiagpu::primitive> reduce_scalar_acc(
                 new nvidiagpu::primitive{[=](void** inputs, void** outputs) mutable {
@@ -2409,7 +2409,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_reduce_window(const OpName op_name
     NVShape input_strides = row_major_strides(input_shape);
 
     // get an allocator for transient per kernel nvidiagpu memory
-    NVAllocator allocator = this->m_primitive_emitter->get_memory_allocator();
+    Allocator allocator = this->m_primitive_emitter->get_memory_allocator();
 
     // (lazy) allocation for kernel arguments
     size_t idx_input_strides = allocator.reserve_argspace(input_strides.data(), rank * sizeof(int));
@@ -2589,7 +2589,7 @@ size_t runtime::nvidiagpu::CUDAEmitter::build_primitive(const op::Convolution* n
     // what is done for convolution in the IA transformer
     // c.f runtime/cpu/pass/cpu_layout.cpp
 
-    NVAllocator allocator = m_primitive_emitter->get_memory_allocator();
+    Allocator allocator = m_primitive_emitter->get_memory_allocator();
     size_t transposed_data_idx =
         allocator.reserve_workspace(shape_size(input_shape) * args[0].get_element_type().size());
     size_t transposed_filter_idx =

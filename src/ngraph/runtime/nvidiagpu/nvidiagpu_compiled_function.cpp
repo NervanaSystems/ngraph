@@ -155,7 +155,7 @@ void runtime::nvidiagpu::CompiledFunction::compile()
 
     m_function_name = m_function->get_name();
 
-    auto allocator = std::make_shared<runtime::nvidiagpu::NVAllocator>(
+    auto allocator = std::make_shared<runtime::nvidiagpu::Allocator>(
         m_shared_context->m_primitive_emitter->get_memory_allocator());
 
     ngraph::pass::Manager pass_manager;

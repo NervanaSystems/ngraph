@@ -25,7 +25,7 @@ namespace ngraph
     {
         namespace nvidiagpu
         {
-            class NVAllocator;
+            class Allocator;
             namespace pass
             {
                 class TensorMemoryReservation;
@@ -37,7 +37,7 @@ namespace ngraph
 class ngraph::runtime::nvidiagpu::pass::TensorMemoryReservation : public ngraph::pass::FunctionPass
 {
 public:
-    TensorMemoryReservation(NVAllocator& allocator,
+    TensorMemoryReservation(Allocator& allocator,
                             std::unordered_map<std::string, size_t>& buffers)
         : ngraph::pass::FunctionPass()
         , m_allocator(allocator)
@@ -48,6 +48,6 @@ public:
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 
 private:
-    NVAllocator& m_allocator;
+    Allocator& m_allocator;
     std::unordered_map<std::string, size_t>& m_memory_buffers;
 };

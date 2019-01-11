@@ -66,7 +66,7 @@ void runtime::nvidiagpu::MemoryManager::allocate()
     {
         throw std::runtime_error(
             "Attempt to allocate memory while reservations are inprogress. Ensure all "
-            "NVAllocators are closed before allocating.");
+            "Allocators are closed before allocating.");
     }
     if (m_buffer_offset)
     {
@@ -123,18 +123,18 @@ size_t runtime::nvidiagpu::MemoryManager::queue_for_transfer(const void* data, s
     return offset;
 }
 
-runtime::nvidiagpu::NVAllocator::NVAllocator(MemoryManager* mgr)
+runtime::nvidiagpu::Allocator::Allocator(MemoryManager* mgr)
     : m_manager(mgr)
 {
 }
 
-runtime::nvidiagpu::NVAllocator::NVAllocator(const NVAllocator& g)
+runtime::nvidiagpu::Allocator::Allocator(const Allocator& g)
 {
     m_manager = g.m_manager;
     m_active = g.m_active;
 }
 
-size_t runtime::nvidiagpu::NVAllocator::reserve_argspace(const void* data, size_t size)
+size_t runtime::nvidiagpu::Allocator::reserve_argspace(const void* data, size_t size)
 {
     // add parameter data to host buffer that will be transfered to device
     size_t offset = m_manager->queue_for_transfer(data, size);
@@ -153,7 +153,7 @@ size_t runtime::nvidiagpu::NVAllocator::reserve_argspace(const void* data, size_
     return m_manager->m_primitive_emitter->insert(mem_primitive);
 }
 
-size_t runtime::nvidiagpu::NVAllocator::reserve_workspace(size_t size, bool zero_initialize)
+size_t runtime::nvidiagpu::Allocator::reserve_workspace(size_t size, bool zero_initialize)
 {
     if (size == 0)
     {
@@ -182,7 +182,7 @@ size_t runtime::nvidiagpu::NVAllocator::reserve_workspace(size_t size, bool zero
     return m_manager->m_primitive_emitter->insert(std::move(mem_primitive));
 }
 
-void runtime::nvidiagpu::NVAllocator::close()
+void runtime::nvidiagpu::Allocator::close()
 {
     while (!m_active.empty())
     {
@@ -190,7 +190,7 @@ void runtime::nvidiagpu::NVAllocator::close()
         m_active.pop();
     }
 }
-runtime::nvidiagpu::NVAllocator::~NVAllocator()
+runtime::nvidiagpu::Allocator::~Allocator()
 {
     this->close();
 }
