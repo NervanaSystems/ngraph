@@ -21,11 +21,11 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/nvidiagpu/cudnn_emitter.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_emitter.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_invoke.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_primitive_emitter.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_context.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_util.hpp"
+#include "ngraph/runtime/nvidiagpu/emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/invoke.hpp"
+#include "ngraph/runtime/nvidiagpu/primitive_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/runtime_context.hpp"
+#include "ngraph/runtime/nvidiagpu/util.hpp"
 #include "ngraph/runtime/nvidiagpu/type_info.hpp"
 #include "ngraph/util.hpp"
 

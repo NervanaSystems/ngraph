@@ -45,7 +45,7 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/nvidiagpu/op/rnn.hpp"
-#include "nvidiagpu_rnn_fusion.hpp"
+#include "ngraph/runtime/nvidiagpu/pass/rnn_fusion.hpp"
 
 #define RETURN_IF_FALSE(cond, message)                                                             \
     if (!(cond))                                                                                   \

@@ -16,8 +16,8 @@
 #include <algorithm>
 
 #include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_cuda_kernel_builder.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_kernel_args.hpp"
+#include "ngraph/runtime/nvidiagpu/cuda_kernel_builder.hpp"
+#include "ngraph/runtime/nvidiagpu/kernel_args.hpp"
 #include "ngraph/runtime/nvidiagpu/nvrtc/helpers.hpp"
 #include "ngraph/runtime/nvidiagpu/type_info.hpp"
 

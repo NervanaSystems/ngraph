@@ -21,7 +21,7 @@
 #include <cudnn.h>
 
 #include "ngraph/runtime/nvidiagpu/cuda_error_check.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_util.hpp"
+#include "ngraph/runtime/nvidiagpu/util.hpp"
 
 namespace ngraph
 {

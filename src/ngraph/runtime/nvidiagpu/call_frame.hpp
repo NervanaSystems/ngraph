@@ -20,8 +20,8 @@
 #include <memory>
 #include <unordered_map>
 
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_compiled_function.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/nvidiagpu/compiled_function.hpp"
+#include "ngraph/runtime/nvidiagpu/tensor_wrapper.hpp"
 
 namespace ngraph
 {

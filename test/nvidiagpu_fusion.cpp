@@ -47,7 +47,7 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/runtime/nvidiagpu/op/rnn.hpp"
-#include "ngraph/runtime/nvidiagpu/pass/nvidiagpu_rnn_fusion.hpp"
+#include "ngraph/runtime/nvidiagpu/pass/rnn_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"

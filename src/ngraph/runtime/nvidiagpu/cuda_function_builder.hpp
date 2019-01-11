@@ -18,8 +18,8 @@
 
 #include <string>
 
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_cuda_context_manager.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_util.hpp"
+#include "ngraph/runtime/nvidiagpu/cuda_context_manager.hpp"
+#include "ngraph/runtime/nvidiagpu/util.hpp"
 
 namespace ngraph
 {

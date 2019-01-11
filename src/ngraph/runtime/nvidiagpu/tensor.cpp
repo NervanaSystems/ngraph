@@ -20,9 +20,9 @@
 
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/runtime/nvidiagpu/cuda_error_check.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_backend.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_tensor.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_util.hpp"
+#include "ngraph/runtime/nvidiagpu/backend.hpp"
+#include "ngraph/runtime/nvidiagpu/tensor.hpp"
+#include "ngraph/runtime/nvidiagpu/util.hpp"
 
 using namespace ngraph;
 using namespace std;

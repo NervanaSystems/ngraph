@@ -22,11 +22,11 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_backend.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_external_function.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_internal_function.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_primitive_emitter.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_tensor.hpp"
+#include "ngraph/runtime/nvidiagpu/backend.hpp"
+#include "ngraph/runtime/nvidiagpu/external_function.hpp"
+#include "ngraph/runtime/nvidiagpu/internal_function.hpp"
+#include "ngraph/runtime/nvidiagpu/primitive_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/tensor.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;

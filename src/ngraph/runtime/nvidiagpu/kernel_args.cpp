@@ -16,7 +16,7 @@
 
 #include <string>
 
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_kernel_args.hpp"
+#include "ngraph/runtime/nvidiagpu/kernel_args.hpp"
 
 #define TI(x) std::type_index(typeid(x))
 

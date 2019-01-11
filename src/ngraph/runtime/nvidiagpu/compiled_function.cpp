@@ -36,15 +36,15 @@
 #include "ngraph/pass/any_all_replacement.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_backend.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_compiled_function.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_external_function.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_internal_function.hpp"
+#include "ngraph/runtime/nvidiagpu/backend.hpp"
+#include "ngraph/runtime/nvidiagpu/compiled_function.hpp"
+#include "ngraph/runtime/nvidiagpu/external_function.hpp"
+#include "ngraph/runtime/nvidiagpu/internal_function.hpp"
 #include "ngraph/runtime/nvidiagpu/op/batch_norm.hpp"
 #include "ngraph/runtime/nvidiagpu/op/rnn.hpp"
-#include "ngraph/runtime/nvidiagpu/pass/nvidiagpu_batch_norm_cache.hpp"
-#include "ngraph/runtime/nvidiagpu/pass/nvidiagpu_layout.hpp"
-#include "ngraph/runtime/nvidiagpu/pass/nvidiagpu_rnn_fusion.hpp"
+#include "ngraph/runtime/nvidiagpu/pass/batch_norm_cache.hpp"
+#include "ngraph/runtime/nvidiagpu/pass/layout.hpp"
+#include "ngraph/runtime/nvidiagpu/pass/rnn_fusion.hpp"
 #include "ngraph/runtime/nvidiagpu/pass/tensor_memory_reservation.hpp"
 
 using namespace std;

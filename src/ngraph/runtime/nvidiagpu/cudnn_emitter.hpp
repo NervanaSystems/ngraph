@@ -28,7 +28,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/runtime/nvidiagpu/cudnn_descriptors.hpp"
 #include "ngraph/runtime/nvidiagpu/cudnn_host_parameters.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_context.hpp"
+#include "ngraph/runtime/nvidiagpu/runtime_context.hpp"
 #include "ngraph/shape.hpp"
 
 #include "ngraph/op/convolution.hpp"

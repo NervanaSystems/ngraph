@@ -19,7 +19,7 @@
 #include <cublas_v2.h>
 
 #include "ngraph/op/dot.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_context.hpp"
+#include "ngraph/runtime/nvidiagpu/runtime_context.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph

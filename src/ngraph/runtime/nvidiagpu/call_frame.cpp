@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_call_frame.hpp"
+#include "ngraph/runtime/nvidiagpu/call_frame.hpp"
 
 using namespace ngraph;
 

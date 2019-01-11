@@ -15,8 +15,8 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/nvidiagpu/cublas_emitter.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_emitter.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_primitive_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/primitive_emitter.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;

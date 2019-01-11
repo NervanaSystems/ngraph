@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_compiled_function.hpp"
+#include "ngraph/runtime/nvidiagpu/compiled_function.hpp"
 
 #define LAYOUT_DECL(op_type)                                                                       \
     layout<op_type>(ngraph::runtime::nvidiagpu::CompiledFunction * compiled_function,              \

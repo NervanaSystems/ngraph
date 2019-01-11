@@ -21,7 +21,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/pass/manager_state.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_memory_manager.hpp"
+#include "ngraph/runtime/nvidiagpu/memory_manager.hpp"
 #include "ngraph/runtime/nvidiagpu/pass/tensor_memory_reservation.hpp"
 
 using namespace ngraph;

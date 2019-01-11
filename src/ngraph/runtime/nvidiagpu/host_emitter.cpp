@@ -20,9 +20,9 @@
 #include <vector>
 
 #include "ngraph/runtime/nvidiagpu/host_emitter.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_invoke.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_primitive_emitter.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_context.hpp"
+#include "ngraph/runtime/nvidiagpu/invoke.hpp"
+#include "ngraph/runtime/nvidiagpu/primitive_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/runtime_context.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;

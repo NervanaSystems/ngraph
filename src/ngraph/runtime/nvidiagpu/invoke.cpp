@@ -16,8 +16,8 @@
 
 #include <string>
 
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_invoke.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_context.hpp"
+#include "ngraph/runtime/nvidiagpu/invoke.hpp"
+#include "ngraph/runtime/nvidiagpu/runtime_context.hpp"
 
 extern "C" void ngraph::runtime::nvidiagpu::invoke_primitive(const RuntimeContext* ctx,
                                                              size_t primitive_index,

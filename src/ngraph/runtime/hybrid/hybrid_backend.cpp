@@ -23,8 +23,8 @@
 #include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
 #include "ngraph/runtime/hybrid/pass/fix_get_output_element.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_backend.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_tensor.hpp"
+#include "ngraph/runtime/nvidiagpu/backend.hpp"
+#include "ngraph/runtime/nvidiagpu/tensor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 using namespace ngraph;

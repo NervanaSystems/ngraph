@@ -23,36 +23,36 @@ set(SRC
     cudnn_emitter.cpp
     cublas_emitter.cpp
     host_emitter.cpp
-    nvidiagpu_backend.cpp
-    nvidiagpu_call_frame.cpp
-    nvidiagpu_cuda_context_manager.cpp
-    nvidiagpu_cuda_function_builder.cpp
-    nvidiagpu_cuda_function_pool.cpp
-    nvidiagpu_cuda_kernel_builder.cpp
-    nvidiagpu_emitter.cpp
-    nvidiagpu_compiled_function.cpp
-    nvidiagpu_internal_function.cpp
-    nvidiagpu_invoke.cpp
-    nvidiagpu_kernel_args.cpp
-    nvidiagpu_kernel_emitters.cpp
-    nvidiagpu_memory_manager.cpp
-    nvidiagpu_primitive_emitter.cpp
-    nvidiagpu_runtime_constructor.cpp
-    nvidiagpu_runtime_context.cpp
-    nvidiagpu_tensor_wrapper.cpp
-    nvidiagpu_tensor.cpp
-    nvidiagpu_util.cpp
+    backend.cpp
+    call_frame.cpp
+    cuda_context_manager.cpp
+    cuda_function_builder.cpp
+    cuda_function_pool.cpp
+    cuda_kernel_builder.cpp
+    emitter.cpp
+    compiled_function.cpp
+    internal_function.cpp
+    invoke.cpp
+    kernel_args.cpp
+    kernel_emitters.cpp
+    memory_manager.cpp
+    primitive_emitter.cpp
+    runtime_constructor.cpp
+    runtime_context.cpp
+    tensor_wrapper.cpp
+    tensor.cpp
+    util.cpp
     type_info.cpp
-    pass/nvidiagpu_batch_norm_cache.cpp
-    pass/nvidiagpu_layout.cpp
-    pass/nvidiagpu_rnn_fusion.cpp
+    pass/batch_norm_cache.cpp
+    pass/layout.cpp
+    pass/rnn_fusion.cpp
     pass/tensor_memory_reservation.cpp
     op/batch_norm.cpp
     op/rnn.cpp
     )
 
 if (NOT NGRAPH_DEX_ONLY)
-    list(APPEND SRC nvidiagpu_external_function.cpp)
+    list(APPEND SRC external_function.cpp)
 endif()
 
 set(CUDA_INC

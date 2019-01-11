@@ -21,8 +21,8 @@
 #include <unordered_map>
 
 #include "ngraph/file_util.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_cuda_function_builder.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_cuda_function_pool.hpp"
+#include "ngraph/runtime/nvidiagpu/cuda_function_builder.hpp"
+#include "ngraph/runtime/nvidiagpu/cuda_function_pool.hpp"
 
 static const std::string s_output_dir = "nvidiagpu_codegen";
 

@@ -24,8 +24,8 @@
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/topk.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_op_annotations.hpp"
-#include "nvidiagpu_layout.hpp"
+#include "ngraph/runtime/nvidiagpu/op_annotations.hpp"
+#include "ngraph/runtime/nvidiagpu/pass/layout.hpp"
 
 using namespace std;
 using namespace ngraph;

@@ -17,7 +17,7 @@
 
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_tensor_wrapper.hpp"
+#include "ngraph/runtime/nvidiagpu/tensor_wrapper.hpp"
 
 using namespace std;
 using namespace ngraph;

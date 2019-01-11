@@ -20,9 +20,9 @@
 #include "ngraph/runtime/nvidiagpu/cuda_emitter.hpp"
 #include "ngraph/runtime/nvidiagpu/cudnn_emitter.hpp"
 #include "ngraph/runtime/nvidiagpu/host_emitter.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_kernel_args.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_memory_manager.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_context.hpp"
+#include "ngraph/runtime/nvidiagpu/kernel_args.hpp"
+#include "ngraph/runtime/nvidiagpu/memory_manager.hpp"
+#include "ngraph/runtime/nvidiagpu/runtime_context.hpp"
 
 namespace ngraph
 {

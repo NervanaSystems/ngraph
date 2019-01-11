@@ -22,8 +22,8 @@
 #include <string>
 #include <unordered_map>
 
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_cuda_context_manager.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_cuda_function_pool.hpp"
+#include "ngraph/runtime/nvidiagpu/cuda_context_manager.hpp"
+#include "ngraph/runtime/nvidiagpu/cuda_function_pool.hpp"
 
 namespace ngraph
 {

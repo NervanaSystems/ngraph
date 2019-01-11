@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_context.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_util.hpp"
+#include "ngraph/runtime/nvidiagpu/runtime_context.hpp"
+#include "ngraph/runtime/nvidiagpu/util.hpp"
 
 using namespace ngraph;
 

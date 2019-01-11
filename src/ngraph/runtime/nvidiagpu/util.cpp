@@ -24,7 +24,7 @@
 #include <string>
 
 #include "ngraph/runtime/nvidiagpu/cuda_error_check.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_util.hpp"
+#include "ngraph/runtime/nvidiagpu/util.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;

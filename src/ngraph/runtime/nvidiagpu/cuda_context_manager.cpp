@@ -18,7 +18,7 @@
 #include <string>
 
 #include "ngraph/runtime/nvidiagpu/cuda_error_check.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_cuda_context_manager.hpp"
+#include "ngraph/runtime/nvidiagpu/cuda_context_manager.hpp"
 
 using namespace ngraph;
 

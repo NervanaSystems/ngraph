@@ -17,7 +17,7 @@
 #include <string>
 
 #include "cudnn_invoke.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_runtime_context.hpp"
+#include "ngraph/runtime/nvidiagpu/runtime_context.hpp"
 
 extern "C" void ngraph::runtime::nvidiagpu::cudnn_utils::cudnn_invoke_primitive(
     RuntimeContext* ctx, size_t primitive_index, void** args, void** result)

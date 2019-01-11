@@ -19,8 +19,8 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_primitive_emitter.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_util.hpp"
+#include "ngraph/runtime/nvidiagpu/primitive_emitter.hpp"
+#include "ngraph/runtime/nvidiagpu/util.hpp"
 #include "ngraph/runtime/nvidiagpu/nvshape.hpp"
 #include "ngraph/util.hpp"
 #include "util/all_close.hpp"
@@ -171,27 +171,27 @@ TEST(nvidiagpu_test, topk_fanout_graph_transform)
 {
     Shape shape{2, 3, 2};
     Shape out_shape{2, 2, 2};
-    auto A_nvidiagpu = make_shared<op::Parameter>(element::f32, shape);
-    auto A_int32_nvidiagpu_1 = make_shared<op::Parameter>(element::i32, out_shape);
-    auto A_int32_nvidiagpu_2 = make_shared<op::Parameter>(element::i32, out_shape);
-    auto A_f32_nvidiagpu_1 = make_shared<op::Parameter>(element::f32, out_shape);
-    auto A_f32_nvidiagpu_2 = make_shared<op::Parameter>(element::f32, out_shape);
-    auto B_nvidiagpu = make_shared<op::TopK>(A_nvidiagpu, 1, element::i32, 2, true);
-    auto C_nvidiagpu_0 = make_shared<op::GetOutputElement>(B_nvidiagpu, 0);
-    auto C_nvidiagpu_1 = make_shared<op::GetOutputElement>(B_nvidiagpu, 1);
+    auto A_gpu = make_shared<op::Parameter>(element::f32, shape);
+    auto A_int32_gpu_1 = make_shared<op::Parameter>(element::i32, out_shape);
+    auto A_int32_gpu_2 = make_shared<op::Parameter>(element::i32, out_shape);
+    auto A_f32_gpu_1 = make_shared<op::Parameter>(element::f32, out_shape);
+    auto A_f32_gpu_2 = make_shared<op::Parameter>(element::f32, out_shape);
+    auto B_gpu = make_shared<op::TopK>(A_gpu, 1, element::i32, 2, true);
+    auto C_gpu_0 = make_shared<op::GetOutputElement>(B_gpu, 0);
+    auto C_gpu_1 = make_shared<op::GetOutputElement>(B_gpu, 1);
 
-    auto nvidiagpu_R_0 = make_shared<op::Add>(A_int32_nvidiagpu_1, C_nvidiagpu_0);
-    auto nvidiagpu_R_1 = make_shared<op::Add>(A_int32_nvidiagpu_2, C_nvidiagpu_0);
-    auto nvidiagpu_R_2 = make_shared<op::Add>(A_f32_nvidiagpu_1, C_nvidiagpu_1);
-    auto nvidiagpu_R_3 = make_shared<op::Add>(A_f32_nvidiagpu_2, C_nvidiagpu_1);
+    auto gpu_R_0 = make_shared<op::Add>(A_int32_gpu_1, C_gpu_0);
+    auto gpu_R_1 = make_shared<op::Add>(A_int32_gpu_2, C_gpu_0);
+    auto gpu_R_2 = make_shared<op::Add>(A_f32_gpu_1, C_gpu_1);
+    auto gpu_R_3 = make_shared<op::Add>(A_f32_gpu_2, C_gpu_1);
 
-    auto nvidiagpu_f = make_shared<Function>(
-        NodeVector{nvidiagpu_R_0, nvidiagpu_R_1, nvidiagpu_R_2, nvidiagpu_R_3},
-        ParameterVector{A_nvidiagpu,
-                        A_int32_nvidiagpu_1,
-                        A_int32_nvidiagpu_2,
-                        A_f32_nvidiagpu_1,
-                        A_f32_nvidiagpu_2});
+    auto gpu_f = make_shared<Function>(
+        NodeVector{gpu_R_0, gpu_R_1, gpu_R_2, gpu_R_3},
+        ParameterVector{A_gpu,
+                        A_int32_gpu_1,
+                        A_int32_gpu_2,
+                        A_f32_gpu_1,
+                        A_f32_gpu_2});
 
     auto backend = runtime::Backend::create("GPU");
 
@@ -212,7 +212,7 @@ TEST(nvidiagpu_test, topk_fanout_graph_transform)
     auto r2 = backend->create_tensor(element::f32, out_shape);
     auto r3 = backend->create_tensor(element::f32, out_shape);
 
-    auto handle = backend->compile(nvidiagpu_f);
+    auto handle = backend->compile(gpu_f);
     backend->call_with_validate(handle, {r0, r1, r2, r3}, {a, b, c, d, e});
 
     EXPECT_EQ((vector<int32_t>{2, 1, 1, 2, 1, 2, 0, 1}), read_vector<int32_t>(r0));
@@ -221,7 +221,7 @@ TEST(nvidiagpu_test, topk_fanout_graph_transform)
         vector<float>{4, 4, 3, 3, 3, 4, 2, 3}, read_vector<float>(r2), MIN_FLOAT_TOLERANCE_BITS));
     EXPECT_TRUE(test::all_close_f(
         vector<float>{4, 4, 3, 3, 3, 4, 2, 3}, read_vector<float>(r3), MIN_FLOAT_TOLERANCE_BITS));
-    auto reshape_count = count_ops_of_type<ngraph::op::Reshape>(nvidiagpu_f);
+    auto reshape_count = count_ops_of_type<ngraph::op::Reshape>(gpu_f);
     EXPECT_EQ(reshape_count, 10);
 }
 

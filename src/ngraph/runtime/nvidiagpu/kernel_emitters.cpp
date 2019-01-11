@@ -19,7 +19,7 @@
 
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/util.hpp"
-#include "nvidiagpu_kernel_emitters.hpp"
+#include "ngraph/runtime/nvidiagpu/kernel_emitters.hpp"
 
 using namespace ngraph;
 

@@ -19,8 +19,8 @@
 #include <array>
 #include "ngraph/codegen/code_writer.hpp"
 #include "ngraph/runtime/nvidiagpu/nvdiff.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_cuda_kernel_ops.hpp"
-#include "ngraph/runtime/nvidiagpu/nvidiagpu_host_parameters.hpp"
+#include "ngraph/runtime/nvidiagpu/cuda_kernel_ops.hpp"
+#include "ngraph/runtime/nvidiagpu/host_parameters.hpp"
 #include "ngraph/runtime/nvidiagpu/nvshape.hpp"
 #include "ngraph/strides.hpp"
 
