@@ -18,8 +18,8 @@
 #include <iostream>
 #include <string>
 
-#include "ngraph/runtime/nvidiagpu/cuda_error_check.hpp"
 #include "ngraph/runtime/nvidiagpu/cuda_context_manager.hpp"
+#include "ngraph/runtime/nvidiagpu/cuda_error_check.hpp"
 #include "ngraph/runtime/nvidiagpu/cuda_function_builder.hpp"
 #include "ngraph/runtime/nvidiagpu/util.hpp"
 

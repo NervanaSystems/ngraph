@@ -20,8 +20,8 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/runtime/nvidiagpu/op_annotations.hpp"
 #include "ngraph/runtime/nvidiagpu/op/batch_norm.hpp"
+#include "ngraph/runtime/nvidiagpu/op_annotations.hpp"
 #include "ngraph/runtime/nvidiagpu/pass/batch_norm_cache.hpp"
 
 using namespace ngraph;

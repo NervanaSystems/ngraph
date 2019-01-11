@@ -18,8 +18,8 @@
 #include <map>
 
 #include "ngraph/codegen/code_writer.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/runtime/nvidiagpu/kernel_emitters.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 

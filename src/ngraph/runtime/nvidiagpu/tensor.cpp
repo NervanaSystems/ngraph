@@ -19,8 +19,8 @@
 #include <cuda_runtime.h>
 
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
-#include "ngraph/runtime/nvidiagpu/cuda_error_check.hpp"
 #include "ngraph/runtime/nvidiagpu/backend.hpp"
+#include "ngraph/runtime/nvidiagpu/cuda_error_check.hpp"
 #include "ngraph/runtime/nvidiagpu/tensor.hpp"
 #include "ngraph/runtime/nvidiagpu/util.hpp"
 

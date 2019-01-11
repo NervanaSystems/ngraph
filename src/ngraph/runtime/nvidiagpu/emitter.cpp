@@ -111,12 +111,12 @@
 #include "ngraph/runtime/nvidiagpu/cuda_kernel_ops.hpp"
 #include "ngraph/runtime/nvidiagpu/emitter.hpp"
 #include "ngraph/runtime/nvidiagpu/kernel_emitters.hpp"
-#include "ngraph/runtime/nvidiagpu/op_annotations.hpp"
-#include "ngraph/runtime/nvidiagpu/primitive_emitter.hpp"
-#include "ngraph/runtime/nvidiagpu/util.hpp"
 #include "ngraph/runtime/nvidiagpu/op/batch_norm.hpp"
 #include "ngraph/runtime/nvidiagpu/op/rnn.hpp"
+#include "ngraph/runtime/nvidiagpu/op_annotations.hpp"
+#include "ngraph/runtime/nvidiagpu/primitive_emitter.hpp"
 #include "ngraph/runtime/nvidiagpu/type_info.hpp"
+#include "ngraph/runtime/nvidiagpu/util.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

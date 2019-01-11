@@ -19,9 +19,9 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/runtime/nvidiagpu/nvshape.hpp"
 #include "ngraph/runtime/nvidiagpu/primitive_emitter.hpp"
 #include "ngraph/runtime/nvidiagpu/util.hpp"
-#include "ngraph/runtime/nvidiagpu/nvshape.hpp"
 #include "ngraph/util.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
@@ -187,11 +187,7 @@ TEST(nvidiagpu_test, topk_fanout_graph_transform)
 
     auto gpu_f = make_shared<Function>(
         NodeVector{gpu_R_0, gpu_R_1, gpu_R_2, gpu_R_3},
-        ParameterVector{A_gpu,
-                        A_int32_gpu_1,
-                        A_int32_gpu_2,
-                        A_f32_gpu_1,
-                        A_f32_gpu_2});
+        ParameterVector{A_gpu, A_int32_gpu_1, A_int32_gpu_2, A_f32_gpu_1, A_f32_gpu_2});
 
     auto backend = runtime::Backend::create("GPU");
 
