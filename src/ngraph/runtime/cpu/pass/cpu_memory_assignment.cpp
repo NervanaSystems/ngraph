@@ -51,6 +51,7 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
     unordered_map<descriptor::Tensor*, descriptor::Tensor*> tensor_alias_map;
     // backward in place ops: concat
     unordered_map<descriptor::Tensor*, descriptor::Tensor*> tensor_alias_backward_map;
+    vector<descriptor::Tensor*> multiple_users_tensor;
 
     auto propagate_in_place_concat = [&](shared_ptr<ngraph::op::Concat> concat,
                                          descriptor::Tensor* output_tensor) {
@@ -130,8 +131,8 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                     {
                         for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                         {
-                            // check if any user has destructive io
-                            bool no_tensor_alias = false;
+                            // check if any user has destructive oi
+                            bool has_destructive_oi_user = false;
                             for (auto& user : node->get_outputs().at(oi_pair.output).get_inputs())
                             {
                                 auto user_node = user->get_node();
@@ -148,30 +149,51 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                                             if (user_oi_pair.input == input_index &&
                                                 user_oi_pair.destructive)
                                             {
-                                                no_tensor_alias = true;
+                                                has_destructive_oi_user = true;
                                                 break;
                                             }
                                         }
                                     }
                                 }
-                                if (no_tensor_alias)
+                                if (has_destructive_oi_user)
                                 {
                                     break;
                                 }
-                            }
-                            if (no_tensor_alias)
-                            {
-                                continue;
                             }
                             auto output_tensor =
                                 &node->get_outputs().at(oi_pair.output).get_tensor();
                             auto input_tensor = &node->get_inputs().at(oi_pair.input).get_tensor();
                             if (tensor_alias_map.find(input_tensor) == tensor_alias_map.end())
                             {
+                                auto input_output =
+                                    &node->get_inputs().at(oi_pair.input).get_output();
+                                auto input_output_inputs = input_output->get_inputs();
+                                if (has_destructive_oi_user && input_output_inputs.size() > 1)
+                                {
+                                    NGRAPH_DEBUG << "cpu_memory_assignment: multiple users and one "
+                                                    "destruction oi, no tensor alias for "
+                                                 << output_tensor->get_name();
+                                    continue;
+                                }
                                 tensor_alias_map[output_tensor] = input_tensor;
+                                if (input_output_inputs.size() > 1)
+                                {
+                                    multiple_users_tensor.push_back(input_tensor);
+                                }
                             }
                             else
                             {
+                                if (has_destructive_oi_user &&
+                                    std::find(multiple_users_tensor.begin(),
+                                              multiple_users_tensor.end(),
+                                              tensor_alias_map[input_tensor]) !=
+                                        multiple_users_tensor.end())
+                                {
+                                    NGRAPH_DEBUG << "cpu_memory_assignment: multiple users and one "
+                                                    "destruction oi, no tensor alias for "
+                                                 << output_tensor->get_name();
+                                    continue;
+                                }
                                 tensor_alias_map[output_tensor] = tensor_alias_map[input_tensor];
                             }
                         }
