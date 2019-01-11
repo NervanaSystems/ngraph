@@ -119,7 +119,7 @@ std::shared_ptr<runtime::nvidiagpu::CompiledFunction> runtime::nvidiagpu::Compil
     const std::shared_ptr<nvidiagpu::Backend::BackendContext>& shared_context)
 {
 #if defined(NGRAPH_DEX_ONLY)
-    return std::make_shared<runtime::nvidiagpu::NVInternalFunction>(function, shared_context);
+    return std::make_shared<runtime::nvidiagpu::InternalFunction>(function, shared_context);
 #else
     // For now codegen is default unless explicitly disabled
     bool use_codegen = true;
@@ -140,7 +140,7 @@ std::shared_ptr<runtime::nvidiagpu::CompiledFunction> runtime::nvidiagpu::Compil
     }
     else
     {
-        return std::make_shared<runtime::nvidiagpu::NVInternalFunction>(function, shared_context);
+        return std::make_shared<runtime::nvidiagpu::InternalFunction>(function, shared_context);
     }
 #endif
 }

@@ -44,13 +44,13 @@ namespace ngraph
             class NVRuntimeConstructor;
             struct RuntimeContext;
 
-            class NVInternalFunction : public CompiledFunction
+            class InternalFunction : public CompiledFunction
             {
             public:
-                NVInternalFunction(
+                InternalFunction(
                     const std::shared_ptr<ngraph::Function>& function,
                     const std::shared_ptr<nvidiagpu::Backend::BackendContext>& shared_context);
-                virtual ~NVInternalFunction();
+                virtual ~InternalFunction();
 
                 virtual std::string add_to_runtime(
                     size_t primitive_index,
