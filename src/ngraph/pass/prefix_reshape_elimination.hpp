@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,23 +20,20 @@
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pass
     {
-        namespace plaidml
-        {
-            namespace pass
-            {
-                class ReshapeElision;
-            }
-        }
+        class PrefixReshapeElimination;
     }
 }
 
-// A minor pass to elide unnecessary reshapes.  A reshape is
-// considered unnecessary if its output shape is the same as its input
-// shape, modulo leading size-1 axes.
-class ngraph::runtime::plaidml::pass::ReshapeElision final : public ngraph::pass::GraphRewrite
+// A pass to eliminate reshapes whose output shapes are the same as
+// their input shape modulo leading size-1 axes.
+//
+// N.B. This pass MUST only be used by backends that can handle the
+//      omission of leading size-1 axes, e.g. backends that implement
+//      NumPy-style broadcast semantics.
+class ngraph::pass::PrefixReshapeElimination final : public ngraph::pass::GraphRewrite
 {
 public:
-    ReshapeElision();
+    PrefixReshapeElimination();
 };
