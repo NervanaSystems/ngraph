@@ -106,6 +106,10 @@ if (NGRAPH_PLAIDML_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
 endif()
 
+if (NGRAPH_GENERIC_CPU_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
+endif()
+
 add_subdirectory(models)
 add_subdirectory(files)
 add_subdirectory(util)
