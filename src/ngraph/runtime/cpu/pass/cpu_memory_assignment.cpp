@@ -178,13 +178,13 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                                         break;
                                     }
                                 }
+                                auto input_output =
+                                    &node->get_inputs().at(oi_pair.input).get_output();
+                                auto input_output_inputs = input_output->get_inputs();
+                                bool has_multiple_users = input_output_inputs.size() > 1;
                                 if (tensor_alias_map.find(input_tensor) == tensor_alias_map.end())
                                 {
-                                    auto input_output =
-                                        &node->get_inputs().at(oi_pair.input).get_output();
-                                    auto input_output_inputs = input_output->get_inputs();
-
-                                    if (has_destructive_oi_user && input_output_inputs.size() > 1)
+                                    if (has_destructive_oi_user && has_multiple_users)
                                     {
                                         NGRAPH_DEBUG << "cpu_memory_assignment: multiple users and "
                                                         "one user has"
@@ -193,18 +193,18 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                                         continue;
                                     }
                                     tensor_alias_map[output_tensor] = input_tensor;
-                                    if (input_output_inputs.size() > 1)
+                                    if (has_multiple_users)
                                     {
                                         multiple_users_tensor.push_back(input_tensor);
                                     }
                                 }
                                 else
                                 {
-                                    if (has_destructive_oi_user &&
-                                        std::find(multiple_users_tensor.begin(),
-                                                  multiple_users_tensor.end(),
-                                                  tensor_alias_map[input_tensor]) !=
-                                            multiple_users_tensor.end())
+                                    bool in_set = std::find(multiple_users_tensor.begin(),
+                                                            multiple_users_tensor.end(),
+                                                            tensor_alias_map[input_tensor]) !=
+                                                  multiple_users_tensor.end();
+                                    if (has_destructive_oi_user && (has_multiple_users || in_set))
                                     {
                                         NGRAPH_DEBUG << "cpu_memory_assignment: multiple users and "
                                                         "one user has "
@@ -214,6 +214,11 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                                     }
                                     tensor_alias_map[output_tensor] =
                                         tensor_alias_map[input_tensor];
+                                    if (has_multiple_users && !in_set)
+                                    {
+                                        multiple_users_tensor.push_back(
+                                            tensor_alias_map[input_tensor]);
+                                    }
                                 }
                             }
                         }
@@ -323,24 +328,11 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
 
         for (descriptor::Tensor* output_decl : output_tensor_decls)
         {
-            if (tensor_alias_backward_map.find(output_decl) != tensor_alias_backward_map.end())
+            auto currently_live_it = currently_live.find(output_decl);
+            if (currently_live_it != currently_live.end())
             {
-                auto currently_live_it =
-                    currently_live.find(tensor_alias_backward_map[output_decl]);
-                if (currently_live_it != currently_live.end())
-                {
-                    new_tensor_decls.insert(tensor_alias_backward_map[output_decl]);
-                    currently_live.erase(currently_live_it);
-                }
-            }
-            else
-            {
-                auto currently_live_it = currently_live.find(output_decl);
-                if (currently_live_it != currently_live.end())
-                {
-                    new_tensor_decls.insert(output_decl);
-                    currently_live.erase(currently_live_it);
-                }
+                new_tensor_decls.insert(output_decl);
+                currently_live.erase(currently_live_it);
             }
         }
         node->liveness_free_list = free_tensor_decls;
