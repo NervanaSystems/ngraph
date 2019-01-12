@@ -167,7 +167,7 @@ if (NGRAPH_TBB_ENABLE)
     )
     add_library(libtbb INTERFACE)
     target_link_libraries(libtbb INTERFACE
-        ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/${TBB_BUILDDIR_NAME}/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
+        ${NGRAPH_BUILD_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}
     )
     target_include_directories(libtbb SYSTEM INTERFACE ${TBB_ROOT}/include)
 endif()
