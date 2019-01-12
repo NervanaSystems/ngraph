@@ -41,4 +41,6 @@ if (NGRAPH_GENERIC_CPU_ENABLE)
     add_subdirectory(generic_cpu)
 endif()
 
-add_subdirectory(plaidml)
+if (NGRAPH_PLAIDML_ENABLE)
+    add_subdirectory(plaidml)
+endif()
