@@ -87,10 +87,13 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         set(MKLDNN_FLAG "${MKLDNN_FLAG} -Wno-unused-result -Wno-unused-value")
     endif()
 endif()
-set(MKLDNN_DEPENDS ext_mkl)
+if(NGRAPH_MANYLINUX_ENABLE)
+    set(MKL_DEPENDS ext_omprt)
+endif()
 
 ExternalProject_Add(
     ext_mkl
+    DEPENDS ${MKL_DEPENDS}
     PREFIX mkl
     URL ${MKLURL}
     URL_HASH SHA1=${MKL_SHA1_HASH}
@@ -101,15 +104,33 @@ ExternalProject_Add(
     DOWNLOAD_NO_PROGRESS TRUE
     EXCLUDE_FROM_ALL TRUE
 )
+
+set(MKLDNN_DEPENDS ext_mkl)
 ExternalProject_Get_Property(ext_mkl source_dir)
 set(MKL_ROOT ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/external/mkl)
 set(MKL_SOURCE_DIR ${source_dir})
+
+ExternalProject_Add_Step(
+    ext_mkl
+    CopyMKL
+    COMMAND ${CMAKE_COMMAND} -E copy ${MKL_SOURCE_DIR}/lib/${MKLML_LIB} ${NGRAPH_BUILD_DIR}
+    COMMENT "Copy mklml runtime libraries to ngraph build directory."
+    DEPENDEES download
+    )
+
+if(NOT NGRAPH_MANYLINUX_ENABLE)
+ExternalProject_Add_Step(
+    ext_mkl
+    CopyOMP
+    COMMAND ${CMAKE_COMMAND} -E copy ${MKL_SOURCE_DIR}/lib/${MKLML_LIB} ${NGRAPH_BUILD_DIR}
+    COMMENT "Copy OpenMP runtime libraries to ngraph build directory."
+    DEPENDEES download
+    )
+endif()
+
 add_library(libmkl INTERFACE)
 add_dependencies(libmkl ext_mkl)
-foreach(LIB ${MKL_LIBS})
-    list(APPEND MKL_LIBS_PATH ${MKL_SOURCE_DIR}/lib/${LIB})
-endforeach()
-target_link_libraries(libmkl INTERFACE ${MKL_LIBS_PATH})
+target_link_libraries(libmkl INTERFACE ${NGRAPH_BUILD_DIR}/${MKLML_LIB} ${NGRAPH_BUILD_DIR}/${OMP_LIB})
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
 set(MKLDNN_GIT_TAG "830a100")
@@ -154,6 +175,13 @@ ExternalProject_Add(
     EXCLUDE_FROM_ALL TRUE
     )
 
+ExternalProject_Add_Step(
+    ext_mkldnn
+    CopyMKLDNN
+    COMMAND ${CMAKE_COMMAND} -E copy ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB} ${NGRAPH_BUILD_DIR}
+    COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
+    DEPENDEES install
+    )
 
 # CPU backend has dependency on CBLAS
 ExternalProject_Add_Step(
@@ -164,17 +192,20 @@ ExternalProject_Add_Step(
     DEPENDERS configure
     )
 
-add_custom_command(TARGET ext_mkldnn POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib ${NGRAPH_BUILD_DIR}
-    COMMENT "Move mkldnn libraries to ngraph build directory"
-)
-
 add_library(libmkldnn INTERFACE)
 add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 target_link_libraries(libmkldnn INTERFACE
-    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB}
+    ${NGRAPH_BUILD_DIR}/${MKLDNN_LIB}
     libmkl
     )
 
-install(DIRECTORY ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/ DESTINATION ${NGRAPH_INSTALL_LIB} OPTIONAL)
+install(
+    FILES
+        ${NGRAPH_BUILD_DIR}/${MKL_LIB}
+        ${NGRAPH_BUILD_DIR}/${OMP_LIB}
+        ${NGRAPH_BUILD_DIR}/${MKLDNN_LIB}
+    DESTINATION
+        ${NGRAPH_INSTALL_LIB}
+    OPTIONAL
+)

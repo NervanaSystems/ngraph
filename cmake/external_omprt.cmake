@@ -29,7 +29,6 @@ set(OMPRT_INSTALL_PREFIX ${EXTERNAL_PROJECTS_ROOT}/omprt)
 
 ExternalProject_Add(
     ext_omprt
-    DEPENDS ext_mkldnn
     URL http://releases.llvm.org/7.0.1/openmp-7.0.1.src.tar.xz
     URL_HASH SHA1=3b931dcafbe6e621c9d99617235fd63f222c2ba2
     DOWNLOAD_NO_PROGRESS TRUE
@@ -48,9 +47,12 @@ ExternalProject_Add(
     EXCLUDE_FROM_ALL TRUE
 )
 
-add_custom_command(TARGET ext_omprt POST_BUILD
+ExternalProject_Add_Step(
+    ext_omprt
+    CopyOMPRT
     COMMAND ${CMAKE_COMMAND} -E copy ${OMPRT_INSTALL_PREFIX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}omp${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
     COMMAND ${CMAKE_COMMAND} -E copy ${OMPRT_INSTALL_PREFIX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}gomp${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
     COMMAND ${CMAKE_COMMAND} -E copy ${OMPRT_INSTALL_PREFIX}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX} ${NGRAPH_BUILD_DIR}
-    COMMENT "Move OpenMP runtime libraries to ngraph build directory."
-)
+    COMMENT "Copy OpenMP runtime libraries to ngraph build directory."
+    DEPENDEES install
+    )
