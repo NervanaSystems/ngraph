@@ -54,7 +54,6 @@
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select_and_scatter.hpp"
-#include "ngraph/op/select_and_scatter.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
@@ -151,8 +150,8 @@ namespace ngraph
         {
             class INTBackend;
         }
-    }
-}
+    } // namespace runtime
+} // namespace ngraph
 
 class ngraph::runtime::interpreter::INTBackend : public Backend
 {
@@ -1051,6 +1050,20 @@ private:
             }
 
             break;
+        }
+        case OP_TYPEID::QuantizedAvgPool: { break;
+        }
+        case OP_TYPEID::QuantizedConvolutionBias: { break;
+        }
+        case OP_TYPEID::QuantizedConvolutionBiasAdd: { break;
+        }
+        case OP_TYPEID::QuantizedConvolutionBiasSignedAdd: { break;
+        }
+        case OP_TYPEID::QuantizedConvolutionRelu: { break;
+        }
+        case OP_TYPEID::QuantizedConvolution: { break;
+        }
+        case OP_TYPEID::QuantizedMaxPool: { break;
         }
         case OP_TYPEID::Reduce:
         {
