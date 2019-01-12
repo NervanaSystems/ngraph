@@ -20,6 +20,7 @@ batch_norm_inference_f64
 batch_norm_training_0eps_f64
 batch_norm_one_output
 batch_norm_three_outputs
+batch_norm_bprop_n4c3h2w2
 dequantize
 dequantize_axes
 dequantize_int32
