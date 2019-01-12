@@ -40,11 +40,11 @@ ExternalProject_Add(
 set(NGRAPH_DEPS_INCLUDE ${CMAKE_SOURCE_DIR}/src)
 set(NGRAPH_DEPS_LIB     ${NGRAPH_BUILD_DIR})
 
-set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.in.py")
+set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/configure_file/setup.in.py")
 set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
 configure_file(${SETUP_PY_IN} ${SETUP_PY})
 
-set(TOX_INI_IN "${CMAKE_CURRENT_SOURCE_DIR}/tox.in.ini")
+set(TOX_INI_IN "${CMAKE_CURRENT_SOURCE_DIR}/configure_file/tox.in.ini")
 set(TOX_INI    "${CMAKE_CURRENT_BINARY_DIR}/tox.ini")
 configure_file(${TOX_INI_IN} ${TOX_INI})
 
