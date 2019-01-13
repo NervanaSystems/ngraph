@@ -37,8 +37,8 @@ ngraph::runtime::plaidml::pass::ReplicateCombination::ReplicateCombination()
 
     pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
         auto nodes = m.get_matched_nodes();
-        auto lower = std::dynamic_pointer_cast<plaidml::op::Replicate>(nodes.at(0));
-        auto upper = std::dynamic_pointer_cast<plaidml::op::Replicate>(nodes.at(1));
+        auto lower = std::static_pointer_cast<plaidml::op::Replicate>(nodes.at(0));
+        auto upper = std::static_pointer_cast<plaidml::op::Replicate>(nodes.at(1));
         std::vector<size_t> axes = lower->get_replication_axes();
         const std::vector<size_t>& upper_axes = upper->get_replication_axes();
         auto uit = upper_axes.begin();

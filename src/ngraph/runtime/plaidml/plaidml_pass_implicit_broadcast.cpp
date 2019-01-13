@@ -45,7 +45,7 @@ ngraph::runtime::plaidml::pass::ImplicitBroadcast::ImplicitBroadcast()
         // for the broadcast axes.
         auto src = m.get_matched_nodes().at(2);
         Shape src_shape = src->get_shape();
-        auto broadcast = std::dynamic_pointer_cast<op::Broadcast>(m.get_matched_nodes().at(1));
+        auto broadcast = std::static_pointer_cast<op::Broadcast>(m.get_matched_nodes().at(1));
 
         AxisVector reshape_order;
         Shape reshape_shape;
