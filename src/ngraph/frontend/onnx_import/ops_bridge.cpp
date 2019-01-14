@@ -95,6 +95,7 @@
 #include "op/unsqueeze.hpp"
 #include "op/xor.hpp"
 #include "ops_bridge.hpp"
+#include "ngraph/log.hpp"
 
 namespace ngraph
 {
@@ -102,20 +103,19 @@ namespace ngraph
     {
         namespace detail
         {
-            const Operator& find(const std::string& name,
-                                 std::int64_t version,
-                                 const std::string& domain,
-                                 const std::map<std::int64_t, Operator>& map)
+            const std::map<std::int64_t, Operator>::const_iterator
+                find(std::int64_t version, const std::map<std::int64_t, Operator>& map)
             {
+                std::map<std::int64_t, Operator>::const_iterator it{};
                 while (version > 0)
                 {
-                    const auto it = map.find(version--);
+                    it = map.find(version--);
                     if (it != std::end(map))
                     {
-                        return it->second;
+                        return it;
                     }
                 }
-                throw error::UnsupportedVersion{name, version, domain};
+                return it;
             }
         }
 
@@ -136,9 +136,20 @@ namespace ngraph
             {
                 throw error::UnknownDomain{domain};
             }
+            if (version > OperatorsBridge::LATEST_SUPPORTED_OPSET_VERSION)
+            {
+                NGRAPH_WARN << "Currently operator set version: " << version << " is unsupported."
+                            << " Falling back to: "
+                            << OperatorsBridge::LATEST_SUPPORTED_OPSET_VERSION;
+            }
             for (const auto& op : dm->second)
             {
-                result.emplace(op.first, detail::find(op.first, version, domain, op.second));
+                const auto& it{detail::find(version, op.second)};
+                if (it == std::end(op.second))
+                {
+                    throw error::UnsupportedVersion{op.first, version, domain};
+                }
+                result.emplace(op.first, it->second);
             }
             return result;
         }
@@ -159,13 +170,15 @@ namespace ngraph
             {
                 return false;
             }
-            // search for version
-            auto op_ver = op_map->second.find(version);
-            if (op_ver == std::end(op_map->second))
+
+            if (detail::find(version, op_map->second) != std::end(op_map->second))
+            {
+                return true;
+            }
+            else
             {
                 return false;
             }
-            return true;
         }
 
 #define REGISTER_OPERATOR(name_, ver_, fn_)                                                        \
