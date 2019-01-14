@@ -51,7 +51,7 @@ ngraph::runtime::plaidml::pass::ReplicateElision::ReplicateElision()
 
         for (auto nit = nodes.begin() + 1; nit != nodes.end(); ++nit)
         {
-            auto replicate = std::dynamic_pointer_cast<plaidml::op::Replicate>(*nit);
+            auto replicate = std::static_pointer_cast<plaidml::op::Replicate>(*nit);
             const auto& replicate_axes = replicate->get_replication_axes();
             bool elidable = true;
             for (std::size_t idx = 0; idx < dim_limit; ++idx)
