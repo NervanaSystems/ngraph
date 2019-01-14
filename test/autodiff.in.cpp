@@ -21,6 +21,11 @@
 
 #include "gtest/gtest.h"
 
+#define AUTODIFF_BACKEND_$                                                                         \
+    {                                                                                              \
+        BACKEND_NAME                                                                               \
+    }
+
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
@@ -864,12 +869,11 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batchdot_tensor2_tensor2)
     }
 
     auto g = make_function_from_file(file_name);
-    if (backend_name == "CPU")
-    {
-        pass::Manager pass_manager;
-        pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-        pass_manager.run_passes(g);
-    }
+#ifdef AUTODIFF_BACKEND_CPU
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.run_passes(g);
+#endif
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), f, g, args, .01f, .01f));
 }
 
