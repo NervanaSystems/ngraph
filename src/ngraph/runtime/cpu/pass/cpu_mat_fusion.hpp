@@ -45,8 +45,8 @@ namespace ngraph
                     };
 
                     CPUBatchFusion(FusionType type = ALL)
-                        : m_fusion_type(type)
-                        , FunctionPass()
+                        : FunctionPass()
+                        , m_fusion_type(type)
                     {
                     }
                     virtual bool
