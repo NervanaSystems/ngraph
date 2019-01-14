@@ -189,7 +189,7 @@ TEST(nvidiagpu_test, topk_fanout_graph_transform)
         NodeVector{gpu_R_0, gpu_R_1, gpu_R_2, gpu_R_3},
         ParameterVector{A_gpu, A_int32_gpu_1, A_int32_gpu_2, A_f32_gpu_1, A_f32_gpu_2});
 
-    auto backend = runtime::Backend::create("GPU");
+    auto backend = runtime::Backend::create("NVIDIAGPU");
 
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(
@@ -267,7 +267,7 @@ TEST(nvidiagpu_test, maxpool_bprop_larger_than_cache)
                                   x, dy, window_shape, move_strides, padding_below, padding_above),
                               ParameterVector{x, dy});
 
-    auto backend = runtime::Backend::create("GPU");
+    auto backend = runtime::Backend::create("NVIDIAGPU");
 
     // initialize x to array of alternating 0s and 1s as described above
     std::vector<float> x_data(num_elements, 0);

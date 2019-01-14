@@ -94,7 +94,7 @@ TEST(nvidiagpu_fusion, rnn_fprop_1_lstm_cell)
 
     auto func = make_shared<Function>(NodeVector{rnn_ht_output, rnn_ct_output},
                                       ParameterVector{src_layer, src_iter, params, state_iter});
-    auto backend = runtime::Backend::create("GPU");
+    auto backend = runtime::Backend::create("NVIDIAGPU");
 
     shared_ptr<runtime::Tensor> src_layer_t =
         backend->create_tensor(element::f32, src_layer->get_shape());
@@ -245,7 +245,7 @@ TEST(nvidiagpu_fusion, lstm_analytic)
         NodeVector{ht, ct},
         ParameterVector{input_xt, weights_i2h, weights_h2h, bias_i2h, bias_h2h});
 
-    auto backend = runtime::Backend::create("GPU");
+    auto backend = runtime::Backend::create("NVIDIAGPU");
 
     std::shared_ptr<runtime::Tensor> input_xt_t =
         backend->create_tensor(element::f32, input_xt->get_shape());
@@ -395,7 +395,7 @@ TEST(nvidiagpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
                                                    bias_i2h_0,
                                                    bias_h2h_0});
 
-    auto backend = runtime::Backend::create("GPU");
+    auto backend = runtime::Backend::create("NVIDIAGPU");
 
     auto params = f->get_parameters();
     std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors;
@@ -444,7 +444,7 @@ TEST(nvidiagpu_fusion, rnn_fusion_inter_vs_nvidiagpu_1lstm_cell)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto nvidiagpu_results = execute(nvidiagpu_f, args, "GPU");
+    auto nvidiagpu_results = execute(nvidiagpu_f, args, "NVIDIAGPU");
     for (size_t i = 0; i < nvidiagpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(nvidiagpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
@@ -466,7 +466,7 @@ TEST(DISABLED_nvidiagpu_fusion, rnn_fusion_inter_vs_nvidiagpu_1rnn_layer_3lstm_c
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto nvidiagpu_results = execute(nvidiagpu_f, args, "GPU");
+    auto nvidiagpu_results = execute(nvidiagpu_f, args, "NVIDIAGPU");
     for (size_t i = 0; i < nvidiagpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(nvidiagpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
@@ -488,7 +488,7 @@ TEST(nvidiagpu_fusion, rnn_fusion_inter_vs_nvidiagpu_2rnn_layer_3lstm_cell)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto nvidiagpu_results = execute(nvidiagpu_f, args, "GPU");
+    auto nvidiagpu_results = execute(nvidiagpu_f, args, "NVIDIAGPU");
     for (size_t i = 0; i < nvidiagpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(nvidiagpu_results.at(i), int_results.at(i), 1.0e-3f, 1.0e-3f));
@@ -528,7 +528,7 @@ TEST(nvidiagpu_fusion, fuse_rnn_across_2layer_1timestep)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto nvidiagpu_results = execute(nvidiagpu_f, args, "GPU");
+    auto nvidiagpu_results = execute(nvidiagpu_f, args, "NVIDIAGPU");
 
     // TODO (pruthvi): Enable this after fixing failing
     // mxnet rnn unit tests
