@@ -25,6 +25,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/prefix_reshape_elimination.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
@@ -35,7 +36,6 @@
 #include "ngraph/runtime/plaidml/plaidml_pass_lower_convolutions.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_replicate_combination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_replicate_elision.hpp"
-#include "ngraph/runtime/plaidml/plaidml_pass_reshape_elision.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_winograd.hpp"
 
 namespace
@@ -99,9 +99,9 @@ std::shared_ptr<ngraph::runtime::plaidml::CompiledFunction>
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReplicateElision>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReplicateCombination>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ImplicitBroadcast>();
-    pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReshapeElision>();
+    pass_manager.register_pass<ngraph::pass::PrefixReshapeElimination>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::LowerConvolutions>();
-    if (m_config->winograd)
+    if (pass_manager.get_pass_config().get_pass_enable("Winograd"))
     {
         pass_manager.register_pass<ngraph::runtime::plaidml::pass::Winograd>();
     }

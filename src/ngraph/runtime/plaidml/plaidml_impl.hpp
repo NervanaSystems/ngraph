@@ -166,7 +166,7 @@ namespace ngraph
                 {
                     Impl impl;
                     impl.set_build(build);
-                    impl.set_op(dynamic_cast<const typename Impl::Op*>(op));
+                    impl.set_op(static_cast<const typename Impl::Op*>(op));
                     impl.Apply();
                 }
             };
