@@ -21,10 +21,9 @@
 
 #include "gtest/gtest.h"
 
-#define AUTODIFF_BACKEND_$                                                                         \
-    {                                                                                              \
-        BACKEND_NAME                                                                               \
-    }
+// clang-format off
+#define AUTODIFF_BACKEND_${BACKEND_NAME}
+// clang-format on
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
