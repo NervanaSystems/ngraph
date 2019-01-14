@@ -21,7 +21,9 @@ try{ if(LABEL.trim() == "") {throw new Exception();} }catch(Exception e){LABEL="
 PROJECT_NAME = "ngraph-onnx"
 CI_ROOT = "ngraph/.ci/onnx/jenkins"
 DOCKER_CONTAINER_NAME = "jenkins_${PROJECT_NAME}_ci"
-NGRAPH_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph.git"
+REPOSITORY_SOURCE = "NervanaSystems"
+if (env.CHANGE_FORK) {REPOSITORY_SOURCE = env.CHANGE_FORK}
+NGRAPH_GIT_ADDRESS = "https://github.com/${REPOSITORY_SOURCE}/ngraph.git"
 ONNX_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph-onnx.git"
 JENKINS_GITHUB_CREDENTIAL_ID = "7157091e-bc04-42f0-99fd-dc4da2922a55"
 ONNX_BRANCH = "$CHANGE_BRANCH"
@@ -160,6 +162,7 @@ def notifyByEmail() {
                         <tr><td>Status:</td> <td>${currentBuild.result}</td></tr>
                         <tr><td>Pull Request Title:</td> <td>$CHANGE_TITLE</td></tr>
                         <tr><td>Pull Request:</td> <td><a href=$CHANGE_URL>$CHANGE_ID</a> </td></tr>
+                        <tr><td>nGraph Repository Source:</td> <td>$NGRAPH_GIT_ADDRESS</td></tr>
                         <tr><td>Branch:</td> <td>$CHANGE_BRANCH</td></tr>
                         <tr><td>Commit Hash:</td> <td>$GIT_COMMIT_SUBJECT</td></tr>
                         <tr><td>Commit Subject:</td> <td>$GIT_COMMIT_HASH</td></tr>
