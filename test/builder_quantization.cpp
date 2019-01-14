@@ -892,6 +892,43 @@ TEST(builder, dynamic_scaled_Q)
               read_vector<int8_t>(result4));
 }
 
+TEST(builder, dynamic_scaled_Q_vec)
+{
+    auto call_SQ = [](unique_ptr<runtime::Backend>& backend,
+                      element::Type type,
+                      op::Quantize::RoundMode mode,
+                      Shape in_shape,
+                      vector<float> in,
+                      float min,
+                      float max) {
+        auto A = make_shared<op::Parameter>(element::f32, in_shape);
+        auto B = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto C = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto QT = ngraph::builder::ScaledQuantize(A, B, C, type, AxisSet{0}, mode);
+        auto f = make_shared<Function>(NodeVector{QT}, ParameterVector{A, B, C});
+        // Create some tensors for input/output
+        auto a = backend->create_tensor(element::f32, in_shape);
+        auto b = backend->create_tensor(element::f32, Shape{1});
+        auto c = backend->create_tensor(element::f32, Shape{1});
+        copy_data(a, in);
+        copy_data(b, vector<float>{min});
+        copy_data(c, vector<float>{max});
+        auto result = backend->create_tensor(type, in_shape);
+        backend->call_with_validate(backend->compile(f), {result}, {a, b, c});
+        return result;
+    };
+    auto backend = runtime::Backend::create("CPU");
+
+    auto result4 = call_SQ(backend,
+                           element::i8,
+                           op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN,
+                           Shape{1, 3, 1, 1},
+                           vector<float>{-1.3990955, -1.468798, -2.0760186},
+                           -2.0760186f,
+                           0.17088544f);
+    EXPECT_EQ((vector<int8_t>{-86, -90, -127}), read_vector<int8_t>(result4));
+}
+
 TEST(builder, scaled_Q_signed)
 {
     vector<float> a_data = {-127.0, 0.0, 1.0, 3.0, 5.0, 64.0, 127.0, 500.0};
