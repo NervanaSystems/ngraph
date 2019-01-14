@@ -34,7 +34,7 @@ static default_random_engine s_random_engine;
 
 void set_denormals_flush_to_zero()
 {
-#if defined(__x86_64__) || defined(__amd64__)
+#if (defined(__x86_64__) || defined(__amd64__)) && !defined(__clang__)
     // Avoids perf impact from denormals while benchmarking with random data
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
