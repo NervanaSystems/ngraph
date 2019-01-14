@@ -196,8 +196,8 @@ public:
         auto pattern = std::make_shared<pattern::op::Label>(iconst0);
 
         auto callback = [pattern](pattern::Matcher& m) {
-            std::cout << "In a callback for construct_add_zero against "
-                      << m.get_match_root()->get_name();
+            NGRAPH_DEBUG << "In a callback for construct_add_zero against "
+                         << m.get_match_root()->get_name();
             NGRAPH_ASSERT(m.get_match_root()->get_arguments().size() == 2);
 
             auto pattern_map = m.get_pattern_map();
