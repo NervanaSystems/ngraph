@@ -40,20 +40,6 @@
 
 using namespace ngraph;
 
-extern template ngraph::AxisVector
-    ngraph::apply_permutation<ngraph::AxisVector>(ngraph::AxisVector input,
-                                                  ngraph::AxisVector order);
-
-extern template ngraph::Coordinate
-    ngraph::apply_permutation<ngraph::Coordinate>(ngraph::Coordinate input,
-                                                  ngraph::AxisVector order);
-
-extern template ngraph::Strides
-    ngraph::apply_permutation<ngraph::Strides>(ngraph::Strides input, ngraph::AxisVector order);
-
-extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
-                                                                       ngraph::AxisVector order);
-
 using ReshapeMap = std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<op::Reshape>>;
 
 static std::string describe_reshape(std::shared_ptr<Node> node)
