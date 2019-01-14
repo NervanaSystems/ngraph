@@ -79,7 +79,7 @@ mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const TensorViewWrap
         fmt);
 }
 
-mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const Shape& shape,
+mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const ngraph::Shape& shape,
                                                             const ngraph::element::Type& et,
                                                             mkldnn::memory::format fmt) const
 {

@@ -197,6 +197,10 @@ if (NGRAPH_CPU_ENABLE)
          message(WARNING "The build toolset doesn't support OpenMP. This will impact performance and lead to slowdowns.")
     endif()
 
+    if (MSVS)
+        target_compile_definitions(cpu_backend PRIVATE EIGEN_HAS_CONSTEXPR)
+    endif()
+    
     if(NGRAPH_DISTRIBUTED_ENABLE)
         target_compile_definitions(cpu_backend PRIVATE NGRAPH_DISTRIBUTED)
         target_include_directories(cpu_backend SYSTEM PRIVATE libmlsl)
