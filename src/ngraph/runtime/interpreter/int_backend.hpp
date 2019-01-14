@@ -508,7 +508,7 @@ private:
             {
             case element::Type_t::boolean:
                 reference::convert<T>(
-                    static_cast<const T*>(args[0]), static_cast<char*>(out[0]), element_count);
+                    static_cast<const T*>(args[0]), static_cast<bool*>(out[0]), element_count);
                 break;
             case element::Type_t::f32:
                 reference::convert<T>(

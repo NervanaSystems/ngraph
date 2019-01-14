@@ -1453,12 +1453,12 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_int32_bool)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i32, shape);
-    copy_data(a, vector<int32_t>{1, 2, 3, 4});
+    copy_data(a, vector<int32_t>{0, 12, 23, 0});
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a});
-    EXPECT_EQ((vector<char>{1, 2, 3, 4}), read_vector<char>(result));
+    EXPECT_EQ((vector<char>{0, 1, 1, 0}), read_vector<char>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bool)
@@ -1472,12 +1472,12 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bool)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
-    copy_data(a, vector<float>{1, 2, 3, 4});
+    copy_data(a, vector<float>{1.25f, 0.f, 3.895f, 0.f});
     auto result = backend->create_tensor(element::boolean, shape);
 
     auto handle = backend->compile(f);
     backend->call_with_validate(handle, {result}, {a});
-    EXPECT_EQ((vector<char>{1, 2, 3, 4}), read_vector<char>(result));
+    EXPECT_EQ((vector<char>{1, 0, 1, 0}), read_vector<char>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, slice_scalar)
