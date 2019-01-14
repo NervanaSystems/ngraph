@@ -982,8 +982,7 @@ private:
                            node.get_inputs().at(0).get_shape(),
                            node.get_output_shape(0),
                            pad->get_padding_below(),
-                           pad->get_padding_above(),
-                           pad->get_padding_interior());
+                           pad->get_padding_above());
             break;
         }
         case OP_TYPEID::Power:

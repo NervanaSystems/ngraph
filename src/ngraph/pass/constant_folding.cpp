@@ -83,8 +83,7 @@ shared_ptr<op::Constant> make_constant_pad(shared_ptr<op::Constant> constant,
                                constant->get_shape(),
                                out_shape,
                                pad->get_padding_below(),
-                               pad->get_padding_above(),
-                               pad->get_padding_interior());
+                               pad->get_padding_above());
 
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
 }
@@ -98,10 +97,8 @@ void ngraph::pass::ConstantFolding::construct_constant_pad()
 
     CoordinateDiff padding_below{0};
     CoordinateDiff padding_above{0};
-    Shape padding_interior{0};
 
-    auto pad = make_shared<op::Pad>(
-        constant_label, pad_value_label, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(constant_label, pad_value_label, padding_below, padding_above);
 
     auto constant_pad_callback = [constant_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_pad_callback against node = "

@@ -35,8 +35,7 @@ namespace ngraph
                      const Shape& arg0_shape,
                      const Shape& out_shape,
                      const CoordinateDiff& padding_below,
-                     const CoordinateDiff& padding_above,
-                     const Shape& padding_interior)
+                     const CoordinateDiff& padding_above)
             {
                 Coordinate input_start(arg0_shape.size(), 0); // start at (0,0,...,0)
                 Coordinate input_end =
@@ -50,11 +49,7 @@ namespace ngraph
                     input_axis_order[i] = i;
                 }
 
-                Strides input_dilation(arg0_shape.size());
-                for (size_t i = 0; i < arg0_shape.size(); i++)
-                {
-                    input_dilation[i] = padding_interior[i] + 1;
-                }
+                Strides input_dilation(arg0_shape.size(), 1);
 
                 CoordinateTransform input_transform(arg0_shape,
                                                     input_start,

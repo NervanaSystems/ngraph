@@ -24,12 +24,10 @@ using namespace ngraph;
 op::Pad::Pad(const shared_ptr<Node>& arg,
              const shared_ptr<Node>& arg_pad_value,
              const CoordinateDiff& padding_below,
-             const CoordinateDiff& padding_above,
-             const Shape& padding_interior)
+             const CoordinateDiff& padding_above)
     : Op("Pad", check_single_output_args({arg, arg_pad_value}))
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
-    , m_padding_interior(padding_interior)
 {
     constructor_validate_and_infer_types();
 }
@@ -49,20 +47,16 @@ void op::Pad::validate_and_infer_types()
 
     auto arg_shape = get_input_partial_shape(0);
 
-    NODE_VALIDATION_ASSERT(this,
-                           m_padding_below.size() == m_padding_above.size() &&
-                               m_padding_below.size() == m_padding_interior.size())
-        << "Ranks for padding below (" << m_padding_below << "), padding above (" << m_padding_above
-        << ") and interior padding (" << m_padding_interior << ") "
-        << "do not match.";
+    NODE_VALIDATION_ASSERT(this, m_padding_below.size() == m_padding_above.size())
+        << "Ranks for padding below (" << m_padding_below << ") and padding above ("
+        << m_padding_above << ") do not match.";
 
     size_t implied_rank = m_padding_below.size();
 
     NODE_VALIDATION_ASSERT(this, arg_shape.rank().compatible(implied_rank))
-        << "Rank for padding below/padding above/interior padding does not match the rank of the "
+        << "Rank for padding below and padding above do not match the rank of the "
         << "data argument (padding below: " << m_padding_below
-        << ", padding above: " << m_padding_above << ", interior padding: " << m_padding_interior
-        << ").";
+        << ", padding above: " << m_padding_above << ").";
 
     std::vector<Dimension> result_dims(implied_rank, Dimension::dynamic());
 
@@ -72,16 +66,12 @@ void op::Pad::validate_and_infer_types()
         {
             if (arg_shape[i].is_static())
             {
-                ptrdiff_t result_dim = m_padding_below[i] +
-                                       static_cast<ptrdiff_t>(subtract_or_zero(
-                                           size_t(arg_shape[i]) * (m_padding_interior[i] + 1),
-                                           m_padding_interior[i])) +
-                                       m_padding_above[i];
+                ptrdiff_t result_dim =
+                    m_padding_below[i] + static_cast<ptrdiff_t>(arg_shape[i]) + m_padding_above[i];
                 NODE_VALIDATION_ASSERT(this, result_dim >= 0)
                     << "Inferred result dimension at axis " << i
                     << " is negative after padding (padding below: " << m_padding_below << ", "
-                    << ", padding above: " << m_padding_above
-                    << ", interior padding: " << m_padding_interior << ").";
+                    << ", padding above: " << m_padding_above << ").";
                 result_dims[i] = static_cast<size_t>(result_dim);
             }
         }
@@ -93,11 +83,13 @@ void op::Pad::validate_and_infer_types()
 shared_ptr<Node> op::Pad::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Pad>(
-        new_args.at(0), new_args.at(1), m_padding_below, m_padding_above, m_padding_interior);
+    return make_shared<Pad>(new_args.at(0), new_args.at(1), m_padding_below, m_padding_above);
 }
 
-/* The "y" half of this is going to be a bit tricky... best way to handle it, I think,
+/* (TODO(amprocte): this comment was written back when we still had "interior" padding
+   and before the introduction of edge/reflect modes. Update it.)
+
+   The "y" half of this is going to be a bit tricky... best way to handle it, I think,
    is to ReplaceSlice the non-padded values in the incoming delta tensor with a zero
    broadcasted to x's shape; then sum that and backprop the result to y.
 

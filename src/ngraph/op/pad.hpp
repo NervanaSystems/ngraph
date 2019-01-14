@@ -33,12 +33,10 @@ namespace ngraph
             /// \param arg_pad_value The node producing the scalar value to be inserted for padding.
             /// \param padding_below The padding-below widths.
             /// \param padding_above The padding-above widths.
-            /// \param padding_interior The interior-padding widths.
             Pad(const std::shared_ptr<Node>& arg,
                 const std::shared_ptr<Node>& arg_pad_value,
                 const CoordinateDiff& padding_below,
-                const CoordinateDiff& padding_above,
-                const Shape& padding_interior);
+                const CoordinateDiff& padding_above);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -46,8 +44,6 @@ namespace ngraph
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             /// \return The padding-above sizes.
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
-            /// \return The interior padding sizes.
-            const Shape& get_padding_interior() const { return m_padding_interior; }
             /// \return The default value for Pad.
             virtual std::shared_ptr<Node> get_default_value() const override;
 
@@ -57,7 +53,6 @@ namespace ngraph
                                            const NodeVector& deltas) override;
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
-            Shape m_padding_interior;
         };
     }
 }

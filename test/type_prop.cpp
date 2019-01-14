@@ -10783,106 +10783,64 @@ TEST(type_prop, avg_pool_partial_rank_static_dynamic_window_in_padding)
     }
 }
 
-TEST(type_prop, pad_deduce_1d_exterior)
+TEST(type_prop, pad_deduce_1d)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
     CoordinateDiff padding_below{2};
     CoordinateDiff padding_above{3};
-    Shape padding_interior{0};
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
     EXPECT_EQ(pad->get_element_type(), element::f32);
     EXPECT_EQ(pad->get_shape(), (Shape{55}));
 
     EXPECT_EQ(pad->get_padding_below(), (CoordinateDiff{2}));
     EXPECT_EQ(pad->get_padding_above(), (CoordinateDiff{3}));
-    EXPECT_EQ(pad->get_padding_interior(), (Shape{0}));
 }
 
-TEST(type_prop, pad_deduce_1d_interior)
-{
-    // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    CoordinateDiff padding_below{0};
-    CoordinateDiff padding_above{0};
-    Shape padding_interior{2};
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
-    EXPECT_EQ(pad->get_element_type(), element::f32);
-    EXPECT_EQ(pad->get_shape(), (Shape{148}));
-
-    EXPECT_EQ(pad->get_padding_below(), (CoordinateDiff{0}));
-    EXPECT_EQ(pad->get_padding_above(), (CoordinateDiff{0}));
-    EXPECT_EQ(pad->get_padding_interior(), (Shape{2}));
-}
-
-TEST(type_prop, pad_deduce_1d_interior_exterior)
-{
-    // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    CoordinateDiff padding_below{5};
-    CoordinateDiff padding_above{6};
-    Shape padding_interior{2};
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
-    EXPECT_EQ(pad->get_element_type(), element::f32);
-    EXPECT_EQ(pad->get_shape(), (Shape{159}));
-
-    EXPECT_EQ(pad->get_padding_below(), (CoordinateDiff{5}));
-    EXPECT_EQ(pad->get_padding_above(), (CoordinateDiff{6}));
-    EXPECT_EQ(pad->get_padding_interior(), (Shape{2}));
-}
-
-TEST(type_prop, pad_deduce_2d_interior_exterior)
+TEST(type_prop, pad_deduce_2d)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
     CoordinateDiff padding_below{5, 3};
     CoordinateDiff padding_above{6, 9};
-    Shape padding_interior{2, 3};
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
     EXPECT_EQ(pad->get_element_type(), element::f32);
-    EXPECT_EQ(pad->get_shape(), (Shape{159, 169}));
+    EXPECT_EQ(pad->get_shape(), (Shape{61, 52}));
 
     EXPECT_EQ(pad->get_padding_below(), (CoordinateDiff{5, 3}));
     EXPECT_EQ(pad->get_padding_above(), (CoordinateDiff{6, 9}));
-    EXPECT_EQ(pad->get_padding_interior(), (Shape{2, 3}));
 }
 
-TEST(type_prop, pad_deduce_3d_interior_exterior)
+TEST(type_prop, pad_deduce_3d)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
     CoordinateDiff padding_below{5, 3, 0};
     CoordinateDiff padding_above{6, 9, 4};
-    Shape padding_interior{2, 3, 0};
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
     EXPECT_EQ(pad->get_element_type(), element::f32);
-    EXPECT_EQ(pad->get_shape(), (Shape{159, 169, 24}));
+    EXPECT_EQ(pad->get_shape(), (Shape{61, 52, 24}));
 
     EXPECT_EQ(pad->get_padding_below(), (CoordinateDiff{5, 3, 0}));
     EXPECT_EQ(pad->get_padding_above(), (CoordinateDiff{6, 9, 4}));
-    EXPECT_EQ(pad->get_padding_interior(), (Shape{2, 3, 0}));
 }
 
-TEST(type_prop, pad_deduce_3d_neg_interior_exterior)
+TEST(type_prop, pad_deduce_3d_neg)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
     CoordinateDiff padding_below{-5, 3, -2};
     CoordinateDiff padding_above{-6, -9, 4};
-    Shape padding_interior{2, 3, 0};
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
     EXPECT_EQ(pad->get_element_type(), element::f32);
-    EXPECT_EQ(pad->get_shape(), (Shape{137, 151, 22}));
+    EXPECT_EQ(pad->get_shape(), (Shape{39, 34, 22}));
 
     EXPECT_EQ(pad->get_padding_below(), (CoordinateDiff{-5, 3, -2}));
     EXPECT_EQ(pad->get_padding_above(), (CoordinateDiff{-6, -9, 4}));
-    EXPECT_EQ(pad->get_padding_interior(), (Shape{2, 3, 0}));
 }
 
 TEST(type_prop, pad_deduce_element_type_mismatch)
@@ -10892,11 +10850,9 @@ TEST(type_prop, pad_deduce_element_type_mismatch)
     auto param1 = make_shared<op::Parameter>(element::i32, Shape{});
     CoordinateDiff padding_below{5, 3, 0};
     CoordinateDiff padding_above{6, 9, 4};
-    Shape padding_interior{2, 3, 0};
     try
     {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Element tpye mismatch not detected";
@@ -10918,11 +10874,9 @@ TEST(type_prop, pad_deduce_nonscalar_pad_value)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{6});
     CoordinateDiff padding_below{5, 3, 0};
     CoordinateDiff padding_above{6, 9, 4};
-    Shape padding_interior{2, 3, 0};
     try
     {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Non-scalar pad value not detected";
@@ -10945,11 +10899,9 @@ TEST(type_prop, pad_deduce_below_padding_wrong_rank)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
     CoordinateDiff padding_below{5, 3, 0, 6};
     CoordinateDiff padding_above{6, 9, 4};
-    Shape padding_interior{2, 3, 0};
     try
     {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Wrong below-padding rank not detected";
@@ -10957,9 +10909,9 @@ TEST(type_prop, pad_deduce_below_padding_wrong_rank)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Ranks for padding below (CoordinateDiff{5, 3, 0, 6}), "
+                             std::string("Ranks for padding below (CoordinateDiff{5, 3, 0, 6}) and "
                                          "padding above (CoordinateDiff{6, 9, "
-                                         "4}) and interior padding (Shape{2, 3, 0}) do not match"));
+                                         "4}) do not match"));
     }
     catch (...)
     {
@@ -10974,11 +10926,9 @@ TEST(type_prop, pad_deduce_above_padding_wrong_rank)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
     CoordinateDiff padding_below{5, 3, 0};
     CoordinateDiff padding_above{6, 9};
-    Shape padding_interior{2, 3, 0};
     try
     {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Wrong above-padding rank not detected";
@@ -10986,9 +10936,8 @@ TEST(type_prop, pad_deduce_above_padding_wrong_rank)
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Ranks for padding below (CoordinateDiff{5, 3, 0}), "
-                                         "padding above (CoordinateDiff{6, 9}) and interior "
-                                         "padding (Shape{2, 3, 0}) do not match"));
+                             std::string("Ranks for padding below (CoordinateDiff{5, 3, 0}) and "
+                                         "padding above (CoordinateDiff{6, 9}) do not match"));
     }
     catch (...)
     {
@@ -10996,48 +10945,16 @@ TEST(type_prop, pad_deduce_above_padding_wrong_rank)
     }
 }
 
-TEST(type_prop, pad_deduce_interior_padding_wrong_rank)
-{
-    // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{50, 40, 20});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
-    CoordinateDiff padding_below{5, 3, 0};
-    CoordinateDiff padding_above{6, 9, 4};
-    Shape padding_interior{2, 3, 0, 9, 3};
-    try
-    {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
-
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Wrong interior padding rank not detected";
-    }
-    catch (const NodeValidationError& error)
-    {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("Ranks for padding below (CoordinateDiff{5, 3, 0}), padding above "
-                        "(CoordinateDiff{6, 9, 4}) "
-                        "and interior padding (Shape{2, 3, 0, 9, 3}) do not match"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-
-TEST(type_prop, pad_deduce_interior_padding_too_much_negative_padding)
+TEST(type_prop, pad_deduce_too_much_negative_padding)
 {
     // Deduce type
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
     CoordinateDiff padding_below{5, 3, 0};
     CoordinateDiff padding_above{6, 9, -3};
-    Shape padding_interior{2, 3, 0};
     try
     {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Too much negative padding not detected";
@@ -11061,9 +10978,8 @@ TEST(type_prop, pad_partial_data_rank_dynamic_padding_rank_dynamic_ok)
 
     CoordinateDiff padding_below{2, 4, 6};
     CoordinateDiff padding_above{8, 2, 3};
-    Shape padding_interior{1, 0, 1};
 
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
     ASSERT_EQ(pad->get_output_element_type(0), element::f32);
     ASSERT_TRUE(pad->get_output_partial_shape(0).same_scheme(
@@ -11077,20 +10993,18 @@ TEST(type_prop, pad_partial_data_rank_dynamic_padding_rank_dynamic_attribs_rank_
 
     CoordinateDiff padding_below{2, 4, 6};
     CoordinateDiff padding_above{8, 2, 3, 0};
-    Shape padding_interior{1, 0, 1};
 
     try
     {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
         FAIL() << "Inconsistent attribute ranks not detected (rank-dynamic/rank-dynamic arguments)";
     }
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Ranks for padding below (CoordinateDiff{2, 4, 6}), "
+                             std::string("Ranks for padding below (CoordinateDiff{2, 4, 6}) and "
                                          "padding above (CoordinateDiff{8, 2, 3, "
-                                         "0}) and interior padding (Shape{1, 0, 1}) do not match"));
+                                         "0}) do not match"));
     }
     catch (...)
     {
@@ -11107,9 +11021,8 @@ TEST(type_prop, pad_partial_data_rank_static_dynamic_padding_rank_dynamic_ok)
 
     CoordinateDiff padding_below{2, 4, 6};
     CoordinateDiff padding_above{8, 2, 3};
-    Shape padding_interior{1, 0, 1};
 
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
     ASSERT_EQ(pad->get_output_element_type(0), element::f32);
     ASSERT_TRUE(pad->get_output_partial_shape(0).same_scheme(
@@ -11124,13 +11037,12 @@ TEST(type_prop, pad_partial_data_rank_static_dynamic_some_dims_known_padding_ran
 
     CoordinateDiff padding_below{2, 4, 6};
     CoordinateDiff padding_above{8, 2, 3};
-    Shape padding_interior{1, 0, 1};
 
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
     ASSERT_EQ(pad->get_output_element_type(0), element::f32);
     ASSERT_TRUE(
-        pad->get_output_partial_shape(0).same_scheme(PartialShape{15, 11, Dimension::dynamic()}));
+        pad->get_output_partial_shape(0).same_scheme(PartialShape{13, 11, Dimension::dynamic()}));
 }
 
 TEST(type_prop, pad_partial_data_rank_dynamic_padding_static_ok)
@@ -11140,9 +11052,8 @@ TEST(type_prop, pad_partial_data_rank_dynamic_padding_static_ok)
 
     CoordinateDiff padding_below{2, 4, 6};
     CoordinateDiff padding_above{8, 2, 3};
-    Shape padding_interior{1, 0, 1};
 
-    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+    auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
 
     ASSERT_EQ(pad->get_output_element_type(0), element::f32);
     ASSERT_TRUE(pad->get_output_partial_shape(0).same_scheme(
@@ -11156,12 +11067,10 @@ TEST(type_prop, pad_partial_data_rank_dynamic_padding_static_wrong_padding_rank)
 
     CoordinateDiff padding_below{2, 4, 6};
     CoordinateDiff padding_above{8, 2, 3};
-    Shape padding_interior{1, 0, 1};
 
     try
     {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
         FAIL() << "Wrong padding rank not detected (rank-dynamic/static arguments)";
     }
     catch (const NodeValidationError& error)
@@ -11183,20 +11092,18 @@ TEST(type_prop, pad_partial_data_rank_dynamic_padding_static_attribs_rank_incons
 
     CoordinateDiff padding_below{2, 4, 6};
     CoordinateDiff padding_above{8, 2, 3, 4};
-    Shape padding_interior{1, 0, 1};
 
     try
     {
-        auto pad =
-            make_shared<op::Pad>(param0, param1, padding_below, padding_above, padding_interior);
+        auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
         FAIL() << "Wrong padding rank not detected (rank-dynamic/static arguments)";
     }
     catch (const NodeValidationError& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Ranks for padding below (CoordinateDiff{2, 4, 6}), "
+                             std::string("Ranks for padding below (CoordinateDiff{2, 4, 6}) and "
                                          "padding above (CoordinateDiff{8, 2, 3, "
-                                         "4}) and interior padding (Shape{1, 0, 1}) do not match"));
+                                         "4}) do not match"));
     }
     catch (...)
     {
