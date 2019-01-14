@@ -39,8 +39,7 @@ namespace ngraph
                                   const std::string& output_name,
                                   const Shape& output_shape,
                                   const element::Type& output_type,
-                                  const Shape& pad_below,
-                                  const Shape& pad_interior);
+                                  const Shape& pad_below);
 
             void do_max_pool_backprop_operation(cldnn::topology& topology,
                                                 const std::string& input_name,

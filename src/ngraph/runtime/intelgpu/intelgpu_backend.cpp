@@ -1274,7 +1274,6 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
 
             const shared_ptr<op::Pad> pad = static_pointer_cast<op::Pad>(op);
             const Shape& pad_below = pad->get_padding_below();
-            const Shape& pad_interior = pad->get_padding_interior();
 
             do_pad_operation(topology,
                              get_input_name(op, 0),
@@ -1283,8 +1282,7 @@ runtime::Handle runtime::intelgpu::IntelGPUBackend::compile(shared_ptr<Function>
                              get_output_name(op),
                              get_output_shape(op),
                              get_output_type(op),
-                             pad_below,
-                             pad_interior);
+                             pad_below);
             break;
         }
         case OP_TYPEID::BatchNormTrainingBackprop:
