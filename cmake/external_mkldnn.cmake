@@ -202,7 +202,7 @@ target_link_libraries(libmkldnn INTERFACE
 
 install(
     FILES
-        ${NGRAPH_BUILD_DIR}/${MKL_LIB}
+        ${NGRAPH_BUILD_DIR}/${MKLML_LIB}
         ${NGRAPH_BUILD_DIR}/${OMP_LIB}
         ${NGRAPH_BUILD_DIR}/${MKLDNN_LIB}
     DESTINATION
