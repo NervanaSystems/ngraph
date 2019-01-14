@@ -22,12 +22,13 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/random.hpp"
 #include "util/test_control.hpp"
-
 using namespace std;
 using namespace ngraph;
 
@@ -845,6 +846,31 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, backwards_batchdot_tensor2_tensor2)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    std::string backend_name = "${BACKEND_NAME}";
+
+    const std::string file_name("mxnet/batch_dot_3.json");
+    auto f = make_function_from_file(file_name);
+
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> args;
+    for (shared_ptr<op::Parameter> param : f->get_parameters())
+    {
+        args.push_back(rng.initialize(backend->create_tensor<float>(param->get_shape())));
+    }
+
+    auto g = make_function_from_file(file_name);
+    if (backend_name == "CPU")
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+        pass_manager.run_passes(g);
+    }
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), f, g, args, .01f, .01f));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_exp)

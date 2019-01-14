@@ -2301,20 +2301,11 @@ TEST(cpu_fusion, fuse_1_layer_rnn)
     }
 }
 
-static std::shared_ptr<Function> make_function(const std::string& file_name)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-    return func;
-}
-
 TEST(cpu_fusion, rnn_fusion_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
@@ -2335,8 +2326,8 @@ TEST(cpu_fusion, rnn_fusion_1lstm_cell)
 TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/1rnn_layer_3lstm_cell.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
@@ -2357,8 +2348,8 @@ TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
 TEST(cpu_fusion, rnn_fusion_2rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
@@ -3016,8 +3007,8 @@ TEST(cpu_fusion, fuse_batch_dot_forward)
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
 
     const std::string file_name("mxnet/batch_dot_3.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     pass_manager.run_passes(cpu_f);
     test::Uniform<float> rng(0.0f, 1.0f);
     vector<vector<float>> args;
@@ -3039,8 +3030,8 @@ TEST(cpu_fusion, fuse_batch_dot_forward)
 TEST(cpu_fusion, fuse_batch_dot_backward)
 {
     const std::string file_name("mxnet/batch_dot_3.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
@@ -3049,7 +3040,7 @@ TEST(cpu_fusion, fuse_batch_dot_backward)
     auto int_df = autodiff::backprop_function(int_f);
     auto cpu_df = autodiff::backprop_function(cpu_f);
 
-    test::Uniform<float> rng(0.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_df->get_parameters())
     {
@@ -3070,8 +3061,8 @@ TEST(cpu_fusion, fuse_batch_dot_backward)
 TEST(cpu_fusion, fuse_rnn_across_layer_2layer_3timestep)
 {
     const std::string file_name("mxnet/2layer_3timestep_ic100oc100.json");
-    auto cpu_f = make_function(file_name);
-    auto int_f = make_function(file_name);
+    auto cpu_f = make_function_from_file(file_name);
+    auto int_f = make_function_from_file(file_name);
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
