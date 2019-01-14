@@ -33,7 +33,7 @@ ngraph::runtime::plaidml::pass::ConcatElision::ConcatElision()
         });
 
     pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
-        auto concat = std::dynamic_pointer_cast<ngraph::op::Concat>(m.get_match_root());
+        auto concat = std::static_pointer_cast<ngraph::op::Concat>(m.get_match_root());
         auto args = concat->get_arguments();
 
         // Elide one-argument concats.
