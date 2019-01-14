@@ -1683,6 +1683,8 @@ TEST(onnx, model_is_op_supported)
 {
     // Simple case
     EXPECT_TRUE(onnx_import::is_operator_supported("Sum", 1, "ai.onnx"));
+    // With fallback
+    EXPECT_TRUE(onnx_import::is_operator_supported("Sum", 100, "ai.onnx"));
 
     // Different opset versions
     EXPECT_TRUE(onnx_import::is_operator_supported("Add", 1, "ai.onnx"));
@@ -1696,8 +1698,6 @@ TEST(onnx, model_is_op_supported)
     EXPECT_FALSE(onnx_import::is_operator_supported("DummyOp", 1, "ai.onnx"));
     EXPECT_FALSE(onnx_import::is_operator_supported("DummyOp", 10, "ai.onnx"));
 
-    // Bad opset version for existing operator
-    EXPECT_FALSE(onnx_import::is_operator_supported("Sum", 5));
     // Operator with bad domain name
     EXPECT_FALSE(onnx_import::is_operator_supported("Sum", 1, "bad.domain"));
 
