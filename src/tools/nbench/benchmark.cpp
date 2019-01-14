@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include <random>
-#ifdef __i386__
+#if defined(__x86_64__) || defined(__amd64__)
 #include <xmmintrin.h>
 #endif
 
