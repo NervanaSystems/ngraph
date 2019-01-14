@@ -21,6 +21,7 @@
 #include <unordered_map>
 
 #include "core/attribute.hpp"
+#include "ngraph/log.hpp"
 #include "op/abs.hpp"
 #include "op/acos.hpp"
 #include "op/add.hpp"
@@ -95,7 +96,6 @@
 #include "op/unsqueeze.hpp"
 #include "op/xor.hpp"
 #include "ops_bridge.hpp"
-#include "ngraph/log.hpp"
 
 namespace ngraph
 {
