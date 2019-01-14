@@ -86,7 +86,7 @@ namespace ngraph
                                                std::int64_t version,
                                                const std::string& domain)
             {
-                instance()._is_operator_registered(name, version, domain);
+                return instance()._is_operator_registered(name, version, domain);
             }
 
         private:
