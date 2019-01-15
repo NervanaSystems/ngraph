@@ -14,34 +14,31 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "code_writer.hpp"
+#include "ngraph/runtime/generic_cpu/node_wrapper.hpp"
 
-using namespace std;
 using namespace ngraph;
+using namespace std;
 
-codegen::CodeWriter::CodeWriter()
-    : indent(0)
-    , m_pending_indent(true)
-    , m_temporary_name_count(0)
+runtime::gcpu::NodeWrapper::NodeWrapper(const shared_ptr<const Node>& node)
+    : m_node{node}
 {
-}
+// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+// {"Abs", runtime::gcpu::OP_TYPEID::Abs},
+// {"Acos", runtime::gcpu::OP_TYPEID::Acos},
+// ...
+#define NGRAPH_OP(a, b) {#a, runtime::gcpu::OP_TYPEID::a},
+    static unordered_map<string, runtime::gcpu::OP_TYPEID> typeid_map{
+#include "ngraph/op/op_tbl.hpp"
+    };
+#undef NGRAPH_OP
 
-string codegen::CodeWriter::get_code() const
-{
-    return m_ss.str();
-}
-
-void codegen::CodeWriter::operator+=(const std::string& s)
-{
-    *this << s;
-}
-
-std::string codegen::CodeWriter::generate_temporary_name(std::string prefix)
-{
-    std::stringstream ss;
-
-    ss << prefix << m_temporary_name_count;
-    m_temporary_name_count++;
-
-    return ss.str();
+    auto it = typeid_map.find(m_node->description());
+    if (it != typeid_map.end())
+    {
+        m_typeid = it->second;
+    }
+    else
+    {
+        throw unsupported_op("Unsupported op '" + m_node->description() + "'");
+    }
 }

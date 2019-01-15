@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -146,7 +146,8 @@ set (SRC
     pass/memory_visualize.cpp
     pass/nop_elimination.cpp
     pass/pass.cpp
-    pass/pass_config.cpp
+    pass/pass_config.cpp 
+    pass/prefix_reshape_elimination.cpp 
     pass/propagate_cacheability.cpp
     pass/reshape_elimination.cpp
     pass/reshape_sinking.cpp
@@ -178,6 +179,8 @@ set (SRC
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC distributed.cpp)
 endif()
+
+configure_file(version.in.hpp version.hpp)
 
 add_library(ngraph SHARED ${SRC})
 
@@ -264,6 +267,8 @@ install(DIRECTORY
         PATTERN "*.hpp"
         PATTERN "*.h"
 )
+install(FILES ${CMAKE_BINARY_DIR}/src/ngraph/version.hpp
+    DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph")
 
 set(CPACK_GENERATOR "DEB")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)

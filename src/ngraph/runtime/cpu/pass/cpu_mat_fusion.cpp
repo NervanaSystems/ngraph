@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -327,21 +327,35 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             auto add_node = std::make_shared<op::Add>(dot_node, bias_broadcast_node);
             const auto& add_shape = add_node->get_shape();
 
+            // we will sort the captured Add(Dot(X, W) + B) as per the the slice ordering of X
+            // this will simplify the replace_node logic
+            auto compare_slices = [&](const std::shared_ptr<Node> node1,
+                                      const std::shared_ptr<Node> node2) {
+                const auto node1_slice =
+                    std::static_pointer_cast<op::Slice>(op_seg_map[node1].at(Type::DATA));
+
+                const auto node2_slice =
+                    std::static_pointer_cast<op::Slice>(op_seg_map[node2].at(Type::DATA));
+
+                return (node1_slice->get_lower_bounds() < node2_slice->get_lower_bounds() &&
+                        node1_slice->get_upper_bounds() < node2_slice->get_upper_bounds());
+            };
+            std::sort(op_nodes.begin(), op_nodes.end(), compare_slices);
+
+            size_t num_timesteps = op_nodes.size();
+            size_t batch_size = add_shape[0] / num_timesteps;
             // create a slice for each user of the dot op matching the original dot op's output
-            for (auto op : op_nodes)
+            for (size_t i = 0, start_index = 0; i < op_nodes.size(); i++, start_index += batch_size)
             {
-                const auto old_slice =
-                    std::static_pointer_cast<op::Slice>(op_seg_map[op].at(Type::DATA));
-                const auto& old_lower_bounds = old_slice->get_lower_bounds();
-                // lower bound matching the current time step
-                const Coordinate lower_bounds{old_lower_bounds[1], 0};
-                // striding by the number of data
-                const Strides strides{data_shape[1], 1};
-                auto slice_node =
-                    std::make_shared<op::Slice>(add_node, lower_bounds, add_shape, strides);
+                // calculate the lower and upper bounds for the slice of the new fused node
+                // ((<x0 | x1..|xt>*W)+b), which will used to replace the nodes matched in the pattern
+                const Coordinate lower_bounds{start_index, 0};
+                const Coordinate upper_bounds{start_index + batch_size, add_shape[1]};
+
+                auto slice_node = std::make_shared<op::Slice>(add_node, lower_bounds, upper_bounds);
 
                 // replace old nodes
-                function->replace_node(op, slice_node);
+                function->replace_node(op_nodes[i], slice_node);
             }
             modify_graph = true;
         }

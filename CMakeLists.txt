@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2017-2018 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 cmake_minimum_required (VERSION 3.1)
 
+# set directory where the custom finders live
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed.")
 endif()
@@ -24,7 +27,8 @@ if("${CMAKE_GENERATOR}" STREQUAL "Ninja")
     message(FATAL_ERROR "Ninja generator not supported.")
 endif()
 
-include(cmake/Modules/git_tags.cmake)
+include(git_tags)
+include(var_functions)
 
 NGRAPH_GET_VERSION_LABEL()
 
@@ -88,17 +92,10 @@ message(STATUS "NGRAPH_FORWARD_CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}")
 # Prevent Eigen from using any LGPL3 code
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY -DTBB_USE_THREADING_TOOLS")
 
-if($ENV{NGRAPH_USE_PREBUILT_LLVM})
-    set(NGRAPH_USE_PREBUILT_LLVM TRUE)
-endif()
+ngraph_var(NGRAPH_USE_PREBUILT_LLVM DEFAULT "FALSE")
 
 # Create compilation database compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-# set directory where the custom finders live
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
-
-include(var_functions)
 
 option(NGRAPH_UNIT_TEST_ENABLE "Control the building of unit tests" TRUE)
 option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
@@ -108,13 +105,14 @@ option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
 option(NGRAPH_NOP_ENABLE "Control the building of the NOP backend" TRUE)
 option(NGRAPH_GPUH_ENABLE "Control the building of the Hybrid GPU backend" FALSE)
+option(NGRAPH_GENERIC_CPU_ENABLE "Enable build nGraph for generic CPU backend" FALSE)
 option(NGRAPH_DISTRIBUTED_ENABLE "Add distributed mode to the CPU backend" FALSE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
 option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
-option(NGRAPH_PYTHON_BUILD_ENABLE   "Enable build nGraph python package wheel" FALSE)
+option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FALSE)
 
 if (NGRAPH_GPUH_ENABLE)
     set(NGRAPH_GPU_ENABLE TRUE)
@@ -128,6 +126,7 @@ message(STATUS "NGRAPH_GPU_ENABLE:            ${NGRAPH_GPU_ENABLE}")
 message(STATUS "NGRAPH_INTERPRETER_ENABLE:    ${NGRAPH_INTERPRETER_ENABLE}")
 message(STATUS "NGRAPH_NOP_ENABLE:            ${NGRAPH_NOP_ENABLE}")
 message(STATUS "NGRAPH_GPUH_ENABLE:           ${NGRAPH_GPUH_ENABLE}")
+message(STATUS "NGRAPH_GENERIC_CPU_ENABLE:    ${NGRAPH_GENERIC_CPU_ENABLE}")
 message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:    ${NGRAPH_DISTRIBUTED_ENABLE}")
 message(STATUS "NGRAPH_DEBUG_ENABLE:          ${NGRAPH_DEBUG_ENABLE}")
 message(STATUS "NGRAPH_ONNX_IMPORT_ENABLE:    ${NGRAPH_ONNX_IMPORT_ENABLE}")
@@ -135,13 +134,24 @@ message(STATUS "NGRAPH_DEX_ONLY:              ${NGRAPH_DEX_ONLY}")
 message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:  ${NGRAPH_CODE_COVERAGE_ENABLE}")
 message(STATUS "NGRAPH_LIB_VERSIONING_ENABLE: ${NGRAPH_LIB_VERSIONING_ENABLE}")
 message(STATUS "NGRAPH_PYTHON_BUILD_ENABLE:   ${NGRAPH_PYTHON_BUILD_ENABLE}")
+message(STATUS "NGRAPH_USE_PREBUILT_LLVM:     ${NGRAPH_USE_PREBUILT_LLVM}")
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
     option(NGRAPH_ONNXIFI_ENABLE "Enable ONNX Interface for Framework Integration" TRUE)
 endif()
 
-option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" FALSE)
+find_package(PlaidML CONFIG)
+
+option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
+
+if (NGRAPH_PLAIDML_ENABLE)
+    if (NOT PLAIDML_FOUND)
+        message(FATAL_ERROR "PlaidML not installed")
+    endif()
+endif()
+
+message(STATUS "NGRAPH_PLAIDML_ENABLE:        ${NGRAPH_PLAIDML_ENABLE}")
 
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
@@ -303,11 +313,9 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     else()
         find_package(Protobuf 2.6.1 REQUIRED)
     endif()
-    if (NGRAPH_ONNXIFI_ENABLE)
-        include(cmake/external_onnx.cmake)
-        if (TARGET ext_protobuf)
-            add_dependencies(ext_onnx ext_protobuf)
-        endif()
+    include(cmake/external_onnx.cmake)
+    if (TARGET ext_protobuf)
+        add_dependencies(ext_onnx ext_protobuf)
     endif()
 endif()
 
