@@ -1790,7 +1790,6 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n4d2c3h2w2)
     ASSERT_EQ(read_vector<int>(da), expected);
 }
 
-
 // clang-format off
 #ifdef AUTODIFF_BACKEND_${BACKEND_NAME}
 #undef AUTODIFF_BACKEND_${BACKEND_NAME}
