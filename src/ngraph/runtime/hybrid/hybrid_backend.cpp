@@ -18,13 +18,10 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/gpu/gpu_tensor.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
 #include "ngraph/runtime/hybrid/pass/assign_placement.hpp"
 #include "ngraph/runtime/hybrid/pass/fix_get_output_element.hpp"
-#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 using namespace ngraph;
@@ -205,32 +202,6 @@ bool runtime::hybrid::HybridBackend::is_supported(const Node& node) const
     return true;
 }
 
-string runtime::hybrid::HybridBackend::get_placement_name(const runtime::Tensor* t)
-{
-    string rc;
-    if (dynamic_cast<const runtime::HostTensor*>(t) != nullptr)
-    {
-        rc = "HostTensor";
-    }
-    else if (dynamic_cast<const runtime::gpu::GPUTensor*>(t) != nullptr)
-    {
-        rc = "GPUTensor";
-    }
-    return rc;
-}
-string runtime::hybrid::HybridBackend::get_placement_name(const runtime::Backend* t)
-{
-    string rc;
-    if (dynamic_cast<const runtime::interpreter::INTBackend*>(t) != nullptr)
-    {
-        rc = "INTBackend";
-    }
-    else if (dynamic_cast<const runtime::gpu::GPU_Backend*>(t) != nullptr)
-    {
-        rc = "GPU_Backend";
-    }
-    return rc;
-}
 size_t runtime::hybrid::HybridBackend::get_placement(const runtime::Tensor* t)
 {
     size_t index = 0;
