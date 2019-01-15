@@ -22,9 +22,7 @@
 #include "gtest/gtest.h"
 
 // clang-format off
-#ifndef AUTODIFF_BACKEND_${BACKEND_NAME}
 #define AUTODIFF_BACKEND_${BACKEND_NAME}
-#endif
 // clang-format on
 
 #include "ngraph/ngraph.hpp"
@@ -854,6 +852,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
 
+#ifdef AUTODIFF_BACKEND_CPU
 NGRAPH_TEST(${BACKEND_NAME}, backwards_batchdot_tensor2_tensor2)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -870,13 +869,12 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batchdot_tensor2_tensor2)
     }
 
     auto g = make_function_from_file(file_name);
-#ifdef AUTODIFF_BACKEND_CPU
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
     pass_manager.run_passes(g);
-#endif
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), f, g, args, .01f, .01f));
 }
+#endif
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_exp)
 {
@@ -1791,3 +1789,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_sequence_n4d2c3h2w2)
     backend->call_with_validate(handle, {da, db}, {a, b, c});
     ASSERT_EQ(read_vector<int>(da), expected);
 }
+
+// clang-format off
+#undef AUTODIFF_BACKEND_${BACKEND_NAME}
+// clang-format on
