@@ -408,7 +408,6 @@ void codegen::CompilerCore::configure_search_path()
     load_headers_from_resource();
 #endif
 
-#if defined(__APPLE__)
 #ifdef EIGEN_HEADERS_PATH
     add_header_search_path(EIGEN_HEADERS_PATH);
 #endif
@@ -419,47 +418,130 @@ void codegen::CompilerCore::configure_search_path()
     add_header_search_path(TBB_HEADERS_PATH);
 #endif
     add_header_search_path(NGRAPH_HEADERS_PATH);
-    add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
 
+#if defined(__APPLE__)
+    // Is it OK to use AppleClang c++ headers for Clang?
     add_header_search_path("/Library/Developer/CommandLineTools/usr/include/c++/v1");
+    add_header_search_path("/usr/local/include");
+    add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
+    add_header_search_path("/usr/include");
 #else
     // Add base toolchain-supplied header paths
     // Ideally one would use the Linux toolchain definition in clang/lib/Driver/ToolChains.h
     // But that's a private header and isn't part of the public libclang API
     // Instead of re-implementing all of that functionality in a custom toolchain
     // just hardcode the paths relevant to frequently used build/test machines for now
-    add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
-#ifdef EIGEN_HEADERS_PATH
-    add_header_search_path(EIGEN_HEADERS_PATH);
-#endif
-#ifdef MKLDNN_HEADERS_PATH
-    add_header_search_path(MKLDNN_HEADERS_PATH);
-#endif
-#ifdef TBB_HEADERS_PATH
-    add_header_search_path(TBB_HEADERS_PATH);
-#endif
-    add_header_search_path(NGRAPH_HEADERS_PATH);
 
-    string header_version = find_header_version("/usr/include/c++");
-    string os_specific_path =
-        find_os_specific_path(file_util::path_join("/usr/include/c++", header_version));
+    // Redhat/CentOS has devtoolset level support
+    // Handling only lvl 2 (gcc 4.8) for now.
+    // Assume everything else is Ubuntu like
+    if(file_util::exists("/opt/rh/devtoolset-2/root"))
+    {
+        string header_version = find_header_version("/opt/rh/devtoolset-2/root/usr/include/c++");
+        string os_specific_path =
+            find_os_specific_path(file_util::path_join("/opt/rh/devtoolset-2/root/usr/include/c++/", header_version));
+        // /opt/rh/devtoolset-2/root/usr/include/c++/4.8.2
+        add_header_search_path(file_util::path_join("/opt/rh/devtoolset-2/root/usr/include/c++/", header_version));
+        // /opt/rh/devtoolset-2/root/usr/include/c++/4.8.2/x86_64-CentOS-linux
+        add_header_search_path(
+            file_util::path_join("/opt/rh/devtoolset-2/root/usr/include/c++/", header_version, os_specific_path));
+        // /opt/rh/devtoolset-2/root/usr/include/c++/4.8.2/backward
+        add_header_search_path(
+            file_util::path_join("/opt/rh/devtoolset-2/root/usr/include/c++/", header_version, "backward"));
+        // /usr/local/include
+        add_header_search_path("/usr/local/include");
+        add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
+        // /opt/rh/devtoolset-2/root/usr/include
+        add_header_search_path("/opt/rh/devtoolset-2/root/usr/include");
+        // /usr/include
+        add_header_search_path("/usr/include");
+    }
+    else
+    {
+        /*
+        Redhat/CentOS g++ location
+        /usr/bin/g++
+        Redhat/CentOS g++ default include path
+        /usr/include/c++/4.8.5
+        /usr/include/c++/4.8.5/x86_64-redhat-linux
+        /usr/include/c++/4.8.5/backward
+        /usr/lib/gcc/x86_64-redhat-linux/4.8.5/include
+        /usr/local/include
+        /usr/include
+        Redhat/CentOS clang++ default include path
+        /usr/include/c++/4.8.5
+        /usr/include/c++/4.8.5/x86_64-redhat-linux
+        /usr/include/c++/4.8.5/backward
+        /usr/local/include
+        /usr/lib/clang/3.4.2/include
+        /usr/include
+        Common path
+        /usr/include/c++/4.8.5
+        /usr/include/c++/4.8.5/x86_64-redhat-linux
+        /usr/include/c++/4.8.5/backward
+        /usr/local/include
+        /usr/include
+        */
+        /*
+        Ubuntu g++ location
+        /usr/bin/g++-<VER>
+        Ubuntu g++ default include path
+        /usr/include/c++/5
+        /usr/include/x86_64-linux-gnu/c++/5
+        /usr/include/c++/5/backward
+        /usr/lib/gcc/x86_64-linux-gnu/5/include
+        /usr/local/include
+        /usr/lib/gcc/x86_64-linux-gnu/5/include-fixed
+        /usr/include/x86_64-linux-gnu
+        /usr/include
+        Ubuntu clang++ default include path
+        /usr/include/c++/5.4.0
+        /usr/include/x86_64-linux-gnu/c++/5.4.0
+        /usr/include/c++/5.4.0/backward
+        /usr/local/include
+        <path to clang>/lib/clang/7.0.0/include
+        /usr/include/x86_64-linux-gnu
+        /usr/include
+        Common path
+        /usr/include/c++/5.4.0
+        /usr/include/x86_64-linux-gnu/c++/5.4.0
+        /usr/include/c++/5.4.0/backward
+        /usr/local/include
+        /usr/include/x86_64-linux-gnu
+        /usr/include
+        */
+        string header_version = find_header_version("/usr/include/c++");
+        string cpp_header_root = file_util::path_join("/usr/include/c++/", header_version);
+        string os_specific_path =
+            find_os_specific_path(cpp_header_root);
 
-    // /usr/include/c++/7
-    add_header_search_path(file_util::path_join("/usr/include/c++/", header_version));
+        // Common
+        add_header_search_path(cpp_header_root);
 
-    // /usr/include/x86_64-linux-gnu/c++/7
-    add_header_search_path(
-        file_util::path_join("/usr/include/x86_64-linux-gnu/c++/", header_version));
+        // Ubuntu only
+        add_header_search_path(
+            file_util::path_join("/usr/include/x86_64-linux-gnu/c++/", header_version));
 
-    add_header_search_path(
-        file_util::path_join("/usr/lib/gcc/x86_64-linux-gnu/", header_version, "/include"));
-    add_header_search_path("/usr/local/include");
-    add_header_search_path(
-        file_util::path_join("/usr/include/c++/", header_version, os_specific_path));
-    add_header_search_path(
-        file_util::path_join("/usr/lib/gcc/x86_64-linux-gnu/", header_version, "/include-fixed"));
-    add_header_search_path("/usr/include/x86_64-linux-gnu");
-    add_header_search_path("/usr/include");
+        // CentOS only
+        add_header_search_path(
+            file_util::path_join(cpp_header_root, os_specific_path));
+
+        // Common
+        add_header_search_path(
+            file_util::path_join(cpp_header_root, "backward"));
+
+        // Common
+        add_header_search_path("/usr/local/include");
+
+        // From Clang
+        add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
+
+        // Ubuntu only
+        add_header_search_path("/usr/include/x86_64-linux-gnu");
+
+        // Common
+        add_header_search_path("/usr/include");
+    }
 #endif
 
 #ifdef CUDA_HEADER_PATHS
