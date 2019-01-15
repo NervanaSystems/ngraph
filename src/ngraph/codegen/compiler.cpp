@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <iostream>
+#include <string>
 
 #include <clang/Basic/DiagnosticOptions.h>
 #include <clang/Basic/TargetInfo.h>
@@ -75,11 +76,11 @@ using namespace ngraph;
 class CompilerInfo
 {
 public:
-    string pch_file;
+    std::string pch_file;
     shared_ptr<codegen::CompilerCore> compiler;
 };
 
-static unordered_map<string, CompilerInfo> s_compiler_info;
+static unordered_map<std::string, CompilerInfo> s_compiler_info;
 
 static class StaticHandler
 {
@@ -136,7 +137,7 @@ std::unique_ptr<codegen::Module> codegen::Compiler::compile(const std::string& s
     if (!compiler_info.compiler)
     {
         compiler_info.compiler = make_shared<CompilerCore>();
-        for (const string& path : m_header_search_paths)
+        for (const std::string& path : m_header_search_paths)
         {
             compiler_info.compiler->add_header_search_path(path);
         }
@@ -276,11 +277,11 @@ codegen::CompilerCore::~CompilerCore()
     }
 }
 
-bool codegen::CompilerCore::is_version_number(const string& path)
+bool codegen::CompilerCore::is_version_number(const std::string& path)
 {
     bool rc = true;
-    vector<string> tokens = split(path, '.');
-    for (string s : tokens)
+    vector<std::string> tokens = split(path, '.');
+    for (std::string s : tokens)
     {
         for (char c : s)
         {
@@ -293,24 +294,27 @@ bool codegen::CompilerCore::is_version_number(const string& path)
     return rc;
 }
 
-void codegen::CompilerCore::add_header_search_path(const string& p)
+void codegen::CompilerCore::add_header_search_path(const std::string& p, bool check_path)
 {
-    vector<string> paths = split(p, ';');
-    for (const string& path : paths)
+    vector<std::string> paths = split(p, ';');
+    for (const std::string& path : paths)
     {
         if (find(m_extra_search_path_list.begin(), m_extra_search_path_list.end(), path) ==
             m_extra_search_path_list.end())
         {
-            m_extra_search_path_list.push_back(path);
-            HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
-            hso.AddPath(path, clang::frontend::System, false, false);
+            if(!check_path || file_util::exists(path))
+            {
+                m_extra_search_path_list.push_back(path);
+                HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
+                hso.AddPath(path, clang::frontend::System, false, false);
+            }
         }
     }
 }
 
 std::unique_ptr<codegen::Module>
     codegen::CompilerCore::compile(std::unique_ptr<clang::CodeGenAction>& m_compiler_action,
-                                   const string& source)
+                                   const std::string& source)
 {
     PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
 
@@ -371,10 +375,10 @@ std::unique_ptr<codegen::Module>
     return result;
 }
 
-string codegen::CompilerCore::generate_pch(const string& source)
+std::string codegen::CompilerCore::generate_pch(const std::string& source)
 {
     PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
-    string pch_path = file_util::tmp_filename();
+    std::string pch_path = file_util::tmp_filename();
     m_compiler->getFrontendOpts().OutputFile = pch_path;
 
     // Map code filename to a memoryBuffer
@@ -433,116 +437,109 @@ void codegen::CompilerCore::configure_search_path()
     // Instead of re-implementing all of that functionality in a custom toolchain
     // just hardcode the paths relevant to frequently used build/test machines for now
 
-    // Redhat/CentOS has devtoolset level support
-    // Handling only lvl 2 (gcc 4.8) for now.
-    // Assume everything else is Ubuntu like
-    if(file_util::exists("/opt/rh/devtoolset-2/root"))
+    //
+    //    Redhat/CentOS g++ location
+    //    /usr/bin/g++
+    //    Redhat/CentOS g++ default include path
+    //    /usr/include/c++/4.8.5
+    //    /usr/include/c++/4.8.5/x86_64-redhat-linux
+    //    /usr/include/c++/4.8.5/backward
+    //    /usr/lib/gcc/x86_64-redhat-linux/4.8.5/include
+    //    /usr/local/include
+    //    /usr/include
+    //    Redhat/CentOS clang++ default include path
+    //    /usr/include/c++/4.8.5
+    //    /usr/include/c++/4.8.5/x86_64-redhat-linux
+    //    /usr/include/c++/4.8.5/backward
+    //    /usr/local/include
+    //    /usr/lib/clang/3.4.2/include
+    //    /usr/include
+    //    Common path
+    //    /usr/include/c++/4.8.5
+    //    /usr/include/c++/4.8.5/x86_64-redhat-linux
+    //    /usr/include/c++/4.8.5/backward
+    //    /usr/local/include
+    //    /usr/include
+    //
+    //    Ubuntu g++ location
+    //    /usr/bin/g++-<VER>
+    //    Ubuntu g++ default include path
+    //    /usr/include/c++/5
+    //    /usr/include/x86_64-linux-gnu/c++/5
+    //    /usr/include/c++/5/backward
+    //    /usr/lib/gcc/x86_64-linux-gnu/5/include
+    //    /usr/local/include
+    //    /usr/lib/gcc/x86_64-linux-gnu/5/include-fixed
+    //    /usr/include/x86_64-linux-gnu
+    //    /usr/include
+    //    Ubuntu clang++ default include path
+    //    /usr/include/c++/5.4.0
+    //    /usr/include/x86_64-linux-gnu/c++/5.4.0
+    //    /usr/include/c++/5.4.0/backward
+    //    /usr/local/include
+    //    <path to clang>/lib/clang/7.0.0/include
+    //    /usr/include/x86_64-linux-gnu
+    //    /usr/include
+    //    Common path
+    //    /usr/include/c++/5.4.0
+    //    /usr/include/x86_64-linux-gnu/c++/5.4.0
+    //    /usr/include/c++/5.4.0/backward
+    //    /usr/local/include
+    //    /usr/include/x86_64-linux-gnu
+    //    /usr/include
+    //
+
+    // Overall steps
+    // 1. Check if system has devtoolset and set header path prefix
+    // 2. For highest gcc version, find the highest header version
+    // 3. Set Ubuntu/Redhat common path, set platform specific paths if they exist
+
+    std::string toolpath = find_rh_devtoolset_path();
+    bool has_toolpath = !toolpath.empty();
+    std::string usr_prefix = has_toolpath ? file_util::path_join(toolpath, "usr") : "/usr";
+    std::string cpp_header_prefix = file_util::path_join(usr_prefix, "include/c++");
+    // Only Ubuntu:
+    //     Find highest g++ version (8, 7, 6, 5, 4.9, 4.8)
+    //  Common:
+    //     For version X (if has version), find the highest X.Y.Z for header version
+    std::string header_version = find_header_version(usr_prefix);
+    std::string cpp_header_root = file_util::path_join(cpp_header_prefix, header_version);
+    std::string os_specific_path =
+        find_os_specific_path(cpp_header_root);
+
+    // Common
+    add_header_search_path(cpp_header_root);
+
+    // Ubuntu only
+    add_header_search_path(
+        file_util::path_join("/usr/include/x86_64-linux-gnu/c++/", header_version), true);
+
+    // Redhat/CentOS only
+    add_header_search_path(
+        file_util::path_join(cpp_header_root, os_specific_path), true);
+
+    // Common
+    add_header_search_path(
+        file_util::path_join(cpp_header_root, "backward"));
+
+    // Common
+    add_header_search_path("/usr/local/include");
+
+    // From Clang
+    add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
+
+    // Ubuntu only
+    add_header_search_path("/usr/include/x86_64-linux-gnu", true);
+
+    // Redhat/CentOS only
+    if(has_toolpath)
     {
-        string header_version = find_header_version("/opt/rh/devtoolset-2/root/usr/include/c++");
-        string os_specific_path =
-            find_os_specific_path(file_util::path_join("/opt/rh/devtoolset-2/root/usr/include/c++/", header_version));
-        // /opt/rh/devtoolset-2/root/usr/include/c++/4.8.2
-        add_header_search_path(file_util::path_join("/opt/rh/devtoolset-2/root/usr/include/c++/", header_version));
-        // /opt/rh/devtoolset-2/root/usr/include/c++/4.8.2/x86_64-CentOS-linux
         add_header_search_path(
-            file_util::path_join("/opt/rh/devtoolset-2/root/usr/include/c++/", header_version, os_specific_path));
-        // /opt/rh/devtoolset-2/root/usr/include/c++/4.8.2/backward
-        add_header_search_path(
-            file_util::path_join("/opt/rh/devtoolset-2/root/usr/include/c++/", header_version, "backward"));
-        // /usr/local/include
-        add_header_search_path("/usr/local/include");
-        add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
-        // /opt/rh/devtoolset-2/root/usr/include
-        add_header_search_path("/opt/rh/devtoolset-2/root/usr/include");
-        // /usr/include
-        add_header_search_path("/usr/include");
+            file_util::path_join(cpp_header_prefix, "usr/include"));
     }
-    else
-    {
-        /*
-        Redhat/CentOS g++ location
-        /usr/bin/g++
-        Redhat/CentOS g++ default include path
-        /usr/include/c++/4.8.5
-        /usr/include/c++/4.8.5/x86_64-redhat-linux
-        /usr/include/c++/4.8.5/backward
-        /usr/lib/gcc/x86_64-redhat-linux/4.8.5/include
-        /usr/local/include
-        /usr/include
-        Redhat/CentOS clang++ default include path
-        /usr/include/c++/4.8.5
-        /usr/include/c++/4.8.5/x86_64-redhat-linux
-        /usr/include/c++/4.8.5/backward
-        /usr/local/include
-        /usr/lib/clang/3.4.2/include
-        /usr/include
-        Common path
-        /usr/include/c++/4.8.5
-        /usr/include/c++/4.8.5/x86_64-redhat-linux
-        /usr/include/c++/4.8.5/backward
-        /usr/local/include
-        /usr/include
-        */
-        /*
-        Ubuntu g++ location
-        /usr/bin/g++-<VER>
-        Ubuntu g++ default include path
-        /usr/include/c++/5
-        /usr/include/x86_64-linux-gnu/c++/5
-        /usr/include/c++/5/backward
-        /usr/lib/gcc/x86_64-linux-gnu/5/include
-        /usr/local/include
-        /usr/lib/gcc/x86_64-linux-gnu/5/include-fixed
-        /usr/include/x86_64-linux-gnu
-        /usr/include
-        Ubuntu clang++ default include path
-        /usr/include/c++/5.4.0
-        /usr/include/x86_64-linux-gnu/c++/5.4.0
-        /usr/include/c++/5.4.0/backward
-        /usr/local/include
-        <path to clang>/lib/clang/7.0.0/include
-        /usr/include/x86_64-linux-gnu
-        /usr/include
-        Common path
-        /usr/include/c++/5.4.0
-        /usr/include/x86_64-linux-gnu/c++/5.4.0
-        /usr/include/c++/5.4.0/backward
-        /usr/local/include
-        /usr/include/x86_64-linux-gnu
-        /usr/include
-        */
-        string header_version = find_header_version("/usr/include/c++");
-        string cpp_header_root = file_util::path_join("/usr/include/c++/", header_version);
-        string os_specific_path =
-            find_os_specific_path(cpp_header_root);
 
-        // Common
-        add_header_search_path(cpp_header_root);
-
-        // Ubuntu only
-        add_header_search_path(
-            file_util::path_join("/usr/include/x86_64-linux-gnu/c++/", header_version));
-
-        // CentOS only
-        add_header_search_path(
-            file_util::path_join(cpp_header_root, os_specific_path));
-
-        // Common
-        add_header_search_path(
-            file_util::path_join(cpp_header_root, "backward"));
-
-        // Common
-        add_header_search_path("/usr/local/include");
-
-        // From Clang
-        add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
-
-        // Ubuntu only
-        add_header_search_path("/usr/include/x86_64-linux-gnu");
-
-        // Common
-        add_header_search_path("/usr/include");
-    }
+    // Common
+    add_header_search_path("/usr/include");
 #endif
 
 #ifdef CUDA_HEADER_PATHS
@@ -562,18 +559,18 @@ void codegen::CompilerCore::configure_search_path()
 
 void codegen::CompilerCore::load_headers_from_resource()
 {
-    const string builtin_root = "";
+    const std::string builtin_root = "";
     HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
     PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
-    // for (const string& search_path : builtin_search_paths)
+    // for (const std::string& search_path : builtin_search_paths)
     // {
-    //     string builtin = builtin_root + search_path;
+    //     std::string builtin = builtin_root + search_path;
     //     hso.AddPath(builtin, clang::frontend::System, false, false);
     // }
-    for (const pair<string, string>& header_info : builtin_headers)
+    for (const pair<std::string, std::string>& header_info : builtin_headers)
     {
-        string absolute_path = header_info.first;
-        string builtin = builtin_root + absolute_path;
+        std::string absolute_path = header_info.first;
+        std::string builtin = builtin_root + absolute_path;
         std::unique_ptr<llvm::MemoryBuffer> mb(
             llvm::MemoryBuffer::getMemBuffer(header_info.second, builtin));
         preprocessor_options.addRemappedFile(builtin, mb.release());
@@ -585,43 +582,91 @@ void codegen::CompilerCore::set_precompiled_header_source(const std::string& sou
     m_precompiled_header_source = source;
 }
 
-const string& codegen::CompilerCore::get_precompiled_header_source() const
+const std::string& codegen::CompilerCore::get_precompiled_header_source() const
 {
     return m_precompiled_header_source;
 }
 
-string codegen::CompilerCore::find_header_version(const string& path)
+int codegen::CompilerCore::full_version_number(const std::string& path, const std::string& gpp_ver)
 {
-    vector<string> directories;
-    string rc;
+    // check if header version is compatible with g++ version
+    vector<std::string> tokens = split(path, '.');
+    if(!gpp_ver.empty())
+    {
+        vector<std::string> gpp_tokens = split(gpp_ver, '.');
+        for(int i = 0; i < gpp_tokens.size(); i++)
+        {
+            if(gpp_tokens[i].compare(tokens[i]) != 0)
+            {
+                return 0;
+            }
+        }
+    }
+
+    // create full version number and return
+    std::string full_version = {};
+    // Assume versioning like X.Y.Z
+    int padding = 3 - tokens.size();
+    for (std::string s : tokens)
+    {
+        full_version.append(s);
+    }
+    for(int i = 0; i < padding; i++)
+    {
+        full_version.append("0");
+    }
+    return std::stoi(full_version);
+}
+
+std::string codegen::CompilerCore::find_header_version(const std::string& path)
+{
+    // Step 1: find highest g++ version
+    std::string gpp_prefix = file_util::path_join(path, "bin/g++-");
+    std::string gpp_ver = {};
+    for (auto i : {"8", "7", "6", "5", "4.9", "4.8"})
+    {
+        if(file_util::exists(gpp_prefix + i))
+        {
+            gpp_ver = i;
+            break;
+        }
+    }
+    // Step 2: find highest version of header file that matches g++ version
+    vector<std::string> directories;
+    std::string rc;
     auto f = [&](const std::string& file, bool is_dir) {
         if (is_dir)
         {
             directories.push_back(file);
         }
     };
-    file_util::iterate_files(path, f);
-    for (const string& dir : directories)
+    file_util::iterate_files(file_util::path_join(path, "include/c++"), f);
+    int full_version = 0;
+    for (const std::string& dir : directories)
     {
-        string dir_name = file_util::get_file_name(dir);
+        std::string dir_name = file_util::get_file_name(dir);
         if (is_version_number(dir_name))
         {
-            rc = dir_name;
-            break;
+            int tmp_version = full_version_number(dir_name, gpp_ver);
+            if(tmp_version > full_version)
+            {
+                full_version = tmp_version;
+                rc = dir_name;
+            }
         }
     }
     return rc;
 }
 
-string codegen::CompilerCore::find_os_specific_path(const string& path)
+std::string codegen::CompilerCore::find_os_specific_path(const std::string& path)
 {
-    string rc;
+    std::string rc;
     auto f = [&](const std::string& file, bool is_dir) {
         if (is_dir)
         {
-            const string prefix = "x86_64-";
-            const string suffix = "-linux";
-            string path = file_util::get_file_name(file);
+            const std::string prefix = "x86_64-";
+            const std::string suffix = "-linux";
+            std::string path = file_util::get_file_name(file);
             if (path.size() > (prefix.size() + suffix.size()) &&
                 path.compare(0, prefix.size(), prefix) == 0 &&
                 path.compare(path.size() - suffix.size(), suffix.size(), suffix) == 0)
@@ -633,4 +678,23 @@ string codegen::CompilerCore::find_os_specific_path(const string& path)
     };
     file_util::iterate_files(path, f);
     return rc;
+}
+
+std::string codegen::CompilerCore::find_rh_devtoolset_path()
+{
+    // Redhat/CentOS has devtoolset level support
+    // Support 8, 7, 6, 5, 4, 3, 2
+    // Find highest toolset version X
+    // Find highest header version X.Y.Z
+    std::string toolsetprefix("/opt/rh/devtoolset-");
+    for (auto i : {"8", "7", "6", "5", "4", "3", "2"})
+    {
+        std::string toolpath = file_util::path_join(toolsetprefix + i, "root");
+        if(file_util::exists(toolpath))
+        {
+            return toolpath;
+        }
+    }
+
+    return {};
 }
