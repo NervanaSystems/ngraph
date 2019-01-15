@@ -225,7 +225,7 @@ class BuildExt(build_ext):
             if 'libtbb' in destination:
                 continue
             if sys.platform.startswith('linux'):
-                rpath_patch_cmd = 'patchelf --force-rpath --set-rpath '$ORIGIN' ' + destination
+                rpath_patch_cmd = 'patchelf --force-rpath --set-rpath \'$ORIGIN\' ' + destination
             else:
                 rpath_patch_cmd = 'install_name_tool -id \"@rpath\" ' + destination
             if os.system(rpath_patch_cmd) != 0:
