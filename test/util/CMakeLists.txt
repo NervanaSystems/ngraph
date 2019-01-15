@@ -14,7 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-include(${CMAKE_SOURCE_DIR}/test/models/CMakeLists.txt)
 set (SRC
     autodiff/backprop_function.cpp
     all_close_f.cpp
