@@ -37,11 +37,15 @@ ExternalProject_Add(
 ExternalProject_Get_Property(ext_tbb SOURCE_DIR)
 set(SOURCE_DIR ${SOURCE_DIR}/${ARCHIVE_FILE_BASE})
 
-set(TBB_LINK_LIBS
-    ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clangTooling${CMAKE_SHARED_LIBRARY_SUFFIX}
-    ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clangTooling${CMAKE_SHARED_LIBRARY_SUFFIX}
-    ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clangTooling${CMAKE_SHARED_LIBRARY_SUFFIX}
-)
+if (WIN32)
+    set(TBB_LINK_LIBS ${SOURCE_DIR}/lib/intel64/vc14/tbb.lib)
+else()
+    set(TBB_LINK_LIBS
+        ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clangTooling${CMAKE_SHARED_LIBRARY_SUFFIX}
+        ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clangTooling${CMAKE_SHARED_LIBRARY_SUFFIX}
+        ${SOURCE_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}clangTooling${CMAKE_SHARED_LIBRARY_SUFFIX}
+    )
+endif()
 
 add_library(libtbb INTERFACE)
 add_dependencies(libtbb ext_tbb)

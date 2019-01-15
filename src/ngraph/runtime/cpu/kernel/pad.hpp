@@ -60,7 +60,7 @@ namespace ngraph
                 }
 
                 template <typename ElementType>
-                void pad(const void* arg0,
+                void pad_ref(const void* arg0,
                          const void* arg1,
                          void* out,
                          const Shape& arg0_shape,

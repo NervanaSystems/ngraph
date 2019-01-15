@@ -199,6 +199,7 @@ if (NGRAPH_CPU_ENABLE)
 
     if (MSVS)
         target_compile_definitions(cpu_backend PRIVATE EIGEN_HAS_CONSTEXPR)
+        set_source_files_properties(builder/dot.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
     endif()
     
     if(NGRAPH_DISTRIBUTED_ENABLE)
@@ -214,7 +215,7 @@ if (NGRAPH_CPU_ENABLE)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
     set_target_properties(cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-    if (NOT APPLE)
+    if (NOT APPLE AND NOT MSVS)
         # CPU backend uses third-party libraries like Eigen that might be linked in and
         # exported by other DSOs as well. In the absence of versioning, this could lead to the
         # CPU backend picking up the wrong version or even multiple versions of the

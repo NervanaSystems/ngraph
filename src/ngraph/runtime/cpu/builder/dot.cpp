@@ -187,9 +187,9 @@ namespace ngraph
                     return;
                 }
 
-                std::function<decltype(runtime::cpu::kernel::dot<float>)> kernel;
+                std::function<decltype(runtime::cpu::kernel::dot_ref<float>)> kernel;
 
-                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::dot);
+                SELECT_KERNEL(kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref);
 
                 auto functor =
                     [&, kernel, arg0_shape, arg1_shape, result_shape, reduction_axes_count](
