@@ -39,6 +39,7 @@ __version__ = '${NGRAPH_VERSION_SHORT}'
 # monkey-patch for parallel compilation
 def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=None,
                      debug=0, extra_preargs=None, extra_postargs=None, depends=None):
+    """Enable parallel compilation."""
     # those lines are copied from distutils.ccompiler.CCompiler directly
     macros, objects, extra_postargs, pp_opts, build = self._setup_compile(
         output_dir, macros, include_dirs, sources, depends, extra_postargs)
@@ -83,9 +84,9 @@ if os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE'):
 pyngraph_prefix = PYNGRAPH_SOURCE_DIR + '/'
 sources = []
 packages = []
-package_dir = dict()
+package_dir = {}
 
-for root, dirs, files in os.walk(pyngraph_prefix):
+for root, _dirs, files in os.walk(pyngraph_prefix):
     if root.startswith(pyngraph_prefix + 'pyngraph'):
         sources += [root + '/' + f for f in files if f.endswith('.cpp')]
     elif root.startswith(pyngraph_prefix + 'ngraph'):
@@ -113,7 +114,7 @@ if sys.platform.startswith('linux'):
     extra_link_args += ['-z', 'relro']
     extra_link_args += ['-z', 'now']
 elif sys.platform == 'darwin':
-    extra_link_args += ["-Wl,-rpath,@loader_path"]
+    extra_link_args += ['-Wl,-rpath,@loader_path']
 
 data_files = [
     (
@@ -126,7 +127,7 @@ data_files = [
     (
         '',
         ['${CMAKE_SOURCE_DIR}/LICENSE'],
-    )
+    ),
 ]
 
 if sys.platform == 'win32':
@@ -162,7 +163,10 @@ build_shared_lib = None
 
 
 class Develop(develop):
+    """Custom develop class for copying shared libaries."""
+
     def run(self):
+        """override run"""
         global build_shared_lib
         develop.run(self)
         if self.uninstall:
@@ -175,14 +179,10 @@ class Develop(develop):
 
 
 class BuildExt(build_ext):
-    """
-    A custom build extension for adding compiler-specific options.
-    """
+    """A custom build extension for adding compiler-specific options."""
+
     def has_flag(self, flagname):
-        """
-        Return a boolean indicating whether a flag name is supported on
-        the specified compiler.
-        """
+        """ Return a boolean indicating whether a flag name is supported."""
         import tempfile
         retval = True
         with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
@@ -194,9 +194,7 @@ class BuildExt(build_ext):
         return retval
 
     def cpp_flag(self):
-        """
-        Check and return compiler flag.
-        """
+        """Check and return compiler flag."""
         flags = []
         if self.has_flag('-std=c++11'):
             flags += ['-std=c++11']
@@ -217,6 +215,7 @@ class BuildExt(build_ext):
         return flags
 
     def copy_prebuilt_libraries(self):
+        """Copy prebuild libraries."""
         global sharedlib_files
         for source in sharedlib_files:
             destination = self.build_lib + '/' + os.path.basename(source)
@@ -226,13 +225,14 @@ class BuildExt(build_ext):
             if 'libtbb' in destination:
                 continue
             if sys.platform.startswith('linux'):
-                rpath_patch_cmd = "patchelf --force-rpath --set-rpath '$ORIGIN' " + destination
+                rpath_patch_cmd = 'patchelf --force-rpath --set-rpath '$ORIGIN' ' + destination
             else:
-                rpath_patch_cmd = "install_name_tool -id \"@rpath\" " + destination
+                rpath_patch_cmd = 'install_name_tool -id \"@rpath\" ' + destination
             if os.system(rpath_patch_cmd) != 0:
                 raise Exception("Failed to patch rpath of %s" % destination)
 
     def build_extensions(self):
+        """override build_extension."""
         global build_shared_lib
         if sys.platform == 'win32':
             raise RuntimeError('Unsupported platform: win32!')
@@ -242,7 +242,7 @@ class BuildExt(build_ext):
         self.copy_prebuilt_libraries()
         """-Wstrict-prototypes is not a valid option for c++"""
         try:
-            self.compiler.compiler_so.remove("-Wstrict-prototypes")
+            self.compiler.compiler_so.remove('-Wstrict-prototypes')
         except (AttributeError, ValueError):
             pass
         for ext in self.extensions:
@@ -255,7 +255,10 @@ with open(PYNGRAPH_SOURCE_DIR + '/requirements.txt') as req:
 
 
 class BdistWheel(bdist_wheel):
+    """Custom bdist_wheel class."""
+
     def get_tag(self):
+        """override get_tag."""
         tag = bdist_wheel.get_tag(self)
         if '${NGRAPH_MANYLINUX_ENABLE}' == 'TRUE' and sys.platform.startswith('linux'):
             tag = tag[:2] + ('manylinux1_x86_64',) + tag[3:]
