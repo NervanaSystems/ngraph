@@ -68,7 +68,8 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                         // Non-destructive kernels can pass through if memory sharing is disabled
                         if ((node->liveness_free_list.count(input) != 0 ||
                              std::dynamic_pointer_cast<op::GetOutputElement>(node) ||
-                             (m_disable_memory_sharing && !oi_pair.destructive)) &&
+                             (m_disable_memory_sharing && !oi_pair.destructive &&
+                              !input_node->is_parameter())) &&
                             node->liveness_new_list.count(output) != 0)
                         {
                             in_place_outputs.insert({output, input});
