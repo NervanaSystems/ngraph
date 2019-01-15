@@ -122,7 +122,7 @@ if(NOT NGRAPH_MANYLINUX_ENABLE)
 ExternalProject_Add_Step(
     ext_mkl
     CopyOMP
-    COMMAND ${CMAKE_COMMAND} -E copy ${MKL_SOURCE_DIR}/lib/${MKLML_LIB} ${NGRAPH_BUILD_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy ${MKL_SOURCE_DIR}/lib/${OMP_LIB} ${NGRAPH_BUILD_DIR}
     COMMENT "Copy OpenMP runtime libraries to ngraph build directory."
     DEPENDEES download
     )
