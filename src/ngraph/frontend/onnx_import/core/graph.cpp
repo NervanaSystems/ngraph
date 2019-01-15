@@ -35,18 +35,22 @@ namespace ngraph
                 return result;
             }
 
+            inline std::string get_node_domain(const onnx::NodeProto& node_proto)
+            {
+                return (node_proto.domain().empty() ? "" : node_proto.domain());
+            }
+
             inline std::string to_string(const onnx::NodeProto& node_proto)
             {
-                return (node_proto.domain().empty() ? "" : node_proto.domain() + ".") +
-                       node_proto.op_type();
+                return (get_node_domain(node_proto) + ".") + node_proto.op_type();
             }
-        }
+        } // namespace detail
 
         Graph::Graph(const onnx::GraphProto& graph_proto,
                      const Model& model,
                      const Weights& weights)
             : m_graph_proto{&graph_proto}
-            , m_model{&model}
+            , m_model{const_cast<Model*>(&model)}
         {
             for (const auto& tensor : m_graph_proto->initializer())
             {
@@ -75,7 +79,11 @@ namespace ngraph
             {
                 if (!m_model->is_operator_available(node_proto))
                 {
-                    unknown_operator_types.emplace(detail::to_string(node_proto));
+                    m_model->enable_opset_domain(detail::get_node_domain(node_proto));
+                    if (!m_model->is_operator_available(node_proto))
+                    {
+                        unknown_operator_types.emplace(detail::to_string(node_proto));
+                    }
                 }
             }
 

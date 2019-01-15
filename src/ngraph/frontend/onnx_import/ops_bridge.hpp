@@ -72,6 +72,11 @@ namespace ngraph
                 return instance()._get_operator_set(version, domain);
             }
 
+            static OperatorSet get_operator_set(const std::string& domain)
+            {
+                return instance()._get_operator_set(domain);
+            }
+
             static void register_operator(const std::string& name,
                                           std::int64_t version,
                                           const std::string& domain,
@@ -98,6 +103,7 @@ namespace ngraph
                                     const std::string& domain,
                                     Operator fn);
             OperatorSet _get_operator_set(std::int64_t version, const std::string& domain);
+            OperatorSet _get_operator_set(const std::string& domain);
         };
 
     } // namespace onnx_import

@@ -143,6 +143,11 @@ namespace ngraph
             return result;
         }
 
+        OperatorSet OperatorsBridge::_get_operator_set(const std::string& domain)
+        {
+            std::int64_t version = 10;
+            return _get_operator_set(version, domain);
+        }
 #define REGISTER_OPERATOR(name_, ver_, fn_)                                                        \
     m_map[""][name_].emplace(ver_, std::bind(op::set_##ver_::fn_, std::placeholders::_1))
 
