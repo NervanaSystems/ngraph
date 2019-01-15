@@ -22,7 +22,21 @@
 
 using namespace ngraph;
 
-ngraph::Distributed::Distributed()
+// use the previous MPI implementation
+ngraph::Distributed_MPI::Distributed()
+{}
+
+ngraph::Distributed_MPI::~Distributed()
+{}
+
+ngraph::Distributed_MPI::get_process_count()
+{}
+
+   
+ngraph::Distributed_MPI::get_process_id()
+{}
+
+ngraph::Distributed_MLSL::Distributed()
 {
     if (!MLSL::Environment::GetEnv().IsInitialized())
     {
@@ -30,7 +44,7 @@ ngraph::Distributed::Distributed()
     }
 }
 
-ngraph::Distributed::~Distributed()
+ngraph::Distributed_MLSL::~Distributed()
 {
     if (MLSL::Environment::GetEnv().IsInitialized())
     {
@@ -38,12 +52,12 @@ ngraph::Distributed::~Distributed()
     }
 }
 
-size_t ngraph::Distributed::get_size() const
+size_t ngraph::Distributed_MLSL::get_process_count() const
 {
     return MLSL::Environment::GetEnv().GetProcessCount();
 }
 
-size_t ngraph::Distributed::get_rank() const
+size_t ngraph::Distributed_MLSL::get_process_id() const
 {
     return MLSL::Environment::GetEnv().GetProcessIdx();
 }

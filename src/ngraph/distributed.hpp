@@ -23,9 +23,33 @@ namespace ngraph
     class Distributed
     {
     public:
+        Distributed() {};
+        virtual ~Distributed() = 0;
+        virtual size_t get_process_count() = 0 const;
+        virtual size_t get_process_id() = 0 const;
+    };
+
+    // implementation with MPI
+    class Distributed_MPI : public Distributed
+    {
+    public:
         Distributed();
         ~Distributed();
-        size_t get_size() const;
-        size_t get_rank() const;
+        size_t get_process_count() const;
+        size_t get_process_id() const;
+
     };
+
+    // implementation with MLSL
+    // split the classes in separate files and put in the right place
+    // if distributed_mlsl.hpp and .cpp belongs to cpu runtime
+    class Distributed_MLSL : public Distributed
+    {
+    public:
+        Distributed();
+        ~Distributed();
+        size_t get_process_count() const;
+        size_t get_process_id() const;
+    };
+    
 }
