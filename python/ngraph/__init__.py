@@ -15,8 +15,8 @@
 # ******************************************************************************
 """ngraph module namespace, exposing factory functions for all ops and other classes."""
 
-from pkg_resources import get_distribution
-__version__ = get_distribution('ngraph-core').version
+# from pkg_resources import get_distribution
+# __version__ = get_distribution('ngraph-core').version
 
 from ngraph.ops import absolute
 from ngraph.ops import absolute as abs
