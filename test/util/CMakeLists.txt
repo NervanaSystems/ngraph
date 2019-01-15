@@ -14,7 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-message("TESTOUT ${CMAKE_CXX_FLAGS}")
 set (SRC
     autodiff/backprop_function.cpp
     all_close_f.cpp
