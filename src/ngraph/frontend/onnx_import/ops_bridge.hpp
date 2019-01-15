@@ -62,7 +62,7 @@ namespace ngraph
         class OperatorsBridge
         {
         public:
-            static constexpr const int LATEST_SUPPORTED_OPSET_VERSION = 8;
+            static constexpr const int LATEST_SUPPORTED_OPSET_VERSION = ONNX_OPSET_VERSION;
 
             OperatorsBridge(const OperatorsBridge&) = delete;
             OperatorsBridge& operator=(const OperatorsBridge&) = delete;
