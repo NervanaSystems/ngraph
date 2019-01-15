@@ -16,28 +16,24 @@
 
 #pragma once
 
-#include <plaidml/plaidml++.h>
-
-#include <memory>
-#include <string>
+#include "ngraph/pass/graph_rewrite.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pass
     {
-        namespace plaidml
-        {
-            struct Config;
-
-            Config parse_config_string(const char* configuration_string);
-        }
+        class PrefixReshapeElimination;
     }
 }
 
-struct ngraph::runtime::plaidml::Config
+// A pass to eliminate reshapes whose output shapes are the same as
+// their input shape modulo leading size-1 axes.
+//
+// N.B. This pass MUST only be used by backends that can handle the
+//      omission of leading size-1 axes, e.g. backends that implement
+//      NumPy-style broadcast semantics.
+class ngraph::pass::PrefixReshapeElimination final : public ngraph::pass::GraphRewrite
 {
-    std::shared_ptr<vertexai::ctx> ctx;
-    std::shared_ptr<vertexai::plaidml::device> dev;
-    bool debug;
-    std::string graphviz;
+public:
+    PrefixReshapeElimination();
 };

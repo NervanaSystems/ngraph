@@ -22,12 +22,13 @@
 
 namespace vp = vertexai::plaidml;
 
-ngraph::runtime::plaidml::PlaidML_Tensor::PlaidML_Tensor(Config* config,
+ngraph::runtime::plaidml::PlaidML_Tensor::PlaidML_Tensor(Backend* parent,
+                                                         Config* config,
                                                          const ngraph::element::Type& element_type,
                                                          const ngraph::Shape& shape,
                                                          const std::string& name,
                                                          void* memory)
-    : Tensor{std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name)}
+    : Tensor{std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name), parent}
     , m_tensor{config->dev->allocate(
           to_plaidml(config->ctx, element_type, shape, ConversionUse::FOR_IO))}
     , m_memory{memory}
