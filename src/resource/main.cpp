@@ -87,9 +87,6 @@ int main(int argc, char** argv)
 
     vector<ResourceInfo> include_paths;
 
-#if defined(__APPLE__)
-    include_paths.push_back({CLANG_LIBCPP_HEADERS_PATH, {}, true});
-#endif
     include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
 
 #ifdef EIGEN_HEADERS_PATH
