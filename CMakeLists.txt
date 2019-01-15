@@ -16,6 +16,7 @@
 
 cmake_minimum_required (VERSION 3.1)
 
+set(CMAKE_VERBOSE_MAKEFILE TRUE)
 # set directory where the custom finders live
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 

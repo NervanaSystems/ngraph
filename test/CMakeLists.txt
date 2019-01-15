@@ -14,7 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.0.0")
         # gtest has issues with this with v1.8.x
