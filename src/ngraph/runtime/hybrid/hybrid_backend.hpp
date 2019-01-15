@@ -70,7 +70,5 @@ private:
     std::map<std::shared_ptr<ngraph::Function>, FunctionInstance> m_function_map;
     std::vector<std::shared_ptr<runtime::Backend>> m_backend_list;
 
-    std::string get_placement_name(const runtime::Tensor* t);
-    std::string get_placement_name(const runtime::Backend* t);
     size_t get_placement(const runtime::Tensor* t);
 };
