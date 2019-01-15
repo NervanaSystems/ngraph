@@ -131,8 +131,18 @@ bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph:
                     {
                         for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                         {
+                            auto input_node =
+                                node->get_inputs().at(oi_pair.input).get_output().get_node();
                             auto output_tensor =
                                 &node->get_outputs().at(oi_pair.output).get_tensor();
+                            // check if input node is parameter or constant
+                            if (input_node->is_parameter() || input_node->is_constant())
+                            {
+                                NGRAPH_DEBUG << "cpu_memory_assignment: input is parameter or "
+                                                "constant, no tensor alias for "
+                                             << output_tensor->get_name();
+                                continue;
+                            }
                             auto input_tensor = &node->get_inputs().at(oi_pair.input).get_tensor();
                             if (oi_pair.destructive)
                             {
