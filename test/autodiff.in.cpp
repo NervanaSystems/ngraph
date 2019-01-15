@@ -22,7 +22,9 @@
 #include "gtest/gtest.h"
 
 // clang-format off
+#ifndef AUTODIFF_BACKEND_${BACKEND_NAME}
 #define AUTODIFF_BACKEND_${BACKEND_NAME}
+#endif
 // clang-format on
 
 #include "ngraph/ngraph.hpp"
