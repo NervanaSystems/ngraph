@@ -74,9 +74,10 @@ ngraph::pass::PrefixReshapeElimination::PrefixReshapeElimination()
         },
         NodeVector{reshape_op});
 
-    pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
+    auto callback = [](pattern::Matcher& m) {
         replace_node(m.get_matched_nodes().at(1), m.get_matched_nodes().at(2));
         return true;
     };
-    add_matcher(std::make_shared<pattern::Matcher>(target_op, callback));
+    add_matcher(std::make_shared<pattern::Matcher>(target_op, "PrefixReshapeElimination"),
+                callback);
 }
