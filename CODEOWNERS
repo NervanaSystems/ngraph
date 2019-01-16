@@ -6,11 +6,11 @@
 
 /cmake/                             @rkimballn1 @silee2
 
-/.ci/                               @aslepko @crlishka
-/.ci/travis/                        @postrational
-/.ci/onnx/                          @postrational
-/contrib/docker/                    @aslepko @crlishka
-/.travis.yml                        @postrational
+/.ci/                               @aslepko
+/.ci/travis/                        @aslepko @postrational
+/.ci/onnx/                          @aslepko @postrational
+/contrib/docker/                    @aslepko
+/.travis.yml                        @aslepko @postrational
 
 /.clang-format                      @rkimballn1
 /.gitattributes                     @rkimballn1

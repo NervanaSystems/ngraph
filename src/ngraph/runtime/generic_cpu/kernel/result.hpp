@@ -16,27 +16,26 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include <algorithm>
+#include <cmath>
+#include <numeric>
+#include <vector>
+#include "ngraph/shape.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace plaidml
+        namespace gcpu
         {
-            namespace pass
+            namespace kernel
             {
-                class ReshapeElision;
+                template <typename T>
+                void result(const T* arg, T* out, size_t count)
+                {
+                    memcpy(out, arg, sizeof(T) * count);
+                }
             }
         }
     }
 }
-
-// A minor pass to elide unnecessary reshapes.  A reshape is
-// considered unnecessary if its output shape is the same as its input
-// shape, modulo leading size-1 axes.
-class ngraph::runtime::plaidml::pass::ReshapeElision final : public ngraph::pass::GraphRewrite
-{
-public:
-    ReshapeElision();
-};

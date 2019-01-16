@@ -112,7 +112,7 @@ ngraph::runtime::plaidml::pass::Winograd::Winograd()
         });
 
     pattern::graph_rewrite_callback callback = [](pattern::Matcher& m) {
-        auto conv = std::dynamic_pointer_cast<plaidml::op::Convolution>(m.get_match_root());
+        auto conv = std::static_pointer_cast<plaidml::op::Convolution>(m.get_match_root());
         NodeVector args = conv->get_arguments();
         std::shared_ptr<ngraph::op::Constant> a;
         std::shared_ptr<ngraph::op::Constant> b;
