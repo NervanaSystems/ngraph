@@ -1705,9 +1705,9 @@ TEST(onnx_${BACKEND_NAME}, is_op_supported)
 
     // Registered custom operator
     onnx_import::register_operator(
-            "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
-                NodeVector ng_inputs{node.get_ng_inputs()};
-                return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
-            });
+        "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+            NodeVector ng_inputs{node.get_ng_inputs()};
+            return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
+        });
     EXPECT_TRUE(onnx_import::is_operator_supported("AddQ", 1, "com.intel.ai"));
 }
