@@ -49,7 +49,7 @@ namespace
         auto size = inputs_fs.tellg();
         inputs_fs.seekg(0, std::ios::beg);
         file_content.resize(size / sizeof(T));
-        inputs_fs.read((char*)file_content.data(), size);
+        inputs_fs.read(static_cast<char*>(file_content.data()), size);
         return file_content;
     }
 
