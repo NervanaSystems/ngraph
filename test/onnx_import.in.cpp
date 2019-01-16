@@ -472,7 +472,7 @@ TEST(onnx_${BACKEND_NAME}, model_matmul)
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_softmax)
+TEST(onnx_${BACKEND_NAME}, DISABLED_model_softmax)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/softmax.onnx"));
@@ -1541,7 +1541,7 @@ TEST(onnx_${BACKEND_NAME}, model_matmul_vec_ten3d)
     EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
 
-TEST(onnx_${BACKEND_NAME}, model_softplus)
+TEST(onnx_${BACKEND_NAME}, DISABLED_model_softplus)
 {
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/softplus.onnx"));
