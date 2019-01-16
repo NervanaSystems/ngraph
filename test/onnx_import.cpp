@@ -35,6 +35,27 @@ using namespace ngraph;
 using Inputs = std::vector<std::vector<float>>;
 using Outputs = std::vector<std::vector<float>>;
 
+namespace
+{
+    template <typename T>
+    std::vector<T> read_binary_file(const std::string& path)
+    {
+        std::vector<T> file_content;
+        std::ifstream inputs_fs{file_util::path_join(SERIALIZED_ZOO, path),
+                                std::ios::in | std::ios::binary};
+        EXPECT_TRUE(inputs_fs);
+
+        inputs_fs.seekg(0, std::ios::end);
+        auto size = inputs_fs.tellg();
+        inputs_fs.seekg(0, std::ios::beg);
+        file_content.resize(size / sizeof(T));
+        inputs_fs.read(reinterpret_cast<char*>(file_content.data()), size);
+        return file_content;
+    }
+
+} // anonymous namespace
+
+
 TEST(onnx, model_output_names_check)
 {
     auto function = onnx_import::import_onnx_model(
@@ -1708,4 +1729,18 @@ TEST(onnx, model_is_op_supported)
             return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
         });
     EXPECT_TRUE(onnx_import::is_operator_supported("AddQ", 1, "com.intel.ai"));
+}
+
+TEST(onnx, model_slice_start_out_of_bounds)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/slice_start_out_of_bounds.onnx"));
+
+    Inputs inputs{read_binary_file<float>(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/slice_start_out_of_bounds_input0.bin"))};
+    Outputs expected_output{read_binary_file<float>(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/slice_start_out_of_bounds_output0.bin"))};
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
 }
