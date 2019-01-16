@@ -166,7 +166,7 @@ class Develop(develop):
     """Custom develop class for copying shared libaries."""
 
     def run(self):
-        """override run"""
+        """Override run."""
         global build_shared_lib
         develop.run(self)
         if self.uninstall:
@@ -182,7 +182,7 @@ class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
 
     def has_flag(self, flagname):
-        """ Return a boolean indicating whether a flag name is supported."""
+        """Return a boolean indicating whether a flag name is supported."""
         import tempfile
         retval = True
         with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
@@ -229,10 +229,10 @@ class BuildExt(build_ext):
             else:
                 rpath_patch_cmd = 'install_name_tool -id \"@rpath\" ' + destination
             if os.system(rpath_patch_cmd) != 0:
-                raise Exception("Failed to patch rpath of %s" % destination)
+                raise Exception('Failed to patch rpath of %s' % destination)
 
     def build_extensions(self):
-        """override build_extension."""
+        """Override build_extension."""
         global build_shared_lib
         if sys.platform == 'win32':
             raise RuntimeError('Unsupported platform: win32!')
@@ -258,7 +258,7 @@ class BdistWheel(bdist_wheel):
     """Custom bdist_wheel class."""
 
     def get_tag(self):
-        """override get_tag."""
+        """Override get_tag."""
         tag = bdist_wheel.get_tag(self)
         if '${NGRAPH_MANYLINUX_ENABLE}' == 'TRUE' and sys.platform.startswith('linux'):
             tag = tag[:2] + ('manylinux1_x86_64',) + tag[3:]
