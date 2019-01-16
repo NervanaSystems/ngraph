@@ -416,14 +416,14 @@ namespace ngraph
 
             // quantize weights and bias
             auto output_et = with_relu ? element::u8 : element::i8;
-            auto min_filter = std::make_shared<op::Min>(filters, AxisSet{1, 2, 3});
-            auto max_filter = std::make_shared<op::Max>(filters, AxisSet{1, 2, 3});
-            min_input = std::make_shared<op::Reshape>(min_input, AxisVector{}, Shape{1});
-            max_input = std::make_shared<op::Reshape>(max_input, AxisVector{}, Shape{1});
+            auto min_filter = std::make_shared<op::Min>(filters, AxisSet{0, 1, 2, 3});
+            auto max_filter = std::make_shared<op::Max>(filters, AxisSet{0, 1, 2, 3});
+            min_input = std::make_shared<op::Reshape>(min_input, AxisVector{}, Shape{});
+            max_input = std::make_shared<op::Reshape>(max_input, AxisVector{}, Shape{});
             min_freezed_output =
-                std::make_shared<op::Reshape>(min_freezed_output, AxisVector{}, Shape{1});
+                std::make_shared<op::Reshape>(min_freezed_output, AxisVector{}, Shape{});
             max_freezed_output =
-                std::make_shared<op::Reshape>(max_freezed_output, AxisVector{}, Shape{1});
+                std::make_shared<op::Reshape>(max_freezed_output, AxisVector{}, Shape{});
 
             op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
             if (new_bias != nullptr)
@@ -432,10 +432,10 @@ namespace ngraph
                 auto bias_scale =
                     quantization_util::get_bias_scale(min_input, max_input, min_filter, max_filter);
                 new_bias = make_shared<op::Quantize>(
-                    new_bias, bias_scale, zero, element::i32, AxisSet{0}, round_mode);
+                    new_bias, bias_scale, zero, element::i32, AxisSet{}, round_mode);
             }
-            auto new_weights_i8 = ScaledQuantize(
-                filters, min_filter, max_filter, element::i8, AxisSet{0}, round_mode);
+            auto new_weights_i8 =
+                ScaledQuantize(filters, min_filter, max_filter, element::i8, AxisSet{}, round_mode);
 
             // invoke quantized conv builder api
             auto requantization_scale = quantization_util::get_scale(min_input,

@@ -1040,8 +1040,8 @@ TEST(builder, dynamic_scaled_QC_fusion)
                                                                 F,
                                                                 Strides{1, 1}, // move_strides
                                                                 Strides{1, 1}, // filter_dilation
-                                                                CoordinateDiff{1, 1}, // below_pads
-                                                                CoordinateDiff{1, 1}, // above_pads
+                                                                CoordinateDiff{0, 0}, // below_pads
+                                                                CoordinateDiff{0, 0}, // above_pads
                                                                 Strides{1, 1}, // data_dilation
                                                                 true,
                                                                 false);
@@ -1062,8 +1062,8 @@ TEST(builder, dynamic_scaled_QC_fusion)
     copy_data(e_a, vector<float>{17.618633f});
     auto g = backend->create_tensor(element::f32, Shape{});
     copy_data(g, vector<float>{0.0f});
-    auto result = backend->create_tensor(element::i8, shape_r);
+    auto result = backend->create_tensor(element::u8, shape_r);
     backend->call_with_validate(backend->compile(f), {result}, {a, b, c, d, e, e_a, g});
-    EXPECT_EQ((vector<int8_t>{0, 0, 1, 1, 2, 1, 0, 1, 1, 2, 0, 0, 0, 0, 0, 1}),
-              read_vector<int8_t>(result));
+    EXPECT_EQ((vector<uint8_t>{0, 0, 1, 1, 2, 1, 0, 1, 1, 2, 0, 0, 0, 0, 0, 1}),
+              read_vector<uint8_t>(result));
 }
