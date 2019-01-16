@@ -73,6 +73,8 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
                             node->liveness_new_list.count(output) != 0)
 
                         {
+                            NGRAPH_DEBUG << "Reusing " << input->get_name() << " for "
+                                         << output->get_name();
                             in_place_outputs.insert({output, input});
                             reused_inputs.insert(input);
                         }
