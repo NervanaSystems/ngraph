@@ -436,7 +436,7 @@ static void sink_concat(std::shared_ptr<op::Concat> n,
 
         auto iinput_shape = ngraph::apply_permutation(iarg_reshape->get_shape(), def_order);
         auto idummy_correct_shape =
-            std::make_shared<pattern::op::Label>(iarg_reshape->get_element_type(), input_shape);
+            std::make_shared<pattern::op::Label>(iarg_reshape->get_element_type(), iinput_shape);
         new_args.push_back(idummy_correct_shape);
     }
 
