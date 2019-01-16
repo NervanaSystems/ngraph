@@ -144,7 +144,7 @@ namespace ngraph
             }
             for (const auto& op : dm->second)
             {
-                const auto& it{detail::find(version, op.second)};
+                const auto& it = detail::find(version, op.second);
                 if (it == std::end(op.second))
                 {
                     throw error::UnsupportedVersion{op.first, version, domain};
