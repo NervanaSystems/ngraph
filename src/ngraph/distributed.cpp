@@ -24,17 +24,34 @@ using namespace ngraph;
 
 // use the previous MPI implementation
 ngraph::Distributed_MPI::Distributed()
-{}
+{
+    int flag = 0;
+    MPI_Initialized(&flag);
+    if (!flag)
+    {
+        MPI_Init(NULL, NULL);
+    }
+}
 
 ngraph::Distributed_MPI::~Distributed()
-{}
+{
+    MPI_Finalize();
+}
 
-ngraph::Distributed_MPI::get_process_count()
-{}
+size_t ngraph::Distributed_MPI::get_process_count()
+{
+    size_t size;
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    return size;
+}
 
    
-ngraph::Distributed_MPI::get_process_id()
-{}
+size_t ngraph::Distributed_MPI::get_process_id()
+{
+    size_t process_id;
+    MPI_Comm_rank(MPI_COMM_WORLD, &process_id);
+    return process_id;
+}
 
 ngraph::Distributed_MLSL::Distributed()
 {
