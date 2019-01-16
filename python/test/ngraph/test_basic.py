@@ -19,7 +19,6 @@ import json
 
 import ngraph as ng
 from test.ngraph.util import get_runtime, run_op_node
-from ngraph.impl import Function, NodeVector
 from ngraph.exceptions import UserInputError
 
 
