@@ -22,7 +22,7 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 set(MLSL_GIT_URL https://github.com/sasadep/MLSL)
-set(MLSL_GIT_TAG sandeep/18-04 )
+set(MLSL_GIT_TAG sandeep/18-04)
 
 find_program(MAKE_EXE NAMES gmake nmake make)
 

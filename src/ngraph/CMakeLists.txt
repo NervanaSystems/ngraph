@@ -177,7 +177,9 @@ set (SRC
     cpio.cpp
     )
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND SRC distributed.cpp)
+    list(APPEND SRC 
+        distributed/distributed.cpp
+        distributed.cpp)
 endif()
 
 configure_file(version.in.hpp version.hpp)
