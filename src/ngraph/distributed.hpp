@@ -25,8 +25,12 @@ namespace ngraph
     public:
         Distributed() {};
         virtual ~Distributed() = 0;
+        virtual void is_initialized() = 0;
         virtual size_t get_process_count() = 0 const;
         virtual size_t get_process_id() = 0 const;
+        // return data_type
+        virtual auto data_type(std::string type) = 0 const;
+
     };
 
     // implementation with MPI
