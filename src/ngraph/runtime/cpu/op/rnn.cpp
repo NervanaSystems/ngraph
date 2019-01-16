@@ -17,6 +17,7 @@
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -131,12 +132,22 @@ void op::Rnn::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
     auto fprop_dst_layer = goes.at(0);
     auto fprop_dst_iter = goes.at(1);
 
+    // mkldnn rnn bprop needs weights in the format mkldnn_ldgoi, but the rnn fprop weighst are in
+    // mkldnn_ldigo so we will reshape the weights
+    auto& weight_layer_shape = weights_layer->get_shape();
+    auto weights_layer_reshape = std::make_shared<op::Reshape>(
+        weights_layer, AxisVector{1, 0}, Shape{weight_layer_shape[1], weight_layer_shape[0]});
+
+    auto& weight_iter_shape = weights_iter->get_shape();
+    auto weights_iter_reshape = std::make_shared<op::Reshape>(
+        weights_iter, AxisVector{1, 0}, Shape{weight_iter_shape[1], weight_iter_shape[0]});
+
     auto rnn_bprop =
         std::make_shared<op::RnnBackprop>(static_pointer_cast<op::Rnn>(shared_from_this()),
                                           src_layer,
                                           src_iter,
-                                          weights_layer,
-                                          weights_iter,
+                                          weights_layer_reshape,
+                                          weights_iter_reshape,
                                           bias,
                                           fprop_dst_layer,
                                           fprop_dst_iter,
@@ -189,36 +200,12 @@ op::RnnBackprop::RnnBackprop(std::shared_ptr<Node> result_forward,
     m_rnn_attributes.sic = rnn_node->get_src_iter_feature_size();
 
     set_output_size(5);
-    set_output_type(0,
-                    fprop_src_layer->get_element_type(),
-                    Shape{m_rnn_attributes.timestep, m_rnn_attributes.batch, m_rnn_attributes.slc});
-    set_output_type(1,
-                    fprop_src_layer->get_element_type(),
-                    Shape{m_rnn_attributes.layer,
-                          m_rnn_attributes.direction,
-                          m_rnn_attributes.states,
-                          m_rnn_attributes.batch,
-                          m_rnn_attributes.sic});
-    set_output_type(2,
-                    fprop_src_layer->get_element_type(),
-                    Shape{m_rnn_attributes.layer,
-                          m_rnn_attributes.direction,
-                          m_rnn_attributes.gates,
-                          m_rnn_attributes.sic,
-                          m_rnn_attributes.slc});
-    set_output_type(3,
-                    fprop_src_layer->get_element_type(),
-                    Shape{m_rnn_attributes.layer,
-                          m_rnn_attributes.direction,
-                          m_rnn_attributes.gates,
-                          m_rnn_attributes.sic,
-                          m_rnn_attributes.sic});
-    set_output_type(4,
-                    fprop_src_layer->get_element_type(),
-                    Shape{m_rnn_attributes.layer,
-                          m_rnn_attributes.direction,
-                          m_rnn_attributes.gates,
-                          m_rnn_attributes.sic});
+    set_output_type(0, fprop_src_layer->get_element_type(), fprop_src_layer->get_shape());
+    set_output_type(1, fprop_src_iter->get_element_type(), fprop_src_iter->get_shape());
+    set_output_type(2, fprop_weights_layer->get_element_type(), fprop_weights_layer->get_shape());
+    set_output_type(3, fprop_weights_iter->get_element_type(), fprop_weights_iter->get_shape());
+    set_output_type(4, fprop_bias->get_element_type(), fprop_bias->get_shape());
+
     constructor_validate_and_infer_types();
 }
 

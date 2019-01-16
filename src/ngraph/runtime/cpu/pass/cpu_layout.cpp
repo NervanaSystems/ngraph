@@ -2042,12 +2042,7 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        vector<memory::desc> i_mds;
-                        vector<memory::desc> o_mds;
-                        RnnBackpropLayout<ngraph::op::RnnBackprop>(node, i_mds, o_mds);
-
-                        node = insert_input_conversions(external_function, node, i_mds);
-                        set_output_layouts(node, o_mds);
+                        set_native_layouts(external_function, node, false);
                     }
                     else
                     {

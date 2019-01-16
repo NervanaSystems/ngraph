@@ -3439,18 +3439,13 @@ TEST(cpu_fusion, rnn_input_fusion_inter_vs_cpu)
     }
 }
 
-TEST(cpu_fusion, auto_diff_rnn_1)
+TEST(cpu_fusion, autodiff_rnn_1cell)
 {
-    test::Uniform<float> rng(-1.0f, 1.0f);
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> args;
-
     auto src_layer = make_shared<op::Parameter>(element::f32, Shape{1, 1});
     auto src_iter = make_shared<op::Parameter>(element::f32, Shape{2, 1});
     auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{1, 4});
     auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{1, 4});
     auto biases = make_shared<op::Parameter>(element::f32, Shape{4});
-    auto dst_layer = make_shared<op::Parameter>(element::f32, Shape{1, 1});
-    auto dst_iter = make_shared<op::Parameter>(element::f32, Shape{2, 1});
     auto diff_dst_layer = make_shared<op::Parameter>(element::f32, Shape{1, 1});
     auto diff_dst_iter = make_shared<op::Parameter>(element::f32, Shape{2, 1});
 
@@ -3472,37 +3467,37 @@ TEST(cpu_fusion, auto_diff_rnn_1)
                                          rnn_direction,
                                          num_of_rnn_fused_layer);
 
-    auto rnn_bprop = make_shared<op::RnnBackprop>(rnn_node,
-                                                  src_layer,
-                                                  src_iter,
-                                                  weights_layer,
-                                                  weights_iter,
-                                                  biases,
-                                                  dst_layer,
-                                                  dst_iter,
-                                                  diff_dst_layer,
-                                                  diff_dst_iter);
+    auto dst_layer = std::make_shared<op::GetOutputElement>(rnn_node, 0);
+    auto dst_iter = std::make_shared<op::GetOutputElement>(rnn_node, 1);
 
-    auto diff_src_layer = std::make_shared<op::GetOutputElement>(rnn_bprop, 0);
-    auto diff_src_iter = std::make_shared<op::GetOutputElement>(rnn_bprop, 1);
-    auto diff_weights_layer = std::make_shared<op::GetOutputElement>(rnn_bprop, 2);
-    auto diff_weights_iter = std::make_shared<op::GetOutputElement>(rnn_bprop, 3);
-    auto diff_bias = std::make_shared<op::GetOutputElement>(rnn_bprop, 4);
+    auto cpu_f = make_shared<Function>(
+        NodeVector{dst_layer, dst_iter},
+        ParameterVector{src_layer, src_iter, weights_layer, weights_iter, biases});
 
-    auto func = make_shared<Function>(
+    ngraph::autodiff::Adjoints adjoints(NodeVector{dst_layer, dst_iter},
+                                        NodeVector{diff_dst_layer, diff_dst_iter});
+
+    auto diff_src_layer = adjoints.backprop_node(src_layer);
+    auto diff_src_iter = adjoints.backprop_node(src_iter);
+    auto diff_weights_layer = adjoints.backprop_node(weights_layer);
+    auto diff_weights_iter = adjoints.backprop_node(weights_iter);
+    auto diff_bias = adjoints.backprop_node(biases);
+
+    auto cpu_df = make_shared<Function>(
         NodeVector{diff_src_layer, diff_src_iter, diff_weights_layer, diff_weights_iter, diff_bias},
         ParameterVector{src_layer,
                         src_iter,
                         weights_layer,
                         weights_iter,
                         biases,
-                        dst_layer,
-                        dst_iter,
                         diff_dst_layer,
                         diff_dst_iter});
-    auto backend = runtime::Backend::create("CPU");
 
-    for (shared_ptr<op::Parameter> param : func->get_parameters())
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    auto backend = runtime::Backend::create("CPU");
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> args;
+
+    for (shared_ptr<op::Parameter> param : cpu_df->get_parameters())
     {
         auto arg_tensor = backend->create_tensor<float>(param->get_shape());
         copy_data(arg_tensor, vector<float>(shape_size(param->get_shape()), 1));
@@ -3517,15 +3512,13 @@ TEST(cpu_fusion, auto_diff_rnn_1)
 
     std::vector<std::shared_ptr<ngraph::runtime::Tensor>> results{
         diff_src_layer_t, diff_src_iter_t, diff_wei_layer_t, diff_wei_iter_t, diff_bias_t};
-    backend->call_with_validate(backend->compile(func), results, args);
+    backend->call_with_validate(backend->compile(cpu_df), results, args);
 
     for (auto& res_tensor : results)
     {
         for (auto& i : read_vector<float>(res_tensor))
         {
             // make comparision with the expected v/s computed values
-            std::cout << i << std::endl;
         }
-        std::cout << "#######################################" << std::endl;
     }
 }
