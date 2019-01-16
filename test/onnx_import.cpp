@@ -1660,7 +1660,7 @@ TEST(onnx, model_argmax_int32)
         std::vector<std::int64_t>{1, 1, 1, 1, 1, 1}};
 
     std::vector<std::vector<std::int64_t>> outputs{
-        execute<std::int32_t, std::int64_t>(function, inputs, "CPU")};
+        execute<std::int32_t, std::int64_t>(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }
 
@@ -1675,7 +1675,7 @@ TEST(onnx, model_argmin_int32)
     std::vector<std::vector<std::int64_t>> expected_output{std::vector<std::int64_t>{0, 0, 0, 0}};
 
     std::vector<std::vector<std::int64_t>> outputs{
-        execute<std::int32_t, std::int64_t>(function, inputs, "CPU")};
+        execute<std::int32_t, std::int64_t>(function, inputs, "INTERPRETER")};
     EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }
 
