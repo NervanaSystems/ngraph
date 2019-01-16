@@ -357,7 +357,7 @@ namespace ngraph
                         Y = std::make_shared<ngraph::op::Reshape>(
                             Y, reshape::get_default_axis_vector(Y->get_shape().size()), shape);
                     }
-                    return {Y, exp_h_list.back()};
+                    return {Y, exp_h_list.back(), C_t};
                 }
             } // namespace set_1
 

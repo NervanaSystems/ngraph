@@ -1678,3 +1678,42 @@ TEST(onnx, model_argmin_int32)
         execute<std::int32_t, std::int64_t>(function, inputs, "CPU")};
     EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }
+
+TEST(onnx, model_lstm_fwd_simple_weights_no_bias)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/lstm_fwd_simple_weights_no_bias.onnx"));
+
+    int64_t seq_length = 2;
+    int batch_size = 2;
+    int64_t input_size = 1;
+    int64_t hidden_size = 3;
+    int num_directions = 1;
+
+    Inputs inputs;
+    // X
+    inputs.emplace_back(std::vector<float>{1.f, 2.f, 10.f, 11.f});
+    // W
+    inputs.emplace_back(
+        std::vector<float>{0.1f, 0.2f, 0.3f, 0.4f, 1.f, 2.f, 3.f, 4.f, 10.f, 11.f, 12.f, 13.f});
+    // R
+    inputs.emplace_back(std::vector<float>(num_directions * 4 * hidden_size * hidden_size, 0.1f));
+
+    Outputs expected_output;
+    // Y
+    expected_output.emplace_back(std::vector<float>{0.28828835f,
+                                                    0.36581863f,
+                                                    0.45679406f,
+                                                    0.34526032f,
+                                                    0.47220859f,
+                                                    0.55850911f,
+                                                    0.84196719f,
+                                                    0.89402526f,
+                                                    0.91073048f,
+                                                    0.85882828f,
+                                                    0.90703777f,
+                                                    0.92382453f});
+
+    Outputs outputs{execute(function, inputs, "INTERPRETER")};
+    EXPECT_TRUE(test::all_close_f(expected_output.front(), outputs.front()));
+}
