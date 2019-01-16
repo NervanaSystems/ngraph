@@ -14,12 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <stdexcept>
-#include <vector>
-
 #include <pybind11/buffer_info.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#include <stdexcept>
+#include <vector>
 
 #include "ngraph/op/constant.hpp"
 #include "ngraph/shape.hpp"
