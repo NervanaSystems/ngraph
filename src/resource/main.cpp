@@ -112,7 +112,7 @@ int main(int argc, char** argv)
     {
         // cout << "path " << path.source_path << " -> " << path.target_path << endl;
         vector<string> path_list;
-        if(path.subdirs.empty())
+        if (path.subdirs.empty())
         {
             path_list.push_back(path.search_path);
         }

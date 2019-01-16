@@ -78,7 +78,7 @@ public:
     bool is_debuginfo_enabled() { return m_debuginfo_enabled; }
     void set_precompiled_header_source(const std::string& source);
     const std::string& get_precompiled_header_source() const;
-    void add_header_search_path(const std::string& path, bool check_path=false);
+    void add_header_search_path(const std::string& path, bool check_path = false);
 
     std::unique_ptr<ngraph::codegen::Module>
         compile(std::unique_ptr<clang::CodeGenAction>& compiler_action, const std::string& source);

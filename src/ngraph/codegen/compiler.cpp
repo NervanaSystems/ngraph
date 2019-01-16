@@ -302,7 +302,7 @@ void codegen::CompilerCore::add_header_search_path(const std::string& p, bool ch
         if (find(m_extra_search_path_list.begin(), m_extra_search_path_list.end(), path) ==
             m_extra_search_path_list.end())
         {
-            if(!check_path || file_util::exists(path))
+            if (!check_path || file_util::exists(path))
             {
                 m_extra_search_path_list.push_back(path);
                 HeaderSearchOptions& hso = m_compiler->getInvocation().getHeaderSearchOpts();
@@ -503,8 +503,7 @@ void codegen::CompilerCore::configure_search_path()
     //     For version X (if has version), find the highest X.Y.Z for header version
     std::string header_version = find_header_version(usr_prefix);
     std::string cpp_header_root = file_util::path_join(cpp_header_prefix, header_version);
-    std::string os_specific_path =
-        find_os_specific_path(cpp_header_root);
+    std::string os_specific_path = find_os_specific_path(cpp_header_root);
 
     // Common
     add_header_search_path(cpp_header_root);
@@ -514,12 +513,10 @@ void codegen::CompilerCore::configure_search_path()
         file_util::path_join("/usr/include/x86_64-linux-gnu/c++/", header_version), true);
 
     // Redhat/CentOS only
-    add_header_search_path(
-        file_util::path_join(cpp_header_root, os_specific_path), true);
+    add_header_search_path(file_util::path_join(cpp_header_root, os_specific_path), true);
 
     // Common
-    add_header_search_path(
-        file_util::path_join(cpp_header_root, "backward"));
+    add_header_search_path(file_util::path_join(cpp_header_root, "backward"));
 
     // Common
     add_header_search_path("/usr/local/include");
@@ -531,10 +528,9 @@ void codegen::CompilerCore::configure_search_path()
     add_header_search_path("/usr/include/x86_64-linux-gnu", true);
 
     // Redhat/CentOS only
-    if(has_toolpath)
+    if (has_toolpath)
     {
-        add_header_search_path(
-            file_util::path_join(cpp_header_prefix, "usr/include"));
+        add_header_search_path(file_util::path_join(cpp_header_prefix, "usr/include"));
     }
 
     // Common
@@ -590,12 +586,12 @@ int codegen::CompilerCore::full_version_number(const std::string& path, const st
 {
     // check if header version is compatible with g++ version
     vector<std::string> tokens = split(path, '.');
-    if(!gpp_ver.empty())
+    if (!gpp_ver.empty())
     {
         vector<std::string> gpp_tokens = split(gpp_ver, '.');
-        for(int i = 0; i < gpp_tokens.size(); i++)
+        for (int i = 0; i < gpp_tokens.size(); i++)
         {
-            if(gpp_tokens[i].compare(tokens[i]) != 0)
+            if (gpp_tokens[i].compare(tokens[i]) != 0)
             {
                 return 0;
             }
@@ -610,7 +606,7 @@ int codegen::CompilerCore::full_version_number(const std::string& path, const st
     {
         full_version.append(s);
     }
-    for(int i = 0; i < padding; i++)
+    for (int i = 0; i < padding; i++)
     {
         full_version.append("0");
     }
@@ -624,7 +620,7 @@ std::string codegen::CompilerCore::find_header_version(const std::string& path)
     std::string gpp_ver = {};
     for (auto i : {"8", "7", "6", "5", "4.9", "4.8"})
     {
-        if(file_util::exists(gpp_prefix + i))
+        if (file_util::exists(gpp_prefix + i))
         {
             gpp_ver = i;
             break;
@@ -647,7 +643,7 @@ std::string codegen::CompilerCore::find_header_version(const std::string& path)
         if (is_version_number(dir_name))
         {
             int tmp_version = full_version_number(dir_name, gpp_ver);
-            if(tmp_version > full_version)
+            if (tmp_version > full_version)
             {
                 full_version = tmp_version;
                 rc = dir_name;
@@ -689,7 +685,7 @@ std::string codegen::CompilerCore::find_rh_devtoolset_path()
     for (auto i : {"8", "7", "6", "5", "4", "3", "2"})
     {
         std::string toolpath = file_util::path_join(toolsetprefix + i, "root");
-        if(file_util::exists(toolpath))
+        if (file_util::exists(toolpath))
         {
             return toolpath;
         }
