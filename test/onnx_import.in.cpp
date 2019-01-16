@@ -1680,3 +1680,34 @@ TEST(onnx_${BACKEND_NAME}, model_argmin_int32)
         execute<std::int32_t, std::int64_t>(function, inputs, "${BACKEND_NAME}")};
     EXPECT_TRUE(test::all_close(expected_output.front(), outputs.front()));
 }
+
+TEST(onnx_${BACKEND_NAME}, is_op_supported)
+{
+    // Simple case
+    EXPECT_TRUE(onnx_import::is_operator_supported("Sum", 1, "ai.onnx"));
+    // With fallback
+    EXPECT_TRUE(onnx_import::is_operator_supported("Sum", 100, "ai.onnx"));
+
+    // Different opset versions
+    EXPECT_TRUE(onnx_import::is_operator_supported("Add", 1, "ai.onnx"));
+    EXPECT_TRUE(onnx_import::is_operator_supported("Add", 7, "ai.onnx"));
+
+    // Default domain name
+    EXPECT_TRUE(onnx_import::is_operator_supported("Sum", 1));
+
+    // Unregistered operator
+    EXPECT_FALSE(onnx_import::is_operator_supported("DummyOp", 1));
+    EXPECT_FALSE(onnx_import::is_operator_supported("DummyOp", 1, "ai.onnx"));
+    EXPECT_FALSE(onnx_import::is_operator_supported("DummyOp", 10, "ai.onnx"));
+
+    // Operator with bad domain name
+    EXPECT_FALSE(onnx_import::is_operator_supported("Sum", 1, "bad.domain"));
+
+    // Registered custom operator
+    onnx_import::register_operator(
+            "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+                NodeVector ng_inputs{node.get_ng_inputs()};
+                return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
+            });
+    EXPECT_TRUE(onnx_import::is_operator_supported("AddQ", 1, "com.intel.ai"));
+}
