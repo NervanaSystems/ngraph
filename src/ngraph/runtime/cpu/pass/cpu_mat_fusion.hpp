@@ -35,16 +35,7 @@ namespace ngraph
                 class CPUBatchFusion : public ngraph::pass::FunctionPass
                 {
                 public:
-                    enum FusionType
-                    {
-                        //`DIFFERENTIABLE_FUSIONS` produce ops that support autodiff
-                        // i.e. implement `generate_adjoints`
-                        DIFFERENTIABLE_FUSIONS = 0x1,
-                        REGULAR_FUSIONS = 0x2,
-                        ALL = 0xFFFFFFFF
-                    };
-
-                    CPUBatchFusion(FusionType type = ALL)
+                    CPUBatchFusion(ngraph::pass::FusionType type = ngraph::pass::ALL_FUSIONS)
                         : FunctionPass()
                         , m_fusion_type(type)
                     {
@@ -53,7 +44,7 @@ namespace ngraph
                         run_on_function(std::shared_ptr<ngraph::Function> function) override;
 
                 private:
-                    FusionType m_fusion_type;
+                    ngraph::pass::FusionType m_fusion_type;
                 };
             }
         }

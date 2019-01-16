@@ -578,7 +578,7 @@ bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Functio
         const Node& node = *n;
         if (TI(node) == TI(op::Concat))
         {
-            if (m_fusion_type & DIFFERENTIABLE_FUSIONS)
+            if (m_fusion_type & ngraph::pass::DIFFERENTIABLE_FUSIONS)
             {
                 if (auto fused_node = fuse_batch_dot(n))
                 {
@@ -586,7 +586,7 @@ bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Functio
                     modified = true;
                 }
             }
-            if (m_fusion_type & REGULAR_FUSIONS)
+            if (m_fusion_type & ngraph::pass::REGULAR_FUSIONS)
             {
                 if (auto fused_conv = fuse_group_convolution(n))
                 {
