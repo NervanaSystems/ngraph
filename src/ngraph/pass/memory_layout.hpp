@@ -73,6 +73,10 @@ public:
     // memory_manager& alignment(size_t a);
 
     size_t allocate(size_t size);
+    size_t allocate(size_t size,
+                    const std::shared_ptr<ngraph::Node>& node,
+                    std::map<size_t, std::pair<size_t, std::set<std::string>>>&);
+
     void free(size_t offset);
 
     void dump(std::ostream&);
@@ -87,6 +91,10 @@ public:
     size_t max_allocated() const { return m_max_allocated; }
 private:
     size_t first_fit(size_t size);
+    size_t first_fit(size_t size,
+                     const std::shared_ptr<ngraph::Node>&,
+                     std::map<size_t, std::pair<size_t, std::set<std::string>>>&);
+    std::pair<size_t, bool> first_fit_private(size_t size);
     size_t best_fit(size_t size);
     size_t no_reuse_allocator(size_t size);
 

@@ -15,6 +15,8 @@
 //*****************************************************************************
 
 #include <exception>
+#include <execinfo.h>
+#include <iomanip>
 #include <sstream>
 
 #include "ngraph/log.hpp"
@@ -30,6 +32,27 @@
 using namespace std;
 using namespace ngraph;
 
+static stringstream ss_verbose;
+static stringstream ss_concise;
+
+void print_trace(void)
+{
+    void* array[10];
+    size_t size;
+    char** strings;
+    size_t i;
+
+    size = backtrace(array, 10);
+    strings = backtrace_symbols(array, size);
+
+    printf("Obtained %zd stack frames.\n", size);
+
+    for (i = 0; i < size; i++)
+        printf("%s\n", strings[i]);
+
+    free(strings);
+}
+
 pass::MemoryLayout::MemoryLayout(size_t alignment, bool disable_memory_sharing)
     : m_alignment(alignment)
     , m_disable_memory_sharing(disable_memory_sharing)
@@ -43,6 +66,15 @@ pass::MemoryLayout::MemoryLayout(size_t alignment, bool disable_memory_sharing)
 bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
 {
     MemoryManager mm(m_alignment, m_disable_memory_sharing);
+
+    size_t total_mem_alloc_all_nodes_requested = 0;
+    size_t total_mem_alloc_all_nodes_actual = 0;
+    size_t total_mem_free_all_nodes = 0;
+
+    std::set<size_t> sizes_requested;
+    std::map<size_t, size_t> size_num_nodes;
+    std::map<size_t, std::pair<size_t, std::set<std::string>>> size_nodes_adding_to_maxalloc;
+
     for (shared_ptr<Node> node : function->get_ordered_ops())
     {
         std::map<descriptor::Tensor*, descriptor::Tensor*> in_place_outputs;
@@ -79,26 +111,146 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<ngraph::Function> function)
             }
         }
 
+        size_t mem_alloc_requested = 0;
+        size_t mem_alloc_actual = 0;
+        string str_;
         for (descriptor::Tensor* tensor : node->liveness_new_list)
         {
+            size_t is_inplace = 0;
+            if (in_place_outputs.count(tensor))
+            {
+                str_ = "INPLACE for tensor " + tensor->get_name();
+            }
+            else
+            {
+                str_ = "ALLOCATE for tensor " + tensor->get_name();
+                is_inplace = 1;
+            }
+            ss_verbose << "- Node " << node->get_name() << " has requested to allocate "
+                       << std::setprecision(5)
+                       << static_cast<float>(tensor->size() / 1024.0f / 1024.0f) << " MiB "
+                       << "for tensor " << tensor->get_name() << " of shape ("
+                       << join(tensor->get_shape()) << ")" << std::endl;
+            sizes_requested.insert(tensor->size());
+            if (size_num_nodes.find(tensor->size()) == size_num_nodes.end())
+            {
+                size_num_nodes.insert(std::make_pair(tensor->size(), 1));
+            }
+            else
+            {
+                size_num_nodes[tensor->size()]++;
+            }
+            mem_alloc_requested += tensor->size();
+            mem_alloc_actual += is_inplace * tensor->size();
+
+            ss_verbose << str_ << std::endl;
             size_t offset = in_place_outputs.count(tensor)
                                 ? in_place_outputs.at(tensor)->get_pool_offset()
-                                : mm.allocate(tensor->size());
+                                : mm.allocate(tensor->size(), node, size_nodes_adding_to_maxalloc);
             tensor->set_pool_offset(offset);
         }
 
+        ss_verbose << "->Total Memory alloc requested by node " << node->get_name() << " = "
+                   << static_cast<float>(mem_alloc_requested) / 1024.0f / 1024.0f << " MiB"
+                   << std::endl;
+        ss_verbose << "->Total Memory actually requested to allocate by node " << node->get_name()
+                   << " = " << static_cast<float>(mem_alloc_actual) / 1024.0f / 1024.0f << " MiB"
+                   << std::endl;
+
+        total_mem_alloc_all_nodes_requested += mem_alloc_requested;
+        total_mem_alloc_all_nodes_actual += mem_alloc_actual;
+
+        size_t mem_free = 0;
         if (!m_disable_memory_sharing)
         {
             for (const descriptor::Tensor* tensor : node->liveness_free_list)
             {
                 if (reused_inputs.count(tensor) == 0)
                 {
+                    ss_verbose << "- Node " << node->get_name() << " has requested to free "
+                               << std::setprecision(5)
+                               << static_cast<float>(tensor->size() / 1024.0f / 1024.0f) << " MiB "
+                               << "for tensor " << tensor->get_name() << " of shape ("
+                               << join(tensor->get_shape()) << ")" << std::endl;
+                    mem_free += tensor->size();
                     mm.free(tensor->get_pool_offset());
                 }
             }
         }
+        ss_verbose << "Total Memory free for node " << node->get_name() << " = "
+                   << static_cast<float>(mem_free) / 1024.0f / 1024.0f << " MiB" << std::endl;
+        total_mem_free_all_nodes += mem_free;
+
+        ss_verbose << std::endl;
     }
+
     function->set_temporary_pool_size(mm.max_allocated());
+
+    ss_concise << "Total Memory alloc requested by all nodes combined = "
+               << static_cast<float>(total_mem_alloc_all_nodes_requested) / 1024.0f / 1024.0f
+               << " MiB " << std::endl;
+    ss_concise << "Total Memory actually requested to allocate by all nodes combined = "
+               << static_cast<float>(total_mem_alloc_all_nodes_actual) / 1024.0f / 1024.0f
+               << " MiB " << std::endl;
+    ss_concise << "Total Memory free for all nodes = "
+               << static_cast<float>(total_mem_free_all_nodes) / 1024.0f / 1024.0f << " MiB "
+               << std::endl;
+    ss_concise << "Net Memory for all nodes = "
+               << (total_mem_alloc_all_nodes_actual - total_mem_free_all_nodes) << std::endl;
+    ss_concise << std::endl;
+
+    ss_concise << "Set of discrete sizes in MiB that are requested to be allocated: " << std::endl;
+    ss_concise << "[";
+    for (auto it : sizes_requested)
+    {
+        ss_concise << static_cast<float>(it) / 1024.0f / 1024.0f << ", ";
+    }
+    ss_concise << "]" << std::endl;
+    ss_concise << std::endl;
+
+    ss_concise
+        << "Map of discrete alloc request sizes (in MiB) and the number of nodes requesting them: "
+        << std::endl;
+    ss_concise << "[";
+    for (auto itr : size_num_nodes)
+    {
+        ss_concise << "(" << static_cast<float>(itr.first) / 1024.0f / 1024.0f << ", " << itr.second
+                   << "), ";
+    }
+    ss_concise << "]" << std::endl;
+    ss_concise << std::endl;
+
+    ss_concise << "Map of discrete alloc request sizes (in MiB) and the number of nodes actually "
+                  "contributing to the maximum allocation value: "
+               << std::endl;
+    ss_concise << "[";
+
+    for (auto itr_ : size_nodes_adding_to_maxalloc)
+    {
+        ss_concise << "(" << static_cast<float>(itr_.first) / 1024.0f / 1024.0f << ", "
+                   << itr_.second.first << ", {";
+        for (auto itr_1 : itr_.second.second)
+        {
+            ss_concise << itr_1 << ", ";
+        }
+        ss_concise << "})";
+    }
+    ss_concise << "]" << std::endl;
+
+    for (auto itr_2 : size_nodes_adding_to_maxalloc)
+    {
+        string n = (itr_2.second.first == 1) ? " node" : " nodes";
+        ss_concise << itr_2.second.first << n << " of types ";
+        for (auto itr_3 : itr_2.second.second)
+        {
+            ss_concise << itr_3 << ", ";
+        }
+        ss_concise << "contribute to the max allocated size by requesting "
+                   << static_cast<float>(itr_2.first) / 1024.0f / 1024.0f << " MiB" << std::endl;
+    }
+    ss_verbose << ss_concise.str();
+    std::cout << ss_verbose.str() << std::endl;
+    //std::cout << ss_concise.str() << std::endl;
 
     return false;
 }
@@ -114,6 +266,8 @@ pass::MemoryManager::MemoryManager(size_t alignment, bool disable_memory_reuse)
     , m_scheme{disable_memory_reuse ? allocation_scheme::NO_REUSE : allocation_scheme::FIRST_FIT}
     , m_max_allocated{0}
 {
+    std::cout << "Constructor of Memory Manager called where m_max_allocated is set to 0"
+              << std::endl;
     if (m_alignment == 0)
     {
         throw invalid_argument("Memory alignment must be > 0");
@@ -123,10 +277,31 @@ pass::MemoryManager::MemoryManager(size_t alignment, bool disable_memory_reuse)
 
 size_t pass::MemoryManager::allocate(size_t size)
 {
+    /*     std::cout << std::endl;
+    std::cout << "TRACE from pass::MemoryManager::allocate(size_t size): " << std::endl;
+    print_trace(); */
+    std::cout << "In pass::MemoryManager::allocate, memory of size "
+              << static_cast<float>(size) / 1024.0f / 1024.0f << " MiB is being requested "
+              << std::endl;
     size_t rc;
     switch (m_scheme)
     {
     case allocation_scheme::FIRST_FIT: rc = first_fit(size); break;
+    case allocation_scheme::BEST_FIT: rc = best_fit(size); break;
+    case allocation_scheme::NO_REUSE: rc = no_reuse_allocator(size); break;
+    }
+    return rc;
+}
+
+size_t pass::MemoryManager::allocate(size_t size,
+                                     const std::shared_ptr<ngraph::Node>& node_in_use,
+                                     std::map<size_t, std::pair<size_t, std::set<std::string>>>& s)
+{
+    ss_verbose << "In pass::MemoryManager::allocate,";
+    size_t rc;
+    switch (m_scheme)
+    {
+    case allocation_scheme::FIRST_FIT: rc = first_fit(size, node_in_use, s); break;
     case allocation_scheme::BEST_FIT: rc = best_fit(size); break;
     case allocation_scheme::NO_REUSE: rc = no_reuse_allocator(size); break;
     }
@@ -184,6 +359,48 @@ size_t pass::MemoryManager::best_fit(size_t size)
 
 size_t pass::MemoryManager::first_fit(size_t size)
 {
+    std::pair<size_t, bool> r = first_fit_private(size);
+    if (r.second)
+    {
+        std::cout << "NO ADDITIONAL MEM ADDED IN THIS ALLOCATE CALL" << std::endl;
+    }
+    else
+    {
+        std::cout << "ADDITIONAL MEM ADDED IN THIS ALLOCATE CALL" << std::endl;
+    }
+
+    return r.first;
+}
+
+size_t pass::MemoryManager::first_fit(size_t size,
+                                      const std::shared_ptr<ngraph::Node>& node_in_use,
+                                      std::map<size_t, std::pair<size_t, std::set<std::string>>>& s)
+{
+    std::pair<size_t, bool> r = first_fit_private(size);
+    if (r.second)
+    {
+        ss_verbose << "NO ADDITIONAL MEM ADDED IN THIS ALLOCATE CALL" << std::endl;
+    }
+    else
+    {
+        ss_verbose << "ADDITIONAL MEM ADDED IN THIS ALLOCATE CALL" << std::endl;
+        if (s.find(size) == s.end())
+        {
+            std::set<std::string> node_desc{node_in_use->description()};
+            s.insert(std::make_pair(size, std::make_pair(1, node_desc)));
+        }
+        else
+        {
+            s[size].first++;
+            s[size].second.insert(node_in_use->description());
+        }
+    }
+
+    return r.first;
+}
+
+std::pair<size_t, bool> pass::MemoryManager::first_fit_private(size_t size)
+{
     size = align(size, m_alignment);
     size_t offset = 0;
     bool found = false;
@@ -211,9 +428,19 @@ size_t pass::MemoryManager::first_fit(size_t size)
     {
         throw bad_alloc();
     }
+    ss_verbose << "in first_fit, offset returned = " << offset
+               << " Bytes = " << (offset / 1024.0f / 1024.0f) << " MiB " << std::endl;
+    ss_verbose << "And, size requested was " << size << " Bytes = " << (size / 1024.0f / 1024.0f)
+               << " MiB " << std::endl;
+    ss_verbose << "Max allocated is being set in first fit: "
+               << " Before set: " << (m_max_allocated / 1024.0f / 1024.0f) << " MiB ";
+    size_t before_set = m_max_allocated;
     m_max_allocated = max(m_max_allocated, offset + size);
+    ss_verbose << " After set: " << (m_max_allocated / 1024.0f / 1024.0f) << " MiB " << std::endl;
+    size_t after_set = m_max_allocated;
+    bool is_not_alloc = (before_set == after_set) ? true : false;
 
-    return offset;
+    return std::make_pair(offset, is_not_alloc);
 }
 
 void pass::MemoryManager::free(size_t offset)

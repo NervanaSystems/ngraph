@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <cstring>
+#include <iomanip>
 
 #include "ngraph/runtime/gpu/gpu_memory_manager.hpp"
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
@@ -73,6 +74,15 @@ void runtime::gpu::GPUMemoryManager::allocate()
         m_buffer_offset = ngraph::pass::MemoryManager::align(
             m_buffer_offset, runtime::gpu::GPUMemoryManager::alignment);
         // the back most node is always empty, fill it here
+        static size_t total_argspace_allocations = 0;
+        total_argspace_allocations += m_buffer_offset;
+        std::stringstream ss;
+        ss << std::endl;
+        ss << "Total Argspace requested in GPUMemoryManager::allocate() till this point "
+           << std::setprecision(5)
+           << static_cast<float>(total_argspace_allocations / 1024.0f / 1024.0f) << " MiB "
+           << " = " << static_cast<float>(total_argspace_allocations / 1024.0f / 1024.0f / 1024.0f)
+           << " GiB " << std::endl;
         m_argspace_mem.back().ptr = runtime::gpu::create_gpu_buffer(m_buffer_offset);
         m_argspace_mem.back().size = m_buffer_offset;
         // copy buffered kernel arguments to device
@@ -83,16 +93,27 @@ void runtime::gpu::GPUMemoryManager::allocate()
         m_buffered_mem.clear();
         m_buffered_mem.resize(initial_buffer_size, 0);
         m_buffer_offset = 0;
+        std::cout << ss.str();
     }
 
     auto workspace_size = m_workspace_manager->max_allocated();
     if (workspace_size)
     {
+        static size_t total_workspace_allocations = 0;
+        total_workspace_allocations += workspace_size;
+        std::stringstream ss;
+        ss << std::endl;
+        ss << "Total Workspace requested from GPUMemoryManager::allocate() till this point "
+           << std::setprecision(5) << total_workspace_allocations / 1024.0f / 1024.0f << " MiB "
+           << " = " << total_workspace_allocations / 1024.0f / 1024.0f / 1024.0f << " GiB "
+           << std::endl;
+        ss << std::endl;
         m_workspace_mem.back().ptr = runtime::gpu::create_gpu_buffer(workspace_size);
         m_workspace_mem.back().size = workspace_size;
         m_workspace_mem.push_back({nullptr, 0});
         m_workspace_manager.reset(
             new pass::MemoryManager(runtime::gpu::GPUMemoryManager::alignment));
+        std::cout << ss.str();
     }
 }
 

@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <iomanip>
 #include <memory>
 
 #include <cuda_runtime.h>
@@ -46,6 +47,15 @@ runtime::gpu::GPUTensor::GPUTensor(const ngraph::element::Type& element_type,
     }
     else if (m_buffer_size > 0)
     {
+        static size_t total_buffer_allocation_size = 0;
+        static size_t tensor_count = 0;
+        total_buffer_allocation_size += m_buffer_size;
+        std::cout << "Buffer allocation in GPUTensor::GPUTensor " << std::setprecision(5)
+                  << m_buffer_size / 1024.0f / 1024.0f << " MiB for tensor " << this->get_name()
+                  << "(" << ++tensor_count << ")" << std::endl;
+        std::cout << "Total Buffer allocation in GPUTensor::GPUTensor till this point = "
+                  << std::setprecision(8) << total_buffer_allocation_size / 1024.0f / 1024.0f
+                  << " MiB " << std::endl;
         m_allocated_buffer_pool = runtime::gpu::create_gpu_buffer(m_buffer_size);
     }
 }

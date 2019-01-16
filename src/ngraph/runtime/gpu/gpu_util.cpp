@@ -18,6 +18,8 @@
 #include <cstdlib>
 #include <cuda.h>
 #include <cuda_runtime.h>
+#include <execinfo.h>
+#include <iomanip>
 #include <iostream>
 #include <stddef.h>
 #include <stdio.h>
@@ -29,6 +31,24 @@
 
 using namespace ngraph;
 using namespace std;
+
+void print_trace(void)
+{
+    void* array[10];
+    size_t size;
+    char** strings;
+    size_t i;
+
+    size = backtrace(array, 10);
+    strings = backtrace_symbols(array, size);
+
+    printf("Obtained %zd stack frames.\n", size);
+
+    for (i = 0; i < size; i++)
+        printf("%s\n", strings[i]);
+
+    free(strings);
+}
 
 void runtime::gpu::print_gpu_f32_tensor(const void* p, size_t element_count, size_t element_size)
 {
@@ -45,6 +65,12 @@ void runtime::gpu::check_cuda_errors(CUresult err)
 
 void* runtime::gpu::create_gpu_buffer(size_t buffer_size, const void* data)
 {
+    // std::cout << "TRACE from create_gpu_buffer: " << std::endl;
+    // print_trace();
+    std::cout << "Data Requested in create_gpu_buffer: " << std::setprecision(5)
+              << static_cast<float>(buffer_size / 1024.0f / 1024.0f)
+              << " MiB = " << static_cast<float>(buffer_size / 1024.0f / 1024.0f / 1024.0f)
+              << " GiB " << std::endl;
     void* allocated_buffer_pool;
     CUDA_RT_SAFE_CALL(cudaMalloc(static_cast<void**>(&allocated_buffer_pool), buffer_size));
     if (data)
@@ -175,7 +201,7 @@ namespace
         }
         return std::pair<uint64_t, uint64_t>{magic, shift};
     }
-}
+} // namespace
 
 std::pair<uint64_t, uint64_t> runtime::gpu::idiv_magic_u32(uint64_t max_numerator, uint64_t divisor)
 {

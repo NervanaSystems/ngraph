@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <iomanip>
 #include <memory>
 
 #include "ngraph/function.hpp"
@@ -31,6 +32,12 @@ bool runtime::gpu::pass::TensorMemoryReservation::run_on_function(shared_ptr<Fun
 {
     bool reservation = false;
     size_t mem_pool_size = f->get_temporary_pool_size();
+    std::cout << std::endl;
+    std::cout << "Intermediate memory reservation = " << std::setprecision(5)
+              << static_cast<float>(mem_pool_size / 1024.0f / 1024.0f) << " MiB" << std::endl;
+    std::cout << "Reserve workspace is being called in which in TensorMemoryReservation pass turn "
+                 "calls allocate with size "
+              << static_cast<float>(mem_pool_size / 1024.0f / 1024.0f) << " MiB" << std::endl;
     // intermediate memory reservation
     if (mem_pool_size)
     {
