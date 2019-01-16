@@ -219,8 +219,6 @@ class BuildExt(build_ext):
         global sharedlib_files
         for source in sharedlib_files:
             destination = self.build_lib + '/' + os.path.basename(source)
-            if 'libomp' in source or 'libgomp' in source:
-                continue
             copyfile(source, destination)
             if 'libtbb' in destination:
                 continue
