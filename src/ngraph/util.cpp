@@ -482,6 +482,10 @@ T ngraph::apply_permutation(T input, AxisVector order)
 
 template AxisVector ngraph::apply_permutation<AxisVector>(AxisVector input, AxisVector order);
 template Shape ngraph::apply_permutation<Shape>(Shape input, AxisVector order);
+template ngraph::Coordinate ngraph::apply_permutation<ngraph::Coordinate>(ngraph::Coordinate input,
+                                                                          ngraph::AxisVector order);
+template ngraph::Strides ngraph::apply_permutation<ngraph::Strides>(ngraph::Strides input,
+                                                                    ngraph::AxisVector order);
 
 AxisVector ngraph::get_default_order(const Shape& shape)
 {
