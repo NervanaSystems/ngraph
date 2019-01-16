@@ -64,7 +64,9 @@ namespace ngraph
             /// \brief Constructs a Matcher object
             ///
             /// \param pattern_node is a pattern sub graph that will be matched against input graphs
-            /// \param callback is a callback function that will be called on a successful match
+            /// \param pattern_node is a pattern sub graph that will be matched against input graphs
+            /// \param name is a string which is used for logging and disabling a matcher
+            /// \param strict_mode forces a matcher to consider shapes and ET of nodes
             Matcher(const std::shared_ptr<Node> pattern_node = nullptr,
                     const std::string& name = "Unnamed",
                     bool strict_mode = false)
