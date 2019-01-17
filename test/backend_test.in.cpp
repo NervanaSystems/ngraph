@@ -5874,6 +5874,40 @@ NGRAPH_TEST(${BACKEND_NAME}, dequantize)
               read_vector<output_c_type>(y));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, dequantize_segfault)
+{
+    Shape input_shape{4};
+    Shape scale_offset_shape = {};
+    AxisSet quantization_axes;
+
+    auto input_type = element::u8;
+    auto output_type = element::f32;
+
+    typedef uint8_t input_c_type;
+    typedef float output_c_type;
+
+    auto X = make_shared<op::Parameter>(input_type, input_shape);
+    auto scale = make_shared<op::Parameter>(output_type, scale_offset_shape);
+    auto offset = make_shared<op::Parameter>(input_type, scale_offset_shape);
+    auto dequantize = make_shared<op::Dequantize>(X, scale, offset, output_type, quantization_axes);
+    auto f = make_shared<Function>(dequantize, ParameterVector{X, scale, offset});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(input_type, input_shape);
+    auto y = backend->create_tensor(output_type, input_shape);
+    auto Scale = backend->create_tensor(output_type, scale_offset_shape);
+    auto Offset = backend->create_tensor(input_type, scale_offset_shape);
+
+    copy_data(x, vector<input_c_type>{0, 3, 128, 255});
+    copy_data(Scale, vector<output_c_type>{2});
+    copy_data(Offset, vector<input_c_type>{128});
+
+    auto handle = backend->compile(f);
+    backend->call_with_validate(handle, {y}, {x, Scale, Offset});
+    EXPECT_EQ((vector<output_c_type>{-256.0f, -250.0f, 0.0f, 254.0f}),
+              read_vector<output_c_type>(y));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, quantize_zero_offset)
 {
     Shape input_shape{4, 3};

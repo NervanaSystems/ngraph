@@ -728,6 +728,7 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Dequantize)
                 {
                     auto dequantize = static_cast<op::Dequantize*>(node);
+                    // offset can be a ngraph::op::Parameter
                     auto offset_const_op =
                         std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(2));
                     // TODO: MKLDNN only handles float / not double
@@ -737,6 +738,7 @@ namespace ngraph
                     }
                     if (node->get_input_element_type(0) == element::u8)
                     {
+                        //get_vector is trying to read m_data what is nullptr -> segfault
                         auto offset = offset_const_op->get_vector<uint8_t>();
                         if (offset[0] != 0)
                             return;
@@ -760,6 +762,7 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Quantize)
                 {
                     auto quantize = static_cast<op::Quantize*>(node);
+                    // offset can be a ngraph::op::Parameter
                     auto offset_const_op =
                         std::static_pointer_cast<ngraph::op::Constant>(quantize->get_argument(2));
                     op::Quantize::RoundMode round_mode = quantize->get_round_mode();
