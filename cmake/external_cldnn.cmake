@@ -66,6 +66,5 @@ else()
     ExternalProject_Get_Property(ext_cldnn SOURCE_DIR BINARY_DIR)
     add_dependencies(libcldnn ext_cldnn)
     target_include_directories(libcldnn SYSTEM INTERFACE ${SOURCE_DIR}/api)
-
     target_link_libraries(libcldnn INTERFACE ${SOURCE_DIR}/build/out/Linux64/${CMAKE_BUILD_TYPE}/${CMAKE_SHARED_LIBRARY_PREFIX}clDNN64${CMAKE_SHARED_LIBRARY_SUFFIX})
 endif()
