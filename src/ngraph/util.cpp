@@ -440,7 +440,7 @@ void ngraph::check_fp_values_isnan(const char* name, const float* array, size_t 
 {
     for (size_t i = 0; i < n; i++)
     {
-        if (std::isinf(array[i]))
+        if (std::isnan(array[i]))
         {
             throw std::runtime_error("Discovered NaN in '" + string(name) + "'");
         }
@@ -451,7 +451,7 @@ void ngraph::check_fp_values_isnan(const char* name, const double* array, size_t
 {
     for (size_t i = 0; i < n; i++)
     {
-        if (std::isinf(array[i]))
+        if (std::isnan(array[i]))
         {
             throw std::runtime_error("Discovered NaN in '" + string(name) + "'");
         }
