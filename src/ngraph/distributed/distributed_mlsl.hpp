@@ -14,31 +14,23 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifdef NGRAPH_DISTRIBUTED
+#pragma once
 
-#include <mlsl.hpp>
+#include <cstddef>
 
 #include "ngraph/distributed/distributed.hpp"
 
-using namespace ngraph;
-
-ngraph::distributed::Distributed::Distributed()
-{
-    
-}
-
-ngraph::distributed::Distributed::~Distributed()
-{
-    
-}
-
-size_t ngraph::distributed::Distributed::get_size() const
-{
-    return 1;
-}
-
-size_t ngraph::distributed::Distributed::get_rank() const
-{
-    return 1;
-}
-#endif
+namespace ngraph
+{   
+    namespace distributed
+    { 
+        class DistributedMLSL : public ngraph::distributed::Distributed 
+        {
+        public:
+            DistributedMLSL();
+            ~DistributedMLSL();
+            size_t get_size() const;
+            size_t get_rank() const;
+        };
+    }
+} 

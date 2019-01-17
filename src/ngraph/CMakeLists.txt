@@ -179,6 +179,8 @@ set (SRC
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND SRC 
         distributed/distributed.cpp
+        distributed/distributed_mlsl.cpp
+        distributed/distributed_openmpi.cpp
         distributed.cpp)
 endif()
 
@@ -191,6 +193,11 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
     target_compile_definitions(ngraph PRIVATE NGRAPH_DISTRIBUTED)
     target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
     target_link_libraries(ngraph PRIVATE libmlsl)
+
+    find_package(MPI REQUIRED)
+    target_include_directories(ngraph SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
+    target_link_libraries(ngraph PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+
 endif()
 
 add_subdirectory(frontend)

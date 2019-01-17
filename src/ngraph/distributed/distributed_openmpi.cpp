@@ -16,29 +16,38 @@
 
 #ifdef NGRAPH_DISTRIBUTED
 
-#include <mlsl.hpp>
+#include <mpi.h>
 
-#include "ngraph/distributed/distributed.hpp"
+#include "ngraph/distributed/distributed_openmpi.hpp"
 
 using namespace ngraph;
 
-ngraph::distributed::Distributed::Distributed()
+ngraph::distributed::DistributedOpenMPI::DistributedOpenMPI()
 {
-    
+    int flag = 0;
+    MPI_Initialized(&flag);
+    if (!flag)
+    {
+        MPI_Init(NULL, NULL);
+    }
 }
 
-ngraph::distributed::Distributed::~Distributed()
+ngraph::distributed::DistributedOpenMPI::~DistributedOpenMPI()
 {
-    
+    MPI_Finalize();
 }
 
-size_t ngraph::distributed::Distributed::get_size() const
+int ngraph::distributed::DistributedOpenMPI::get_size() const
 {
-    return 1;
+    int size;
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    return size;
 }
 
-size_t ngraph::distributed::Distributed::get_rank() const
+int ngraph::distributed::DistributedOpenMPI::get_rank() const
 {
-    return 1;
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    return rank;
 }
 #endif

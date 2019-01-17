@@ -18,27 +18,33 @@
 
 #include <mlsl.hpp>
 
-#include "ngraph/distributed/distributed.hpp"
+#include "ngraph/distributed/distributed_mlsl.hpp"
 
 using namespace ngraph;
 
-ngraph::distributed::Distributed::Distributed()
+ngraph::distributed::DistributedMLSL::DistributedMLSL()
 {
-    
+    if (!MLSL::Environment::GetEnv().IsInitialized())
+    {
+        MLSL::Environment::GetEnv().Init(nullptr, nullptr);
+    }
 }
 
-ngraph::distributed::Distributed::~Distributed()
+ngraph::distributed::DistributedMLSL::~DistributedMLSL()
 {
-    
+    if (MLSL::Environment::GetEnv().IsInitialized())
+    {
+        MLSL::Environment::GetEnv().Finalize();
+    }
 }
 
-size_t ngraph::distributed::Distributed::get_size() const
+size_t ngraph::distributed::DistributedMLSL::get_size() const
 {
-    return 1;
+    return MLSL::Environment::GetEnv().GetProcessCount();
 }
 
-size_t ngraph::distributed::Distributed::get_rank() const
+size_t ngraph::distributed::DistributedMLSL::get_rank() const
 {
-    return 1;
+    return MLSL::Environment::GetEnv().GetProcessIdx();
 }
 #endif
