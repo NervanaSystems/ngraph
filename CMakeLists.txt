@@ -76,16 +76,13 @@ set(NGRAPH_FORWARD_CMAKE_ARGS
 
 if (NOT MSVS)
     if(NOT CMAKE_BUILD_TYPE)
-        set(NGRAPH_FORWARD_CMAKE_ARGS
-                ${NGRAPH_FORWARD_CMAKE_ARGS}
-                -DCMAKE_BUILD_TYPE=Release
-                )
-    else()
-        set(NGRAPH_FORWARD_CMAKE_ARGS
-                ${NGRAPH_FORWARD_CMAKE_ARGS}
-                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                )
+        set(CMAKE_BUILD_TYPE Release)
     endif()
+
+    set(NGRAPH_FORWARD_CMAKE_ARGS
+            ${NGRAPH_FORWARD_CMAKE_ARGS}
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            )
 endif()
 message(STATUS "NGRAPH_FORWARD_CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}")
 
