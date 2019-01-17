@@ -45,7 +45,6 @@ set(SRC
     builder/convolution.cpp
     builder/dot.cpp
     builder/embedding_lookup.cpp
-    builder/function_call.cpp
     builder/leaky_relu.cpp
     builder/lstm.cpp
     builder/lrn.cpp
@@ -58,7 +57,6 @@ set(SRC
     builder/pad.cpp
     builder/product.cpp
     builder/reduce_function.cpp
-    builder/reduce_function_window.cpp
     builder/replace_slice.cpp
     builder/quantization.cpp
     builder/quantized_avg_pool.cpp
@@ -69,7 +67,6 @@ set(SRC
     builder/reverse_sequence.cpp
     builder/rnn.cpp
     builder/select.cpp
-    builder/select_and_scatter.cpp
     builder/sigmoid.cpp
     builder/slice.cpp
     builder/state.cpp
