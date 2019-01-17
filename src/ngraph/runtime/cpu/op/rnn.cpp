@@ -135,19 +135,23 @@ void op::Rnn::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
     // mkldnn rnn bprop needs weights in the format mkldnn_ldgoi, but the rnn fprop weighst are in
     // mkldnn_ldigo so we will reshape the weights
     auto& weight_layer_shape = weights_layer->get_shape();
-    auto weights_layer_reshape = std::make_shared<op::Reshape>(
-        weights_layer, AxisVector{1, 0}, Shape{weight_layer_shape[1], weight_layer_shape[0]});
-
+    if (weight_layer_shape[0] == this->m_src_layer_feature_size)
+    {
+        weights_layer = std::make_shared<op::Reshape>(
+            weights_layer, AxisVector{1, 0}, Shape{weight_layer_shape[1], weight_layer_shape[0]});
+    }
     auto& weight_iter_shape = weights_iter->get_shape();
-    auto weights_iter_reshape = std::make_shared<op::Reshape>(
-        weights_iter, AxisVector{1, 0}, Shape{weight_iter_shape[1], weight_iter_shape[0]});
-
+    if (weight_iter_shape[0] == this->m_src_iter_feature_size)
+    {
+        weights_iter = std::make_shared<op::Reshape>(
+            weights_iter, AxisVector{1, 0}, Shape{weight_iter_shape[1], weight_iter_shape[0]});
+    }
     auto rnn_bprop =
         std::make_shared<op::RnnBackprop>(static_pointer_cast<op::Rnn>(shared_from_this()),
                                           src_layer,
                                           src_iter,
-                                          weights_layer_reshape,
-                                          weights_iter_reshape,
+                                          weights_layer,
+                                          weights_iter,
                                           bias,
                                           fprop_dst_layer,
                                           fprop_dst_iter,

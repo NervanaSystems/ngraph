@@ -1081,26 +1081,33 @@ size_t MKLDNNEmitter::build_rnn_backward(const ngraph::Node* node,
                                          const std::vector<TensorViewWrapper>& args,
                                          const std::vector<TensorViewWrapper>& out)
 {
-    auto rnn_bprop_node = static_cast<const ngraph::op::RnnBackprop*>(node);
-    auto rnn_node = static_cast<const ngraph::op::Rnn*>(rnn_bprop_node->get_fprop_node().get());
-    auto t = static_cast<unsigned long>(rnn_node->get_src_sequence_length());
-    auto n = static_cast<unsigned long>(rnn_node->get_batch_size());
-    auto c = static_cast<unsigned long>(rnn_node->get_src_layer_feature_size());
-    auto s = static_cast<unsigned long>(rnn_node->get_num_cell_states());
-    auto l = static_cast<unsigned long>(rnn_node->get_num_fused_layers());
-    auto d = static_cast<unsigned long>(rnn_node->get_direction());
-    auto g = static_cast<unsigned long>(rnn_node->get_gates_per_cell());
-    auto i = static_cast<unsigned long>(rnn_node->get_src_layer_feature_size());
-    auto o = static_cast<unsigned long>(rnn_node->get_src_iter_feature_size());
+    auto rnn_bprop_op = static_cast<const op::RnnBackprop*>(node);
+    auto rnn_attributes = rnn_bprop_op->get_rnn_attributes();
+    Shape src_layer_dims{rnn_attributes.timestep, rnn_attributes.batch, rnn_attributes.slc};
+
+    Shape src_iter_dims{rnn_attributes.layer,
+                        rnn_attributes.direction,
+                        rnn_attributes.states,
+                        rnn_attributes.batch,
+                        rnn_attributes.slc};
+
+    Shape wei_layer_dims{rnn_attributes.layer,
+                         rnn_attributes.direction,
+                         rnn_attributes.gates,
+                         rnn_attributes.slc,
+                         rnn_attributes.sic};
+
+    Shape wei_iter_dims{rnn_attributes.layer,
+                        rnn_attributes.direction,
+                        rnn_attributes.gates,
+                        rnn_attributes.sic,
+                        rnn_attributes.sic};
+
+    Shape bias_dims{
+        rnn_attributes.layer, rnn_attributes.direction, rnn_attributes.gates, rnn_attributes.sic};
 
     mkldnn::memory::data_type et =
         mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0));
-
-    Shape src_layer_dims{t, n, c};
-    Shape src_iter_dims{l, d, s, n, c};
-    Shape wei_layer_dims{l, d, i, g, o};
-    Shape wei_iter_dims{l, d, i, g, o};
-    Shape bias_dims{l, d, g, o};
 
     auto formatted_md = [&](Shape& dimensions, mkldnn::memory::format layout) {
         return mkldnn::memory::desc(mkldnn::memory::dims(dimensions.begin(), dimensions.end()),
@@ -1110,23 +1117,6 @@ size_t MKLDNNEmitter::build_rnn_backward(const ngraph::Node* node,
     auto generic_md = [&](Shape& dimensions) {
         return formatted_md(dimensions, mkldnn::memory::format::any);
     };
-
-    /*const memory::desc src_layer_md(src_layer_dims, et,  mkldnn::memory::format::tnc);
-    const memory::desc src_iter_md(src_iter_dims, et, mkldnn::memory::format::ldsnc);
-    const memory::desc wei_layer_md(wei_layer_dims, et, mkldnn::memory::format::any);
-    const memory::desc wei_iter_md(wei_iter_dims, et, mkldnn::memory::format::any);
-    const memory::desc bias_md(bias_dims, et, mkldnn::memory::format::any);
-    const memory::desc dst_layer_md(src_layer_dims, et, mkldnn::memory::format::tnc);
-    const memory::desc dst_iter_md(src_iter_dims, et, mkldnn::memory::format::any);
-
-    const memory::desc diff_src_layer_md(src_layer_dims, et,  mkldnn::memory::format::tnc);
-    const memory::desc diff_src_iter_md(src_iter_dims, et, mkldnn::memory::format::ldsnc);
-    const memory::desc diff_wei_layer_md(wei_layer_dims, et, mkldnn::memory::format::any);
-    const memory::desc diff_wei_iter_md(wei_iter_dims, et, mkldnn::memory::format::any);
-    const memory::desc diff_bias_md(bias_dims, et, mkldnn::memory::format::any);
-    const memory::desc diff_dst_layer_md(src_layer_dims, et, mkldnn::memory::format::tnc);
-    const memory::desc diff_dst_iter_md(src_iter_dims, et, mkldnn::memory::format::any);
-    */
 
     auto src_layer_md = build_memory_descriptor(
         src_layer_dims, args[0].get_element_type(), mkldnn::memory::format::tnc);
@@ -1181,16 +1171,16 @@ size_t MKLDNNEmitter::build_rnn_backward(const ngraph::Node* node,
         mkldnn::rnn_direction::unidirectional_left2right,
         src_layer_md,
         src_iter_md,
-        generic_md(wei_layer_dims),
-        generic_md(wei_iter_dims),
-        generic_md(bias_dims),
+        formatted_md(wei_layer_dims, mkldnn::memory::format::ldgoi),
+        formatted_md(wei_iter_dims, mkldnn::memory::format::ldgoi),
+        formatted_md(bias_dims, mkldnn::memory::format::ldgo),
         formatted_md(src_layer_dims, mkldnn::memory::format::tnc),
         formatted_md(src_iter_dims, mkldnn::memory::format::ldsnc),
         formatted_md(src_layer_dims, mkldnn::memory::format::tnc),
         formatted_md(src_iter_dims, mkldnn::memory::format::ldsnc),
-        generic_md(wei_layer_dims),
-        generic_md(wei_iter_dims),
-        generic_md(bias_dims),
+        formatted_md(wei_layer_dims, mkldnn::memory::format::ldgoi),
+        formatted_md(wei_iter_dims, mkldnn::memory::format::ldgoi),
+        formatted_md(bias_dims, mkldnn::memory::format::ldgo),
         formatted_md(src_layer_dims, mkldnn::memory::format::tnc),
         formatted_md(src_iter_dims, mkldnn::memory::format::ldsnc));
 
