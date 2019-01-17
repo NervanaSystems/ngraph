@@ -26,8 +26,10 @@
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
@@ -1174,6 +1176,38 @@ namespace ngraph
                 writer << out[0].get_name() << "[i] = " << args[0].get_name()
                        << "[i] <= " << args[1].get_name() << "[i];\n";
                 writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Any)
+            {
+                const ngraph::op::Any* any = static_cast<const ngraph::op::Any*>(node);
+                writer.block_begin();
+                {
+                    writer << "reference::any(";
+                    writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            " << out[0].get_name() << ",\n";
+                    writer << "            {" << join(args[0].get_shape()) << "},\n";
+                    writer << "            {" << join(out[0].get_shape()) << "},\n";
+                    writer << "            {" << join(any->get_reduction_axes()) << "});\n";
+                }
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::All)
+            {
+                const ngraph::op::All* all = static_cast<const ngraph::op::All*>(node);
+                writer.block_begin();
+                {
+                    writer << "reference::all(";
+                    writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            " << out[0].get_name() << ",\n";
+                    writer << "            {" << join(args[0].get_shape()) << "},\n";
+                    writer << "            {" << join(out[0].get_shape()) << "},\n";
+                    writer << "            {" << join(all->get_reduction_axes()) << "});\n";
+                }
                 writer.block_end();
             }
 

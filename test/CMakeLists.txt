@@ -65,13 +65,6 @@ set(SRC
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
 
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    list(APPEND SRC onnx_import.cpp)
-    if (NGRAPH_ONNXIFI_ENABLE)
-        list(APPEND SRC onnxifi.cpp onnxifi_span.cpp)
-    endif()
-endif()
-
 if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
         backend_debug_api.cpp
@@ -106,6 +99,10 @@ if (NGRAPH_PLAIDML_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} PlaidML)
 endif()
 
+if (NGRAPH_GENERIC_CPU_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
+endif()
+
 add_subdirectory(models)
 add_subdirectory(files)
 add_subdirectory(util)
@@ -136,11 +133,20 @@ set(MULTI_TEST_SRC
     backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
 )
+
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND MULTI_TEST_SRC distributed.in.cpp)
 endif()
+
 if (NGRAPH_CPU_ENABLE)
     list(APPEND MULTI_TEST_SRC backend_graph_comparison.in.cpp)
+endif()
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    list(APPEND MULTI_TEST_SRC onnx_import.in.cpp)
+    if (NGRAPH_ONNXIFI_ENABLE)
+        list(APPEND SRC onnxifi.cpp onnxifi_span.cpp)
+    endif()
 endif()
 
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})

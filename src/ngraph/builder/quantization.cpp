@@ -19,6 +19,7 @@
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/quantization.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
 #include "quantization_util.hpp"
 
 using namespace std;
@@ -337,18 +338,19 @@ namespace ngraph
                 bias = make_shared<op::Quantize>(
                     bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
             }
-            return make_shared<op::QuantizedConvolutionBiasSignedAdd>(input,
-                                                                      filters,
-                                                                      bias,
-                                                                      sum_input,
-                                                                      window_movement_strides,
-                                                                      window_dilation_strides,
-                                                                      padding_below,
-                                                                      padding_above,
-                                                                      data_dilation_strides,
-                                                                      requantization_scale,
-                                                                      sum_scale,
-                                                                      with_relu);
+            auto qconv = make_shared<op::QuantizedConvolutionBiasSignedAdd>(input,
+                                                                            filters,
+                                                                            bias,
+                                                                            sum_input,
+                                                                            window_movement_strides,
+                                                                            window_dilation_strides,
+                                                                            padding_below,
+                                                                            padding_above,
+                                                                            data_dilation_strides,
+                                                                            requantization_scale,
+                                                                            sum_scale,
+                                                                            with_relu);
+            return make_shared<op::Convert>(qconv, element::u8);
         }
     }
 }
