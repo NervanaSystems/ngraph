@@ -56,7 +56,7 @@ elseif (APPLE)
 elseif (WIN32)
     set(MKLPACKAGE "mklml_win_${MKLVERSION}.zip")
     set(MKL_SHA1_HASH 97f01ab854d8ee88cc0429f301df84844d7cce6b)
-    set(MKL_LIBS mklml.dll libiomp5md.dll)
+    set(MKL_LIBS mklml.lib libiomp5md.lib)
 endif()
 set(MKLURL ${MKLURLROOT}${MKLPACKAGE})
 
@@ -78,7 +78,11 @@ set(MKL_SOURCE_DIR ${source_dir})
 add_library(libmkl INTERFACE)
 add_dependencies(libmkl ext_mkl)
 foreach(LIB ${MKL_LIBS})
-    list(APPEND TMP_PATHS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${LIB})
+    if (WIN32)
+        list(APPEND TMP_PATHS ${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/${LIB})
+    else()
+        list(APPEND TMP_PATHS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${LIB})
+    endif()
 endforeach()
 set(MKL_LIBS ${TMP_PATHS})
 target_link_libraries(libmkl INTERFACE ${MKL_LIBS})
@@ -179,9 +183,15 @@ add_custom_command(TARGET ext_mkldnn POST_BUILD
 add_library(libmkldnn INTERFACE)
 add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
-target_link_libraries(libmkldnn INTERFACE
+if (WIN32)
+    target_link_libraries(libmkldnn INTERFACE
+    ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/mkldnn.lib
+    libmkl
+    )
+else()
+    target_link_libraries(libmkldnn INTERFACE
     ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${CMAKE_SHARED_LIBRARY_PREFIX}mkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}
     libmkl
     )
-
+endif()
 install(DIRECTORY ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/ DESTINATION ${NGRAPH_INSTALL_LIB} OPTIONAL)
