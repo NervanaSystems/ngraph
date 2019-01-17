@@ -38,13 +38,13 @@ ngraph::distributed::DistributedMLSL::~DistributedMLSL()
     }
 }
 
-size_t ngraph::distributed::DistributedMLSL::get_size() const
+int ngraph::distributed::DistributedMLSL::get_size() const
 {
-    return MLSL::Environment::GetEnv().GetProcessCount();
+    return static_cast<int>(MLSL::Environment::GetEnv().GetProcessCount());
 }
 
-size_t ngraph::distributed::DistributedMLSL::get_rank() const
-{
-    return MLSL::Environment::GetEnv().GetProcessIdx();
+int ngraph::distributed::DistributedMLSL::get_rank() const
+{ 
+    return static_cast<int>(MLSL::Environment::GetEnv().GetProcessIdx());
 }
 #endif

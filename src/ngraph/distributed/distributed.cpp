@@ -16,8 +16,6 @@
 
 #ifdef NGRAPH_DISTRIBUTED
 
-#include <mlsl.hpp>
-
 #include "ngraph/distributed/distributed.hpp"
 
 using namespace ngraph;
@@ -32,12 +30,12 @@ ngraph::distributed::Distributed::~Distributed()
     
 }
 
-size_t ngraph::distributed::Distributed::get_size() const
+int ngraph::distributed::Distributed::get_size() const
 {
     return 1;
 }
 
-size_t ngraph::distributed::Distributed::get_rank() const
+int ngraph::distributed::Distributed::get_rank() const
 {
     return 1;
 }
