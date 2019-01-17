@@ -139,12 +139,6 @@ namespace ngraph
                                                  GPUKernelArgs& args,
                                                  const size_t rank);
 
-                static void get_reduce_window_op(codegen::CodeWriter& writer,
-                                                 const std::string& name,
-                                                 const std::string& op,
-                                                 const std::vector<std::string>& data_types,
-                                                 const size_t rank);
-
                 static void get_reverse_sequence_op(codegen::CodeWriter& writer,
                                                     const std::string& name,
                                                     const std::array<std::string, 3>& data_types,
