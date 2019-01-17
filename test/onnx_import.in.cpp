@@ -1590,18 +1590,18 @@ TEST(onnx_${BACKEND_NAME}, model_softplus_infinity)
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/softplus.onnx"));
 
     Inputs inputs{std::vector<float>{std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity(),
-                                           std::numeric_limits<float>::infinity()}};
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity(),
+                                     std::numeric_limits<float>::infinity()}};
 
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
     for (float v : outputs.front())
