@@ -473,7 +473,21 @@ bool ngraph::pass::ReshapeSinking::run_on_function(std::shared_ptr<ngraph::Funct
         }
         else if (auto slice = std::dynamic_pointer_cast<op::Slice>(n))
         {
-            sink_slice(slice, reorders, reshapes_to_delete);
+            // A heuristic. If Reshape has multiple slice users, if sunk
+            // it will be replicated by the number of its users
+            // TODO: we should have a pre-pass that looks at this kind of
+            // scenarios and marks some reshapes as too "toxic" to sink
+            // For now, this heuristic works really well.
+            // Note, get_users(*true*) which means we only care about
+            // live users of Reshape
+            if (slice->get_argument(0)->get_users(true).size() == 1)
+            {
+                sink_slice(slice, reorders, reshapes_to_delete);
+            }
+            else
+            {
+                materialize_shapes(n, reorders, reshapes_to_delete);
+            }
         }
         else if (auto pad = std::dynamic_pointer_cast<op::Pad>(n))
         {
