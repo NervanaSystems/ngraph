@@ -51,16 +51,13 @@ namespace ngraph
                     input_axis_order[i] = i;
                 }
 
-                Strides input_dilation(arg0_shape.size(), 1);
-
                 CoordinateTransform input_transform(arg0_shape,
                                                     input_start,
                                                     input_end,
                                                     input_strides,
                                                     input_axis_order,
                                                     padding_below,
-                                                    padding_above,
-                                                    input_dilation);
+                                                    padding_above);
                 CoordinateTransform output_transform(out_shape);
 
                 CoordinateTransform::Iterator output_it = output_transform.begin();
@@ -74,22 +71,37 @@ namespace ngraph
 
                     T v;
 
-                    if (input_transform.has_source_coordinate(in_coord))
+                    switch (pad_mode)
                     {
-                        v = arg0[input_transform.index(in_coord)];
-                    }
-                    else
+                    case op::PadMode::CONSTANT:
+                        // If the coordinate is out of bounds, substitute *arg1.
+                        v = input_transform.has_source_coordinate(in_coord)
+                                ? arg0[input_transform.index(in_coord)]
+                                : *arg1;
+                        break;
+                    case op::PadMode::EDGE:
                     {
-                        switch (pad_mode)
+                        Coordinate c = in_coord; // have to copy because in_coord is const
+
+                        // Truncate each out-of-bound dimension.
+                        for (size_t i = 0; i < c.size(); i++)
                         {
-                        case op::PadMode::CONSTANT: v = *arg1; break;
-                        case op::PadMode::EDGE:
-                            throw std::invalid_argument("EDGE padding mode not implemented");
-                            break;
-                        case op::PadMode::REFLECT:
-                            throw std::invalid_argument("REFLECT padding mode not implemented");
-                            break;
+                            if (c[i] < padding_below[i])
+                            {
+                                c[i] = padding_below[i];
+                            }
+
+                            if (c[i] >= (padding_below[i] + arg0_shape[i] + padding_above[i]))
+                            {
+                                c[i] = padding_below[i] + arg0_shape[i] - 1;
+                            }
                         }
+                        v = arg0[input_transform.index(c)];
+                        break;
+                    }
+                    case op::PadMode::REFLECT:
+                        throw std::invalid_argument("REFLECT padding mode not implemented");
+                        break;
                     }
 
                     out[output_transform.index(out_coord)] = v;
